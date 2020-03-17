@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "XHarness": {
+      "commandName": "Project",
+      "commandLineArgs": "-p:android -a:package -o:tests=path/to/Test.Lib1.dll,\"path to/Test.Lib2.dll\" "
+    }
+  }
+}
