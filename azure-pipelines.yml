@@ -28,70 +28,78 @@ trigger:
 pr:
 - master
 
-jobs:
-- template: /eng/common/templates/job/job.yml
-  parameters:
-    name: Windows_NT
-    enableTelemetry: true
-    enablePublishBuildArtifacts: true
-    helixRepo: dotnet/xharness
-    pool:
-      ${{ if eq(variables._RunAsInternal, True) }}:
-        name: NetCoreInternal-Pool
-        queue: BuildPool.Server.Amd64.VS2019
-      ${{ if eq(variables._RunAsPublic, True) }}:
-        name: NetCorePublic-Pool
-        queue: BuildPool.Server.Amd64.VS2019.Open
-    strategy:
-      matrix:
-        debug_configuration:
-          _BuildConfig: Debug
-        release_configuration:
-          _BuildConfig: Release
-    steps:
-    - script: eng\common\cibuild.cmd
-        -configuration $(_BuildConfig)
-        -prepareMachine
-        $(_InternalBuildArgs)
-      name: Build
-      displayName: Build
-      condition: succeeded()
-    - task: PublishBuildArtifacts@1
-      displayName: Publish Logs to VSTS
-      inputs:
-        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-        PublishLocation: Container
-        ArtifactName: $(Agent.Os)_$(Agent.JobName)
-      continueOnError: true
-      condition: always()
+stages:
+- stage: build
+  displayName: Build
+  jobs:
+  - template: /eng/common/templates/job/job.yml
+    parameters:
+      name: Windows_NT
+      enableTelemetry: true
+      enablePublishBuildArtifacts: true
+      enableMicrobuild: true
+      enablePublishUsingPipelines: true
+      helixRepo: dotnet/xharness
+      pool:
+        ${{ if eq(variables._RunAsInternal, True) }}:
+          name: NetCoreInternal-Pool
+          queue: BuildPool.Server.Amd64.VS2019
+        ${{ if eq(variables._RunAsPublic, True) }}:
+          name: NetCorePublic-Pool
+          queue: BuildPool.Server.Amd64.VS2019.Open
+      strategy:
+        matrix:
+          release_configuration:
+            _BuildConfig: Release
+          ${{ if eq(variables._RunAsPublic, True) }}:
+            debug_configuration:
+              _BuildConfig: Debug
+      steps:
+      - script: eng\common\cibuild.cmd
+          -configuration $(_BuildConfig)
+          -prepareMachine
+          $(_InternalBuildArgs)
+        name: Build
+        displayName: Build
+        condition: succeeded()
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Logs to VSTS
+        inputs:
+          PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+          PublishLocation: Container
+          ArtifactName: $(Agent.Os)_$(Agent.JobName)
+        continueOnError: true
+        condition: always()
 
-- template: /eng/common/templates/job/job.yml
-  parameters:
-    name: OSX
-    enableTelemetry: true
-    enablePublishBuildArtifacts: true
-    helixRepo: dotnet/xharness
-    pool:
-      name: Hosted macOS
-    strategy:
-      matrix:
-        debug_configuration:
-          _BuildConfig: Debug
-        release_configuration:
-          _BuildConfig: Release
-    steps:
-    - script: eng/common/cibuild.sh
-        --configuration $(_BuildConfig)
-        --prepareMachine
-        $(_InternalBuildArgs)
-      name: Build
-      displayName: Build
-      condition: succeeded()
-    - task: PublishBuildArtifacts@1
-      displayName: Publish Logs to VSTS
-      inputs:
-        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-        PublishLocation: Container
-        ArtifactName: $(Agent.Os)_$(Agent.JobName)
-      continueOnError: true
-      condition: always()
+  - template: /eng/common/templates/job/job.yml
+    parameters:
+      name: OSX
+      enableTelemetry: true
+      enablePublishBuildArtifacts: true
+      enablePublishUsingPipelines: true
+      helixRepo: dotnet/xharness
+      pool:
+        name: Hosted macOS
+      strategy:
+        matrix:
+          release_configuration:
+            _BuildConfig: Release
+          ${{ if eq(variables._RunAsPublic, True) }}:
+            debug_configuration:
+              _BuildConfig: Debug            
+      steps:
+      - script: eng/common/cibuild.sh
+          --configuration $(_BuildConfig)
+          --prepareMachine
+          $(_InternalBuildArgs)
+        name: Build
+        displayName: Build
+        condition: succeeded()
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Logs to VSTS
+        inputs:
+          PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+          PublishLocation: Container
+          ArtifactName: $(Agent.Os)_$(Agent.JobName)
+        continueOnError: true
+        condition: always()
