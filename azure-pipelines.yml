@@ -23,83 +23,109 @@ variables:
 
 # CI and PR triggers
 trigger:
-- master
+  batch: true
+  branches:
+    include:
+    - master
 
 pr:
-- master
+  branches:
+    include:
+    - master
 
 stages:
 - stage: build
   displayName: Build
   jobs:
-  - template: /eng/common/templates/job/job.yml
+  - template: /eng/common/templates/jobs/jobs.yml
     parameters:
-      name: Windows_NT
       enableTelemetry: true
       enablePublishBuildArtifacts: true
       enableMicrobuild: true
       enablePublishUsingPipelines: true
+      enablePublishBuildAssets: true
       helixRepo: dotnet/xharness
-      pool:
-        ${{ if eq(variables._RunAsInternal, True) }}:
-          name: NetCoreInternal-Pool
-          queue: BuildPool.Server.Amd64.VS2019
-        ${{ if eq(variables._RunAsPublic, True) }}:
-          name: NetCorePublic-Pool
-          queue: BuildPool.Server.Amd64.VS2019.Open
-      strategy:
-        matrix:
-          release_configuration:
-            _BuildConfig: Release
+      
+      jobs:
+      - job: Windows_NT
+        pool:
+          ${{ if eq(variables._RunAsInternal, True) }}:
+            name: NetCoreInternal-Pool
+            queue: BuildPool.Server.Amd64.VS2019
           ${{ if eq(variables._RunAsPublic, True) }}:
-            debug_configuration:
-              _BuildConfig: Debug
-      steps:
-      - script: eng\common\cibuild.cmd
-          -configuration $(_BuildConfig)
-          -prepareMachine
-          $(_InternalBuildArgs)
-        name: Build
-        displayName: Build
-        condition: succeeded()
-      - task: PublishBuildArtifacts@1
-        displayName: Publish Logs to VSTS
-        inputs:
-          PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-          PublishLocation: Container
-          ArtifactName: $(Agent.Os)_$(Agent.JobName)
-        continueOnError: true
-        condition: always()
+            name: NetCorePublic-Pool
+            queue: BuildPool.Server.Amd64.VS2019.Open
+        strategy:
+          matrix:
+            release_configuration:
+              _BuildConfig: Release
+            ${{ if eq(variables._RunAsPublic, True) }}:
+              debug_configuration:
+                _BuildConfig: Debug
+        steps:
+        - script: eng\common\cibuild.cmd
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            $(_InternalBuildArgs)
+          name: Build
+          displayName: Build
+          condition: succeeded()
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Logs to VSTS
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+            PublishLocation: Container
+            ArtifactName: $(Agent.Os)_$(Agent.JobName)
+          continueOnError: true
+          condition: always()
 
-  - template: /eng/common/templates/job/job.yml
+      - job: OSX
+        pool:
+          name: Hosted macOS
+        strategy:
+          matrix:
+            release_configuration:
+              _BuildConfig: Release
+            ${{ if eq(variables._RunAsPublic, True) }}:
+              debug_configuration:
+                _BuildConfig: Debug            
+        steps:
+        - script: eng/common/cibuild.sh
+            --configuration $(_BuildConfig)
+            --prepareMachine
+            $(_InternalBuildArgs)
+          name: Build
+          displayName: Build
+          condition: succeeded()
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Logs to VSTS
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+            PublishLocation: Container
+            ArtifactName: $(Agent.Os)_$(Agent.JobName)
+          continueOnError: true
+          condition: always()
+        
+- ${{ if eq(variables._RunAsInternal, True) }}:
+  - template: eng\common\templates\post-build\post-build.yml
     parameters:
-      name: OSX
-      enableTelemetry: true
-      enablePublishBuildArtifacts: true
-      enablePublishUsingPipelines: true
-      helixRepo: dotnet/xharness
-      pool:
-        name: Hosted macOS
-      strategy:
-        matrix:
-          release_configuration:
-            _BuildConfig: Release
-          ${{ if eq(variables._RunAsPublic, True) }}:
-            debug_configuration:
-              _BuildConfig: Debug            
-      steps:
-      - script: eng/common/cibuild.sh
-          --configuration $(_BuildConfig)
-          --prepareMachine
-          $(_InternalBuildArgs)
-        name: Build
-        displayName: Build
-        condition: succeeded()
-      - task: PublishBuildArtifacts@1
-        displayName: Publish Logs to VSTS
-        inputs:
-          PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-          PublishLocation: Container
-          ArtifactName: $(Agent.Os)_$(Agent.JobName)
-        continueOnError: true
-        condition: always()
+      enableSymbolValidation: true
+      # Reenable once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
+      enableSourceLinkValidation: false
+      publishDependsOn:
+      - Validate
+      # This is to enable SDL runs part of Post-Build Validation Stage
+      SDLValidationParameters:
+        enable: false
+        continueOnError: false
+        params: ' -SourceToolsList @("policheck","credscan")
+        -TsaInstanceURL $(_TsaInstanceURL)
+        -TsaProjectName $(_TsaProjectName)
+        -TsaNotificationEmail $(_TsaNotificationEmail)
+        -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
+        -TsaBugAreaPath $(_TsaBugAreaPath)
+        -TsaIterationPath $(_TsaIterationPath)
+        -TsaRepositoryName "Arcade"
+        -TsaCodebaseName "Arcade"
+        -TsaPublish $True'
+        
