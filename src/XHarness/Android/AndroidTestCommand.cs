@@ -35,7 +35,7 @@ namespace XHarness.Android
                 "",
                 "Executes tests on and Android device, waits up to a given timeout, then copies files off the device.",
                 { "app|a=", "Path to .apk file",  v => ApplicationPath = v},
-                { "arg", "Argument to pass to the instrumentation, in form key=value", v =>
+                { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
                     {
                         string[] argPair = v.Split('=');
 
@@ -76,6 +76,13 @@ namespace XHarness.Android
             }
             Console.WriteLine($"Android Test command called: App = {ApplicationPath}{Environment.NewLine}Instrumentation Name = {InstrumentationName}");
             Console.WriteLine($"Output Directory:{OutputDirectory}{Environment.NewLine}Working Directory = {WorkingDirectory}{Environment.NewLine}Timeout = {TimeoutInSeconds} seconds.");
+            Console.WriteLine("Arguments to instrumentation:");
+            foreach (var key in InstrumentationArguments.Keys)
+            {
+                Console.WriteLine($"  {key} = {InstrumentationArguments[key]}");
+            }
+
+
             return 0;
         }
     }
