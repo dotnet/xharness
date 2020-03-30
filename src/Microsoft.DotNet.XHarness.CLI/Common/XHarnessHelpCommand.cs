@@ -10,7 +10,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.XHarness.CLI.Common
 {
-    class XHarnessHelpCommand : HelpCommand
+    internal class XHarnessHelpCommand : HelpCommand
     {
         public override int Invoke(IEnumerable<string> arguments)
         {
@@ -41,8 +41,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                     Console.WriteLine($"No help available for command '{args[0]}'");
                     return -1;
             }
-            return 0;
 
+            return 0;
         }
 
         private void PrintAllHelp(CommandSet commandSet, string v)

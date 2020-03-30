@@ -17,14 +17,15 @@ namespace Microsoft.DotNet.XHarness.CLI
             Console.WriteLine(string.Join(' ', args));
 
             // Root command: will use the platform specific commands to perform the appropriate action.
-            var commands = new CommandSet("xharness");
+            var commands = new CommandSet("xharness")
+            {
+                // Add per-platform CommandSets - If adding  a new supported set, that goes here. 
+                new iOSCommandSet(),
+                new AndroidCommandSet(),
 
-            // Add per-platform CommandSets - If adding  a new supported set, that goes here. 
-            commands.Add(new iOSCommandSet());
-            commands.Add(new AndroidCommandSet());
-
-            // add shared commands, for example, help and so on. --version, --help, --verbosity and so on
-            commands.Add(new XHarnessHelpCommand());
+                // add shared commands, for example, help and so on. --version, --help, --verbosity and so on
+                new XHarnessHelpCommand()
+            };
 
             return commands.Run(args);
         }
