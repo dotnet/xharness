@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.0
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
 {
     public class AndroidGetStateCommand : Command
     {
-        bool ShowHelp = false;
+        private bool _showHelp = false;
 
         public AndroidGetStateCommand() : base("state")
         {
@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
                 "usage: android state",
                 "",
                 "Print information about the current machine, such as host machine info, path/version of ADB.exe used and device status",
-                { "help|h", "Show this message", v => ShowHelp = v != null }
+                { "help|h", "Show this message", v => _showHelp = v != null }
             };
         }
 
@@ -26,18 +26,21 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
         {
             // Deal with unknown options and print nicely 
             var extra = Options.Parse(arguments);
-            if (ShowHelp)
+            if (_showHelp)
             {
                 Options.WriteOptionDescriptions(Console.Out);
                 return 1;
             }
+
             if (extra.Count > 0)
             {
                 Console.WriteLine($"Unknown arguments: {string.Join(" ", extra)}");
                 Options.WriteOptionDescriptions(Console.Out);
                 return 2;
             }
+
             Console.WriteLine("Android state command called (no args supported)");
+
             return 0;
         }
     }
