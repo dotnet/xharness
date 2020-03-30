@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "XHarness": {
+      "commandName": "Project",
+      "commandLineArgs": " ios package -n=FoobittyBar --working-directory=workdir --output-directory=outdir"
+    }
+  }
+}
