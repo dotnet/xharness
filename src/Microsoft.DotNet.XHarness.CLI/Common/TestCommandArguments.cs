@@ -62,12 +62,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                 }
             }
 
-            if (Targets.Count == 0)
+            if (Targets == null || Targets.Count == 0)
             {
                 errs.Add("0 targets specified. At least one target must be provided. " +
                     "Available targets are:" +
-                    Environment.NewLine +
-                    string.Join(Environment.NewLine, GetAvailableTargets()));
+                    Environment.NewLine + "\t" +
+                    string.Join(Environment.NewLine + "\t", GetAvailableTargets()));
             }
 
             return !errors.Any();

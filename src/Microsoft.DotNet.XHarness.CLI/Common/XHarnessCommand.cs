@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                 Console.Error.WriteLine("Invalid arguments:");
                 foreach (string error in errors)
                 {
-                    Console.Error.WriteLine(error);
+                    Console.Error.WriteLine("  - " + error);
                 }
 
                 return 1;
