@@ -7,6 +7,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.XHarness.CLI.iOS
 {
+
     internal class iOSTestCommandArguments : TestCommandArguments
     {
         internal override IEnumerable<string> GetAvailableTargets()
