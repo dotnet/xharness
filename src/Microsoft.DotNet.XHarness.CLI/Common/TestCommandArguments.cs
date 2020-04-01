@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
 
             if (string.IsNullOrEmpty(AppPackagePath))
             {
-                errs.Add("You must provide a name for the application to be created.");
+                errs.Add("You must provide a name for the application that will be tested.");
             }
 
             if (string.IsNullOrEmpty(OutputDirectory))
