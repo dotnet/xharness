@@ -6,27 +6,14 @@ using Microsoft.DotNet.XHarness.CLI.Common;
 using Mono.Options;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.XHarness.CLI.Android
 {
-    public class AndroidTestCommand : TestCommand
+    internal class AndroidTestCommand : TestCommand
     {
-        // Path to packaged app
-        private string _applicationPath;
-
-        // If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.
-        private string _instrumentationName;
-
-        // Path where the outputs of execution will be stored.
-        private string _outputDirectory;
-
-        // Path where run logs will hbe stored and projects
-        private string _workingDirectory;
-
-        // How long XHarness should wait until a test execution completes before clean up (kill running apps, uninstall, etc)
-        private int _timeoutInSeconds = 300;
-        private readonly Dictionary<string, string> _instrumentationArguments = new Dictionary<string, string>();
-        private bool _showHelp = false;
+        private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
+        protected override ITestCommandArguments TestArguments => _arguments;
 
         public AndroidTestCommand() : base()
         {
@@ -34,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
                 "usage: android test [OPTIONS]",
                 "",
                 "Executes tests on and Android device, waits up to a given timeout, then copies files off the device.",
-                { "app|a=", "Path to .apk file",  v => _applicationPath = v},
+                { "app|a=", "Path to already-packaged app",  v => _arguments.AppPackagePath = v},
                 { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
                     {
                         string[] argPair = v.Split('=');
@@ -46,46 +33,36 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
                         }
                         else
                         {
-                            _instrumentationArguments.Add(argPair[0].Trim(), argPair[1].Trim());
+                            _arguments.InstrumentationArguments.Add(argPair[0].Trim(), argPair[1].Trim());
                         }
                     }
                 },
-                { "instrumentation|i=", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.",  v => _instrumentationName = v},
-                { "output-directory=", "Directory in which test results will be outputted", v => _outputDirectory = v},
+                { "instrumentation|i=", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.",  v => _arguments.InstrumentationName = v},
+                { "output-directory=", "Directory in which test results will be outputted", v => _arguments.OutputDirectory = v},
                 { "targets=", "Unused on Android",  v => { /* Ignore v but don't throw */ } },
-                { "timeout=", "Time span, in seconds, to wait for instrumentation to complete.", v => _timeoutInSeconds = int.Parse(v)},
-                { "working-directory=", "Directory in which other files (logs, etc) will be outputted", v => _workingDirectory = v},
-                { "help|h", "Show this message", v => _showHelp = v != null }
+                { "timeout=", "Time span, in seconds, to wait for instrumentation to complete.", v => _arguments.Timeout = TimeSpan.FromSeconds(int.Parse(v)) },
+                { "working-directory=", "Directory in which other files (logs, etc) will be outputted", v => _arguments.WorkingDirectory = v},
+                { "help|h", "Show this message", v => ShowHelp = v != null }
             };
         }
 
-        public override int Invoke(IEnumerable<string> arguments)
+        protected override Task<int> InvokeInternal()
         {
-            // Deal with unknown options and print nicely
-            var extra = Options.Parse(arguments);
-            if (_showHelp)
-            {
-                Options.WriteOptionDescriptions(Console.Out);
-                return 1;
-            }
+            Console.WriteLine($"iOS Test command called:");
+            Console.WriteLine($"  App: {_arguments.AppPackagePath}");
+            Console.WriteLine($"  Targets: {string.Join(',', _arguments.Targets)}");
+            Console.WriteLine($"  Output Directory: {_arguments.OutputDirectory}");
+            Console.WriteLine($"  Working Directory: {_arguments.WorkingDirectory}");
+            Console.WriteLine($"  Timeout: {_arguments.Timeout.TotalSeconds}s");
 
-            if (extra.Count > 0)
-            {
-                Console.WriteLine($"Unknown arguments: {string.Join(" ", extra)}");
-                Options.WriteOptionDescriptions(Console.Out);
-                return 2;
-            }
-
-            Console.WriteLine($"Android Test command called: App = {_applicationPath}{Environment.NewLine}Instrumentation Name = {_instrumentationName}");
-            Console.WriteLine($"Output Directory:{_outputDirectory}{Environment.NewLine}Working Directory = {_workingDirectory}{Environment.NewLine}Timeout = {_timeoutInSeconds} seconds.");
             Console.WriteLine("Arguments to instrumentation:");
 
-            foreach (var key in _instrumentationArguments.Keys)
+            foreach (KeyValuePair<string, string> pair in _arguments.InstrumentationArguments)
             {
-                Console.WriteLine($"  {key} = {_instrumentationArguments[key]}");
+                Console.WriteLine($"  {pair.Key} = {pair.Value}");
             }
 
-            return 0;
+            return Task.FromResult(0);
         }
     }
 }
