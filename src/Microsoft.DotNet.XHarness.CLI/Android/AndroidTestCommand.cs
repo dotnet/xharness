@@ -21,7 +21,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
                 "usage: android test [OPTIONS]",
                 "",
                 "Executes tests on and Android device, waits up to a given timeout, then copies files off the device.",
-                { "app|a=", "Path to already-packaged app",  v => _arguments.AppPackagePath = v},
                 { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
                     {
                         string[] argPair = v.Split('=');
@@ -38,12 +37,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
                     }
                 },
                 { "instrumentation|i=", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.",  v => _arguments.InstrumentationName = v},
-                { "output-directory=", "Directory in which test results will be outputted", v => _arguments.OutputDirectory = v},
-                { "targets=", "Unused on Android",  v => { /* Ignore v but don't throw */ } },
-                { "timeout=", "Time span, in seconds, to wait for instrumentation to complete.", v => _arguments.Timeout = TimeSpan.FromSeconds(int.Parse(v)) },
-                { "working-directory=", "Directory in which other files (logs, etc) will be outputted", v => _arguments.WorkingDirectory = v},
-                { "help|h", "Show this message", v => ShowHelp = v != null }
             };
+
+            foreach (var option in CommonOptions)
+            {
+                Options.Add(option);
+            }
         }
 
         protected override Task<int> InvokeInternal()

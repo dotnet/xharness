@@ -18,26 +18,26 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
         /// <summary>
         /// Path to packaged app
         /// </summary>
-        string AppPackagePath { get; }
+        string AppPackagePath { get; set; }
 
         /// <summary>
         /// List of targets to test
         /// </summary>
-        IReadOnlyCollection<string> Targets { get; }
+        IReadOnlyCollection<string> Targets { get; set; }
 
         /// <summary>
         /// How long XHarness should wait until a test execution completes before clean up (kill running apps, uninstall, etc)
         /// </summary>
-        TimeSpan Timeout { get; }
+        TimeSpan Timeout { get; set; }
 
         /// <summary>
         /// Path where the outputs of execution will be stored
         /// </summary>
-        string OutputDirectory { get; }
+        string OutputDirectory { get; set; }
 
         /// <summary>
         /// Path where run logs will hbe stored and projects
         /// </summary>
-        string WorkingDirectory { get; }
+        string WorkingDirectory { get; set; }
     }
 }

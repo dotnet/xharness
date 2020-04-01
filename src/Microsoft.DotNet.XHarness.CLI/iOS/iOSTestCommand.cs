@@ -23,13 +23,12 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                 "usage: ios test [OPTIONS]",
                 "",
                 "Packaging command that will create a iOS/tvOS/watchOS or macOS application that can be used to run NUnit or XUnit-based test dlls",
-                { "app|a=", "Path to already-packaged app",  v => _arguments.AppPackagePath = v},
-                { "output-directory=|o=", "Directory in which the resulting package will be outputted", v => _arguments.OutputDirectory = v},
-                { "targets=", "Comma-delineated list of targets to test for", v=> _arguments.Targets = v.Split(',') },
-                { "timeout=|t=", "Time span, in seconds, to wait for instrumentation to complete.", v => _arguments.Timeout = TimeSpan.FromSeconds(int.Parse(v))},
-                { "working-directory=|w=", "Directory in which the resulting package will be outputted", v => _arguments.WorkingDirectory = v},
-                { "help|h", "Show this message", v => ShowHelp = v != null }
             };
+
+            foreach (var option in CommonOptions)
+            {
+                Options.Add(option);
+            }
         }
 
         protected override Task<int> InvokeInternal()
