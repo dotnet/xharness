@@ -16,25 +16,12 @@ scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
 . "$scriptroot/common/tools.sh"
 
-# Parse arguments
-commit='master'
-while [[ $# > 0 ]]; do
-  opt="$(echo "$1" | awk '{print tolower($0)}')"
-  case "$opt" in
-    -commit|-c)
-      shift
-      commit="$1"
-      ;;
-    *)
-      echo "Invalid argument: $1"
-      exit 1
-      ;;
-  esac
-  shift
-done
+# Get the xamarin/macios-binaries revision
+version_file="$repo_root/mlaunch.version"
+commit=`grep -E '^[a-zA-Z0-9]+$' "$version_file"`
 
 if [[ -z $commit ]]; then
-  echo "Please use '-commit [ID]' to specify git commit ID of the xamarin/macios-binaries repository to checkout to"
+  echo "Please specify a git commit ID of the xamarin/macios-binaries repository in $version_file"
   exit 1
 fi
 
@@ -51,7 +38,7 @@ binaries_repo="$temp_dir/macios-binaries"
 rm -rf "$binaries_repo"
 mkdir -p "$binaries_repo"
 
-# Shallow-clone the macios-binaries repo
+# Shallow-clone the xamarin/macios-binaries repo
 cd "$binaries_repo"
 git init
 git remote add origin https://github.com/xamarin/macios-binaries.git
