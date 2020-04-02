@@ -5,12 +5,18 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Common
 {
     internal interface ICommandArguments
     {
         bool TryValidate([NotNullWhen(true)]out IEnumerable<string> errors);
+
+        /// <summary>
+        /// Minimum level at which logging statements will be emitted to the console
+        /// </summary>
+        public LogLevel Verbosity { get; set; }
     }
 
     internal interface ITestCommandArguments : ICommandArguments
@@ -39,5 +45,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
         /// Path where run logs will hbe stored and projects
         /// </summary>
         string WorkingDirectory { get; set; }
+
     }
 }

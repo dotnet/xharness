@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Common
 {
@@ -17,6 +18,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(5);
         public string OutputDirectory { get; set; }
         public string WorkingDirectory { get; set; }
+        public LogLevel Verbosity { get; set; }
 
         public virtual bool TryValidate([NotNullWhen(true)] out IEnumerable<string> errors)
         {
@@ -60,14 +62,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                 {
                     Directory.CreateDirectory(WorkingDirectory);
                 }
-            }
-
-            if (Targets == null || Targets.Count == 0)
-            {
-                errs.Add("0 targets specified. At least one target must be provided. " +
-                    "Available targets are:" +
-                    Environment.NewLine + "\t" +
-                    string.Join(Environment.NewLine + "\t", GetAvailableTargets()));
             }
 
             return !errors.Any();
