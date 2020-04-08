@@ -2,9 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.DotNet.XHarness.CLI.Common;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.DotNet.XHarness.CLI.Common;
 
 namespace Microsoft.DotNet.XHarness.CLI.Android
 {
@@ -24,8 +24,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
                 return false;
             }
 
-            // TODO: Validate instrumentation
-
+            // TODO: Android specific validation checks
             return true;
         }
 

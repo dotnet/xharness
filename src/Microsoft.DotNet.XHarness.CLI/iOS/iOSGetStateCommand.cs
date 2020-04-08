@@ -2,45 +2,29 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.CLI.Common;
+using Microsoft.Extensions.Logging;
 using Mono.Options;
-using System;
-using System.Collections.Generic;
 
 namespace Microsoft.DotNet.XHarness.CLI.iOS
 {
-    public class iOSGetStateCommand : Command
+    internal class iOSGetStateCommand : GetStateCommand
     {
-        private bool _showHelp = false;
-
-        public iOSGetStateCommand() : base("state")
+        public iOSGetStateCommand() : base()
         {
             Options = new OptionSet() {
                 "usage: ios state",
                 "",
-                "Print information about the current machine, such as host machine info and device status",
-                { "help|h", "Show this message", v => _showHelp = v != null }
+                "Print information about the current machine, such as host machine info and device status"
             };
         }
 
-        public override int Invoke(IEnumerable<string> arguments)
+        protected override Task<int> InvokeInternal()
         {
-            // Deal with unknown options and print nicely 
-            var extra = Options.Parse(arguments);
-            if (_showHelp)
-            {
-                Options.WriteOptionDescriptions(Console.Out);
-                return 1;
-            }
+            _log.LogInformation("iOS state command called (no args supported)");
 
-            if (extra.Count > 0)
-            {
-                Console.WriteLine($"Unknown arguments: {string.Join(" ", extra)}");
-                Options.WriteOptionDescriptions(Console.Out);
-            }
-
-            Console.WriteLine("iOS state command called (no args supported)");
-
-            return 0;
+            return Task.FromResult(0);
         }
     }
 }

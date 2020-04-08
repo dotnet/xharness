@@ -12,9 +12,11 @@ namespace Microsoft.DotNet.XHarness.CLI
 {
     public static class Program
     {
+
+
         public static int Main(string[] args)
         {
-            Console.WriteLine(string.Join(' ', args));
+            Console.WriteLine($"XHarness command issued: {string.Join(' ', args)}");
 
             // Root command: will use the platform specific commands to perform the appropriate action.
             var commands = new CommandSet("xharness")
@@ -27,7 +29,9 @@ namespace Microsoft.DotNet.XHarness.CLI
                 new XHarnessHelpCommand()
             };
 
-            return commands.Run(args);
+            int result = commands.Run(args);
+            Console.WriteLine($"XHarness exit code: {result}");
+            return result;
         }
     }
 }

@@ -5,6 +5,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.Common;
+using Microsoft.Extensions.Logging;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.iOS
@@ -23,6 +24,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
     internal class iOSPackageCommand : PackageCommand
     {
         private readonly iOSPackageCommandArguments _arguments = new iOSPackageCommandArguments();
+
         protected override IPackageCommandArguments PackageArguments => _arguments;
 
         public iOSPackageCommand() : base()
@@ -39,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                             _arguments.SelectedTemplateType = template;
                         } else
                         {
-                            Console.WriteLine($"Unknown template type '{v}'");
+                            _log.LogInformation($"Unknown template type '{v}'");
                             ShowHelp = true;
                         }
                     }
@@ -55,10 +57,10 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
         protected override Task<int> InvokeInternal()
         {
-            Console.WriteLine($"iOS Package command called:{Environment.NewLine}Application Name = {_arguments.AppPackageName}");
-            Console.WriteLine($"Working Directory:{_arguments.WorkingDirectory}{Environment.NewLine}Output Directory:{_arguments.OutputDirectory}");
-            Console.WriteLine($"Ignore Files Root Directory:{_arguments.IgnoreFilesRootDirectory}{Environment.NewLine}Traits Root Directory:{_arguments.TraitsRootDirectory}");
-            Console.WriteLine($"MTouch Args:{_arguments.MtouchExtraArgs}{Environment.NewLine}Template Type:{Enum.GetName(typeof(TemplateType), _arguments.SelectedTemplateType)}");
+            _log.LogDebug($"iOS Package command called:{Environment.NewLine}Application Name = {_arguments.AppPackageName}");
+            _log.LogDebug($"Working Directory:{_arguments.WorkingDirectory}{Environment.NewLine}Output Directory:{_arguments.OutputDirectory}");
+            _log.LogDebug($"Ignore Files Root Directory:{_arguments.IgnoreFilesRootDirectory}{Environment.NewLine}Traits Root Directory:{_arguments.TraitsRootDirectory}");
+            _log.LogDebug($"MTouch Args:{_arguments.MtouchExtraArgs}{Environment.NewLine}Template Type:{Enum.GetName(typeof(TemplateType), _arguments.SelectedTemplateType)}");
 
             return Task.FromResult(0);
         }

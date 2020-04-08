@@ -2,10 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.DotNet.XHarness.CLI.Common;
-using Mono.Options;
-using System;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.CLI.Common;
+using Microsoft.Extensions.Logging;
+using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.iOS
 {
@@ -33,12 +33,12 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
         protected override Task<int> InvokeInternal()
         {
-            Console.WriteLine($"iOS Test command called:");
-            Console.WriteLine($"  App: {_arguments.AppPackagePath}");
-            Console.WriteLine($"  Targets: {string.Join(',', _arguments.Targets)}");
-            Console.WriteLine($"  Output Directory: {_arguments.OutputDirectory}");
-            Console.WriteLine($"  Working Directory: {_arguments.WorkingDirectory}");
-            Console.WriteLine($"  Timeout: {_arguments.Timeout.TotalSeconds}s");
+            _log.LogInformation($"iOS Test command called:");
+            _log.LogInformation($"  App: {_arguments.AppPackagePath}");
+            _log.LogInformation($"  Targets: {string.Join(',', _arguments.Targets)}");
+            _log.LogInformation($"  Output Directory: {_arguments.OutputDirectory}");
+            _log.LogInformation($"  Working Directory: {_arguments.WorkingDirectory}");
+            _log.LogInformation($"  Timeout: {_arguments.Timeout.TotalSeconds}s");
 
             return Task.FromResult(0);
         }

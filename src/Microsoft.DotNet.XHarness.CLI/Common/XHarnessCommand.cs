@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Common
@@ -15,39 +16,76 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
 
         protected bool ShowHelp = false;
 
+        protected ILogger _log;
+        protected ILoggerFactory _logFactory;
+        protected string _name;
+
         protected XHarnessCommand(string name) : base(name)
         {
+            _name = name;
         }
 
         public override sealed int Invoke(IEnumerable<string> arguments)
         {
-            var extra = Options.Parse(arguments);
-
-            if (ShowHelp)
+            try
             {
-                Options.WriteOptionDescriptions(Console.Out);
-                return 0;
-            }
+                var extra = Options.Parse(arguments);
 
-            if (extra.Count > 0)
-            {
-                Console.Error.WriteLine($"Unknown arguments{string.Join(" ", extra)}");
-                Options.WriteOptionDescriptions(Console.Out);
-                return 1;
-            }
-
-            if (!Arguments.TryValidate(out var errors))
-            {
-                Console.Error.WriteLine("Invalid arguments:");
-                foreach (string error in errors)
+                if (Arguments != null)
                 {
-                    Console.Error.WriteLine("  - " + error);
+                    InitializeLog(Arguments.Verbosity, _name);
+                }
+                else
+                {
+                    InitializeLog(LogLevel.Information, _name);
                 }
 
-                return 1;
-            }
+                if (ShowHelp)
+                {
+                    Options.WriteOptionDescriptions(Console.Out);
+                    return 0;
+                }
 
-            return InvokeInternal().GetAwaiter().GetResult();
+                if (extra.Count > 0)
+                {
+                    _log.LogError($"Unknown arguments{string.Join(" ", extra)}");
+                    Options.WriteOptionDescriptions(Console.Out);
+                    return 1;
+                }
+
+                if (Arguments != null && Arguments.TryValidate(out var errors) != true)
+                {
+                    _log.LogError("Invalid arguments:");
+                    foreach (string error in errors)
+                    {
+                        _log.LogError("  - " + error);
+                    }
+
+                    return 1;
+                }
+
+                return InvokeInternal().GetAwaiter().GetResult();
+            }
+            finally
+            {
+                // Needed for quick execution to flush out all output.
+                _logFactory.Dispose();
+            }
+        }
+
+        private void InitializeLog(LogLevel verbosity, string name)
+        {
+            _logFactory = LoggerFactory.Create(builder =>
+            {
+                builder
+                    .AddConsole()
+                    .AddFilter(
+                    (level) =>
+                    {
+                        return level >= verbosity;
+                    });
+            });
+            _log = _logFactory.CreateLogger(name);
         }
 
         protected abstract Task<int> InvokeInternal();

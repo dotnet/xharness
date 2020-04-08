@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Common
 {
@@ -32,6 +33,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
         public string AppPackageName { get; set; }
         public string OutputDirectory { get; set; }
         public string WorkingDirectory { get; set; }
+        public LogLevel Verbosity { get; set; }
 
         public virtual bool TryValidate([NotNullWhen(true)] out IEnumerable<string> errors)
         {

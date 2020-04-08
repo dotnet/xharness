@@ -2,46 +2,46 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Mono.Options;
 using System;
-using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Android;
+using Microsoft.DotNet.XHarness.CLI.Common;
+using Microsoft.Extensions.Logging;
+using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Android
 {
-    public class AndroidGetStateCommand : Command
+    internal class AndroidGetStateCommand : GetStateCommand
     {
-        private bool _showHelp = false;
-
-        public AndroidGetStateCommand() : base("state")
+        public AndroidGetStateCommand()
         {
             Options = new OptionSet() {
                 "usage: android state",
                 "",
-                "Print information about the current machine, such as host machine info, path/version of ADB.exe used and device status",
-                { "help|h", "Show this message", v => _showHelp = v != null }
+                "Print information about the current machine, such as host machine info and device status"
             };
         }
 
-        public override int Invoke(IEnumerable<string> arguments)
+        protected override Task<int> InvokeInternal()
         {
-            // Deal with unknown options and print nicely 
-            var extra = Options.Parse(arguments);
-            if (_showHelp)
+            _log.LogInformation("Getting state of ADB and attached Android device(s)");
+            try
             {
-                Options.WriteOptionDescriptions(Console.Out);
-                return 1;
+                var runner = new AdbRunner(_log);
+                string state = runner.GetAdbState();
+                if (string.IsNullOrEmpty(state))
+                {
+                    state = "No device attached";
+                }
+                _log.LogInformation($"ADB Version info:{Environment.NewLine}{runner.GetAdbVersion()}");
+                _log.LogInformation($"ADB State ('device' if physically attached):{Environment.NewLine}{state}");
+                return Task.FromResult((int)ExitCodes.SUCCESS);
             }
-
-            if (extra.Count > 0)
+            catch (Exception toLog)
             {
-                Console.WriteLine($"Unknown arguments: {string.Join(" ", extra)}");
-                Options.WriteOptionDescriptions(Console.Out);
-                return 2;
+                _log.LogCritical(toLog, $"Error: {toLog.Message}");
+                return Task.FromResult((int)ExitCodes.GENERAL_FAILURE);
             }
-
-            Console.WriteLine("Android state command called (no args supported)");
-
-            return 0;
         }
     }
 }
