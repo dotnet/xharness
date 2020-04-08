@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public AdbRunner(ILogger log, string adbExePath = ".\\adb.exe")
         {
-            _log = log;
+            _log = log ?? throw new ArgumentNullException(nameof(log));
 
             // We need to find ADB.exe somewhere
             string environmentPath = Environment.GetEnvironmentVariable(AdbEnvironmentVariableName);
