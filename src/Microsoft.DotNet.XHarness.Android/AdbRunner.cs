@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 throw new FileNotFoundException($"Could not find {apkPath}");
             }
-            var result = RunAdbCommand($"install {apkPath}");
+            var result = RunAdbCommand($"install \"{apkPath}\"");
             if (result.ExitCode != 0)
             {
                 _log.LogError($"Error:{Environment.NewLine}{FormatProcessOutputs(result)}");
@@ -115,13 +115,18 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public int UninstallApk(string apkName)
         {
+            if (string.IsNullOrEmpty(apkName))
+            {
+                throw new ArgumentNullException(nameof(apkName));
+            }
+
             _log.LogInformation($"Attempting to remove apk '{apkName}': ");
             var result = RunAdbCommand($"uninstall {apkName}");
-            if (result.ExitCode == 0)
+            if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
             {
                 _log.LogInformation($"Successfully uninstalled {apkName}.");
             }
-            else if (result.ExitCode == 255)
+            else if (result.ExitCode == (int)AdbExitCodes.ADB_UNINSTALL_APP_NOT_ON_DEVICE)
             {
                 _log.LogInformation($"APK '{apkName}' not on device.");
             }
@@ -137,7 +142,7 @@ namespace Microsoft.DotNet.XHarness.Android
         {
             _log.LogInformation($"Killing all running processes for '{apkName}': ");
             var result = RunAdbCommand($"shell am kill --user all {apkName}");
-            if (result.ExitCode != 0)
+            if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
             {
                 _log.LogError($"Error:{Environment.NewLine}{FormatProcessOutputs(result)}");
             }
@@ -156,7 +161,7 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 var result = RunAdbCommand($"shell pm grant {apkName} {permission}");
 
-                if (result.ExitCode != 0)
+                if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
                 {
                     _log.LogError($"Failed granting '{permission}': Exit code: {result.ExitCode}{Environment.NewLine}{result.StandardOutput}; execution may fail as a result.");
                 }
@@ -170,6 +175,11 @@ namespace Microsoft.DotNet.XHarness.Android
         // Assumes the directory is empty so any files present after the pull are new.
         public List<string> PullFiles(string devicePath, string localPath)
         {
+            if (string.IsNullOrEmpty(localPath))
+            {
+                throw new ArgumentNullException(nameof(localPath));
+            }
+
             string tempFolder = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             try
             {
@@ -180,7 +190,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
                 var result = RunAdbCommand($"pull {devicePath} {tempFolder}");
 
-                if (result.ExitCode != 0)
+                if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
                 {
                     _log.LogError($"ERROR: {FormatProcessOutputs(result)}");
                 }
@@ -218,6 +228,15 @@ namespace Microsoft.DotNet.XHarness.Android
         {
             _log.LogInformation($"Pushing contents of '{localDirectory}' to '{devicePath}'");
 
+            if (string.IsNullOrEmpty(localDirectory))
+            {
+                throw new ArgumentNullException(nameof(localDirectory));
+            }
+            if (!Directory.Exists(localDirectory))
+            {
+                throw new DirectoryNotFoundException($"{localDirectory} does not exist");
+            }
+
             // For now, we'll hard-code the assumption that files go into /sdcard/Documents.
             // This functionality may not end up getting used, so don't need to polish it until we're sure it is.
             if (removeIfPresent && devicePath.StartsWith("/sdcard/Documents/", StringComparison.OrdinalIgnoreCase))
@@ -229,9 +248,9 @@ namespace Microsoft.DotNet.XHarness.Android
             foreach (string filePath in filesToCopy)
             {
                 string relativeFilePath = Path.GetRelativePath(localDirectory, filePath).Replace("\\", "/");
-                var result = RunAdbCommand($"push {filePath} {devicePath}{relativeFilePath}");
+                var result = RunAdbCommand($"push \"{filePath}\" {devicePath}{relativeFilePath}");
 
-                if (result.ExitCode != 0)
+                if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
                 {
                     Exception theException = new Exception($"ERROR: {FormatProcessOutputs(result)}");
                     _log.LogError(theException, "Failure pushing files");
@@ -275,11 +294,13 @@ namespace Microsoft.DotNet.XHarness.Android
                 command = $"{command}/{instrumentationClassName}";
             }
             _log.LogDebug($"Raw command: '{command}'");
-            DateTime started = DateTime.Now;
-            var result = RunAdbCommand(command);
-            DateTime returned = DateTime.Now;
 
-            _log.LogInformation($"Running instrumentation class {displayName} took {(returned - started).TotalSeconds} seconds");
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            var result = RunAdbCommand(command);
+            stopWatch.Stop();
+
+            _log.LogInformation($"Running instrumentation class {displayName} took {stopWatch.Elapsed.TotalSeconds} seconds");
             _log.LogDebug(FormatProcessOutputs(result));
             return result;
         }
@@ -312,7 +333,7 @@ namespace Microsoft.DotNet.XHarness.Android
                 throw new FileNotFoundException($"Provided path for adb.exe was not valid ('{_absoluteAdbExePath}')");
             }
 
-            _log.LogDebug($"Executing: '{_absoluteAdbExePath} {command}'");
+            _log.LogDebug($"Executing command: '{_absoluteAdbExePath} {command}'");
 
             ProcessStartInfo processStartInfo = new ProcessStartInfo
             {
