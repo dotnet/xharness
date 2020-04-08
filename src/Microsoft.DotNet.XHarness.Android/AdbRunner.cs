@@ -265,10 +265,9 @@ namespace Microsoft.DotNet.XHarness.Android
             return RunApkInstrumentation(apkName, "", new Dictionary<string, string>());
         }
 
-        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, Dictionary<string, string> args)
-        {
-            return RunApkInstrumentation(apkName, "", args);
-        }
+        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, Dictionary<string, string> args) =>
+            RunApkInstrumentation(apkName, "", args);
+
 
         public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, string instrumentationClassName, Dictionary<string, string> args)
         {
