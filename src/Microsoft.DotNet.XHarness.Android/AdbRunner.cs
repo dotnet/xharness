@@ -15,6 +15,8 @@ namespace Microsoft.DotNet.XHarness.Android
     {
         #region Constructor and state variables
 
+
+
         private const string AdbEnvironmentVariableName = "ADB_EXE_PATH";
 
         private readonly string _absoluteAdbExePath;
@@ -260,16 +262,16 @@ namespace Microsoft.DotNet.XHarness.Android
             _log.LogDebug($"Copied {filesToCopy.Length} files");
         }
 
-        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName)
+        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, TimeSpan timeout)
         {
-            return RunApkInstrumentation(apkName, "", new Dictionary<string, string>());
+            return RunApkInstrumentation(apkName, "", new Dictionary<string, string>(), timeout);
         }
 
-        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, Dictionary<string, string> args) =>
-            RunApkInstrumentation(apkName, "", args);
+        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, Dictionary<string, string> args, TimeSpan timeout) =>
+            RunApkInstrumentation(apkName, "", args, timeout);
 
 
-        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, string instrumentationClassName, Dictionary<string, string> args)
+        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, string instrumentationClassName, Dictionary<string, string> args, TimeSpan timeout)
         {
             string displayName = string.IsNullOrEmpty(instrumentationClassName) ? "{default}" : instrumentationClassName;
 
@@ -296,10 +298,17 @@ namespace Microsoft.DotNet.XHarness.Android
 
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
-            var result = RunAdbCommand(command);
+            var result = RunAdbCommand(command, timeout);
             stopWatch.Stop();
 
-            _log.LogInformation($"Running instrumentation class {displayName} took {stopWatch.Elapsed.TotalSeconds} seconds");
+            if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
+            {
+                _log.LogInformation($"Running instrumentation class {displayName} timed out after waiting {stopWatch.Elapsed.TotalSeconds} seconds");
+            }
+            else
+            { 
+                _log.LogInformation($"Running instrumentation class {displayName} took {stopWatch.Elapsed.TotalSeconds} seconds");
+            }
             _log.LogDebug(FormatProcessOutputs(result));
             return result;
         }
@@ -379,7 +388,8 @@ namespace Microsoft.DotNet.XHarness.Android
             // (int.MaxValue ms is about 24 days).  Large values are effectively timeouts for the outer harness
             if (!p.WaitForExit((int)Math.Min(timeOut.TotalMilliseconds, int.MaxValue)))
             {
-                _log.LogError("Waiting for command timed out! Execution may be compromised.");
+                _log.LogError("Waiting for command timed out: execution may be compromised.");
+                return (standardOut.ToString(), standardErr.ToString(), (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT);
             }
 
             return (standardOut.ToString(), standardErr.ToString(), p.ExitCode);

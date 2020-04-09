@@ -9,8 +9,9 @@ namespace Microsoft.DotNet.XHarness.Android
     /// </summary>
     public enum AdbExitCodes
     {
-        ADB_UNINSTALL_APP_NOT_ON_DEVICE = 255,
-        INSTRUMENTATION_SUCCESS = -1,
         SUCCESS = 0,
+        INSTRUMENTATION_SUCCESS = -1,
+        INSTRUMENTATION_TIMEOUT = -2,
+        ADB_UNINSTALL_APP_NOT_ON_DEVICE = 255,
     }
 }

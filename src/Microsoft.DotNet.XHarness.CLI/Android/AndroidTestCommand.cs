@@ -38,7 +38,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
                         }
                     }
                 },
-                { "instrumentation|i=", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.",  v => _arguments.InstrumentationName = v},
+                { "device-out-folder=|dev-out=", "If specified, copy this folder recursively off the device to the path specified by the output directory",  v => _arguments.DeviceOutputFolder = v},
+                { "instrumentation:|i:", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.",  v => _arguments.InstrumentationName = v},
+                { "package-name=|p=", "Package name contained within the supplied APK",  v => _arguments.PackageName = v},
             };
 
             foreach (var option in CommonOptions)
@@ -59,7 +61,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
                 return Task.FromResult((int)ExitCodes.PACKAGE_NOT_FOUND);
             }
             var runner = new AdbRunner(_log);
-            string apkName = Path.GetFileNameWithoutExtension(_arguments.AppPackagePath);
+
+            // Package Name is not guaranteed to match file name, so it needs to be mandatory.
+            string apkPackageName = _arguments.PackageName;
 
             try
             {
@@ -73,32 +77,36 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
 
                     // If anything changed about the app, Install will fail; uninstall it first.
                     // (we'll ignore if it's not present)
-                    runner.UninstallApk(apkName);
+                    runner.UninstallApk(apkPackageName);
                     if (runner.InstallApk(_arguments.AppPackagePath) != 0)
                     {
                         _log.LogCritical("Install failure: Test command cannot continue");
                         return Task.FromResult((int)ExitCodes.PACKAGE_INSTALLATION_FAILURE);
                     }
-                    runner.KillApk(apkName);
+                    runner.KillApk(apkPackageName);
 
                     // App needs to be able to read and write the storage folders we use for IO
-                    runner.GrantPermissions(apkName,
+                    // If they eventually need more we can either augment this list or make it specify-able from the cmd line.
+                    runner.GrantPermissions(apkPackageName,
                         new string[] {"android.permission.READ_EXTERNAL_STORAGE",
                                       "android.permission.WRITE_EXTERNAL_STORAGE"});
                 }
 
                 // No class name = default Instrumentation
-                runner.RunApkInstrumentation(apkName, _arguments.InstrumentationName, _arguments.InstrumentationArguments);
+                runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
 
                 using (_log.BeginScope("Post-test copy and cleanup"))
                 {
-                    var logs = runner.PullFiles("/sdcard/Documents/helix-results", _arguments.OutputDirectory);
-                    foreach (string log in logs)
+                    if (!string.IsNullOrEmpty(_arguments.DeviceOutputFolder))
                     {
-                        _log.LogDebug($"Detected output file: {log}");
+                        var logs = runner.PullFiles(_arguments.DeviceOutputFolder, _arguments.OutputDirectory);
+                        foreach (string log in logs)
+                        {
+                            _log.LogDebug($"Detected output file: {log}");
+                        }
                     }
-                    runner.DumpAdbLog(Path.Combine(_arguments.OutputDirectory, "adb-logcat.log"));
-                    runner.UninstallApk(apkName);
+                    runner.DumpAdbLog(Path.Combine(_arguments.OutputDirectory, $"adb-logcat-{_arguments.PackageName}.log"));
+                    runner.UninstallApk(apkPackageName);
                 }
 
                 return Task.FromResult((int)ExitCodes.SUCCESS);
