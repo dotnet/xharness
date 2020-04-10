@@ -12,9 +12,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1018BF4C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{713ACDCF-301D-4C96-8B75-5BF2A35A326D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.CLI", "src\Microsoft.DotNet.XHarness.CLI\Microsoft.DotNet.XHarness.CLI.csproj", "{9DEC6CD5-BB88-4C69-BAC1-C8E91A4196EA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.CLI", "src\Microsoft.DotNet.XHarness.CLI\Microsoft.DotNet.XHarness.CLI.csproj", "{FDA1448B-B92F-4AD8-A741-ABAEDF935AF7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.Android", "src\Microsoft.DotNet.XHarness.Android\Microsoft.DotNet.XHarness.Android.csproj", "{42125E73-4394-4008-9130-5347F65ADA0B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Android", "src\Microsoft.DotNet.XHarness.Android\Microsoft.DotNet.XHarness.Android.csproj", "{C5C7BF1E-3CD6-4E5B-8EBB-CE0C103C9640}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Tests.Runners", "src\Microsoft.DotNet.XHarness.Tests.Runners\Microsoft.DotNet.XHarness.Tests.Runners.csproj", "{A9DCDA24-01E9-4467-BCBA-D5B78727D367}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,21 +24,26 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9DEC6CD5-BB88-4C69-BAC1-C8E91A4196EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9DEC6CD5-BB88-4C69-BAC1-C8E91A4196EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9DEC6CD5-BB88-4C69-BAC1-C8E91A4196EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9DEC6CD5-BB88-4C69-BAC1-C8E91A4196EA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{42125E73-4394-4008-9130-5347F65ADA0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{42125E73-4394-4008-9130-5347F65ADA0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{42125E73-4394-4008-9130-5347F65ADA0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{42125E73-4394-4008-9130-5347F65ADA0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDA1448B-B92F-4AD8-A741-ABAEDF935AF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDA1448B-B92F-4AD8-A741-ABAEDF935AF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDA1448B-B92F-4AD8-A741-ABAEDF935AF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDA1448B-B92F-4AD8-A741-ABAEDF935AF7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5C7BF1E-3CD6-4E5B-8EBB-CE0C103C9640}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5C7BF1E-3CD6-4E5B-8EBB-CE0C103C9640}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5C7BF1E-3CD6-4E5B-8EBB-CE0C103C9640}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5C7BF1E-3CD6-4E5B-8EBB-CE0C103C9640}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9DCDA24-01E9-4467-BCBA-D5B78727D367}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9DCDA24-01E9-4467-BCBA-D5B78727D367}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9DCDA24-01E9-4467-BCBA-D5B78727D367}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9DCDA24-01E9-4467-BCBA-D5B78727D367}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{9DEC6CD5-BB88-4C69-BAC1-C8E91A4196EA} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
-		{42125E73-4394-4008-9130-5347F65ADA0B} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
+		{FDA1448B-B92F-4AD8-A741-ABAEDF935AF7} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
+		{C5C7BF1E-3CD6-4E5B-8EBB-CE0C103C9640} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
+		{A9DCDA24-01E9-4467-BCBA-D5B78727D367} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {56D5F4DA-F710-4026-8F49-4A903BCAA9B5}
