@@ -37,9 +37,6 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
             string line;
             while ((line = await textReader.ReadLineAsync()) != null)
             {
-                // we have to make sure of several things, first, lets
-                // remove any char after the first # which would mean
-                // we have comments:
                 line = ParseLine(line);
                 if (string.IsNullOrEmpty(line))
                     continue;
