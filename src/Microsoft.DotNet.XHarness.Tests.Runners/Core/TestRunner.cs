@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,21 +21,85 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
             xUnit,
         }
 
+        /// <summary>
+        /// Number of inconclusive tests.
+        /// </summary>
         public long InconclusiveTests { get; protected set; } = 0;
+
+        /// <summary>
+        /// Number of failed tests.
+        /// </summary>
         public long FailedTests { get; protected set; } = 0;
+
+        /// <summary>
+        /// Number of successful tests.
+        /// </summary>
         public long PassedTests { get; protected set; } = 0;
+
+        /// <summary>
+        /// Number of skipped tests.
+        /// </summary>
         public long SkippedTests { get; protected set; } = 0;
+
+        /// <summary>
+        /// Number of executed tests, which can be the same of lower thant the
+        /// number of total tests.
+        /// </summary>
         public long ExecutedTests { get; protected set; } = 0;
+
+        /// <summary>
+        /// Total number of tests. This icludes, executed, ignored, filtered 
+		/// and skipped tests.
+        /// </summary>
         public long TotalTests { get; protected set; } = 0;
+
+        /// <summary>
+        /// Number of tests that were not executed because they matched a
+		/// filter.
+        /// </summary>
         public long FilteredTests { get; protected set; } = 0;
+
+        /// <summary>
+        /// Specify if the runner should execute tests in parallel. Default is
+        /// false.
+        /// </summary>
         public bool RunInParallel { get; set; } = false;
+
+        /// <summary>
+        /// Root directory of the tests.
+        /// </summary>
         public string TestsRootDirectory { get; set; }
+
+        /// <summary>
+        /// Specify if all the tests found in the assemblies should be ran.
+        /// Default is true.
+        /// </summary>
         public bool RunAllTestsByDefault { get; set; } = true;
+
+        /// <summary>
+        /// Specify if the runner should log those tests that have been excluded
+        /// due to a filter. Default is false. 
+        /// </summary>
         public bool LogExcludedTests { get; set; }
+
+        /// <summary>
+        /// TextWriter that will be used to write the results of the test run.
+        /// </summary>
         public TextWriter Writer { get; set; }
+
+        /// <summary>
+        /// List that contains all the failured that occured in the test run.
+        /// </summary>
         public List<TestFailureInfo> FailureInfos { get; } = new List<TestFailureInfo>();
 
+        /// <summary>
+        /// Logging object.
+        /// </summary>
         protected LogWriter Logger { get; }
+
+        /// <summary>
+        /// Name of the file that will be used to write the results.
+        /// </summary>
         protected abstract string ResultsFileName { get; set; }
 
         protected TestRunner(LogWriter logger)

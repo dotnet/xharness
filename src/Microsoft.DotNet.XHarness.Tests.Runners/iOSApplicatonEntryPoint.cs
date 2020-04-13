@@ -1,7 +1,11 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Tests.Runners.xUnit;
+using Microsoft.DotNet.XHarness.Tests.Runners.Xunit;
 
 namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 {
@@ -34,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
             switch (TestRunner)
             {
                 case TestRunnerType.NUnit:
-                    throw new NotImplementedException("The NUnit test runner has not yet been implemened.");
+                    throw new NotImplementedException();
                 default:
                     runner = new XUnitTestRunner(logger)
                     {
@@ -45,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 
             if (!string.IsNullOrEmpty(IgnoreFilesDirectory))
             {
-                var categories = await IgnoreFileParser.ParseTraitsContentFileAsync(IgnoreFilesDirectory, TestRunner == TestRunnerType.xUnit);
+                var categories = await IgnoreFileParser.ParseTraitsContentFileAsync(IgnoreFilesDirectory, TestRunner == TestRunnerType.Xunit);
                 // add category filters if they have been added
                 runner.SkipCategories(categories);
 

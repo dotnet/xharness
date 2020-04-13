@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Tests.Runners.Core;
 
@@ -10,18 +14,18 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
     public enum TestRunnerType
     {
         NUnit,
-        xUnit,
+        Xunit,
     }
 
     /// <summary>
     /// Abstract class that represents the entry point of the test application.
     /// 
-    /// Subclasses most provide the minimun implementation to ensure that:
+    /// Subclasses must provide the minimun implementation to ensure that:
     ///
     /// Device: We do have the required device information for the logger.
-    /// Assemblies: Provide a list of the assembly information to be ran.
+    /// Assemblies: Provide a list of the assembly information to run.
     ///     assemblies can be loaded from disk or from memory, is up to the 
-    ///     implementator.
+    ///     implementor.
     /// </summary>
     public abstract class ApplicationEntryPoint
     {
@@ -34,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         protected abstract IDevice Device { get; }
 
         /// <summary>
-        /// Returns the IENumerable with the asseblies that contain the tests
+        /// Returns the IEnumerable with the asseblies that contain the tests
         /// to be ran.
         /// </summary>
         /// <returns></returns>

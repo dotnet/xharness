@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <Folder Include="Core\" />
-    <Folder Include="xUnit\" />
+    <Folder Include="Xunit\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="xunit.analyzers" Version="0.10.0" />
@@ -22,11 +22,11 @@
     <None Remove="xUnit\NUnitXml.xslt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="xUnit\NUnit3Xml.xslt">
+    <EmbeddedResource Include="Xunit\NUnit3Xml.xslt">
       <XlfSourceFormat></XlfSourceFormat>
       <XlfOutputItem></XlfOutputItem>
     </EmbeddedResource>
-    <EmbeddedResource Include="xUnit\NUnitXml.xslt">
+    <EmbeddedResource Include="Xunit\NUnitXml.xslt">
       <XlfSourceFormat></XlfSourceFormat>
       <XlfOutputItem></XlfOutputItem>
     </EmbeddedResource>

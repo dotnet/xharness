@@ -1,4 +1,8 @@
-﻿// this is an adaptation of NUnitLite's TcpWriter.cs with an additional 
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+// this is an adaptation of NUnitLite's TcpWriter.cs with a additional 
 // overrides and with network-activity UI enhancement
 // This code is a small modification of 
 // https://github.com/spouliot/Touch.Unit/blob/master/NUnitLite/TouchRunner/TcpTextWriter.cs
