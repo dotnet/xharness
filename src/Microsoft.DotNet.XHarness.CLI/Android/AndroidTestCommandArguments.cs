@@ -11,21 +11,36 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
     internal class AndroidTestCommandArguments : TestCommandArguments
     {
         /// <summary>
-        /// If specified, attempt to run instrumentation with this name instead of the default for the supplied APK
+        /// If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.
+        /// If a given package has multiple instrumentations, failing to specify this may cause execution failure.
         /// </summary>
         public string InstrumentationName { get; set; }
+
+        /// <summary>
+        /// If specified, attempt to run instrumentation with this name instead of the default for the supplied APK
+        /// </summary>
+        public string PackageName { get; set; }
+
+        /// <summary>
+        /// Folder to copy off for output of executing the specified APK
+        /// </summary>
+        public string DeviceOutputFolder { get; set; }
 
         public Dictionary<string, string> InstrumentationArguments { get; set; } = new Dictionary<string, string>();
 
         public override bool TryValidate([NotNullWhen(true)] out IEnumerable<string> errors)
         {
-            if (!base.TryValidate(out errors))
-            {
-                return false;
-            }
+            bool baseResult = base.TryValidate(out var baseErrors);
+            
+            List<string> allErrors = new List<string>(baseErrors);
 
-            // TODO: Android specific validation checks
-            return true;
+            if (string.IsNullOrEmpty(DeviceOutputFolder))
+            {
+                allErrors.Add("Must specify a value for device output folder");
+            }
+            errors = allErrors;
+
+            return allErrors.Count == 0;
         }
 
         internal override IEnumerable<string> GetAvailableTargets()
