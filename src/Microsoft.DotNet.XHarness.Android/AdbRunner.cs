@@ -187,7 +187,7 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 Directory.CreateDirectory(tempFolder);
                 Directory.CreateDirectory(localPath);
-                _log.LogInformation($"Attempting to pull {devicePath} to {localPath}");
+                _log.LogInformation($"Attempting to pull contents of {devicePath} to {localPath}");
                 List<string> copiedFiles = new List<string>();
 
                 var result = RunAdbCommand($"pull {devicePath} {tempFolder}");
