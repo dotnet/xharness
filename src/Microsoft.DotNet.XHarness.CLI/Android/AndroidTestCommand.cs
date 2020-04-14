@@ -84,12 +84,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
                         return Task.FromResult((int)ExitCodes.PACKAGE_INSTALLATION_FAILURE);
                     }
                     runner.KillApk(apkPackageName);
-
-                    // App needs to be able to read and write the storage folders we use for IO
-                    // If they eventually need more we can either augment this list or make it specify-able from the cmd line.
-                    runner.GrantPermissions(apkPackageName,
-                        new string[] {"android.permission.READ_EXTERNAL_STORAGE",
-                                      "android.permission.WRITE_EXTERNAL_STORAGE"});
                 }
 
                 // No class name = default Instrumentation
