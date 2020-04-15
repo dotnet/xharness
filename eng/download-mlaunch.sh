@@ -16,14 +16,25 @@ scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
 . "$scriptroot/common/tools.sh"
 
-# Get the xamarin/macios-binaries revision
-version_file="$repo_root/mlaunch.version"
-commit=`grep -E '^[a-zA-Z0-9]+$' "$version_file"`
+commit=''
+
+while (($# > 0)); do
+  lowerI="$(echo $1 | awk '{print tolower($0)}')"
+  case $lowerI in
+    --commit)
+      shift
+      commit=$1
+      ;;
+  esac
+  shift
+done
 
 if [[ -z $commit ]]; then
-  echo "Please specify a git commit ID of the xamarin/macios-binaries repository in $version_file"
+  echo "Please specify a git commit ID of the xamarin/macios-binaries repository using the --commit option" 1>&2
   exit 1
 fi
+
+echo "mlaunch revision to be installed set to $commit"
 
 target_dir="$artifacts_dir/mlaunch"
 tag_file="$target_dir/.tag-$commit"

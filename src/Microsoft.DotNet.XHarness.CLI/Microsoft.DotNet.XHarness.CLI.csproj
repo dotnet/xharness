@@ -1,16 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>xharness</ToolCommandName>
+    <!-- Mono.Options is apparently not strong-name signed -->
+    <NoWarn>CS8002;</NoWarn>
+
+    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
+    <IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
+    <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
+
+    <!-- This is a git revision of the xamarin/macios-binaries repo where we get the mlaunch tool from
+         If you change the version, please run /eng/download-mlaunch.sh to get this version into your environment -->
+    <MlaunchVersion>3fbdcdb97459ca2c699d47e33028a106b95a7f1f</MlaunchVersion>
+
     <!-- When updating, avoid using 'latest' url as this can make the same commit build differently on different days -->
     <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-windows.zip</WindowsAndroidSdkUrl>
     <WindowsAndroidSdkFileName>windows-android-platform-tools.zip</WindowsAndroidSdkFileName>
-  
+
     <!-- TODO: Figure out minimal set of binaries for linux, then copy them.  Until then this is unsued. -->
     <LinuxAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-linux.zip</LinuxAndroidSdkUrl>
     <LinuxAndroidSdkFileName>linux-android-platform-tools.zip</LinuxAndroidSdkFileName>
   </PropertyGroup>
 
-  <Target Name="DownloadAndroidSdks" BeforeTargets="Build" >
+  <Target Name="DownloadAndroidSdks" BeforeTargets="Build">
     <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" />
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
     <ItemGroup>
@@ -21,15 +37,9 @@
     </ItemGroup>
   </Target>
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <IsPackable>true</IsPackable>
-    <PackAsTool>true</PackAsTool>
-    <ToolCommandName>xharness</ToolCommandName>
-    <!-- Mono.Options is apparently not strong-name signed -->
-    <NoWarn>CS8002;</NoWarn>
-  </PropertyGroup>
+  <Target Name="DownloadMlaunch" AfterTargets="Build" Condition="'$(IsWindows)' != 'true'">
+    <Exec Command="../../eng/download-mlaunch.sh --commit $(MlaunchVersion)" />
+  </Target>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>$(NoWarn);1701;1702;1705;1591;NU5105</NoWarn>

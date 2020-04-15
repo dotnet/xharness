@@ -1,3 +1,0 @@
-# This is a git revision of the xamarin/macios-binaries repo where we get the mlaunch tool from
-# If you change the version, please run /eng/install-mlaunch.sh to get a new installation
-3fbdcdb97459ca2c699d47e33028a106b95a7f1f
