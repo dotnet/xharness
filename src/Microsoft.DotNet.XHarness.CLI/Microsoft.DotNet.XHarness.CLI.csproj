@@ -37,13 +37,14 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="DownloadMlaunch" BeforeTargets="Build" Condition="'$(IsWindows)' != 'true'">
-    <Exec Command="../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target-dir $(IntermediateOutputPath)/mlaunch" />
+  <Target Name="DownloadMlaunch" BeforeTargets="Build;Pack">
+    <Exec Command="../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target-dir $(IntermediateOutputPath)/mlaunch" Condition="'$(IsWindows)' != 'true'" />
  
     <ItemGroup>
-      <MlaunchFiles Include="$(IntermediateOutputPath)/mlaunch/**/*" />
-      <Content Include="@(MlaunchFiles)">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Content Include="$(IntermediateOutputPath)/mlaunch/**/*.*">
+        <Pack>true</Pack>
+        <PackagePath>content/mlaunch</PackagePath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
   </Target>
