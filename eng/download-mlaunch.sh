@@ -17,6 +17,7 @@ scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 . "$scriptroot/common/tools.sh"
 
 commit=''
+target_dir="$artifacts_dir/mlaunch"
 
 while (($# > 0)); do
   lowerI="$(echo $1 | awk '{print tolower($0)}')"
@@ -24,6 +25,11 @@ while (($# > 0)); do
     --commit)
       shift
       commit=$1
+      ;;
+
+    --target-dir)
+      shift
+      target_dir=$1
       ;;
   esac
   shift
@@ -34,13 +40,12 @@ if [[ -z $commit ]]; then
   exit 1
 fi
 
-echo "mlaunch revision to be installed set to $commit"
+echo "mlaunch revision $commit will be installed into $target_dir"
 
-target_dir="$artifacts_dir/mlaunch"
 tag_file="$target_dir/.tag-$commit"
 
 if [ -f "$tag_file" ]; then
-  echo "mlaunch version $commit is already installed"
+  echo "mlaunch is already installed"
   exit 0
 fi
 
@@ -62,6 +67,6 @@ git checkout FETCH_HEAD
 mv -v "$binaries_repo/mlaunch" "$target_dir"
 
 # Tag the version of mlaunch we have
-touch "$target_dir/tag-$commit"
+touch "$tag_file"
 
 echo "Finished installing mlaunch in $target_dir"
