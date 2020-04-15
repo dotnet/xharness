@@ -352,3 +352,6 @@ MigrationBackup/
 # Local installations of .net core
 .dotnet/
 
+# Locally restored packages (when simulating AzDO build)
+.packages/
+

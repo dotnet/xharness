@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.Android
         #region Constructor and state variables
 
         // When packaged as a DotNet CLI tool, this should always be a minimal adb.exe
-        private const string DefaultAdbExePath = @"..\..\..\content\adb.exe";
+        private const string DefaultAdbExePath = @"..\..\..\content\adb\adb.exe";
         private const string AdbEnvironmentVariableName = "ADB_EXE_PATH";
 
         private readonly string _absoluteAdbExePath;
