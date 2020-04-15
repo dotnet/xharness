@@ -10,8 +10,9 @@
     <NoWarn>CS8002;</NoWarn>
   </PropertyGroup>
 
+  <!-- Suppress NU5100 because there are ADB .DLLs we don't reference which we want as 'content' type -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <NoWarn>$(NoWarn);1701;1702;1705;1591;NU5105</NoWarn>
+    <NoWarn>$(NoWarn);1701;1702;1705;1591;NU5105;NU5100</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,4 +23,28 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.XHarness.Android\Microsoft.DotNet.XHarness.Android.csproj" />
   </ItemGroup>
+  
+  <PropertyGroup>
+    <!-- When updating, avoid using 'latest' url as this can make the same commit build differently on different days -->
+    <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-windows.zip</WindowsAndroidSdkUrl>
+    <WindowsAndroidSdkFileName>windows-android-platform-tools.zip</WindowsAndroidSdkFileName>
+  
+    <!-- TODO: Figure out minimal set of binaries for linux, then copy them.  Until then this is unused. -->
+    <LinuxAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-linux.zip</LinuxAndroidSdkUrl>
+    <LinuxAndroidSdkFileName>linux-android-platform-tools.zip</LinuxAndroidSdkFileName>
+  </PropertyGroup>
+
+  <Target Name="DownloadAndroidSdks" BeforeTargets="Build" >
+    <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="True" />
+    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
+    <ItemGroup>
+      <WindowsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
+      <Content Include="@(WindowsAdbFiles)">
+        <Pack>true</Pack>
+        <PackagePath>content/adb</PackagePath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+  </Target>
+  
 </Project>
