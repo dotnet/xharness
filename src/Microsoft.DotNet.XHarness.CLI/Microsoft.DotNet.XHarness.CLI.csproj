@@ -21,5 +21,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.XHarness.Android\Microsoft.DotNet.XHarness.Android.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj" />
   </ItemGroup>
 </Project>
