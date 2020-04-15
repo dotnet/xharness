@@ -28,7 +28,7 @@
     <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-windows.zip</WindowsAndroidSdkUrl>
     <WindowsAndroidSdkFileName>windows-android-platform-tools.zip</WindowsAndroidSdkFileName>
   
-    <!-- TODO: Figure out minimal set of binaries for linux, then copy them.  Until then this is unsued. -->
+    <!-- TODO: Figure out minimal set of binaries for linux, then copy them.  Until then this is unused. -->
     <LinuxAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-linux.zip</LinuxAndroidSdkUrl>
     <LinuxAndroidSdkFileName>linux-android-platform-tools.zip</LinuxAndroidSdkFileName>
   </PropertyGroup>
