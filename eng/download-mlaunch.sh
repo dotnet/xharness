@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+#
+#    Commandlet downloads specific revision of the mlaunch binary from xamarin/macios-binaries repository.
+#    This binary is then bundled with XHarness inside the NuGet.
+#
+#    Revision is cached in a temp dir and re-used for new builds.
+#
+
 set -e
 
 # Get current path
@@ -43,7 +50,7 @@ if [[ -z $commit ]]; then
   exit 1
 fi
 
-echo "mlaunch revision $commit will be downloaded into $target_dir"
+echo "Getting mlaunch revision $commit into $target_dir"
 
 tag_file="$target_dir/.tag-$commit"
 
@@ -53,12 +60,32 @@ if [ -f "$tag_file" ]; then
 fi
 
 binaries_repo="$temp_dir/macios-binaries"
+tag_file_in_repo="$binaries_repo/.tag-$commit"
 
-rm -rf "$binaries_repo"
+# Check if the repo was already checked out
+if [ -d "$binaries_repo" ]; then
+    if [ -f "$tag_file_in_repo" ]; then
+        # Copy mlaunch to the target folder
+        cp -Rv "$binaries_repo/mlaunch" "$target_dir"
+
+        # Tag the version of mlaunch we have
+        touch "$tag_file"
+
+        echo "Finished downloading mlaunch from cache"
+        exit 0
+    fi
+
+    echo "Found cached repository but different version was checked out. Downloading again for $commit..."
+    rm -rf "$binaries_repo"
+fi
+
+echo "Cloning the xamarin-binaries repository. This will take few minutes.."
+
 mkdir -p "$binaries_repo"
 
 # Shallow-clone the xamarin/macios-binaries repo
 cd "$binaries_repo"
+
 git init
 git remote add origin https://github.com/xamarin/macios-binaries.git
 git config core.sparseCheckout true
@@ -66,8 +93,10 @@ echo "mlaunch" >> .git/info/sparse-checkout
 git fetch --depth 1 origin $commit
 git checkout FETCH_HEAD
 
-# Copy mlaunch to the artifacts folder
-mv -v "$binaries_repo/mlaunch" "$target_dir"
+touch "$tag_file_in_repo"
+
+# Copy mlaunch to the target folder
+cp -Rv "$binaries_repo/mlaunch" "$target_dir"
 
 # Tag the version of mlaunch we have
 touch "$tag_file"
