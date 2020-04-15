@@ -39,7 +39,7 @@
 
   <Target Name="DownloadMlaunch" BeforeTargets="Build;Pack">
     <Exec Condition="'$(IsWindows)' != 'true'" Command="../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target-dir $(IntermediateOutputPath)mlaunch" />
-    <Exec Condition="'$(IsWindows)' == 'true'" Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit &apos;$(MlaunchVersion)&apos; -TargetDir &apos;$(IntermediateOutputPath)mlaunch&apos; } &quot;" />
+    <Exec Condition="'$(IsWindows)' == 'true'" Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' } &quot;" />
  
     <ItemGroup>
       <Content Include="$(IntermediateOutputPath)/mlaunch/**/*.*">
