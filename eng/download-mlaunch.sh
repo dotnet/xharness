@@ -31,6 +31,9 @@ while (($# > 0)); do
       shift
       target_dir=$1
       ;;
+    --help)
+      echo "Usage: download-mlaunch.sh --commit 343tvfdf3rfqef2dfv3 --target-dir /where-to-install"
+      exit 0
   esac
   shift
 done
@@ -40,12 +43,12 @@ if [[ -z $commit ]]; then
   exit 1
 fi
 
-echo "mlaunch revision $commit will be installed into $target_dir"
+echo "mlaunch revision $commit will be downloaded into $target_dir"
 
 tag_file="$target_dir/.tag-$commit"
 
 if [ -f "$tag_file" ]; then
-  echo "mlaunch is already installed"
+  echo "mlaunch is already downloaded"
   exit 0
 fi
 
