@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
@@ -53,10 +54,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                     return 1;
                 }
 
-                if (Arguments != null && Arguments.TryValidate(out var errors) != true)
+                var validationErrors = Arguments?.GetValidationErrors();
+
+                if (validationErrors?.Any() ?? false)
                 {
                     _log.LogError("Invalid arguments:");
-                    foreach (string error in errors)
+                    foreach (string error in validationErrors)
                     {
                         _log.LogError("  - " + error);
                     }
