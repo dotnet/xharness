@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         public abstract Task RunAsync();
 
         protected async Task<TestRunner> CreateRunner(LogWriter logger)
-        { 
+        {
             TestRunner runner;
             switch (TestRunner)
             {
@@ -97,6 +97,6 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
                 }
             }
             return runner;
-		}
+        }
     }
 }

@@ -58,8 +58,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
                 if (TestsResultsFinalPath == null)
                     throw new InvalidOperationException("Tests results final path cannot be null.");
                 using (var stream = File.Create(TestsResultsFinalPath))
-                using (var writer = new StreamWriter (stream))
-                { 
+                using (var writer = new StreamWriter(stream))
+                {
                     runner.WriteResultsToFile(writer, jargon);
                     logger.Info($"Xml file was written to {TestsResultsFinalPath}.");
                 }
