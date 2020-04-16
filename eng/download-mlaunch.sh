@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
 #
-#    Commandlet downloads specific revision of the mlaunch binary from xamarin/macios-binaries repository.
-#    This binary is then bundled with XHarness inside the NuGet.
+#   Commandlet downloads specific revision of the mlaunch binary from xamarin/macios-binaries repository.
+#   This binary is then bundled with XHarness inside the NuGet.
 #
-#    Revision is cached in a temp dir and re-used for new builds.
+#   Revision is cached in a temp dir and re-used for new builds.
+#
+#   Usage: ./download-mlaunch --commit 343tvfdf3rfqef2dfv3 --target-dir /where-to-install
 #
 
 set -e
@@ -92,6 +94,11 @@ git config core.sparseCheckout true
 echo "mlaunch" >> .git/info/sparse-checkout
 git fetch --depth 1 origin $commit
 git checkout FETCH_HEAD
+
+# Clean what we don't need
+rm -rf "$binaries_repo/mlaunch/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch.dSYM"
+rm -v $binaries_repo/mlaunch/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.pdb
+rm -v $binaries_repo/mlaunch/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.mdb
 
 touch "$tag_file_in_repo"
 

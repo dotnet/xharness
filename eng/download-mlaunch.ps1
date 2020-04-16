@@ -63,6 +63,11 @@ Set-Content -Path ".git/info/sparse-checkout" -Value "mlaunch"
 git fetch --depth 1 origin $commit
 git checkout FETCH_HEAD
 
+# Clean what we don't need
+Remove-Item -Path (Join-Path $binariesRepo "mlaunch/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch.dSYM") -Recurse -Force -Verbose
+Get-ChildItem -Path (Join-Path $binariesRepo "mlaunch/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.pdb") | ForEach-Object { Remove-Item -Path $_.FullName -Verbose }
+Get-ChildItem -Path (Join-Path $binariesRepo "mlaunch/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.mdb") | ForEach-Object { Remove-Item -Path $_.FullName -Verbose }
+
 New-Item -ItemType File -Path $tagFileInRepo
 
 # Copy mlaunch to the target folder
