@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
@@ -15,14 +16,12 @@ namespace Microsoft.DotNet.XHarness.Android
     {
         #region Constructor and state variables
 
-        // When packaged as a DotNet CLI tool, this should always be a minimal adb.exe
-        private const string DefaultAdbExePath = @"..\..\..\content\adb\adb.exe";
         private const string AdbEnvironmentVariableName = "ADB_EXE_PATH";
 
         private readonly string _absoluteAdbExePath;
         private readonly ILogger _log;
 
-        public AdbRunner(ILogger log, string adbExePath = DefaultAdbExePath)
+        public AdbRunner(ILogger log, string adbExePath = "")
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
 
@@ -33,6 +32,11 @@ namespace Microsoft.DotNet.XHarness.Android
                 _log.LogDebug($"Using {AdbEnvironmentVariableName} environment variable ({environmentPath}) for ADB path.");
                 adbExePath = environmentPath;
             }
+            if (string.IsNullOrEmpty(adbExePath))
+            {
+                adbExePath = GetCliAdbExePath();
+            }
+
             _absoluteAdbExePath = Path.GetFullPath(Environment.ExpandEnvironmentVariables(adbExePath));
             if (!File.Exists(_absoluteAdbExePath))
             {
@@ -44,6 +48,17 @@ namespace Microsoft.DotNet.XHarness.Android
                 _log.LogDebug($"ADBRunner using ADB.exe supplied from {adbExePath}");
                 _log.LogDebug($"Full resolved path:'{_absoluteAdbExePath}'");
             }
+        }
+
+        private static string GetCliAdbExePath()
+        {
+            var currentAssemblyDirectory = Path.GetDirectoryName(typeof(AdbRunner).Assembly.Location);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return Path.Join(currentAssemblyDirectory, @"..\..\..\runtimes\any\native\adb\windows\adb.exe");
+            }
+            // TODO: Figure out a minimum set of linux ADB binaries (or just bring the whole thing if we must)
+            else throw new NotImplementedException("Non-Windows ADB support not added yet");
         }
 
         #endregion
@@ -306,7 +321,7 @@ namespace Microsoft.DotNet.XHarness.Android
                 _log.LogInformation($"Running instrumentation class {displayName} timed out after waiting {stopWatch.Elapsed.TotalSeconds} seconds");
             }
             else
-            { 
+            {
                 _log.LogInformation($"Running instrumentation class {displayName} took {stopWatch.Elapsed.TotalSeconds} seconds");
             }
             _log.LogDebug(FormatProcessOutputs(result));
