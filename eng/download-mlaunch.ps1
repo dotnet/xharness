@@ -59,6 +59,8 @@ Set-Location $binariesRepo
 git init
 git remote add origin https://github.com/xamarin/macios-binaries.git
 git config core.sparseCheckout true
+git config core.autocrlf false
+git config core.eol lf
 Set-Content -Path ".git/info/sparse-checkout" -Value "mlaunch"
 git fetch --depth 1 origin $commit
 git checkout FETCH_HEAD
