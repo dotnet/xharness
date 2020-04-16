@@ -21,7 +21,7 @@ New-Item -Path $TargetDir -ItemType Directory -ErrorAction SilentlyContinue
 
 Write-Host "Getting mlaunch revision $commit into $TargetDir"
 
-$tagFile = Join-Path $TargetDir ".tag-$commit"
+$tagFile = Join-Path $TargetDir "$commit.tag"
 
 if (Test-Path $tagFile) {
     Write-Host "mlaunch is already downloaded"
@@ -29,7 +29,7 @@ if (Test-Path $tagFile) {
 }
 
 $binariesRepo = Join-Path $TempDir "macios-binaries"
-$tagFileInRepo = Join-Path $binariesRepo ".tag-$commit"
+$tagFileInRepo = Join-Path $binariesRepo "$commit.tag"
 
 if (Test-Path $binariesRepo) {
     if (Test-Path $tagFileInRepo) {

@@ -54,7 +54,7 @@ fi
 
 echo "Getting mlaunch revision $commit into $target_dir"
 
-tag_file="$target_dir/.tag-$commit"
+tag_file="$target_dir/$commit.tag"
 
 if [ -f "$tag_file" ]; then
   echo "mlaunch is already downloaded"
@@ -62,7 +62,7 @@ if [ -f "$tag_file" ]; then
 fi
 
 binaries_repo="$temp_dir/macios-binaries"
-tag_file_in_repo="$binaries_repo/.tag-$commit"
+tag_file_in_repo="$binaries_repo/$commit.tag"
 
 # Check if the repo was already checked out
 if [ -d "$binaries_repo" ]; then
