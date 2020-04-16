@@ -13,13 +13,13 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
     public abstract class AndroidApplicationEntryPoint : ApplicationEntryPoint
     {
         /// <summary>
-        /// Implementators should provide a text writter than will be used to
-        /// write the logging of the test that are executed.
+        /// Implementors should provide a text writter than will be used to
+        /// write the logging of the tests that are executed.
         /// </summary>
         public abstract TextWriter Logger { get; }
 
         /// <summary>
-        /// Implementators should provide a full path in which the final 
+        /// Implementors should provide a full path in which the final 
         /// results of the test run will be written. This property must not
         /// return null.
         /// </summary>
