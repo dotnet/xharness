@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Tests.Runners", "src\Microsoft.DotNet.XHarness.Tests.Runners\Microsoft.DotNet.XHarness.Tests.Runners.csproj", "{A9DCDA24-01E9-4467-BCBA-D5B78727D367}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.iOS.Shared", "src\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj", "{A91316D8-4D48-4959-932F-5A0C3E1F7779}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,6 +38,10 @@ Global
 		{A9DCDA24-01E9-4467-BCBA-D5B78727D367}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9DCDA24-01E9-4467-BCBA-D5B78727D367}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9DCDA24-01E9-4467-BCBA-D5B78727D367}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A91316D8-4D48-4959-932F-5A0C3E1F7779}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A91316D8-4D48-4959-932F-5A0C3E1F7779}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A91316D8-4D48-4959-932F-5A0C3E1F7779}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A91316D8-4D48-4959-932F-5A0C3E1F7779}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -44,6 +50,7 @@ Global
 		{FDA1448B-B92F-4AD8-A741-ABAEDF935AF7} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
 		{C5C7BF1E-3CD6-4E5B-8EBB-CE0C103C9640} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
 		{A9DCDA24-01E9-4467-BCBA-D5B78727D367} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
+		{A91316D8-4D48-4959-932F-5A0C3E1F7779} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {56D5F4DA-F710-4026-8F49-4A903BCAA9B5}
