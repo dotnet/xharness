@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.DotNet.XHarness.CLI.Common;
 
 namespace Microsoft.DotNet.XHarness.CLI.Android
@@ -28,27 +27,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
 
         public Dictionary<string, string> InstrumentationArguments { get; set; } = new Dictionary<string, string>();
 
-        public override bool TryValidate([NotNullWhen(true)] out IEnumerable<string> errors)
+        public override IList<string> GetValidationErrors()
         {
-            bool baseResult = base.TryValidate(out var baseErrors);
-            
-            List<string> allErrors = new List<string>(baseErrors);
+            var errors = base.GetValidationErrors();
 
             if (string.IsNullOrEmpty(DeviceOutputFolder))
             {
-                allErrors.Add("Must specify a value for device output folder");
+                errors.Add("Must specify a value for device output folder");
             }
-            errors = allErrors;
 
-            return allErrors.Count == 0;
-        }
-
-        internal override IEnumerable<string> GetAvailableTargets()
-        {
-            return new[]
-            {
-                "TODO: To be filled in", // TODO
-            };
+            return errors;
         }
     }
 }
