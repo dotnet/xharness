@@ -70,6 +70,17 @@ stages:
           name: Build
           displayName: Build
           condition: succeeded()
+          
+        - task: PublishTestResults@2
+          displayName: 'Publish Unit Test Results'
+          inputs: 
+            testResultsFormat: xUnit
+            testResultsFiles: 'TestResults/**/*.xml'
+            mergeTestResults: true
+            searchFolder: $(system.defaultworkingdirectory)
+            testRunTitle: XHarness Unit Tests
+          condition: succeededOrFailed()          
+
         - task: PublishBuildArtifacts@1
           displayName: Publish Logs to VSTS
           inputs:
@@ -97,6 +108,17 @@ stages:
           name: Build
           displayName: Build
           condition: succeeded()
+
+        - task: PublishTestResults@2
+          displayName: 'Publish Unit Test Results'
+          inputs: 
+            testResultsFormat: xUnit
+            testResultsFiles: 'TestResults/**/*.xml'
+            mergeTestResults: true
+            searchFolder: $(system.defaultworkingdirectory)
+            testRunTitle: XHarness Unit Tests
+          condition: succeededOrFailed()                    
+          
         - task: PublishBuildArtifacts@1
           displayName: Publish Logs to VSTS
           inputs:
