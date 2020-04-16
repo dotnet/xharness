@@ -4,9 +4,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Common
@@ -20,19 +18,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
         public string WorkingDirectory { get; set; }
         public LogLevel Verbosity { get; set; }
 
-        public virtual bool TryValidate([NotNullWhen(true)] out IEnumerable<string> errors)
+        public virtual IList<string> GetValidationErrors()
         {
-            var errs = new List<string>();
-            errors = errs;
+            var errors = new List<string>();
 
             if (string.IsNullOrEmpty(AppPackagePath))
             {
-                errs.Add("You must provide a name for the application that will be tested.");
+                errors.Add("You must provide a name for the application that will be tested.");
             }
 
             if (string.IsNullOrEmpty(OutputDirectory))
             {
-                errs.Add("Output directory path missing.");
+                errors.Add("Output directory path missing.");
             }
             else
             {
@@ -49,7 +46,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
 
             if (string.IsNullOrEmpty(WorkingDirectory))
             {
-                errs.Add("Working directory path missing.");
+                errors.Add("Working directory path missing.");
             }
             else
             {
@@ -64,9 +61,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                 }
             }
 
-            return !errors.Any();
+            return errors;
         }
-
-        internal abstract IEnumerable<string> GetAvailableTargets();
     }
 }
