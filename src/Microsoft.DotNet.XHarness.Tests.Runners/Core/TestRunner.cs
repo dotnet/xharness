@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 {
-    internal abstract class TestRunner
+    public abstract class TestRunner
     {
         public enum Jargon
         {
