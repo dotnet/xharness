@@ -75,7 +75,7 @@ stages:
           displayName: 'Publish Unit Test Results'
           inputs: 
             testResultsFormat: xUnit
-            testResultsFiles: 'TestResults/**/*.xml'
+            testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
             mergeTestResults: true
             searchFolder: $(system.defaultworkingdirectory)
             testRunTitle: XHarness Unit Tests
@@ -113,7 +113,7 @@ stages:
           displayName: 'Publish Unit Test Results'
           inputs: 
             testResultsFormat: xUnit
-            testResultsFiles: 'TestResults/**/*.xml'
+            testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
             mergeTestResults: true
             searchFolder: $(system.defaultworkingdirectory)
             testRunTitle: XHarness Unit Tests
