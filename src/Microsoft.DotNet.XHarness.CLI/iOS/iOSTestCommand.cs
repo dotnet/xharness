@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
                 var appBundleInformationParser = new AppBundleInformationParser(processManager);
 
-                var appBundleInfo = await appBundleInformationParser.ParseFromAppBundle(_arguments.AppPackagePath, target, cancellationToken);
+                var appBundleInfo = await appBundleInformationParser.ParseFromAppBundle(_arguments.AppPackagePath, target, mainLog, cancellationToken);
 
                 _log.LogInformation($"Starting the application {appBundleInfo.AppName}");
 

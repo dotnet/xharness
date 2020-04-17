@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
     {
         AppBundleInformation ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration);
 
-        Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, CancellationToken cancellationToken = default);
+        Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default);
     }
 
     public class AppBundleInformationParser : IAppBundleInformationParser
