@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 {
-    public abstract class iOSApplicatonEntryPoint : ApplicationEntryPoint
+    public abstract class iOSApplicationEntryPoint : ApplicationEntryPoint
     {
         public override async Task RunAsync()
         {

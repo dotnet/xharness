@@ -4,42 +4,36 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.DotNet.XHarness.CLI.Common;
 
 namespace Microsoft.DotNet.XHarness.CLI.iOS
 {
-
     internal class iOSTestCommandArguments : TestCommandArguments
     {
-        public override bool TryValidate([NotNullWhen(true)] out IEnumerable<string> errors)
+        public override IList<string> GetValidationErrors()
         {
-            List<string> errs = new List<string>();
+            IList<string> errors = base.GetValidationErrors();
+
             if (Targets == null || Targets.Count == 0)
             {
-                errs.Add($@"No targets specified. At least one target must be provided. " +
+                errors.Add($@"No targets specified. At least one target must be provided. " +
                     $"Available targets are:{Environment.NewLine}\t{string.Join(Environment.NewLine + "\t", GetAvailableTargets())}");
             }
-            bool baseResult = base.TryValidate(out errors);
-            errs.AddRange(errors);
-            errors = errs;
-            return errs.Count > 0;
+
+            return errors;
         }
 
-        internal override IEnumerable<string> GetAvailableTargets()
+        private static IEnumerable<string> GetAvailableTargets() => new[]
         {
-            return new[]
-            {
-                "None",
-                "Simulator_iOS",
-                "Simulator_iOS32",
-                "Simulator_iOS64",
-                "Simulator_tvOS",
-                "Simulator_watchOS",
-                "Device_iOS",
-                "Device_tvOS",
-                "Device_watchOS",
-            };
-        }
+            "None",
+            "Simulator_iOS",
+            "Simulator_iOS32",
+            "Simulator_iOS64",
+            "Simulator_tvOS",
+            "Simulator_watchOS",
+            "Device_iOS",
+            "Device_tvOS",
+            "Device_watchOS",
+        };
     }
 }
