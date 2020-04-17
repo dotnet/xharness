@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
             if (!target.IsSimulator())
             {
-                _log.LogInformation($"Installing application '{appBundleInfo.AppName}'");
+                _log.LogInformation($"Installing application '{appBundleInfo.AppName}' on " + (deviceName != null ? " on device '{deviceName}'" : target.AsString()));
 
                 var appInstaller = new AppInstaller(processManager, deviceLoader, mainLog, verbosity);
 
@@ -124,8 +124,8 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
                 if (!result.Succeeded)
                 {
-                    _log.LogError("Failed to install the app bundle");
-                    return result.ExitCode;
+                    _log.LogError($"Failed to install the app bundle (exit code={result.ExitCode})");
+                    return (int)ExitCodes.PACKAGE_INSTALLATION_FAILURE;
                 }
 
                 _log.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on device '{deviceName}'");
