@@ -2,7 +2,9 @@
   "profiles": {
     "XHarness": {
       "commandName": "Project",
-      "commandLineArgs": "ios test --app=\"test.app\" --working-directory=\"workdir\" --output-directory=\"outdir\" --xcode-root=\"/Applications/Xcode114.app\" --mlaunch-path=\"/Library/Frameworks/Xamarin.iOS.framework/Versions/13.14.1.39/bin/mlaunch\" --targets=ios-simulator-64 --timeout=600"
+      "commandLineArgs": "",
+      "environmentVariables": {
+      }
     }
   }
 }
