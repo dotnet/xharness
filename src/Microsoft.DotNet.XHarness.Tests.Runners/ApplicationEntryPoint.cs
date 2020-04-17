@@ -68,8 +68,14 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         /// </summary>
         public abstract Task RunAsync();
 
+        /// <summary>
+        /// Get/Set the minimun log level to be used by the runner logging.
+        /// </summary>
+        public MinimumLogLevel MinimumLogLevel { get; set; } = MinimumLogLevel.Info;
+
         protected async Task<TestRunner> CreateRunner(LogWriter logger)
         {
+            logger.MinimumLogLevel = MinimumLogLevel;
             TestRunner runner;
             switch (TestRunner)
             {
