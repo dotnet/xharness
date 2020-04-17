@@ -62,7 +62,13 @@ git config core.sparseCheckout true
 git config core.autocrlf false
 git config core.eol lf
 Set-Content -Path ".git/info/sparse-checkout" -Value "mlaunch"
-git fetch --depth 1 origin $commit 2>&1
+Invoke-Expression -ErrorAction Continue -OutVariable out -InformationVariable info -ErrorVariable err "git fetch --depth 1 origin $commit 2>&1"
+Write-Host "info $info"
+Write-Host "out $out"
+Write-Host "err $err"
+$error | Format-List -force *
+$error[0] | Format-List -force *
+$error[0].InnerException | Format-List -force *
 git checkout FETCH_HEAD
 
 # Clean what we don't need
