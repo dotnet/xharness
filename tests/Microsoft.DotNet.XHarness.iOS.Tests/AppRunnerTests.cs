@@ -122,7 +122,7 @@ namespace Xharness.Tests
         }
 
         [Test]
-        public async Task RunOnSimulatorWithNoAvailableSimulatorTest()
+        public void RunOnSimulatorWithNoAvailableSimulatorTest()
         {
             // Mock finding simulators
             string simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
