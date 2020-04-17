@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
@@ -21,6 +22,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
     public static class TestTargetExtensions
     {
+        public static readonly Dictionary<string, TestTarget> TestTargetNames = new Dictionary<string, TestTarget>
+        {
+            { "sim_ios", TestTarget.Simulator_iOS },
+            { "sim_ios32", TestTarget.Simulator_iOS32 },
+            { "sim_ios64", TestTarget.Simulator_iOS64 },
+            { "sim_tvos", TestTarget.Simulator_tvOS },
+            { "sim_watchos", TestTarget.Simulator_watchOS },
+            { "dev_ios", TestTarget.Device_iOS },
+            { "dev_tvos", TestTarget.Device_tvOS },
+            { "dev_watchos", TestTarget.Device_watchOS },
+        };
+
         public static RunMode ToRunMode(this TestTarget target) => target switch
         {
             TestTarget.Simulator_iOS => RunMode.Classic,

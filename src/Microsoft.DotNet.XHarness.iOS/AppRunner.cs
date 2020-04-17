@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
         }
 
-        public async Task<int> RunApp(
+        public async Task<(string deviceName, int exitCode)> RunApp(
             AppBundleInformation appInformation,
             TestTarget target,
             TimeSpan timeout,
@@ -186,6 +186,8 @@ namespace Microsoft.DotNet.XHarness.iOS
                 var simulator = string.IsNullOrEmpty(deviceName)
                     ? simulators.First()
                     : simulators.First(s => string.Equals(s.Name, deviceName, StringComparison.InvariantCultureIgnoreCase));
+
+                deviceName = simulator.Name;
 
                 if (!target.IsWatchOSTarget())
                 {
@@ -341,7 +343,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             // check the final status, copy all the required data
             await testReporter.ParseResult();
 
-            return testReporter.Success.Value ? 0 : 1;
+            return (deviceName, testReporter.Success.Value ? 0 : 1);
         }
     }
 }
