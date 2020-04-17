@@ -29,9 +29,24 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
     /// Assemblies: Provide a list of the assembly information to run.
     ///     assemblies can be loaded from disk or from memory, is up to the 
     ///     implementor.
+    ///
+    /// Clients that register to the class events and want to update the UI
+    /// are responsable to do so in the main UI thread. The application entry
+    /// point does not guarantee that the tests are executed in the ui thread.
+    ///
     /// </summary>
     public abstract class ApplicationEntryPoint
     {
+
+        /// <summary>
+        /// Event raised when the test run has started.
+        /// </summary>
+        public event EventHandler TestsStarted;
+       
+        /// <summary>
+        /// Event raised when the test run has completed.
+        /// </summary>
+        public event EventHandler<TestRunResult> TestsCompleted;
 
         protected abstract int? MaxParallelThreads { get; }
         /// <summary>
@@ -73,7 +88,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         /// </summary>
         public MinimumLogLevel MinimumLogLevel { get; set; } = MinimumLogLevel.Info;
 
-        protected async Task<TestRunner> CreateRunner(LogWriter logger)
+        protected async Task<TestRunner> InternalRunAsync (LogWriter logger)
         {
             logger.MinimumLogLevel = MinimumLogLevel;
             TestRunner runner;
@@ -102,6 +117,17 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
                     runner.SkipTests(skippedTests);
                 }
             }
+
+            var testAssemblies = GetTestAssemblies();
+            // notify the clients we are starting
+            TestsStarted?.Invoke(this, new EventArgs());
+
+            await runner.Run(testAssemblies).ConfigureAwait(false);
+
+            var result = new TestRunResult(runner);
+            // notify the client we are done and the results, but do not expose
+            // the runner.
+            TestsCompleted?.Invoke(this, result);
             return runner;
         }
     }
