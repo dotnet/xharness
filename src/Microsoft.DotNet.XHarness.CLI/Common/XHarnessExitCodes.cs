@@ -15,5 +15,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
         GENERAL_FAILURE = -44,
         FAILED_TO_GET_BUNDLE_INFO = -45,
         APP_CRASH = -46,
+        DEVICE_NOT_FOUND = -47,
     }
 }

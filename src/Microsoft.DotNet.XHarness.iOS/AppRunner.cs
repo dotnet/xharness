@@ -184,8 +184,13 @@ namespace Microsoft.DotNet.XHarness.iOS
                 }
 
                 var simulator = string.IsNullOrEmpty(deviceName)
-                    ? simulators.First()
-                    : simulators.First(s => string.Equals(s.Name, deviceName, StringComparison.InvariantCultureIgnoreCase));
+                    ? simulators.FirstOrDefault()
+                    : simulators.FirstOrDefault(s => string.Equals(s.Name, deviceName, StringComparison.InvariantCultureIgnoreCase));
+
+                if (simulator == null)
+                {
+                    throw new NoDeviceFoundException();
+                }
 
                 deviceName = simulator.Name;
 
@@ -269,6 +274,11 @@ namespace Microsoft.DotNet.XHarness.iOS
                     }
 
                     deviceName = companionDevice?.Name ?? device.Name;
+                }
+
+                if (deviceName == null)
+                {
+                    throw new NoDeviceFoundException();
                 }
 
                 crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName);

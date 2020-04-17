@@ -106,7 +106,22 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                 var appInstaller = new AppInstaller(processManager, deviceLoader, mainLog, verbosity);
 
                 ProcessExecutionResult result;
-                (deviceName, result) = await appInstaller.InstallApp(_arguments.AppPackagePath, target, cancellationToken: cancellationToken);
+
+                try
+                {
+                    (deviceName, result) = await appInstaller.InstallApp(_arguments.AppPackagePath, target, cancellationToken: cancellationToken);
+                }
+                catch (NoDeviceFoundException)
+                {
+                    _log.LogError($"Failed to find suitable device for target {target.AsString()}");
+                    return (int)ExitCodes.DEVICE_NOT_FOUND;
+                }
+                catch (Exception e)
+                {
+                    _log.LogError($"Failed to install the app bundle:{Environment.NewLine}{e}");
+                    return (int)ExitCodes.PACKAGE_INSTALLATION_FAILURE;
+                }
+
                 if (!result.Succeeded)
                 {
                     _log.LogError("Failed to install the app bundle");
@@ -154,6 +169,11 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
                 return 0;
             }
+            catch (NoDeviceFoundException)
+            {
+                _log.LogError($"Failed to find suitable device for target {target.AsString()}");
+                return (int)ExitCodes.DEVICE_NOT_FOUND;
+            }
             catch (Exception e)
             {
                 _log.LogError($"Application run failed:{Environment.NewLine}{e}");
@@ -171,8 +191,10 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                     {
                         _log.LogError($"Failed to uninstall the app bundle with exit code: {uninstallResult.ExitCode}");
                     }
-
-                    _log.LogInformation($"Application '{appBundleInfo.AppName}' was uninstalled successfully");
+                    else
+                    {
+                        _log.LogInformation($"Application '{appBundleInfo.AppName}' was uninstalled successfully");
+                    }
                 }
             }
         }
