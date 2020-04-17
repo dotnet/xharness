@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
@@ -24,15 +25,27 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
     {
         public static readonly Dictionary<string, TestTarget> TestTargetNames = new Dictionary<string, TestTarget>
         {
-            { "sim_ios", TestTarget.Simulator_iOS },
-            { "sim_ios32", TestTarget.Simulator_iOS32 },
-            { "sim_ios64", TestTarget.Simulator_iOS64 },
-            { "sim_tvos", TestTarget.Simulator_tvOS },
-            { "sim_watchos", TestTarget.Simulator_watchOS },
-            { "dev_ios", TestTarget.Device_iOS },
-            { "dev_tvos", TestTarget.Device_tvOS },
-            { "dev_watchos", TestTarget.Device_watchOS },
+            { "ios-simulator", TestTarget.Simulator_iOS },
+            { "ios-simulator-32", TestTarget.Simulator_iOS32 },
+            { "ios-simulator-64", TestTarget.Simulator_iOS64 },
+            { "tvos-simulator", TestTarget.Simulator_tvOS },
+            { "watchos-simulator", TestTarget.Simulator_watchOS },
+            { "ios-device", TestTarget.Device_iOS },
+            { "tvos-device", TestTarget.Device_tvOS },
+            { "watchos-device", TestTarget.Device_watchOS },
         };
+
+        private static readonly Dictionary<TestTarget, string> s_testTargetStrings = TestTargetNames.ToDictionary(x => x.Value, x => x.Key);
+
+        public static string ToString(this TestTarget target)
+        {
+            if (s_testTargetStrings.TryGetValue(target, out string name))
+            {
+                return name;
+            }
+
+            throw new ArgumentOutOfRangeException($"Unknown target: {target}");
+        }
 
         public static RunMode ToRunMode(this TestTarget target) => target switch
         {
