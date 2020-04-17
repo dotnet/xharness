@@ -2,20 +2,35 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
-
     public interface IAppBundleInformationParser
     {
         AppBundleInformation ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration);
+
+        Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, CancellationToken cancellationToken = default);
     }
 
     public class AppBundleInformationParser : IAppBundleInformationParser
     {
+        private const string PlistBuddyPath = "/usr/libexec/PlistBuddy";
+
+        private readonly IProcessManager _processManager;
+
+        public AppBundleInformationParser(IProcessManager processManager)
+        {
+            _processManager = processManager ?? throw new System.ArgumentNullException(nameof(processManager));
+        }
+
         public AppBundleInformation ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration)
         {
             var csproj = new XmlDocument();
@@ -49,6 +64,39 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 : appPath;
 
             return new AppBundleInformation(appName, bundleIdentifier, appPath, launchAppPath, extension);
+        }
+
+        public async Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, CancellationToken cancellationToken = default)
+        {
+            var appName = await GetPlistProperty(appPackagePath, PListExtensions.BundleNamePropertyName, cancellationToken);
+            var bundleIdentifier = await GetPlistProperty(appPackagePath, PListExtensions.BundleIdentifierPropertyName, cancellationToken);
+
+            string launchAppPath = target.ToRunMode() == RunMode.WatchOS
+                ? Directory.GetDirectories(Path.Combine(appPackagePath, "Watch"), "*.app")[0]
+                : appPackagePath;
+
+            return new AppBundleInformation(appName, appPackagePath, bundleIdentifier, launchAppPath, extension: null);
+        }
+
+        private async Task<string> GetPlistProperty(string appPackagePath, string propertyName, CancellationToken cancellationToken = default)
+        {
+            var args = new[]
+            {
+                "-c",
+                $"'Print {propertyName}'",
+                appPackagePath,
+            };
+
+            var log = new MemoryLog();
+
+            var result = await _processManager.ExecuteCommandAsync(PlistBuddyPath, args, log, TimeSpan.FromSeconds(30), cancellationToken: cancellationToken);
+
+            if (!result.Succeeded)
+            {
+                throw new Exception($"Failed to get bundle information: {log}");
+            }
+
+            return log.ToString();
         }
     }
 }
