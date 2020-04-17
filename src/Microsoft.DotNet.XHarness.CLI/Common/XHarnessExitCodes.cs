@@ -14,5 +14,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
         PACKAGE_INSTALLATION_FAILURE = -43,
         GENERAL_FAILURE = -44,
         FAILED_TO_GET_BUNDLE_INFO = -45,
+        APP_CRASH = -46,
     }
 }

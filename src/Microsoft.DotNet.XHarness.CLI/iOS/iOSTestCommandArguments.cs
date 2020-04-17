@@ -24,6 +24,11 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
         public string MlaunchPath { get; set; } = Path.Join("..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
 
         /// <summary>
+        /// Name of a specific device we want to target.
+        /// </summary>
+        public string DeviceName { get; set; }
+
+        /// <summary>
         /// How long we wait before app starts and first test should start running.
         /// </summary>
         public TimeSpan LaunchTimeout { get; set; } = TimeSpan.FromMinutes(5);

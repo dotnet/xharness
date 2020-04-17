@@ -28,6 +28,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         Version XcodeVersion { get; }
 
         Task<ProcessExecutionResult> ExecuteCommandAsync(string filename, IList<string> args, ILog log, TimeSpan timeout, Dictionary<string, string> environment_variables = null, CancellationToken? cancellationToken = null);
+        Task<ProcessExecutionResult> ExecuteCommandAsync(string filename, IList<string> args, ILog log, ILog stdoutLog, ILog stderrLog, TimeSpan timeout, Dictionary<string, string> environment_variables = null, CancellationToken? cancellationToken = null);
         Task<ProcessExecutionResult> ExecuteCommandAsync(MlaunchArguments args, ILog log, TimeSpan timeout, Dictionary<string, string> environment_variables = null, CancellationToken? cancellation_token = null);
         Task<ProcessExecutionResult> ExecuteXcodeCommandAsync(string executable, IList<string> args, ILog log, TimeSpan timeout);
         Task<ProcessExecutionResult> RunAsync(Process process, ILog log, TimeSpan? timeout = null, Dictionary<string, string> environment_variables = null, CancellationToken? cancellation_token = null, bool? diagnostics = null);

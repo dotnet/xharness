@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         private static readonly Dictionary<TestTarget, string> s_testTargetStrings = TestTargetNames.ToDictionary(x => x.Value, x => x.Key);
 
-        public static string ToString(this TestTarget target)
+        public static string ToFriendlyString(this TestTarget target)
         {
             if (s_testTargetStrings.TryGetValue(target, out string name))
             {

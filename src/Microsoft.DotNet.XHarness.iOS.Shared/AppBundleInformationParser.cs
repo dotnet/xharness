@@ -94,14 +94,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 plistPath,
             };
 
-            var result = await _processManager.ExecuteCommandAsync(PlistBuddyPath, args, log, TimeSpan.FromSeconds(30), cancellationToken: cancellationToken);
+            var commandOutput = new MemoryLog();
+            var result = await _processManager.ExecuteCommandAsync(PlistBuddyPath, args, log, commandOutput, commandOutput, TimeSpan.FromSeconds(30), cancellationToken: cancellationToken);
 
             if (!result.Succeeded)
             {
-                throw new Exception($"Failed to get bundle information: {log}");
+                throw new Exception($"Failed to get bundle information: {commandOutput}");
             }
 
-            return log.ToString();
+            return commandOutput.ToString();
         }
     }
 }
