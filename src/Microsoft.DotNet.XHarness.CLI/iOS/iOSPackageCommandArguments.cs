@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.DotNet.XHarness.CLI.Common;
 
 namespace Microsoft.DotNet.XHarness.CLI.iOS
@@ -24,16 +23,12 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
         public TemplateType SelectedTemplateType { get; set; }
 
-        public override bool TryValidate([NotNullWhen(true)] out IEnumerable<string> errors)
+        public override IList<string> GetValidationErrors()
         {
-            if (!base.TryValidate(out errors))
-            {
-                return false;
-            }
+            IList<string> errors = base.GetValidationErrors();
 
-            // TODO: Validate the above
-
-            return true;
+            // TODO: Validate arguments above
+            return errors;
         }
     }
 }

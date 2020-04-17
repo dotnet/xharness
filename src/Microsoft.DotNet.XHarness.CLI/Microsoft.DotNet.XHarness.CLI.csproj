@@ -22,7 +22,6 @@
     <LinuxAndroidSdkFileName>linux-android-platform-tools.zip</LinuxAndroidSdkFileName>
   </PropertyGroup>
 
-  <!-- Suppress NU5100 because there are ADB .DLLs we don't reference which we want as 'content' type -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>$(NoWarn);1701;1702;1705;1591;NU5105;NU5100</NoWarn>
   </PropertyGroup>
@@ -34,6 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.XHarness.Android\Microsoft.DotNet.XHarness.Android.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj" />
   </ItemGroup>
 
   <Target Name="DownloadAndroidSdks" BeforeTargets="Build" >
@@ -43,7 +43,7 @@
       <WindowsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
       <Content Include="@(WindowsAdbFiles)">
         <Pack>true</Pack>
-        <PackagePath>content/adb</PackagePath>
+        <PackagePath>runtimes/any/native/adb/windows</PackagePath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
