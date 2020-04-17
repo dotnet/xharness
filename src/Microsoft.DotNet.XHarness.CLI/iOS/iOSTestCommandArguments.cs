@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.DotNet.XHarness.CLI.Common;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -43,7 +44,8 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             if (Targets == null || Targets.Count == 0)
             {
                 errors.Add($@"No targets specified. At least one target must be provided. " +
-                    $"Available targets are:{Environment.NewLine}\t{string.Join(Environment.NewLine + "\t", TestTargetExtensions.TestTargetNames.Keys)}");
+                    $"Available targets are:{Environment.NewLine}\t" +
+                    $"{string.Join(Environment.NewLine + "\t", GetAvailableTargets())}");
             }
 
             if (!Path.IsPathRooted(MlaunchPath))
@@ -84,5 +86,10 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
             return errors;
         }
+
+        private static IEnumerable<string> GetAvailableTargets() =>
+            Enum.GetValues(typeof(TestTarget))
+                .Cast<TestTarget>()
+                .Select(t => t.AsString());
     }
 }
