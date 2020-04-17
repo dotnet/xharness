@@ -63,7 +63,7 @@ Invoke-Expression -Verbose -ErrorAction Stop "git config core.autocrlf false"
 Invoke-Expression -Verbose -ErrorAction Stop "git config core.eol lf"
 Set-Content -Path ".git/info/sparse-checkout" -Value "mlaunch"
 try {
-    Invoke-Expression -Verbose -ErrorAction Continue "git fetch --depth 1 origin $commit" | Out-String -OutVariable out
+    Invoke-Expression -Verbose "git fetch --depth 1 origin $commit" | Out-String -OutVariable out
 }
 catch {
     Write-Host "Exception: "
