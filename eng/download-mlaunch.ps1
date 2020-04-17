@@ -66,10 +66,11 @@ Set-Content -Path ".git/info/sparse-checkout" -Value "mlaunch"
 # Workaround for https://github.com/dahlbyk/posh-git/issues/109
 try
 {
-    git fetch -v --depth 1 origin $commit
+    Invoke-Expression -Verbose -ErrorAction Continue "git fetch -v --depth 1 origin $commit"
 }
 catch
 {
+    Write-Host "git fetch failed but continuing (https://github.com/dahlbyk/posh-git/issues/109)"
 }
 
 git checkout FETCH_HEAD
