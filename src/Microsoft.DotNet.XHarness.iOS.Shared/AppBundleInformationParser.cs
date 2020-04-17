@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             if (!File.Exists(plistPath))
             {
-                throw new Exception($"Failed to find Info.plist inside the app bundle at: {plistPath}");
+                throw new Exception($"Failed to find Info.plist inside the app bundle at: '{plistPath}'");
             }
 
             var appName = await GetPlistProperty(plistPath, PListExtensions.BundleNamePropertyName, log, cancellationToken);
@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             };
 
             var commandOutput = new MemoryLog();
-            var result = await _processManager.ExecuteCommandAsync(PlistBuddyPath, args, log, commandOutput, commandOutput, TimeSpan.FromSeconds(30), cancellationToken: cancellationToken);
+            var result = await _processManager.ExecuteCommandAsync(PlistBuddyPath, args, log, commandOutput, commandOutput, TimeSpan.FromSeconds(15), cancellationToken: cancellationToken);
 
             if (!result.Succeeded)
             {

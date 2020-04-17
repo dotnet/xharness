@@ -113,10 +113,10 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                     return result.ExitCode;
                 }
 
-                _log.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully");
+                _log.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on device '{deviceName}'");
             }
 
-            _log.LogInformation($"Starting application {appBundleInfo.AppName} on device {deviceName}");
+            _log.LogInformation($"Starting application '{appBundleInfo.AppName}' on device '{deviceName}'");
 
             int exitCode;
 
@@ -163,13 +163,13 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             {
                 if (!target.IsSimulator())
                 {
-                    _log.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from device {deviceName}");
+                    _log.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from device '{deviceName}'");
 
                     var appUninstaller = new AppUninstaller(processManager, mainLog, verbosity);
                     var uninstallResult = await appUninstaller.UninstallApp(deviceName, appBundleInfo.BundleIdentifier, cancellationToken);
                     if (!uninstallResult.Succeeded)
                     {
-                        _log.LogError($"Failed to uninstall the app bundle '{appBundleInfo.AppName}' from device {deviceName} with exit code: {uninstallResult.ExitCode}");
+                        _log.LogError($"Failed to uninstall the app bundle with exit code: {uninstallResult.ExitCode}");
                     }
                 }
 
