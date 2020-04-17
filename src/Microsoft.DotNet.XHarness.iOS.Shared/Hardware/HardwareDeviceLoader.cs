@@ -17,7 +17,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 {
-
     public interface IHardwareDeviceLoader : IDeviceLoader
     {
         IEnumerable<IHardwareDevice> ConnectedDevices { get; }
@@ -34,8 +33,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
     public class HardwareDeviceLoader : IHardwareDeviceLoader
     {
-        readonly IProcessManager processManager;
-        bool loaded;
+        readonly IProcessManager _processManager;
+        bool _loaded;
 
         readonly BlockingEnumerableCollection<IHardwareDevice> connectedDevices = new BlockingEnumerableCollection<IHardwareDevice>();
 
@@ -48,19 +47,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         public HardwareDeviceLoader(IProcessManager processManager)
         {
-            this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            this._processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
         public async Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false)
         {
-            if (loaded)
+            if (_loaded)
             {
                 if (!forceRefresh)
                     return;
                 connectedDevices.Reset();
             }
 
-            loaded = true;
+            _loaded = true;
 
             var tmpfile = Path.GetTempFileName();
             try
@@ -74,23 +73,25 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     if (listExtraData)
                         arguments.Add(new ListExtraDataArgument());
 
-                    var task = processManager.RunAsync(process, arguments, log, timeout: TimeSpan.FromSeconds(120));
+                    var task = _processManager.RunAsync(process, arguments, log, timeout: TimeSpan.FromSeconds(120));
                     log.WriteLine("Launching {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
 
                     var result = await task;
 
                     if (!result.Succeeded)
                         throw new Exception("Failed to list devices.");
-                    log.WriteLine("Result:");
-                    log.WriteLine(File.ReadAllText(tmpfile));
-                    log.Flush();
 
                     var doc = new XmlDocument();
                     doc.LoadWithoutNetworkAccess(tmpfile);
 
-                    foreach (XmlNode dev in doc.SelectNodes("/MTouch/Device"))
+                    var devices = doc.SelectNodes("/MTouch/Device");
+
+                    log.WriteLine($"Found {devices.Count} devices");
+                    log.Flush();
+
+                    foreach (XmlNode dev in devices)
                     {
-                        var d = GetDevice(dev);
+                        Device d = GetDevice(dev);
                         if (d == null)
                             continue;
                         if (!includeLocked && d.IsLocked)
@@ -107,11 +108,23 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     }
                 }
             }
+            catch (Exception e)
+            {
+                log.WriteLine($"Failed to parse device list: {e}");
+                log.Flush();
+            }
             finally
             {
                 connectedDevices.SetCompleted();
-                File.Delete(tmpfile);
+
+                if (connectedDevices.Any())
+                {
+                    log.WriteLine($"Found following devices: '{string.Join("', '", connectedDevices.Select(d => d.Name))}'");
+                }
+
                 log.Flush();
+
+                File.Delete(tmpfile);
             }
         }
 
@@ -167,7 +180,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             return companion.First();
         }
 
-        Device GetDevice(XmlNode deviceNone)
+        private Device GetDevice(XmlNode deviceNone)
         {
             // get data, if we are missing some of them, we will return null, happens sometimes that we 
             // have some empty nodes. We could do this with try/catch, but we want to throw the min amount

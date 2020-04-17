@@ -53,6 +53,11 @@ namespace Microsoft.DotNet.XHarness.iOS
                 }
             }
 
+            if (deviceName == null)
+            {
+                throw new NoDeviceFoundException();
+            }
+
             var args = new MlaunchArguments();
 
             for (int i = -1; i < _verbosity; i++)
