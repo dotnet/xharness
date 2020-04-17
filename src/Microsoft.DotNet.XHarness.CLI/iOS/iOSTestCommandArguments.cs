@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.DotNet.XHarness.CLI.Common;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.CLI.iOS
 {
@@ -69,11 +70,11 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
             foreach (string targetName in Targets)
             {
-                if (TestTargetExtensions.TestTargetNames.TryGetValue(targetName, out TestTarget target))
+                try
                 {
-                    testTargets.Add(target);
+                    testTargets.Add(targetName.ParseAsAppRunnerTarget());
                 }
-                else
+                catch (ArgumentOutOfRangeException)
                 {
                     errors.Add($"Failed to parse test target '{targetName}'");
                 }

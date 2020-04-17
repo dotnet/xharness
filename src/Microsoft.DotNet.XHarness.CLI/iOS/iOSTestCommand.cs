@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             ISimulatorLoader simulatorLoader,
             CancellationToken cancellationToken = default)
         {
-            _log.LogInformation($"Starting test for {target.ToFriendlyString()}{ (_arguments.DeviceName != null ? " targeting " + _arguments.DeviceName : null) }..");
+            _log.LogInformation($"Starting test for {target.AsString()}{ (_arguments.DeviceName != null ? " targeting " + _arguments.DeviceName : null) }..");
 
             string mainLogFile = Path.Join(_arguments.OutputDirectory, $"run-{target}{(_arguments.DeviceName != null ? "-" + _arguments.DeviceName : null)}.log");
             ILog mainLog = logs.Create(mainLogFile, LogType.ExecutionLog.ToString(), true);
@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                 _log.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on device '{deviceName}'");
             }
 
-            _log.LogInformation($"Starting application '{appBundleInfo.AppName}' on device '{deviceName}'");
+            _log.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? " on device '{deviceName}'" : target.AsString()));
 
             int exitCode;
 

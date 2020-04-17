@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 case TestTarget.Simulator_watchOS:
                     return "watchos-simulator";
                 default:
-                    throw new NotImplementedException();
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 case "":
                     return TestTarget.None;
                 default:
-                    throw new NotImplementedException(@this);
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 case "com.apple.watchkit":
                     return Extension.WatchKit2;
                 default:
-                    throw new NotImplementedException();
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 case Extension.WatchKit2:
                     return "com.apple.watchkit";
                 default:
-                    throw new NotImplementedException();
+                    throw new ArgumentOutOfRangeException();
             }
         }
 

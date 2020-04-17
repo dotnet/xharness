@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
@@ -23,30 +21,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
     public static class TestTargetExtensions
     {
-        public static readonly Dictionary<string, TestTarget> TestTargetNames = new Dictionary<string, TestTarget>
-        {
-            { "ios-simulator", TestTarget.Simulator_iOS },
-            { "ios-simulator-32", TestTarget.Simulator_iOS32 },
-            { "ios-simulator-64", TestTarget.Simulator_iOS64 },
-            { "tvos-simulator", TestTarget.Simulator_tvOS },
-            { "watchos-simulator", TestTarget.Simulator_watchOS },
-            { "ios-device", TestTarget.Device_iOS },
-            { "tvos-device", TestTarget.Device_tvOS },
-            { "watchos-device", TestTarget.Device_watchOS },
-        };
-
-        private static readonly Dictionary<TestTarget, string> s_testTargetStrings = TestTargetNames.ToDictionary(x => x.Value, x => x.Key);
-
-        public static string ToFriendlyString(this TestTarget target)
-        {
-            if (s_testTargetStrings.TryGetValue(target, out string name))
-            {
-                return name;
-            }
-
-            throw new ArgumentOutOfRangeException($"Unknown target: {target}");
-        }
-
         public static RunMode ToRunMode(this TestTarget target) => target switch
         {
             TestTarget.Simulator_iOS => RunMode.Classic,
