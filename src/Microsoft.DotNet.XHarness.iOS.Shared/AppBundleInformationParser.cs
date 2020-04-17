@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 throw new Exception($"Failed to get bundle information: {commandOutput}");
             }
 
-            return commandOutput.ToString();
+            return commandOutput.ToString().Trim();
         }
     }
 }
