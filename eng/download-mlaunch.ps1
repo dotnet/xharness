@@ -56,14 +56,14 @@ New-Item -ItemType Directory -Force -ErrorAction Stop -Path $binariesRepo
 # Shallow-clone the xamarin/macios-binaries repo
 Set-Location $binariesRepo
 
-git init
-git remote add origin https://github.com/xamarin/macios-binaries.git
-git config core.sparseCheckout true
-git config core.autocrlf false
-git config core.eol lf
+Invoke-Expression -Verbose -ErrorAction Stop "git init"
+Invoke-Expression -Verbose -ErrorAction Stop "git remote add origin https://github.com/xamarin/macios-binaries.git"
+Invoke-Expression -Verbose -ErrorAction Stop "git config core.sparseCheckout true"
+Invoke-Expression -Verbose -ErrorAction Stop "git config core.autocrlf false"
+Invoke-Expression -Verbose -ErrorAction Stop "git config core.eol lf"
 Set-Content -Path ".git/info/sparse-checkout" -Value "mlaunch"
-git fetch --depth 1 origin $commit
-git checkout FETCH_HEAD
+Invoke-Expression -Verbose -ErrorAction Stop "git fetch --depth 1 origin $commit"
+Invoke-Expression -Verbose -ErrorAction Stop "git checkout FETCH_HEAD"
 
 # Clean what we don't need
 Remove-Item -Path (Join-Path $binariesRepo "mlaunch/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch.dSYM") -Recurse -Force -Verbose
