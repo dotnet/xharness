@@ -171,9 +171,9 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                     {
                         _log.LogError($"Failed to uninstall the app bundle with exit code: {uninstallResult.ExitCode}");
                     }
-                }
 
-                _log.LogInformation($"Application '{appBundleInfo.AppName}' was uninstalled successfully");
+                    _log.LogInformation($"Application '{appBundleInfo.AppName}' was uninstalled successfully");
+                }
             }
         }
     }
