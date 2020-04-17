@@ -70,6 +70,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         {
             var plistPath = Path.Join(appPackagePath, "Info.plist");
 
+            if (!File.Exists(plistPath))
+            {
+                throw new Exception($"Failed to find Info.plist inside the app bundle at: {plistPath}");
+            }
+
             var appName = await GetPlistProperty(plistPath, PListExtensions.BundleNamePropertyName, log, cancellationToken);
             var bundleIdentifier = await GetPlistProperty(plistPath, PListExtensions.BundleIdentifierPropertyName, log, cancellationToken);
 

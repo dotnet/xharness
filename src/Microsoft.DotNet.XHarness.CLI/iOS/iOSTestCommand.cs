@@ -95,7 +95,17 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
                 var appBundleInformationParser = new AppBundleInformationParser(processManager);
 
-                var appBundleInfo = await appBundleInformationParser.ParseFromAppBundle(_arguments.AppPackagePath, target, mainLog, cancellationToken);
+                AppBundleInformation appBundleInfo;
+
+                try
+                {
+                    appBundleInfo = await appBundleInformationParser.ParseFromAppBundle(_arguments.AppPackagePath, target, mainLog, cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    _log.LogError($"Failed to get bundle information: {e}");
+                    return (int)ExitCodes.FAILED_TO_GET_BUNDLE_INFO;
+                }
 
                 _log.LogInformation($"Starting the application {appBundleInfo.AppName}");
 
