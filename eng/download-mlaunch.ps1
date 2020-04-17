@@ -68,6 +68,7 @@ try {
 catch {
     Write-Host "Exception: "
     Write-Host $out
+    Write-Host ($_ | Format-Table | Out-String)
 }
 ExitWithExitCode 1
 Invoke-Expression -Verbose -ErrorAction Stop "git checkout FETCH_HEAD"
