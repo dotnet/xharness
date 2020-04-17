@@ -62,7 +62,9 @@ Invoke-Expression -Verbose -ErrorAction Stop "git config core.sparseCheckout tru
 Invoke-Expression -Verbose -ErrorAction Stop "git config core.autocrlf false"
 Invoke-Expression -Verbose -ErrorAction Stop "git config core.eol lf"
 Set-Content -Path ".git/info/sparse-checkout" -Value "mlaunch"
-Invoke-Expression -Verbose -ErrorAction Stop "git fetch --depth 1 origin $commit"
+Invoke-Expression -Verbose -ErrorAction Continue "git fetch --depth 1 origin $commit >> foo.txt"
+Get-Contents -Path "foo.txt"
+ExitWithExitCode 1
 Invoke-Expression -Verbose -ErrorAction Stop "git checkout FETCH_HEAD"
 
 # Clean what we don't need
