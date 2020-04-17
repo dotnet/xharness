@@ -56,7 +56,7 @@
     <ItemGroup>
       <Content Include="$(IntermediateOutputPath)/mlaunch/**/*.*">
         <Pack>true</Pack>
-        <PackagePath>content/mlaunch</PackagePath>
+        <PackagePath>runtimes/any/native/mlaunch</PackagePath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
