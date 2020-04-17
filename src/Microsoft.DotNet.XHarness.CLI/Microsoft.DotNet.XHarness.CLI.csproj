@@ -49,7 +49,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="DownloadMlaunch" BeforeTargets="Build;Pack">
+  <Target Name="DownloadMlaunch" BeforeTargets="Build">
     <Exec Condition=" '$(OS)' != 'Windows_NT' " Command="chmod 0755 ../../eng/download-mlaunch.sh &amp;&amp; ../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target-dir $(IntermediateOutputPath)mlaunch" />
     <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' } &quot;" />
 
