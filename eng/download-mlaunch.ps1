@@ -56,6 +56,8 @@ New-Item -ItemType Directory -Force -ErrorAction Stop -Path $binariesRepo
 # Shallow-clone the xamarin/macios-binaries repo
 Set-Location $binariesRepo
 
+$env:GIT_REDIRECT_STDERR = '2>&1'
+
 git init
 git remote add origin https://github.com/xamarin/macios-binaries.git
 git config core.sparseCheckout true
@@ -66,7 +68,7 @@ Set-Content -Path ".git/info/sparse-checkout" -Value "mlaunch"
 # Workaround for https://github.com/dahlbyk/posh-git/issues/109
 try
 {
-    Invoke-Expression -Verbose -ErrorAction Continue "git fetch -v --depth 1 origin $commit"
+    git fetch -v --depth 1 origin $commit
 }
 catch
 {
