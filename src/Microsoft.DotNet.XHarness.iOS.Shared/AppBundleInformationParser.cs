@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 plistPath,
             };
 
-            var commandOutput = new MemoryLog();
+            var commandOutput = new MemoryLog { Timestamp = false };
             var result = await _processManager.ExecuteCommandAsync(PlistBuddyPath, args, log, commandOutput, commandOutput, TimeSpan.FromSeconds(15), cancellationToken: cancellationToken);
 
             if (!result.Succeeded)
