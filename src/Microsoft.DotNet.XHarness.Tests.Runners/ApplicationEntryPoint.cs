@@ -2,9 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Tests.Runners.Core;
+using Microsoft.DotNet.XHarness.Tests.Runners.Xunit;
 
 namespace Microsoft.DotNet.XHarness.Tests.Runners
 {
@@ -64,5 +67,36 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         /// Execute the tests in an async mode.
         /// </summary>
         public abstract Task RunAsync();
+
+        protected async Task<TestRunner> CreateRunner(LogWriter logger)
+        {
+            TestRunner runner;
+            switch (TestRunner)
+            {
+                case TestRunnerType.NUnit:
+                    throw new NotImplementedException();
+                default:
+                    runner = new XUnitTestRunner(logger)
+                    {
+                        MaxParallelThreads = MaxParallelThreads
+                    };
+                    break;
+            }
+
+            if (!string.IsNullOrEmpty(IgnoreFilesDirectory))
+            {
+                var categories = await IgnoreFileParser.ParseTraitsContentFileAsync(IgnoreFilesDirectory, TestRunner == TestRunnerType.Xunit);
+                // add category filters if they have been added
+                runner.SkipCategories(categories);
+
+                var skippedTests = await IgnoreFileParser.ParseContentFilesAsync(IgnoreFilesDirectory);
+                if (skippedTests.Any())
+                {
+                    // ensure that we skip those tests that have been passed via the ignore files
+                    runner.SkipTests(skippedTests);
+                }
+            }
+            return runner;
+        }
     }
 }

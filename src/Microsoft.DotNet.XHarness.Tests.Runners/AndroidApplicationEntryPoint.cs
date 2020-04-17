@@ -2,36 +2,40 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Tests.Runners.Core;
+
+namespace Microsoft.DotNet.XHarness.Tests.Runners
 {
-    public abstract class iOSApplicationEntryPoint : ApplicationEntryPoint
+    public abstract class AndroidApplicationEntryPoint : ApplicationEntryPoint
     {
+        /// <summary>
+        /// Implementors should provide a text writter than will be used to
+        /// write the logging of the tests that are executed.
+        /// </summary>
+        public abstract TextWriter Logger { get; }
+
+        /// <summary>
+        /// Implementors should provide a full path in which the final 
+        /// results of the test run will be written. This property must not
+        /// return null.
+        /// </summary>
+        public abstract string TestsResultsFinalPath { get; }
+
+
         public override async Task RunAsync()
         {
             var options = ApplicationOptions.Current;
-            TcpTextWriter writer = null;
-            if (!string.IsNullOrEmpty(options.HostName))
-            {
-                try
-                {
-                    writer = new TcpTextWriter(options.HostName, options.HostPort);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Network error: Cannot connect to {0}:{1}: {2}. Continuing on console.", options.HostName, options.HostPort, ex);
-                    writer = null; // will default to the console
-                }
-            }
-
             // we generate the logs in two different ways depending if the generate xml flag was
             // provided. If it was, we will write the xml file to the tcp writer if present, else
             // we will write the normal console output using the LogWriter
-            var logger = (writer == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, writer);
+            var logger = (Logger == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, Logger);
             logger.MinimumLogLevel = MinimumLogLevel.Info;
             var testAssemblies = GetTestAssemblies();
+
             var runner = await CreateRunner(logger);
 
             // if we have ignore files, ignore those tests
@@ -50,8 +54,14 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
             }
             if (options.EnableXml)
             {
-                runner.WriteResultsToFile(writer ?? Console.Out, jargon);
-                logger.Info("Xml file was written to the tcp listener.");
+                if (TestsResultsFinalPath == null)
+                    throw new InvalidOperationException("Tests results final path cannot be null.");
+                using (var stream = File.Create(TestsResultsFinalPath))
+                using (var writer = new StreamWriter(stream))
+                {
+                    runner.WriteResultsToFile(writer, jargon);
+                    logger.Info($"Xml file was written to {TestsResultsFinalPath}.");
+                }
             }
             else
             {
@@ -63,6 +73,5 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
             if (options.TerminateAfterExecution)
                 TerminateWithSuccess();
         }
-
     }
 }

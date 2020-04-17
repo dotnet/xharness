@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
     /// only to generate unique index when storing information in the Bundle, so <see cref="Message"/> must contain
     /// the test name.
     /// </summary>
-    internal class TestFailureInfo
+    public class TestFailureInfo
     {
         /// <summary>
         /// Gets or sets the name of the test. Must not be null or empty (all whitespace isn't allowed either)
