@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 args.Add(new SetEnvVariableArgument("NUNIT_HOSTNAME", ips));
             }
 
-            var listener_log = _logs.Create($"test-{target}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
+            var listener_log = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
             var (transport, listener, listenerTmpFile) = _listenerFactory.Create(target.ToRunMode(), _mainLog, listener_log, isSimulator, true, false);
 
             // Initialize has to be called before we try to get Port (internal implementation of the listener says so)
