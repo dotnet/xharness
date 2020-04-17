@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
         /// Path to the mlaunch binary.
         /// Default comes from the NuGet.
         /// </summary>
-        public string MlaunchPath { get; set; } = Path.Join("..", "..", "..", "content", "mlaunch", "bin", "mlaunch"); // TODO: Do whatever Matt does with ADB
+        public string MlaunchPath { get; set; } = Path.Join("..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
 
         /// <summary>
         /// How long we wait before app starts and first test should start running.
