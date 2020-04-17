@@ -81,7 +81,7 @@ if [ -d "$binaries_repo" ]; then
     rm -rf "$binaries_repo"
 fi
 
-echo "Cloning the xamarin-binaries repository. This will take few minutes.."
+echo "Cloning the xamarin-binaries repository. This might take few minutes.."
 
 mkdir -p "$binaries_repo"
 

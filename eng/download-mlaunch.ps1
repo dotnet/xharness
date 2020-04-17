@@ -49,7 +49,7 @@ if (Test-Path $binariesRepo) {
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $binariesRepo
 }
 
-Write-Host "Cloning the xamarin-binaries repository. This will take few minutes.."
+Write-Host "Cloning the xamarin-binaries repository. This might take few minutes.."
 
 New-Item -ItemType Directory -Force -ErrorAction Stop -Path $binariesRepo
 
@@ -63,11 +63,16 @@ Invoke-Expression -Verbose -ErrorAction Stop "git config core.autocrlf false"
 Invoke-Expression -Verbose -ErrorAction Stop "git config core.eol lf"
 Set-Content -Path ".git/info/sparse-checkout" -Value "mlaunch"
 try {
-    Invoke-Expression -Verbose "git fetch --depth 1 origin $commit" | Out-String -OutVariable out
+    Invoke-Expression -Verbose "git fetch --depth 1 origin $commit" -ErrorVariable $errr -OutVariable $outt | Out-String -OutVariable out
 }
 catch {
-    Write-Host "Exception: "
+    Write-Host "outt:"
+    Write-Host $outt
+    Write-Host "errr:"
+    Write-Host $errr
+    Write-Host "out:"
     Write-Host $out
+    Write-Host "Exception: "
     Write-Host ($_ | Format-Table | Out-String)
 }
 ExitWithExitCode 1
