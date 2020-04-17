@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                     var message = new StringBuilder("Invalid arguments:");
                     foreach (string error in validationErrors)
                     {
-                        message.AppendLine("  - " + error);
+                        message.Append(Environment.NewLine + "  - " + error);
                     }
 
                     _log.LogError(message.ToString());
