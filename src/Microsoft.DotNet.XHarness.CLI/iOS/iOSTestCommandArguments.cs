@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
         /// Path to the mlaunch binary.
         /// Default comes from the NuGet.
         /// </summary>
-        public string MlaunchPath { get; set; } = Path.Join("..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
+        public string MlaunchPath { get; set; } = Path.Join(Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(iOSTestCommandArguments)).Location), "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
 
         /// <summary>
         /// Name of a specific device we want to target.
@@ -47,6 +47,24 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                     $"Available targets are:{Environment.NewLine}\t" +
                     $"{string.Join(Environment.NewLine + "\t", GetAvailableTargets())}");
             }
+            else
+            {
+                var testTargets = new List<TestTarget>();
+
+                foreach (string targetName in Targets)
+                {
+                    try
+                    {
+                        testTargets.Add(targetName.ParseAsAppRunnerTarget());
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        errors.Add($"Failed to parse test target '{targetName}'");
+                    }
+                }
+
+                TestTargets = testTargets;
+            }
 
             if (!Path.IsPathRooted(MlaunchPath))
             {
@@ -67,22 +85,6 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             {
                 errors.Add($"Failed to find Xcode root at {XcodeRoot}");
             }
-
-            var testTargets = new List<TestTarget>();
-
-            foreach (string targetName in Targets)
-            {
-                try
-                {
-                    testTargets.Add(targetName.ParseAsAppRunnerTarget());
-                }
-                catch (ArgumentOutOfRangeException)
-                {
-                    errors.Add($"Failed to parse test target '{targetName}'");
-                }
-            }
-
-            TestTargets = testTargets;
 
             return errors;
         }
