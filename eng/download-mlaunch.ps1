@@ -34,6 +34,7 @@ $tagFileInRepo = Join-Path $binariesRepo "$commit.tag"
 if (Test-Path $binariesRepo) {
     if (Test-Path $tagFileInRepo) {
         $path = Join-Path $binariesRepo "mlaunch"
+        $path = Join-Path $path "*"
 
         # Copy mlaunch to the target folder
         Copy-Item -Path $path -Destination $TargetDir -Recurse -Verbose
@@ -85,7 +86,7 @@ Get-ChildItem -Path (Join-Path $binariesRepo "mlaunch/lib/mlaunch/mlaunch.app/Co
 New-Item -ItemType File -Path $tagFileInRepo
 
 # Copy mlaunch to the target folder
-Copy-Item -Path "mlaunch" -Destination $TargetDir -Recurse -Verbose
+Copy-Item -Path (Join-Path $binariesRepo "*") -Destination $TargetDir -Recurse -Verbose
 
 # Tag the version of mlaunch we have
 New-Item -ItemType File -Path $tagFile
