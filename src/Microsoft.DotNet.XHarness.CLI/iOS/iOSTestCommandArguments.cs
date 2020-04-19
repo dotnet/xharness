@@ -23,7 +23,9 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
         /// Path to the mlaunch binary.
         /// Default comes from the NuGet.
         /// </summary>
-        public string MlaunchPath { get; set; } = Path.Join(Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(iOSTestCommandArguments)).Location), "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
+        public string MlaunchPath { get; set; } = Path.Join(
+            Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(iOSTestCommandArguments)).Location),
+            "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
 
         /// <summary>
         /// Name of a specific device we want to target.
