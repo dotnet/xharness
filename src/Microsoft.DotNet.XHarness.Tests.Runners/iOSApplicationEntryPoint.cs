@@ -31,11 +31,9 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
             // we will write the normal console output using the LogWriter
             var logger = (writer == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, writer);
             logger.MinimumLogLevel = MinimumLogLevel.Info;
-            var testAssemblies = GetTestAssemblies();
-            var runner = await CreateRunner(logger);
 
             // if we have ignore files, ignore those tests
-            await runner.Run(testAssemblies).ConfigureAwait(false);
+            var runner = await InternalRunAsync(logger);
 
             TestRunner.Jargon jargon = Core.TestRunner.Jargon.NUnitV3;
             switch (options.XmlVersion)
