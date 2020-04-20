@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             }
         }
 
-        protected override async Task<int> InvokeInternal()
+        protected override async Task<ExitCode> InvokeInternal()
         {
             var processManager = new ProcessManager(_arguments.XcodeRoot, _arguments.MlaunchPath);
             var deviceLoader = new HardwareDeviceLoader(processManager);
@@ -55,13 +55,13 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             var logs = new Logs(_arguments.OutputDirectory);
             var cancellationToken = new CancellationToken(); // TODO: Get cancellation from command line env? Set timeout through it?
 
-            var exitCode = 0;
+            var exitCode = ExitCode.SUCCESS;
 
             foreach (TestTarget target in _arguments.TestTargets)
             {
                 var exitCodeForRun = await RunTest(target, logs, processManager, deviceLoader, simulatorLoader, cancellationToken);
 
-                if (exitCodeForRun != 0)
+                if (exitCodeForRun != ExitCode.SUCCESS)
                 {
                     exitCode = exitCodeForRun;
                 }
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             return exitCode;
         }
 
-        private async Task<int> RunTest(TestTarget target,
+        private async Task<ExitCode> RunTest(TestTarget target,
             Logs logs,
             ProcessManager processManager,
             IHardwareDeviceLoader deviceLoader,
@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             catch (Exception e)
             {
                 _log.LogError($"Failed to get bundle information: {e.Message}");
-                return (int)ExitCodes.FAILED_TO_GET_BUNDLE_INFO;
+                return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
             }
 
             if (!target.IsSimulator())
@@ -114,18 +114,18 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                 catch (NoDeviceFoundException)
                 {
                     _log.LogError($"Failed to find suitable device for target {target.AsString()}");
-                    return (int)ExitCodes.DEVICE_NOT_FOUND;
+                    return ExitCode.DEVICE_NOT_FOUND;
                 }
                 catch (Exception e)
                 {
                     _log.LogError($"Failed to install the app bundle:{Environment.NewLine}{e}");
-                    return (int)ExitCodes.PACKAGE_INSTALLATION_FAILURE;
+                    return ExitCode.PACKAGE_INSTALLATION_FAILURE;
                 }
 
                 if (!result.Succeeded)
                 {
                     _log.LogError($"Failed to install the app bundle (exit code={result.ExitCode})");
-                    return (int)ExitCodes.PACKAGE_INSTALLATION_FAILURE;
+                    return ExitCode.PACKAGE_INSTALLATION_FAILURE;
                 }
 
                 _log.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on device '{deviceName}'");
@@ -172,12 +172,12 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             catch (NoDeviceFoundException)
             {
                 _log.LogError($"Failed to find suitable device for target {target.AsString()}");
-                return (int)ExitCodes.DEVICE_NOT_FOUND;
+                return ExitCode.DEVICE_NOT_FOUND;
             }
             catch (Exception e)
             {
                 _log.LogError($"Application run failed:{Environment.NewLine}{e}");
-                return (int)ExitCodes.APP_CRASH;
+                return ExitCode.APP_CRASH;
             }
             finally
             {

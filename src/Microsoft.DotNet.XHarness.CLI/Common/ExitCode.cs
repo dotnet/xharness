@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
     /// <summary>
     ///  Exit codes to use for common failure reasons; if you add a new exit code, add it here and use the enum.
     /// </summary>
-    public enum ExitCodes
+    internal enum ExitCode
     {
         SUCCESS = 0,
         PACKAGE_NOT_FOUND = -42,

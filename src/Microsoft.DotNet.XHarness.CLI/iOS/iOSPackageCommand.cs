@@ -55,14 +55,14 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             }
         }
 
-        protected override Task<int> InvokeInternal()
+        protected override Task<ExitCode> InvokeInternal()
         {
             _log.LogDebug($"iOS Package command called:{Environment.NewLine}Application Name = {_arguments.AppPackageName}");
             _log.LogDebug($"Working Directory:{_arguments.WorkingDirectory}{Environment.NewLine}Output Directory:{_arguments.OutputDirectory}");
             _log.LogDebug($"Ignore Files Root Directory:{_arguments.IgnoreFilesRootDirectory}{Environment.NewLine}Traits Root Directory:{_arguments.TraitsRootDirectory}");
             _log.LogDebug($"MTouch Args:{_arguments.MtouchExtraArgs}{Environment.NewLine}Template Type:{Enum.GetName(typeof(TemplateType), _arguments.SelectedTemplateType)}");
 
-            return Task.FromResult(0);
+            return Task.FromResult(ExitCode.SUCCESS);
         }
     }
 }
