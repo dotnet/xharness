@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         /// <summary>
         /// Return the test results as xml.
         /// </summary>
-        public bool EnableXml { get; set; }
+        public bool EnableXml { get; set; } = true; // always true by default
 
         /// <summary>
         /// The name of the host that has the device plugged.

@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
             };
         }
 
-        protected override Task<int> InvokeInternal()
+        protected override Task<ExitCode> InvokeInternal()
         {
             _log.LogInformation("Getting state of ADB and attached Android device(s)");
             try
@@ -35,12 +35,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
                 }
                 _log.LogInformation($"ADB Version info:{Environment.NewLine}{runner.GetAdbVersion()}");
                 _log.LogInformation($"ADB State ('device' if physically attached):{Environment.NewLine}{state}");
-                return Task.FromResult((int)ExitCodes.SUCCESS);
+                return Task.FromResult(ExitCode.SUCCESS);
             }
             catch (Exception toLog)
             {
                 _log.LogCritical(toLog, $"Error: {toLog.Message}");
-                return Task.FromResult((int)ExitCodes.GENERAL_FAILURE);
+                return Task.FromResult(ExitCode.GENERAL_FAILURE);
             }
         }
     }

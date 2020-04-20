@@ -3,13 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Tests.Runners.Xunit;
 
 namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 {
-    public abstract class iOSApplicatonEntryPoint : ApplicationEntryPoint
+    public abstract class iOSApplicationEntryPoint : ApplicationEntryPoint
     {
         public override async Task RunAsync()
         {
@@ -33,38 +31,11 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
             // we will write the normal console output using the LogWriter
             var logger = (writer == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, writer);
             logger.MinimumLogLevel = MinimumLogLevel.Info;
-            var testAssemblies = GetTestAssemblies();
-            TestRunner runner;
-            switch (TestRunner)
-            {
-                case TestRunnerType.NUnit:
-                    throw new NotImplementedException();
-                default:
-                    runner = new XUnitTestRunner(logger)
-                    {
-                        MaxParallelThreads = MaxParallelThreads
-                    };
-                    break;
-            }
-
-            if (!string.IsNullOrEmpty(IgnoreFilesDirectory))
-            {
-                var categories = await IgnoreFileParser.ParseTraitsContentFileAsync(IgnoreFilesDirectory, TestRunner == TestRunnerType.Xunit);
-                // add category filters if they have been added
-                runner.SkipCategories(categories);
-
-                var skippedTests = await IgnoreFileParser.ParseContentFilesAsync(IgnoreFilesDirectory);
-                if (skippedTests.Any())
-                {
-                    // ensure that we skip those tests that have been passed via the ignore files
-                    runner.SkipTests(skippedTests);
-                }
-            }
 
             // if we have ignore files, ignore those tests
-            await runner.Run(testAssemblies).ConfigureAwait(false);
+            var runner = await InternalRunAsync(logger);
 
-            Core.TestRunner.Jargon jargon = Core.TestRunner.Jargon.NUnitV3;
+            TestRunner.Jargon jargon = Core.TestRunner.Jargon.NUnitV3;
             switch (options.XmlVersion)
             {
                 case XmlVersion.NUnitV2:

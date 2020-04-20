@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
@@ -58,16 +59,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
 
                 if (validationErrors?.Any() ?? false)
                 {
-                    _log.LogError("Invalid arguments:");
+                    var message = new StringBuilder("Invalid arguments:");
                     foreach (string error in validationErrors)
                     {
-                        _log.LogError("  - " + error);
+                        message.Append(Environment.NewLine + "  - " + error);
                     }
+
+                    _log.LogError(message.ToString());
 
                     return 1;
                 }
 
-                return InvokeInternal().GetAwaiter().GetResult();
+                return (int) InvokeInternal().GetAwaiter().GetResult();
             }
             finally
             {
@@ -91,6 +94,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
             _log = _logFactory.CreateLogger(name);
         }
 
-        protected abstract Task<int> InvokeInternal();
+        protected abstract Task<ExitCode> InvokeInternal();
     }
 }
