@@ -18,12 +18,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
     public class TestReporterTests : IDisposable
     {
         private readonly Mock<ICrashSnapshotReporter> _crashReporter;
-        private Mock<IProcessManager> _processManager;
+        private readonly Mock<IProcessManager> _processManager;
         private readonly IResultParser _parser;
-        private Mock<ILog> _runLog;
-        private Mock<ILog> _mainLog;
+        private readonly Mock<ILog> _runLog;
+        private readonly Mock<ILog> _mainLog;
         private readonly Mock<ILogs> _logs;
-        private Mock<ISimpleListener> _listener;
+        private readonly Mock<ISimpleListener> _listener;
         private readonly AppBundleInformation _appInformation;
         private readonly string _deviceName = "Device Name";
         private readonly string _logsDirectory;
@@ -45,10 +45,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 
         public void Dispose()
         {
-            _processManager = null;
-            _runLog = null;
-            _mainLog = null;
-            _listener = null;
             if (Directory.Exists(_logsDirectory))
             {
                 Directory.Delete(_logsDirectory, true);

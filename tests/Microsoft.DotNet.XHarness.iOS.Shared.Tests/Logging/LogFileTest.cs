@@ -5,22 +5,19 @@
 using System;
 using System.IO;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Moq;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
 {
     public class LogFileTest : IDisposable
     {
-        private string _path;
-        private string _description;
-        private Mock<ILogs> _logs;
+        private readonly string _path;
+        private readonly string _description;
 
         public LogFileTest()
         {
             _description = "My log";
             _path = Path.GetTempFileName();
-            _logs = new Mock<ILogs>();
             File.Delete(_path); // delete the empty file
         }
 
@@ -30,10 +27,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             {
                 File.Delete(_path);
             }
-
-            _path = null;
-            _description = null;
-            _logs = null;
         }
 
         [Fact]

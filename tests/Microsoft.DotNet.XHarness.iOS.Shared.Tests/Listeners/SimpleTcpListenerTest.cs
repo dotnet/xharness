@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.IO;
 using System.Net.Sockets;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
@@ -12,21 +11,15 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
 {
-    public class SimpleTcpListenerTest : IDisposable
+    public class SimpleTcpListenerTest
     {
-        private Mock<ILog> _log;
-        private Mock<ILog> _testLog;
+        private readonly Mock<ILog> _log;
+        private readonly Mock<ILog> _testLog;
 
         public SimpleTcpListenerTest()
         {
             _log = new Mock<ILog>();
             _testLog = new Mock<ILog>();
-        }
-
-        public void Dispose()
-        {
-            _log = null;
-            _testLog = null;
         }
 
         [Fact]

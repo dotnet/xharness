@@ -18,24 +18,17 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 {
-    public class DevicesTest : IDisposable
+    public class DevicesTest
     {
-        private HardwareDeviceLoader _devices;
-        private Mock<IProcessManager> _processManager;
-        private Mock<ILog> _executionLog;
+        private readonly HardwareDeviceLoader _devices;
+        private readonly Mock<IProcessManager> _processManager;
+        private readonly Mock<ILog> _executionLog;
 
         public DevicesTest()
         {
             _processManager = new Mock<IProcessManager>();
             _devices = new HardwareDeviceLoader(_processManager.Object);
             _executionLog = new Mock<ILog>();
-        }
-
-        public void Dispose()
-        {
-            _processManager = null;
-            _executionLog = null;
-            _devices = null;
         }
 
         [Theory]

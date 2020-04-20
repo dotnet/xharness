@@ -15,10 +15,10 @@ namespace Xharness.Tests.TestImporter.Xamarin.Tests
 {
     public class XamariniOSTemplateTest : IDisposable
     {
-        private string _outputdir;
-        private Mock<IAssemblyLocator> _assemlyLocator;
-        private Mock<IProjectFilter> _projectFilter;
-        private XamariniOSTemplate _template;
+        private readonly string _outputdir;
+        private readonly Mock<IAssemblyLocator> _assemlyLocator;
+        private readonly Mock<IProjectFilter> _projectFilter;
+        private readonly XamariniOSTemplate _template;
 
         public XamariniOSTemplateTest()
         {
@@ -41,11 +41,6 @@ namespace Xharness.Tests.TestImporter.Xamarin.Tests
             {
                 Directory.Delete(_outputdir, true);
             }
-
-            _outputdir = null;
-            _assemlyLocator = null;
-            _projectFilter = null;
-            _template = null;
         }
 
         [Theory]

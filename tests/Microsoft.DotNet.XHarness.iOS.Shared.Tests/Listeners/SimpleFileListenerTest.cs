@@ -13,9 +13,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
 {
     public class SimpleFileListenerTest : IDisposable
     {
-        private string _path;
-        private Mock<ILog> _testLog;
-        private Mock<ILog> _log;
+        private readonly string _path;
+        private readonly Mock<ILog> _testLog;
+        private readonly Mock<ILog> _log;
 
         public SimpleFileListenerTest()
         {
@@ -31,10 +31,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             {
                 File.Delete(_path);
             }
-
-            _path = null;
-            _testLog = null;
-            _log = null;
         }
 
         [Fact]

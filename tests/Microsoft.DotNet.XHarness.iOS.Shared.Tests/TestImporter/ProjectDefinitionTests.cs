@@ -10,20 +10,15 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter
 {
-    public class ProjectDefinitionTests : IDisposable
+    public class ProjectDefinitionTests
     {
-        private Mock<IAssemblyLocator> _assemblyLocator;
+        private readonly Mock<IAssemblyLocator> _assemblyLocator;
         private readonly Mock<ITestAssemblyDefinitionFactory> _factory;
 
         public ProjectDefinitionTests()
         {
             _assemblyLocator = new Mock<IAssemblyLocator>();
             _factory = new Mock<ITestAssemblyDefinitionFactory>();
-        }
-
-        public void Dispose()
-        {
-            _assemblyLocator = null;
         }
 
         [Fact]

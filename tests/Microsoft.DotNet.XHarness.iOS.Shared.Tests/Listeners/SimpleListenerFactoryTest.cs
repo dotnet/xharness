@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Moq;
@@ -10,21 +9,15 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
 {
-    public class SimpleListenerFactoryTest : IDisposable
+    public class SimpleListenerFactoryTest
     {
-        private Mock<ILog> _log;
-        private SimpleListenerFactory _factory;
+        private readonly Mock<ILog> _log;
+        private readonly SimpleListenerFactory _factory;
 
         public SimpleListenerFactoryTest()
         {
             _log = new Mock<ILog>();
             _factory = new SimpleListenerFactory();
-        }
-
-        public void Dispose()
-        {
-            _log = null;
-            _factory = null;
         }
 
         [Fact]

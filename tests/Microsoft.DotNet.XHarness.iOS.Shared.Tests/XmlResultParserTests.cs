@@ -13,7 +13,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 {
-    public class XmlResultParserTests : IDisposable
+    public class XmlResultParserTests
     {
         private static readonly Dictionary<XmlResultJargon, Action<string, string, string, string, string, string, string, int>> s_validationMap = new Dictionary<XmlResultJargon, Action<string, string, string, string, string, string, string, int>>
         {
@@ -21,16 +21,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             [XmlResultJargon.NUnitV3] = ValidateNUnitV3Failure,
             [XmlResultJargon.xUnit] = ValidatexUnitFailure,
         };
-        private XmlResultParser _resultParser;
+
+        private readonly XmlResultParser _resultParser;
 
         public XmlResultParserTests()
         {
             _resultParser = new XmlResultParser();
-        }
-
-        public void Dispose()
-        {
-            _resultParser = null;
         }
 
         private string CreateResultSample(XmlResultJargon jargon, bool includePing = false)
