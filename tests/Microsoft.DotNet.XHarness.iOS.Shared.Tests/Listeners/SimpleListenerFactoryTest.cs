@@ -2,35 +2,35 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Moq;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
-using Xunit;
 using System;
+using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Moq;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
 {
     public class SimpleListenerFactoryTest : IDisposable
     {
-        private Mock<ILog> log;
-        private SimpleListenerFactory factory;
+        private Mock<ILog> _log;
+        private SimpleListenerFactory _factory;
 
         public SimpleListenerFactoryTest()
         {
-            log = new Mock<ILog>();
-            factory = new SimpleListenerFactory();
+            _log = new Mock<ILog>();
+            _factory = new SimpleListenerFactory();
         }
 
         public void Dispose()
         {
-            log = null;
-            factory = null;
+            _log = null;
+            _factory = null;
         }
 
         [Fact]
         public void CreateNotWatchListener()
         {
-            var (transport, listener, listenerTmpFile) = factory.Create(RunMode.iOS, log.Object, log.Object, true, true, true);
+            var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.iOS, _log.Object, _log.Object, true, true, true);
             Assert.Equal(ListenerTransport.Tcp, transport);
             Assert.IsType<SimpleTcpListener>(listener);
             Assert.Null(listenerTmpFile);
@@ -40,22 +40,22 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
         public void CreateWatchOSSimulator()
         {
             var logFullPath = "myfullpath.txt";
-            _ = log.Setup(l => l.FullPath).Returns(logFullPath);
+            _ = _log.Setup(l => l.FullPath).Returns(logFullPath);
 
-            var (transport, listener, listenerTmpFile) = factory.Create(RunMode.WatchOS, log.Object, log.Object, true, true, true);
+            var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.WatchOS, _log.Object, _log.Object, true, true, true);
             Assert.Equal(ListenerTransport.File, transport);
             Assert.IsType<SimpleFileListener>(listener);
             Assert.NotNull(listenerTmpFile);
             Assert.Equal(logFullPath + ".tmp", listenerTmpFile);
 
-            log.Verify(l => l.FullPath, Times.Once);
+            _log.Verify(l => l.FullPath, Times.Once);
 
         }
 
         [Fact]
         public void CreateWatchOSDevice()
         {
-            var (transport, listener, listenerTmpFile) = factory.Create(RunMode.WatchOS, log.Object, log.Object, false, true, true);
+            var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.WatchOS, _log.Object, _log.Object, false, true, true);
             Assert.Equal(ListenerTransport.Http, transport);
             Assert.IsType<SimpleHttpListener>(listener);
             Assert.Null(listenerTmpFile);

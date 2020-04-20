@@ -4,8 +4,6 @@
 
 using System;
 using System.IO;
-
-
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed;
 using Xunit;
@@ -14,7 +12,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
 {
     public class InfoPlistGeneratorTests
     {
-
         [Fact]
         public void GenerateCodeNullTemplateFile()
         {

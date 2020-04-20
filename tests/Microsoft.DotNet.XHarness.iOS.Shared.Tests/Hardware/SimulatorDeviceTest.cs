@@ -6,10 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Moq;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Moq;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware

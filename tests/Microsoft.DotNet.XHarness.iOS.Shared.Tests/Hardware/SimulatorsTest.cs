@@ -9,11 +9,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Moq;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Moq;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
@@ -48,9 +48,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     processPath = p.StartInfo.FileName;
                     passedArguments = args;
                     if (!timeout)
+                    {
                         return Task.FromResult(new ProcessExecutionResult { ExitCode = 1, TimedOut = false });
+                    }
                     else
+                    {
                         return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = true });
+                    }
                 });
 
             await Assert.ThrowsAsync<Exception>(async () =>
@@ -74,7 +78,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             {
                 string line;
                 while ((line = sampleStream.ReadLine()) != null)
+                {
                     outputStream.WriteLine(line);
+                }
             }
         }
 

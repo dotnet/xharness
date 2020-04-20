@@ -4,55 +4,58 @@
 
 using System;
 using System.IO;
-using Moq;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Moq;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
 {
     public class LogFileTest : IDisposable
     {
-        private string path;
-        private string description;
-        private Mock<ILogs> logs;
+        private string _path;
+        private string _description;
+        private Mock<ILogs> _logs;
 
         public LogFileTest()
         {
-            description = "My log";
-            path = Path.GetTempFileName();
-            logs = new Mock<ILogs>();
-            File.Delete(path); // delete the empty file
+            _description = "My log";
+            _path = Path.GetTempFileName();
+            _logs = new Mock<ILogs>();
+            File.Delete(_path); // delete the empty file
         }
 
         public void Dispose()
         {
-            if (File.Exists(path))
-                File.Delete(path);
-            path = null;
-            description = null;
-            logs = null;
+            if (File.Exists(_path))
+            {
+                File.Delete(_path);
+            }
+
+            _path = null;
+            _description = null;
+            _logs = null;
         }
 
         [Fact]
         public void ConstructorTest()
         {
-            using (var log = new LogFile(description, path))
+            using (var log = new LogFile(_description, _path))
             {
-                Assert.Equal(description, log.Description);
-                Assert.Equal(path, log.FullPath);
+                Assert.Equal(_description, log.Description);
+                Assert.Equal(_path, log.FullPath);
             }
         }
 
         [Fact]
         public void ConstructorNullPathTest()
         {
-            Assert.Throws<ArgumentNullException>(() => { var log = new LogFile(description, null); });
+            Assert.Throws<ArgumentNullException>(() => { var log = new LogFile(_description, null); });
         }
 
         [Fact]
         public void ConstructorNullDescriptionTest()
         {
-            using var log = new LogFile(null, path);
+            using var log = new LogFile(null, _path);
         }
 
 
@@ -62,27 +65,32 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             string oldLine = "Hello world!";
             string newLine = "Hola mundo!";
             // create a log, write to it and assert that we have the expected data
-            using (var stream = File.Create(path))
+            using (var stream = File.Create(_path))
             using (var writer = new StreamWriter(stream))
             {
                 writer.WriteLine(oldLine);
             }
-            using (var log = new LogFile(description, path))
+            using (var log = new LogFile(_description, _path))
             {
                 log.WriteLine(newLine);
                 log.Flush();
             }
             bool oldLineFound = false;
             bool newLineFound = false;
-            using (var reader = new StreamReader(path))
+            using (var reader = new StreamReader(_path))
             {
                 string line;
                 while ((line = reader.ReadLine()) != null)
                 {
                     if (line == oldLine)
+                    {
                         oldLineFound = true;
+                    }
+
                     if (line.EndsWith(newLine)) // consider time stamp
+                    {
                         newLineFound = true;
+                    }
                 }
             }
 
@@ -96,27 +104,32 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             string oldLine = "Hello world!";
             string newLine = "Hola mundo!";
             // create a log, write to it and assert that we have the expected data
-            using (var stream = File.Create(path))
+            using (var stream = File.Create(_path))
             using (var writer = new StreamWriter(stream))
             {
                 writer.WriteLine(oldLine);
             }
-            using (var log = new LogFile(description, path, false))
+            using (var log = new LogFile(_description, _path, false))
             {
                 log.WriteLine(newLine);
                 log.Flush();
             }
             bool oldLineFound = false;
             bool newLineFound = false;
-            using (var reader = new StreamReader(path))
+            using (var reader = new StreamReader(_path))
             {
                 string line;
                 while ((line = reader.ReadLine()) != null)
                 {
                     if (line == oldLine)
+                    {
                         oldLineFound = true;
+                    }
+
                     if (line.EndsWith(newLine)) // consider timestamp
+                    {
                         newLineFound = true;
+                    }
                 }
             }
 

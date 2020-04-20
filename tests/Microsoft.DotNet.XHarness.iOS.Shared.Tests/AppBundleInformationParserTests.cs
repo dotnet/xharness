@@ -11,20 +11,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 {
     public class AppBundleInformationParserTests : IDisposable
     {
-        private const string appName = "com.xamarin.bcltests.SystemXunit";
-        private static readonly string outputPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(AppBundleInformationParser)).Location);
-        private static readonly string sampleProjectPath = Path.Combine(outputPath, "Samples", "TestProject");
-        private static readonly string appPath = Path.Combine(sampleProjectPath, "bin", appName + ".app");
-        private static readonly string projectFilePath = Path.Combine(sampleProjectPath, "SystemXunit.csproj");
+        private const string AppName = "com.xamarin.bcltests.SystemXunit";
+        private static readonly string s_outputPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(AppBundleInformationParser)).Location);
+        private static readonly string s_sampleProjectPath = Path.Combine(s_outputPath, "Samples", "TestProject");
+        private static readonly string s_appPath = Path.Combine(s_sampleProjectPath, "bin", AppName + ".app");
+        private static readonly string s_projectFilePath = Path.Combine(s_sampleProjectPath, "SystemXunit.csproj");
 
         public AppBundleInformationParserTests()
         {
-            Directory.CreateDirectory(appPath);
+            Directory.CreateDirectory(s_appPath);
         }
 
         public void Dispose()
         {
-            Directory.Delete(appPath, true);
+            Directory.Delete(s_appPath, true);
         }
 
         [Fact]
@@ -32,12 +32,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         {
             var parser = new AppBundleInformationParser();
 
-            var info = parser.ParseFromProject(projectFilePath, TestTarget.Simulator_iOS64, "Debug");
+            var info = parser.ParseFromProject(s_projectFilePath, TestTarget.Simulator_iOS64, "Debug");
 
-            Assert.Equal(appName, info.AppName);
-            Assert.Equal(appPath, info.AppPath);
-            Assert.Equal(appPath, info.LaunchAppPath);
-            Assert.Equal(appName, info.BundleIdentifier);
+            Assert.Equal(AppName, info.AppName);
+            Assert.Equal(s_appPath, info.AppPath);
+            Assert.Equal(s_appPath, info.LaunchAppPath);
+            Assert.Equal(AppName, info.BundleIdentifier);
         }
     }
 }

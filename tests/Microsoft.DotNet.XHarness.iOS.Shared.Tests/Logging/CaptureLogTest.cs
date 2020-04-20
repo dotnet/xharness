@@ -4,7 +4,6 @@
 
 using System;
 using System.IO;
-using Moq;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Xunit;
 
@@ -26,7 +25,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         public void Dispose()
         {
             if (File.Exists(_filePath))
+            {
                 File.Delete(_filePath);
+            }
         }
 
         [Fact]
@@ -55,7 +56,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
                 using (var writer = new StreamWriter(_filePath))
                 {
                     foreach (var line in logLines)
+                    {
                         writer.WriteLine(line);
+                    }
                 }
                 captureLog.StopCapture();
                 // get the stream and assert we do have the correct lines

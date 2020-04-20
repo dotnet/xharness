@@ -12,24 +12,24 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter
 {
     public class ProjectDefinitionTests : IDisposable
     {
-        private Mock<IAssemblyLocator> assemblyLocator;
-        private readonly Mock<ITestAssemblyDefinitionFactory> factory;
+        private Mock<IAssemblyLocator> _assemblyLocator;
+        private readonly Mock<ITestAssemblyDefinitionFactory> _factory;
 
         public ProjectDefinitionTests()
         {
-            assemblyLocator = new Mock<IAssemblyLocator>();
-            factory = new Mock<ITestAssemblyDefinitionFactory>();
+            _assemblyLocator = new Mock<IAssemblyLocator>();
+            _factory = new Mock<ITestAssemblyDefinitionFactory>();
         }
 
         public void Dispose()
         {
-            assemblyLocator = null;
+            _assemblyLocator = null;
         }
 
         [Fact]
         public void GetTypeForAssembliesNullMonoPath()
         {
-            var projectDefinition = new ProjectDefinition("MyProject", assemblyLocator.Object, factory.Object, new List<ITestAssemblyDefinition>(), "");
+            var projectDefinition = new ProjectDefinition("MyProject", _assemblyLocator.Object, _factory.Object, new List<ITestAssemblyDefinition>(), "");
             Assert.Throws<ArgumentNullException>(() => projectDefinition.GetTypeForAssemblies(null, Platform.iOS));
         }
     }

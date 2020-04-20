@@ -7,8 +7,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using Moq;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Moq;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
@@ -63,7 +63,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                 }
                 string line;
                 while ((line = sampleStream.ReadLine()) != null)
+                {
                     outputStream.WriteLine(line);
+                }
             }
             return tempPath;
         }
@@ -337,7 +339,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             {
                 string line;
                 while ((line = sampleStream.ReadLine()) != null)
+                {
                     outputStream.WriteLine(line);
+                }
             }
             var (resultLine, failed) = _resultParser.GenerateHumanReadableResults(tempPath, destinationFile, XmlResultJargon.NUnitV3);
             Assert.True(failed, "failed");

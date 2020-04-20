@@ -7,46 +7,46 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Moq;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Moq;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 {
     public class CrashReportSnapshotTests : IDisposable
     {
-        private readonly string tempXcodeRoot;
-        private readonly string symbolicatePath;
-        private readonly Mock<IProcessManager> processManager;
+        private readonly string _tempXcodeRoot;
+        private readonly string _symbolicatePath;
+        private readonly Mock<IProcessManager> _processManager;
         private readonly Mock<ILog> _log;
         private readonly Mock<ILogs> _logs;
 
         public CrashReportSnapshotTests()
         {
-            processManager = new Mock<IProcessManager>();
+            _processManager = new Mock<IProcessManager>();
             _log = new Mock<ILog>();
             _logs = new Mock<ILogs>();
 
-            tempXcodeRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            symbolicatePath = Path.Combine(tempXcodeRoot, "Contents", "SharedFrameworks", "DTDeviceKitBase.framework", "Versions", "A", "Resources");
+            _tempXcodeRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            _symbolicatePath = Path.Combine(_tempXcodeRoot, "Contents", "SharedFrameworks", "DTDeviceKitBase.framework", "Versions", "A", "Resources");
 
-            processManager.SetupGet(x => x.XcodeRoot).Returns(tempXcodeRoot);
-            processManager.SetupGet(x => x.MlaunchPath).Returns("/var/bin/mlaunch");
+            _processManager.SetupGet(x => x.XcodeRoot).Returns(_tempXcodeRoot);
+            _processManager.SetupGet(x => x.MlaunchPath).Returns("/var/bin/mlaunch");
 
             // Create fake place for device logs
-            Directory.CreateDirectory(tempXcodeRoot);
+            Directory.CreateDirectory(_tempXcodeRoot);
 
             // Create fake symbolicate binary
-            Directory.CreateDirectory(symbolicatePath);
-            File.WriteAllText(Path.Combine(symbolicatePath, "symbolicatecrash"), "");
+            Directory.CreateDirectory(_symbolicatePath);
+            File.WriteAllText(Path.Combine(_symbolicatePath, "symbolicatecrash"), "");
         }
 
         public void Dispose()
         {
-            Directory.Delete(tempXcodeRoot, true);
+            Directory.Delete(_tempXcodeRoot, true);
         }
 
         [Fact]
@@ -69,10 +69,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             _logs.Setup(x => x.Create("crash.symbolicated.log", "Symbolicated crash report: crash.log", It.IsAny<bool>()))
                 .Returns(symbolicateReport);
 
-            processManager.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult() { ExitCode = 0 }));
+            _processManager.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult() { ExitCode = 0 }));
 
             // Act
-            var snapshotReport = new CrashSnapshotReporter(processManager.Object,
+            var snapshotReport = new CrashSnapshotReporter(_processManager.Object,
                 _log.Object,
                 _logs.Object,
                 true,
@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             _logs.VerifyAll();
 
             // List of crash reports is retrieved
-            processManager.Verify(
+            _processManager.Verify(
                 x => x.ExecuteCommandAsync(
                     It.Is<MlaunchArguments>(args => args.AsCommandLine() ==
                        StringUtils.FormatArguments(
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                 Times.Exactly(2));
 
             // Device crash log is downloaded
-            processManager.Verify(
+            _processManager.Verify(
                 x => x.ExecuteCommandAsync(
                     It.Is<MlaunchArguments>(args => args.AsCommandLine() ==
                         StringUtils.FormatArguments(
@@ -118,9 +118,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                 Times.Once);
 
             // Symbolicate is ran
-            processManager.Verify(
+            _processManager.Verify(
                 x => x.ExecuteCommandAsync(
-                    Path.Combine(symbolicatePath, "symbolicatecrash"),
+                    Path.Combine(_symbolicatePath, "symbolicatecrash"),
                     It.Is<IList<string>>(args => args.First() == crashLogPath),
                     symbolicateReport,
                     TimeSpan.FromMinutes(1),

@@ -2,31 +2,31 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.IO;
 using System.Net.Sockets;
-using Moq;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
-using System;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Moq;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
 {
     public class SimpleTcpListenerTest : IDisposable
     {
-        private Mock<ILog> log;
-        private Mock<ILog> testLog;
+        private Mock<ILog> _log;
+        private Mock<ILog> _testLog;
 
         public SimpleTcpListenerTest()
         {
-            log = new Mock<ILog>();
-            testLog = new Mock<ILog>();
+            _log = new Mock<ILog>();
+            _testLog = new Mock<ILog>();
         }
 
         public void Dispose()
         {
-            log = null;
-            testLog = null;
+            _log = null;
+            _testLog = null;
         }
 
         [Fact]
@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             // create a stream to be used and write the data there
             var lines = new string[] { "first line", "second line", "last line" };
             // setup the expected data to be written
-            testLog.Setup(l => l.Write(It.IsAny<byte[]>(), 0, It.IsAny<int>())).Callback<byte[], int, int>((buffer, start, end) =>
+            _testLog.Setup(l => l.Write(It.IsAny<byte[]>(), 0, It.IsAny<int>())).Callback<byte[], int, int>((buffer, start, end) =>
             {
                 using (var resultStream = File.Create(tempResult))
                 {// opening closing a lot, but for the test we do not care
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             });
             // create a linstener that will start in an other thread, connect to it
             // and send the data.
-            var listener = new SimpleTcpListener(log.Object, testLog.Object, true, true);
+            var listener = new SimpleTcpListener(_log.Object, _testLog.Object, true, true);
             listener.Initialize();
             var connectionPort = listener.Port;
             listener.StartAsync();
@@ -74,11 +74,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
                 while ((line = reader.ReadLine()) != null)
                 {
                     if (line.EndsWith(lines[0]))
+                    {
                         firstLineFound = true;
+                    }
+
                     if (line.EndsWith(lines[1]))
+                    {
                         secondLineFound = true;
+                    }
+
                     if (line.EndsWith(lines[2]))
+                    {
                         lastLineFound = true;
+                    }
                 }
             }
             Assert.True(firstLineFound, "first line");

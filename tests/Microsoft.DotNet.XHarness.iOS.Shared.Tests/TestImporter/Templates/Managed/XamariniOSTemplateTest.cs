@@ -15,34 +15,37 @@ namespace Xharness.Tests.TestImporter.Xamarin.Tests
 {
     public class XamariniOSTemplateTest : IDisposable
     {
-        private string outputdir;
-        private Mock<IAssemblyLocator> assemlyLocator;
-        private Mock<IProjectFilter> projectFilter;
-        private XamariniOSTemplate template;
+        private string _outputdir;
+        private Mock<IAssemblyLocator> _assemlyLocator;
+        private Mock<IProjectFilter> _projectFilter;
+        private XamariniOSTemplate _template;
 
         public XamariniOSTemplateTest()
         {
-            outputdir = Path.GetTempFileName();
-            File.Delete(outputdir);
-            Directory.CreateDirectory(outputdir);
-            assemlyLocator = new Mock<IAssemblyLocator>();
-            projectFilter = new Mock<IProjectFilter>();
-            template = new XamariniOSTemplate
+            _outputdir = Path.GetTempFileName();
+            File.Delete(_outputdir);
+            Directory.CreateDirectory(_outputdir);
+            _assemlyLocator = new Mock<IAssemblyLocator>();
+            _projectFilter = new Mock<IProjectFilter>();
+            _template = new XamariniOSTemplate
             {
-                AssemblyLocator = assemlyLocator.Object,
-                ProjectFilter = projectFilter.Object,
-                OutputDirectoryPath = outputdir,
+                AssemblyLocator = _assemlyLocator.Object,
+                ProjectFilter = _projectFilter.Object,
+                OutputDirectoryPath = _outputdir,
             };
         }
 
         public void Dispose()
         {
-            if (Directory.Exists(outputdir))
-                Directory.Delete(outputdir, true);
-            outputdir = null;
-            assemlyLocator = null;
-            projectFilter = null;
-            template = null;
+            if (Directory.Exists(_outputdir))
+            {
+                Directory.Delete(_outputdir, true);
+            }
+
+            _outputdir = null;
+            _assemlyLocator = null;
+            _projectFilter = null;
+            _template = null;
         }
 
         [Theory]
@@ -54,8 +57,8 @@ namespace Xharness.Tests.TestImporter.Xamarin.Tests
         public void GetProjectPathTest(string projectName, Platform platform, string expectedName)
         {
             // ignore the fact that all params are the same, we do not care
-            var path = template.GetProjectPath(projectName, platform);
-            Assert.Equal(Path.Combine(template.OutputDirectoryPath, expectedName), path);
+            var path = _template.GetProjectPath(projectName, platform);
+            Assert.Equal(Path.Combine(_template.OutputDirectoryPath, expectedName), path);
         }
 
         [Theory]
@@ -64,8 +67,8 @@ namespace Xharness.Tests.TestImporter.Xamarin.Tests
         public void GetProjectPathWatchOSTest(string projectName, WatchAppType appType, string expectedName)
         {
             // ignore the fact that all params are the same, we do not care
-            var path = template.GetProjectPath(projectName, appType);
-            Assert.Equal(Path.Combine(template.OutputDirectoryPath, expectedName), path);
+            var path = _template.GetProjectPath(projectName, appType);
+            Assert.Equal(Path.Combine(_template.OutputDirectoryPath, expectedName), path);
         }
 
         [Theory]

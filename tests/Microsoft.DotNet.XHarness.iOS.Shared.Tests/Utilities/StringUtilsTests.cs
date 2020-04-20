@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
 {
     public class StringUtilsTests
     {
-        private static readonly char shellQuoteChar =
+        private static readonly char s_shellQuoteChar =
             (int)Environment.OSVersion.Platform != 128
                 && Environment.OSVersion.Platform != PlatformID.Unix
                 && Environment.OSVersion.Platform != PlatformID.MacOSX
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
         [InlineData("foo $bar's", "foo $bar\\\'s")]
         public void QuoteForProcessTest(string input, string expected)
         {
-            Assert.Equal(shellQuoteChar + expected + shellQuoteChar, StringUtils.Quote(input));
+            Assert.Equal(s_shellQuoteChar + expected + s_shellQuoteChar, StringUtils.Quote(input));
         }
 
         [Fact(Skip = "Only works on OSX/Linux")]
