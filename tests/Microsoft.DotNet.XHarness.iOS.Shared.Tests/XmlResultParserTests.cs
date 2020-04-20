@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                     sampleFileName = "xUnitSample.xml";
                     break;
             }
-            Assert.Null(sampleFileName);
+            Assert.NotNull(sampleFileName);
             var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith(sampleFileName, StringComparison.Ordinal)).FirstOrDefault();
             var tempPath = Path.GetTempFileName();
             using (var outputStream = new StreamWriter(tempPath))

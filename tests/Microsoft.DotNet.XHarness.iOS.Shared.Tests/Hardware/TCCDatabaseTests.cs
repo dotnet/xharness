@@ -15,27 +15,21 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 {
-    public class TCCDatabaseTests : IDisposable
+    public class TCCDatabaseTests
     {
-        private Mock<IProcessManager> processManager;
-        private TCCDatabase database;
-        private readonly Mock<ILog> executionLog;
-        private readonly string simRuntime;
-        private readonly string dataPath;
+        private readonly Mock<IProcessManager> _processManager;
+        private readonly TCCDatabase _database;
+        private readonly Mock<ILog> _executionLog;
+        private readonly string _simRuntime;
+        private readonly string _dataPath;
 
         public TCCDatabaseTests()
         {
-            processManager = new Mock<IProcessManager>();
-            database = new TCCDatabase(processManager.Object);
-            executionLog = new Mock<ILog>();
-            simRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-12-1";
-            dataPath = "/path/to/my/data";
-        }
-
-        public void Dispose()
-        {
-            processManager = null;
-            database = null;
+            _processManager = new Mock<IProcessManager>();
+            _database = new TCCDatabase(_processManager.Object);
+            _executionLog = new Mock<ILog>();
+            _simRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-12-1";
+            _dataPath = "/path/to/my/data";
         }
 
         [Theory]
@@ -49,22 +43,22 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-4-1", 2)]
         public void GetTCCFormatTest(string runtime, int expected)
         {
-            Assert.Equal(expected, database.GetTCCFormat(runtime));
+            Assert.Equal(expected, _database.GetTCCFormat(runtime));
         }
 
         [Fact]
         public void GetTCCFormatUnknownTest()
         {
-            Assert.Throws<NotImplementedException>(() => database.GetTCCFormat("unknown-sim-runtime"));
+            Assert.Throws<NotImplementedException>(() => _database.GetTCCFormat("unknown-sim-runtime"));
         }
 
         [Fact]
         public async Task AgreeToPromptsAsyncNoIdentifiers()
         {
             // we should write in the log that we did not managed to agree to it
-            executionLog.Setup(l => l.WriteLine(It.IsAny<string>()));
-            await database.AgreeToPromptsAsync(simRuntime, dataPath, executionLog.Object);
-            executionLog.Verify(l => l.WriteLine("No bundle identifiers given when requested permission editing."));
+            _executionLog.Setup(l => l.WriteLine(It.IsAny<string>()));
+            await _database.AgreeToPromptsAsync(_simRuntime, _dataPath, _executionLog.Object);
+            _executionLog.Verify(l => l.WriteLine("No bundle identifiers given when requested permission editing."));
         }
 
         [Fact]
@@ -72,18 +66,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         {
             string processName = null;
             // set the process manager to always return a failure so that we do eventually get a timeout
-            processManager.Setup(p => p.ExecuteCommandAsync(It.IsAny<string>(), It.IsAny<List<string>>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), null, null))
+            _processManager.Setup(p => p.ExecuteCommandAsync(It.IsAny<string>(), It.IsAny<List<string>>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), null, null))
                 .Returns<string, IList<string>, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((p, a, l, t, e, c) =>
                 {
                     processName = p;
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 1, TimedOut = true });
                 });
             // try to accept and fail because we always timeout
-            await database.AgreeToPromptsAsync(simRuntime, dataPath, executionLog.Object, "my-bundle-id", "your-bundle-id");
+            await _database.AgreeToPromptsAsync(_simRuntime, _dataPath, _executionLog.Object, "my-bundle-id", "your-bundle-id");
 
             // verify that we did write in the logs and that we did call sqlite3
             Assert.Equal("sqlite3", processName);
-            executionLog.Verify(l => l.WriteLine("Failed to edit TCC.db, the test run might hang due to permission request dialogs"), Times.AtLeastOnce);
+            _executionLog.Verify(l => l.WriteLine("Failed to edit TCC.db, the test run might hang due to permission request dialogs"), Times.AtLeastOnce);
         }
 
         [Theory]
@@ -132,7 +126,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             }
             string processName = null;
             IList<string> args = new List<string>();
-            processManager.Setup(p => p.ExecuteCommandAsync(It.IsAny<string>(), It.IsAny<List<string>>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), null, null))
+            _processManager.Setup(p => p.ExecuteCommandAsync(It.IsAny<string>(), It.IsAny<List<string>>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), null, null))
                 .Returns<string, IList<string>, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((p, a, l, t, e, c) =>
                 {
                     processName = p;
@@ -140,11 +134,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
                 });
 
-            await database.AgreeToPromptsAsync(runtime, dataPath, executionLog.Object, bundleIdentifier);
+            await _database.AgreeToPromptsAsync(runtime, _dataPath, _executionLog.Object, bundleIdentifier);
 
             Assert.Equal("sqlite3", processName);
             // assert that the sql is present
-            Assert.True(args.Contains(dataPath));
+            Assert.True(args.Contains(_dataPath));
             Assert.True(args.Contains(expectedArgs.ToString()));
         }
     }
