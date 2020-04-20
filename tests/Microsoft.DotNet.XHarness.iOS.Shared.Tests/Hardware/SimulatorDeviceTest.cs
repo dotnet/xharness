@@ -7,23 +7,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Moq;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 {
-    [TestFixture]
-    public class SimulatorDeviceTest
+    public class SimulatorDeviceTest : IDisposable
     {
+        private Mock<ILog> executionLog;
+        private Mock<IProcessManager> processManager;
+        private SimulatorDevice simulator;
 
-        Mock<ILog> executionLog;
-        Mock<IProcessManager> processManager;
-        SimulatorDevice simulator;
-
-        [SetUp]
-        public void SetUp()
+        public SimulatorDeviceTest()
         {
             executionLog = new Mock<ILog>();
             processManager = new Mock<IProcessManager>();
@@ -33,31 +30,32 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             };
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             executionLog = null;
             processManager = null;
             simulator = null;
         }
 
-        [TestCase("com.apple.CoreSimulator.SimRuntime.watchOS-5-1", true)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-7-1", false)]
+        [Theory]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-5-1", true)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-7-1", false)]
         public void IsWatchSimulatorTest(string runtime, bool expectation)
         {
             simulator.SimRuntime = runtime;
-            Assert.AreEqual(expectation, simulator.IsWatchSimulator);
+            Assert.Equal(expectation, simulator.IsWatchSimulator);
         }
 
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-12-1", "iOS 12.1")]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-10-1", "iOS 10.1")]
+        [Theory]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-12-1", "iOS 12.1")]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-10-1", "iOS 10.1")]
         public void OSVersionTest(string runtime, string expected)
         {
             simulator.SimRuntime = runtime;
-            Assert.AreEqual(expected, simulator.OSVersion);
+            Assert.Equal(expected, simulator.OSVersion);
         }
 
-        [Test]
+        [Fact]
         public async Task EraseAsyncTest()
         {
             // just call and verify the correct args are pass
@@ -69,7 +67,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
         }
 
-        [Test]
+        [Fact]
         public async Task ShutdownAsyncTest()
         {
             await simulator.Shutdown(executionLog.Object);
@@ -77,8 +75,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             processManager.Verify(h => h.ExecuteXcodeCommandAsync(It.Is<string>(s => s == "simctl"), It.Is<string[]>(args => args.Where(a => a == simulator.UDID || a == "shutdown").Count() == 2), It.IsAny<ILog>(), It.IsAny<TimeSpan>()));
         }
 
-        [Test]
-        [Ignore("Running this test will actually kill simulators on the machine")]
+        [Fact(Skip = "Running this test will actually kill simulators on the machine")]
         public async Task KillEverythingAsyncTest()
         {
             Func<IList<string>, bool> verifyKillAll = (args) =>

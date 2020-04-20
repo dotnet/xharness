@@ -10,41 +10,37 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 {
-
-    [TestFixture]
-    public class DevicesTest
+    public class DevicesTest : IDisposable
     {
+        private HardwareDeviceLoader devices;
+        private Mock<IProcessManager> processManager;
+        private Mock<ILog> executionLog;
 
-        HardwareDeviceLoader devices;
-        Mock<IProcessManager> processManager;
-        Mock<ILog> executionLog;
-
-        [SetUp]
-        public void SetUp()
+        public DevicesTest()
         {
             processManager = new Mock<IProcessManager>();
             devices = new HardwareDeviceLoader(processManager.Object);
             executionLog = new Mock<ILog>();
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             processManager = null;
             executionLog = null;
             devices = null;
         }
 
-        [TestCase(false)] // no timeout
-        [TestCase(true)] // timeoout
+        [Theory]
+        [InlineData(false)] // no timeout
+        [InlineData(true)] // timeoout
         public void LoadAsyncProcessErrorTest(bool timeout)
         {
             string processPath = null;
@@ -69,14 +65,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             });
 
             MlaunchArgument listDevArg = passedArguments.Where(a => a is ListDevicesArgument).FirstOrDefault();
-            Assert.IsNotNull(listDevArg, "list devices arg missing");
+            Assert.NotNull(listDevArg);
 
             MlaunchArgument outputFormatArg = passedArguments.Where(a => a is XmlOutputFormatArgument).FirstOrDefault();
-            Assert.IsNotNull(outputFormatArg, "output format arg missing");
+            Assert.NotNull(outputFormatArg);
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
         public async Task LoadAsyncProcessSuccess(bool extraData)
         {
             string processPath = null;
@@ -108,26 +105,26 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
             // assert the devices that are expected from the sample xml
             MlaunchArgument listDevArg = passedArguments.Where(a => a is ListDevicesArgument).FirstOrDefault();
-            Assert.IsNotNull(listDevArg, "list devices arg missing");
+            Assert.NotNull(listDevArg);
 
             MlaunchArgument outputFormatArg = passedArguments.Where(a => a is XmlOutputFormatArgument).FirstOrDefault();
-            Assert.IsNotNull(outputFormatArg, "output format arg missing");
+            Assert.NotNull(outputFormatArg);
 
             if (extraData)
             {
                 MlaunchArgument listExtraDataArg = passedArguments.Where(a => a is ListExtraDataArgument).FirstOrDefault();
-                Assert.IsNotNull(listExtraDataArg, "list extra data arg missing");
+                Assert.NotNull(listExtraDataArg);
             }
 
-            Assert.AreEqual(2, devices.Connected64BitIOS.Count());
-            Assert.AreEqual(1, devices.Connected32BitIOS.Count());
-            Assert.AreEqual(0, devices.ConnectedTV.Count());
+            Assert.Equal(2, devices.Connected64BitIOS.Count());
+            Assert.Single(devices.Connected32BitIOS);
+            Assert.Empty(devices.ConnectedTV);
         }
 
         private void AssertArgumentValue(MlaunchArgument arg, string expected, string message = null)
         {
             var value = arg.AsCommandLineArgument().Split(new char[] { '=' }, 2).LastOrDefault();
-            Assert.AreEqual(expected, value, message);
+            Assert.Equal(expected, value);
         }
     }
 }

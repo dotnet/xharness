@@ -8,31 +8,27 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 {
-
-    [TestFixture]
-    public class TestReporterTests
+    public class TestReporterTests : IDisposable
     {
+        private readonly Mock<ICrashSnapshotReporter> crashReporter;
+        private Mock<IProcessManager> processManager;
+        private readonly IResultParser parser;
+        private Mock<ILog> runLog;
+        private Mock<ILog> mainLog;
+        private readonly Mock<ILogs> logs;
+        private Mock<ISimpleListener> listener;
+        private readonly AppBundleInformation appInformation;
+        private readonly string deviceName = "Device Name";
+        private readonly string logsDirectory;
 
-        Mock<ICrashSnapshotReporter> crashReporter;
-        Mock<IProcessManager> processManager;
-        IResultParser parser;
-        Mock<ILog> runLog;
-        Mock<ILog> mainLog;
-        Mock<ILogs> logs;
-        Mock<ISimpleListener> listener;
-        AppBundleInformation appInformation;
-        string deviceName = "Device Name";
-        string logsDirectory;
-
-        [SetUp]
-        public void SetUp()
+        public TestReporterTests()
         {
             crashReporter = new Mock<ICrashSnapshotReporter>();
             processManager = new Mock<IProcessManager>();
@@ -47,8 +43,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             Directory.CreateDirectory(logsDirectory);
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             processManager = null;
             runLog = null;
@@ -58,13 +53,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                 Directory.Delete(logsDirectory, true);
         }
 
-        Stream GetRunLogSample()
+        private Stream GetRunLogSample()
         {
             var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("run-log.txt", StringComparison.Ordinal)).FirstOrDefault();
             return GetType().Assembly.GetManifestResourceStream(name);
         }
 
-        TestReporter BuildTestResult()
+        private TestReporter BuildTestResult()
         {
             logs.Setup(l => l.Directory).Returns(logsDirectory);
 
@@ -82,7 +77,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                 TimeSpan.FromSeconds(2));
         }
 
-        [Test]
+        [Fact]
         public async Task CollectSimulatorResultsSucess()
         {
             // set the listener to return a task that we are not going to complete
@@ -98,15 +93,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             var processResult = Task.FromResult(new ProcessExecutionResult() { TimedOut = false, ExitCode = 0 });
             await testResult.CollectSimulatorResult(processResult);
             // we should have timeout, since the task completion source was never set
-            Assert.IsTrue(testResult.Success, "success");
+            Assert.True(testResult.Success, "success");
 
             processManager.Verify(p => p.KillTreeAsync(It.IsAny<int>(), It.IsAny<ILog>(), true), Times.Never);
         }
 
         // we need to make sure that we take into account the case in which we do have data, but no PID and an empty file
         // which is a catastrophic launch error
-        [TestCase("Some Data")]
-        [TestCase(null)]
+        [Theory]
+        [InlineData("Some Data")]
+        [InlineData(null)]
         public async Task CollectSimulatorResultsLaunchFailureTest(string runLogData)
         {
             // similar to the above test, but in this case we ware going to fake a launch issue, that is, the runlog
@@ -135,16 +131,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             var processResult = Task.FromResult(new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 });
             await testResult.CollectSimulatorResult(processResult);
             // we should have timeout, since the task completion source was never set
-            Assert.IsFalse(testResult.Success, "success");
+            Assert.False(testResult.Success, "success");
 
             // verify that we do not try to kill a process that never got started
             processManager.Verify(p => p.KillTreeAsync(It.IsAny<int>(), It.IsAny<ILog>(), true), Times.Never);
             File.Delete(tmpFile);
         }
 
-
-        [TestCase(0)]
-        [TestCase(1)]
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
         public async Task CollectSimulatorResultsSuccessLaunchTest(int processExitCode)
         {
             // fake the best case scenario, we got the process to exit correctly
@@ -160,9 +156,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 
             // we should have timeout, since the task completion source was never set
             if (processExitCode != 0)
-                Assert.IsFalse(testResult.Success, "success");
+                Assert.False(testResult.Success, "success");
             else
-                Assert.IsTrue(testResult.Success, "success");
+                Assert.True(testResult.Success, "success");
 
             if (processExitCode != 0)
                 processManager.Verify(p => p.KillTreeAsync(It.IsAny<int>(), It.IsAny<ILog>(), true), Times.Once);
@@ -171,7 +167,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                 processManager.Verify(p => p.KillTreeAsync(It.IsAny<int>(), It.IsAny<ILog>(), true), Times.Never);
         }
 
-        [Test]
+        [Fact]
         public async Task CollectDeviceResultTimeoutTest()
         {
             // set the listener to return a task that we are not going to complete
@@ -186,11 +182,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             var processResult = Task.FromResult(new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 });
             await testResult.CollectDeviceResult(processResult);
             // we should have timeout, since the task completion source was never set
-            Assert.IsFalse(testResult.Success, "success");
+            Assert.False(testResult.Success, "success");
         }
 
-        [TestCase(0)]
-        [TestCase(1)]
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
         public async Task CollectDeviceResultSuccessTest(int processExitCode)
         {
             // fake the best case scenario, we got the process to exit correctly
@@ -204,12 +201,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 
             // we should have timeout, since the task completion source was never set
             if (processExitCode != 0)
-                Assert.IsFalse(testResult.Success, "success");
+                Assert.False(testResult.Success, "success");
             else
-                Assert.IsTrue(testResult.Success, "success");
+                Assert.True(testResult.Success, "success");
         }
 
-        [Test]
+        [Fact]
         public void LaunchCallbackFaultedTest()
         {
             var testResult = BuildTestResult();
@@ -220,7 +217,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                It.Is<string>(s => s.StartsWith($"Test launch failed:")), It.IsAny<object>()), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void LaunchCallbackCanceledTest()
         {
             var testResult = BuildTestResult();
@@ -231,7 +228,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test launch was cancelled."))), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void LaunchCallbackSuccessTest()
         {
             var testResult = BuildTestResult();
@@ -241,7 +238,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         }
 
         // copy the sample data to a given tmp file
-        string CreateSampleFile(string resourceName)
+        private string CreateSampleFile(string resourceName)
         {
             var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith(resourceName, StringComparison.Ordinal)).FirstOrDefault();
             var tempPath = Path.GetTempFileName();
@@ -253,7 +250,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             return tempPath;
         }
 
-        [Test]
+        [Fact]
         public async Task ParseResultFailingTestsTest()
         {
             var sample = CreateSampleFile("NUnitV3SampleFailure.xml");
@@ -263,14 +260,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 
             var testResult = BuildTestResult();
             var (result, failure) = await testResult.ParseResult();
-            Assert.AreEqual(TestExecutingResult.Failed, result, "execution result");
-            Assert.IsNull(failure, "failure message");
+            Assert.Equal(TestExecutingResult.Failed, result);
+            Assert.Null(failure);
 
             // ensure that we do  call the crash reporter end capture but with 0, since it was a success
             crashReporter.Verify(c => c.EndCaptureAsync(It.Is<TimeSpan>(t => t.TotalSeconds == 5)), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public async Task ParseResultSuccessTestsTest()
         {
             // get a file with a success result so that we can return it as part of the listener log
@@ -281,14 +278,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 
             var testResult = BuildTestResult();
             var (result, failure) = await testResult.ParseResult();
-            Assert.AreEqual(TestExecutingResult.Succeeded, result, "execution result");
-            Assert.IsNull(failure, "failure message");
+            Assert.Equal(TestExecutingResult.Succeeded, result);
+            Assert.Null(failure);
 
             // ensure that we do  call the crash reporter end capture but with 0, since it was a success
             crashReporter.Verify(c => c.EndCaptureAsync(It.Is<TimeSpan>(t => t.TotalSeconds == 0)), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public async Task ParseResultTimeoutTestsTest()
         {
             // more complicated test, we need to fake a process timeout, then ensure that the result is the expected one
@@ -322,12 +319,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             await testResult.CollectDeviceResult(processResult);
             // we should have timeout, since the task completion source was never set
             var (result, failure) = await testResult.ParseResult();
-            Assert.IsFalse(testResult.Success, "success");
+            Assert.False(testResult.Success, "success");
 
             // verify that we state that there was a timeout
             mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test run never launched"))), Times.Once);
             // assert that the timeout failure was created.
-            Assert.IsTrue(File.Exists(failurePath), "failure path");
+            Assert.True(File.Exists(failurePath), "failure path");
             var isTimeoutFailure = false;
             using (var reader = new StreamReader(failurePath))
             {
@@ -341,7 +338,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                     }
                 }
             }
-            Assert.IsTrue(isTimeoutFailure, "correct xml");
+            Assert.True(isTimeoutFailure, "correct xml");
             File.Delete(failurePath);
         }
     }

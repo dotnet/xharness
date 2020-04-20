@@ -4,22 +4,18 @@
 
 using System;
 using System.IO;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
 {
-
-    [TestFixture]
-    public class LogsTest
+    public class LogsTest : IDisposable
     {
+        private readonly string directory;
+        private string fileName;
+        private readonly string description;
 
-        string directory;
-        string fileName;
-        string description;
-
-        [SetUp]
-        public void SetUp()
+        public LogsTest()
         {
             directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             fileName = "test-file.txt";
@@ -28,41 +24,40 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             Directory.CreateDirectory(directory);
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             if (Directory.Exists(directory))
                 Directory.Delete(directory, true);
         }
 
-        [Test]
+        [Fact]
         public void ConstructorTest()
         {
             using (var logs = new Logs(directory))
             {
-                Assert.AreEqual(directory, logs.Directory);
+                Assert.Equal(directory, logs.Directory);
             }
         }
 
-        [Test]
+        [Fact]
         public void ConstructorNullDirTest()
         {
             Assert.Throws<ArgumentNullException>(() => new Logs(null));
         }
 
-        [Test]
+        [Fact]
         public void CreateFileTest()
         {
             using (var logs = new Logs(directory))
             {
                 var file = logs.CreateFile(fileName, description);
-                Assert.IsTrue(File.Exists(file), "exists");
-                Assert.AreEqual(fileName, Path.GetFileName(file), "file name");
-                Assert.AreEqual(1, logs.Count, "count");
+                Assert.True(File.Exists(file), "exists");
+                Assert.Equal(fileName, Path.GetFileName(file));
+                Assert.Single(logs);
             }
         }
 
-        [Test]
+        [Fact]
         public void CreateFileNullPathTest()
         {
             using (var logs = new Logs(directory))
@@ -73,18 +68,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             }
         }
 
-        [Test]
+        [Fact]
         public void CreateFileNullDescriptionTest()
         {
             using (var logs = new Logs(directory))
             {
                 string description = null;
-                Assert.DoesNotThrow(() => logs.CreateFile(fileName, description), "null description");
-                Assert.AreEqual(1, logs.Count, "count");
+                logs.CreateFile(fileName, description);
+                Assert.Single(logs);
             }
         }
 
-        [Test]
+        [Fact]
         public void AddFileTest()
         {
             var fullPath = Path.Combine(directory, fileName);
@@ -93,13 +88,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             using (var logs = new Logs(directory))
             {
                 var fileLog = logs.AddFile(fullPath, description);
-                Assert.AreEqual(fullPath, fileLog.FullPath, "path"); // path && fullPath are the same
-                Assert.AreEqual(Path.Combine(directory, fileName), fileLog.FullPath, "full path");
-                Assert.AreEqual(description, fileLog.Description, "description");
+                Assert.Equal(fullPath, fileLog.FullPath); // path && fullPath are the same
+                Assert.Equal(Path.Combine(directory, fileName), fileLog.FullPath);
+                Assert.Equal(description, fileLog.Description);
             }
         }
 
-        [Test]
+        [Fact]
         public void AddFileNotInDirTest()
         {
             var dir1 = Path.Combine(directory, "dir1");
@@ -115,12 +110,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             {
                 var newPath = Path.Combine(dir2, Path.GetFileNameWithoutExtension(fileName));
                 var fileLog = logs.AddFile(filePath, description);
-                StringAssert.StartsWith(newPath, fileLog.FullPath, "path"); // assert new path
-                Assert.IsTrue(File.Exists(fileLog.FullPath), "copy");
+                Assert.StartsWith(newPath, fileLog.FullPath); // assert new path
+                Assert.True(File.Exists(fileLog.FullPath), "copy");
             }
         }
 
-        [Test]
+        [Fact]
         public void AddFilePathNullTest()
         {
             using (var logs = new Logs(directory))
@@ -129,15 +124,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             }
         }
 
-        [Test]
+        [Fact]
         public void AddFileDescriptionNull()
         {
             var fullPath = Path.Combine(directory, fileName);
             File.WriteAllText(fullPath, "foo");
             using (var logs = new Logs(directory))
             {
-                Assert.DoesNotThrow(() => logs.Create(fullPath, null), "throws");
-                Assert.AreEqual(1, logs.Count, "count");
+                logs.Create(fullPath, null);
+                Assert.Single(logs);
             }
         }
     }

@@ -6,30 +6,27 @@ using System;
 using System.Collections.Generic;
 using Microsoft.DotNet.XHarness.iOS.Shared.TestImporter;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter
 {
-    public class ProjectDefinitionTests
+    public class ProjectDefinitionTests : IDisposable
     {
+        private Mock<IAssemblyLocator> assemblyLocator;
+        private readonly Mock<ITestAssemblyDefinitionFactory> factory;
 
-        Mock<IAssemblyLocator> assemblyLocator;
-        Mock<ITestAssemblyDefinitionFactory> factory;
-
-        [SetUp]
-        public void SetUp()
+        public ProjectDefinitionTests()
         {
             assemblyLocator = new Mock<IAssemblyLocator>();
             factory = new Mock<ITestAssemblyDefinitionFactory>();
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             assemblyLocator = null;
         }
 
-        [Test]
+        [Fact]
         public void GetTypeForAssembliesNullMonoPath()
         {
             var projectDefinition = new ProjectDefinition("MyProject", assemblyLocator.Object, factory.Object, new List<ITestAssemblyDefinition>(), "");

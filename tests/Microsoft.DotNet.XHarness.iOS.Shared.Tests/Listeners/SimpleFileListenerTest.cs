@@ -5,23 +5,19 @@
 using System;
 using System.IO;
 using Moq;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
 {
-
-    [TestFixture]
-    public class SimpleFileListenerTest
+    public class SimpleFileListenerTest : IDisposable
     {
+        private string path;
+        private Mock<ILog> testLog;
+        private Mock<ILog> log;
 
-        string path;
-        Mock<ILog> testLog;
-        Mock<ILog> log;
-
-        [SetUp]
-        public void SetUp()
+        public SimpleFileListenerTest()
         {
             path = Path.GetTempFileName();
             testLog = new Mock<ILog>();
@@ -29,8 +25,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             File.Delete(path);
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             if (File.Exists(path))
                 File.Delete(path);
@@ -39,14 +34,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             log = null;
         }
 
-        [Test]
+        [Fact]
         public void ConstructorNullPathTest()
         {
             Assert.Throws<ArgumentNullException>(() => new SimpleFileListener(null, log.Object, testLog.Object, false));
         }
 
-        [TestCase("Tests run: ", false)]
-        [TestCase("<!-- the end -->", true)]
+        [Theory]
+        [InlineData("Tests run: ", false)]
+        [InlineData("<!-- the end -->", true)]
         public void TestProcess(string endLine, bool isXml)
         {
             var lines = new string[] { "first line", "second line", "last line" };

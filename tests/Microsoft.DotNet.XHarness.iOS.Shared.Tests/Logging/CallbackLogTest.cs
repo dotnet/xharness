@@ -3,17 +3,14 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
 {
-
-    [TestFixture]
     public class CallbackLogTest
     {
-
-        [Test]
+        [Fact]
         public void OnWriteTest()
         {
             var message = "This is a log message";
@@ -28,9 +25,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
 
             var log = new CallbackLog(cb);
             log.Write(message);
-            Assert.IsTrue(called, "Callback was not called");
-            Assert.IsNotNull(data, "data");
-            StringAssert.EndsWith(message, data, "message"); // TODO: take time stamp into account
+            Assert.True(called, "Callback was not called");
+            Assert.NotNull(data);
+            Assert.EndsWith(message, data); // TODO: take time stamp into account
         }
     }
 }

@@ -6,17 +6,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
-using NUnit.Framework;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 {
-    [TestFixture]
     public class DeviceTest
     {
-
-        class DevicesDataTestSource
+        public class DevicesDataTestSource
         {
-            public static IEnumerable DebugSpeedDevices
+            public static IEnumerable<object[]> DebugSpeedDevices
             {
                 get
                 {
@@ -28,9 +26,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                         (interfaceType: (string) null, result:  1),
                         (interfaceType: "HOLA", result: 3),
                     };
+
                     foreach (var (interfaceType, result) in data)
                     {
-                        yield return new TestCaseData(
+                        yield return new object[]
+                        {
                             new Device(
                                 buildVersion: "17A577",
                                 deviceClass: DeviceClass.iPhone,
@@ -39,13 +39,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                                 isUsableForDebugging: true,
                                 name: "Test iPhone",
                                 productType: "iPhone12,1",
-                                productVersion: "13.0"))
-                            .Returns(result);
+                                productVersion: "13.0"),
+                            result
+                        };
                     }
                 }
             }
 
-            public static IEnumerable DevicePlatformDevices
+            public static IEnumerable<object[]> DevicePlatformDevices
             {
                 get
                 {
@@ -57,9 +58,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                         (deviceClass: DeviceClass.Watch, result: DevicePlatform.watchOS),
                         (deviceClass: DeviceClass.Unknown, result: DevicePlatform.Unknown),
                     };
+
                     foreach (var (deviceClass, result) in data)
                     {
-                        yield return new TestCaseData(
+                        yield return new object[]
+                        {
                             new Device(
                                 buildVersion: "17A577",
                                 deviceClass: deviceClass,
@@ -68,13 +71,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                                 isUsableForDebugging: true,
                                 name: "Test iPhone",
                                 productType: "iPhone12,1",
-                                productVersion: "13.0"))
-                            .Returns(result);
+                                productVersion: "13.0"),
+                            result
+                        };
                     }
                 }
             }
 
-            public static IEnumerable Supports64bDevices
+            public static IEnumerable<object[]> Supports64bDevices
             {
                 get
                 {
@@ -149,7 +153,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     {
                         foreach (var (version, result) in data[product])
                         {
-                            yield return new TestCaseData(
+                            yield return new object[]
+                            {
                                 new Device(
                                     buildVersion: "17A577",
                                     deviceClass: DeviceClass.iPhone,
@@ -158,15 +163,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                                     isUsableForDebugging: true,
                                     name: "Test iPhone",
                                     productType: $"{product}{version}",
-                                    productVersion: "13.0"))
-                                .Returns(result)
-                                .SetDescription($"{product} {version}");
+                                    productVersion: "13.0"),
+                                result
+                            };
                         }
                     }
                 }
             }
 
-            public static IEnumerable Supports32bDevices
+            public static IEnumerable<object[]> Supports32bDevices
             {
                 get
                 {
@@ -206,7 +211,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     {
                         foreach (var (version, result) in data[deviceClass])
                         {
-                            yield return new TestCaseData(
+                            yield return new object[]
+                            {
                                 new Device(
                                     buildVersion: "17A577",
                                     deviceClass: deviceClass,
@@ -215,24 +221,29 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                                     isUsableForDebugging: true,
                                     name: "Test iPhone",
                                     productType: "iPhone12,1",
-                                    productVersion: version.ToString()))
-                                .Returns(result);
+                                    productVersion: version.ToString()),
+                                result
+                            };
                         }
                     }
                 }
             }
 
-            [TestCaseSource(typeof(DevicesDataTestSource), "DebugSpeedDevices")]
-            public int DebugSpeedTest(IHardwareDevice device) => device.DebugSpeed;
+            [Theory]
+            [MemberData(nameof(DebugSpeedDevices), MemberType = typeof(DevicesDataTestSource))]
+            public void DebugSpeedTest(IHardwareDevice device, int expected) => Assert.Equal(expected, device.DebugSpeed);
 
-            [TestCaseSource(typeof(DevicesDataTestSource), "DevicePlatformDevices")]
-            public DevicePlatform DevicePlatformTest(IHardwareDevice device) => device.DevicePlatform;
+            [Theory]
+            [MemberData(nameof(DevicePlatformDevices), MemberType = typeof(DevicesDataTestSource))]
+            public void DevicePlatformTest(IHardwareDevice device, DevicePlatform expected) => Assert.Equal(expected, device.DevicePlatform);
 
-            [TestCaseSource(typeof(DevicesDataTestSource), "Supports64bDevices")]
-            public bool Supports64bTest(IHardwareDevice device) => device.Supports64Bit;
+            [Theory]
+            [MemberData(nameof(Supports64bDevices), MemberType = typeof(DevicesDataTestSource))]
+            public void Supports64bTest(IHardwareDevice device, bool expected) => Assert.Equal(expected, device.Supports64Bit);
 
-            [TestCaseSource(typeof(DevicesDataTestSource), "Supports32bDevices")]
-            public bool Supports32BTest(IHardwareDevice device) => device.Supports32Bit;
+            [Theory]
+            [MemberData(nameof(Supports32bDevices), MemberType = typeof(DevicesDataTestSource))]
+            public void Supports32BTest(IHardwareDevice device, bool expected) => Assert.Equal(expected, device.Supports32Bit);
         }
     }
 }

@@ -5,35 +5,31 @@
 using System.IO;
 using System.Net.Sockets;
 using Moq;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
+using System;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
 {
-
-    [TestFixture]
-    public class SimpleTcpListenerTest
+    public class SimpleTcpListenerTest : IDisposable
     {
+        private Mock<ILog> log;
+        private Mock<ILog> testLog;
 
-        Mock<ILog> log;
-        Mock<ILog> testLog;
-
-        [SetUp]
-        public void SetUp()
+        public SimpleTcpListenerTest()
         {
             log = new Mock<ILog>();
             testLog = new Mock<ILog>();
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             log = null;
             testLog = null;
         }
 
-        [Test]
+        [Fact]
         public void ProcessTest()
         {
             var tempResult = Path.GetTempFileName();
@@ -85,9 +81,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
                         lastLineFound = true;
                 }
             }
-            Assert.IsTrue(firstLineFound, "first line");
-            Assert.IsTrue(secondLineFound, "second line");
-            Assert.IsTrue(lastLineFound, "last line");
+            Assert.True(firstLineFound, "first line");
+            Assert.True(secondLineFound, "second line");
+            Assert.True(lastLineFound, "last line");
         }
     }
 }

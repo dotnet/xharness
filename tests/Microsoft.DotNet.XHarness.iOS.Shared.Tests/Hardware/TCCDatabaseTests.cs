@@ -8,26 +8,22 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 {
-
-    [TestFixture]
-    public class TCCDatabaseTests
+    public class TCCDatabaseTests : IDisposable
     {
+        private Mock<IProcessManager> processManager;
+        private TCCDatabase database;
+        private readonly Mock<ILog> executionLog;
+        private readonly string simRuntime;
+        private readonly string dataPath;
 
-        Mock<IProcessManager> processManager;
-        TCCDatabase database;
-        Mock<ILog> executionLog;
-        string simRuntime;
-        string dataPath;
-
-        [SetUp]
-        public void SetUp()
+        public TCCDatabaseTests()
         {
             processManager = new Mock<IProcessManager>();
             database = new TCCDatabase(processManager.Object);
@@ -36,33 +32,33 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             dataPath = "/path/to/my/data";
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             processManager = null;
             database = null;
         }
 
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-12-1", 3)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-10-1", 2)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-9-1", 2)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-7-1", 1)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.tvOS-12-3", 3)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.tvOS-8-1", 2)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.watchOS-5-1", 3)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.watchOS-4-1", 2)]
+        [Theory]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-12-1", 3)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-10-1", 2)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-9-1", 2)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-7-1", 1)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.tvOS-12-3", 3)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.tvOS-8-1", 2)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-5-1", 3)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-4-1", 2)]
         public void GetTCCFormatTest(string runtime, int expected)
         {
-            Assert.AreEqual(expected, database.GetTCCFormat(runtime));
+            Assert.Equal(expected, database.GetTCCFormat(runtime));
         }
 
-        [Test]
+        [Fact]
         public void GetTCCFormatUnknownTest()
         {
             Assert.Throws<NotImplementedException>(() => database.GetTCCFormat("unknown-sim-runtime"));
         }
 
-        [Test]
+        [Fact]
         public async Task AgreeToPromptsAsyncNoIdentifiers()
         {
             // we should write in the log that we did not managed to agree to it
@@ -71,7 +67,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             executionLog.Verify(l => l.WriteLine("No bundle identifiers given when requested permission editing."));
         }
 
-        [Test]
+        [Fact]
         public async Task AgreeToPropmtsAsyncTimeoutsTest()
         {
             string processName = null;
@@ -86,13 +82,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             await database.AgreeToPromptsAsync(simRuntime, dataPath, executionLog.Object, "my-bundle-id", "your-bundle-id");
 
             // verify that we did write in the logs and that we did call sqlite3
-            Assert.AreEqual("sqlite3", processName, "sqlite3 process");
+            Assert.Equal("sqlite3", processName);
             executionLog.Verify(l => l.WriteLine("Failed to edit TCC.db, the test run might hang due to permission request dialogs"), Times.AtLeastOnce);
         }
 
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-12-1", 3)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-10-1", 2)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-7-1", 1)]
+        [Theory]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-12-1", 3)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-10-1", 2)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-7-1", 1)]
         public async Task AgreeToPropmtsAsyncSuccessTest(string runtime, int dbVersion)
         {
             string bundleIdentifier = "my-bundle-identifier";
@@ -145,10 +142,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
             await database.AgreeToPromptsAsync(runtime, dataPath, executionLog.Object, bundleIdentifier);
 
-            Assert.AreEqual("sqlite3", processName, "sqlite3 process");
+            Assert.Equal("sqlite3", processName);
             // assert that the sql is present
-            Assert.That(args, Has.Member(dataPath));
-            Assert.That(args, Has.Member(expectedArgs.ToString()), "insert sql");
+            Assert.True(args.Contains(dataPath));
+            Assert.True(args.Contains(expectedArgs.ToString()));
         }
     }
 }

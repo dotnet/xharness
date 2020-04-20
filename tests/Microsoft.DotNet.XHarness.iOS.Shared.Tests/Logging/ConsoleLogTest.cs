@@ -4,56 +4,52 @@
 
 using System;
 using System.IO;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
 {
-
-    [TestFixture]
-    public class ConsoleLogTest
+    public class ConsoleLogTest : IDisposable
     {
+        private readonly string _testFile;
+        private readonly TextWriter _sdoutWriter;
+        private readonly ConsoleLog _log;
 
-        string testFile;
-        TextWriter sdoutWriter;
-        ConsoleLog log;
-
-        [SetUp]
-        public void SetUp()
+        public ConsoleLogTest()
         {
-            testFile = Path.GetTempFileName();
-            log = new ConsoleLog();
-            sdoutWriter = Console.Out;
+            _testFile = Path.GetTempFileName();
+            _log = new ConsoleLog();
+            _sdoutWriter = Console.Out;
         }
 
-        [Test]
-        public void FullPathTest() => Assert.Throws<NotSupportedException>(() => { string path = log.FullPath; });
+        [Fact]
+        public void FullPathTest() => Assert.Throws<NotSupportedException>(() => { string path = _log.FullPath; });
 
-        [Test]
+        [Fact]
         public void TestWrite()
         {
             var message = "This is a log message";
-            using (FileStream testStream = new FileStream(testFile, FileMode.OpenOrCreate, FileAccess.Write))
+            using (FileStream testStream = new FileStream(_testFile, FileMode.OpenOrCreate, FileAccess.Write))
             using (StreamWriter writer = new StreamWriter(testStream))
             {
                 Console.SetOut(writer);
                 // simply test that we do write in the file. We need to close the stream to be able to read it
-                log.WriteLine(message);
+                _log.WriteLine(message);
             }
 
-            using (FileStream testStream = new FileStream(testFile, FileMode.OpenOrCreate, FileAccess.Read))
+            using (FileStream testStream = new FileStream(_testFile, FileMode.OpenOrCreate, FileAccess.Read))
             using (var reader = new StreamReader(testStream))
             {
                 var line = reader.ReadLine();
-                StringAssert.EndsWith(message, line, "output"); // consider the time stamp
+                Assert.EndsWith(message, line); // consider the time stamp
             }
 
         }
-        [TearDown]
-        public void TearDown()
+
+        public void Dispose()
         {
-            Console.SetOut(sdoutWriter); // get back to write to the console
-            File.Delete(testFile);
+            Console.SetOut(_sdoutWriter); // get back to write to the console
+            File.Delete(_testFile);
         }
     }
 }

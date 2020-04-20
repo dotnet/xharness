@@ -10,41 +10,37 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 {
-
-    [TestFixture]
-    public class SimulatorsTest
+    public class SimulatorsTest : IDisposable
     {
+        private Mock<ILog> executionLog;
+        private Mock<IProcessManager> processManager;
+        private SimulatorLoader simulators;
 
-        Mock<ILog> executionLog;
-        Mock<IProcessManager> processManager;
-        SimulatorLoader simulators;
-
-        [SetUp]
-        public void SetUp()
+        public SimulatorsTest()
         {
             executionLog = new Mock<ILog>();
             processManager = new Mock<IProcessManager>();
             simulators = new SimulatorLoader(processManager.Object);
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             executionLog = null;
             processManager = null;
             simulators = null;
         }
 
-        [TestCase(false)] // no timeout
-        [TestCase(true)] // timeout
+        [Theory]
+        [InlineData(false)] // no timeout
+        [InlineData(true)] // timeout
         public void LoadAsyncProcessErrorTest(bool timeout)
         {
             string processPath = null;
@@ -70,13 +66,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
             // validate the execution of mlaunch
             MlaunchArgument listSimArg = passedArguments.Where(a => a is ListSimulatorsArgument).FirstOrDefault();
-            Assert.IsNotNull(listSimArg, "list devices arg missing");
+            Assert.NotNull(listSimArg);
 
             MlaunchArgument outputFormatArg = passedArguments.Where(a => a is XmlOutputFormatArgument).FirstOrDefault();
-            Assert.IsNotNull(outputFormatArg, "output format arg missing");
+            Assert.NotNull(outputFormatArg);
         }
 
-        void CopySampleData(string tempPath)
+        private void CopySampleData(string tempPath)
         {
             var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("simulators.xml", StringComparison.Ordinal)).FirstOrDefault();
             using (var outputStream = new StreamWriter(tempPath))
@@ -88,7 +84,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             }
         }
 
-        [Test]
+        [Fact]
         public async Task LoadAsyncProcessSuccess()
         {
             string processPath = null;
@@ -112,18 +108,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             await simulators.LoadDevices(executionLog.Object);
 
             MlaunchArgument listSimArg = passedArguments.Where(a => a is ListSimulatorsArgument).FirstOrDefault();
-            Assert.IsNotNull(listSimArg, "list devices arg missing");
+            Assert.NotNull(listSimArg);
 
             MlaunchArgument outputFormatArg = passedArguments.Where(a => a is XmlOutputFormatArgument).FirstOrDefault();
-            Assert.IsNotNull(outputFormatArg, "output format arg missing");
+            Assert.NotNull(outputFormatArg);
 
-            Assert.AreEqual(75, simulators.AvailableDevices.Count());
+            Assert.Equal(75, simulators.AvailableDevices.Count());
         }
 
-        [TestCase(TestTarget.Simulator_iOS64, 1)]
-        [TestCase(TestTarget.Simulator_iOS32, 1)]
-        [TestCase(TestTarget.Simulator_tvOS, 1)]
-        [TestCase(TestTarget.Simulator_watchOS, 2)]
+        [Theory]
+        [InlineData(TestTarget.Simulator_iOS64, 1)]
+        [InlineData(TestTarget.Simulator_iOS32, 1)]
+        [InlineData(TestTarget.Simulator_tvOS, 1)]
+        [InlineData(TestTarget.Simulator_watchOS, 2)]
         public async Task FindAsyncDoNotCreateTest(TestTarget target, int expected)
         {
             string processPath = null;
@@ -152,13 +149,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             await simulators.LoadDevices(executionLog.Object);
             var sims = await simulators.FindSimulators(target, executionLog.Object, false, false);
 
-            Assert.AreEqual(expected, sims.Count(), $"{target} simulators count");
+            Assert.Equal(expected, sims.Count());
         }
 
         private void AssertArgumentValue(MlaunchArgument arg, string expected, string message = null)
         {
             var value = arg.AsCommandLineArgument().Split(new char[] { '=' }, 2).LastOrDefault();
-            Assert.AreEqual(expected, value, message);
+            Assert.Equal(expected, value);
         }
     }
 }

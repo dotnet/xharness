@@ -5,24 +5,24 @@
 using System;
 using System.IO;
 
-using NUnit.Framework;
 
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Managed
 {
     public class InfoPlistGeneratorTests
     {
 
-        [Test]
+        [Fact]
         public void GenerateCodeNullTemplateFile()
         {
             Assert.ThrowsAsync<ArgumentNullException>(() =>
                InfoPlistGenerator.GenerateCodeAsync(null, "Project Name"));
         }
 
-        [Test]
+        [Fact]
         public void GenerateCodeNullProjectName()
         {
             var tmp = Path.GetTempFileName();
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
             File.Delete(tmp);
         }
 
-        [Test]
+        [Fact]
         public async Task GenerateCode()
         {
             const string projectName = "MyTest";
@@ -50,9 +50,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
             var result = await InfoPlistGenerator.GenerateCodeAsync(File.OpenRead(templatePath), projectName);
             try
             {
-                StringAssert.DoesNotContain(InfoPlistGenerator.ApplicationNameReplacement, result);
-                StringAssert.DoesNotContain(InfoPlistGenerator.IndentifierReplacement, result);
-                StringAssert.Contains(projectName, result);
+                Assert.DoesNotContain(InfoPlistGenerator.ApplicationNameReplacement, result);
+                Assert.DoesNotContain(InfoPlistGenerator.IndentifierReplacement, result);
+                Assert.Contains(projectName, result);
             }
             finally
             {

@@ -2,46 +2,42 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.IO;
 using System.Reflection;
-using NUnit.Framework;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 {
-    [TestFixture]
-    public class AppBundleInformationParserTests
+    public class AppBundleInformationParserTests : IDisposable
     {
+        private const string appName = "com.xamarin.bcltests.SystemXunit";
+        private static readonly string outputPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(AppBundleInformationParser)).Location);
+        private static readonly string sampleProjectPath = Path.Combine(outputPath, "Samples", "TestProject");
+        private static readonly string appPath = Path.Combine(sampleProjectPath, "bin", appName + ".app");
+        private static readonly string projectFilePath = Path.Combine(sampleProjectPath, "SystemXunit.csproj");
 
-        const string appName = "com.xamarin.bcltests.SystemXunit";
-
-        static readonly string outputPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(AppBundleInformationParser)).Location);
-        static readonly string sampleProjectPath = Path.Combine(outputPath, "Samples", "TestProject");
-        static readonly string appPath = Path.Combine(sampleProjectPath, "bin", appName + ".app");
-        static readonly string projectFilePath = Path.Combine(sampleProjectPath, "SystemXunit.csproj");
-
-        [SetUp]
-        public void SetUp()
+        public AppBundleInformationParserTests()
         {
             Directory.CreateDirectory(appPath);
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             Directory.Delete(appPath, true);
         }
 
-        [Test]
+        [Fact]
         public void InitializeTest()
         {
             var parser = new AppBundleInformationParser();
 
             var info = parser.ParseFromProject(projectFilePath, TestTarget.Simulator_iOS64, "Debug");
 
-            Assert.AreEqual(appName, info.AppName);
-            Assert.AreEqual(appPath, info.AppPath);
-            Assert.AreEqual(appPath, info.LaunchAppPath);
-            Assert.AreEqual(appName, info.BundleIdentifier);
+            Assert.Equal(appName, info.AppName);
+            Assert.Equal(appPath, info.AppPath);
+            Assert.Equal(appPath, info.LaunchAppPath);
+            Assert.Equal(appName, info.BundleIdentifier);
         }
     }
 }

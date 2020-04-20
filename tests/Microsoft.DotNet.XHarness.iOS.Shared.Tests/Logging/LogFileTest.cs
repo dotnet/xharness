@@ -5,23 +5,18 @@
 using System;
 using System.IO;
 using Moq;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
 {
-
-    [TestFixture]
-    public class LogFileTest
+    public class LogFileTest : IDisposable
     {
+        private string path;
+        private string description;
+        private Mock<ILogs> logs;
 
-        string path;
-        string description;
-
-        Mock<ILogs> logs;
-
-        [SetUp]
-        public void SetUp()
+        public LogFileTest()
         {
             description = "My log";
             path = Path.GetTempFileName();
@@ -29,8 +24,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             File.Delete(path); // delete the empty file
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             if (File.Exists(path))
                 File.Delete(path);
@@ -39,35 +33,30 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             logs = null;
         }
 
-        [Test]
+        [Fact]
         public void ConstructorTest()
         {
             using (var log = new LogFile(description, path))
             {
-                Assert.AreEqual(description, log.Description, "description");
-                Assert.AreEqual(path, log.FullPath, "path");
+                Assert.Equal(description, log.Description);
+                Assert.Equal(path, log.FullPath);
             }
         }
 
-        [Test]
+        [Fact]
         public void ConstructorNullPathTest()
         {
             Assert.Throws<ArgumentNullException>(() => { var log = new LogFile(description, null); });
         }
 
-        [Test]
+        [Fact]
         public void ConstructorNullDescriptionTest()
         {
-            Assert.DoesNotThrow(() =>
-            {
-#pragma warning disable CS0642 // Possible mistaken empty statement
-                using (var log = new LogFile(null, path)) ;
-#pragma warning restore CS0642 // Possible mistaken empty statement
-            });
+            using var log = new LogFile(null, path);
         }
 
 
-        [Test]
+        [Fact]
         public void WriteTest()
         {
             string oldLine = "Hello world!";
@@ -97,11 +86,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
                 }
             }
 
-            Assert.IsTrue(oldLineFound, "old line");
-            Assert.IsTrue(newLineFound, "new line");
+            Assert.True(oldLineFound, "old line");
+            Assert.True(newLineFound, "new line");
         }
 
-        [Test]
+        [Fact]
         public void WriteNotAppendTest()
         {
             string oldLine = "Hello world!";
@@ -131,8 +120,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
                 }
             }
 
-            Assert.IsFalse(oldLineFound, "old line");
-            Assert.IsTrue(newLineFound, "new line");
+            Assert.False(oldLineFound, "old line");
+            Assert.True(newLineFound, "new line");
         }
 
     }
