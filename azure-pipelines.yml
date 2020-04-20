@@ -116,7 +116,7 @@ stages:
             testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
             mergeTestResults: true
             searchFolder: $(system.defaultworkingdirectory)
-            testRunTitle: XHarness unit tests ($(_BuildConfig))
+            testRunTitle: XHarness unit tests - $(Agent.Os) / $(_BuildConfig)
           condition: succeededOrFailed()
 
         - task: PublishBuildArtifacts@1
