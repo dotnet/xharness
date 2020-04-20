@@ -262,6 +262,10 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             });
             OnInfo($"\t[FAIL] {args.Message.Test.TestCase.DisplayName}");
             OnInfo(sb.ToString());
+            OnTestCompleted((
+                TestName: args.Message.Test.DisplayName,
+                TestResult: TestResult.Failed
+            ));
         }
 
         void HandleTestCollectionStarting(MessageHandlerArgs<ITestCollectionStarting> args)
