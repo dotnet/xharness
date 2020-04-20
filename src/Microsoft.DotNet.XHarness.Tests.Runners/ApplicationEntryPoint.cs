@@ -48,7 +48,20 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         /// </summary>
         public event EventHandler<TestRunResult> TestsCompleted;
 
+        // fwd the events from the runner so that clients can connect to them
+
+        /// <summary>
+        /// Event raised when a test has started.
+        /// </summary>
+        public event EventHandler<string> TestStarted;
+
+        /// <summary>
+        /// Event raised when a test has completed or has been skipped.
+        /// </summary>
+        public event EventHandler<(string TestName, TestResult TestResult)> TestCompleted;
+
         protected abstract int? MaxParallelThreads { get; }
+
         /// <summary>
         /// Must be implemented and return a class that returns the information
         /// of a device. It can return null.
@@ -88,6 +101,20 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         /// </summary>
         public MinimumLogLevel MinimumLogLevel { get; set; } = MinimumLogLevel.Info;
 
+        void OnTestStarted(object sender, string testName)
+        {
+            var handler = TestStarted;
+            if (handler != null)
+                handler(sender, testName); 
+        }
+
+        void OnTestCompleted(object sender, (string TestName, TestResult Testresult) result)
+        {
+            var handler = TestCompleted;
+            if (handler != null)
+                handler(sender, result); 
+        }
+
         protected async Task<TestRunner> InternalRunAsync (LogWriter logger)
         {
             logger.MinimumLogLevel = MinimumLogLevel;
@@ -103,6 +130,9 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
                     };
                     break;
             }
+            // connect to the runner events so that we fwd them to the client
+            runner.TestStarted += OnTestStarted;
+            runner.TestCompleted += OnTestCompleted;
 
             if (!string.IsNullOrEmpty(IgnoreFilesDirectory))
             {

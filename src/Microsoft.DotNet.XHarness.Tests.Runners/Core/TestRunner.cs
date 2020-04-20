@@ -22,6 +22,16 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         }
 
         /// <summary>
+        /// Event raised when a test has started.
+        /// </summary>
+        public event EventHandler<string> TestStarted;
+
+        /// <summary>
+        /// Event raised when a test has completed or has been skipped.
+        /// </summary>
+        public event EventHandler<(string TestName, TestResult TestResult)> TestCompleted;
+
+        /// <summary>
         /// Number of inconclusive tests.
         /// </summary>
         public long InconclusiveTests { get; protected set; } = 0;
@@ -179,5 +189,19 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
                 Directory.CreateDirectory(resultsPath);
             return Path.Combine(resultsPath, ResultsFileName);
         }
+
+        protected virtual void OnTestStarted(string testName)
+        {
+            var hanlder = TestStarted;
+            if (hanlder != null)
+                hanlder(this, testName);
+        }
+
+        protected virtual void OnTestCompleted((string TestName, TestResult TestResult) result)
+        {
+            var handler = TestCompleted;
+            if (handler != null)
+                handler(this, result); 
+		}
     }
 }
