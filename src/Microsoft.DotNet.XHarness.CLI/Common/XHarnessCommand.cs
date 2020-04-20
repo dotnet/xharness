@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                     return 1;
                 }
 
-                return InvokeInternal().GetAwaiter().GetResult();
+                return (int) InvokeInternal().GetAwaiter().GetResult();
             }
             finally
             {
@@ -94,6 +94,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
             _log = _logFactory.CreateLogger(name);
         }
 
-        protected abstract Task<int> InvokeInternal();
+        protected abstract Task<ExitCode> InvokeInternal();
     }
 }

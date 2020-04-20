@@ -20,11 +20,11 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             };
         }
 
-        protected override Task<int> InvokeInternal()
+        protected override Task<ExitCode> InvokeInternal()
         {
             _log.LogInformation("iOS state command called (no args supported)");
 
-            return Task.FromResult(0);
+            return Task.FromResult(ExitCode.SUCCESS);
         }
     }
 }
