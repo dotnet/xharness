@@ -50,8 +50,11 @@
   </Target>
 
   <Target Name="DownloadMlaunch" BeforeTargets="Build">
-    <Exec Condition=" '$(OS)' != 'Windows_NT' " Command="chmod 0755 ../../eng/download-mlaunch.sh &amp;&amp; ../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target-dir $(IntermediateOutputPath)mlaunch" />
-    <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' } &quot;" />
+    <Exec Condition=" '$(OS)' != 'Windows_NT' "
+          Command="chmod 0755 ../../eng/download-mlaunch.sh &amp;&amp; ../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target-dir $(IntermediateOutputPath)mlaunch" />
+
+    <Exec Condition=" '$(OS)' == 'Windows_NT' "
+          Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' } &quot;" />
 
     <ItemGroup>
       <Content Include="$(IntermediateOutputPath)/mlaunch/**/*.*">
@@ -59,6 +62,13 @@
         <PackagePath>runtimes/any/native/mlaunch</PackagePath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- Exclude mlaunch binaries from signing - they are already signed by Mono -->
+      <MlaunchBinaries Include="$(IntermediateOutputPath)mlaunch/**/*.exe" />
+      <MlaunchBinaries Include="$(IntermediateOutputPath)mlaunch/**/*.dll" />
+      <FileSignInfo Include="@MlaunchBinaries" CertificateName="None" />
     </ItemGroup>
   </Target>
 </Project>
