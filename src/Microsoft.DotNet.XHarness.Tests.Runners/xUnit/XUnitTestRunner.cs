@@ -160,7 +160,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             ReportTestCases("   Associated", args.Message.TestCases, log: OnDiagnostic);
             // notify the completion of the test
             OnTestCompleted((
-				TestName: args.Message.Test.DisplayName,
+                TestName: args.Message.Test.DisplayName,
                 TestResult: TestResult.Passed
             ));
         }
