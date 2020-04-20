@@ -95,10 +95,10 @@ stages:
           name: Hosted macOS
         strategy:
           matrix:
-            release_configuration:
+            Release:
               _BuildConfig: Release
             ${{ if eq(variables._RunAsPublic, True) }}:
-              debug_configuration:
+              Debug:
                 _BuildConfig: Debug
         steps:
         - script: eng/common/cibuild.sh
@@ -116,7 +116,7 @@ stages:
             testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
             mergeTestResults: true
             searchFolder: $(system.defaultworkingdirectory)
-            testRunTitle: XHarness unit tests - $(Agent.JobName) / $(_BuildConfig)
+            testRunTitle: XHarness unit tests - $(Agent.JobName)
           condition: succeededOrFailed()
 
         - task: PublishBuildArtifacts@1
