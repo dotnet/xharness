@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             _testLog = new Mock<ILog>();
         }
 
-        [Fact]
+        [Fact(Skip = "Test is flaky - https://github.com/dotnet/xharness/issues/52")]
         public void ProcessTest()
         {
             var tempResult = Path.GetTempFileName();
