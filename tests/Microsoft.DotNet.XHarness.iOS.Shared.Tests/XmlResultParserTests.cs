@@ -71,7 +71,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         {
             var path = Path.GetTempFileName();
             File.Delete(path);
-            Assert.False(_resultParser.IsValidXml(path, out var jargon), "missing file");
+            // TODO: Just testing a test will fail - change back to False before submitting
+            Assert.True(_resultParser.IsValidXml(path, out var jargon), "missing file");
         }
 
         [Theory]
