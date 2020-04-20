@@ -11,6 +11,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
     public class Logs : List<ILog>, ILogs
     {
+        private readonly IHelpers _helpers = new Helpers();
+
         public string Directory { get; set; }
 
         public Logs(string directory)
@@ -52,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
             if (!path.StartsWith(Directory, StringComparison.Ordinal))
             {
-                var newPath = Path.Combine(Directory, Path.GetFileNameWithoutExtension(path) + "-" + Helpers.Timestamp + Path.GetExtension(path));
+                var newPath = Path.Combine(Directory, Path.GetFileNameWithoutExtension(path) + "-" + _helpers.Timestamp + Path.GetExtension(path));
                 File.Copy(path, newPath, true);
                 path = newPath;
             }

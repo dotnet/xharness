@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
             }
         }
 
-        protected override Task<int> InvokeInternal()
+        protected override Task<ExitCode> InvokeInternal()
         {
             _log.LogDebug($"Android Test command called: App = {_arguments.AppPackagePath}{Environment.NewLine}Instrumentation Name = {_arguments.InstrumentationName}");
             _log.LogDebug($"Output Directory:{_arguments.OutputDirectory}{Environment.NewLine}Working Directory = {_arguments.WorkingDirectory}{Environment.NewLine}Timeout = {_arguments.Timeout.TotalSeconds} seconds.");
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
             if (!File.Exists(_arguments.AppPackagePath))
             {
                 _log.LogCritical($"Couldn't find {_arguments.AppPackagePath}!");
-                return Task.FromResult((int)ExitCodes.PACKAGE_NOT_FOUND);
+                return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
             }
             var runner = new AdbRunner(_log);
 
@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
                     if (runner.InstallApk(_arguments.AppPackagePath) != 0)
                     {
                         _log.LogCritical("Install failure: Test command cannot continue");
-                        return Task.FromResult((int)ExitCodes.PACKAGE_INSTALLATION_FAILURE);
+                        return Task.FromResult(ExitCode.PACKAGE_INSTALLATION_FAILURE);
                     }
                     runner.KillApk(apkPackageName);
                 }
@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
                     runner.UninstallApk(apkPackageName);
                 }
 
-                return Task.FromResult((int)ExitCodes.SUCCESS);
+                return Task.FromResult(ExitCode.SUCCESS);
             }
             catch (Exception toLog)
             {
@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
                 runner.KillAdbServer();
             }
 
-            return Task.FromResult((int)ExitCodes.GENERAL_FAILURE);
+            return Task.FromResult(ExitCode.GENERAL_FAILURE);
         }
     }
 }

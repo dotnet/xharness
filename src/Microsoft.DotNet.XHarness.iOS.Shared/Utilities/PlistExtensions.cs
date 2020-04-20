@@ -9,6 +9,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 {
     public static class PListExtensions
     {
+        public const string BundleIdentifierPropertyName = "CFBundleIdentifier";
+        public const string BundleNamePropertyName = "CFBundleName";
+
         public static void LoadWithoutNetworkAccess(this XmlDocument doc, string filename)
         {
             using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
@@ -63,12 +66,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void SetCFBundleIdentifier(this XmlDocument plist, string value)
         {
-            plist.SetPListStringValue("CFBundleIdentifier", value);
+            plist.SetPListStringValue(BundleIdentifierPropertyName, value);
         }
 
         public static void SetCFBundleName(this XmlDocument plist, string value)
         {
-            plist.SetPListStringValue("CFBundleName", value);
+            plist.SetPListStringValue(BundleNamePropertyName, value);
         }
 
         public static void SetUIDeviceFamily(this XmlDocument plist, params int[] families)
@@ -78,7 +81,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static string GetCFBundleIdentifier(this XmlDocument plist)
         {
-            return plist.GetPListStringValue("CFBundleIdentifier");
+            return plist.GetPListStringValue(BundleIdentifierPropertyName);
         }
 
         public static string GetNSExtensionPointIdentifier(this XmlDocument plist)

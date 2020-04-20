@@ -46,5 +46,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             TestTarget.Device_watchOS => false,
             _ => throw new ArgumentOutOfRangeException($"Unknown target: {target}"),
         };
+
+        public static bool IsWatchOSTarget(this TestTarget target) => target switch
+        {
+            TestTarget.Simulator_watchOS => true,
+            TestTarget.Device_watchOS => true,
+            _ => false,
+        };
     }
 }

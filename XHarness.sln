@@ -12,13 +12,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1018BF4C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{713ACDCF-301D-4C96-8B75-5BF2A35A326D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.CLI", "src\Microsoft.DotNet.XHarness.CLI\Microsoft.DotNet.XHarness.CLI.csproj", "{FDA1448B-B92F-4AD8-A741-ABAEDF935AF7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.CLI", "src\Microsoft.DotNet.XHarness.CLI\Microsoft.DotNet.XHarness.CLI.csproj", "{FDA1448B-B92F-4AD8-A741-ABAEDF935AF7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Android", "src\Microsoft.DotNet.XHarness.Android\Microsoft.DotNet.XHarness.Android.csproj", "{C5C7BF1E-3CD6-4E5B-8EBB-CE0C103C9640}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.Android", "src\Microsoft.DotNet.XHarness.Android\Microsoft.DotNet.XHarness.Android.csproj", "{C5C7BF1E-3CD6-4E5B-8EBB-CE0C103C9640}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Tests.Runners", "src\Microsoft.DotNet.XHarness.Tests.Runners\Microsoft.DotNet.XHarness.Tests.Runners.csproj", "{A9DCDA24-01E9-4467-BCBA-D5B78727D367}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.Tests.Runners", "src\Microsoft.DotNet.XHarness.Tests.Runners\Microsoft.DotNet.XHarness.Tests.Runners.csproj", "{A9DCDA24-01E9-4467-BCBA-D5B78727D367}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.iOS.Shared", "src\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj", "{A91316D8-4D48-4959-932F-5A0C3E1F7779}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.iOS.Shared", "src\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj", "{A91316D8-4D48-4959-932F-5A0C3E1F7779}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.iOS", "src\Microsoft.DotNet.XHarness.iOS\Microsoft.DotNet.XHarness.iOS.csproj", "{A6DFDFD0-6E4F-41A8-A7AB-F4E43A4353B4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.iOS.Tests", "tests\Microsoft.DotNet.XHarness.iOS.Tests\Microsoft.DotNet.XHarness.iOS.Tests.csproj", "{10A26931-A5C8-4256-B8AC-0984CAAAB93D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +46,14 @@ Global
 		{A91316D8-4D48-4959-932F-5A0C3E1F7779}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A91316D8-4D48-4959-932F-5A0C3E1F7779}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A91316D8-4D48-4959-932F-5A0C3E1F7779}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6DFDFD0-6E4F-41A8-A7AB-F4E43A4353B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6DFDFD0-6E4F-41A8-A7AB-F4E43A4353B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6DFDFD0-6E4F-41A8-A7AB-F4E43A4353B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6DFDFD0-6E4F-41A8-A7AB-F4E43A4353B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10A26931-A5C8-4256-B8AC-0984CAAAB93D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10A26931-A5C8-4256-B8AC-0984CAAAB93D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10A26931-A5C8-4256-B8AC-0984CAAAB93D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10A26931-A5C8-4256-B8AC-0984CAAAB93D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -51,6 +63,8 @@ Global
 		{C5C7BF1E-3CD6-4E5B-8EBB-CE0C103C9640} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
 		{A9DCDA24-01E9-4467-BCBA-D5B78727D367} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
 		{A91316D8-4D48-4959-932F-5A0C3E1F7779} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
+		{A6DFDFD0-6E4F-41A8-A7AB-F4E43A4353B4} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
+		{10A26931-A5C8-4256-B8AC-0984CAAAB93D} = {1018BF4C-BD8F-49D7-9797-758E68B9FC9D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {56D5F4DA-F710-4026-8F49-4A903BCAA9B5}
