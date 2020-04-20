@@ -57,7 +57,9 @@ New-Item -ItemType Directory -Force -ErrorAction Stop -Path $binariesRepo
 # Shallow-clone the xamarin/macios-binaries repo
 Set-Location $binariesRepo
 
+# Workaround for https://github.com/dahlbyk/posh-git/issues/109
 $env:GIT_REDIRECT_STDERR = '2>&1'
+$ErrorActionPreference = "SilentlyContinue"
 
 git init
 git remote add origin https://github.com/xamarin/macios-binaries.git
@@ -65,18 +67,10 @@ git config core.sparseCheckout true
 git config core.autocrlf false
 git config core.eol lf
 Set-Content -Path ".git/info/sparse-checkout" -Value "mlaunch"
-
-# Workaround for https://github.com/dahlbyk/posh-git/issues/109
-try
-{
-    git fetch -v --depth 1 origin $commit
-}
-catch
-{
-    Write-Host "git fetch failed but continuing (https://github.com/dahlbyk/posh-git/issues/109)"
-}
-
+git fetch -v --depth 1 origin $commit
 git checkout FETCH_HEAD
+
+$ErrorActionPreference = "Stop"
 
 # Clean what we don't need
 Remove-Item -Path (Join-Path $binariesRepo "mlaunch/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch.dSYM") -Recurse -Force -Verbose
