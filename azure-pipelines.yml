@@ -45,7 +45,7 @@ stages:
       enablePublishUsingPipelines: true
       enablePublishBuildAssets: true
       helixRepo: dotnet/xharness
-      
+
       jobs:
       - job: Windows_NT
         pool:
@@ -70,16 +70,16 @@ stages:
           name: Build
           displayName: Build
           condition: succeeded()
-          
+
         - task: PublishTestResults@2
           displayName: 'Publish Unit Test Results'
-          inputs: 
+          inputs:
             testResultsFormat: xUnit
             testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
             mergeTestResults: true
             searchFolder: $(system.defaultworkingdirectory)
             testRunTitle: XHarness Unit Tests
-          condition: succeededOrFailed()          
+          condition: succeededOrFailed()
 
         - task: PublishBuildArtifacts@1
           displayName: Publish Logs to VSTS
@@ -99,7 +99,7 @@ stages:
               _BuildConfig: Release
             ${{ if eq(variables._RunAsPublic, True) }}:
               debug_configuration:
-                _BuildConfig: Debug            
+                _BuildConfig: Debug
         steps:
         - script: eng/common/cibuild.sh
             --configuration $(_BuildConfig)
@@ -111,14 +111,14 @@ stages:
 
         - task: PublishTestResults@2
           displayName: 'Publish Unit Test Results'
-          inputs: 
+          inputs:
             testResultsFormat: xUnit
             testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
             mergeTestResults: true
             searchFolder: $(system.defaultworkingdirectory)
-            testRunTitle: XHarness Unit Tests
-          condition: succeededOrFailed()                    
-          
+            testRunTitle: XHarness unit tests ($(_BuildConfig))
+          condition: succeededOrFailed()
+
         - task: PublishBuildArtifacts@1
           displayName: Publish Logs to VSTS
           inputs:
@@ -127,7 +127,7 @@ stages:
             ArtifactName: $(Agent.Os)_$(Agent.JobName)
           continueOnError: true
           condition: always()
-        
+
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
@@ -150,4 +150,4 @@ stages:
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
         -TsaPublish $True'
-        
+
