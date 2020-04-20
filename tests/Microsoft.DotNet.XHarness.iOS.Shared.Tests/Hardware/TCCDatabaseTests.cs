@@ -7,92 +7,83 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Moq;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Moq;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 {
-
-    [TestFixture]
     public class TCCDatabaseTests
     {
+        private readonly Mock<IProcessManager> _processManager;
+        private readonly TCCDatabase _database;
+        private readonly Mock<ILog> _executionLog;
+        private readonly string _simRuntime;
+        private readonly string _dataPath;
 
-        Mock<IProcessManager> processManager;
-        TCCDatabase database;
-        Mock<ILog> executionLog;
-        string simRuntime;
-        string dataPath;
-
-        [SetUp]
-        public void SetUp()
+        public TCCDatabaseTests()
         {
-            processManager = new Mock<IProcessManager>();
-            database = new TCCDatabase(processManager.Object);
-            executionLog = new Mock<ILog>();
-            simRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-12-1";
-            dataPath = "/path/to/my/data";
+            _processManager = new Mock<IProcessManager>();
+            _database = new TCCDatabase(_processManager.Object);
+            _executionLog = new Mock<ILog>();
+            _simRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-12-1";
+            _dataPath = "/path/to/my/data";
         }
 
-        [TearDown]
-        public void TearDown()
-        {
-            processManager = null;
-            database = null;
-        }
-
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-12-1", 3)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-10-1", 2)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-9-1", 2)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-7-1", 1)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.tvOS-12-3", 3)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.tvOS-8-1", 2)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.watchOS-5-1", 3)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.watchOS-4-1", 2)]
+        [Theory]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-12-1", 3)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-10-1", 2)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-9-1", 2)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-7-1", 1)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.tvOS-12-3", 3)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.tvOS-8-1", 2)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-5-1", 3)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-4-1", 2)]
         public void GetTCCFormatTest(string runtime, int expected)
         {
-            Assert.AreEqual(expected, database.GetTCCFormat(runtime));
+            Assert.Equal(expected, _database.GetTCCFormat(runtime));
         }
 
-        [Test]
+        [Fact]
         public void GetTCCFormatUnknownTest()
         {
-            Assert.Throws<NotImplementedException>(() => database.GetTCCFormat("unknown-sim-runtime"));
+            Assert.Throws<NotImplementedException>(() => _database.GetTCCFormat("unknown-sim-runtime"));
         }
 
-        [Test]
+        [Fact]
         public async Task AgreeToPromptsAsyncNoIdentifiers()
         {
             // we should write in the log that we did not managed to agree to it
-            executionLog.Setup(l => l.WriteLine(It.IsAny<string>()));
-            await database.AgreeToPromptsAsync(simRuntime, dataPath, executionLog.Object);
-            executionLog.Verify(l => l.WriteLine("No bundle identifiers given when requested permission editing."));
+            _executionLog.Setup(l => l.WriteLine(It.IsAny<string>()));
+            await _database.AgreeToPromptsAsync(_simRuntime, _dataPath, _executionLog.Object);
+            _executionLog.Verify(l => l.WriteLine("No bundle identifiers given when requested permission editing."));
         }
 
-        [Test]
+        [Fact]
         public async Task AgreeToPropmtsAsyncTimeoutsTest()
         {
             string processName = null;
             // set the process manager to always return a failure so that we do eventually get a timeout
-            processManager.Setup(p => p.ExecuteCommandAsync(It.IsAny<string>(), It.IsAny<List<string>>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), null, null))
+            _processManager.Setup(p => p.ExecuteCommandAsync(It.IsAny<string>(), It.IsAny<List<string>>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), null, null))
                 .Returns<string, IList<string>, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((p, a, l, t, e, c) =>
                 {
                     processName = p;
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 1, TimedOut = true });
                 });
             // try to accept and fail because we always timeout
-            await database.AgreeToPromptsAsync(simRuntime, dataPath, executionLog.Object, "my-bundle-id", "your-bundle-id");
+            await _database.AgreeToPromptsAsync(_simRuntime, _dataPath, _executionLog.Object, "my-bundle-id", "your-bundle-id");
 
             // verify that we did write in the logs and that we did call sqlite3
-            Assert.AreEqual("sqlite3", processName, "sqlite3 process");
-            executionLog.Verify(l => l.WriteLine("Failed to edit TCC.db, the test run might hang due to permission request dialogs"), Times.AtLeastOnce);
+            Assert.Equal("sqlite3", processName);
+            _executionLog.Verify(l => l.WriteLine("Failed to edit TCC.db, the test run might hang due to permission request dialogs"), Times.AtLeastOnce);
         }
 
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-12-1", 3)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-10-1", 2)]
-        [TestCase("com.apple.CoreSimulator.SimRuntime.iOS-7-1", 1)]
+        [Theory]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-12-1", 3)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-10-1", 2)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-7-1", 1)]
         public async Task AgreeToPropmtsAsyncSuccessTest(string runtime, int dbVersion)
         {
             string bundleIdentifier = "my-bundle-identifier";
@@ -135,7 +126,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             }
             string processName = null;
             IList<string> args = new List<string>();
-            processManager.Setup(p => p.ExecuteCommandAsync(It.IsAny<string>(), It.IsAny<List<string>>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), null, null))
+            _processManager.Setup(p => p.ExecuteCommandAsync(It.IsAny<string>(), It.IsAny<List<string>>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), null, null))
                 .Returns<string, IList<string>, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((p, a, l, t, e, c) =>
                 {
                     processName = p;
@@ -143,12 +134,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
                 });
 
-            await database.AgreeToPromptsAsync(runtime, dataPath, executionLog.Object, bundleIdentifier);
+            await _database.AgreeToPromptsAsync(runtime, _dataPath, _executionLog.Object, bundleIdentifier);
 
-            Assert.AreEqual("sqlite3", processName, "sqlite3 process");
+            Assert.Equal("sqlite3", processName);
             // assert that the sql is present
-            Assert.That(args, Has.Member(dataPath));
-            Assert.That(args, Has.Member(expectedArgs.ToString()), "insert sql");
+            Assert.True(args.Contains(_dataPath));
+            Assert.True(args.Contains(expectedArgs.ToString()));
         }
     }
 }

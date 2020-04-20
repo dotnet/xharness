@@ -4,67 +4,61 @@
 
 using System;
 using System.IO;
-using Moq;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
 {
-
-    [TestFixture]
-    public class CaptureLogTest
+    public class CaptureLogTest : IDisposable
     {
+        private readonly string _filePath;
+        private readonly string _capturePath;
 
-        string filePath;
-        string capturePath;
-        Mock<ILogs> logs;
-
-        [SetUp]
-        public void SetUp()
+        public CaptureLogTest()
         {
-            filePath = Path.GetTempFileName();
-            capturePath = Path.GetTempFileName();
-            logs = new Mock<ILogs>();
-            File.Delete(filePath);
-            File.Delete(capturePath);
+            _filePath = Path.GetTempFileName();
+            _capturePath = Path.GetTempFileName();
+            File.Delete(_filePath);
+            File.Delete(_capturePath);
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
-            if (File.Exists(filePath))
-                File.Delete(filePath);
+            if (File.Exists(_filePath))
+            {
+                File.Delete(_filePath);
+            }
         }
 
-
-
-        [Test]
+        [Fact]
         public void ConstructorNullFilePath()
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                var captureLog = new CaptureLog(null, filePath, false);
+                var captureLog = new CaptureLog(null, _filePath, false);
             });
         }
 
 
-        [Test]
+        [Fact]
         public void CaptureRightOrder()
         {
             var ignoredLine = "This lines should not be captured";
             var logLines = new[] { "first line", "second line", "thrid line" };
-            using (var stream = File.Create(filePath))
+            using (var stream = File.Create(_filePath))
             using (var writer = new StreamWriter(stream))
             {
                 writer.WriteLine(ignoredLine);
             }
-            using (var captureLog = new CaptureLog(capturePath, filePath, false))
+            using (var captureLog = new CaptureLog(_capturePath, _filePath, false))
             {
                 captureLog.StartCapture();
-                using (var writer = new StreamWriter(filePath))
+                using (var writer = new StreamWriter(_filePath))
                 {
                     foreach (var line in logLines)
+                    {
                         writer.WriteLine(line);
+                    }
                 }
                 captureLog.StopCapture();
                 // get the stream and assert we do have the correct lines
@@ -73,51 +67,48 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
                     string line;
                     while ((line = captureStream.ReadLine()) != null)
                     {
-                        Assert.Contains(line, logLines, "Lines not captured");
+                        Assert.Contains(line, logLines);
                     }
                 }
             }
         }
 
-        [Test]
+        [Fact]
         public void CaptureMissingFileTest()
         {
-            using (var captureLog = new CaptureLog(capturePath, filePath, false))
+            using (var captureLog = new CaptureLog(_capturePath, _filePath, false))
             {
-                Assert.AreEqual(capturePath, captureLog.FullPath, "capture path");
+                Assert.Equal(_capturePath, captureLog.FullPath);
                 captureLog.StartCapture();
                 captureLog.StopCapture();
             }
             // read the data that was added to the capture path and  ensure that we do have the name of the missing file
-            using (var reader = new StreamReader(capturePath))
+            using (var reader = new StreamReader(_capturePath))
             {
                 var line = reader.ReadLine();
-                StringAssert.Contains(filePath, line, "file path missing");
+                Assert.Contains(_filePath, line);
             }
         }
 
-        [Test]
+        [Fact]
         public void CaptureWrongOrder()
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
-                using (var captureLog = new CaptureLog(capturePath, filePath, false))
+                using (var captureLog = new CaptureLog(_capturePath, _filePath, false))
                 {
                     captureLog.StopCapture();
                 }
             });
         }
 
-        [Test]
+        [Fact]
         public void CaptureWrongOrderEntirePath()
         {
-            Assert.DoesNotThrow(() =>
+            using (var captureLog = new CaptureLog(_capturePath, _filePath, true))
             {
-                using (var captureLog = new CaptureLog(capturePath, filePath, true))
-                {
-                    captureLog.StopCapture();
-                }
-            });
+                captureLog.StopCapture();
+            }
         }
     }
 }

@@ -9,74 +9,68 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Moq;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Moq;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 {
-
-    [TestFixture]
     public class SimulatorsTest
     {
+        private readonly Mock<ILog> _executionLog;
+        private readonly Mock<IProcessManager> _processManager;
+        private readonly SimulatorLoader _simulators;
 
-        Mock<ILog> executionLog;
-        Mock<IProcessManager> processManager;
-        SimulatorLoader simulators;
-
-        [SetUp]
-        public void SetUp()
+        public SimulatorsTest()
         {
-            executionLog = new Mock<ILog>();
-            processManager = new Mock<IProcessManager>();
-            simulators = new SimulatorLoader(processManager.Object);
+            _executionLog = new Mock<ILog>();
+            _processManager = new Mock<IProcessManager>();
+            _simulators = new SimulatorLoader(_processManager.Object);
         }
 
-        [TearDown]
-        public void TearDown()
-        {
-            executionLog = null;
-            processManager = null;
-            simulators = null;
-        }
-
-        [TestCase(false)] // no timeout
-        [TestCase(true)] // timeout
-        public void LoadAsyncProcessErrorTest(bool timeout)
+        [Theory]
+        [InlineData(false)] // no timeout
+        [InlineData(true)] // timeout
+        public async Task LoadAsyncProcessErrorTest(bool timeout)
         {
             string processPath = null;
             MlaunchArguments passedArguments = null;
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
-            processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
+            _processManager
+                .Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
                 .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, CancellationToken?, bool?>((p, args, log, t, env, token, d) =>
                 {
                     // we are going set the used args to validate them later, will always return an error from this method
                     processPath = p.StartInfo.FileName;
                     passedArguments = args;
                     if (!timeout)
+                    {
                         return Task.FromResult(new ProcessExecutionResult { ExitCode = 1, TimedOut = false });
+                    }
                     else
+                    {
                         return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = true });
+                    }
                 });
 
-            Assert.ThrowsAsync<Exception>(async () =>
+            await Assert.ThrowsAsync<Exception>(async () =>
             {
-                await simulators.LoadDevices(executionLog.Object);
+                await _simulators.LoadDevices(_executionLog.Object);
             });
 
             // validate the execution of mlaunch
             MlaunchArgument listSimArg = passedArguments.Where(a => a is ListSimulatorsArgument).FirstOrDefault();
-            Assert.IsNotNull(listSimArg, "list devices arg missing");
+            Assert.NotNull(listSimArg);
 
             MlaunchArgument outputFormatArg = passedArguments.Where(a => a is XmlOutputFormatArgument).FirstOrDefault();
-            Assert.IsNotNull(outputFormatArg, "output format arg missing");
+            Assert.NotNull(outputFormatArg);
         }
 
-        void CopySampleData(string tempPath)
+        private void CopySampleData(string tempPath)
         {
             var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("simulators.xml", StringComparison.Ordinal)).FirstOrDefault();
             using (var outputStream = new StreamWriter(tempPath))
@@ -84,18 +78,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             {
                 string line;
                 while ((line = sampleStream.ReadLine()) != null)
+                {
                     outputStream.WriteLine(line);
+                }
             }
         }
 
-        [Test]
+        [Fact]
         public async Task LoadAsyncProcessSuccess()
         {
             string processPath = null;
             MlaunchArguments passedArguments = null;
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
-            processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
+            _processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
                 .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, CancellationToken?, bool?>((p, args, log, t, env, token, d) =>
                 {
                     processPath = p.StartInfo.FileName;
@@ -109,32 +105,33 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
                 });
 
-            await simulators.LoadDevices(executionLog.Object);
+            await _simulators.LoadDevices(_executionLog.Object);
 
             MlaunchArgument listSimArg = passedArguments.Where(a => a is ListSimulatorsArgument).FirstOrDefault();
-            Assert.IsNotNull(listSimArg, "list devices arg missing");
+            Assert.NotNull(listSimArg);
 
             MlaunchArgument outputFormatArg = passedArguments.Where(a => a is XmlOutputFormatArgument).FirstOrDefault();
-            Assert.IsNotNull(outputFormatArg, "output format arg missing");
+            Assert.NotNull(outputFormatArg);
 
-            Assert.AreEqual(75, simulators.AvailableDevices.Count());
+            Assert.Equal(75, _simulators.AvailableDevices.Count());
         }
 
-        [TestCase(TestTarget.Simulator_iOS64, 1)]
-        [TestCase(TestTarget.Simulator_iOS32, 1)]
-        [TestCase(TestTarget.Simulator_tvOS, 1)]
-        [TestCase(TestTarget.Simulator_watchOS, 2)]
+        [Theory]
+        [InlineData(TestTarget.Simulator_iOS64, 1)]
+        [InlineData(TestTarget.Simulator_iOS32, 1)]
+        [InlineData(TestTarget.Simulator_tvOS, 1)]
+        [InlineData(TestTarget.Simulator_watchOS, 2)]
         public async Task FindAsyncDoNotCreateTest(TestTarget target, int expected)
         {
             string processPath = null;
             MlaunchArguments passedArguments = null;
 
-            processManager
-                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), executionLog.Object, TimeSpan.FromMinutes(1)))
+            _processManager
+                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1)))
                 .ReturnsAsync(new ProcessExecutionResult() { ExitCode = 0 });
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
-            processManager
+            _processManager
                 .Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
                 .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, CancellationToken?, bool?>((p, args, log, t, env, token, d) =>
                 {
@@ -149,16 +146,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
                 });
 
-            await simulators.LoadDevices(executionLog.Object);
-            var sims = await simulators.FindSimulators(target, executionLog.Object, false, false);
+            await _simulators.LoadDevices(_executionLog.Object);
+            var sims = await _simulators.FindSimulators(target, _executionLog.Object, false, false);
 
-            Assert.AreEqual(expected, sims.Count(), $"{target} simulators count");
+            Assert.Equal(expected, sims.Count());
         }
 
         private void AssertArgumentValue(MlaunchArgument arg, string expected, string message = null)
         {
             var value = arg.AsCommandLineArgument().Split(new char[] { '=' }, 2).LastOrDefault();
-            Assert.AreEqual(expected, value, message);
+            Assert.Equal(expected, value);
         }
     }
 }

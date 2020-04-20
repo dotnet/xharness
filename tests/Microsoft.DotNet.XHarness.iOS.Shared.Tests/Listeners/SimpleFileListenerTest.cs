@@ -4,63 +4,58 @@
 
 using System;
 using System.IO;
-using Moq;
-using NUnit.Framework;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Moq;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
 {
-
-    [TestFixture]
-    public class SimpleFileListenerTest
+    public class SimpleFileListenerTest : IDisposable
     {
+        private readonly string _path;
+        private readonly Mock<ILog> _testLog;
+        private readonly Mock<ILog> _log;
 
-        string path;
-        Mock<ILog> testLog;
-        Mock<ILog> log;
-
-        [SetUp]
-        public void SetUp()
+        public SimpleFileListenerTest()
         {
-            path = Path.GetTempFileName();
-            testLog = new Mock<ILog>();
-            log = new Mock<ILog>();
-            File.Delete(path);
+            _path = Path.GetTempFileName();
+            _testLog = new Mock<ILog>();
+            _log = new Mock<ILog>();
+            File.Delete(_path);
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
-            if (File.Exists(path))
-                File.Delete(path);
-            path = null;
-            testLog = null;
-            log = null;
+            if (File.Exists(_path))
+            {
+                File.Delete(_path);
+            }
         }
 
-        [Test]
+        [Fact]
         public void ConstructorNullPathTest()
         {
-            Assert.Throws<ArgumentNullException>(() => new SimpleFileListener(null, log.Object, testLog.Object, false));
+            Assert.Throws<ArgumentNullException>(() => new SimpleFileListener(null, _log.Object, _testLog.Object, false));
         }
 
-        [TestCase("Tests run: ", false)]
-        [TestCase("<!-- the end -->", true)]
+        [Theory]
+        [InlineData("Tests run: ", false)]
+        [InlineData("<!-- the end -->", true)]
         public void TestProcess(string endLine, bool isXml)
         {
             var lines = new string[] { "first line", "second line", "last line" };
             // set mock expectations
-            testLog.Setup(l => l.WriteLine("Tests have started executing"));
-            testLog.Setup(l => l.WriteLine("Tests have finished executing"));
+            _testLog.Setup(l => l.WriteLine("Tests have started executing"));
+            _testLog.Setup(l => l.WriteLine("Tests have finished executing"));
             foreach (var line in lines)
             {
-                testLog.Setup(l => l.WriteLine(line));
+                _testLog.Setup(l => l.WriteLine(line));
             }
             // create a listener, set the writer and ensure that what we write in the file is present in the final path
-            using (var sourceWriter = new StreamWriter(path))
+            using (var sourceWriter = new StreamWriter(_path))
             {
-                var listener = new SimpleFileListener(path, log.Object, testLog.Object, isXml);
+                var listener = new SimpleFileListener(_path, _log.Object, _testLog.Object, isXml);
                 listener.Initialize();
                 listener.StartAsync();
                 // write a number of lines and ensure that those are called in the mock
@@ -76,7 +71,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             // verify that the expected lines were added
             foreach (var line in lines)
             {
-                testLog.Verify(l => l.WriteLine(line), Times.Once);
+                _testLog.Verify(l => l.WriteLine(line), Times.Once);
             }
         }
 

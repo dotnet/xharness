@@ -4,39 +4,37 @@
 
 using System;
 using System.Diagnostics;
-using NUnit.Framework;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
 {
-
-    [TestFixture]
     public class StringUtilsTests
     {
-
-        static readonly char shellQuoteChar =
+        private static readonly char s_shellQuoteChar =
             (int)Environment.OSVersion.Platform != 128
                 && Environment.OSVersion.Platform != PlatformID.Unix
                 && Environment.OSVersion.Platform != PlatformID.MacOSX
             ? '"'   // Windows
             : '\''; // !Windows
 
-        [Test]
+        [Fact]
         public void NoEscapingNeeded()
         {
-            Assert.AreEqual("foo", StringUtils.Quote("foo"));
+            Assert.Equal("foo", StringUtils.Quote("foo"));
         }
 
-        [TestCase("foo bar", "foo bar", Description = "Space")]
-        [TestCase("foo \"bar\"", "foo \\\"bar\\\"", Description = "Quotes")]
-        [TestCase("foo bar's", "foo bar\\\'s", Description = "Apostrophe")]
-        [TestCase("foo $bar's", "foo $bar\\\'s", Description = "Dollar sign")]
+        [Theory]
+        [InlineData("foo bar", "foo bar")]
+        [InlineData("foo \"bar\"", "foo \\\"bar\\\"")]
+        [InlineData("foo bar's", "foo bar\\\'s")]
+        [InlineData("foo $bar's", "foo $bar\\\'s")]
         public void QuoteForProcessTest(string input, string expected)
         {
-            Assert.AreEqual(shellQuoteChar + expected + shellQuoteChar, StringUtils.Quote(input));
+            Assert.Equal(s_shellQuoteChar + expected + s_shellQuoteChar, StringUtils.Quote(input));
         }
 
-        [Test]
+        [Fact(Skip = "Only works on OSX/Linux")]
         public void FormatArgumentsTest()
         {
             var p = new Process();
@@ -49,7 +47,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
             p.StartInfo.Arguments = StringUtils.FormatArguments("-n", "foo", complexInput, "bar");
             p.Start();
             var output = p.StandardOutput.ReadToEnd();
-            Assert.AreEqual($"foo {complexInput} bar", output, "echo");
+            Assert.Equal($"foo {complexInput} bar", output);
         }
     }
 }
