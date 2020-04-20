@@ -59,7 +59,7 @@ Set-Location $binariesRepo
 
 # Workaround for https://github.com/dahlbyk/posh-git/issues/109
 $env:GIT_REDIRECT_STDERR = '2>&1'
-$ErrorActionPreference = "SilentlyContinue"
+$ErrorActionPreference = "Continue"
 
 git init
 git remote add origin https://github.com/xamarin/macios-binaries.git
@@ -69,8 +69,6 @@ git config core.eol lf
 Set-Content -Path ".git/info/sparse-checkout" -Value "mlaunch"
 git fetch -v --depth 1 origin $commit
 git checkout FETCH_HEAD
-
-$ErrorActionPreference = "Stop"
 
 # Clean what we don't need
 Remove-Item -Path (Join-Path $binariesRepo "mlaunch/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch.dSYM") -Recurse -Force -Verbose
@@ -83,7 +81,7 @@ New-Item -ItemType File -Path $tagFileInRepo
 Copy-Item -Path (Join-Path $binariesRepo "*") -Destination $TargetDir -Recurse -Verbose
 
 # Tag the version of mlaunch we have
-New-Item -ItemType File -Path $tagFile
+New-Item -ItemType File -Path $tagFile -ErrorAction "SilentlyContinue"
 
 Write-Host "Finished installing mlaunch in $TargetDir"
 
