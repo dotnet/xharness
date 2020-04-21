@@ -1,12 +1,23 @@
 <Project>
 
   <ItemGroup>
-    <!-- Do not sign non-shipping packages -->
-    <ItemsToSign Remove="$(ArtifactsNonShippingPackagesDir)**\MonoBundle\*.exe" />
+      <!-- Exclude mlaunch binaries from signing - they are already signed by Mono -->
     <ItemsToSign Remove="$(IntermediateOutputPath)**\MonoBundle\*.exe" />
     <ItemsToSign Remove="$(IntermediateOutputPath)**\MonoBundle\*.dll" />
     <ItemsToSign Remove="$(ArtifactsTmpDir)**\MonoBundle\*.exe" />
     <ItemsToSign Remove="$(ArtifactsTmpDir)**\MonoBundle\*.dll" />
+
+    <ItemsToSign Remove="System.Net.Http.dll" />
+    <ItemsToSign Remove="System.Net.Http.dll" />
+    <ItemsToSign Remove="System.Numerics.dll" />
+    <ItemsToSign Remove="System.Numerics.dll" />
+    <ItemsToSign Remove="System.Xml.dll" />
+    <ItemsToSign Remove="System.Xml.dll" />
+    <ItemsToSign Remove="Xamarin.Hosting.dll" />
+    <ItemsToSign Remove="Xamarin.Hosting.dll" />
+    <ItemsToSign Remove="Xamarin.Mac.dll" />
+    <ItemsToSign Remove="Xamarin.Mac.dll" />
+
   </ItemGroup>
 
   <PropertyGroup>
