@@ -68,7 +68,10 @@
       <!-- Exclude mlaunch binaries from signing - they are already signed by Mono -->
       <MlaunchBinaries Include="**/mlaunch.app/**/*.exe" />
       <MlaunchBinaries Include="**/mlaunch.app/**/*.dll" />
-      <FileSignInfo Include="@MlaunchBinaries" CertificateName="None" />
+      <FileSignInfo Include="@(MlaunchBinaries)" CertificateName="None" />
     </ItemGroup>
+
+      <Message Text="!!!!!: @(MlaunchBinaries)" Importance="high" />
+
   </Target>
 </Project>
