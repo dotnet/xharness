@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         // parses the xml of the given jargon, create a human readable result and returns a result line with the summary of what was
         // parsed.
-        (string resultLine, bool failed) GenerateHumanReadableResults(string source, string destination, XmlResultJargon xmlType);
+        (string resultLine, bool failed) GenerateHumanReadableResults(string source, string destination, XmlResultJargon xmlType, bool generateHumanResults);
 
         // generated a human readable test report.
         void GenerateTestReport(StreamWriter writer, string resultsPath, XmlResultJargon xmlType);

@@ -25,7 +25,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             string device,
             TimeSpan timeout,
             string additionalLogsDirectory = null,
-            ExceptionLogger exceptionLogger = null);
+            ExceptionLogger exceptionLogger = null,
+			bool generateHtml = false);
     }
 
     public class TestReporterFactory : ITestReporterFactory
@@ -49,7 +50,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             string device,
             TimeSpan timeout,
             string additionalLogsDirectory = null,
-            ExceptionLogger exceptionLogger = null)
+            ExceptionLogger exceptionLogger = null,
+            bool generateHtml = false)
         {
             return new TestReporter(processManager,
                 mainLog,
@@ -64,7 +66,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 device,
                 timeout,
                 additionalLogsDirectory,
-                exceptionLogger);
+                exceptionLogger,
+                generateHtml);
         }
     }
 }
