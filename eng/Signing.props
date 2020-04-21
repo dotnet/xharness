@@ -2,12 +2,19 @@
 
   <ItemGroup>
     <!-- Exclude mlaunch binaries from signing - they are already signed by Mono -->
-    <MlaunchBinaries Include="$(IntermediateOutputPath)**\MonoBundle\*.exe" />
-    <MlaunchBinaries Include="$(IntermediateOutputPath)**\MonoBundle\*.dll" />
-    <MlaunchBinaries Include="$(ArtifactsTmpDir)**\MonoBundle\*.exe" />
-    <MlaunchBinaries Include="$(ArtifactsTmpDir)**\MonoBundle\*.dll" />
+    <!-- <MlaunchBinaries Include="$(IntermediateOutputPath)**\mlaunch.app\Contents\MonoBundle\*.exe" />
+    <MlaunchBinaries Include="$(IntermediateOutputPath)**\mlaunch.app\Contents\MonoBundle\*.dll" />
+    <MlaunchBinaries Include="$(ArtifactsTmpDir)**\mlaunch.app\Contents\MonoBundle\*.exe" />
+    <MlaunchBinaries Include="$(ArtifactsTmpDir)**\mlaunch.app\Contents\MonoBundle\*.dll" />
     <ItemsToSign Remove="@(MlaunchBinaries)" />
-    <FileSignInfo Include="@(MlaunchBinaries)" CertificateName="None" />
+    <FileSignInfo Include="@(MlaunchBinaries)" CertificateName="None" /> -->
+
+    <FileSignInfo Include="mlaunch.exe" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="System.Net.Http.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="System.Numerics.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="System.Xml.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Xamarin.Hosting.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Xamarin.Mac.dll" CertificateName="3PartySHA2" />
   </ItemGroup>
 
   <PropertyGroup>
