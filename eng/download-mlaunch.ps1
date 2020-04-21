@@ -78,7 +78,7 @@ Get-ChildItem -Path (Join-Path $binariesRepo "mlaunch/lib/mlaunch/mlaunch.app/Co
 New-Item -ItemType File -Path $tagFileInRepo
 
 # Copy mlaunch to the target folder
-Copy-Item -Path (Join-Path $binariesRepo "*") -Destination $TargetDir -Recurse -Verbose
+Copy-Item -Path (Join-Path $binariesRepo (Join-Path "mlaunch" "*")) -Destination $TargetDir -Recurse -Verbose
 
 # Tag the version of mlaunch we have
 New-Item -ItemType File -Path $tagFile -ErrorAction "SilentlyContinue"
