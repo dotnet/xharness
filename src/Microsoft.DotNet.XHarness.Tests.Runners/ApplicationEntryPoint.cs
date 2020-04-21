@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
     /// </summary>
     public abstract class ApplicationEntryPoint
     {
-
+        const string ActiveIssueCategory = "ActiveIssue";
         /// <summary>
         /// Event raised when the test run has started.
         /// </summary>
@@ -133,12 +133,12 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
             // connect to the runner events so that we fwd them to the client
             runner.TestStarted += OnTestStarted;
             runner.TestCompleted += OnTestCompleted;
+            var categories = new List<string> { ActiveIssueCategory }; // default known category to ignore
 
             if (!string.IsNullOrEmpty(IgnoreFilesDirectory))
             {
-                var categories = await IgnoreFileParser.ParseTraitsContentFileAsync(IgnoreFilesDirectory, TestRunner == TestRunnerType.Xunit);
+                categories.AddRange (await IgnoreFileParser.ParseTraitsContentFileAsync(IgnoreFilesDirectory, TestRunner == TestRunnerType.Xunit));
                 // add category filters if they have been added
-                runner.SkipCategories(categories);
 
                 var skippedTests = await IgnoreFileParser.ParseContentFilesAsync(IgnoreFilesDirectory);
                 if (skippedTests.Any())
@@ -147,6 +147,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
                     runner.SkipTests(skippedTests);
                 }
             }
+
+            runner.SkipCategories(categories);
 
             var testAssemblies = GetTestAssemblies();
             // notify the clients we are starting
