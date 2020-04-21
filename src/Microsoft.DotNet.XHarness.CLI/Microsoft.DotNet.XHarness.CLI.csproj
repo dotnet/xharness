@@ -66,8 +66,12 @@
 
     <ItemGroup>
       <!-- Exclude mlaunch binaries from signing - they are already signed by Mono -->
-      <MlaunchBinaries Include="**/mlaunch.app/**/*.exe" />
-      <MlaunchBinaries Include="**/mlaunch.app/**/*.dll" />
+      <!-- <MlaunchBinaries Include="$(IntermediateOutputPath)mlaunch/**/*.exe" />
+      <MlaunchBinaries Include="$(IntermediateOutputPath)mlaunch/**/*.dll" /> -->
+      <MlaunchBinaries Include="$(IntermediateOutputPath)**/MonoBundle/*.exe" />
+      <MlaunchBinaries Include="$(IntermediateOutputPath)**/MonoBundle/*.dll" />
+      <MlaunchBinaries Include="$(ArtifactsTmpDir)**/MonoBundle/*.exe" />
+      <MlaunchBinaries Include="$(ArtifactsTmpDir)**/MonoBundle/*.dll" />
       <FileSignInfo Include="@(MlaunchBinaries)" CertificateName="None" />
     </ItemGroup>
 
