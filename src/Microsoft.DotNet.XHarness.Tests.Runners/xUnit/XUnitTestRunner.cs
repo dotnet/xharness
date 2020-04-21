@@ -1172,7 +1172,12 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                 foreach (var c in categories)
                 {
                     var traitInfo = c.Split('=');
-                    filters.Add(XUnitFilter.CreateTraitFilter(traitInfo[0], traitInfo[1], true));
+                    if (traitInfo.Length == 2)
+                    {
+                        filters.Add(XUnitFilter.CreateTraitFilter(traitInfo[0], traitInfo[1], true));
+                    } else { 
+                        filters.Add(XUnitFilter.CreateTraitFilter(c, null, true));
+					}
                 }
             }
         }
