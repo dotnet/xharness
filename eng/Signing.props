@@ -1,0 +1,20 @@
+<Project>
+
+  <ItemGroup>
+    <!-- Do not sign non-shipping packages -->
+    <ItemsToSign Remove="$(ArtifactsNonShippingPackagesDir)**\MonoBundle\*.exe" />
+    <ItemsToSign Remove="$(IntermediateOutputPath)**\MonoBundle\*.exe" />
+    <ItemsToSign Remove="$(IntermediateOutputPath)**\MonoBundle\*.dll" />
+    <ItemsToSign Remove="$(ArtifactsTmpDir)**\MonoBundle\*.exe" />
+    <ItemsToSign Remove="$(ArtifactsTmpDir)**\MonoBundle\*.dll" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!--
+      Signing of shipping artifacts (layout, msi, bundle) are handled separately.
+      It is therefore expected that above removal can yield an empty set.
+    -->
+    <AllowEmptySignList>true</AllowEmptySignList>
+  </PropertyGroup>
+
+</Project>
