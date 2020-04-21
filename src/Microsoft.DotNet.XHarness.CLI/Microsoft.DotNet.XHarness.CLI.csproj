@@ -8,6 +8,18 @@
     <ToolCommandName>xharness</ToolCommandName>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>CS8002;</NoWarn>
+
+    <!-- This is a git revision of the xamarin/macios-binaries repo where we get the mlaunch tool from
+         If you change the version, please run /eng/download-mlaunch.sh to get this version into your environment -->
+    <MlaunchVersion>3fbdcdb97459ca2c699d47e33028a106b95a7f1f</MlaunchVersion>
+
+    <!-- When updating, avoid using 'latest' url as this can make the same commit build differently on different days -->
+    <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-windows.zip</WindowsAndroidSdkUrl>
+    <WindowsAndroidSdkFileName>windows-android-platform-tools.zip</WindowsAndroidSdkFileName>
+
+    <!-- TODO: Figure out minimal set of binaries for linux, then copy them.  Until then this is unsued. -->
+    <LinuxAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-linux.zip</LinuxAndroidSdkUrl>
+    <LinuxAndroidSdkFileName>linux-android-platform-tools.zip</LinuxAndroidSdkFileName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -24,16 +36,6 @@
     <ProjectReference Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.XHarness.iOS\Microsoft.DotNet.XHarness.iOS.csproj" />
   </ItemGroup>
-  
-  <PropertyGroup>
-    <!-- When updating, avoid using 'latest' url as this can make the same commit build differently on different days -->
-    <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-windows.zip</WindowsAndroidSdkUrl>
-    <WindowsAndroidSdkFileName>windows-android-platform-tools.zip</WindowsAndroidSdkFileName>
-  
-    <!-- TODO: Figure out minimal set of binaries for linux, then copy them.  Until then this is unused. -->
-    <LinuxAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-linux.zip</LinuxAndroidSdkUrl>
-    <LinuxAndroidSdkFileName>linux-android-platform-tools.zip</LinuxAndroidSdkFileName>
-  </PropertyGroup>
 
   <Target Name="DownloadAndroidSdks" BeforeTargets="Build">
     <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="True" />
@@ -47,5 +49,21 @@
       </Content>
     </ItemGroup>
   </Target>
-  
+
+  <Target Name="DownloadMlaunch" BeforeTargets="Build">
+    <Exec Condition=" '$(OS)' != 'Windows_NT' "
+          Command="chmod 0755 ../../eng/download-mlaunch.sh &amp;&amp; ../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target-dir $(IntermediateOutputPath)mlaunch" />
+
+    <Exec Condition=" '$(OS)' == 'Windows_NT' "
+          Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' } &quot;" />
+
+    <ItemGroup>
+      <Content Include="$(IntermediateOutputPath)/mlaunch/**/*.*">
+        <Pack>true</Pack>
+        <PackagePath>runtimes/any/native/mlaunch</PackagePath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+  </Target>
 </Project>
