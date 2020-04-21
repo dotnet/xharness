@@ -141,6 +141,11 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             LogTestDetails(args.Message.Test, log: OnDebug);
             LogTestOutput(args.Message, log: OnDiagnostic);
             ReportTestCases("   Associated", args.Message.TestCases, log: OnDiagnostic);
+            // notify that the test completed because it was skipped
+            OnTestCompleted((
+                TestName: args.Message.Test.DisplayName,
+                TestResult: TestResult.Skipped
+            ));
         }
 
         void HandleTestPassed(MessageHandlerArgs<ITestPassed> args)
@@ -153,6 +158,11 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             LogTestDetails(args.Message.Test, log: OnDebug);
             LogTestOutput(args.Message, log: OnDiagnostic);
             ReportTestCases("   Associated", args.Message.TestCases, log: OnDiagnostic);
+            // notify the completion of the test
+            OnTestCompleted((
+                TestName: args.Message.Test.DisplayName,
+                TestResult: TestResult.Passed
+            ));
         }
 
         void HandleTestOutput(MessageHandlerArgs<ITestOutput> args)
@@ -202,7 +212,6 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
         {
             if (args == null || args.Message == null)
                 return;
-
             ExecutedTests++;
             OnDiagnostic("Test finished");
             LogTestDetails(args.Message.Test, log: OnDiagnostic);
@@ -253,6 +262,10 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             });
             OnInfo($"\t[FAIL] {args.Message.Test.TestCase.DisplayName}");
             OnInfo(sb.ToString());
+            OnTestCompleted((
+                TestName: args.Message.Test.DisplayName,
+                TestResult: TestResult.Failed
+            ));
         }
 
         void HandleTestCollectionStarting(MessageHandlerArgs<ITestCollectionStarting> args)
@@ -458,6 +471,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             if (args == null || args.Message == null)
                 return;
 
+            // notify that a method is starting
+            OnTestStarted(args.Message.Test.DisplayName);
             OnDiagnostic($"'After' method for test '{args.Message.Test.DisplayName}' starting");
         }
 
@@ -465,7 +480,6 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
         {
             if (args == null || args.Message == null)
                 return;
-
             OnDiagnostic($"'After' method for test '{args.Message.Test.DisplayName}' finished");
         }
 

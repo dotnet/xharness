@@ -45,7 +45,7 @@ stages:
       enablePublishUsingPipelines: true
       enablePublishBuildAssets: true
       helixRepo: dotnet/xharness
-      
+
       jobs:
       - job: Windows_NT
         pool:
@@ -57,10 +57,10 @@ stages:
             queue: BuildPool.Server.Amd64.VS2019.Open
         strategy:
           matrix:
-            release_configuration:
+            Release:
               _BuildConfig: Release
             ${{ if eq(variables._RunAsPublic, True) }}:
-              debug_configuration:
+              Debug:
                 _BuildConfig: Debug
         steps:
         - script: eng\common\cibuild.cmd
@@ -70,6 +70,17 @@ stages:
           name: Build
           displayName: Build
           condition: succeeded()
+
+        - task: PublishTestResults@2
+          displayName: 'Publish Unit Test Results'
+          inputs:
+            testResultsFormat: xUnit
+            testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
+            mergeTestResults: true
+            searchFolder: $(system.defaultworkingdirectory)
+            testRunTitle: XHarness unit tests - $(Agent.JobName)
+          condition: succeededOrFailed()
+
         - task: PublishBuildArtifacts@1
           displayName: Publish Logs to VSTS
           inputs:
@@ -84,11 +95,11 @@ stages:
           name: Hosted macOS
         strategy:
           matrix:
-            release_configuration:
+            Release:
               _BuildConfig: Release
             ${{ if eq(variables._RunAsPublic, True) }}:
-              debug_configuration:
-                _BuildConfig: Debug            
+              Debug:
+                _BuildConfig: Debug
         steps:
         - script: eng/common/cibuild.sh
             --configuration $(_BuildConfig)
@@ -97,6 +108,17 @@ stages:
           name: Build
           displayName: Build
           condition: succeeded()
+
+        - task: PublishTestResults@2
+          displayName: 'Publish Unit Test Results'
+          inputs:
+            testResultsFormat: xUnit
+            testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
+            mergeTestResults: true
+            searchFolder: $(system.defaultworkingdirectory)
+            testRunTitle: XHarness unit tests - $(Agent.JobName)
+          condition: succeededOrFailed()
+
         - task: PublishBuildArtifacts@1
           displayName: Publish Logs to VSTS
           inputs:
@@ -105,7 +127,7 @@ stages:
             ArtifactName: $(Agent.Os)_$(Agent.JobName)
           continueOnError: true
           condition: always()
-        
+
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
@@ -128,4 +150,4 @@ stages:
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
         -TsaPublish $True'
-        
+

@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
     {
         public string AppPackagePath { get; set; }
         public IReadOnlyCollection<string> Targets { get; set; }
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(5);
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(15);
         public string OutputDirectory { get; set; }
         public string WorkingDirectory { get; set; }
         public LogLevel Verbosity { get; set; }

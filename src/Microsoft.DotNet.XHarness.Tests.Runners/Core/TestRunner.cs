@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 {
-    internal abstract class TestRunner
+    public abstract class TestRunner
     {
         public enum Jargon
         {
@@ -20,6 +20,16 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
             NUnitV3,
             xUnit,
         }
+
+        /// <summary>
+        /// Event raised when a test has started.
+        /// </summary>
+        public event EventHandler<string> TestStarted;
+
+        /// <summary>
+        /// Event raised when a test has completed or has been skipped.
+        /// </summary>
+        public event EventHandler<(string TestName, TestResult TestResult)> TestCompleted;
 
         /// <summary>
         /// Number of inconclusive tests.
@@ -179,5 +189,19 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
                 Directory.CreateDirectory(resultsPath);
             return Path.Combine(resultsPath, ResultsFileName);
         }
+
+        protected virtual void OnTestStarted(string testName)
+        {
+            var hanlder = TestStarted;
+            if (hanlder != null)
+                hanlder(this, testName);
+        }
+
+        protected virtual void OnTestCompleted((string TestName, TestResult TestResult) result)
+        {
+            var handler = TestCompleted;
+            if (handler != null)
+                handler(this, result); 
+		}
     }
 }

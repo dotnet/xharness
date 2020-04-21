@@ -20,30 +20,30 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 {
     public class ProcessManager : IProcessManager
     {
-        static readonly Lazy<string> autoDetectedXcodeRoot = new Lazy<string>(DetectXcodePath, LazyThreadSafetyMode.PublicationOnly);
+        static readonly Lazy<string> s_autoDetectedXcodeRoot = new Lazy<string>(DetectXcodePath, LazyThreadSafetyMode.PublicationOnly);
 
-        readonly string xcodeRoot;
-        public string XcodeRoot => xcodeRoot ?? autoDetectedXcodeRoot.Value;
+        readonly string _xcodeRoot;
+        public string XcodeRoot => _xcodeRoot ?? s_autoDetectedXcodeRoot.Value;
         public string MlaunchPath { get; }
 
-        Version xcode_version;
+        Version _xcode_version;
         public Version XcodeVersion
         {
             get
             {
-                if (xcode_version == null)
+                if (_xcode_version == null)
                 {
                     var doc = new XmlDocument();
                     doc.Load(Path.Combine(XcodeRoot, "Contents", "version.plist"));
-                    xcode_version = Version.Parse(doc.SelectSingleNode("//key[text() = 'CFBundleShortVersionString']/following-sibling::string").InnerText);
+                    _xcode_version = Version.Parse(doc.SelectSingleNode("//key[text() = 'CFBundleShortVersionString']/following-sibling::string").InnerText);
                 }
-                return xcode_version;
+                return _xcode_version;
             }
         }
 
         public ProcessManager(string xcodeRoot = null, string mlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch")
         {
-            this.xcodeRoot = xcodeRoot;
+            this._xcodeRoot = xcodeRoot;
             MlaunchPath = mlaunchPath;
         }
 
@@ -54,10 +54,22 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             Dictionary<string, string> environmentVariables = null,
             CancellationToken? cancellationToken = null)
         {
+            return await ExecuteCommandAsync(filename, args, log, log, log, timeout, environmentVariables, cancellationToken);
+        }
+
+        public async Task<ProcessExecutionResult> ExecuteCommandAsync(string filename,
+            IList<string> args,
+            ILog log,
+            ILog stdout,
+            ILog stderr,
+            TimeSpan timeout,
+            Dictionary<string, string> environmentVariables = null,
+            CancellationToken? cancellationToken = null)
+        {
             using var p = new Process();
             p.StartInfo.FileName = filename ?? throw new ArgumentNullException(nameof(filename));
             p.StartInfo.Arguments = StringUtils.FormatArguments(args);
-            return await RunAsync(p, log, timeout, environmentVariables, cancellationToken);
+            return await RunAsync(p, log, stdout, stderr, timeout, environmentVariables, cancellationToken);
         }
 
         public async Task<ProcessExecutionResult> ExecuteCommandAsync(MlaunchArguments args,
