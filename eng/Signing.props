@@ -1,23 +1,13 @@
 <Project>
 
   <ItemGroup>
-      <!-- Exclude mlaunch binaries from signing - they are already signed by Mono -->
-    <ItemsToSign Remove="$(IntermediateOutputPath)**\MonoBundle\*.exe" />
-    <ItemsToSign Remove="$(IntermediateOutputPath)**\MonoBundle\*.dll" />
-    <ItemsToSign Remove="$(ArtifactsTmpDir)**\MonoBundle\*.exe" />
-    <ItemsToSign Remove="$(ArtifactsTmpDir)**\MonoBundle\*.dll" />
-
-    <ItemsToSign Remove="System.Net.Http.dll" />
-    <ItemsToSign Remove="System.Net.Http.dll" />
-    <ItemsToSign Remove="System.Numerics.dll" />
-    <ItemsToSign Remove="System.Numerics.dll" />
-    <ItemsToSign Remove="System.Xml.dll" />
-    <ItemsToSign Remove="System.Xml.dll" />
-    <ItemsToSign Remove="Xamarin.Hosting.dll" />
-    <ItemsToSign Remove="Xamarin.Hosting.dll" />
-    <ItemsToSign Remove="Xamarin.Mac.dll" />
-    <ItemsToSign Remove="Xamarin.Mac.dll" />
-
+    <!-- Exclude mlaunch binaries from signing - they are already signed by Mono -->
+    <MlaunchBinaries Include="$(IntermediateOutputPath)**\MonoBundle\*.exe" />
+    <MlaunchBinaries Include="$(IntermediateOutputPath)**\MonoBundle\*.dll" />
+    <MlaunchBinaries Include="$(ArtifactsTmpDir)**\MonoBundle\*.exe" />
+    <MlaunchBinaries Include="$(ArtifactsTmpDir)**\MonoBundle\*.dll" />
+    <ItemsToSign Remove="@(MlaunchBinaries)" />
+    <FileSignInfo Include="@(MlaunchBinaries)" CertificateName="None" />
   </ItemGroup>
 
   <PropertyGroup>
