@@ -57,9 +57,8 @@ stages:
             queue: BuildPool.Server.Amd64.VS2019.Open
         strategy:
           matrix:
-            ${{ if eq(variables._RunAsPublic, False) }}:
-              Release:
-                _BuildConfig: Release
+            Release:
+              _BuildConfig: Release
             ${{ if eq(variables._RunAsPublic, True) }}:
               Debug:
                 _BuildConfig: Debug
@@ -100,9 +99,8 @@ stages:
           name: Hosted macOS
         strategy:
           matrix:
-            ${{ if eq(variables._RunAsPublic, False) }}:
-              Release:
-                _BuildConfig: Release
+            Release:
+              _BuildConfig: Release
             ${{ if eq(variables._RunAsPublic, True) }}:
               Debug:
                 _BuildConfig: Debug
