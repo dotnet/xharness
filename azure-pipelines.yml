@@ -64,32 +64,27 @@ stages:
               Debug:
                 _BuildConfig: Debug
         steps:
-        - ${{ if ne(variables._RunAsPublic, False) }}: # TODO ne -> eq
+        - ${{ if eq(variables._RunAsPublic, False) }}:
           - script: eng\InternalBuild.cmd
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              $(_InternalBuildArgs)
             name: Build
             displayName: Build
             condition: succeeded()
-        - ${{ if ne(variables._RunAsPublic, True) }}: # TODO ne -> eq
+        - ${{ if eq(variables._RunAsPublic, True) }}:
           - script: eng\PRBuild.cmd
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              $(_InternalBuildArgs)
             name: Build
             displayName: Build and test
             condition: succeeded()
 
-        - task: PublishTestResults@2
-          displayName: 'Publish Unit Test Results'
-          inputs:
-            testResultsFormat: xUnit
-            testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
-            mergeTestResults: true
-            searchFolder: $(system.defaultworkingdirectory)
-            testRunTitle: XHarness unit tests - $(Agent.JobName)
-          condition: succeededOrFailed()
+        - ${{ if eq(variables._RunAsPublic, False) }}:
+          - task: PublishTestResults@2
+            displayName: 'Publish Unit Test Results'
+            inputs:
+              testResultsFormat: xUnit
+              testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
+              mergeTestResults: true
+              searchFolder: $(system.defaultworkingdirectory)
+              testRunTitle: XHarness unit tests - $(Agent.JobName)
+            condition: succeededOrFailed()
 
         - task: PublishBuildArtifacts@1
           displayName: Publish Logs to VSTS
@@ -112,33 +107,27 @@ stages:
               Debug:
                 _BuildConfig: Debug
         steps:
-        - ${{ if ne(variables._RunAsPublic, False) }}: # TODO ne -> eq
-          - script: |
-              ls -l eng
-              ls -l eng/common
-              chmod 0755 eng/internalbuild.sh
-              eng/internalbuild.sh --configuration $(_BuildConfig) --prepareMachine $(_InternalBuildArgs)
+        - ${{ if eq(variables._RunAsPublic, False) }}:
+          - script: eng/internalbuild.sh
             name: Build
             displayName: Build
             condition: succeeded()
-        - ${{ if ne(variables._RunAsPublic, True) }}: # TODO ne -> eq
+        - ${{ if eq(variables._RunAsPublic, True) }}:
           - script: eng/prbuild.sh
-              --configuration $(_BuildConfig)
-              --prepareMachine
-              $(_InternalBuildArgs)
             name: Build
             displayName: Build and test
             condition: succeeded()
 
-        - task: PublishTestResults@2
-          displayName: 'Publish Unit Test Results'
-          inputs:
-            testResultsFormat: xUnit
-            testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
-            mergeTestResults: true
-            searchFolder: $(system.defaultworkingdirectory)
-            testRunTitle: XHarness unit tests - $(Agent.JobName)
-          condition: succeededOrFailed()
+        - ${{ if eq(variables._RunAsPublic, False) }}:
+          - task: PublishTestResults@2
+            displayName: 'Publish Unit Test Results'
+            inputs:
+              testResultsFormat: xUnit
+              testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
+              mergeTestResults: true
+              searchFolder: $(system.defaultworkingdirectory)
+              testRunTitle: XHarness unit tests - $(Agent.JobName)
+            condition: succeededOrFailed()
 
         - task: PublishBuildArtifacts@1
           displayName: Publish Logs to VSTS
