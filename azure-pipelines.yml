@@ -57,19 +57,29 @@ stages:
             queue: BuildPool.Server.Amd64.VS2019.Open
         strategy:
           matrix:
-            Release:
-              _BuildConfig: Release
+            ${{ if eq(variables._RunAsPublic, False) }}:
+              Release:
+                _BuildConfig: Release
             ${{ if eq(variables._RunAsPublic, True) }}:
               Debug:
                 _BuildConfig: Debug
         steps:
-        - script: eng\common\cibuild.cmd
-            -configuration $(_BuildConfig)
-            -prepareMachine
-            $(_InternalBuildArgs)
-          name: Build
-          displayName: Build
-          condition: succeeded()
+        - ${{ if ne(variables._RunAsPublic, False) }}: # TODO ne -> eq
+          - script: eng\InternalBuild.cmd
+              -configuration $(_BuildConfig)
+              -prepareMachine
+              $(_InternalBuildArgs)
+            name: Build
+            displayName: Build
+            condition: succeeded()
+        - ${{ if ne(variables._RunAsPublic, True) }}: # TODO ne -> eq
+          - script: eng\PRBuild.cmd
+              -configuration $(_BuildConfig)
+              -prepareMachine
+              $(_InternalBuildArgs)
+            name: Build
+            displayName: Build and test
+            condition: succeeded()
 
         - task: PublishTestResults@2
           displayName: 'Publish Unit Test Results'
@@ -95,19 +105,29 @@ stages:
           name: Hosted macOS
         strategy:
           matrix:
-            Release:
-              _BuildConfig: Release
+            ${{ if eq(variables._RunAsPublic, False) }}:
+              Release:
+                _BuildConfig: Release
             ${{ if eq(variables._RunAsPublic, True) }}:
               Debug:
                 _BuildConfig: Debug
         steps:
-        - script: eng/common/cibuild.sh
-            --configuration $(_BuildConfig)
-            --prepareMachine
-            $(_InternalBuildArgs)
-          name: Build
-          displayName: Build
-          condition: succeeded()
+        - ${{ if ne(variables._RunAsPublic, False) }}: # TODO ne -> eq
+          - script: eng/internalbuild.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              $(_InternalBuildArgs)
+            name: Build
+            displayName: Build
+            condition: succeeded()
+        - ${{ if ne(variables._RunAsPublic, True) }}: # TODO ne -> eq
+          - script: eng/prbuild.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              $(_InternalBuildArgs)
+            name: Build
+            displayName: Build and test
+            condition: succeeded()
 
         - task: PublishTestResults@2
           displayName: 'Publish Unit Test Results'
