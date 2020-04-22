@@ -113,10 +113,11 @@ stages:
                 _BuildConfig: Debug
         steps:
         - ${{ if ne(variables._RunAsPublic, False) }}: # TODO ne -> eq
-          - script: eng/internalbuild.sh
-              --configuration $(_BuildConfig)
-              --prepareMachine
-              $(_InternalBuildArgs)
+          - script: |
+              ls -l eng
+              ls -l eng/common
+              chmod 0755 eng/internalbuild.sh
+              eng/internalbuild.sh --configuration $(_BuildConfig) --prepareMachine $(_InternalBuildArgs)
             name: Build
             displayName: Build
             condition: succeeded()
