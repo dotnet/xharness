@@ -75,7 +75,7 @@ stages:
             displayName: Build and test
             condition: succeeded()
 
-        - ${{ if eq(variables._RunAsPublic, False) }}:
+        - ${{ if eq(variables._RunAsPublic, True) }}:
           - task: PublishTestResults@2
             displayName: 'Publish Unit Test Results'
             inputs:
@@ -118,7 +118,7 @@ stages:
             displayName: Build and test
             condition: succeeded()
 
-        - ${{ if eq(variables._RunAsPublic, False) }}:
+        - ${{ if eq(variables._RunAsPublic, True) }}:
           - task: PublishTestResults@2
             displayName: 'Publish Unit Test Results'
             inputs:
