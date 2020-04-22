@@ -65,11 +65,17 @@ stages:
         steps:
         - ${{ if eq(variables._RunAsPublic, False) }}:
           - script: eng\InternalBuild.cmd
+              -configuration $(_BuildConfig)
+              -prepareMachine
+              $(_InternalBuildArgs)
             name: Build
             displayName: Build
             condition: succeeded()
         - ${{ if eq(variables._RunAsPublic, True) }}:
-          - script: eng\PRBuild.cmd
+          - script: eng\common\CIBuild.cmd
+              -configuration $(_BuildConfig)
+              -prepareMachine
+              $(_InternalBuildArgs)
             name: Build
             displayName: Build and test
             condition: succeeded()
@@ -107,11 +113,17 @@ stages:
         steps:
         - ${{ if eq(variables._RunAsPublic, False) }}:
           - script: eng/internalbuild.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              $(_InternalBuildArgs)
             name: Build
             displayName: Build
             condition: succeeded()
         - ${{ if eq(variables._RunAsPublic, True) }}:
-          - script: eng/prbuild.sh
+          - script: eng/common/cibuild.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              $(_InternalBuildArgs)
             name: Build
             displayName: Build and test
             condition: succeeded()
