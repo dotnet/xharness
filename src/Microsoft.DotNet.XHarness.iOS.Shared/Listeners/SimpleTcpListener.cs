@@ -145,7 +145,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             {
                 var se = e as SocketException;
                 if (se == null || se.SocketErrorCode != SocketError.Interrupted)
-                    Console.WriteLine("[{0}] : {1}", DateTime.Now, e);
+                    Log.WriteLine("[{0}] : {1}", DateTime.Now, e);
             }
             finally
             {
