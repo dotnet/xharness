@@ -63,23 +63,34 @@ stages:
               Debug:
                 _BuildConfig: Debug
         steps:
-        - script: eng\common\cibuild.cmd
-            -configuration $(_BuildConfig)
-            -prepareMachine
-            $(_InternalBuildArgs)
-          name: Build
-          displayName: Build
-          condition: succeeded()
+        - ${{ if eq(variables._RunAsPublic, False) }}:
+          - script: eng\common\CIBuild.cmd
+              -configuration $(_BuildConfig)
+              -prepareMachine
+              $(_InternalBuildArgs)
+              /p:Test=false
+            name: Build
+            displayName: Build
+            condition: succeeded()
 
-        - task: PublishTestResults@2
-          displayName: 'Publish Unit Test Results'
-          inputs:
-            testResultsFormat: xUnit
-            testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
-            mergeTestResults: true
-            searchFolder: $(system.defaultworkingdirectory)
-            testRunTitle: XHarness unit tests - $(Agent.JobName)
-          condition: succeededOrFailed()
+        - ${{ if eq(variables._RunAsPublic, True) }}:
+          - script: eng\common\CIBuild.cmd
+              -configuration $(_BuildConfig)
+              -prepareMachine
+              $(_InternalBuildArgs)
+            name: Build
+            displayName: Build and run tests
+            condition: succeeded()
+
+          - task: PublishTestResults@2
+            displayName: 'Publish Unit Test Results'
+            inputs:
+              testResultsFormat: xUnit
+              testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
+              mergeTestResults: true
+              searchFolder: $(system.defaultworkingdirectory)
+              testRunTitle: XHarness unit tests - $(Agent.JobName)
+            condition: succeededOrFailed()
 
         - task: PublishBuildArtifacts@1
           displayName: Publish Logs to VSTS
@@ -101,23 +112,34 @@ stages:
               Debug:
                 _BuildConfig: Debug
         steps:
-        - script: eng/common/cibuild.sh
-            --configuration $(_BuildConfig)
-            --prepareMachine
-            $(_InternalBuildArgs)
-          name: Build
-          displayName: Build
-          condition: succeeded()
+        - ${{ if eq(variables._RunAsPublic, False) }}:
+          - script: eng/common/cibuild.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              $(_InternalBuildArgs)
+              /p:Test=false
+            name: Build
+            displayName: Build
+            condition: succeeded()
 
-        - task: PublishTestResults@2
-          displayName: 'Publish Unit Test Results'
-          inputs:
-            testResultsFormat: xUnit
-            testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
-            mergeTestResults: true
-            searchFolder: $(system.defaultworkingdirectory)
-            testRunTitle: XHarness unit tests - $(Agent.JobName)
-          condition: succeededOrFailed()
+        - ${{ if eq(variables._RunAsPublic, True) }}:
+          - script: eng/common/cibuild.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              $(_InternalBuildArgs)
+            name: Build
+            displayName: Build and run tests
+            condition: succeeded()
+
+          - task: PublishTestResults@2
+            displayName: 'Publish Unit Test Results'
+            inputs:
+              testResultsFormat: xUnit
+              testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
+              mergeTestResults: true
+              searchFolder: $(system.defaultworkingdirectory)
+              testRunTitle: XHarness unit tests - $(Agent.JobName)
+            condition: succeededOrFailed()
 
         - task: PublishBuildArtifacts@1
           displayName: Publish Logs to VSTS
