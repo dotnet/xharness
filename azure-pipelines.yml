@@ -64,10 +64,11 @@ stages:
                 _BuildConfig: Debug
         steps:
         - ${{ if eq(variables._RunAsPublic, False) }}:
-          - script: eng\InternalBuild.cmd
+          - script: eng\common\CIBuild.cmd
               -configuration $(_BuildConfig)
               -prepareMachine
               $(_InternalBuildArgs)
+              /p:Test=false
             name: Build
             displayName: Build
             condition: succeeded()
@@ -77,10 +78,9 @@ stages:
               -prepareMachine
               $(_InternalBuildArgs)
             name: Build
-            displayName: Build and test
+            displayName: Build and run tests
             condition: succeeded()
 
-        - ${{ if eq(variables._RunAsPublic, True) }}:
           - task: PublishTestResults@2
             displayName: 'Publish Unit Test Results'
             inputs:
@@ -112,23 +112,24 @@ stages:
                 _BuildConfig: Debug
         steps:
         - ${{ if eq(variables._RunAsPublic, False) }}:
-          - script: eng/internalbuild.sh
+          - script: eng/common/cibuild.sh
               --configuration $(_BuildConfig)
               --prepareMachine
               $(_InternalBuildArgs)
+              /p:Test=false
             name: Build
             displayName: Build
             condition: succeeded()
+
         - ${{ if eq(variables._RunAsPublic, True) }}:
           - script: eng/common/cibuild.sh
               --configuration $(_BuildConfig)
               --prepareMachine
               $(_InternalBuildArgs)
             name: Build
-            displayName: Build and test
+            displayName: Build and run tests
             condition: succeeded()
 
-        - ${{ if eq(variables._RunAsPublic, True) }}:
           - task: PublishTestResults@2
             displayName: 'Publish Unit Test Results'
             inputs:
