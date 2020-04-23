@@ -12,12 +12,11 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace Xharness.Tests
 {
-    [TestFixture]
-    public class AppRunnerTests
+    public class AppRunnerTests : IDisposable
     {
         const string AppName = "com.xamarin.bcltests.SystemXunit";
         const string AppBundleIdentifier = AppName + ".ID";
@@ -35,22 +34,22 @@ namespace Xharness.Tests
             productType: "iPhone12,1",
             productVersion: "13.0");
 
-        private Mock<IProcessManager> _processManager;
-        private Mock<ILogs> _logs;
-        private Mock<ILog> _mainLog;
+        private readonly Mock<IProcessManager> _processManager;
+        private readonly Mock<ILogs> _logs;
+        private readonly Mock<ILog> _mainLog;
+        private readonly Mock<ISimulatorLoader> _simulatorLoader;
+        private readonly Mock<ISimpleListener> _listener;
+        private readonly Mock<ICrashSnapshotReporter> _snapshotReporter;
+        private readonly Mock<ITestReporter> _testReporter;
+        private readonly Mock<IHelpers> _helpers;
+
+        private readonly ISimpleListenerFactory _listenerFactory;
+        private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
+        private readonly ITestReporterFactory _testReporterFactory;
+
         private Mock<IHardwareDeviceLoader> _hardwareDeviceLoader;
-        private Mock<ISimulatorLoader> _simulatorLoader;
-        private Mock<ISimpleListener> _listener;
-        private Mock<ICrashSnapshotReporter> _snapshotReporter;
-        private Mock<ITestReporter> _testReporter;
-        private Mock<IHelpers> _helpers;
 
-        private ISimpleListenerFactory _listenerFactory;
-        private ICrashSnapshotReporterFactory _snapshotReporterFactory;
-        private ITestReporterFactory _testReporterFactory;
-
-        [SetUp]
-        public void SetUp()
+        public AppRunnerTests()
         {
             _mainLog = new Mock<ILog>();
 
@@ -115,14 +114,13 @@ namespace Xharness.Tests
             Directory.CreateDirectory(s_outputPath);
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             Directory.Delete(s_outputPath, true);
         }
 
-        [Test]
-        public void RunOnSimulatorWithNoAvailableSimulatorTest()
+        [Fact]
+        public async Task RunOnSimulatorWithNoAvailableSimulatorTest()
         {
             // Mock finding simulators
             string simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
@@ -166,13 +164,12 @@ namespace Xharness.Tests
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
-            Assert.ThrowsAsync<NoDeviceFoundException>(
+            await Assert.ThrowsAsync<NoDeviceFoundException>(
                 async () => await appRunner.RunApp(
                     appInformation,
                     TestTarget.Simulator_tvOS,
                     TimeSpan.FromSeconds(30),
-                    TimeSpan.FromSeconds(30)),
-                "Running requires installed simulators");
+                    TimeSpan.FromSeconds(30)));
 
             // Verify
 
@@ -184,7 +181,7 @@ namespace Xharness.Tests
             _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
         }
 
-        [Test]
+        [Fact]
         public async Task RunOnSimulatorSuccessfullyTest()
         {
             string simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
@@ -242,8 +239,8 @@ namespace Xharness.Tests
                 ensureCleanSimulatorState: true);
 
             // Verify
-            Assert.AreEqual("Test iPhone simulator", deviceName);
-            Assert.AreEqual(0, exitCode);
+            Assert.Equal("Test iPhone simulator", deviceName);
+            Assert.Equal(0, exitCode);
 
             var expectedArgs = $"-argument=-connection-mode -argument=none -argument=-app-arg:-autostart " +
                 $"-setenv=NUNIT_AUTOSTART=true -argument=-app-arg:-autoexit -setenv=NUNIT_AUTOEXIT=true " +
@@ -278,8 +275,8 @@ namespace Xharness.Tests
             simulator.Verify(x => x.KillEverything(_mainLog.Object));
         }
 
-        [Test]
-        public void RunOnDeviceWithNoAvailableSimulatorTest()
+        [Fact]
+        public async Task RunOnDeviceWithNoAvailableSimulatorTest()
         {
             _hardwareDeviceLoader = new Mock<IHardwareDeviceLoader>();
             _hardwareDeviceLoader
@@ -301,17 +298,16 @@ namespace Xharness.Tests
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
-            Assert.ThrowsAsync<NoDeviceFoundException>(
+            await Assert.ThrowsAsync<NoDeviceFoundException>(
                 async () => await appRunner.RunApp(
                     appInformation,
                     TestTarget.Device_iOS,
                     TimeSpan.FromSeconds(30),
                     TimeSpan.FromSeconds(30),
-                    ensureCleanSimulatorState: true),
-                "Running requires connected devices");
+                    ensureCleanSimulatorState: true));
         }
 
-        [Test]
+        [Fact]
         public async Task RunOnDeviceSuccessfullyTest()
         {
             var deviceSystemLog = new Mock<ILog>();
@@ -358,8 +354,8 @@ namespace Xharness.Tests
                 TimeSpan.FromSeconds(30));
 
             // Verify
-            Assert.AreEqual("Test iPhone", deviceName);
-            Assert.AreEqual(0, exitCode);
+            Assert.Equal("Test iPhone", deviceName);
+            Assert.Equal(0, exitCode);
 
             var ips = string.Join(",", System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString()));
 
