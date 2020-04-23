@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                         {
                             timeout = 250; // Switch to a 250ms timeout after 20 seconds
                         }
-                        else if (timeout == 250 && watch.ElapsedMilliseconds > 120000)
+                        else if (watch.ElapsedMilliseconds > 120000)
                         {
                             // Give up after 2 minutes.
                             throw ex;
@@ -190,4 +190,3 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         }
     }
 }
-
