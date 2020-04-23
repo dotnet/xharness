@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             args.Add(new UninstallAppFromDeviceArgument(appBundleId));
             args.Add(new DeviceNameArgument(deviceName));
 
-            return await _processManager.ExecuteCommandAsync(args, _mainLog, TimeSpan.FromMinutes(1), cancellation_token: cancellationToken);
+            return await _processManager.ExecuteCommandAsync(args, _mainLog, TimeSpan.FromMinutes(1), cancellationToken: cancellationToken);
         }
     }
 }

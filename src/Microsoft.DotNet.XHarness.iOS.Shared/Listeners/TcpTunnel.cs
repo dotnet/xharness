@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     }
                 });
                 // do not await since we are going to be running the process is parallel
-                _tcpTunnelExecutionTask = _processManager.ExecuteCommandAsync(tcpArgs, tunnelbackLog, timeout, cancellation_token: _cancellationToken.Token);
+                _tcpTunnelExecutionTask = _processManager.ExecuteCommandAsync(tcpArgs, tunnelbackLog, timeout, cancellationToken: _cancellationToken.Token);
             }
         }
 

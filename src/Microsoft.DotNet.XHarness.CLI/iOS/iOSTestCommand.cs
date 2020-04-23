@@ -54,13 +54,15 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             var tunnelBore = new TunnelBore(processManager);
 
             var logs = new Logs(_arguments.OutputDirectory);
-            var cancellationToken = new CancellationToken(); // TODO: Get cancellation from command line env? Set timeout through it?
+
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(_arguments.Timeout);
 
             var exitCode = ExitCode.SUCCESS;
 
             foreach (TestTarget target in _arguments.TestTargets)
             {
-                var exitCodeForRun = await RunTest(target, logs, processManager, deviceLoader, simulatorLoader, tunnelBore, cancellationToken);
+                var exitCodeForRun = await RunTest(target, logs, processManager, deviceLoader, simulatorLoader, tunnelBore, cts.Token);
 
                 if (exitCodeForRun != ExitCode.SUCCESS)
                 {
@@ -158,7 +160,8 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                     _arguments.LaunchTimeout,
                     deviceName,
                     verbosity: verbosity,
-                    xmlResultJargon: XmlResultJargon.xUnit);
+                    xmlResultJargon: XmlResultJargon.xUnit,
+                    cancellationToken: cancellationToken);
 
                 if (exitCode != 0)
                 {
