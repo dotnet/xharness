@@ -94,11 +94,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         public Task<ProcessExecutionResult> RunAsync(Process process,
             ILog log,
             TimeSpan? timeout = null,
-            Dictionary<string, string> environment_variables = null,
+            Dictionary<string, string> environmentVariables = null,
             CancellationToken? cancellationToken = null,
             bool? diagnostics = null)
         {
-            return RunAsync(process, log, log, log, timeout, environment_variables, cancellationToken, diagnostics);
+            return RunAsync(process, log, log, log, timeout, environmentVariables, cancellationToken, diagnostics);
         }
 
         public Task<ProcessExecutionResult> RunAsync(Process process,
