@@ -8,7 +8,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
 
-    // interface to be implemented by those listener that can use a tcp tunnel
+    // interface to be implemented by those listeners that can use a tcp tunnel
     public interface ITunnelListener : ISimpleListener
     {
         TaskCompletionSource<bool> TunnelHoleThrough { get; }
@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         public Task<bool> Started { get; }
     }
 
-    // represents a tunnel created between a device and a host. This tunnel allows the communication between
+    // represents a tunnel created between a device and a host. This tunnel allows communication between
     // the host and the device via the usb cable.
     public class TcpTunnel : ITcpTunnel
     {
@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     new DeviceNameArgument (device),
                 };
 
-                // use a cancelation token, later will be used to kill the tcp tunnel proces
+                // use a cancelation token, later will be used to kill the tcp tunnel process
                 _cancellationToken = new CancellationTokenSource();
                 mainLog.WriteLine($"Starting tcp tunnel between mac port: {simpleListener.Port} and devie port {simpleListener.Port}.");
                 Port = simpleListener.Port;
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                         simpleListener.TunnelHoleThrough.TrySetResult(true);
                     }
                 });
-                // do not await since we are going to be running the process is parallel
+                // do not await since we are going to be running the process in parallel
                 _tcpTunnelExecutionTask = _processManager.ExecuteCommandAsync(tcpArgs, tunnelbackLog, timeout, cancellationToken: _cancellationToken.Token);
             }
         }

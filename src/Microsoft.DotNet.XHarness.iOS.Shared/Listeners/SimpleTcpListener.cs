@@ -14,8 +14,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
     public class SimpleTcpListener : SimpleListener, ITunnelListener
     {
-        readonly bool autoExit;
-        readonly bool useTcpTunnel = true;
+        const int _timeOutInit = 100;
+        const int _timeOutIincrement = 250;
+        readonly bool _autoExit;
+        readonly bool _useTcpTunnel = true;
 
         byte[] buffer = new byte[16 * 1024];
         TcpListener server;
@@ -25,8 +27,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public SimpleTcpListener(ILog log, ILog testLog, bool autoExit, bool xmlOutput, bool tunnel = false) : base(log, testLog, xmlOutput)
         {
-            this.autoExit = autoExit;
-            this.useTcpTunnel = tunnel;
+            _autoExit = autoExit;
+            _useTcpTunnel = tunnel;
         }
 
         public SimpleTcpListener(int port, ILog log, ILog testLog, bool autoExit, bool xmlOutput, bool tunnel = false) : this(log, testLog, autoExit, xmlOutput, tunnel)
@@ -41,7 +43,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public override void Initialize()
         {
-            if (useTcpTunnel && Port != 0)
+            if (_useTcpTunnel && Port != 0)
                 return;
 
             server = new TcpListener(Address, Port);
@@ -50,7 +52,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             if (Port == 0)
                 Port = ((IPEndPoint)server.LocalEndpoint).Port;
 
-            if (useTcpTunnel)
+            if (_useTcpTunnel)
             {
                 // close the listener. We have a port. This is not the best
                 // way to find a free port, but there is nothing we can do
@@ -74,7 +76,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                         client.ReceiveBufferSize = buffer.Length;
                         processed = Processing(client);
                     }
-                } while (!autoExit || !processed);
+                } while (!_autoExit || !processed);
             }
             catch (Exception e)
             {
@@ -104,7 +106,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             bool processed;
             try
             {
-                int timeout = 100;
+                int timeout = _timeOutInit; ;
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
                 while (true)
@@ -122,9 +124,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     }
                     catch (SocketException ex)
                     {
-                        if (timeout == 100 && watch.ElapsedMilliseconds > 20000)
+                        if (timeout == _timeOutInit && watch.ElapsedMilliseconds > 20000)
                         {
-                            timeout = 250; // Switch to a 250ms timeout after 20 seconds
+                            timeout = _timeOutIincrement; // Switch to a 250ms timeout after 20 seconds
                         }
                         else if (watch.ElapsedMilliseconds > 120000)
                         {
@@ -139,7 +141,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 {
                     client.ReceiveBufferSize = buffer.Length;
                     processed = Processing(client);
-                } while (!autoExit || !processed);
+                } while (!_autoExit || !processed);
             }
             catch (Exception e)
             {
@@ -155,7 +157,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         protected override void Start()
         {
-            if (useTcpTunnel)
+            if (_useTcpTunnel)
             {
                 StartTcpTunnel();
             }
