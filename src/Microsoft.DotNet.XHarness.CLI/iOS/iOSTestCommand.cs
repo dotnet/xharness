@@ -51,6 +51,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             var processManager = new ProcessManager(_arguments.XcodeRoot, _arguments.MlaunchPath);
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
+            var tunnelBore = new TunnelBore(processManager);
 
             var logs = new Logs(_arguments.OutputDirectory);
             var cancellationToken = new CancellationToken(); // TODO: Get cancellation from command line env? Set timeout through it?
@@ -59,7 +60,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
             foreach (TestTarget target in _arguments.TestTargets)
             {
-                var exitCodeForRun = await RunTest(target, logs, processManager, deviceLoader, simulatorLoader, cancellationToken);
+                var exitCodeForRun = await RunTest(target, logs, processManager, deviceLoader, simulatorLoader, tunnelBore, cancellationToken);
 
                 if (exitCodeForRun != ExitCode.SUCCESS)
                 {
@@ -75,6 +76,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
             ProcessManager processManager,
             IHardwareDeviceLoader deviceLoader,
             ISimulatorLoader simulatorLoader,
+            ITunnelBore tunnelBore,
             CancellationToken cancellationToken = default)
         {
             _log.LogInformation($"Starting test for {target.AsString()}{ (_arguments.DeviceName != null ? " targeting " + _arguments.DeviceName : null) }..");
@@ -141,7 +143,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                     processManager,
                     deviceLoader,
                     simulatorLoader,
-                    new SimpleListenerFactory(),
+                    new SimpleListenerFactory(tunnelBore),
                     new CrashSnapshotReporterFactory(processManager),
                     new CaptureLogFactory(),
                     new DeviceLogCapturerFactory(processManager),
