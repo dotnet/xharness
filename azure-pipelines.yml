@@ -72,6 +72,7 @@ stages:
             name: Build
             displayName: Build
             condition: succeeded()
+
         - ${{ if eq(variables._RunAsPublic, True) }}:
           - script: eng\common\CIBuild.cmd
               -configuration $(_BuildConfig)
@@ -111,7 +112,7 @@ stages:
               Debug:
                 _BuildConfig: Debug
         steps:
-        - ${{ if ne(variables._RunAsPublic, False) }}: # TODO SWITCH ne to eq
+        - ${{ if eq(variables._RunAsPublic, False) }}:
           - script: eng/common/cibuild.sh
               --configuration $(_BuildConfig)
               --prepareMachine
@@ -121,7 +122,7 @@ stages:
             displayName: Build
             condition: succeeded()
 
-        - ${{ if ne(variables._RunAsPublic, True) }}: # TODO SWITCH ne to eq
+        - ${{ if eq(variables._RunAsPublic, True) }}:
           - script: eng/common/cibuild.sh
               --configuration $(_BuildConfig)
               --prepareMachine
