@@ -12,13 +12,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
     public class SimpleListenerFactoryTest
     {
         private readonly Mock<ILog> _log;
-        private readonly Mock<ITunnelBore> _tunnelBore;
         private readonly SimpleListenerFactory _factory;
 
         public SimpleListenerFactoryTest()
         {
             _log = new Mock<ILog>();
-            _factory = new SimpleListenerFactory(_tunnelBore.Object);
+            _factory = new SimpleListenerFactory(Mock.Of<ITunnelBore> ());
         }
 
         [Fact]
