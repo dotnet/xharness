@@ -10,12 +10,11 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace Xharness.Tests
 {
-    [TestFixture]
-    public class AppInstallerTests
+    public class AppInstallerTests : IDisposable
     {
         private static readonly string s_appPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         private static readonly IHardwareDevice s_mockDevice = new Device(
@@ -28,12 +27,11 @@ namespace Xharness.Tests
             productType: "iPhone12,1",
             productVersion: "13.0");
 
-        Mock<IProcessManager> _processManager;
-        Mock<ILog> _mainLog;
-        Mock<IHardwareDeviceLoader> _hardwareDeviceLoader;
+        readonly Mock<IProcessManager> _processManager;
+        readonly Mock<ILog> _mainLog;
+        private Mock<IHardwareDeviceLoader> _hardwareDeviceLoader;
 
-        [SetUp]
-        public void SetUp()
+        public AppInstallerTests()
         {
             _mainLog = new Mock<ILog>();
 
@@ -48,24 +46,22 @@ namespace Xharness.Tests
             Directory.CreateDirectory(s_appPath);
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             Directory.Delete(s_appPath, true);
         }
 
-        [Test]
-        public void InstallToSimulatorTest()
+        [Fact]
+        public async Task InstallToSimulatorTest()
         {
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 1);
 
-            var exception = Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await appInstaller.InstallApp(s_appPath, TestTarget.Simulator_iOS64),
-                "Install should not be allowed on a simulator");
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await appInstaller.InstallApp(s_appPath, TestTarget.Simulator_iOS64));
         }
 
-        [Test]
-        public void InstallWhenNoDevicesTest()
+        [Fact]
+        public async Task InstallWhenNoDevicesTest()
         {
             _hardwareDeviceLoader = new Mock<IHardwareDeviceLoader>();
             _hardwareDeviceLoader
@@ -74,12 +70,11 @@ namespace Xharness.Tests
 
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 1);
 
-            Assert.ThrowsAsync<NoDeviceFoundException>(
-                async () => await appInstaller.InstallApp(s_appPath, TestTarget.Device_iOS),
-                "Install requires connected devices");
+            await Assert.ThrowsAsync<NoDeviceFoundException>(
+                async () => await appInstaller.InstallApp(s_appPath, TestTarget.Device_iOS));
         }
 
-        [Test]
+        [Fact]
         public async Task InstallOnDeviceTest()
         {
             // Act
@@ -88,8 +83,8 @@ namespace Xharness.Tests
             var (deviceName, result) = await appInstaller.InstallApp(s_appPath, TestTarget.Device_iOS);
 
             // Verify
-            Assert.AreEqual(0, result.ExitCode);
-            Assert.AreEqual(s_mockDevice.Name, deviceName);
+            Assert.Equal(0, result.ExitCode);
+            Assert.Equal(s_mockDevice.Name, deviceName);
 
             var expectedArgs = $"-v -v -v --installdev {StringUtils.FormatArguments(s_appPath)} --devname \"{s_mockDevice.Name}\"";
 
@@ -101,7 +96,7 @@ namespace Xharness.Tests
                It.IsAny<CancellationToken>()));
         }
 
-        [Test]
+        [Fact]
         public async Task InstallOnPredefinedDeviceTest()
         {
             // Act
@@ -110,8 +105,8 @@ namespace Xharness.Tests
             var (deviceName, result) = await appInstaller.InstallApp(s_appPath, TestTarget.Device_iOS, deviceName: "OtherDevice");
 
             // Verify
-            Assert.AreEqual(0, result.ExitCode);
-            Assert.AreEqual("OtherDevice", deviceName);
+            Assert.Equal(0, result.ExitCode);
+            Assert.Equal("OtherDevice", deviceName);
 
             var expectedArgs = $"-v -v -v --installdev {StringUtils.FormatArguments(s_appPath)} --devname OtherDevice";
 
