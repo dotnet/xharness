@@ -318,4 +318,21 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
         public override string AsCommandLineArgument() => "-v";
     }
+
+    /// <summary>
+    /// Create a tcp tunnel with the iOS device from the host.
+    /// </summary>
+    public sealed class TcpTunnelArgument : MlaunchArgument
+    {
+        readonly int port;
+
+        public TcpTunnelArgument(int port)
+        {
+            if (port <= 0)
+                throw new ArgumentOutOfRangeException(nameof(port));
+            this.port = port;
+        }
+
+        public override string AsCommandLineArgument() => $"--tcp-tunnel={port}:{port}";
+    }
 }

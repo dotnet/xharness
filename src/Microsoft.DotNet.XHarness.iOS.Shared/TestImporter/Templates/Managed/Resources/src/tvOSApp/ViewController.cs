@@ -72,7 +72,7 @@ namespace BCLTests
             {
                 try
                 {
-                    writer = new TcpTextWriter(options.HostName, options.HostPort);
+                    writer = new TcpTextWriter(options.HostName, options.HostPort, options.UseTcpTunnel);
                 }
                 catch (Exception ex)
                 {
