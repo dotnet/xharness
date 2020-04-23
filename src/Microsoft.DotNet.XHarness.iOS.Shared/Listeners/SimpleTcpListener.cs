@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             {
                 var se = e as SocketException;
                 if (se == null || se.SocketErrorCode != SocketError.Interrupted)
-                    Console.WriteLine("[{0}] : {1}", DateTime.Now, e);
+                    Log.WriteLine("[{0}] : {1}", DateTime.Now, e);
             }
             finally
             {
@@ -131,6 +131,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                             // Give up after 2 minutes.
                             throw ex;
                         }
+                        Log.WriteLine($"Could not connet to tcp tunnel. Rerrying in {timeout} milliseconds.");
                         Thread.Sleep(timeout);
                     }
                 }
