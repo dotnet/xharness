@@ -111,7 +111,7 @@ stages:
               Debug:
                 _BuildConfig: Debug
         steps:
-        - ${{ if eq(variables._RunAsPublic, False) }}:
+        - ${{ if ne(variables._RunAsPublic, False) }}: # TODO SWITCH ne to eq
           - script: eng/common/cibuild.sh
               --configuration $(_BuildConfig)
               --prepareMachine
@@ -121,7 +121,7 @@ stages:
             displayName: Build
             condition: succeeded()
 
-        - ${{ if eq(variables._RunAsPublic, True) }}:
+        - ${{ if ne(variables._RunAsPublic, True) }}: # TODO SWITCH ne to eq
           - script: eng/common/cibuild.sh
               --configuration $(_BuildConfig)
               --prepareMachine
