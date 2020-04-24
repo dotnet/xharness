@@ -184,8 +184,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 {
                     "restore",
                     projectPath,
-                    "-verbosity",
-                    "detailed"
+                    "--verbosity:detailed"
                 };
 
                 dotnetRestore.StartInfo.Arguments = StringUtils.FormatArguments(args);
@@ -249,7 +248,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             return StringUtils.FormatArguments(new []
             {
                 "msbuild",
-                "--verbosity:diagnostic",
+                "-verbosity:diagnostic",
                 $"/bl:{binlogPath}",
                 $"/p:Platform={projectPlatform}",
                 $"/p:Configuration={_arguments.BuildConfiguration}",
