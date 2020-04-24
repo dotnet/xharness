@@ -39,10 +39,5 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
         /// Path where the outputs of execution will be stored
         /// </summary>
         string OutputDirectory { get; set; }
-
-        /// <summary>
-        /// Path where run logs will hbe stored and projects
-        /// </summary>
-        string WorkingDirectory { get; set; }
     }
 }
