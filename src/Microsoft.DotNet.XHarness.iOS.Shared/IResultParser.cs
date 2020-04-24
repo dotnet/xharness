@@ -47,11 +47,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         /// <summary>
         /// Parses the xml of the given jargon and returns a result line with the summary of what was parsed.
-        /// If destination is provided, creates a human readable HTML result.
+        /// If destination is provided, creates a human readable report.
         /// </summary>
         /// <param name="source">File that will be read</param>
         /// <param name="xmlType">Jargon of the source file</param>
-        /// <param name="destination">If provided, will contain human readable HTML result</param>
+        /// <param name="destination">If provided, will contain human readable result</param>
         /// <returns>A result line with the summary of what was parsed and an over all result</returns>
         (string resultLine, bool failed) ParseResults(string source, XmlResultJargon xmlType, string destination = null);
 
