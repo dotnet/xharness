@@ -47,6 +47,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 "usage: ios package [OPTIONS]",
                 "",
                 "Packaging command that will create a iOS/tvOS/watchOS or macOS application that can be used to run NUnit or XUnit-based test dlls",
+                { "name=|n=", "Name of the test application",  v => _arguments.AppPackageName = v},
                 { "mtouch-extraargs=|m=", "Extra arguments to be passed to mtouch.", v => _arguments.MtouchExtraArgs = v },
                 { "ignore-directory=|i=", "Root directory containing all the *.ignore files used to skip tests if needed.", v => _arguments.IgnoreFilesRootDirectory = v },
                 { "template=|t=", "Indicates which template to use. There are two available ones: Managed, which uses Xamarin.[iOS|Mac] and Native (default:Managed).",
@@ -57,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                         }
                         else
                         {
-                            _log.LogInformation(
+                            Console.Error.WriteLine(
                                 $"Unknown template type '{v}'. " +
                                 $"Allowed values are: {GetAllowedValues<TemplateType>()}");
 
@@ -77,7 +78,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                         }
                         else
                         {
-                            _log.LogInformation(
+                            Console.Error.WriteLine(
                                 $"Unknown build configuration '{v}'. " +
                                 $"Allowed values are: {GetAllowedValues<BuildConfiguration>()}");
 
@@ -93,7 +94,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                         }
                         else
                         {
-                            _log.LogInformation(
+                            Console.Error.WriteLine(
                                 $"Unknown build configuration '{v}'. " +
                                 $"Allowed values are: {GetAllowedValues<TestingFramework>()}");
 
@@ -110,7 +111,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                         }
                         else
                         {
-                            _log.LogInformation(
+                            Console.Error.WriteLine(
                                 $"Unknown target platform '{v}'. " +
                                 $"Allowed values are: {GetAllowedValues<Platform>()}");
 
@@ -118,7 +119,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                         }
                     }
                 },
-                { "name=|n=", "Name of the test application",  v => _arguments.AppPackageName = v},
                 { "help|h", "Show this message", v => ShowHelp = v != null },
             };
         }
@@ -144,8 +144,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             var logs = new Logs(_arguments.WorkingDirectory);
             var runLog = logs.Create("package-log.txt", "Package Log");
-            var consoleLog = new CallbackLog(s => _log.LogInformation(s));
+            var consoleLog = new CallbackLog(s => _log.LogInformation(s.Trim()));
             var aggregatedLog = Log.CreateAggregatedLog(runLog, consoleLog);
+            aggregatedLog.Timestamp = false;
 
             aggregatedLog.WriteLine("Generating scaffold app with:");
             aggregatedLog.WriteLine($"\tAppname: '{_arguments.AppPackageName}'");
@@ -168,7 +169,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
 
             // We do have all the required projects, time to compile them
-            aggregatedLog.WriteLine("Scaffold app generatoed.");
+            aggregatedLog.WriteLine("Scaffold app generated.");
 
             // First step, nuget restore whatever is needed
             var projectPath = Path.Combine(_arguments.OutputDirectory, _arguments.AppPackageName + ".csproj");
@@ -234,7 +235,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
         {
             var names = Enum.GetValues(typeof(T))
                 .Cast<T>()
-                .Select(t => t.ToString().ToLowerInvariant());
+                .Select(t => t.ToString());
 
             return string.Join(", ", names);
         }
