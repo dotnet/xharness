@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     /// required .csproj and src are created. The command is part of the parent CommandSet iOS and exposes similar
     /// plus extra options to the one that its Android counterpart exposes.
     /// </summary>
-    internal class iOSPackageCommand : PackageCommand
+    internal class iOSPackageCommand : XHarnessCommand
     {
         // TODO: Some more parameters we need to make configurable maybe
         private const string NugetPath = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/nuget";
@@ -34,13 +34,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
         private readonly TimeSpan _nugetRestoreTimeout = TimeSpan.FromMinutes(10);
         private readonly TimeSpan _msBuildTimeout = TimeSpan.FromMinutes(30);
 
-
-        private readonly iOSPackageCommandArguments _arguments = new iOSPackageCommandArguments();
         private readonly IProcessManager _processManager;
 
-        protected override IPackageCommandArguments PackageArguments => _arguments;
+        private readonly iOSPackageCommandArguments _arguments = new iOSPackageCommandArguments();
+        protected override ICommandArguments Arguments => _arguments;
 
-        public iOSPackageCommand(IProcessManager processManager = null) : base()
+        public iOSPackageCommand(IProcessManager processManager = null) : base("package")
         {
             _processManager = processManager ?? new ProcessManager();
 
@@ -68,6 +67,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 },
                 { "traits-directory=|td=", "Root directory that contains all the .txt files with traits that will be skipped if needed.", v =>  _arguments.TraitsRootDirectory = v },
                 { "working-directory=|w=", "Directory that will be used to output generated projects", v => _arguments.WorkingDirectory = v },
+                { "output-directory=|o=", "Directory in which the resulting package will be outputted", v => _arguments.OutputDirectory = v},
                 { "assembly=|a=", "An assembly to be added as part of the testing application", v => _arguments.Assemblies.Add(v)},
                 { "configuration=", "The configuration that will be used to build the app. Default is 'Debug'",
                     v => {
@@ -118,12 +118,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                         }
                     }
                 },
+                { "name=|n=", "Name of the test application",  v => _arguments.AppPackageName = v},
+                { "help|h", "Show this message", v => ShowHelp = v != null },
             };
-
-            foreach (var option in CommonOptions)
-            {
-                Options.Add(option);
-            }
         }
 
         protected async override Task<ExitCode> InvokeInternal()
