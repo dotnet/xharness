@@ -455,6 +455,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             if (args == null || args.Message == null)
                 return;
 
+            // notify that a method is starting
+            OnTestStarted(args.Message.Test.DisplayName);
             OnDiagnostic($"'Before' method for test '{args.Message.Test.DisplayName}' starting");
         }
 
@@ -471,8 +473,6 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             if (args == null || args.Message == null)
                 return;
 
-            // notify that a method is starting
-            OnTestStarted(args.Message.Test.DisplayName);
             OnDiagnostic($"'After' method for test '{args.Message.Test.DisplayName}' starting");
         }
 

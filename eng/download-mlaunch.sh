@@ -6,7 +6,7 @@
 #
 #   Revision is cached in a temp dir and re-used for new builds.
 #
-#   Usage: ./download-mlaunch --commit 343tvfdf3rfqef2dfv3 --target-dir /where-to-install
+#   Usage: ./download-mlaunch --commit 343tvfdf3rfqef2dfv3 --target-dir /where-to-install --remove-symbols
 #
 
 set -e
@@ -25,8 +25,23 @@ scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
 . "$scriptroot/common/tools.sh"
 
+copy_mlaunch () {
+  # Copy mlaunch to the target folder
+  cp -Rv $1 $2
+
+  # Clean what we don't need
+  rm -rf "$2/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch.dSYM"
+
+  if [ "$3" = true ]; then
+    echo "Removing debug symbols"
+    rm -v $2/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.pdb
+    rm -v $2/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.mdb
+  fi
+}
+
 commit=''
 target_dir="$artifacts_dir/mlaunch"
+remove_symbols=false
 
 while (($# > 0)); do
   lowerI="$(echo $1 | awk '{print tolower($0)}')"
@@ -40,6 +55,11 @@ while (($# > 0)); do
       shift
       target_dir=$1
       ;;
+
+    --remove-symbols)
+      remove_symbols=true
+      ;;
+
     --help)
       echo "Usage: download-mlaunch.sh --commit 343tvfdf3rfqef2dfv3 --target-dir /where-to-install"
       exit 0
@@ -67,8 +87,7 @@ tag_file_in_repo="$binaries_repo/$commit.tag"
 # Check if the repo was already checked out
 if [ -d "$binaries_repo" ]; then
     if [ -f "$tag_file_in_repo" ]; then
-        # Copy mlaunch to the target folder
-        cp -Rv "$binaries_repo/mlaunch" "$target_dir"
+        copy_mlaunch "$binaries_repo/mlaunch" "$target_dir" $remove_symbols
 
         # Tag the version of mlaunch we have
         touch "$tag_file"
@@ -95,17 +114,10 @@ echo "mlaunch" >> .git/info/sparse-checkout
 git fetch --depth 1 origin $commit
 git checkout FETCH_HEAD
 
-# Clean what we don't need
-rm -rf "$binaries_repo/mlaunch/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch.dSYM"
-rm -v $binaries_repo/mlaunch/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.pdb
-rm -v $binaries_repo/mlaunch/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.mdb
-
-touch "$tag_file_in_repo"
-
-# Copy mlaunch to the target folder
-cp -Rv "$binaries_repo/mlaunch" "$target_dir"
+copy_mlaunch "$binaries_repo/mlaunch" "$target_dir" $remove_symbols
 
 # Tag the version of mlaunch we have
+touch "$tag_file_in_repo"
 touch "$tag_file"
 
 echo "Finished installing mlaunch in $target_dir"

@@ -7,23 +7,20 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace Xharness.Tests
 {
-    [TestFixture]
     public class AppUninstallerTests
     {
         private const string DeviceName = "Test iPad";
         private const string AppBundleId = "some.bundle.name.app";
 
-        private Mock<IProcessManager> _processManager;
-        private Mock<ILog> _mainLog;
+        private readonly Mock<IProcessManager> _processManager;
+        private readonly Mock<ILog> _mainLog;
+        private readonly AppUninstaller _appUninstaller;
 
-        private AppUninstaller _appUninstaller = null;
-
-        [SetUp]
-        public void SetUp()
+        public AppUninstallerTests()
         {
             _mainLog = new Mock<ILog>();
 
@@ -33,14 +30,14 @@ namespace Xharness.Tests
             _appUninstaller = new AppUninstaller(_processManager.Object, _mainLog.Object, 1);
         }
 
-        [Test]
+        [Fact]
         public async Task UninstallFromDeviceTest()
         {
             // Act
             var result = await _appUninstaller.UninstallApp(DeviceName, AppBundleId);
 
             // Verify
-            Assert.AreEqual(0, result.ExitCode);
+            Assert.Equal(0, result.ExitCode);
 
             var expectedArgs = $"-v -v --uninstalldevbundleid {StringUtils.FormatArguments(AppBundleId)} --devname \"{DeviceName}\"";
 

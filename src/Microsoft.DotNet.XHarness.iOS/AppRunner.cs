@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
@@ -62,7 +63,8 @@ namespace Microsoft.DotNet.XHarness.iOS
             bool ensureCleanSimulatorState = false,
             string variation = null,
             int verbosity = 1,
-            XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit)
+            XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
+            CancellationToken cancellationToken = default)
         {
             var args = new MlaunchArguments
             {
@@ -102,7 +104,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
 
             var listener_log = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
-            var (transport, listener, listenerTmpFile) = _listenerFactory.Create(target.ToRunMode(), _mainLog, listener_log, isSimulator, true, false);
+            var (transport, listener, listenerTmpFile) = _listenerFactory.Create(target.ToRunMode(), _mainLog, listener_log, isSimulator, true, false, false);
 
             // Initialize has to be called before we try to get Port (internal implementation of the listener says so)
             // TODO: Improve this to not get into a broken state - it was really hard to debug when I moved this lower
@@ -168,6 +170,8 @@ namespace Microsoft.DotNet.XHarness.iOS
                     timeout,
                     null,
                     (level, message) => _mainLog.WriteLine(message));
+
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken);
 
                 listener.ConnectedTask
                     .TimeoutAfter(testLaunchTimeout)
@@ -246,7 +250,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 _mainLog.WriteLine("Starting test run");
 
-                var result = _processManager.ExecuteCommandAsync(args, _mainLog, timeout, cancellation_token: testReporter.CancellationToken);
+                var result = _processManager.ExecuteCommandAsync(args, _mainLog, timeout, cancellationToken: linkedCts.Token);
 
                 await testReporter.CollectSimulatorResult(result);
 
@@ -296,6 +300,8 @@ namespace Microsoft.DotNet.XHarness.iOS
                     null,
                     (level, message) => _mainLog.WriteLine(message));
 
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken);
+
                 listener.ConnectedTask
                     .TimeoutAfter(testLaunchTimeout)
                     .ContinueWith(testReporter.LaunchCallback)
@@ -330,7 +336,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                         args,
                         aggregatedLog,
                         timeout,
-                        cancellation_token: testReporter.CancellationToken);
+                        cancellationToken: linkedCts.Token);
 
                     await testReporter.CollectDeviceResult(runTestTask);
                 }
@@ -347,7 +353,8 @@ namespace Microsoft.DotNet.XHarness.iOS
                 }
             }
 
-            listener.Cancel();
+            // TODO: https://github.com/dotnet/xharness/issues/73
+            // listener.Cancel();
             listener.Dispose();
 
             // check the final status, copy all the required data
