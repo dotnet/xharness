@@ -15,7 +15,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
         public IReadOnlyCollection<string> Targets { get; set; }
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(15);
         public string OutputDirectory { get; set; }
-        public string WorkingDirectory { get; set; }
         public LogLevel Verbosity { get; set; }
 
         public virtual IList<string> GetValidationErrors()
@@ -41,23 +40,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                 if (!Directory.Exists(OutputDirectory))
                 {
                     Directory.CreateDirectory(OutputDirectory);
-                }
-            }
-
-            if (string.IsNullOrEmpty(WorkingDirectory))
-            {
-                errors.Add("Working directory path missing.");
-            }
-            else
-            {
-                if (!Path.IsPathRooted(WorkingDirectory))
-                {
-                    WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), WorkingDirectory);
-                }
-
-                if (!Directory.Exists(WorkingDirectory))
-                {
-                    Directory.CreateDirectory(WorkingDirectory);
                 }
             }
 

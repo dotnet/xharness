@@ -28,7 +28,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                 { "timeout=|t=", "Time span, in seconds, to wait for instrumentation to complete.", v => TestArguments.Timeout = TimeSpan.FromSeconds(int.Parse(v))},
                 { "verbose|v", "Enable verbose logging (log everything)", v => TestArguments.Verbosity = LogLevel.Debug},
                 { "verbosity-level:|vl:", "Verbosity level (1-6) where higher means less logging. (Default = 2)", v => TestArguments.Verbosity = (LogLevel)int.Parse(v)},
-                { "working-directory=|w=", "Directory in which the resulting package will be outputted", v => TestArguments.WorkingDirectory = v},
                 { "help|h", "Show this message", v => ShowHelp = v != null }
             };
         }

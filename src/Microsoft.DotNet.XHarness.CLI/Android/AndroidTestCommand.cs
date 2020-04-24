@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
         protected override Task<ExitCode> InvokeInternal()
         {
             _log.LogDebug($"Android Test command called: App = {_arguments.AppPackagePath}{Environment.NewLine}Instrumentation Name = {_arguments.InstrumentationName}");
-            _log.LogDebug($"Output Directory:{_arguments.OutputDirectory}{Environment.NewLine}Working Directory = {_arguments.WorkingDirectory}{Environment.NewLine}Timeout = {_arguments.Timeout.TotalSeconds} seconds.");
+            _log.LogDebug($"Output Directory:{_arguments.OutputDirectory}{Environment.NewLine}Timeout = {_arguments.Timeout.TotalSeconds} seconds.");
             _log.LogDebug("Arguments to instrumentation:");
 
             if (!File.Exists(_arguments.AppPackagePath))
