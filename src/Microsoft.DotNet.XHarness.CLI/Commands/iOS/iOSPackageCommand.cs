@@ -29,8 +29,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     internal class iOSPackageCommand : XHarnessCommand
     {
         // TODO: Some more parameters we need to make configurable maybe
-        private const string NugetPath = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/nuget";
-        private const string DotnetPath = "dotnet"; // "/Library/Frameworks/Mono.framework/Versions/Current/bin/msbuild";
+        //private const string NugetPath = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/nuget";
+        //private const string MsBuildPath = "/Library/Frameworks/Mono.framework/Versions/Current/bin/msbuild";
+        private const string DotnetPath = "dotnet";
         private readonly TimeSpan _nugetRestoreTimeout = TimeSpan.FromMinutes(10);
         private readonly TimeSpan _msBuildTimeout = TimeSpan.FromMinutes(30);
 
@@ -176,9 +177,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             aggregatedLog.WriteLine($"Project path is {projectPath}");
             aggregatedLog.WriteLine($"Performing nuget restore.");
 
-            using (var nuget = new Process())
+            using (var dotnetRestore = new Process())
             {
-                nuget.StartInfo.FileName = NugetPath;
+                dotnetRestore.StartInfo.FileName = DotnetPath;
                 var args = new List<string>
                 {
                     "restore",
@@ -187,9 +188,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     "detailed"
                 };
 
-                nuget.StartInfo.Arguments = StringUtils.FormatArguments(args);
+                dotnetRestore.StartInfo.Arguments = StringUtils.FormatArguments(args);
 
-                var result = await _processManager.RunAsync(nuget, aggregatedLog, _nugetRestoreTimeout);
+                var result = await _processManager.RunAsync(dotnetRestore, aggregatedLog, _nugetRestoreTimeout);
                 if (result.TimedOut)
                 {
                     aggregatedLog.WriteLine("nuget restore timedout.");
@@ -206,14 +207,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             var finalResult = ExitCode.SUCCESS;
 
             // perform the build of the application
-            using (var xbuild = new Process())
+            using (var dotnetBuild = new Process())
             {
-                xbuild.StartInfo.FileName = DotnetPath;
-                xbuild.StartInfo.Arguments = StringUtils.FormatArguments(GetBuildArguments(projectPath, _arguments.Platforms[0].ToString())); // TODO: Only taking into account one!!! :(
+                dotnetBuild.StartInfo.FileName = DotnetPath;
+                // TODO: Only taking into account one platform
+                dotnetBuild.StartInfo.Arguments = GetBuildArguments(projectPath, _arguments.Platforms[0].ToString());
 
                 aggregatedLog.WriteLine($"Building {_arguments.AppPackageName} ({projectPath})");
 
-                var result = await _processManager.RunAsync(xbuild, aggregatedLog, _msBuildTimeout);
+                var result = await _processManager.RunAsync(dotnetBuild, aggregatedLog, _msBuildTimeout);
                 if (result.TimedOut)
                 {
                     aggregatedLog.WriteLine("Build timed out after {0} seconds.", _msBuildTimeout.TotalSeconds);
@@ -240,18 +242,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             return string.Join(", ", names);
         }
 
-        private List<string> GetBuildArguments(string projectPath, string projectPlatform)
+        private string GetBuildArguments(string projectPath, string projectPlatform)
         {
             var binlogPath = Path.Combine(_arguments.WorkingDirectory, "appbuild.binlog");
 
-            return new List<string>
+            return StringUtils.FormatArguments(new []
             {
-                "/verbosity:diagnostic",
+                "msbuild",
+                "--verbosity:diagnostic",
                 $"/bl:{binlogPath}",
                 $"/p:Platform={projectPlatform}",
                 $"/p:Configuration={_arguments.BuildConfiguration}",
                 projectPath
-            };
+            });
         }
     }
 }
