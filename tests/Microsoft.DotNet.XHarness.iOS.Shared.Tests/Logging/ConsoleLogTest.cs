@@ -9,6 +9,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
 {
+    [CollectionDefinition("ConsoleLogTest", DisableParallelization = true)]
     public class ConsoleLogTest : IDisposable
     {
         private readonly string _testFile;
