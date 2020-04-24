@@ -42,6 +42,7 @@ namespace Xharness.Tests
         private readonly Mock<ICrashSnapshotReporter> _snapshotReporter;
         private readonly Mock<ITestReporter> _testReporter;
         private readonly Mock<IHelpers> _helpers;
+        private readonly Mock<ITunnelBore> _tunnelBore;
 
         private readonly ISimpleListenerFactory _listenerFactory;
         private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
@@ -87,8 +88,12 @@ namespace Xharness.Tests
             _logs = new Mock<ILogs>();
             _logs.SetupGet(x => x.Directory).Returns(Path.Combine(s_outputPath, "logs"));
 
+            _tunnelBore = new Mock<ITunnelBore>();
+            _tunnelBore.Setup(t => t.Close(It.IsAny<string>()));
+
             var factory = new Mock<ISimpleListenerFactory>();
             factory.SetReturnsDefault((ListenerTransport.Tcp, _listener.Object, "listener-temp-file"));
+            factory.Setup(f => f.TunnelBore).Returns(_tunnelBore.Object);
             _listenerFactory = factory.Object;
             _listener.SetupGet(x => x.Port).Returns(1020);
 
@@ -119,8 +124,10 @@ namespace Xharness.Tests
             Directory.Delete(s_outputPath, true);
         }
 
-        [Fact]
-        public async Task RunOnSimulatorWithNoAvailableSimulatorTest()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task RunOnSimulatorWithNoAvailableSimulatorTest(bool useTcpTunnel)
         {
             // Mock finding simulators
             string simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
@@ -160,7 +167,8 @@ namespace Xharness.Tests
                 _testReporterFactory,
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                useTcpTunnel);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
@@ -179,6 +187,8 @@ namespace Xharness.Tests
 
             _listener.Verify(x => x.Initialize(), Times.AtLeastOnce);
             _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
+
+            _tunnelBore.Verify(t => t.Create(It.IsAny<string>(), It.IsAny<ILog>()), Times.Never); // never create tunnels on simulators
         }
 
         [Fact]
@@ -227,7 +237,8 @@ namespace Xharness.Tests
                 _testReporterFactory,
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                false);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
@@ -294,7 +305,8 @@ namespace Xharness.Tests
                 _testReporterFactory,
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                false);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
@@ -307,8 +319,10 @@ namespace Xharness.Tests
                     ensureCleanSimulatorState: true));
         }
 
-        [Fact]
-        public async Task RunOnDeviceSuccessfullyTest()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task RunOnDeviceSuccessfullyTest(bool useTunnel)
         {
             var deviceSystemLog = new Mock<ILog>();
             deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
@@ -332,6 +346,11 @@ namespace Xharness.Tests
                 .Setup(x => x.Create("device-Test iPhone-mocked_timestamp.log", "Device log", It.IsAny<bool?>()))
                 .Returns(deviceSystemLog.Object);
 
+            // set tunnel bore expectation
+            if (useTunnel) {
+                _tunnelBore.Setup(t => t.Create("Test iPhone", It.IsAny<ILog>()));
+            }
+
             // Act
             var appRunner = new AppRunner(_processManager.Object,
                 _hardwareDeviceLoader.Object,
@@ -343,7 +362,8 @@ namespace Xharness.Tests
                 _testReporterFactory,
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                useTunnel);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
@@ -359,12 +379,14 @@ namespace Xharness.Tests
 
             var ips = string.Join(",", System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString()));
 
+            var tunnelParam = useTunnel ? "-setenv=USE_TCP_TUNNEL=true " : "";
+
             var expectedArgs = $"-argument=-connection-mode -argument=none -argument=-app-arg:-autostart " +
                 $"-setenv=NUNIT_AUTOSTART=true -argument=-app-arg:-autoexit -setenv=NUNIT_AUTOEXIT=true " +
                 $"-argument=-app-arg:-enablenetwork -setenv=NUNIT_ENABLE_NETWORK=true -setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 -v -v " +
                 $"-argument=-app-arg:-hostname:{ips} -setenv=NUNIT_HOSTNAME={ips} -argument=-app-arg:-transport:Tcp " +
                 $"-setenv=NUNIT_TRANSPORT=TCP -argument=-app-arg:-hostport:{_listener.Object.Port} " +
-                $"-setenv=NUNIT_HOSTPORT={_listener.Object.Port} --launchdev {StringUtils.FormatArguments(s_appPath)} " +
+                $"-setenv=NUNIT_HOSTPORT={_listener.Object.Port} {tunnelParam}--launchdev {StringUtils.FormatArguments(s_appPath)} " +
                 $"--disable-memory-limits --wait-for-exit --devname \"Test iPhone\"";
 
             _processManager
@@ -381,6 +403,12 @@ namespace Xharness.Tests
             _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
             // _listener.Verify(x => x.Cancel(), Times.AtLeastOnce); // TODO: https://github.com/dotnet/xharness/issues/73
             _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
+
+            // verify that we do close the tunnel when it was used
+            // we dont want to leak a process
+            if (useTunnel) {
+                _tunnelBore.Verify(t => t.Close("Test iPhone"));
+            }
 
             _hardwareDeviceLoader.VerifyAll();
 

@@ -23,6 +23,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             bool autoExit,
             bool xmlOutput,
             bool useTcpTunnel);
+
+        ITunnelBore TunnelBore { get; }
     }
 
     public class SimpleListenerFactory : ISimpleListenerFactory
