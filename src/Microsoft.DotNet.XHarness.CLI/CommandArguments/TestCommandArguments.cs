@@ -7,17 +7,39 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Common
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
-    internal abstract class TestCommandArguments : ITestCommandArguments
+    internal interface ITestCommandArguments : ICommandArguments
+    {
+        /// <summary>
+        /// Path to packaged app
+        /// </summary>
+        string AppPackagePath { get; set; }
+
+        /// <summary>
+        /// List of targets to test
+        /// </summary>
+        IReadOnlyCollection<string> Targets { get; set; }
+
+        /// <summary>
+        /// How long XHarness should wait until a test execution completes before clean up (kill running apps, uninstall, etc)
+        /// </summary>
+        TimeSpan Timeout { get; set; }
+
+        /// <summary>
+        /// Path where the outputs of execution will be stored
+        /// </summary>
+        string OutputDirectory { get; set; }
+    }
+
+    internal abstract class TestCommandArguments : XHarnessCommandArguments, ITestCommandArguments
     {
         public string AppPackagePath { get; set; }
         public IReadOnlyCollection<string> Targets { get; set; }
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(15);
         public string OutputDirectory { get; set; }
-        public LogLevel Verbosity { get; set; }
 
-        public virtual IList<string> GetValidationErrors()
+        public override IList<string> GetValidationErrors()
         {
             var errors = new List<string>();
 
@@ -32,15 +54,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
             }
             else
             {
-                if (!Path.IsPathRooted(OutputDirectory))
-                {
-                    OutputDirectory = Path.Combine(Directory.GetCurrentDirectory(), OutputDirectory);
-                }
-
-                if (!Directory.Exists(OutputDirectory))
-                {
-                    Directory.CreateDirectory(OutputDirectory);
-                }
+                OutputDirectory = RootPath(OutputDirectory);
             }
 
             return errors;

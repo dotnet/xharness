@@ -1,16 +1,16 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.CLI.Common;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.CLI.iOS;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI.iOS
+namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
-
     // Represents the template to be used. Currently only supports the Managed one.
     public enum TemplateType
     {
@@ -21,13 +21,13 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
     // Command that will create the required project generation for the iOS plaform. The command will ensure that all
     // required .csproj and src are created. The command is part of the parent CommandSet iOS and exposes similar
     // plus extra options to the one that its Android counterpart exposes.
-    internal class iOSPackageCommand : PackageCommand
+    internal class iOSPackageCommand : XHarnessCommand
     {
         private readonly iOSPackageCommandArguments _arguments = new iOSPackageCommandArguments();
 
-        protected override IPackageCommandArguments PackageArguments => _arguments;
+        protected override ICommandArguments Arguments => _arguments;
 
-        public iOSPackageCommand() : base()
+        public iOSPackageCommand() : base("package")
         {
             Options = new OptionSet() {
                 "usage: ios package [OPTIONS]",
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                 { "ignore-directory=|i=", "Root directory containing all the *.ignore files used to skip tests if needed.", v => _arguments.IgnoreFilesRootDirectory = v },
                 { "template=|t=", "Indicates which template to use. There are two available ones: Managed, which uses Xamarin.[iOS|Mac] and Native (default:Managed).",
                     v=> {
-                        if (Enum.TryParse<TemplateType>(v, out TemplateType template)) {
+                        if (Enum.TryParse(v, out TemplateType template)) {
                             _arguments.SelectedTemplateType = template;
                         } else
                         {
@@ -47,12 +47,11 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                     }
                 },
                 { "traits-directory=|td=", "Root directory that contains all the .txt files with traits that will be skipped if needed.", v =>  _arguments.TraitsRootDirectory = v },
+                { "name=|n=", "Name of the test application",  v => _arguments.AppPackageName = v},
+                { "output-directory=|o=", "Directory in which the resulting package will be outputted", v => _arguments.OutputDirectory = v},
+                { "working-directory=|w=", "Directory in which the resulting package will be outputted", v => _arguments.WorkingDirectory = v},
+                { "help|h", "Show this message", v => ShowHelp = v != null },
             };
-
-            foreach (var option in CommonOptions)
-            {
-                Options.Add(option);
-            }
         }
 
         protected override Task<ExitCode> InvokeInternal()

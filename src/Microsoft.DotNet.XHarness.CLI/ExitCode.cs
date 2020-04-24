@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.CLI.Common
+namespace Microsoft.DotNet.XHarness.CLI
 {
     /// <summary>
     ///  Exit codes to use for common failure reasons; if you add a new exit code, add it here and use the enum.
