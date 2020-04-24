@@ -339,7 +339,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                     outputStream.WriteLine(line);
                 }
             }
-            var (resultLine, failed) = _resultParser.ParseResults(tempPath, destinationFile, XmlResultJargon.NUnitV3, true);
+            var (resultLine, failed) = _resultParser.ParseResults(tempPath, XmlResultJargon.NUnitV3, destinationFile);
             Assert.True(failed, "failed");
             Assert.Equal(expectedResultLine, resultLine);
             // verify that the destination does contain the result line
@@ -360,9 +360,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             Assert.Equal(expectedResultLine, resultLineInDestinationFile);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         [Fact]
         public void DoNotGenerateHtmlReport()
         {
@@ -371,9 +368,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             // path to be parsed
             var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("Issue8214.xml", StringComparison.Ordinal)).FirstOrDefault();
             var tempPath = Path.GetTempFileName();
-            var destinationFile = Path.GetTempFileName();
-            if (File.Exists(destinationFile))
-                File.Delete(destinationFile);
             using (var outputStream = new StreamWriter(tempPath))
             using (var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name)))
             {
@@ -383,11 +377,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                     outputStream.WriteLine(line);
                 }
             }
-            var (resultLine, failed) = _resultParser.ParseResults(tempPath, destinationFile, XmlResultJargon.NUnitV3, false);
+
+            var (resultLine, failed) = _resultParser.ParseResults(tempPath, XmlResultJargon.NUnitV3, null);
+
             Assert.True(failed, "failed");
             Assert.Equal(expectedResultLine, resultLine);
-            // verify that the file in the destination was not created
-            Assert.False(File.Exists(destinationFile));
         }
     }
 }
