@@ -356,12 +356,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        public (string resultLine, bool failed) ParseResults(string source, XmlResultJargon xmlType, string destination = null)
+        public (string resultLine, bool failed) ParseResults(string source, XmlResultJargon xmlType, string humanReadableReportDestination = null)
         {
             StreamWriter writer = null;
-            if (destination != null)
+            if (humanReadableReportDestination != null)
             {
-                writer = new StreamWriter(destination, true);
+                writer = new StreamWriter(humanReadableReportDestination, true);
             }
 
             var reader = new StreamReader(source);

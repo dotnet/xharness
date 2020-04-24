@@ -51,9 +51,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         /// </summary>
         /// <param name="source">File that will be read</param>
         /// <param name="xmlType">Jargon of the source file</param>
-        /// <param name="destination">If provided, will contain human readable result</param>
+        /// <param name="humanReadableReportDestination">If provided, will contain human readable result</param>
         /// <returns>A result line with the summary of what was parsed and an over all result</returns>
-        (string resultLine, bool failed) ParseResults(string source, XmlResultJargon xmlType, string destination = null);
+        (string resultLine, bool failed) ParseResults(string source, XmlResultJargon xmlType, string humanReadableReportDestination = null);
 
         /// <summary>
         /// Generates a human readable test report.
