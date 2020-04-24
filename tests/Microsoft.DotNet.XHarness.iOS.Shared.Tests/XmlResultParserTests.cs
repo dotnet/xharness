@@ -339,7 +339,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                     outputStream.WriteLine(line);
                 }
             }
-            var (resultLine, failed) = _resultParser.GenerateHumanReadableResults(tempPath, destinationFile, XmlResultJargon.NUnitV3, true);
+            var (resultLine, failed) = _resultParser.ParseResults(tempPath, destinationFile, XmlResultJargon.NUnitV3, true);
             Assert.True(failed, "failed");
             Assert.Equal(expectedResultLine, resultLine);
             // verify that the destination does contain the result line
@@ -383,7 +383,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                     outputStream.WriteLine(line);
                 }
             }
-            var (resultLine, failed) = _resultParser.GenerateHumanReadableResults(tempPath, destinationFile, XmlResultJargon.NUnitV3, false);
+            var (resultLine, failed) = _resultParser.ParseResults(tempPath, destinationFile, XmlResultJargon.NUnitV3, false);
             Assert.True(failed, "failed");
             Assert.Equal(expectedResultLine, resultLine);
             // verify that the file in the destination was not created

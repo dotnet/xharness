@@ -372,11 +372,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     }
                     path = newFilename;
 
-                    // write the human readable results in a tmp file, which we later use to step on the logs
-                    var tmpFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-                    (parseResult.resultLine, parseResult.failed) = resultParser.GenerateHumanReadableResults(path, tmpFile, xmlType, generateHtml);
-                    File.Copy(tmpFile, test_log_path, true);
-                    File.Delete(tmpFile);
+                    if (generateHtml)
+                    {
+                        // write the human readable results in a tmp file, which we later use to step on the logs
+                        var tmpFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                        (parseResult.resultLine, parseResult.failed) = resultParser.ParseResults(path, xmlType, tmpFile);
+                        File.Copy(tmpFile, test_log_path, true);
+                        File.Delete(tmpFile);
+                    }
+                    else
+                    {
+                        (parseResult.resultLine, parseResult.failed) = resultParser.ParseResults(path, xmlType);
+                    }
 
                     // we do not longer need the tmp file
                     logs.AddFile(path, LogType.XmlLog.ToString());

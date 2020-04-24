@@ -356,33 +356,25 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        public (string resultLine, bool failed) GenerateHumanReadableResults(string source, string destination, XmlResultJargon xmlType, bool generateHumanResults)
+        public (string resultLine, bool failed) ParseResults(string source, XmlResultJargon xmlType, string destination = null)
         {
-            (string resultLine, bool failed) parseData;
             StreamWriter writer = null;
-            if (generateHumanResults)
-                writer = new StreamWriter(destination, true);
-            var reader = new StreamReader(source);
-            switch (xmlType)
+            if (destination != null)
             {
-                case XmlResultJargon.TouchUnit:
-                    parseData = ParseTouchUnitXml(reader, writer);
-                    break;
-                case XmlResultJargon.NUnitV2:
-                    parseData = ParseNUnitXml(reader, writer);
-                    break;
-                case XmlResultJargon.NUnitV3:
-                    parseData = ParseNUnitV3Xml(reader, writer);
-                    break;
-                case XmlResultJargon.xUnit:
-                    parseData = ParsexUnitXml(reader, writer);
-                    break;
-                default:
-                    parseData = ("", true);
-                    break;
+                writer = new StreamWriter(destination, true);
             }
+
+            var reader = new StreamReader(source);
+            var parsedData = xmlType switch
+            {
+                XmlResultJargon.TouchUnit => ParseTouchUnitXml(reader, writer),
+                XmlResultJargon.NUnitV2 => ParseNUnitXml(reader, writer),
+                XmlResultJargon.NUnitV3 => ParseNUnitV3Xml(reader, writer),
+                XmlResultJargon.xUnit => ParsexUnitXml(reader, writer),
+                _ => ("", true),
+            };
             writer?.Dispose();
-            return parseData;
+            return parsedData;
         }
 
         static void GenerateNUnitV2TestReport(StreamWriter writer, XmlReader reader)
