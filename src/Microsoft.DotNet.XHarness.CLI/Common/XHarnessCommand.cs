@@ -84,12 +84,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
             _logFactory = LoggerFactory.Create(builder =>
             {
                 builder
-                    .AddConsole()
-                    .AddFilter(
-                    (level) =>
+                    .AddConsole(options =>
                     {
-                        return level >= verbosity;
-                    });
+                        if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
+                        {
+                            options.DisableColors = true;
+                        }
+
+                        if (Environment.GetEnvironmentVariable("XHARNESS_LOG_WITH_TIMESTAMPS")?.ToLower().Equals("true") ?? false)
+                        {
+                            options.TimestampFormat = "[HH:mm:ss] ";
+                        }
+                    })
+                    .AddFilter(level => level >= verbosity);
             });
             _log = _logFactory.CreateLogger(name);
         }
