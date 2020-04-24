@@ -24,8 +24,12 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>$(NoWarn);1701;1702;1705;1591;NU5105;NU5100</NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.3" />
     <PackageReference Include="Mono.Options" Version="6.6.0.161" />
@@ -57,11 +61,9 @@
       <RemoveSymbols Condition=" '$(Configuration)' == 'Release' AND '$(OS)' != 'Windows_NT' ">--remove-symbols</RemoveSymbols>
     </PropertyGroup>
 
-    <Exec Condition=" '$(OS)' != 'Windows_NT' "
-          Command="chmod 0755 ../../eng/download-mlaunch.sh &amp;&amp; ../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target-dir $(IntermediateOutputPath)mlaunch $(RemoveSymbols)" />
+    <Exec Condition=" '$(OS)' != 'Windows_NT' " Command="chmod 0755 ../../eng/download-mlaunch.sh &amp;&amp; ../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target-dir $(IntermediateOutputPath)mlaunch $(RemoveSymbols)" />
 
-    <Exec Condition=" '$(OS)' == 'Windows_NT' "
-          Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' $(RemoveSymbols) } &quot;" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' $(RemoveSymbols) } &quot;" />
 
     <ItemGroup>
       <Content Include="$(IntermediateOutputPath)/mlaunch/**/*.*">
