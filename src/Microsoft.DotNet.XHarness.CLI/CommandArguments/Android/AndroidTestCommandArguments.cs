@@ -3,9 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using Microsoft.DotNet.XHarness.CLI.Common;
 
-namespace Microsoft.DotNet.XHarness.CLI.Android
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
     internal class AndroidTestCommandArguments : TestCommandArguments
     {

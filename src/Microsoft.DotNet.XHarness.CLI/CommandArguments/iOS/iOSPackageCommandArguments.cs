@@ -4,10 +4,10 @@
 
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.DotNet.XHarness.CLI.Common;
+using Microsoft.DotNet.XHarness.CLI.Commands.iOS;
 using Microsoft.DotNet.XHarness.iOS.TestImporter;
 
-namespace Microsoft.DotNet.XHarness.CLI.iOS
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 {
     /// <summary>
     /// Represents the template to be used. Currently only supports the Managed one.

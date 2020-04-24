@@ -7,8 +7,31 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Common
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
+    internal interface ITestCommandArguments : ICommandArguments
+    {
+        /// <summary>
+        /// Path to packaged app
+        /// </summary>
+        string AppPackagePath { get; set; }
+
+        /// <summary>
+        /// List of targets to test
+        /// </summary>
+        IReadOnlyCollection<string> Targets { get; set; }
+
+        /// <summary>
+        /// How long XHarness should wait until a test execution completes before clean up (kill running apps, uninstall, etc)
+        /// </summary>
+        TimeSpan Timeout { get; set; }
+
+        /// <summary>
+        /// Path where the outputs of execution will be stored
+        /// </summary>
+        string OutputDirectory { get; set; }
+    }
+
     internal abstract class TestCommandArguments : ITestCommandArguments
     {
         public string AppPackagePath { get; set; }

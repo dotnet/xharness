@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Common
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
     internal interface IPackageCommandArguments : ICommandArguments
     {
