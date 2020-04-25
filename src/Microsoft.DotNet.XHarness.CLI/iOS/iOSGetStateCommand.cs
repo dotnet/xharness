@@ -76,7 +76,8 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
             Console.WriteLine();
 
-            Console.WriteLine("Developer Toos:");
+            Console.WriteLine("Developer Tools:");
+
             Console.WriteLine($"  Xcode:\t{info.XcodePath} - ({info.XcodeVersion})");
 
             Console.WriteLine();
