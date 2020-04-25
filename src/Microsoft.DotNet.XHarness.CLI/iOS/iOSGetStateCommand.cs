@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
         protected override async Task<ExitCode> InvokeInternal()
         {
-            var processManager = new ProcessManager(null, "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch");
+            var processManager = new ProcessManager(null); 
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
             var log = new MemoryLog(); // do we really want to log this?
