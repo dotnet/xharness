@@ -23,12 +23,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
             CommonOptions = new OptionSet
             {
                 { "app|a=", "Path to already-packaged app", v => TestArguments.AppPackagePath = v },
-                { "output-directory=|o=", "Directory in which the resulting package will be outputted", v => TestArguments.OutputDirectory = v},
+                { "output-directory=|o=", "Directory in which the resulting package will be outputted", v => TestArguments.OutputDirectory = v.Trim('"')},
                 { "targets=", "Comma-delineated list of targets to test for", v=> TestArguments.Targets = v.Split(',') },
                 { "timeout=|t=", "Time span, in seconds, to wait for instrumentation to complete.", v => TestArguments.Timeout = TimeSpan.FromSeconds(int.Parse(v))},
                 { "verbose|v", "Enable verbose logging (log everything)", v => TestArguments.Verbosity = LogLevel.Debug},
                 { "verbosity-level:|vl:", "Verbosity level (1-6) where higher means less logging. (Default = 2)", v => TestArguments.Verbosity = (LogLevel)int.Parse(v)},
-                { "working-directory=|w=", "Directory in which the resulting package will be outputted", v => TestArguments.WorkingDirectory = v},
+                { "working-directory=|w=", "Directory in which the resulting package will be outputted", v => TestArguments.WorkingDirectory = v.Trim('"')},
                 { "help|h", "Show this message", v => ShowHelp = v != null }
             };
         }
