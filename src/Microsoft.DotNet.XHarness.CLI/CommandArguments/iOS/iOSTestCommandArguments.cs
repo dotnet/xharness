@@ -60,7 +60,18 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                     }
                     catch (ArgumentOutOfRangeException)
                     {
-                        errors.Add($"Failed to parse test target '{targetName}'");
+                        // let the user know that the target is not known
+                        // and all the available ones.
+                        var sb = new StringBuilder();
+                        sb.AppendLine($"Failed to parse test target '{targetName}'. Avaliable targets are:");
+                        sb.AppendLine();
+                        foreach (var val in Enum.GetValues(typeof(TestTarget)))
+                        {
+                            var enumString = ((TestTarget)val).AsString();
+                            if (!string.IsNullOrEmpty(enumString))
+                                sb.AppendLine($"\t* {enumString}");
+                        }
+                        errors.Add(sb.ToString());
                     }
                 }
 
