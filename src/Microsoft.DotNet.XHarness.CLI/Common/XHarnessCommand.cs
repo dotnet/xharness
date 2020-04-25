@@ -70,14 +70,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                             // first line is in the same distance, rest have
                             // and indentation
                             message.Append(Environment.NewLine + "  - " + lines[0]);
-                            for(int index = 1; index < lines.Length; index++) {
+                            for (int index = 1; index < lines.Length; index++)
+                            {
                                 message.Append($"{Environment.NewLine}\t{lines[index]}");
-							}
+                            }
                         }
-						else
-                        { 
+                        else
+                        {
                             message.Append(Environment.NewLine + "  - " + error);
-						} 
+                        }
                     }
 
                     _log.LogError(message.ToString());
@@ -85,7 +86,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                     return 1;
                 }
 
-                return (int) InvokeInternal().GetAwaiter().GetResult();
+                return (int)InvokeInternal().GetAwaiter().GetResult();
             }
             finally
             {

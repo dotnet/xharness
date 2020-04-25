@@ -65,9 +65,10 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
                         // let the user know that the target is not known
                         // and all the available ones.
                         var sb = new StringBuilder();
-						sb.AppendLine($"Failed to parse test target '{targetName}'. Avaliable targets are:");
+                        sb.AppendLine($"Failed to parse test target '{targetName}'. Avaliable targets are:");
                         sb.AppendLine();
-                        foreach (var val in Enum.GetValues(typeof(TestTarget))) {
+                        foreach (var val in Enum.GetValues(typeof(TestTarget)))
+                        {
                             var enumString = ((TestTarget)val).AsString();
                             if (!string.IsNullOrEmpty(enumString))
                                 sb.AppendLine($"\t* {enumString}");
