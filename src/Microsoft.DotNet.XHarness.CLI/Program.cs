@@ -4,8 +4,8 @@
 
 using System;
 using Microsoft.DotNet.XHarness.CLI.Android;
-using Microsoft.DotNet.XHarness.CLI.Common;
-using Microsoft.DotNet.XHarness.CLI.iOS;
+using Microsoft.DotNet.XHarness.CLI.Commands;
+using Microsoft.DotNet.XHarness.CLI.Commands.iOS;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI

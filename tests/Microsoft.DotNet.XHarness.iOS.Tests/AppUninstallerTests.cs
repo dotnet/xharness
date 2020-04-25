@@ -9,7 +9,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Moq;
 using Xunit;
 
-namespace Xharness.Tests
+namespace Microsoft.DotNet.XHarness.iOS.Tests
 {
     public class AppUninstallerTests
     {
