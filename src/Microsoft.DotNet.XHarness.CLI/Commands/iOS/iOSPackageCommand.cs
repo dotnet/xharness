@@ -145,10 +145,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             var logs = new Logs(_arguments.WorkingDirectory);
             var runLog = logs.Create("package-log.txt", "Package Log");
-            var consoleLog = new CallbackLog(s => _log.LogInformation(s.Trim()));
-            var aggregatedLog = Log.CreateAggregatedLog(runLog, consoleLog);
-            aggregatedLog.Timestamp = false;
+            var consoleLog = new CallbackLog(s => _log.LogInformation(s))
+            {
+                Timestamp = false
+            };
 
+            var aggregatedLog = Log.CreateAggregatedLog(runLog, consoleLog);
             aggregatedLog.WriteLine("Generating scaffold app with:");
             aggregatedLog.WriteLine($"\tAppname: '{_arguments.AppPackageName}'");
             aggregatedLog.WriteLine($"\tAssemblies: '{string.Join(" ", _arguments.Assemblies)}'");
@@ -209,7 +211,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             using (var dotnetBuild = new Process())
             {
                 dotnetBuild.StartInfo.FileName = DotnetPath;
+
                 // TODO: Only taking into account one platform
+                if (_arguments.Platforms.Count > 1)
+                {
+                    _log.LogWarning($"Multi-platform targetting is not supported yet. Targetting {_arguments.Platforms[0]} only.");
+                }
+
                 dotnetBuild.StartInfo.Arguments = GetBuildArguments(projectPath, _arguments.Platforms[0].ToString());
 
                 aggregatedLog.WriteLine($"Building {_arguments.AppPackageName} ({projectPath})");
@@ -225,7 +233,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 }
                 else if (!result.Succeeded)
                 {
+                    _log.LogError($"Build failed with return code: {result.ExitCode}");
+
                     finalResult = ExitCode.GENERAL_FAILURE; // TODO: Make more specific?
+
+                    if (_arguments.SelectedTemplateType == TemplateType.Managed)
+                    {
+                        _log.LogInformation("Possible cause of the failure may be missing Xamarin iOS package");
+                    }
                 }
             }
 
