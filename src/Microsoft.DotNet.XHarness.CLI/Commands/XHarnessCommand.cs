@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -63,7 +63,23 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                     var message = new StringBuilder("Invalid arguments:");
                     foreach (string error in validationErrors)
                     {
-                        message.Append(Environment.NewLine + "  - " + error);
+                        // errors can have more than one line, if the do, add
+                        // some nice indentation
+                        var lines = error.Split(Environment.NewLine);
+                        if (lines.Length > 1)
+                        {
+                            // first line is in the same distance, rest have
+                            // and indentation
+                            message.Append(Environment.NewLine + "  - " + lines[0]);
+                            for (int index = 1; index < lines.Length; index++)
+                            {
+                                message.Append($"{Environment.NewLine}\t{lines[index]}");
+                            }
+                        }
+                        else
+                        {
+                            message.Append(Environment.NewLine + "  - " + error);
+                        }
                     }
 
                     _log.LogError(message.ToString());
@@ -85,12 +101,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
             _logFactory = LoggerFactory.Create(builder =>
             {
                 builder
-                    .AddConsole()
-                    .AddFilter(
-                    (level) =>
+                    .AddConsole(options =>
                     {
-                        return level >= verbosity;
-                    });
+                        if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
+                        {
+                            options.DisableColors = true;
+                        }
+
+                        if (Environment.GetEnvironmentVariable("XHARNESS_LOG_WITH_TIMESTAMPS")?.ToLower().Equals("true") ?? false)
+                        {
+                            options.TimestampFormat = "[HH:mm:ss] ";
+                        }
+                    })
+                    .AddFilter(level => level >= verbosity);
             });
             _log = _logFactory.CreateLogger(name);
         }

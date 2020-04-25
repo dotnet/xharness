@@ -11,12 +11,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
     {
         protected override ICommandArguments Arguments => null;
 
-
-        protected readonly OptionSet CommonOptions;
+        protected readonly OptionSet CommonOptions = new OptionSet();
 
         public GetStateCommand() : base("state")
         {
-            CommonOptions = new OptionSet { };
         }
     }
 }

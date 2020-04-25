@@ -34,8 +34,23 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         iPhoneSimulator
     }
 
-    internal class iOSPackageCommandArguments : PackageCommandArguments
+    internal class iOSPackageCommandArguments : XHarnessCommandArguments
     {
+        /// <summary>
+        /// Name of the packaged app
+        /// </summary>
+        public string AppPackageName { get; set; }
+
+        /// <summary>
+        /// Path where the outputs of execution will be stored
+        /// </summary>
+        public string OutputDirectory { get; set; }
+
+        /// <summary>
+        /// Path where run logs will hbe stored and projects
+        /// </summary>
+        public string WorkingDirectory { get; set; }
+
         public TemplateType SelectedTemplateType { get; set; } = TemplateType.Managed;
 
         public BuildConfiguration BuildConfiguration { get; set; } = BuildConfiguration.Debug;
@@ -60,7 +75,40 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 
         public override IList<string> GetValidationErrors()
         {
-            IList<string> errors = base.GetValidationErrors();
+            var errors = new List<string>();
+
+            if (string.IsNullOrEmpty(AppPackageName))
+            {
+                errors.Add("You must provide a name for the application to be created.");
+            }
+
+            if (string.IsNullOrEmpty(OutputDirectory))
+            {
+                errors.Add("Output directory path missing.");
+            }
+            else
+            {
+                OutputDirectory = RootPath(OutputDirectory);
+
+                if (!Directory.Exists(OutputDirectory))
+                {
+                    Directory.CreateDirectory(OutputDirectory);
+                }
+            }
+
+            if (string.IsNullOrEmpty(WorkingDirectory))
+            {
+                errors.Add("Working directory path missing.");
+            }
+            else
+            {
+                WorkingDirectory = RootPath(WorkingDirectory);
+
+                if (!Directory.Exists(WorkingDirectory))
+                {
+                    Directory.CreateDirectory(WorkingDirectory);
+                }
+            }
 
             if (Assemblies.Count == 0)
             {

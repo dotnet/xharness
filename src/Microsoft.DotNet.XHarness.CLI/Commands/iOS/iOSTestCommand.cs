@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -20,12 +20,29 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
+
+    /// <summary>
+    /// Specifies the channel that is used to comminicate with the device.
+    /// </summary>
+    public enum CommunicationChannel
+    {
+        /// <summary>
+        /// Connect to the device using the LAN or WAN.
+        /// </summary>
+        Network,
+        /// <summary>
+        /// Connect to the device using a tcp-tunnel
+        /// </summary>
+        UsbTunnel,
+    }
+
     /// <summary>
     /// Command which executes a given, already-packaged iOS application, waits on it and returns status based on the outcome.
     /// </summary>
     internal class iOSTestCommand : TestCommand
     {
         private readonly iOSTestCommandArguments _arguments = new iOSTestCommandArguments();
+        private CommunicationChannel _channel = CommunicationChannel.UsbTunnel; // use the tunnel as default since it is more reliable.
         protected override ITestCommandArguments TestArguments => _arguments;
 
         public iOSTestCommand() : base()
@@ -38,6 +55,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 { "xcode=", "Path where Xcode is installed", v => _arguments.XcodeRoot = v},
                 { "mlaunch=", "Path to the mlaunch binary", v => _arguments.MlaunchPath = v},
                 { "device-name=", "Name of a specific device, if you wish to target one", v => _arguments.DeviceName = v},
+                { "communication-channel:", $"The communication channel to use to communicate with the default. Can be {CommunicationChannel.Network} and {CommunicationChannel.UsbTunnel}. Default is {CommunicationChannel.UsbTunnel}", v => Enum.TryParse (v, out _channel)},
                 { "launch-timeout=|lt=", "Time span, in seconds, to wait for the iOS app to start.", v => _arguments.LaunchTimeout = TimeSpan.FromSeconds(int.Parse(v))},
             };
 
@@ -153,7 +171,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     new TestReporterFactory(processManager),
                     mainLog,
                     logs,
-                    new Helpers());
+                    new Helpers(),
+                    useTcpTunnel: _channel == CommunicationChannel.UsbTunnel);
 
                 (deviceName, exitCode) = await appRunner.RunApp(appBundleInfo,
                     target,
@@ -205,7 +224,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
         }
 
-        private  static int GetMlaunchVerbosity(LogLevel level) => level switch
+        private static int GetMlaunchVerbosity(LogLevel level) => level switch
         {
             LogLevel.Trace => 6,
             LogLevel.Debug => 5,

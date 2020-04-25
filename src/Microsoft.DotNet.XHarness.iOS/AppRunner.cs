@@ -31,6 +31,7 @@ namespace Microsoft.DotNet.XHarness.iOS
         private readonly ILogs _logs;
         private readonly ILog _mainLog;
         private readonly IHelpers _helpers;
+        private readonly bool _useTcpTunnel;
 
         public AppRunner(IProcessManager processManager,
             IHardwareDeviceLoader hardwareDeviceLoader,
@@ -42,7 +43,8 @@ namespace Microsoft.DotNet.XHarness.iOS
             ITestReporterFactory reporterFactory,
             ILog mainLog,
             ILogs logs,
-            IHelpers helpers)
+            IHelpers helpers,
+            bool useTcpTunnel)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _hardwareDeviceLoader = hardwareDeviceLoader ?? throw new ArgumentNullException(nameof(hardwareDeviceLoader));
@@ -55,6 +57,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
+            _useTcpTunnel = useTcpTunnel;
         }
 
         public async Task<(string deviceName, int exitCode)> RunApp(
@@ -124,6 +127,9 @@ namespace Microsoft.DotNet.XHarness.iOS
 
             args.Add(new SetAppArgumentArgument($"-hostport:{listener.Port}", true));
             args.Add(new SetEnvVariableArgument("NUNIT_HOSTPORT", listener.Port));
+
+            if (_useTcpTunnel && !isSimulator) // simulators do not support tunnels
+                args.Add(new SetEnvVariableArgument("USE_TCP_TUNNEL", true));
 
             listener.StartAsync();
 
@@ -332,6 +338,16 @@ namespace Microsoft.DotNet.XHarness.iOS
                 {
                     await crashReporter.StartCaptureAsync();
 
+                    // create a tunnel to communicate with the device 
+                    if (transport == ListenerTransport.Tcp && _useTcpTunnel && listener is SimpleTcpListener tcpListener)
+                    {
+                        // create a new tunnel using the listener
+                        var tunnel = _listenerFactory.TunnelBore.Create(deviceName, _mainLog);
+                        tunnel.Open(deviceName, tcpListener, timeout, _mainLog);
+                        // wait until we started the tunnel
+                        await tunnel.Started;
+                    }
+
                     _mainLog.WriteLine("Starting test run");
 
                     // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit).
@@ -348,6 +364,10 @@ namespace Microsoft.DotNet.XHarness.iOS
                 {
                     deviceLogCapturer.StopCapture();
                     deviceSystemLog.Dispose();
+
+                    // close a tunnel if it was created
+                    if (!isSimulator)
+                        await _listenerFactory.TunnelBore.Close(deviceName);
                 }
 
                 // Upload the system log

@@ -12,8 +12,26 @@ Param(
 
     [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$True)]
-    [string] $TargetDir
+    [string] $TargetDir,
+
+    [switch] $RemoveSymbols=$False
 )
+
+function Copy-Mlaunch([string] $sourceDir, [string] $targetDir, [bool] $removeSymbols) {
+    $sourceDir = Join-Path $sourceDir "*"
+
+    # Copy mlaunch to the target folder
+    Copy-Item -Path $sourceDir -Destination $targetDir -Recurse -Verbose
+
+    # Clean what we don't need
+    Remove-Item -Path (Join-Path $targetDir "lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch.dSYM") -Recurse -Force -Verbose
+
+    if ($removeSymbols) {
+        Write-Host "Removing debug symbols"
+        Get-ChildItem -Path (Join-Path $targetDir "lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.pdb") | ForEach-Object { Remove-Item -Path $_.FullName -Verbose }
+        Get-ChildItem -Path (Join-Path $targetDir "lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.mdb") | ForEach-Object { Remove-Item -Path $_.FullName -Verbose }
+    }
+}
 
 . $PSScriptRoot\common\tools.ps1
 
@@ -33,11 +51,7 @@ $tagFileInRepo = Join-Path $binariesRepo "$commit.tag"
 
 if (Test-Path $binariesRepo) {
     if (Test-Path $tagFileInRepo) {
-        $path = Join-Path $binariesRepo "mlaunch"
-        $path = Join-Path $path "*"
-
-        # Copy mlaunch to the target folder
-        Copy-Item -Path $path -Destination $TargetDir -Recurse -Verbose
+        Copy-Mlaunch (Join-Path $binariesRepo "mlaunch") $TargetDir $RemoveSymbols
 
         # Tag the version of mlaunch we have
         New-Item -ItemType File -Path $tagFile
@@ -70,15 +84,10 @@ Set-Content -Path ".git/info/sparse-checkout" -Value "mlaunch"
 git fetch -v --depth 1 origin $commit
 git checkout FETCH_HEAD
 
-# Clean what we don't need
-Remove-Item -Path (Join-Path $binariesRepo "mlaunch/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch.dSYM") -Recurse -Force -Verbose
-Get-ChildItem -Path (Join-Path $binariesRepo "mlaunch/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.pdb") | ForEach-Object { Remove-Item -Path $_.FullName -Verbose }
-Get-ChildItem -Path (Join-Path $binariesRepo "mlaunch/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.mdb") | ForEach-Object { Remove-Item -Path $_.FullName -Verbose }
+Copy-Mlaunch (Join-Path $binariesRepo "mlaunch") $TargetDir $RemoveSymbols
 
+New-Item -ItemType File -Path $tagFile
 New-Item -ItemType File -Path $tagFileInRepo
-
-# Copy mlaunch to the target folder
-Copy-Item -Path (Join-Path $binariesRepo (Join-Path "mlaunch" "*")) -Destination $TargetDir -Recurse -Verbose
 
 # Tag the version of mlaunch we have
 New-Item -ItemType File -Path $tagFile -ErrorAction "SilentlyContinue"
