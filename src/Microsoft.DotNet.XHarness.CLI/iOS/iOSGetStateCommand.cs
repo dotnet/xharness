@@ -58,7 +58,6 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
         private async Task AsJson(SystemInfo info)
         {
-            _log.LogInformation("Priting json output.");
             var options = new JsonSerializerOptions
             {
                 WriteIndented = true
@@ -69,7 +68,6 @@ namespace Microsoft.DotNet.XHarness.CLI.iOS
 
         private void AsText(SystemInfo info)
         {
-            _log.LogInformation("Priting human readable output.");
             Console.WriteLine("Runtime Enviroment:");
             Console.WriteLine($"  Machine name:\t{info.MachineName}");
             Console.WriteLine($"  OS Name:\t{info.OSName}");
