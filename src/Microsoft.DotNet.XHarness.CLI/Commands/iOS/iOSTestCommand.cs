@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             _log.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? " on device '{deviceName}'" : target.AsString()));
 
-            int exitCode;
+            bool success;
 
             try
             {
@@ -174,7 +174,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     new Helpers(),
                     useTcpTunnel: _channel == CommunicationChannel.UsbTunnel);
 
-                (deviceName, exitCode) = await appRunner.RunApp(appBundleInfo,
+                (deviceName, success) = await appRunner.RunApp(appBundleInfo,
                     target,
                     _arguments.Timeout,
                     _arguments.LaunchTimeout,
@@ -183,16 +183,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     xmlResultJargon: XmlResultJargon.xUnit,
                     cancellationToken: cancellationToken);
 
-                if (exitCode != 0)
+                if (success)
                 {
-                    _log.LogError($"App bundle run failed with exit code {exitCode}. Check logs for more information");
+                    _log.LogInformation("Application finished the run successfully");
+                    return ExitCode.SUCCESS;
                 }
                 else
                 {
-                    _log.LogInformation("Application finished the run successfully");
+                    _log.LogError($"Application run failed. Check logs for more information");
+                    return ExitCode.APP_CRASH;
                 }
-
-                return 0;
             }
             catch (NoDeviceFoundException)
             {

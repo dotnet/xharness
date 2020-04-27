@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             _useTcpTunnel = useTcpTunnel;
         }
 
-        public async Task<(string deviceName, int exitCode)> RunApp(
+        public async Task<(string deviceName, bool success)> RunApp(
             AppBundleInformation appInformation,
             TestTarget target,
             TimeSpan timeout,
@@ -384,7 +384,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             // check the final status, copy all the required data
             await testReporter.ParseResult();
 
-            return (deviceName, testReporter.Success.Value ? 0 : 1);
+            return (deviceName, testReporter.Success ?? false);
         }
     }
 }
