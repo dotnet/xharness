@@ -383,5 +383,27 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             Assert.True(failed, "failed");
             Assert.Equal(expectedResultLine, resultLine);
         }
+
+        [Fact]
+        public void Issue91Test() // make sure that the skipped value is correct according to the provided xml in the issue.
+        {
+            string expectedResultLine = "Tests run: 3 Passed: 1 Inconclusive: 0 Failed: 1 Ignored: 1";
+            var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("Issue95.xml", StringComparison.Ordinal)).FirstOrDefault();
+            var tempPath = Path.GetTempFileName();
+            using (var outputStream = new StreamWriter(tempPath))
+            using (var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name)))
+            {
+                string line;
+                while ((line = sampleStream.ReadLine()) != null)
+                {
+                    outputStream.WriteLine(line);
+                }
+            }
+
+            var (resultLine, failed) = _resultParser.ParseResults(tempPath, XmlResultJargon.NUnitV2, null);
+
+            Assert.True(failed, "failed");
+            Assert.Equal(expectedResultLine, resultLine);
+        }
     }
 }
