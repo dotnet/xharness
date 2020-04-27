@@ -10,7 +10,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
-    public interface ISimpleListener
+    public interface ISimpleListener : IDisposable
     {
         Task CompletionTask { get; }
         Task ConnectedTask { get; }
@@ -104,6 +104,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             {
                 // We might have stopped already, so just ignore any exceptions.
             }
+        }
+
+        public virtual void Dispose()
+        {
+            TestLog.Dispose();
         }
     }
 }

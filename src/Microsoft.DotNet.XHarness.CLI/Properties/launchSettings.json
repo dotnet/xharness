@@ -2,9 +2,7 @@
   "profiles": {
     "XHarness": {
       "commandName": "Project",
-      "commandLineArgs": "",
-      "environmentVariables": {
-      }
+      "commandLineArgs": "ios package --name=DummyTestProject --assembly=\"D:\\github\\xharness\\artifacts\\bin\\DummyTestProject\\Debug\\net5.0\\DummyTestProject.dll\"  --working-directory=workdir --output-directory=outdir --testing-framework=xUnit --template=Managed --platform=iPhoneSimulator"
     }
   }
 }
