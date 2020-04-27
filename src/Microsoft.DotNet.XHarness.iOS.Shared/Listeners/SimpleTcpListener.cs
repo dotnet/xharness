@@ -14,43 +14,50 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
     public class SimpleTcpListener : SimpleListener, ITunnelListener
     {
-        const int _timeOutInit = 100;
-        const int _timeOutIincrement = 250;
-        readonly bool _autoExit;
-        readonly bool _useTcpTunnel = true;
+        private const int TimeOutInit = 100;
+        private const int TimeOutIncrement = 250;
 
-        byte[] buffer = new byte[16 * 1024];
-        TcpListener server;
-        TcpClient client;
+        private readonly bool _autoExit;
+        private readonly bool _useTcpTunnel = true;
+        private readonly byte[] _buffer = new byte[16 * 1024];
 
-        public TaskCompletionSource<bool> TunnelHoleThrough { get; private set; } = new TaskCompletionSource<bool>();
+        private TcpListener _server;
+        private TcpClient _client;
 
-        public SimpleTcpListener(ILog log, ILog testLog, bool autoExit, bool xmlOutput, bool tunnel = false) : base(log, testLog, xmlOutput)
+        public TaskCompletionSource<bool> TunnelHoleThrough { get; } = new TaskCompletionSource<bool>();
+
+        public SimpleTcpListener(ILog log, ILog testLog, bool autoExit, bool tunnel = false) : base(log, testLog)
         {
             _autoExit = autoExit;
             _useTcpTunnel = tunnel;
         }
 
-        public SimpleTcpListener(int port, ILog log, ILog testLog, bool autoExit, bool xmlOutput, bool tunnel = false) : this(log, testLog, autoExit, xmlOutput, tunnel)
-            => Port = port;
+        public SimpleTcpListener(int port, ILog log, ILog testLog, bool autoExit, bool tunnel = false) : this(log, testLog, autoExit, tunnel)
+        {
+            Port = port;
+        }
 
         protected override void Stop()
         {
-            client?.Close();
-            client?.Dispose();
-            server?.Stop();
+            _client?.Close();
+            _client?.Dispose();
+            _server?.Stop();
         }
 
         public override void Initialize()
         {
             if (_useTcpTunnel && Port != 0)
+            {
                 return;
+            }
 
-            server = new TcpListener(Address, Port);
-            server.Start();
+            _server = new TcpListener(Address, Port);
+            _server.Start();
 
             if (Port == 0)
-                Port = ((IPEndPoint)server.LocalEndpoint).Port;
+            {
+                Port = ((IPEndPoint)_server.LocalEndpoint).Port;
+            }
 
             if (_useTcpTunnel)
             {
@@ -58,11 +65,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 // way to find a free port, but there is nothing we can do
                 // better than this.
 
-                server.Stop();
+                _server.Stop();
             }
         }
 
-        void StartNetworkTcp()
+        private void StartNetworkTcp()
         {
             bool processed;
 
@@ -71,10 +78,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 do
                 {
                     Log.WriteLine("Test log server listening on: {0}:{1}", Address, Port);
-                    using (client = server.AcceptTcpClient())
+                    using (_client = _server.AcceptTcpClient())
                     {
-                        client.ReceiveBufferSize = buffer.Length;
-                        processed = Processing(client);
+                        _client.ReceiveBufferSize = _buffer.Length;
+                        processed = Processing();
                     }
                 } while (!_autoExit || !processed);
             }
@@ -82,13 +89,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             {
                 var se = e as SocketException;
                 if (se == null || se.SocketErrorCode != SocketError.Interrupted)
+                {
                     Log.WriteLine("[{0}] : {1}", DateTime.Now, e);
+                }
             }
             finally
             {
                 try
                 {
-                    server.Stop();
+                    _server.Stop();
                 }
                 finally
                 {
@@ -97,7 +106,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
         }
 
-        void StartTcpTunnel()
+        private void StartTcpTunnel()
         {
             if (!TunnelHoleThrough.Task.Result)
             { // do nothing until the tunnel is ready
@@ -106,17 +115,17 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             bool processed;
             try
             {
-                int timeout = _timeOutInit; ;
+                int timeout = TimeOutInit; ;
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
                 while (true)
                 {
                     try
                     {
-                        client = new TcpClient("localhost", Port);
+                        _client = new TcpClient("localhost", Port);
                         Log.WriteLine("Test log server listening on: {0}:{1}", Address, Port);
                         // let the device know we are ready!
-                        var stream = client.GetStream();
+                        var stream = _client.GetStream();
                         var ping = Encoding.UTF8.GetBytes("ping");
                         stream.Write(ping, 0, ping.Length);
                         break;
@@ -124,30 +133,33 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     }
                     catch (SocketException ex)
                     {
-                        if (timeout == _timeOutInit && watch.ElapsedMilliseconds > 20000)
+                        if (timeout == TimeOutInit && watch.ElapsedMilliseconds > 20000)
                         {
-                            timeout = _timeOutIincrement; // Switch to a 250ms timeout after 20 seconds
+                            timeout = TimeOutIncrement; // Switch to a 250ms timeout after 20 seconds
                         }
                         else if (watch.ElapsedMilliseconds > 120000)
                         {
                             // Give up after 2 minutes.
                             throw ex;
                         }
-                        Log.WriteLine($"Could not connet to tcp tunnel. Rerrying in {timeout} milliseconds.");
+                        Log.WriteLine($"Could not connect to TCP tunnel. Retrying in {timeout} milliseconds.");
                         Thread.Sleep(timeout);
                     }
                 }
+
                 do
                 {
-                    client.ReceiveBufferSize = buffer.Length;
-                    processed = Processing(client);
+                    _client.ReceiveBufferSize = _buffer.Length;
+                    processed = Processing();
                 } while (!_autoExit || !processed);
             }
             catch (Exception e)
             {
                 var se = e as SocketException;
                 if (se == null || se.SocketErrorCode != SocketError.Interrupted)
+                {
                     Log.WriteLine("[{0}] : {1}", DateTime.Now, e);
+                }
             }
             finally
             {
@@ -167,18 +179,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
         }
 
-        bool Processing(TcpClient client)
+        private bool Processing()
         {
-            Connected(client.Client.RemoteEndPoint.ToString());
+            Connected(_client.Client.RemoteEndPoint.ToString());
+
             // now simply copy what we receive
             int i;
             int total = 0;
-            NetworkStream stream = client.GetStream();
-            var fs = OutputWriter;
-            while ((i = stream.Read(buffer, 0, buffer.Length)) != 0)
+            NetworkStream stream = _client.GetStream();
+            while ((i = stream.Read(_buffer, 0, _buffer.Length)) != 0)
             {
-                fs.Write(buffer, 0, i);
-                fs.Flush();
+                TestLog.Write(_buffer, 0, i);
+                TestLog.Flush();
                 total += i;
             }
 
@@ -188,6 +200,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 // the ip address we're reachable on.
                 return false;
             }
+
             return true;
         }
     }

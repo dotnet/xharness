@@ -12,22 +12,23 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
     public class SimpleHttpListener : SimpleListener
     {
-        readonly bool autoExit;
-        HttpListener server;
-        bool connected_once;
+        private readonly bool _autoExit;
+        private HttpListener _server;
+        private bool _connected_once;
 
-        public SimpleHttpListener(ILog log, ILog testLog, bool autoExit, bool xmlOutput)
-            : base(log, testLog, xmlOutput)
+        public SimpleHttpListener(ILog log, ILog testLog, bool autoExit) : base(log, testLog)
         {
-            this.autoExit = autoExit;
+            _autoExit = autoExit;
         }
 
         public override void Initialize()
         {
-            server = new HttpListener();
+            _server = new HttpListener();
 
             if (Port != 0)
+            {
                 throw new NotImplementedException();
+            }
 
             // Try and find an unused port
             int attemptsLeft = 50;
@@ -35,11 +36,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             while (attemptsLeft-- > 0)
             {
                 var newPort = r.Next(49152, 65535); // The suggested range for dynamic ports is 49152-65535 (IANA)
-                server.Prefixes.Clear();
-                server.Prefixes.Add("http://*:" + newPort + "/");
+                _server.Prefixes.Clear();
+                _server.Prefixes.Add("http://*:" + newPort + "/");
                 try
                 {
-                    server.Start();
+                    _server.Start();
                     Port = newPort;
                     break;
                 }
@@ -52,7 +53,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         protected override void Stop()
         {
-            server.Stop();
+            _server.Stop();
         }
 
         protected override void Start()
@@ -64,21 +65,23 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 Log.WriteLine("Test log server listening on: {0}:{1}", Address, Port);
                 do
                 {
-                    var context = server.GetContext();
+                    var context = _server.GetContext();
                     processed = Processing(context);
-                } while (!autoExit || !processed);
+                } while (!_autoExit || !processed);
             }
             catch (Exception e)
             {
                 var se = e as SocketException;
                 if (se == null || se.SocketErrorCode != SocketError.Interrupted)
+                {
                     Console.WriteLine("[{0}] : {1}", DateTime.Now, e);
+                }
             }
             finally
             {
                 try
                 {
-                    server.Stop();
+                    _server.Stop();
                 }
                 finally
                 {
@@ -87,7 +90,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
         }
 
-        bool Processing(HttpListenerContext context)
+        private bool Processing(HttpListenerContext context)
         {
             var finished = false;
 
@@ -97,23 +100,26 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             var stream = request.InputStream;
             var data = string.Empty;
             using (var reader = new StreamReader(stream))
+            {
                 data = reader.ReadToEnd();
+            }
+
             stream.Close();
 
             switch (request.RawUrl)
             {
                 case "/Start":
-                    if (!connected_once)
+                    if (!_connected_once)
                     {
-                        connected_once = true;
+                        _connected_once = true;
                         Connected(request.RemoteEndPoint.ToString());
                     }
                     break;
                 case "/Finish":
                     if (!finished)
                     {
-                        OutputWriter.Write(data);
-                        OutputWriter.Flush();
+                        TestLog.Write(data);
+                        TestLog.Flush();
                         finished = true;
                     }
                     break;

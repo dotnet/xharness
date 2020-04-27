@@ -454,6 +454,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             else if (timed_out)
             {
                 WrenchLog.WriteLine("AddSummary: <b><i>{0} timed out</i></b><br/>", runMode);
+                mainLog.WriteLine("Test run timed out");
                 return (false, false);
             }
             else

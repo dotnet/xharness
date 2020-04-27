@@ -11,35 +11,37 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
     public class SimpleFileListener : SimpleListener
     {
-        Thread processor_thread;
-        bool cancel;
+        private readonly bool _xmlOutput;
+        private Thread _processorThread;
+        private bool _cancel;
+
         public string Path { get; private set; }
 
-        public SimpleFileListener(string path, ILog log, ILog testLog, bool xmlOutput)
-            : base(log, testLog, xmlOutput)
+        public SimpleFileListener(string path, ILog log, ILog testLog, bool xmlOutput) : base(log, testLog)
         {
             Path = path ?? throw new ArgumentNullException(nameof(path));
+            _xmlOutput = xmlOutput;
         }
 
         protected override void Stop()
         {
-            cancel = true;
-            processor_thread.Join();
-            processor_thread = null;
+            _cancel = true;
+            _processorThread.Join();
+            _processorThread = null;
             Finished(true);
         }
 
         public override void Initialize()
         {
-            processor_thread = new Thread(Processing);
+            _processorThread = new Thread(Processing);
         }
 
         protected override void Start()
         {
-            processor_thread.Start();
+            _processorThread.Start();
         }
 
-        void Processing()
+        private void Processing()
         {
             Connected("N/A");
             using (var fs = new BlockingFileStream(Path) { Listener = this })
@@ -49,18 +51,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {
-                        OutputWriter.WriteLine(line);
+                        TestLog.WriteLine(line);
                         if (line.StartsWith("[Runner executing:", StringComparison.Ordinal))
                         {
                             Log.WriteLine("Tests have started executing");
                         }
-                        else if (!XmlOutput && line.StartsWith("Tests run: ", StringComparison.Ordinal))
+                        else if (!_xmlOutput && line.StartsWith("Tests run: ", StringComparison.Ordinal))
                         {
                             Log.WriteLine("Tests have finished executing");
                             Finished();
                             return;
                         }
-                        else if (XmlOutput && line == "<!-- the end -->")
+                        else if (_xmlOutput && line == "<!-- the end -->")
                         {
                             Log.WriteLine("Tests have finished executing");
                             Finished();
@@ -71,11 +73,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
         }
 
-        class BlockingFileStream : FileStream
+        private class BlockingFileStream : FileStream
         {
             public SimpleFileListener Listener;
-
-            long last_position;
+            private long _lastPosition;
 
             public BlockingFileStream(string path)
                 : base(path, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite)
@@ -84,10 +85,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
             public override int Read(byte[] array, int offset, int count)
             {
-                while (last_position == base.Length && !Listener.cancel)
+                while (_lastPosition == base.Length && !Listener._cancel)
+                {
                     Thread.Sleep(25);
+                }
+
                 var rv = base.Read(array, offset, count);
-                last_position += rv;
+                _lastPosition += rv;
                 return rv;
             }
         }
