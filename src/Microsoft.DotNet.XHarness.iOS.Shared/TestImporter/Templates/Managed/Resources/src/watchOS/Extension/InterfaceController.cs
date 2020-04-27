@@ -89,7 +89,7 @@ namespace monotouchtestWatchKitExtension
 				yield return new TestAssemblyInfo (a, name);
 			}
  		}
- 		
+
 		void RunTests ()
 		{
 			var options = ApplicationOptions.Current;
@@ -139,6 +139,9 @@ namespace monotouchtestWatchKitExtension
 						break;
 					case XmlVersion.NUnitV3:
 						jargon = Xamarin.iOS.UnitTests.TestRunner.Jargon.NUnitV3;
+						break;
+					case XmlVersion.xUnit:
+						jargon = Xamarin.iOS.UnitTests.TestRunner.Jargon.xUnit;
 						break;
 					}
 					if (options.EnableXml) {
@@ -208,7 +211,7 @@ class NameStartsWithFilter : NUnit.Framework.Internal.TestFilter
 		var method = test as NUnit.Framework.Internal.TestMethod;
 		if (method != null)
 			return Match (method.Parent);
-		
+
 		var name = !string.IsNullOrEmpty (test.Name) ? test.Name : test.FullName;
 		bool rv;
 		if (string.IsNullOrEmpty (name)) {

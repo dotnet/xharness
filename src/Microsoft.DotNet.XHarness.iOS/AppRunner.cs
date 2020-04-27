@@ -32,6 +32,7 @@ namespace Microsoft.DotNet.XHarness.iOS
         private readonly ILog _mainLog;
         private readonly IHelpers _helpers;
         private readonly bool _useTcpTunnel;
+        private readonly bool _useXmlOutput;
 
         public AppRunner(IProcessManager processManager,
             IHardwareDeviceLoader hardwareDeviceLoader,
@@ -44,6 +45,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             ILog mainLog,
             ILogs logs,
             IHelpers helpers,
+            bool useXmlOutput,
             bool useTcpTunnel)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
@@ -57,6 +59,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
+            _useXmlOutput = useXmlOutput;
             _useTcpTunnel = useTcpTunnel;
         }
 
@@ -83,7 +86,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 new SetEnvVariableArgument("NUNIT_AUTOEXIT", true),
                 new SetAppArgumentArgument("-enablenetwork", true),
                 new SetEnvVariableArgument("NUNIT_ENABLE_NETWORK", true),
-                
+
                 // On macOS we can't edit the TCC database easily
                 // (it requires adding the mac has to be using MDM: https://carlashley.com/2018/09/28/tcc-round-up/)
                 // So by default ignore any tests that would pop up permission dialogs in CI.
@@ -131,6 +134,14 @@ namespace Microsoft.DotNet.XHarness.iOS
             if (_useTcpTunnel && !isSimulator) // simulators do not support tunnels
             {
                 args.Add(new SetEnvVariableArgument("USE_TCP_TUNNEL", true));
+            }
+
+            if (_useXmlOutput)
+            {
+                // let the runner now via envars that we want to get a xml output, else the runner will default to plain text
+                args.Add (new SetEnvVariableArgument ("NUNIT_ENABLE_XML_OUTPUT", true));
+                args.Add (new SetEnvVariableArgument ("NUNIT_ENABLE_XML_MODE", "wrapped"));
+                args.Add (new SetEnvVariableArgument ("NUNIT_XML_VERSION", $"{xmlResultJargon}"));
             }
 
             listener.StartAsync();
@@ -338,7 +349,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 {
                     await crashReporter.StartCaptureAsync();
 
-                    // create a tunnel to communicate with the device 
+                    // create a tunnel to communicate with the device
                     if (transport == ListenerTransport.Tcp && _useTcpTunnel && listener is SimpleTcpListener tcpListener)
                     {
                         // create a new tunnel using the listener

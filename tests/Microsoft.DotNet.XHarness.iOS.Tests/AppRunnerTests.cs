@@ -125,9 +125,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         }
 
         [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task RunOnSimulatorWithNoAvailableSimulatorTest(bool useTcpTunnel)
+        [InlineData(false, false)] // no tunnel, no xml
+        [InlineData(false, true)] // no tunnel, xml
+        [InlineData(true, false)] // tunnel, no xml
+        [InlineData(true, true)] // tunnel and xml
+        public async Task RunOnSimulatorWithNoAvailableSimulatorTest(bool useTcpTunnel, bool useXmlOutput)
         {
             // Mock finding simulators
             string simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
@@ -168,6 +170,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
+                useXmlOutput,
                 useTcpTunnel);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
@@ -191,8 +194,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             _tunnelBore.Verify(t => t.Create(It.IsAny<string>(), It.IsAny<ILog>()), Times.Never); // never create tunnels on simulators
         }
 
-        [Fact]
-        public async Task RunOnSimulatorSuccessfullyTest()
+        [Theory]
+        [InlineData(false, false)] // no tunnel, no xml
+        [InlineData(false, true)] // no tunnel, xml
+        [InlineData(true, false)] // tunnel, no xml
+        [InlineData(true, true)] // tunnel and xml
+        public async Task RunOnSimulatorSuccessfullyTest(bool useTunnel, bool useXml)
         {
             string simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
 
@@ -238,7 +245,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                false);
+                useXml,
+                useTunnel);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
@@ -253,12 +261,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal("Test iPhone simulator", deviceName);
             Assert.True(success);
 
+            var xmlParam = useXml ? "-setenv=NUNIT_ENABLE_XML_OUTPUT=true -setenv=NUNIT_ENABLE_XML_MODE=wrapped -setenv=NUNIT_XML_VERSION=xUnit " : "";
+
             var expectedArgs = $"-argument=-connection-mode -argument=none -argument=-app-arg:-autostart " +
                 $"-setenv=NUNIT_AUTOSTART=true -argument=-app-arg:-autoexit -setenv=NUNIT_AUTOEXIT=true " +
                 $"-argument=-app-arg:-enablenetwork -setenv=NUNIT_ENABLE_NETWORK=true -setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 -v -v " +
                 $"-argument=-app-arg:-hostname:127.0.0.1 -setenv=NUNIT_HOSTNAME=127.0.0.1 -argument=-app-arg:-transport:Tcp " +
                 $"-setenv=NUNIT_TRANSPORT=TCP -argument=-app-arg:-hostport:{_listener.Object.Port} " +
-                $"-setenv=NUNIT_HOSTPORT={_listener.Object.Port} --launchsim {StringUtils.FormatArguments(s_appPath)} " +
+                $"-setenv=NUNIT_HOSTPORT={_listener.Object.Port} {xmlParam}--launchsim {StringUtils.FormatArguments(s_appPath)} " +
                 $"--stdout=tty1 --stderr=tty1 --device=:v2:udid={simulator.Object.UDID}";
 
             _processManager
@@ -306,6 +316,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
+                true,
                 false);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
@@ -320,9 +331,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         }
 
         [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task RunOnDeviceSuccessfullyTest(bool useTunnel)
+        [InlineData(false, false)] // no tunnel, no xml
+        [InlineData(false, true)] // no tunnel, xml
+        [InlineData(true, false)] // tunnel, no xml
+        [InlineData(true, true)] // tunnel and xml
+        public async Task RunOnDeviceSuccessfullyTest(bool useTunnel, bool useXml)
         {
             var deviceSystemLog = new Mock<ILog>();
             deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
@@ -363,6 +376,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
+                useXml,
                 useTunnel);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
@@ -377,16 +391,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal("Test iPhone", deviceName);
             Assert.True(success);
 
-            var ips = string.Join(",", System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString()));
+            var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
+            var ips = string.Join(",", ipAddresses);
 
             var tunnelParam = useTunnel ? "-setenv=USE_TCP_TUNNEL=true " : "";
+            var xmlParam = useXml ? "-setenv=NUNIT_ENABLE_XML_OUTPUT=true -setenv=NUNIT_ENABLE_XML_MODE=wrapped -setenv=NUNIT_XML_VERSION=xUnit " : "";
 
             var expectedArgs = $"-argument=-connection-mode -argument=none -argument=-app-arg:-autostart " +
                 $"-setenv=NUNIT_AUTOSTART=true -argument=-app-arg:-autoexit -setenv=NUNIT_AUTOEXIT=true " +
                 $"-argument=-app-arg:-enablenetwork -setenv=NUNIT_ENABLE_NETWORK=true -setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 -v -v " +
                 $"-argument=-app-arg:-hostname:{ips} -setenv=NUNIT_HOSTNAME={ips} -argument=-app-arg:-transport:Tcp " +
                 $"-setenv=NUNIT_TRANSPORT=TCP -argument=-app-arg:-hostport:{_listener.Object.Port} " +
-                $"-setenv=NUNIT_HOSTPORT={_listener.Object.Port} {tunnelParam}--launchdev {StringUtils.FormatArguments(s_appPath)} " +
+                $"-setenv=NUNIT_HOSTPORT={_listener.Object.Port} {tunnelParam}{xmlParam}--launchdev {StringUtils.FormatArguments(s_appPath)} " +
                 $"--disable-memory-limits --wait-for-exit --devname \"Test iPhone\"";
 
             _processManager

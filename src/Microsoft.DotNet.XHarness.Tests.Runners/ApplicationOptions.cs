@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
     {
         NUnitV2 = 0,
         NUnitV3 = 1,
+        xUnit = 2,
     }
 
     internal class ApplicationOptions
@@ -119,7 +120,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         /// <summary>
         /// The transport to be used to communicate with the host. The default
         /// value is TCP.
-        /// 
+        ///
         /// Supported values are:
         ///
         /// * TCP
