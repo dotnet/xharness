@@ -25,4 +25,10 @@
       <XlfOutputItem></XlfOutputItem>
     </EmbeddedResource>
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Execution\Mlaunch\EnviromentVariables.cs">
+      <Link>EnviromentVariables.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>
