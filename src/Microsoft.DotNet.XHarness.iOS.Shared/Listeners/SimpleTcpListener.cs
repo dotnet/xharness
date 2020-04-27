@@ -45,13 +45,17 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         public override void Initialize()
         {
             if (_useTcpTunnel && Port != 0)
+            {
                 return;
+            }
 
             _server = new TcpListener(Address, Port);
             _server.Start();
 
             if (Port == 0)
+            {
                 Port = ((IPEndPoint)_server.LocalEndpoint).Port;
+            }
 
             if (_useTcpTunnel)
             {
@@ -63,7 +67,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
         }
 
-        void StartNetworkTcp()
+        private void StartNetworkTcp()
         {
             bool processed;
 
@@ -100,7 +104,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
         }
 
-        void StartTcpTunnel()
+        private void StartTcpTunnel()
         {
             if (!TunnelHoleThrough.Task.Result)
             { // do nothing until the tunnel is ready
@@ -150,7 +154,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             {
                 var se = e as SocketException;
                 if (se == null || se.SocketErrorCode != SocketError.Interrupted)
+                {
                     Log.WriteLine("[{0}] : {1}", DateTime.Now, e);
+                }
             }
             finally
             {
@@ -170,7 +176,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
         }
 
-        bool Processing(TcpClient client)
+        private bool Processing(TcpClient client)
         {
             Connected(client.Client.RemoteEndPoint.ToString());
 
@@ -180,8 +186,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             NetworkStream stream = client.GetStream();
             while ((i = stream.Read(_buffer, 0, _buffer.Length)) != 0)
             {
-                OutputWriter.Write(_buffer, 0, i);
-                OutputWriter.Flush();
+                TestLog.Write(_buffer, 0, i);
+                TestLog.Flush();
                 total += i;
             }
 

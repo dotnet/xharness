@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {
-                        OutputWriter.WriteLine(line);
+                        TestLog.WriteLine(line);
                         if (line.StartsWith("[Runner executing:", StringComparison.Ordinal))
                         {
                             Log.WriteLine("Tests have started executing");

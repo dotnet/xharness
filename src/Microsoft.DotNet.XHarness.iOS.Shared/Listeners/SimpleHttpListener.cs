@@ -112,8 +112,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 case "/Finish":
                     if (!finished)
                     {
-                        OutputWriter.Write(data);
-                        OutputWriter.Flush();
+                        TestLog.Write(data);
+                        TestLog.Flush();
                         finished = true;
                     }
                     break;

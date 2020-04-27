@@ -379,7 +379,6 @@ namespace Microsoft.DotNet.XHarness.iOS
 
             // TODO: https://github.com/dotnet/xharness/issues/73
             // listener.Cancel();
-            listener.Dispose();
 
             // check the final status, copy all the required data
             await testReporter.ParseResult();

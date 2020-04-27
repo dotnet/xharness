@@ -18,12 +18,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         ILog TestLog { get; }
 
         void Cancel();
-        void Dispose();
         void Initialize();
         void StartAsync();
     }
 
-    public abstract class SimpleListener : ISimpleListener, IDisposable
+    public abstract class SimpleListener : ISimpleListener
     {
         readonly TaskCompletionSource<bool> stopped = new TaskCompletionSource<bool>();
         readonly TaskCompletionSource<bool> connected = new TaskCompletionSource<bool>();
@@ -32,7 +31,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         protected readonly IPAddress Address = IPAddress.Any;
         protected ILog Log { get; }
         protected bool XmlOutput { get; }
-        protected ILog OutputWriter { get; private set; }
         protected abstract void Start();
         protected abstract void Stop();
 
@@ -108,19 +106,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 // We might have stopped already, so just ignore any exceptions.
             }
         }
-
-        #region IDisposable Support
-        protected virtual void Dispose(bool disposing)
-        {
-            OutputWriter?.Dispose();
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-        #endregion
-
     }
 }
 
