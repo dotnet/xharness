@@ -37,6 +37,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// </summary>
         public TimeSpan LaunchTimeout { get; set; } = TimeSpan.FromMinutes(5);
 
+        /// <summary>
+        /// Allows to specify the xml format to be used in the result files.
+        /// </summary>
+        public XmlResultJargon XmlResultJargon { get; set; } = XmlResultJargon.xUnit; // default by mono
+
         public IReadOnlyCollection<TestTarget> TestTargets { get; set; }
 
         public override IList<string> GetValidationErrors()
@@ -64,7 +69,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                         // let the user know that the target is not known
                         // and all the available ones.
                         var sb = new StringBuilder();
-                        sb.AppendLine($"Failed to parse test target '{targetName}'. Avaliable targets are:");
+                        sb.AppendLine($"Failed to parse test target '{targetName}'. Available targets are:");
                         sb.AppendLine();
                         foreach (var val in Enum.GetValues(typeof(TestTarget)))
                         {
@@ -99,6 +104,17 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                 errors.Add($"Failed to find Xcode root at {XcodeRoot}");
             }
 
+            if (XmlResultJargon == XmlResultJargon.Missing)
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine($"Failed to parse xml jargon. Available targets are:");
+                sb.AppendLine();
+                foreach (var val in new [] {XmlResultJargon.NUnitV2, XmlResultJargon.NUnitV3, XmlResultJargon.TouchUnit, XmlResultJargon.xUnit})
+                {
+                    sb.AppendLine($"\t* {val.ToString()}");
+                }
+                errors.Add(sb.ToString());
+            }
             return errors;
         }
 
