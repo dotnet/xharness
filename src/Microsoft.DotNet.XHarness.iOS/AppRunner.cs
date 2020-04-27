@@ -110,8 +110,9 @@ namespace Microsoft.DotNet.XHarness.iOS
                 args.Add(new SetEnvVariableArgument("NUNIT_HOSTNAME", ips));
             }
 
+            var memoryLog = new MemoryLog();
             var listener_log = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
-            var (transport, listener, listenerTmpFile) = _listenerFactory.Create(target.ToRunMode(), _mainLog, listener_log, isSimulator, true, false, false);
+            var (transport, listener, listenerTmpFile) = _listenerFactory.Create(target.ToRunMode(), memoryLog, memoryLog, isSimulator, true, false, false);
 
             // Initialize has to be called before we try to get Port (internal implementation of the listener says so)
             // TODO: Improve this to not get into a broken state - it was really hard to debug when I moved this lower
@@ -166,9 +167,9 @@ namespace Microsoft.DotNet.XHarness.iOS
 
             if (isSimulator)
             {
-                crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName: null);
-                testReporter = _testReporterFactory.Create(_mainLog,
-                    _mainLog,
+                crashReporter = _snapshotReporterFactory.Create(memoryLog, crashLogs, isDevice: !isSimulator, deviceName: null);
+                testReporter = _testReporterFactory.Create(memoryLog,
+                    memoryLog,
                     _logs,
                     crashReporter,
                     listener,
@@ -179,7 +180,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                     device: null,
                     timeout,
                     null,
-                    (level, message) => _mainLog.WriteLine(message));
+                    (level, message) => memoryLog.WriteLine(message));
 
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken);
 
@@ -190,7 +191,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 await _simulatorLoader.LoadDevices(_logs.Create($"simulator-list-{_helpers.Timestamp}.log", "Simulator list"), false, false);
 
-                var simulators = await _simulatorLoader.FindSimulators(target, _mainLog);
+                var simulators = await _simulatorLoader.FindSimulators(target, memoryLog);
                 if (!(simulators?.Any() ?? false))
                 {
                     _mainLog.WriteLine("Didn't find any suitable simulators");
