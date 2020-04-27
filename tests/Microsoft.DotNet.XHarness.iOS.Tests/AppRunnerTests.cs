@@ -242,7 +242,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
-            var (deviceName, exitCode) = await appRunner.RunApp(
+            var (deviceName, success) = await appRunner.RunApp(
                 appInformation,
                 TestTarget.Simulator_tvOS,
                 TimeSpan.FromSeconds(30),
@@ -251,7 +251,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             // Verify
             Assert.Equal("Test iPhone simulator", deviceName);
-            Assert.Equal(0, exitCode);
+            Assert.True(success);
 
             var expectedArgs = $"-argument=-connection-mode -argument=none -argument=-app-arg:-autostart " +
                 $"-setenv=NUNIT_AUTOSTART=true -argument=-app-arg:-autoexit -setenv=NUNIT_AUTOEXIT=true " +
@@ -367,7 +367,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
-            var (deviceName, exitCode) = await appRunner.RunApp(
+            var (deviceName, success) = await appRunner.RunApp(
                 appInformation,
                 TestTarget.Device_iOS,
                 TimeSpan.FromSeconds(30),
@@ -375,7 +375,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             // Verify
             Assert.Equal("Test iPhone", deviceName);
-            Assert.Equal(0, exitCode);
+            Assert.True(success);
 
             var ips = string.Join(",", System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString()));
 
