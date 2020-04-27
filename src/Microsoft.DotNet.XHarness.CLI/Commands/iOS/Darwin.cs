@@ -3,7 +3,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.XHarness.CLI.iOS
+namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
     public static class Darwin
     {

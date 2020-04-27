@@ -7,14 +7,12 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Text.Json;
 
-using Microsoft.DotNet.XHarness.CLI.Common;
-using Microsoft.Extensions.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI.iOS
+namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
     internal class iOSGetStateCommand : GetStateCommand
     {

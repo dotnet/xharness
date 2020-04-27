@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -7,10 +7,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI.Common
+namespace Microsoft.DotNet.XHarness.CLI.Commands
 {
     internal abstract class XHarnessCommand : Command
     {
@@ -62,7 +63,23 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                     var message = new StringBuilder("Invalid arguments:");
                     foreach (string error in validationErrors)
                     {
-                        message.Append(Environment.NewLine + "  - " + error);
+                        // errors can have more than one line, if the do, add
+                        // some nice indentation
+                        var lines = error.Split(Environment.NewLine);
+                        if (lines.Length > 1)
+                        {
+                            // first line is in the same distance, rest have
+                            // and indentation
+                            message.Append(Environment.NewLine + "  - " + lines[0]);
+                            for (int index = 1; index < lines.Length; index++)
+                            {
+                                message.Append($"{Environment.NewLine}\t{lines[index]}");
+                            }
+                        }
+                        else
+                        {
+                            message.Append(Environment.NewLine + "  - " + error);
+                        }
                     }
 
                     _log.LogError(message.ToString());
@@ -70,7 +87,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Common
                     return 1;
                 }
 
-                return (int) InvokeInternal().GetAwaiter().GetResult();
+                return (int)InvokeInternal().GetAwaiter().GetResult();
             }
             finally
             {
