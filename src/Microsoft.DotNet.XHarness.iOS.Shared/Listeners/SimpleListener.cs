@@ -29,9 +29,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         readonly TaskCompletionSource<bool> connected = new TaskCompletionSource<bool>();
         public ILog TestLog { get; private set; }
 
-        // TODO: This can be removed as it's commented out below
-        string xml_data;
-
         protected readonly IPAddress Address = IPAddress.Any;
         protected ILog Log { get; }
         protected bool XmlOutput { get; }
@@ -54,27 +51,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         {
             Log.WriteLine("Connection from {0} saving logs to {1}", remote, TestLog.FullPath);
             connected.TrySetResult(true);
-
-            if (OutputWriter == null)
-            {
-                OutputWriter = TestLog;
-                // a few extra bits of data only available from this side
-                var local_data =
-$@"[Local Date/Time:	{DateTime.Now}]
-[Remote Address:	{remote}]";
-                if (XmlOutput)
-                {
-                    // This can end up creating invalid xml randomly:
-                    // https://github.com/xamarin/maccore/issues/827
-                    //xml_data = local_data;
-                }
-                else
-                {
-                    // Causes the output test result XML to be polluted with a header
-                    // https://github.com/dotnet/xharness/issues/91
-                    // OutputWriter.WriteLine(local_data);
-                }
-            }
         }
 
         protected void Finished(bool early_termination = false)
@@ -89,15 +65,8 @@ $@"[Local Date/Time:	{DateTime.Now}]
                 {
                     Log.WriteLine("Tests have finished executing");
                 }
-                if (xml_data != null)
-                {
-                    OutputWriter.WriteLine($"<!-- \n{xml_data}\n -->");
-                    OutputWriter.Flush();
-                    xml_data = null;
-                }
             }
         }
-
 
         public void StartAsync()
         {
@@ -109,7 +78,7 @@ $@"[Local Date/Time:	{DateTime.Now}]
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"{GetType().Name}: an exception occurred in processing thread: {e}");
+                    Log.WriteLine($"{GetType().Name}: an exception occurred in processing thread: {e}");
                 }
             })
             {
@@ -123,13 +92,7 @@ $@"[Local Date/Time:	{DateTime.Now}]
             return stopped.Task.Wait(ts);
         }
 
-        public Task CompletionTask
-        {
-            get
-            {
-                return stopped.Task;
-            }
-        }
+        public Task CompletionTask => stopped.Task;
 
         public void Cancel()
         {
@@ -149,8 +112,7 @@ $@"[Local Date/Time:	{DateTime.Now}]
         #region IDisposable Support
         protected virtual void Dispose(bool disposing)
         {
-            if (OutputWriter != null)
-                OutputWriter.Dispose();
+            OutputWriter?.Dispose();
         }
 
         public void Dispose()

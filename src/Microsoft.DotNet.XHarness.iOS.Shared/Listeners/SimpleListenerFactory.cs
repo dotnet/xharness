@@ -16,7 +16,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
     public interface ISimpleListenerFactory
     {
-        (ListenerTransport transport, ISimpleListener listener, string listenerTempFile) Create(RunMode mode,
+        (ListenerTransport transport, ISimpleListener listener, string listenerTempFile) Create(
+            RunMode mode,
             ILog log,
             ILog testLog,
             bool isSimulator,
@@ -37,7 +38,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             TunnelBore = tunnelBore ?? throw new ArgumentNullException(nameof(tunnelBore));
         }
 
-        public (ListenerTransport transport, ISimpleListener listener, string listenerTempFile) Create(RunMode mode,
+        public (ListenerTransport transport, ISimpleListener listener, string listenerTempFile) Create(
+            RunMode mode,
             ILog log,
             ILog testLog,
             bool isSimulator,

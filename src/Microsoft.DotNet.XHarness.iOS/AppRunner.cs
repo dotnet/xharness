@@ -110,8 +110,8 @@ namespace Microsoft.DotNet.XHarness.iOS
                 args.Add(new SetEnvVariableArgument("NUNIT_HOSTNAME", ips));
             }
 
-            var listener_log = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
-            var (transport, listener, listenerTmpFile) = _listenerFactory.Create(target.ToRunMode(), _mainLog, listener_log, isSimulator, true, false, false);
+            var listenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
+            var (transport, listener, listenerTmpFile) = _listenerFactory.Create(target.ToRunMode(), _mainLog, listenerLog, isSimulator, true, false, false);
 
             // Initialize has to be called before we try to get Port (internal implementation of the listener says so)
             // TODO: Improve this to not get into a broken state - it was really hard to debug when I moved this lower
@@ -129,7 +129,9 @@ namespace Microsoft.DotNet.XHarness.iOS
             args.Add(new SetEnvVariableArgument("NUNIT_HOSTPORT", listener.Port));
 
             if (_useTcpTunnel && !isSimulator) // simulators do not support tunnels
+            {
                 args.Add(new SetEnvVariableArgument("USE_TCP_TUNNEL", true));
+            }
 
             listener.StartAsync();
 
@@ -154,10 +156,6 @@ namespace Microsoft.DotNet.XHarness.iOS
                 args.Add(isSimulator
                     ? (MlaunchArgument)new LaunchSimulatorArgument(appInformation.LaunchAppPath)
                     : new LaunchDeviceArgument(appInformation.LaunchAppPath));
-            }
-            if (!isSimulator)
-            {
-                args.Add(new DisableMemoryLimitsArgument());
             }
 
             var runMode = target.ToRunMode();
@@ -277,6 +275,8 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
             else
             {
+                args.Add(new DisableMemoryLimitsArgument());
+
                 if (deviceName == null)
                 {
                     IHardwareDevice companionDevice = null;
