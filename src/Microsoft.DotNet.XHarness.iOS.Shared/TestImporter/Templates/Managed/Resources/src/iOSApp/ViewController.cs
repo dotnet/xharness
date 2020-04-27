@@ -113,6 +113,9 @@ namespace BCLTests
                 case XmlVersion.NUnitV3:
                     jargon = Xamarin.iOS.UnitTests.TestRunner.Jargon.NUnitV3;
                     break;
+                case XmlVersion.xUnit:
+                    jargon = Core.TestRunner.Jargon.xUnit;
+                    break;
             }
 
             if (options.EnableXml)

@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     mainLog,
                     logs,
                     new Helpers(),
-                    true, // the cli ALWAYS will get the output as xml
+                    useXmlOutput: true, // the cli ALWAYS will get the output as xml
                     useTcpTunnel: _channel == CommunicationChannel.UsbTunnel);
 
                 (deviceName, success) = await appRunner.RunApp(appBundleInfo,
