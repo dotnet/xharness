@@ -391,7 +391,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal("Test iPhone", deviceName);
             Assert.True(success);
 
-            var ips = string.Join(",", System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString()));
+            var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
+            var ips = string.Join(",", ipAddresses);
 
             var tunnelParam = useTunnel ? "-setenv=USE_TCP_TUNNEL=true " : "";
             var xmlParam = useXml ? "-setenv=NUNIT_ENABLE_XML_OUTPUT=true -setenv=NUNIT_ENABLE_XML_MODE=wrapped -setenv=NUNIT_XML_VERSION=xUnit " : "";
