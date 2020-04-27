@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
     {
         NUnitV2 = 0,
         NUnitV3 = 1,
+        xUnit = 2,
     }
 
     internal class ApplicationOptions

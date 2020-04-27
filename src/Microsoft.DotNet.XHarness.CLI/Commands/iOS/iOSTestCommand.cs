@@ -57,6 +57,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 { "device-name=", "Name of a specific device, if you wish to target one", v => _arguments.DeviceName = v},
                 { "communication-channel:", $"The communication channel to use to communicate with the default. Can be {CommunicationChannel.Network} and {CommunicationChannel.UsbTunnel}. Default is {CommunicationChannel.UsbTunnel}", v => Enum.TryParse (v, out _channel)},
                 { "launch-timeout=|lt=", "Time span, in seconds, to wait for the iOS app to start.", v => _arguments.LaunchTimeout = TimeSpan.FromSeconds(int.Parse(v))},
+                { "xml-jargon:|xj:", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit} {XmlResultJargon.NUnitV2} {XmlResultJargon.NUnitV3} and {XmlResultJargon.xUnit}", v =>
+                    {
+                        // if we cannot parse it, set it as missing and the error will notify the issue
+                        _arguments.XmlResultJargon = Enum.TryParse(v, out XmlResultJargon jargon) ? jargon : XmlResultJargon.Missing;
+                    }
+                },
             };
 
             foreach (var option in CommonOptions)
@@ -172,6 +178,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     mainLog,
                     logs,
                     new Helpers(),
+                    useXmlOutput: true, // the cli ALWAYS will get the output as xml
                     useTcpTunnel: _channel == CommunicationChannel.UsbTunnel);
 
                 (deviceName, success) = await appRunner.RunApp(appBundleInfo,
@@ -180,7 +187,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     _arguments.LaunchTimeout,
                     deviceName,
                     verbosity: verbosity,
-                    xmlResultJargon: XmlResultJargon.xUnit,
+                    xmlResultJargon: _arguments.XmlResultJargon,
                     cancellationToken: cancellationToken);
 
                 if (success)

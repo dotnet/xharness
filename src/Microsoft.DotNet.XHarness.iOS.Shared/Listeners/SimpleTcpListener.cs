@@ -41,7 +41,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         {
             _client?.Close();
             _client?.Dispose();
-            _server?.Stop();
+
+            // _server?.Stop(); was causing hangs
+            // https://github.com/dotnet/xharness/issues/73
+            _server?.Server?.Shutdown(SocketShutdown.Both);
         }
 
         public override void Initialize()

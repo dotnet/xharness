@@ -32,6 +32,7 @@ namespace Microsoft.DotNet.XHarness.iOS
         private readonly ILog _mainLog;
         private readonly IHelpers _helpers;
         private readonly bool _useTcpTunnel;
+        private readonly bool _useXmlOutput;
 
         public AppRunner(IProcessManager processManager,
             IHardwareDeviceLoader hardwareDeviceLoader,
@@ -44,6 +45,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             ILog mainLog,
             ILogs logs,
             IHelpers helpers,
+            bool useXmlOutput,
             bool useTcpTunnel)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
@@ -57,6 +59,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
+            _useXmlOutput = useXmlOutput;
             _useTcpTunnel = useTcpTunnel;
         }
 
@@ -131,6 +134,14 @@ namespace Microsoft.DotNet.XHarness.iOS
             if (_useTcpTunnel && !isSimulator) // simulators do not support tunnels
             {
                 args.Add(new SetEnvVariableArgument(EnviromentVariables.UseTcpTunnel, true));
+            }
+
+            if (_useXmlOutput)
+            {
+                // let the runner now via envars that we want to get a xml output, else the runner will default to plain text
+                args.Add (new SetEnvVariableArgument (EnviromentVariables.EnableXmlOutput, true));
+                args.Add (new SetEnvVariableArgument (EnviromentVariables.XmlMode, "wrapped"));
+                args.Add (new SetEnvVariableArgument (EnviromentVariables.XmlVersion, $"{xmlResultJargon}"));
             }
 
             listener.StartAsync();
@@ -377,8 +388,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 }
             }
 
-            // TODO: https://github.com/dotnet/xharness/issues/73
-            // listener.Cancel();
+            listener.Cancel();
             listener.Dispose();
 
             // check the final status, copy all the required data
