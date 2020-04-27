@@ -355,3 +355,5 @@ MigrationBackup/
 # Locally restored packages (when simulating AzDO build)
 .packages/
 
+# remove noise in mac os x
+.DS_Store
