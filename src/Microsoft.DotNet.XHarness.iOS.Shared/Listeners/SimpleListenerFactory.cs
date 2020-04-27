@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
     {
         (ListenerTransport transport, ISimpleListener listener, string listenerTempFile) Create(RunMode mode,
             ILog log,
-            ILog listenerLog,
+            ILog testLog,
             bool isSimulator,
             bool autoExit,
             bool xmlOutput,
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public (ListenerTransport transport, ISimpleListener listener, string listenerTempFile) Create(RunMode mode,
             ILog log,
-            ILog listenerLog,
+            ILog testLog,
             bool isSimulator,
             bool autoExit,
             bool xmlOutput,
@@ -61,14 +61,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             switch (transport)
             {
                 case ListenerTransport.File:
-                    listenerTempFile = listenerLog.FullPath + ".tmp";
-                    listener = new SimpleFileListener(listenerTempFile, log, listenerLog, xmlOutput);
+                    listenerTempFile = testLog.FullPath + ".tmp";
+                    listener = new SimpleFileListener(listenerTempFile, log, testLog, xmlOutput);
                     break;
                 case ListenerTransport.Http:
-                    listener = new SimpleHttpListener(log, listenerLog, autoExit, xmlOutput);
+                    listener = new SimpleHttpListener(log, testLog, autoExit, xmlOutput);
                     break;
                 case ListenerTransport.Tcp:
-                    listener = new SimpleTcpListener(log, listenerLog, autoExit, xmlOutput, useTcpTunnel);
+                    listener = new SimpleTcpListener(log, testLog, autoExit, xmlOutput, useTcpTunnel);
                     break;
                 default:
                     throw new NotImplementedException("Unknown type of listener");

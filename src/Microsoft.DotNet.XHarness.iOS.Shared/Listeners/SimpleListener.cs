@@ -70,7 +70,9 @@ $@"[Local Date/Time:	{DateTime.Now}]
                 }
                 else
                 {
-                    OutputWriter.WriteLine(local_data);
+                    // Causes the output test result XML to be polluted with a header
+                    // https://github.com/dotnet/xharness/issues/91
+                    // OutputWriter.WriteLine(local_data);
                 }
             }
         }
