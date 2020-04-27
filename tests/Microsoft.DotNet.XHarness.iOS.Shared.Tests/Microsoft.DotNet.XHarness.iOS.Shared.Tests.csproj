@@ -37,6 +37,7 @@
     <None Remove="Samples\simulators.xml" />
     <None Remove="Samples\TouchUnitSample.xml" />
     <None Remove="Samples\xUnitSample.xml" />
+    <None Remove="Samples\Issue95.xml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Samples\devices.xml" />
@@ -51,7 +52,6 @@
     <EmbeddedResource Include="Samples\SystemXunit.csproj" />
     <EmbeddedResource Include="Samples\TouchUnitSample.xml" />
     <EmbeddedResource Include="Samples\xUnitSample.xml" />
-    <None Remove="Samples\Issue95.xml" />
     <EmbeddedResource Include="Samples\Issue95.xml" />
   </ItemGroup>
   <ItemGroup>
