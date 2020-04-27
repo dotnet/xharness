@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     using (_client = _server.AcceptTcpClient())
                     {
                         _client.ReceiveBufferSize = _buffer.Length;
-                        processed = Processing(_client);
+                        processed = Processing();
                     }
                 } while (!_autoExit || !processed);
             }
@@ -142,14 +142,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                             // Give up after 2 minutes.
                             throw ex;
                         }
-                        Log.WriteLine($"Could not connet to tcp tunnel. Rerrying in {timeout} milliseconds.");
+                        Log.WriteLine($"Could not connect to TCP tunnel. Retrying in {timeout} milliseconds.");
                         Thread.Sleep(timeout);
                     }
                 }
+
                 do
                 {
                     _client.ReceiveBufferSize = _buffer.Length;
-                    processed = Processing(_client);
+                    processed = Processing();
                 } while (!_autoExit || !processed);
             }
             catch (Exception e)
@@ -178,14 +179,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
         }
 
-        private bool Processing(TcpClient client)
+        private bool Processing()
         {
-            Connected(client.Client.RemoteEndPoint.ToString());
+            Connected(_client.Client.RemoteEndPoint.ToString());
 
             // now simply copy what we receive
             int i;
             int total = 0;
-            NetworkStream stream = client.GetStream();
+            NetworkStream stream = _client.GetStream();
             while ((i = stream.Read(_buffer, 0, _buffer.Length)) != 0)
             {
                 TestLog.Write(_buffer, 0, i);
