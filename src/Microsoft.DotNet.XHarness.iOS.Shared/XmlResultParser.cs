@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         long.TryParse(reader["skipped"], out skipped);
                         failedTestRun = failed != 0;
                     }
-                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "test-suite" && (reader["type"] == "TestFixture" || reader["type"] == "ParameterizedFixture"))
+                    if (writer != null && reader.NodeType == XmlNodeType.Element && reader.Name == "test-suite" && (reader["type"] == "TestFixture" || reader["type"] == "ParameterizedFixture"))
                     {
                         var testCaseName = reader["fullname"];
                         writer.WriteLine(testCaseName);
@@ -140,7 +140,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 }
             }
             var resultLine = $"Tests run: {testcasecount} Passed: {passed} Inconclusive: {inconclusive} Failed: {failed} Ignored: {skipped + inconclusive}";
-            writer.WriteLine(resultLine);
+            writer?.WriteLine(resultLine);
             return (resultLine, failedTestRun);
         }
 
@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         long.TryParse(reader["skipped"], out skipped);
                         long.TryParse(reader["invalid"], out invalid);
                     }
-                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "TouchUnitExtraData")
+                    if (writer != null && reader.NodeType == XmlNodeType.Element && reader.Name == "TouchUnitExtraData")
                     {
                         // move fwd to get to the CData
                         if (reader.Read())
@@ -174,6 +174,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
             var passed = total - errors - failed - notRun - inconclusive - ignored - skipped - invalid;
             var resultLine = $"Tests run: {total} Passed: {passed} Inconclusive: {inconclusive} Failed: {failed + errors} Ignored: {ignored + skipped + invalid}";
+            writer?.WriteLine(resultLine);
             return (resultLine, total == 0 || errors != 0 || failed != 0);
         }
 
@@ -198,7 +199,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         long.TryParse(reader["skipped"], out skipped);
                         long.TryParse(reader["invalid"], out invalid);
                     }
-                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "test-suite" && (reader["type"] == "TestFixture" || reader["type"] == "TestCollection"))
+                    if (writer != null && reader.NodeType == XmlNodeType.Element && reader.Name == "test-suite" && (reader["type"] == "TestFixture" || reader["type"] == "TestCollection"))
                     {
                         var testCaseName = reader["name"];
                         writer.WriteLine(testCaseName);
@@ -247,7 +248,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
             var passed = total - errors - failed - notRun - inconclusive - ignored - skipped - invalid;
             string resultLine = $"Tests run: {total} Passed: {passed} Inconclusive: {inconclusive} Failed: {failed + errors} Ignored: {ignored + skipped + invalid}";
-            writer.WriteLine(resultLine);
+            writer?.WriteLine(resultLine);
 
             return (resultLine, total == 0 | errors != 0 || failed != 0);
         }
@@ -271,7 +272,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         long.TryParse(reader["skipped"], out var assemblySkipped);
                         skipped += assemblySkipped;
                     }
-                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "collection")
+                    if (writer != null && reader.NodeType == XmlNodeType.Element && reader.Name == "collection")
                     {
                         var testCaseName = reader["name"].Replace("Test collection for ", "");
                         writer.WriteLine(testCaseName);
@@ -316,7 +317,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
             var passed = total - errors - failed - notRun - inconclusive - ignored - skipped - invalid;
             string resultLine = $"Tests run: {total} Passed: {passed} Inconclusive: {inconclusive} Failed: {failed + errors} Ignored: {ignored + skipped + invalid}";
-            writer.WriteLine(resultLine);
+            writer?.WriteLine(resultLine);
 
             return (resultLine, total == 0 | errors != 0 || failed != 0);
         }
@@ -355,32 +356,25 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        public (string resultLine, bool failed) GenerateHumanReadableResults(string source, string destination, XmlResultJargon xmlType)
+        public (string resultLine, bool failed) ParseResults(string source, XmlResultJargon xmlType, string humanReadableReportDestination = null)
         {
-            (string resultLine, bool failed) parseData;
-            using (var reader = new StreamReader(source))
-            using (var writer = new StreamWriter(destination, true))
+            StreamWriter writer = null;
+            if (humanReadableReportDestination != null)
             {
-                switch (xmlType)
-                {
-                    case XmlResultJargon.TouchUnit:
-                        parseData = ParseTouchUnitXml(reader, writer);
-                        break;
-                    case XmlResultJargon.NUnitV2:
-                        parseData = ParseNUnitXml(reader, writer);
-                        break;
-                    case XmlResultJargon.NUnitV3:
-                        parseData = ParseNUnitV3Xml(reader, writer);
-                        break;
-                    case XmlResultJargon.xUnit:
-                        parseData = ParsexUnitXml(reader, writer);
-                        break;
-                    default:
-                        parseData = ("", true);
-                        break;
-                }
+                writer = new StreamWriter(humanReadableReportDestination, true);
             }
-            return parseData;
+
+            var reader = new StreamReader(source);
+            var parsedData = xmlType switch
+            {
+                XmlResultJargon.TouchUnit => ParseTouchUnitXml(reader, writer),
+                XmlResultJargon.NUnitV2 => ParseNUnitXml(reader, writer),
+                XmlResultJargon.NUnitV3 => ParseNUnitV3Xml(reader, writer),
+                XmlResultJargon.xUnit => ParsexUnitXml(reader, writer),
+                _ => ("", true),
+            };
+            writer?.Dispose();
+            return parsedData;
         }
 
         static void GenerateNUnitV2TestReport(StreamWriter writer, XmlReader reader)

@@ -61,6 +61,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         bool launchFailure;
         bool isSimulatorTest;
         bool timedout;
+        bool generateHtml;
 
         public ILog CallbackLog { get; private set; }
 
@@ -84,7 +85,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             string device,
             TimeSpan timeout,
             string additionalLogsDirectory = null,
-            ExceptionLogger exceptionLogger = null)
+            ExceptionLogger exceptionLogger = null,
+			bool generateHtml = false)
         {
             this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             this.deviceName = device; // can be null on simulators 
@@ -102,6 +104,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             this.additionalLogsDirectory = additionalLogsDirectory;
             this.exceptionLogger = exceptionLogger;
             this.timeoutWatch = Stopwatch.StartNew();
+            this.generateHtml = generateHtml;
 
             CallbackLog = new CallbackLog((line) =>
             {
@@ -369,11 +372,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     }
                     path = newFilename;
 
-                    // write the human readable results in a tmp file, which we later use to step on the logs
-                    var tmpFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-                    (parseResult.resultLine, parseResult.failed) = resultParser.GenerateHumanReadableResults(path, tmpFile, xmlType);
-                    File.Copy(tmpFile, test_log_path, true);
-                    File.Delete(tmpFile);
+                    if (generateHtml)
+                    {
+                        // write the human readable results in a tmp file, which we later use to step on the logs
+                        var tmpFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                        (parseResult.resultLine, parseResult.failed) = resultParser.ParseResults(path, xmlType, tmpFile);
+                        File.Copy(tmpFile, test_log_path, true);
+                        File.Delete(tmpFile);
+                    }
+                    else
+                    {
+                        (parseResult.resultLine, parseResult.failed) = resultParser.ParseResults(path, xmlType);
+                    }
 
                     // we do not longer need the tmp file
                     logs.AddFile(path, LogType.XmlLog.ToString());
