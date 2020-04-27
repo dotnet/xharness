@@ -101,17 +101,20 @@ namespace BCLTests
             }
 
             await runner.Run(testAssemblies).ConfigureAwait(false);
+
             Xamarin.iOS.UnitTests.TestRunner.Jargon jargon = Xamarin.iOS.UnitTests.TestRunner.Jargon.NUnitV3;
             switch (options.XmlVersion)
             {
+                case XmlVersion.NUnitV3:
+                    jargon = Xamarin.iOS.UnitTests.TestRunner.Jargon.NUnitV3;
+                    break;
+
                 default:
                 case XmlVersion.NUnitV2:
                     jargon = Xamarin.iOS.UnitTests.TestRunner.Jargon.NUnitV2;
                     break;
-                case XmlVersion.NUnitV3:
-                    jargon = Xamarin.iOS.UnitTests.TestRunner.Jargon.NUnitV3;
-                    break;
             }
+
             if (options.EnableXml)
             {
                 runner.WriteResultsToFile(writer ?? Console.Out, jargon);
@@ -123,10 +126,12 @@ namespace BCLTests
                 logger.Info($"Xml result can be found {resultsFilePath}");
             }
 
-            logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests}");
-            if (options.TerminateAfterExecution)
-                BeginInvokeOnMainThread(TerminateWithSuccess);
+            logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests + runner.SkippedTests}");
 
+            if (options.TerminateAfterExecution)
+            {
+                BeginInvokeOnMainThread(TerminateWithSuccess);
+            }
         }
 
         public override void DidReceiveMemoryWarning()

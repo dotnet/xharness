@@ -148,7 +148,7 @@ namespace monotouchtestWatchKitExtension
 						string resultsFilePath = runner.WriteResultsToFile (jargon);
 						logger.Info ($"Xml result can be found {resultsFilePath}");
 					}
-					logger.Info ($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests}");
+					logger.Info ($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests + runner.SkippedTests}");
 					if (options.TerminateAfterExecution) {
 						var writer_finished_task = http_writer?.FinishedTask;
 						http_writer?.Close ();
