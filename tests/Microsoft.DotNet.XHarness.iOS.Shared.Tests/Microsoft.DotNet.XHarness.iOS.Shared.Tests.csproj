@@ -51,6 +51,8 @@
     <EmbeddedResource Include="Samples\SystemXunit.csproj" />
     <EmbeddedResource Include="Samples\TouchUnitSample.xml" />
     <EmbeddedResource Include="Samples\xUnitSample.xml" />
+    <None Remove="Samples\Issue95.xml" />
+    <EmbeddedResource Include="Samples\Issue95.xml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Samples\TestProject\SystemXunit.csproj">
