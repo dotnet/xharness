@@ -18,6 +18,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             // commond verbs shared with android. We should think a smart way to do this
             Add(new iOSTestCommand());
+
+            Add(new iOSGetStateCommand());
         }
     }
 }
