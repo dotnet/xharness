@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
             {
                 errors.Add("No test assemblies provided.");
             }
-            else
+            else if (!string.IsNullOrEmpty(WorkingDirectory))
             {
                 foreach (var a in Assemblies)
                 {

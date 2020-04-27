@@ -126,6 +126,32 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         protected async override Task<ExitCode> InvokeInternal()
         {
+            // Validate the presence of Xamarin.iOS
+            var missingXamariniOS = false;
+            if (_arguments.SelectedTemplateType == TemplateType.Managed)
+            {
+                var dotnetLog = new MemoryLog() { Timestamp = false };
+                var process = new Process();
+                process.StartInfo.FileName = "bash";
+                process.StartInfo.Arguments = "-c \"" + DotnetPath + " --info | grep \\\"Base Path\\\" | cut -d':' -f 2 | tr -d '[:space:]'\"";
+
+                var result = await _processManager.RunAsync(process, new MemoryLog(), dotnetLog, new MemoryLog(), TimeSpan.FromSeconds(5));
+
+                if (result.Succeeded)
+                {
+                    var sdkPath = dotnetLog.ToString().Trim();
+                    if (Directory.Exists(sdkPath))
+                    {
+                        var xamarinIosPath = Path.Combine(sdkPath, "Xamarin", "iOS", "Xamarin.iOS.CSharp.targets");
+                        if (!File.Exists(xamarinIosPath))
+                        {
+                            missingXamariniOS = true;
+                            _log.LogWarning("Failed to find the Xamarin iOS package which is needed for the Managed template: " + xamarinIosPath);
+                        }
+                    }
+                }
+            }
+
             // create the factory, which will be used to find the diff assemblies
             var assemblyLocator = new AssemblyLocator(Directory.GetCurrentDirectory());
             var assemblyDefinitionFactory = new AssemblyDefinitionFactory(_arguments.TestingFramework, assemblyLocator);
@@ -237,9 +263,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                     finalResult = ExitCode.GENERAL_FAILURE; // TODO: Make more specific?
 
-                    if (_arguments.SelectedTemplateType == TemplateType.Managed)
+                    if (missingXamariniOS)
                     {
-                        _log.LogInformation("Possible cause of the failure may be missing Xamarin iOS package");
+                        _log.LogWarning("Possible cause of the failure may be missing Xamarin iOS package");
                     }
                 }
             }
