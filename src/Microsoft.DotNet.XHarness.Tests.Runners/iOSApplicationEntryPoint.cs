@@ -46,6 +46,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
                     jargon = Core.TestRunner.Jargon.NUnitV3;
                     break;
             }
+
             if (options.EnableXml)
             {
                 runner.WriteResultsToFile(writer ?? Console.Out, jargon);
@@ -57,9 +58,12 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
                 logger.Info($"Xml result can be found {resultsFilePath}");
             }
 
-            logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests}");
+            logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests + runner.SkippedTests}");
+
             if (options.TerminateAfterExecution)
+            {
                 TerminateWithSuccess();
+            }
         }
 
     }

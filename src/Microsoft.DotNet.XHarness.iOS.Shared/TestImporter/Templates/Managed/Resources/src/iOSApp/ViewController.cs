@@ -100,6 +100,7 @@ namespace BCLTests
                 // ensure that we skip those tests that have been passed via the ignore files
                 runner.SkipTests(skippedTests);
             }
+
             await runner.Run(testAssemblies).ConfigureAwait(false);
 
             Xamarin.iOS.UnitTests.TestRunner.Jargon jargon = Xamarin.iOS.UnitTests.TestRunner.Jargon.NUnitV3;
@@ -113,6 +114,7 @@ namespace BCLTests
                     jargon = Xamarin.iOS.UnitTests.TestRunner.Jargon.NUnitV3;
                     break;
             }
+
             if (options.EnableXml)
             {
                 runner.WriteResultsToFile(writer ?? Console.Out, jargon);
@@ -124,10 +126,12 @@ namespace BCLTests
                 logger.Info($"Xml result can be found {resultsFilePath}");
             }
 
-            logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests}");
-            if (options.TerminateAfterExecution)
-                BeginInvokeOnMainThread(TerminateWithSuccess);
+            logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests + runner.SkippedTests}");
 
+            if (options.TerminateAfterExecution)
+            {
+                BeginInvokeOnMainThread(TerminateWithSuccess);
+            }
         }
 
         public override void DidReceiveMemoryWarning()
