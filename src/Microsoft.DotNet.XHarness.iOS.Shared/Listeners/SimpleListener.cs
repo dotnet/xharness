@@ -24,36 +24,35 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
     public abstract class SimpleListener : ISimpleListener
     {
-        readonly TaskCompletionSource<bool> stopped = new TaskCompletionSource<bool>();
-        readonly TaskCompletionSource<bool> connected = new TaskCompletionSource<bool>();
+        private readonly TaskCompletionSource<bool> _stopped = new TaskCompletionSource<bool>();
+        private readonly TaskCompletionSource<bool> _connected = new TaskCompletionSource<bool>();
+
         public ILog TestLog { get; private set; }
 
         protected readonly IPAddress Address = IPAddress.Any;
         protected ILog Log { get; }
-        protected bool XmlOutput { get; }
         protected abstract void Start();
         protected abstract void Stop();
 
-        public Task ConnectedTask => connected.Task;
+        public Task ConnectedTask => _connected.Task;
         public int Port { get; protected set; }
         public abstract void Initialize();
 
-        protected SimpleListener(ILog log, ILog testLog, bool xmlOutput)
+        protected SimpleListener(ILog log, ILog testLog)
         {
             Log = log ?? throw new ArgumentNullException(nameof(log));
             TestLog = testLog ?? throw new ArgumentNullException(nameof(testLog));
-            XmlOutput = xmlOutput;
         }
 
         protected void Connected(string remote)
         {
             Log.WriteLine("Connection from {0} saving logs to {1}", remote, TestLog.FullPath);
-            connected.TrySetResult(true);
+            _connected.TrySetResult(true);
         }
 
         protected void Finished(bool early_termination = false)
         {
-            if (stopped.TrySetResult(early_termination))
+            if (_stopped.TrySetResult(early_termination))
             {
                 if (early_termination)
                 {
@@ -87,18 +86,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public bool WaitForCompletion(TimeSpan ts)
         {
-            return stopped.Task.Wait(ts);
+            return _stopped.Task.Wait(ts);
         }
 
-        public Task CompletionTask => stopped.Task;
+        public Task CompletionTask => _stopped.Task;
 
         public void Cancel()
         {
-            connected.TrySetCanceled();
+            _connected.TrySetCanceled();
             try
             {
                 // wait a second just in case more data arrives.
-                if (!stopped.Task.Wait(TimeSpan.FromSeconds(1)))
+                if (!_stopped.Task.Wait(TimeSpan.FromSeconds(1)))
                     Stop();
             }
             catch

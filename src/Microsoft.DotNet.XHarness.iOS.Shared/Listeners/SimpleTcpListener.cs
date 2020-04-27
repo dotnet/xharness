@@ -26,14 +26,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public TaskCompletionSource<bool> TunnelHoleThrough { get; } = new TaskCompletionSource<bool>();
 
-        public SimpleTcpListener(ILog log, ILog testLog, bool autoExit, bool xmlOutput, bool tunnel = false) : base(log, testLog, xmlOutput)
+        public SimpleTcpListener(ILog log, ILog testLog, bool autoExit, bool tunnel = false) : base(log, testLog)
         {
             _autoExit = autoExit;
             _useTcpTunnel = tunnel;
         }
 
-        public SimpleTcpListener(int port, ILog log, ILog testLog, bool autoExit, bool xmlOutput, bool tunnel = false) : this(log, testLog, autoExit, xmlOutput, tunnel)
-            => Port = port;
+        public SimpleTcpListener(int port, ILog log, ILog testLog, bool autoExit, bool tunnel = false) : this(log, testLog, autoExit, tunnel)
+        {
+            Port = port;
+        }
 
         protected override void Stop()
         {

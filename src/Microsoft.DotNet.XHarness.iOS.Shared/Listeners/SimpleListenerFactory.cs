@@ -67,10 +67,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     listener = new SimpleFileListener(listenerTempFile, log, testLog, xmlOutput);
                     break;
                 case ListenerTransport.Http:
-                    listener = new SimpleHttpListener(log, testLog, autoExit, xmlOutput);
+                    listener = new SimpleHttpListener(log, testLog, autoExit);
                     break;
                 case ListenerTransport.Tcp:
-                    listener = new SimpleTcpListener(log, testLog, autoExit, xmlOutput, useTcpTunnel);
+                    listener = new SimpleTcpListener(log, testLog, autoExit, useTcpTunnel);
                     break;
                 default:
                     throw new NotImplementedException("Unknown type of listener");
