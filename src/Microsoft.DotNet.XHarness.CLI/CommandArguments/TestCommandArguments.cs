@@ -32,14 +32,15 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         string OutputDirectory { get; set; }
     }
 
-    internal abstract class TestCommandArguments : XHarnessCommandArguments, ITestCommandArguments
+    internal abstract class TestCommandArguments : ITestCommandArguments
     {
         public string AppPackagePath { get; set; }
         public IReadOnlyCollection<string> Targets { get; set; }
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(15);
         public string OutputDirectory { get; set; }
+        public LogLevel Verbosity { get; set; }
 
-        public override IList<string> GetValidationErrors()
+        public virtual IList<string> GetValidationErrors()
         {
             var errors = new List<string>();
 
@@ -54,7 +55,15 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
             }
             else
             {
-                OutputDirectory = RootPath(OutputDirectory);
+                if (!Path.IsPathRooted(OutputDirectory))
+                {
+                    OutputDirectory = Path.Combine(Directory.GetCurrentDirectory(), OutputDirectory);
+                }
+
+                if (!Directory.Exists(OutputDirectory))
+                {
+                    Directory.CreateDirectory(OutputDirectory);
+                }
             }
 
             return errors;

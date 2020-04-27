@@ -3,25 +3,17 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using System.IO;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
-    internal abstract class XHarnessCommandArguments : ICommandArguments
+    internal interface ICommandArguments
     {
+        IList<string> GetValidationErrors();
+
+        /// <summary>
+        /// Minimum level at which logging statements will be emitted to the console
+        /// </summary>
         public LogLevel Verbosity { get; set; }
-
-        public abstract IList<string> GetValidationErrors();
-
-        protected static string RootPath(string path)
-        {
-            if (!Path.IsPathRooted(path))
-            {
-                path = Path.Combine(Directory.GetCurrentDirectory(), path);
-            }
-
-            return path;
-        }
     }
 }
