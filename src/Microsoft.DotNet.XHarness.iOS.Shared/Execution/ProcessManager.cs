@@ -181,7 +181,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                 {
                     lock (stdout)
                     {
-                        stdout.Write(e.Data);
+                        stdout.WriteLine(e.Data);
                         stdout.Flush();
                     }
                 }
@@ -197,7 +197,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                 {
                     lock (stderr)
                     {
-                        stderr.Write(e.Data);
+                        stderr.WriteLine(e.Data);
                         stderr.Flush();
                     }
                 }
@@ -247,7 +247,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                 }
                 if (!hasExited)
                 {
-                    log.WriteLine($"Execution of {pid} was cancelled.");
+                    stderr.WriteLine($"Execution of {pid} was cancelled.");
                     kill(pid, 9);
                 }
             });
