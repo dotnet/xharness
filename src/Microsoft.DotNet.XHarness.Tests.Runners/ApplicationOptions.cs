@@ -21,6 +21,20 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         xUnit = 2,
     }
 
+    internal static class XmlVersionExtensions {
+
+        public static TestRunner.Jargon ToTestRunnerJargon(this XmlVersion version)
+        {
+            return version switch
+            {
+                XmlVersion.NUnitV2 => TestRunner.Jargon.NUnitV2,
+                XmlVersion.NUnitV3 => TestRunner.Jargon.NUnitV3,
+                XmlVersion.xUnit => TestRunner.Jargon.xUnit,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+    }
+
     internal class ApplicationOptions
     {
 

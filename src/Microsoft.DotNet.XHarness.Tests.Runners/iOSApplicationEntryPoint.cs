@@ -35,17 +35,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
             // if we have ignore files, ignore those tests
             var runner = await InternalRunAsync(logger);
 
-            TestRunner.Jargon jargon = Core.TestRunner.Jargon.NUnitV3;
-            switch (options.XmlVersion)
-            {
-                case XmlVersion.NUnitV2:
-                    jargon = Core.TestRunner.Jargon.NUnitV2;
-                    break;
-                case XmlVersion.NUnitV3:
-                default: // nunitv3 gives os the most amount of possible details
-                    jargon = Core.TestRunner.Jargon.NUnitV3;
-                    break;
-            }
+            TestRunner.Jargon jargon = options.XmlVersion.ToTestRunnerJargon();
 
             if (options.EnableXml)
             {
