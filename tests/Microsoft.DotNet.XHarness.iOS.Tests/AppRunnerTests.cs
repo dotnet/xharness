@@ -43,8 +43,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         private readonly Mock<ITestReporter> _testReporter;
         private readonly Mock<IHelpers> _helpers;
         private readonly Mock<ITunnelBore> _tunnelBore;
+        private readonly Mock<ISimpleListenerFactory> _listenerFactory;
 
-        private readonly ISimpleListenerFactory _listenerFactory;
         private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
         private readonly ITestReporterFactory _testReporterFactory;
 
@@ -91,10 +91,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             _tunnelBore = new Mock<ITunnelBore>();
             _tunnelBore.Setup(t => t.Close(It.IsAny<string>()));
 
-            var factory = new Mock<ISimpleListenerFactory>();
-            factory.SetReturnsDefault((ListenerTransport.Tcp, _listener.Object, "listener-temp-file"));
-            factory.Setup(f => f.TunnelBore).Returns(_tunnelBore.Object);
-            _listenerFactory = factory.Object;
+            _listenerFactory = new Mock<ISimpleListenerFactory>();
+            _listenerFactory.SetReturnsDefault((ListenerTransport.Tcp, _listener.Object, "listener-temp-file"));
+            _listenerFactory.Setup(f => f.TunnelBore).Returns(_tunnelBore.Object);
             _listener.SetupGet(x => x.Port).Returns(1020);
 
             var factory2 = new Mock<ICrashSnapshotReporterFactory>();
@@ -158,11 +157,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                    It.IsAny<string>()))
                 .Returns(captureLog.Object);
 
+            _listenerFactory.Setup(f => f.UseTunnel).Returns(useTcpTunnel);
             // Act
             var appRunner = new AppRunner(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
-                _listenerFactory,
+                _listenerFactory.Object,
                 _snapshotReporterFactory,
                 captureLogFactory.Object,
                 Mock.Of<IDeviceLogCapturerFactory>(),
@@ -170,8 +170,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                useXmlOutput,
-                useTcpTunnel);
+                useXmlOutput);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
@@ -233,11 +232,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                    It.IsAny<string>()))
                 .Returns(captureLog.Object);
 
+            _listenerFactory.Setup(f => f.UseTunnel).Returns((useTunnel));
             // Act
             var appRunner = new AppRunner(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
-                _listenerFactory,
+                _listenerFactory.Object,
                 _snapshotReporterFactory,
                 captureLogFactory.Object,
                 Mock.Of<IDeviceLogCapturerFactory>(),
@@ -245,8 +245,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                useXml,
-                useTunnel);
+                useXml);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
@@ -305,11 +304,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Setup(x => x.FindDevice(RunMode.iOS, _mainLog.Object, false, false))
                 .ThrowsAsync(new NoDeviceFoundException());
 
+            _listenerFactory.Setup(f => f.UseTunnel).Returns(false);
             // Act
             var appRunner = new AppRunner(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
-                _listenerFactory,
+                _listenerFactory.Object,
                 _snapshotReporterFactory,
                 Mock.Of<ICaptureLogFactory>(),
                 Mock.Of<IDeviceLogCapturerFactory>(),
@@ -317,8 +317,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                true,
-                false);
+                true);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
@@ -365,11 +364,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _tunnelBore.Setup(t => t.Create("Test iPhone", It.IsAny<ILog>()));
             }
 
+            _listenerFactory.Setup(f => f.UseTunnel).Returns((useTunnel));
             // Act
             var appRunner = new AppRunner(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
-                _listenerFactory,
+                _listenerFactory.Object,
                 _snapshotReporterFactory,
                 Mock.Of<ICaptureLogFactory>(),
                 deviceLogCapturerFactory.Object,
@@ -377,8 +377,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                useXml,
-                useTunnel);
+                useXml);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 

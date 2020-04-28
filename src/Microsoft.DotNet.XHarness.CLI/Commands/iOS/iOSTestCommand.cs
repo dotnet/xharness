@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
@@ -76,7 +77,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             var processManager = new ProcessManager(_arguments.XcodeRoot, _arguments.MlaunchPath);
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
-            var tunnelBore = new TunnelBore(processManager);
+            var tunnelBore = (_channel == CommunicationChannel.UsbTunnel) ? new TunnelBore(processManager) : null;
 
             var logs = new Logs(_arguments.OutputDirectory);
 
@@ -176,8 +177,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     mainLog,
                     logs,
                     new Helpers(),
-                    useXmlOutput: true, // the cli ALWAYS will get the output as xml
-                    useTcpTunnel: _channel == CommunicationChannel.UsbTunnel);
+                    useXmlOutput: true); // the cli ALWAYS will get the output as xml
 
                 string resultMessage;
                 TestExecutingResult testResult;

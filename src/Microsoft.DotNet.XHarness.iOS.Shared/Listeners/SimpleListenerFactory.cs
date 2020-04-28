@@ -22,10 +22,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             ILog testLog,
             bool isSimulator,
             bool autoExit,
-            bool xmlOutput,
-            bool useTcpTunnel);
+            bool xmlOutput);
 
         ITunnelBore TunnelBore { get; }
+        bool UseTunnel { get; }
     }
 
     public class SimpleListenerFactory : ISimpleListenerFactory
@@ -33,10 +33,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public ITunnelBore TunnelBore { get; private set; }
 
-        public SimpleListenerFactory(ITunnelBore tunnelBore)
-        {
-            TunnelBore = tunnelBore ?? throw new ArgumentNullException(nameof(tunnelBore));
-        }
+        public bool UseTunnel => TunnelBore != null;
+
+        public SimpleListenerFactory(ITunnelBore tunnelBore = null) =>
+            TunnelBore = tunnelBore; // allow it to be null in case we are working with a sim
 
         public (ListenerTransport transport, ISimpleListener listener, string listenerTempFile) Create(
             RunMode mode,
@@ -44,8 +44,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             ILog testLog,
             bool isSimulator,
             bool autoExit,
-            bool xmlOutput,
-            bool useTcpTunnel)
+            bool xmlOutput)
         {
             string listenerTempFile = null;
             ISimpleListener listener;
@@ -70,7 +69,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     listener = new SimpleHttpListener(log, testLog, autoExit);
                     break;
                 case ListenerTransport.Tcp:
-                    listener = new SimpleTcpListener(log, testLog, autoExit, useTcpTunnel);
+                    listener = new SimpleTcpListener(log, testLog, autoExit, UseTunnel);
                     break;
                 default:
                     throw new NotImplementedException("Unknown type of listener");

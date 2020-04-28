@@ -31,7 +31,6 @@ namespace Microsoft.DotNet.XHarness.iOS
         private readonly ILogs _logs;
         private readonly ILog _mainLog;
         private readonly IHelpers _helpers;
-        private readonly bool _useTcpTunnel;
         private readonly bool _useXmlOutput;
 
         public AppRunner(IProcessManager processManager,
@@ -45,8 +44,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             ILog mainLog,
             ILogs logs,
             IHelpers helpers,
-            bool useXmlOutput,
-            bool useTcpTunnel)
+            bool useXmlOutput)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _hardwareDeviceLoader = hardwareDeviceLoader ?? throw new ArgumentNullException(nameof(hardwareDeviceLoader));
@@ -60,7 +58,6 @@ namespace Microsoft.DotNet.XHarness.iOS
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
             _useXmlOutput = useXmlOutput;
-            _useTcpTunnel = useTcpTunnel;
         }
 
         public async Task<(string DeviceName, TestExecutingResult Result, string ResultMessage)> RunApp(
@@ -114,7 +111,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
 
             var listenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
-            var (transport, listener, listenerTmpFile) = _listenerFactory.Create(target.ToRunMode(), _mainLog, listenerLog, isSimulator, true, false, false);
+            var (transport, listener, listenerTmpFile) = _listenerFactory.Create(target.ToRunMode(), _mainLog, listenerLog, isSimulator, true, false);
 
             // Initialize has to be called before we try to get Port (internal implementation of the listener says so)
             // TODO: Improve this to not get into a broken state - it was really hard to debug when I moved this lower
@@ -131,7 +128,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             args.Add(new SetAppArgumentArgument($"-hostport:{listener.Port}", true));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostPort, listener.Port));
 
-            if (_useTcpTunnel && !isSimulator) // simulators do not support tunnels
+            if (_listenerFactory.UseTunnel && !isSimulator) // simulators do not support tunnels
             {
                 args.Add(new SetEnvVariableArgument(EnviromentVariables.UseTcpTunnel, true));
             }
@@ -350,7 +347,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                     await crashReporter.StartCaptureAsync();
 
                     // create a tunnel to communicate with the device
-                    if (transport == ListenerTransport.Tcp && _useTcpTunnel && listener is SimpleTcpListener tcpListener)
+                    if (transport == ListenerTransport.Tcp && _listenerFactory.UseTunnel && listener is SimpleTcpListener tcpListener)
                     {
                         // create a new tunnel using the listener
                         var tunnel = _listenerFactory.TunnelBore.Create(deviceName, _mainLog);
@@ -377,7 +374,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                     deviceSystemLog.Dispose();
 
                     // close a tunnel if it was created
-                    if (!isSimulator)
+                    if (!isSimulator && _listenerFactory.UseTunnel)
                         await _listenerFactory.TunnelBore.Close(deviceName);
                 }
 
