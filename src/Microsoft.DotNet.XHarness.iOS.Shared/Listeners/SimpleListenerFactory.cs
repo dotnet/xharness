@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public bool UseTunnel => TunnelBore != null;
 
-        public SimpleListenerFactory(ITunnelBore tunnelBore) =>
+        public SimpleListenerFactory(ITunnelBore tunnelBore = null) =>
             TunnelBore = tunnelBore; // allow it to be null in case we are working with a sim
 
         public (ListenerTransport transport, ISimpleListener listener, string listenerTempFile) Create(
