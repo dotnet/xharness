@@ -94,11 +94,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                     runner.KillApk(apkPackageName);
                 }
 
+                // No class name = default Instrumentation
+                (string stdOut, _, int exitCode) = runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
+
                 using (_log.BeginScope("Post-test copy and cleanup"))
                 {
-                    // No class name = default Instrumentation
-                    (string stdOut, _, int exitCode) = runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
-
                     if (exitCode == (int)ExitCode.SUCCESS)
                     {
                         (var resultValues, var instrExitCode) = ParseInstrumentationOutputs(stdOut);
