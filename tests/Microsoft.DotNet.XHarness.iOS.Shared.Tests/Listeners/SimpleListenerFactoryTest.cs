@@ -21,6 +21,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
         }
 
         [Fact]
+        public void ConstructorAllowsNullTunnelBore()
+        {
+            var f = new SimpleListenerFactory(null); // if it throws, test fails ;)
+        }
+
+        [Fact]
         public void CreateNotWatchListener()
         {
             var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.iOS, _log.Object, _log.Object, true, true, true, false);
@@ -52,6 +58,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             Assert.Equal(ListenerTransport.Http, transport);
             Assert.IsType<SimpleHttpListener>(listener);
             Assert.Null(listenerTmpFile);
+        }
+
+        [Fact]
+        public void UseTcpTunnel()
+        {
+            var f = new SimpleListenerFactory(null);
+            Assert.False(f.UseTunnel, "Do not use tunnel.");
+            f = new SimpleListenerFactory(Mock.Of<ITunnelBore>());
+            Assert.True(f.UseTunnel, "Use tunnel.");
         }
     }
 }

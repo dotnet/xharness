@@ -26,6 +26,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             bool useTcpTunnel);
 
         ITunnelBore TunnelBore { get; }
+        bool UseTunnel { get; }
     }
 
     public class SimpleListenerFactory : ISimpleListenerFactory
@@ -33,10 +34,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public ITunnelBore TunnelBore { get; private set; }
 
-        public SimpleListenerFactory(ITunnelBore tunnelBore)
-        {
-            TunnelBore = tunnelBore ?? throw new ArgumentNullException(nameof(tunnelBore));
-        }
+        public bool UseTunnel => TunnelBore != null;
+
+        public SimpleListenerFactory(ITunnelBore tunnelBore) =>
+            TunnelBore = tunnelBore; // allow it to be null in case we are working with a sim
 
         public (ListenerTransport transport, ISimpleListener listener, string listenerTempFile) Create(
             RunMode mode,
