@@ -23,6 +23,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         Task CollectSimulatorResult(Task<ProcessExecutionResult> processExecution);
         Task CollectDeviceResult(Task<ProcessExecutionResult> processExecution);
-        Task<(TestExecutingResult ExecutingResult, string FailureMessage)> ParseResult();
+        Task<(TestExecutingResult ExecutingResult, string ResultMessage)> ParseResult();
     }
 }

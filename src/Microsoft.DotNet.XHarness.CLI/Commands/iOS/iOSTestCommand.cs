@@ -181,7 +181,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     useXmlOutput: true, // the cli ALWAYS will get the output as xml
                     useTcpTunnel: _channel == CommunicationChannel.UsbTunnel);
 
-                (deviceName, success) = await appRunner.RunApp(appBundleInfo,
+                string resultMessage;
+                (deviceName, success, resultMessage) = await appRunner.RunApp(appBundleInfo,
                     target,
                     _arguments.Timeout,
                     _arguments.LaunchTimeout,
@@ -192,12 +193,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                 if (success)
                 {
-                    _log.LogInformation("Application finished the run successfully");
+                    _log.LogInformation("Application finished the run successfully:");
+                    _log.LogInformation(resultMessage);
                     return ExitCode.SUCCESS;
                 }
                 else
                 {
-                    _log.LogError($"Application run failed. Check logs for more information");
+                    _log.LogError($"Application run failed. Check logs for more information:");
+                    _log.LogWarning(resultMessage);
                     return ExitCode.APP_CRASH;
                 }
             }
