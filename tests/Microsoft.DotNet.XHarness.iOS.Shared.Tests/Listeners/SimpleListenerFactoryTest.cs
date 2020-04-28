@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
         public SimpleListenerFactoryTest()
         {
             _log = new Mock<ILog>();
-            _factory = new SimpleListenerFactory(Mock.Of<ITunnelBore> ());
+            _factory = new SimpleListenerFactory();
         }
 
         [Fact]
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
         [Fact]
         public void CreateNotWatchListener()
         {
-            var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.iOS, _log.Object, _log.Object, true, true, true, false);
+            var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.iOS, _log.Object, _log.Object, true, true, true);
             Assert.Equal(ListenerTransport.Tcp, transport);
             Assert.IsType<SimpleTcpListener>(listener);
             Assert.Null(listenerTmpFile);
@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             var logFullPath = "myfullpath.txt";
             _ = _log.Setup(l => l.FullPath).Returns(logFullPath);
 
-            var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.WatchOS, _log.Object, _log.Object, true, true, true, false);
+            var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.WatchOS, _log.Object, _log.Object, true, true, true);
             Assert.Equal(ListenerTransport.File, transport);
             Assert.IsType<SimpleFileListener>(listener);
             Assert.NotNull(listenerTmpFile);
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
         [Fact]
         public void CreateWatchOSDevice()
         {
-            var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.WatchOS, _log.Object, _log.Object, false, true, true, false);
+            var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.WatchOS, _log.Object, _log.Object, false, true, true);
             Assert.Equal(ListenerTransport.Http, transport);
             Assert.IsType<SimpleHttpListener>(listener);
             Assert.Null(listenerTmpFile);
