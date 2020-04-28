@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <TargetFrameworks>netstandard2.0;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netcoreapp3.1</TargetFrameworks>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>CS8002;</NoWarn>
   </PropertyGroup>
@@ -24,5 +24,11 @@
       <XlfSourceFormat></XlfSourceFormat>
       <XlfOutputItem></XlfOutputItem>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Execution\Mlaunch\EnviromentVariables.cs">
+      <Link>EnviromentVariables.cs</Link>
+    </Compile>
   </ItemGroup>
 </Project>

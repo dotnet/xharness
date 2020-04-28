@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -43,8 +43,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         private readonly Mock<ITestReporter> _testReporter;
         private readonly Mock<IHelpers> _helpers;
         private readonly Mock<ITunnelBore> _tunnelBore;
+        private readonly Mock<ISimpleListenerFactory> _listenerFactory;
 
-        private readonly ISimpleListenerFactory _listenerFactory;
         private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
         private readonly ITestReporterFactory _testReporterFactory;
 
@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Returns(true);
             _testReporter
                 .Setup(r => r.ParseResult())
-                .ReturnsAsync((TestExecutingResult.Succeeded, null));
+                .ReturnsAsync((TestExecutingResult.Succeeded, "Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0"));
             _testReporter
                 .Setup(x => x.CollectSimulatorResult(It.IsAny<Task<ProcessExecutionResult>>()))
                 .Returns(Task.CompletedTask);
@@ -91,10 +91,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             _tunnelBore = new Mock<ITunnelBore>();
             _tunnelBore.Setup(t => t.Close(It.IsAny<string>()));
 
-            var factory = new Mock<ISimpleListenerFactory>();
-            factory.SetReturnsDefault((ListenerTransport.Tcp, _listener.Object, "listener-temp-file"));
-            factory.Setup(f => f.TunnelBore).Returns(_tunnelBore.Object);
-            _listenerFactory = factory.Object;
+            _listenerFactory = new Mock<ISimpleListenerFactory>();
+            _listenerFactory.SetReturnsDefault((ListenerTransport.Tcp, _listener.Object, "listener-temp-file"));
+            _listenerFactory.Setup(f => f.TunnelBore).Returns(_tunnelBore.Object);
             _listener.SetupGet(x => x.Port).Returns(1020);
 
             var factory2 = new Mock<ICrashSnapshotReporterFactory>();
@@ -158,11 +157,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                    It.IsAny<string>()))
                 .Returns(captureLog.Object);
 
+            _listenerFactory.Setup(f => f.UseTunnel).Returns(useTcpTunnel);
             // Act
             var appRunner = new AppRunner(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
-                _listenerFactory,
+                _listenerFactory.Object,
                 _snapshotReporterFactory,
                 captureLogFactory.Object,
                 Mock.Of<IDeviceLogCapturerFactory>(),
@@ -170,8 +170,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                useXmlOutput,
-                useTcpTunnel);
+                useXmlOutput);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
@@ -233,11 +232,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                    It.IsAny<string>()))
                 .Returns(captureLog.Object);
 
+            _listenerFactory.Setup(f => f.UseTunnel).Returns((useTunnel));
             // Act
             var appRunner = new AppRunner(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
-                _listenerFactory,
+                _listenerFactory.Object,
                 _snapshotReporterFactory,
                 captureLogFactory.Object,
                 Mock.Of<IDeviceLogCapturerFactory>(),
@@ -245,12 +245,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                useXml,
-                useTunnel);
+                useXml);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
-            var (deviceName, success) = await appRunner.RunApp(
+            var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
                 TestTarget.Simulator_tvOS,
                 TimeSpan.FromSeconds(30),
@@ -259,7 +258,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             // Verify
             Assert.Equal("Test iPhone simulator", deviceName);
-            Assert.True(success);
+            Assert.Equal(TestExecutingResult.Succeeded, result);
+            Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
             var xmlParam = useXml ? "-setenv=NUNIT_ENABLE_XML_OUTPUT=true -setenv=NUNIT_ENABLE_XML_MODE=wrapped -setenv=NUNIT_XML_VERSION=xUnit " : "";
 
@@ -304,11 +304,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Setup(x => x.FindDevice(RunMode.iOS, _mainLog.Object, false, false))
                 .ThrowsAsync(new NoDeviceFoundException());
 
+            _listenerFactory.Setup(f => f.UseTunnel).Returns(false);
             // Act
             var appRunner = new AppRunner(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
-                _listenerFactory,
+                _listenerFactory.Object,
                 _snapshotReporterFactory,
                 Mock.Of<ICaptureLogFactory>(),
                 Mock.Of<IDeviceLogCapturerFactory>(),
@@ -316,8 +317,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                true,
-                false);
+                true);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
@@ -364,11 +364,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _tunnelBore.Setup(t => t.Create("Test iPhone", It.IsAny<ILog>()));
             }
 
+            _listenerFactory.Setup(f => f.UseTunnel).Returns((useTunnel));
             // Act
             var appRunner = new AppRunner(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
-                _listenerFactory,
+                _listenerFactory.Object,
                 _snapshotReporterFactory,
                 Mock.Of<ICaptureLogFactory>(),
                 deviceLogCapturerFactory.Object,
@@ -376,12 +377,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                useXml,
-                useTunnel);
+                useXml);
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
-            var (deviceName, success) = await appRunner.RunApp(
+            var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
                 TestTarget.Device_iOS,
                 TimeSpan.FromSeconds(30),
@@ -389,7 +389,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             // Verify
             Assert.Equal("Test iPhone", deviceName);
-            Assert.True(success);
+            Assert.Equal(TestExecutingResult.Succeeded, result);
+            Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
             var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
             var ips = string.Join(",", ipAddresses);

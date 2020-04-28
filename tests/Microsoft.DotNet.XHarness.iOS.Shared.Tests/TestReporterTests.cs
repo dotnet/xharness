@@ -272,9 +272,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             listenerLog.Setup(l => l.FullPath).Returns(sample);
 
             var testResult = BuildTestResult();
-            var (result, failure) = await testResult.ParseResult();
+            var (result, resultMessage) = await testResult.ParseResult();
             Assert.Equal(TestExecutingResult.Failed, result);
-            Assert.Null(failure);
+            Assert.Equal("Tests run: 5 Passed: 3 Inconclusive: 1 Failed: 2 Ignored: 4", resultMessage);
 
             // ensure that we do  call the crash reporter end capture but with 0, since it was a success
             _crashReporter.Verify(c => c.EndCaptureAsync(It.Is<TimeSpan>(t => t.TotalSeconds == 5)), Times.Once);
@@ -290,9 +290,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             listenerLog.Setup(l => l.FullPath).Returns(sample);
 
             var testResult = BuildTestResult();
-            var (result, failure) = await testResult.ParseResult();
+            var (result, resultMessage) = await testResult.ParseResult();
             Assert.Equal(TestExecutingResult.Succeeded, result);
-            Assert.Null(failure);
+            Assert.Equal("Tests run: 5 Passed: 4 Inconclusive: 0 Failed: 0 Ignored: 1", resultMessage);
 
             // ensure that we do  call the crash reporter end capture but with 0, since it was a success
             _crashReporter.Verify(c => c.EndCaptureAsync(It.Is<TimeSpan>(t => t.TotalSeconds == 0)), Times.Once);

@@ -31,7 +31,6 @@ namespace Microsoft.DotNet.XHarness.iOS
         private readonly ILogs _logs;
         private readonly ILog _mainLog;
         private readonly IHelpers _helpers;
-        private readonly bool _useTcpTunnel;
         private readonly bool _useXmlOutput;
 
         public AppRunner(IProcessManager processManager,
@@ -45,8 +44,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             ILog mainLog,
             ILogs logs,
             IHelpers helpers,
-            bool useXmlOutput,
-            bool useTcpTunnel)
+            bool useXmlOutput)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _hardwareDeviceLoader = hardwareDeviceLoader ?? throw new ArgumentNullException(nameof(hardwareDeviceLoader));
@@ -60,10 +58,9 @@ namespace Microsoft.DotNet.XHarness.iOS
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
             _useXmlOutput = useXmlOutput;
-            _useTcpTunnel = useTcpTunnel;
         }
 
-        public async Task<(string deviceName, bool success)> RunApp(
+        public async Task<(string DeviceName, TestExecutingResult Result, string ResultMessage)> RunApp(
             AppBundleInformation appInformation,
             TestTarget target,
             TimeSpan timeout,
@@ -81,16 +78,16 @@ namespace Microsoft.DotNet.XHarness.iOS
                 new SetAppArgumentArgument("-connection-mode"),
                 new SetAppArgumentArgument("none"), // This will prevent the app from trying to connect to any IDEs
                 new SetAppArgumentArgument("-autostart", true),
-                new SetEnvVariableArgument("NUNIT_AUTOSTART", true),
+                new SetEnvVariableArgument(EnviromentVariables.AutoStart, true),
                 new SetAppArgumentArgument("-autoexit", true),
-                new SetEnvVariableArgument("NUNIT_AUTOEXIT", true),
+                new SetEnvVariableArgument(EnviromentVariables.AutoExit, true),
                 new SetAppArgumentArgument("-enablenetwork", true),
-                new SetEnvVariableArgument("NUNIT_ENABLE_NETWORK", true),
+                new SetEnvVariableArgument(EnviromentVariables.EnableNetwork, true),
 
                 // On macOS we can't edit the TCC database easily
                 // (it requires adding the mac has to be using MDM: https://carlashley.com/2018/09/28/tcc-round-up/)
                 // So by default ignore any tests that would pop up permission dialogs in CI.
-                new SetEnvVariableArgument("DISABLE_SYSTEM_PERMISSION_TESTS", 1),
+                new SetEnvVariableArgument(EnviromentVariables.DisableSystemPermissionTests, 1),
             };
 
             for (int i = -1; i < verbosity; i++)
@@ -103,51 +100,50 @@ namespace Microsoft.DotNet.XHarness.iOS
             if (isSimulator)
             {
                 args.Add(new SetAppArgumentArgument("-hostname:127.0.0.1", true));
-                args.Add(new SetEnvVariableArgument("NUNIT_HOSTNAME", "127.0.0.1"));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"));
             }
             else
             {
                 var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
                 var ips = string.Join(",", ipAddresses);
                 args.Add(new SetAppArgumentArgument($"-hostname:{ips}", true));
-                args.Add(new SetEnvVariableArgument("NUNIT_HOSTNAME", ips));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, ips));
             }
 
             var listenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
             var (transport, listener, listenerTmpFile) = _listenerFactory.Create(target.ToRunMode(),
-                log:_mainLog,
+                log: _mainLog,
                 testLog: listenerLog,
                 isSimulator: isSimulator,
                 autoExit: true,
-                xmlOutput: true, // cli always uses xml
-                useTcpTunnel: _useTcpTunnel);
+                xmlOutput: true); // cli always uses xml
 
             // Initialize has to be called before we try to get Port (internal implementation of the listener says so)
             // TODO: Improve this to not get into a broken state - it was really hard to debug when I moved this lower
             listener.Initialize();
 
             args.Add(new SetAppArgumentArgument($"-transport:{transport}", true));
-            args.Add(new SetEnvVariableArgument("NUNIT_TRANSPORT", transport.ToString().ToUpper()));
+            args.Add(new SetEnvVariableArgument(EnviromentVariables.Transport, transport.ToString().ToUpper()));
 
             if (transport == ListenerTransport.File)
             {
-                args.Add(new SetEnvVariableArgument("NUNIT_LOG_FILE", listenerTmpFile));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.LogFilePath, listenerTmpFile));
             }
 
             args.Add(new SetAppArgumentArgument($"-hostport:{listener.Port}", true));
-            args.Add(new SetEnvVariableArgument("NUNIT_HOSTPORT", listener.Port));
+            args.Add(new SetEnvVariableArgument(EnviromentVariables.HostPort, listener.Port));
 
-            if (_useTcpTunnel && !isSimulator) // simulators do not support tunnels
+            if (_listenerFactory.UseTunnel && !isSimulator) // simulators do not support tunnels
             {
-                args.Add(new SetEnvVariableArgument("USE_TCP_TUNNEL", true));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.UseTcpTunnel, true));
             }
 
             if (_useXmlOutput)
             {
                 // let the runner now via envars that we want to get a xml output, else the runner will default to plain text
-                args.Add (new SetEnvVariableArgument ("NUNIT_ENABLE_XML_OUTPUT", true));
-                args.Add (new SetEnvVariableArgument ("NUNIT_ENABLE_XML_MODE", "wrapped"));
-                args.Add (new SetEnvVariableArgument ("NUNIT_XML_VERSION", $"{xmlResultJargon}"));
+                args.Add (new SetEnvVariableArgument (EnviromentVariables.EnableXmlOutput, true));
+                args.Add (new SetEnvVariableArgument (EnviromentVariables.XmlMode, "wrapped"));
+                args.Add (new SetEnvVariableArgument (EnviromentVariables.XmlVersion, $"{xmlResultJargon}"));
             }
 
             listener.StartAsync();
@@ -356,7 +352,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                     await crashReporter.StartCaptureAsync();
 
                     // create a tunnel to communicate with the device
-                    if (transport == ListenerTransport.Tcp && _useTcpTunnel && listener is SimpleTcpListener tcpListener)
+                    if (transport == ListenerTransport.Tcp && _listenerFactory.UseTunnel && listener is SimpleTcpListener tcpListener)
                     {
                         // create a new tunnel using the listener
                         var tunnel = _listenerFactory.TunnelBore.Create(deviceName, _mainLog);
@@ -383,7 +379,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                     deviceSystemLog.Dispose();
 
                     // close a tunnel if it was created
-                    if (!isSimulator)
+                    if (!isSimulator && _listenerFactory.UseTunnel)
                         await _listenerFactory.TunnelBore.Close(deviceName);
                 }
 
@@ -398,9 +394,9 @@ namespace Microsoft.DotNet.XHarness.iOS
             listener.Dispose();
 
             // check the final status, copy all the required data
-            await testReporter.ParseResult();
+            var (testResult, resultMessage) = await testReporter.ParseResult();
 
-            return (deviceName, testReporter.Success ?? false);
+            return (deviceName, testResult, resultMessage);
         }
     }
 }

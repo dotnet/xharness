@@ -38,19 +38,9 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
 
             var runner = await InternalRunAsync(logger);
 
-            TestRunner.Jargon jargon;
-            switch (options.XmlVersion)
-            {
-                case XmlVersion.NUnitV2:
-                    jargon = Core.TestRunner.Jargon.NUnitV2;
-                    break;
-                case XmlVersion.NUnitV3: // nunitv3 gives os the most amount of possible details
-                    jargon = Core.TestRunner.Jargon.NUnitV3;
-                    break;
-                default:
-                    jargon = Core.TestRunner.Jargon.xUnit;
-                    break;
-            }
+
+            TestRunner.Jargon jargon = options.XmlVersion.ToTestRunnerJargon();
+
             if (options.EnableXml)
             {
                 if (TestsResultsFinalPath == null)

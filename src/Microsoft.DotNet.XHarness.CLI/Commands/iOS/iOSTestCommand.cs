@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
@@ -76,7 +77,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             var processManager = new ProcessManager(_arguments.XcodeRoot, _arguments.MlaunchPath);
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
-            var tunnelBore = new TunnelBore(processManager);
+            var tunnelBore = (_channel == CommunicationChannel.UsbTunnel) ? new TunnelBore(processManager) : null;
 
             var logs = new Logs(_arguments.OutputDirectory);
 
@@ -130,7 +131,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             if (!target.IsSimulator())
             {
-                _log.LogInformation($"Installing application '{appBundleInfo.AppName}' on " + (deviceName != null ? " on device '{deviceName}'" : target.AsString()));
+                _log.LogInformation($"Installing application '{appBundleInfo.AppName}' on " + (deviceName != null ? $" on device '{deviceName}'" : target.AsString()));
 
                 var appInstaller = new AppInstaller(processManager, deviceLoader, mainLog, verbosity);
 
@@ -160,9 +161,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 _log.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on device '{deviceName}'");
             }
 
-            _log.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? " on device '{deviceName}'" : target.AsString()));
-
-            bool success;
+            _log.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? $"device '{deviceName}'" : target.AsString()));
 
             try
             {
@@ -178,10 +177,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     mainLog,
                     logs,
                     new Helpers(),
-                    useXmlOutput: true, // the cli ALWAYS will get the output as xml
-                    useTcpTunnel: _channel == CommunicationChannel.UsbTunnel);
+                    useXmlOutput: true); // the cli ALWAYS will get the output as xml
 
-                (deviceName, success) = await appRunner.RunApp(appBundleInfo,
+                string resultMessage;
+                TestExecutingResult testResult;
+                (deviceName, testResult, resultMessage) = await appRunner.RunApp(appBundleInfo,
                     target,
                     _arguments.Timeout,
                     _arguments.LaunchTimeout,
@@ -190,15 +190,38 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     xmlResultJargon: _arguments.XmlResultJargon,
                     cancellationToken: cancellationToken);
 
-                if (success)
+                switch (testResult)
                 {
-                    _log.LogInformation("Application finished the run successfully");
-                    return ExitCode.SUCCESS;
-                }
-                else
-                {
-                    _log.LogError($"Application run failed. Check logs for more information");
-                    return ExitCode.APP_CRASH;
+                    case TestExecutingResult.Finished:
+                    case TestExecutingResult.Succeeded:
+                    case TestExecutingResult.Failed:
+                        _log.LogInformation($"Application finished the test run with result '{testResult}'");
+                        _log.LogInformation(resultMessage);
+                        return ExitCode.SUCCESS;
+
+                    case TestExecutingResult.Crashed:
+                        _log.LogError($"Application run crashed. Check logs for more information");
+
+                        if (resultMessage != null)
+                        {
+                            _log.LogError(resultMessage);
+                        }
+
+                        return ExitCode.APP_CRASH;
+
+                    case TestExecutingResult.TimedOut:
+                        _log.LogWarning($"Application run timed out");
+                        return ExitCode.TIMED_OUT;
+
+                    default:
+                        _log.LogError($"Application run ended in an unexpected way: '{testResult}'. Check logs for more information");
+
+                        if (resultMessage != null)
+                        {
+                            _log.LogError(resultMessage);
+                        }
+
+                        return ExitCode.GENERAL_FAILURE;
                 }
             }
             catch (NoDeviceFoundException)

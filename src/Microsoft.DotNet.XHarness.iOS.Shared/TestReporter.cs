@@ -431,7 +431,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return parseResult;
         }
 
-        async Task<(bool Succeeded, bool Crashed)> TestsSucceeded(AppBundleInformation appInfo, string test_log_path, bool timed_out)
+        async Task<(bool Succeeded, bool Crashed, string ResultLine)> TestsSucceeded(AppBundleInformation appInfo, string test_log_path, bool timed_out)
         {
             var (resultLine, failed, crashed) = await ParseResultFile(appInfo, test_log_path, timed_out);
             // read the parsed logs in a human readable way
@@ -442,26 +442,26 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 {
                     WrenchLog.WriteLine("AddSummary: <b>{0} failed: {1}</b><br/>", runMode, tests_run);
                     mainLog.WriteLine("Test run failed");
-                    return (false, crashed);
+                    return (false, crashed, resultLine);
                 }
                 else
                 {
                     WrenchLog.WriteLine("AddSummary: {0} succeeded: {1}<br/>", runMode, tests_run);
                     mainLog.WriteLine("Test run succeeded");
-                    return (true, crashed);
+                    return (true, crashed, resultLine);
                 }
             }
             else if (timed_out)
             {
                 WrenchLog.WriteLine("AddSummary: <b><i>{0} timed out</i></b><br/>", runMode);
                 mainLog.WriteLine("Test run timed out");
-                return (false, false);
+                return (false, false, "Test run timed out");
             }
             else
             {
                 WrenchLog.WriteLine("AddSummary: <b><i>{0} crashed</i></b><br/>", runMode);
                 mainLog.WriteLine("Test run crashed");
-                return (false, true);
+                return (false, true, "Test run crashed");
             }
         }
 
@@ -526,14 +526,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        public async Task<(TestExecutingResult ExecutingResult, string FailureMessage)> ParseResult()
+        public async Task<(TestExecutingResult ExecutingResult, string ResultMessage)> ParseResult()
         {
-            var result = (ExecutingResult: TestExecutingResult.Finished, FailureMessage: (string)null);
+            var result = (ExecutingResult: TestExecutingResult.Finished, ResultMessage: (string)null);
             var crashed = false;
             if (File.Exists(listener.TestLog.FullPath))
             {
                 WrenchLog.WriteLine("AddFile: {0}", listener.TestLog.FullPath);
-                (Success, crashed) = await TestsSucceeded(appInfo, listener.TestLog.FullPath, timedout);
+                (Success, crashed, result.ResultMessage) = await TestsSucceeded(appInfo, listener.TestLog.FullPath, timedout);
             }
             else if (timedout)
             {
@@ -611,24 +611,27 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         exceptionLogger?.Invoke(2, message);
                     }
                 }
+
                 if (!string.IsNullOrEmpty(crashReason))
                 {
                     if (crashReason == "per-process-limit")
                     {
-                        result.FailureMessage = "Killed due to using too much memory (per-process-limit).";
+                        result.ResultMessage = "Killed due to using too much memory (per-process-limit).";
                     }
                     else
                     {
-                        result.FailureMessage = $"Killed by the OS ({crashReason})";
+                        result.ResultMessage = $"Killed by the OS ({crashReason})";
                     }
                 }
                 else if (launchFailure)
                 {
                     // same as with a crash
-                    result.FailureMessage = $"Launch failure";
+                    result.ResultMessage = $"Launch failure";
                 }
-                await GenerateXmlFailures(result.FailureMessage, crashed, crashReason);
+
+                await GenerateXmlFailures(result.ResultMessage, crashed, crashReason);
             }
+
             return result;
         }
 
