@@ -182,7 +182,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     useTcpTunnel: _channel == CommunicationChannel.UsbTunnel);
 
                 string resultMessage;
-                (deviceName, success, resultMessage) = await appRunner.RunApp(appBundleInfo,
+                TestExecutingResult testResult;
+                (deviceName, testResult, resultMessage) = await appRunner.RunApp(appBundleInfo,
                     target,
                     _arguments.Timeout,
                     _arguments.LaunchTimeout,
@@ -191,17 +192,38 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     xmlResultJargon: _arguments.XmlResultJargon,
                     cancellationToken: cancellationToken);
 
-                if (success)
+                switch (testResult)
                 {
-                    _log.LogInformation("Application finished the run successfully:");
-                    _log.LogInformation(resultMessage);
-                    return ExitCode.SUCCESS;
-                }
-                else
-                {
-                    _log.LogError($"Application run failed. Check logs for more information:");
-                    _log.LogError(resultMessage);
-                    return ExitCode.APP_CRASH;
+                    case TestExecutingResult.Finished:
+                    case TestExecutingResult.Succeeded:
+                    case TestExecutingResult.Failed:
+                        _log.LogInformation($"Application finished the test run with result '{testResult}'");
+                        _log.LogInformation(resultMessage);
+                        return ExitCode.SUCCESS;
+
+                    case TestExecutingResult.Crashed:
+                        _log.LogError($"Application run crashed. Check logs for more information");
+
+                        if (resultMessage != null)
+                        {
+                            _log.LogError(resultMessage);
+                        }
+
+                        return ExitCode.APP_CRASH;
+
+                    case TestExecutingResult.TimedOut:
+                        _log.LogWarning($"Application run timed out");
+                        return ExitCode.TIMED_OUT;
+
+                    default:
+                        _log.LogError($"Application run ended in an unexpected way: '{testResult}'. Check logs for more information");
+
+                        if (resultMessage != null)
+                        {
+                            _log.LogError(resultMessage);
+                        }
+
+                        break;
                 }
             }
             catch (NoDeviceFoundException)
