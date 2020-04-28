@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -264,11 +264,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             var xmlParam = useXml ? "-setenv=NUNIT_ENABLE_XML_OUTPUT=true -setenv=NUNIT_ENABLE_XML_MODE=wrapped -setenv=NUNIT_XML_VERSION=xUnit " : "";
 
             var expectedArgs = $"-argument=-connection-mode -argument=none -argument=-app-arg:-autostart " +
-                $"-setenv={EnviromentVariables.AutoStart}=true -argument=-app-arg:-autoexit -setenv={EnviromentVariables.AutoExit}=true " +
-                $"-argument=-app-arg:-enablenetwork -setenv={EnviromentVariables.EnableNetwork}=true -setenv={EnviromentVariables.DisableSystemPermissionTests}=1 -v -v " +
-                $"-argument=-app-arg:-hostname:127.0.0.1 -setenv={EnviromentVariables.HostName}=127.0.0.1 -argument=-app-arg:-transport:Tcp " +
-                $"-setenv={EnviromentVariables.Transport}=TCP -argument=-app-arg:-hostport:{_listener.Object.Port} " +
-                $"-setenv={EnviromentVariables.HostPort}={_listener.Object.Port} {xmlParam}--launchsim {StringUtils.FormatArguments(s_appPath)} " +
+                $"-setenv=NUNIT_AUTOSTART=true -argument=-app-arg:-autoexit -setenv=NUNIT_AUTOEXIT=true " +
+                $"-argument=-app-arg:-enablenetwork -setenv=NUNIT_ENABLE_NETWORK=true -setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 -v -v " +
+                $"-argument=-app-arg:-hostname:127.0.0.1 -setenv=NUNIT_HOSTNAME=127.0.0.1 -argument=-app-arg:-transport:Tcp " +
+                $"-setenv=NUNIT_TRANSPORT=TCP -argument=-app-arg:-hostport:{_listener.Object.Port} " +
+                $"-setenv=NUNIT_HOSTPORT={_listener.Object.Port} {xmlParam}--launchsim {StringUtils.FormatArguments(s_appPath)} " +
                 $"--stdout=tty1 --stderr=tty1 --device=:v2:udid={simulator.Object.UDID}";
 
             _processManager
@@ -398,11 +398,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             var xmlParam = useXml ? "-setenv=NUNIT_ENABLE_XML_OUTPUT=true -setenv=NUNIT_ENABLE_XML_MODE=wrapped -setenv=NUNIT_XML_VERSION=xUnit " : "";
 
             var expectedArgs = $"-argument=-connection-mode -argument=none -argument=-app-arg:-autostart " +
-                $"-setenv={EnviromentVariables.AutoStart}=true -argument=-app-arg:-autoexit -setenv={EnviromentVariables.AutoExit}=true " +
-                $"-argument=-app-arg:-enablenetwork -setenv={EnviromentVariables.EnableNetwork}=true -setenv={EnviromentVariables.DisableSystemPermissionTests}=1 -v -v " +
-                $"-argument=-app-arg:-hostname:{ips} -setenv={EnviromentVariables.HostName}={ips} -argument=-app-arg:-transport:Tcp " +
-                $"-setenv={EnviromentVariables.Transport}=TCP -argument=-app-arg:-hostport:{_listener.Object.Port} " +
-                $"-setenv={EnviromentVariables.HostPort}={_listener.Object.Port} {tunnelParam}{xmlParam}--launchdev {StringUtils.FormatArguments(s_appPath)} " +
+                $"-setenv=NUNIT_AUTOSTART=true -argument=-app-arg:-autoexit -setenv=NUNIT_AUTOEXIT=true " +
+                $"-argument=-app-arg:-enablenetwork -setenv=NUNIT_ENABLE_NETWORK=true -setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 -v -v " +
+                $"-argument=-app-arg:-hostname:{ips} -setenv=NUNIT_HOSTNAME={ips} -argument=-app-arg:-transport:Tcp " +
+                $"-setenv=NUNIT_TRANSPORT=TCP -argument=-app-arg:-hostport:{_listener.Object.Port} " +
+                $"-setenv=NUNIT_HOSTPORT={_listener.Object.Port} {tunnelParam}{xmlParam}--launchdev {StringUtils.FormatArguments(s_appPath)} " +
                 $"--disable-memory-limits --wait-for-exit --devname \"Test iPhone\"";
 
             _processManager
