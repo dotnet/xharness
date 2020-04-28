@@ -22,8 +22,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             ILog testLog,
             bool isSimulator,
             bool autoExit,
-            bool xmlOutput,
-            bool useTcpTunnel);
+            bool xmlOutput);
 
         ITunnelBore TunnelBore { get; }
         bool UseTunnel { get; }
@@ -45,8 +44,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             ILog testLog,
             bool isSimulator,
             bool autoExit,
-            bool xmlOutput,
-            bool useTcpTunnel)
+            bool xmlOutput)
         {
             string listenerTempFile = null;
             ISimpleListener listener;
@@ -71,7 +69,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     listener = new SimpleHttpListener(log, testLog, autoExit);
                     break;
                 case ListenerTransport.Tcp:
-                    listener = new SimpleTcpListener(log, testLog, autoExit, useTcpTunnel);
+                    listener = new SimpleTcpListener(log, testLog, autoExit, UseTunnel);
                     break;
                 default:
                     throw new NotImplementedException("Unknown type of listener");
