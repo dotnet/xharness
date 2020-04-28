@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
     }
 
     // interface implemented by a tcp tunnel between the host and the device.
-    public interface ITcpTunnel : IAsyncDisposable 
+    public interface ITcpTunnel : IAsyncDisposable
     {
         public void Open(string device, ITunnelListener simpleListener, TimeSpan timeout, ILog mainLog);
         public Task Close();
@@ -75,6 +75,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 });
                 // do not await since we are going to be running the process in parallel
                 _tcpTunnelExecutionTask = _processManager.ExecuteCommandAsync(tcpArgs, tunnelbackLog, timeout, cancellationToken: _cancellationToken.Token);
+                _tcpTunnelExecutionTask.ContinueWith(delegate(Task<ProcessExecutionResult> task)
+                {
+                    // if the task completes, means that we had issues with the creation of the tunnel and the process
+                    // exited, if that is the case, we do not want to make the app wait, therefore, set the hole to false
+                    // which will throw an exception from the listener.
+                    simpleListener.TunnelHoleThrough.TrySetResult(task.Result.Succeeded);
+                });
             }
         }
 
@@ -88,7 +95,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             await _tcpTunnelExecutionTask;
         }
 
-        public async ValueTask DisposeAsync() 
+        public async ValueTask DisposeAsync()
         {
             await Close();
         }
