@@ -28,10 +28,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     /// </summary>
     internal class iOSPackageCommand : XHarnessCommand
     {
-        // TODO: Some more parameters we need to make configurable maybe
-        //private const string NugetPath = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/nuget";
-        //private const string MsBuildPath = "/Library/Frameworks/Mono.framework/Versions/Current/bin/msbuild";
-        private const string DotnetPath = "dotnet";
         private readonly TimeSpan _nugetRestoreTimeout = TimeSpan.FromMinutes(10);
         private readonly TimeSpan _msBuildTimeout = TimeSpan.FromMinutes(30);
 
@@ -48,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 "usage: ios package [OPTIONS]",
                 "",
                 "Packaging command that will create a iOS/tvOS/watchOS or macOS application that can be used to run NUnit or XUnit-based test dlls",
-                { "name=|n=", "Name of the test application",  v => _arguments.AppPackageName = v},
+                { "name=|n=", "Name of the test application",  v => _arguments.AppPackageName = v },
                 { "mtouch-extraargs=|m=", "Extra arguments to be passed to mtouch.", v => _arguments.MtouchExtraArgs = v },
                 { "ignore-directory=|i=", "Root directory containing all the *.ignore files used to skip tests if needed.", v => _arguments.IgnoreFilesRootDirectory = v },
                 { "template=|t=", "Indicates which template to use. There are two available ones: Managed, which uses Xamarin.[iOS|Mac] and Native (default:Managed).",
@@ -69,8 +65,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 },
                 { "traits-directory=|td=", "Root directory that contains all the .txt files with traits that will be skipped if needed.", v =>  _arguments.TraitsRootDirectory = v },
                 { "working-directory=|w=", "Directory that will be used to output generated projects", v => _arguments.WorkingDirectory = v },
-                { "output-directory=|o=", "Directory in which the resulting package will be outputted", v => _arguments.OutputDirectory = v},
-                { "assembly=|a=", "An assembly to be added as part of the testing application", v => _arguments.Assemblies.Add(v)},
+                { "output-directory=|o=", "Directory in which the resulting package will be outputted", v => _arguments.OutputDirectory = v },
+                { "assembly=|a=", "An assembly to be added as part of the testing application", v => _arguments.Assemblies.Add(v) },
                 { "configuration=", "The configuration that will be used to build the app. Default is 'Debug'",
                     v => {
                         if (Enum.TryParse(v, out BuildConfiguration configuration))
@@ -120,6 +116,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                         }
                     }
                 },
+                { "dotnet=", "Path to the 'dotnet' command. Default is 'dotnet'", v => _arguments.DotNetPath = v },
                 { "help|h", "Show this message", v => ShowHelp = v != null },
             };
         }
@@ -133,7 +130,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 var dotnetLog = new MemoryLog() { Timestamp = false };
                 var process = new Process();
                 process.StartInfo.FileName = "bash";
-                process.StartInfo.Arguments = "-c \"" + DotnetPath + " --info | grep \\\"Base Path\\\" | cut -d':' -f 2 | tr -d '[:space:]'\"";
+                process.StartInfo.Arguments = "-c \"" + _arguments.DotNetPath + " --info | grep \\\"Base Path\\\" | cut -d':' -f 2 | tr -d '[:space:]'\"";
 
                 var result = await _processManager.RunAsync(process, new MemoryLog(), dotnetLog, new MemoryLog(), TimeSpan.FromSeconds(5));
 
@@ -207,7 +204,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             using (var dotnetRestore = new Process())
             {
-                dotnetRestore.StartInfo.FileName = DotnetPath;
+                dotnetRestore.StartInfo.FileName = _arguments.DotNetPath;
                 var args = new List<string>
                 {
                     "restore",
@@ -221,13 +218,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 if (result.TimedOut)
                 {
                     aggregatedLog.WriteLine("nuget restore timedout.");
-                    return ExitCode.GENERAL_FAILURE; // TODO: Make more specific?
+                    return ExitCode.PACKAGE_BUNDLING_FAILURE_NUGET_RESTORE;
                 }
 
                 if (!result.Succeeded)
                 {
                     aggregatedLog.WriteLine($"nuget restore exited with {result.ExitCode}");
-                    return ExitCode.GENERAL_FAILURE; // TODO: Make more specific?
+                    return ExitCode.PACKAGE_BUNDLING_FAILURE_NUGET_RESTORE;
                 }
             }
 
@@ -236,9 +233,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             // perform the build of the application
             using (var dotnetBuild = new Process())
             {
-                dotnetBuild.StartInfo.FileName = DotnetPath;
+                dotnetBuild.StartInfo.FileName = _arguments.DotNetPath;
 
                 // TODO: Only taking into account one platform
+                // https://github.com/dotnet/xharness/issues/105
                 if (_arguments.Platforms.Count > 1)
                 {
                     _log.LogWarning($"Multi-platform targetting is not supported yet. Targetting {_arguments.Platforms[0]} only.");
@@ -261,7 +259,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 {
                     _log.LogError($"Build failed with return code: {result.ExitCode}");
 
-                    finalResult = ExitCode.GENERAL_FAILURE; // TODO: Make more specific?
+                    finalResult = ExitCode.PACKAGE_BUNDLING_FAILURE_BUILD;
 
                     if (missingXamariniOS)
                     {

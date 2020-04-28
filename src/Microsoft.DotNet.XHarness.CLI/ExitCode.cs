@@ -16,5 +16,7 @@ namespace Microsoft.DotNet.XHarness.CLI
         FAILED_TO_GET_BUNDLE_INFO = -45,
         APP_CRASH = -46,
         DEVICE_NOT_FOUND = -47,
+        PACKAGE_BUNDLING_FAILURE_NUGET_RESTORE = -48,
+        PACKAGE_BUNDLING_FAILURE_BUILD = -49,
     }
 }
