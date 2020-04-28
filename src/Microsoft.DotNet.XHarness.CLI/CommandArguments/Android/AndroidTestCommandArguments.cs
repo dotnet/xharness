@@ -30,11 +30,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         {
             var errors = base.GetValidationErrors();
 
-            if (string.IsNullOrEmpty(DeviceOutputFolder))
-            {
-                errors.Add("Must specify a value for device output folder");
-            }
-
             return errors;
         }
     }
