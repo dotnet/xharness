@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
@@ -43,31 +44,31 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         public ApplicationOptions()
         {
             bool b;
-            if (bool.TryParse(Environment.GetEnvironmentVariable("NUNIT_AUTOEXIT"), out b))
+            if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.AutoExit), out b))
                 TerminateAfterExecution = b;
-            if (bool.TryParse(Environment.GetEnvironmentVariable("NUNIT_AUTOSTART"), out b))
+            if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.AutoStart), out b))
                 AutoStart = b;
-            if (bool.TryParse(Environment.GetEnvironmentVariable("NUNIT_ENABLE_NETWORK"), out b))
+            if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.EnableNetwork), out b))
                 EnableNetwork = b;
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NUNIT_HOSTNAME")))
-                HostName = Environment.GetEnvironmentVariable("NUNIT_HOSTNAME");
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.HostName)))
+                HostName = Environment.GetEnvironmentVariable(EnviromentVariables.HostName);
             int i;
-            if (int.TryParse(Environment.GetEnvironmentVariable("NUNIT_HOSTPORT"), out i))
+            if (int.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.HostPort), out i))
                 HostPort = i;
-            if (bool.TryParse(Environment.GetEnvironmentVariable("NUNIT_SORTNAMES"), out b))
+            if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.SortByName), out b))
                 SortNames = b;
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NUNIT_TRANSPORT")))
-                Transport = Environment.GetEnvironmentVariable("NUNIT_TRANSPORT");
-            if (bool.TryParse(Environment.GetEnvironmentVariable("NUNIT_ENABLE_XML_OUTPUT"), out b))
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.Transport)))
+                Transport = Environment.GetEnvironmentVariable(EnviromentVariables.Transport);
+            if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.EnableXmlOutput), out b))
                 EnableXml = b;
-            var xml_mode = Environment.GetEnvironmentVariable("NUNIT_ENABLE_XML_MODE");
+            var xml_mode = Environment.GetEnvironmentVariable(EnviromentVariables.XmlMode);
             if (!string.IsNullOrEmpty(xml_mode))
                 XmlMode = (XmlMode)Enum.Parse(typeof(XmlMode), xml_mode, true);
-            var xml_version = Environment.GetEnvironmentVariable("NUNIT_XML_VERSION");
+            var xml_version = Environment.GetEnvironmentVariable(EnviromentVariables.XmlVersion);
             if (!string.IsNullOrEmpty(xml_version))
                 XmlVersion = (XmlVersion)Enum.Parse(typeof(XmlVersion), xml_version, true);
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NUNIT_LOG_FILE")))
-                LogFile = Environment.GetEnvironmentVariable("NUNIT_LOG_FILE");
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.LogFilePath)))
+                LogFile = Environment.GetEnvironmentVariable(EnviromentVariables.LogFilePath);
 
             var os = new OptionSet() {
                 { "autoexit", "Exit application once the test run has completed.", v => TerminateAfterExecution = true },

@@ -81,16 +81,16 @@ namespace Microsoft.DotNet.XHarness.iOS
                 new SetAppArgumentArgument("-connection-mode"),
                 new SetAppArgumentArgument("none"), // This will prevent the app from trying to connect to any IDEs
                 new SetAppArgumentArgument("-autostart", true),
-                new SetEnvVariableArgument("NUNIT_AUTOSTART", true),
+                new SetEnvVariableArgument(EnviromentVariables.AutoStart, true),
                 new SetAppArgumentArgument("-autoexit", true),
-                new SetEnvVariableArgument("NUNIT_AUTOEXIT", true),
+                new SetEnvVariableArgument(EnviromentVariables.AutoExit, true),
                 new SetAppArgumentArgument("-enablenetwork", true),
-                new SetEnvVariableArgument("NUNIT_ENABLE_NETWORK", true),
+                new SetEnvVariableArgument(EnviromentVariables.EnableNetwork, true),
 
                 // On macOS we can't edit the TCC database easily
                 // (it requires adding the mac has to be using MDM: https://carlashley.com/2018/09/28/tcc-round-up/)
                 // So by default ignore any tests that would pop up permission dialogs in CI.
-                new SetEnvVariableArgument("DISABLE_SYSTEM_PERMISSION_TESTS", 1),
+                new SetEnvVariableArgument(EnviromentVariables.DisableSystemPermissionTests, 1),
             };
 
             for (int i = -1; i < verbosity; i++)
@@ -103,14 +103,14 @@ namespace Microsoft.DotNet.XHarness.iOS
             if (isSimulator)
             {
                 args.Add(new SetAppArgumentArgument("-hostname:127.0.0.1", true));
-                args.Add(new SetEnvVariableArgument("NUNIT_HOSTNAME", "127.0.0.1"));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"));
             }
             else
             {
                 var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
                 var ips = string.Join(",", ipAddresses);
                 args.Add(new SetAppArgumentArgument($"-hostname:{ips}", true));
-                args.Add(new SetEnvVariableArgument("NUNIT_HOSTNAME", ips));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, ips));
             }
 
             var listenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
@@ -121,27 +121,27 @@ namespace Microsoft.DotNet.XHarness.iOS
             listener.Initialize();
 
             args.Add(new SetAppArgumentArgument($"-transport:{transport}", true));
-            args.Add(new SetEnvVariableArgument("NUNIT_TRANSPORT", transport.ToString().ToUpper()));
+            args.Add(new SetEnvVariableArgument(EnviromentVariables.Transport, transport.ToString().ToUpper()));
 
             if (transport == ListenerTransport.File)
             {
-                args.Add(new SetEnvVariableArgument("NUNIT_LOG_FILE", listenerTmpFile));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.LogFilePath, listenerTmpFile));
             }
 
             args.Add(new SetAppArgumentArgument($"-hostport:{listener.Port}", true));
-            args.Add(new SetEnvVariableArgument("NUNIT_HOSTPORT", listener.Port));
+            args.Add(new SetEnvVariableArgument(EnviromentVariables.HostPort, listener.Port));
 
             if (_useTcpTunnel && !isSimulator) // simulators do not support tunnels
             {
-                args.Add(new SetEnvVariableArgument("USE_TCP_TUNNEL", true));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.UseTcpTunnel, true));
             }
 
             if (_useXmlOutput)
             {
                 // let the runner now via envars that we want to get a xml output, else the runner will default to plain text
-                args.Add (new SetEnvVariableArgument ("NUNIT_ENABLE_XML_OUTPUT", true));
-                args.Add (new SetEnvVariableArgument ("NUNIT_ENABLE_XML_MODE", "wrapped"));
-                args.Add (new SetEnvVariableArgument ("NUNIT_XML_VERSION", $"{xmlResultJargon}"));
+                args.Add (new SetEnvVariableArgument (EnviromentVariables.EnableXmlOutput, true));
+                args.Add (new SetEnvVariableArgument (EnviromentVariables.XmlMode, "wrapped"));
+                args.Add (new SetEnvVariableArgument (EnviromentVariables.XmlVersion, $"{xmlResultJargon}"));
             }
 
             listener.StartAsync();
