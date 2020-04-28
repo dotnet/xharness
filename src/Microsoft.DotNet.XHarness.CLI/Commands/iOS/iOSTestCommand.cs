@@ -131,7 +131,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             if (!target.IsSimulator())
             {
-                _log.LogInformation($"Installing application '{appBundleInfo.AppName}' on " + (deviceName != null ? " on device '{deviceName}'" : target.AsString()));
+                _log.LogInformation($"Installing application '{appBundleInfo.AppName}' on " + (deviceName != null ? $" on device '{deviceName}'" : target.AsString()));
 
                 var appInstaller = new AppInstaller(processManager, deviceLoader, mainLog, verbosity);
 
@@ -161,7 +161,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 _log.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on device '{deviceName}'");
             }
 
-            _log.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? " on device '{deviceName}'" : target.AsString()));
+            _log.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? $" on device '{deviceName}'" : target.AsString()));
 
             try
             {
