@@ -162,8 +162,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             _log.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? " on device '{deviceName}'" : target.AsString()));
 
-            bool success;
-
             try
             {
                 var appRunner = new AppRunner(
@@ -223,7 +221,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                             _log.LogError(resultMessage);
                         }
 
-                        break;
+                        return ExitCode.GENERAL_FAILURE;
                 }
             }
             catch (NoDeviceFoundException)
