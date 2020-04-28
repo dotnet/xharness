@@ -73,6 +73,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// </summary>
         public string TraitsRootDirectory { get; set; }
 
+        /// <summary>
+        /// Path to the 'dotnet' command
+        /// </summary>
+        public string DotNetPath { get; set; } = "dotnet";
+
         public override IList<string> GetValidationErrors()
         {
             var errors = new List<string>();
