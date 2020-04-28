@@ -18,5 +18,6 @@ namespace Microsoft.DotNet.XHarness.CLI
         DEVICE_NOT_FOUND = -47,
         PACKAGE_BUNDLING_FAILURE_NUGET_RESTORE = -48,
         PACKAGE_BUNDLING_FAILURE_BUILD = -49,
+        TIMED_OUT = -50,
     }
 }

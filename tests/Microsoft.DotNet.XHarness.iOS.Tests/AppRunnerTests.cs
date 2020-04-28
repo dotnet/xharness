@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Returns(true);
             _testReporter
                 .Setup(r => r.ParseResult())
-                .ReturnsAsync((TestExecutingResult.Succeeded, null));
+                .ReturnsAsync((TestExecutingResult.Succeeded, "Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0"));
             _testReporter
                 .Setup(x => x.CollectSimulatorResult(It.IsAny<Task<ProcessExecutionResult>>()))
                 .Returns(Task.CompletedTask);
@@ -250,7 +250,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
-            var (deviceName, success) = await appRunner.RunApp(
+            var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
                 TestTarget.Simulator_tvOS,
                 TimeSpan.FromSeconds(30),
@@ -259,7 +259,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             // Verify
             Assert.Equal("Test iPhone simulator", deviceName);
-            Assert.True(success);
+            Assert.Equal(TestExecutingResult.Succeeded, result);
+            Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
             var xmlParam = useXml ? "-setenv=NUNIT_ENABLE_XML_OUTPUT=true -setenv=NUNIT_ENABLE_XML_MODE=wrapped -setenv=NUNIT_XML_VERSION=xUnit " : "";
 
@@ -381,7 +382,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
 
-            var (deviceName, success) = await appRunner.RunApp(
+            var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
                 TestTarget.Device_iOS,
                 TimeSpan.FromSeconds(30),
@@ -389,7 +390,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             // Verify
             Assert.Equal("Test iPhone", deviceName);
-            Assert.True(success);
+            Assert.Equal(TestExecutingResult.Succeeded, result);
+            Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
             var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
             var ips = string.Join(",", ipAddresses);
