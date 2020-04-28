@@ -200,7 +200,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 else
                 {
                     _log.LogError($"Application run failed. Check logs for more information:");
-                    _log.LogWarning(resultMessage);
+                    _log.LogError(resultMessage);
                     return ExitCode.APP_CRASH;
                 }
             }
