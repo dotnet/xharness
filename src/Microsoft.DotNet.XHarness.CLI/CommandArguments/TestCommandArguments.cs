@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.DotNet.XHarness.CLI.Commands.iOS;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
@@ -39,6 +40,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(15);
         public string OutputDirectory { get; set; }
         public LogLevel Verbosity { get; set; }
+        public CommunicationChannel CommunicationChannel { get; set; } = CommunicationChannel.UsbTunnel;
 
         public virtual IList<string> GetValidationErrors()
         {
