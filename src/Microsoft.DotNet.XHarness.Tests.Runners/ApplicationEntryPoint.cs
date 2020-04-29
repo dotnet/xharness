@@ -23,15 +23,15 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
     /// <summary>
     /// Abstract class that represents the entry point of the test application.
     ///
-    /// Subclasses must provide the minimun implementation to ensure that:
+    /// Subclasses must provide the minimum implementation to ensure that:
     ///
     /// Device: We do have the required device information for the logger.
     /// Assemblies: Provide a list of the assembly information to run.
-    ///     assemblies can be loaded from disk or from memory, is up to the
+    ///     assemblies can be loaded from disk or from memory, this is up to the
     ///     implementor.
     ///
     /// Clients that register to the class events and want to update the UI
-    /// are responsable to do so in the main UI thread. The application entry
+    /// are responsible to do so in the main UI thread. The application entry
     /// point does not guarantee that the tests are executed in the ui thread.
     ///
     /// </summary>

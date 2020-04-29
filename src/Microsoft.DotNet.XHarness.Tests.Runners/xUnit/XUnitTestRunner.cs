@@ -1174,29 +1174,29 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
 
         public override void SkipCategories(IEnumerable<string> categories)
         {
-            if (categories.Any())
+            if (categories == null)
+                throw new ArgumentNullException(nameof(categories));
+            
+            foreach (var c in categories)
             {
-                foreach (var c in categories)
+                var traitInfo = c.Split('=');
+                if (traitInfo.Length == 2)
                 {
-                    var traitInfo = c.Split('=');
-                    if (traitInfo.Length == 2)
-                    {
-                        filters.Add(XUnitFilter.CreateTraitFilter(traitInfo[0], traitInfo[1], true));
-                    } else {
-                        filters.Add(XUnitFilter.CreateTraitFilter(c, null, true));
-					}
+                    filters.Add(XUnitFilter.CreateTraitFilter(traitInfo[0], traitInfo[1], true));
+                } else {
+                    filters.Add(XUnitFilter.CreateTraitFilter(c, null, true));
                 }
             }
         }
 
         public override void SkipAttributes(IEnumerable<string> attributes)
         {
-            if (attributes.Any())
+            if (attributes == null)
+                throw new ArgumentNullException(nameof(attributes));
+
+            foreach (var attr in attributes)
             {
-                foreach (var attr in attributes)
-                {
-                    filters.Add(XUnitFilter.CreateAttributeFilter(attr, true));
-                }
+                filters.Add(XUnitFilter.CreateAttributeFilter(attr, true));
             }
         }
     }
