@@ -10,7 +10,6 @@ using System.Text.Json;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Mono.Options;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
 using Microsoft.Extensions.Logging;
@@ -105,7 +104,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         protected override async Task<ExitCode> InvokeInternal()
         {
-            var processManager = new ProcessManager(null); 
+            var processManager = new ProcessManager(mlaunchPath: _arguments.MlaunchPath); 
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
             var log = new MemoryLog(); // do we really want to log this?
