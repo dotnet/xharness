@@ -78,7 +78,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             var processManager = new ProcessManager(_arguments.XcodeRoot, _arguments.MlaunchPath);
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
-            var tunnelBore = (_channel == CommunicationChannel.UsbTunnel) ? new TunnelBore(processManager) : null;
+            var hasSimulators = _arguments.TestTargets.Where(t => t.IsSimulator()).Any();
+            var tunnelBore = (_channel == CommunicationChannel.UsbTunnel && !hasSimulators) ? new TunnelBore(processManager) : null;
 
             var logs = new Logs(_arguments.OutputDirectory);
 
