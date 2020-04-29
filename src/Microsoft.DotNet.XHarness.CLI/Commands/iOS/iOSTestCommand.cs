@@ -173,7 +173,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 _log.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on device '{deviceName}'");
             }
 
-            _log.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? $" on device '{deviceName}'" : target.AsString()));
+            _log.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? $"device '{deviceName}'" : target.AsString()));
 
             try
             {
