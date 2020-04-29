@@ -69,7 +69,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             var processManager = new ProcessManager(_arguments.XcodeRoot, _arguments.MlaunchPath);
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
-            var tunnelBore = (_arguments.CommunicationChannel == CommunicationChannel.UsbTunnel) ? new TunnelBore(processManager) : null;
 
             var logs = new Logs(_arguments.OutputDirectory);
 
@@ -80,7 +79,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             foreach (TestTarget target in _arguments.TestTargets)
             {
-                var exitCodeForRun = await RunTest(target, logs, processManager, deviceLoader, simulatorLoader, tunnelBore, cts.Token);
+                var tunnelBore = (_arguments.CommunicationChannel == CommunicationChannel.UsbTunnel && !target.IsSimulator())
+                    ? new TunnelBore(processManager)
+                    : null;
+                var exitCodeForRun = await RunTest(target, logs, processManager, deviceLoader, simulatorLoader,
+                    tunnelBore, cts.Token);
 
                 if (exitCodeForRun != ExitCode.SUCCESS)
                 {
