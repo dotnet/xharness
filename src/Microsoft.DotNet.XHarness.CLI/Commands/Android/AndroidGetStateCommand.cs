@@ -5,20 +5,20 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
-using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
     internal class AndroidGetStateCommand : GetStateCommand
     {
+        protected override ICommandArguments Arguments => null;
+
+        protected override string BaseCommand { get; } = "android";
+
         public AndroidGetStateCommand()
         {
-            Options = new OptionSet() {
-                "usage: android state",
-                "",
-                "Print information about the current machine, such as host machine info and device status"
-            };
+            Options = CommonOptions;
         }
 
         protected override Task<ExitCode> InvokeInternal()

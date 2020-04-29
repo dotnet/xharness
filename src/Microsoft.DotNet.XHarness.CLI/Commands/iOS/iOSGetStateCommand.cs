@@ -4,19 +4,22 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json;
 
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Mono.Options;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
+using Microsoft.Extensions.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
     internal class iOSGetStateCommand : GetStateCommand
     {
-
         class DeviceInfo
         {
             public string Name { get; set; }
@@ -33,25 +36,28 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             public string OSPlatform { get; set; }
             public string XcodePath { get; set; }
             public string XcodeVersion { get; set; }
+            public string MlaunchPath { get; set; }
+            public string MlaunchVersion { get; set; }
             public List<DeviceInfo> Simulators { get; } = new List<DeviceInfo>();
             public List<DeviceInfo> Devices { get; } = new List<DeviceInfo>();
         }
 
         private const string SimulatorPrefix = "com.apple.CoreSimulator.SimDeviceType.";
-        private bool _showSimulatorsUUID = false;
-        private bool _showDevicesUUID = true;
-        private bool _useJson = false;
+
+        private readonly iOSGetStateCommandArguments _arguments = new iOSGetStateCommandArguments();
+
+        protected override ICommandArguments Arguments => _arguments;
+
+        protected override string BaseCommand { get; } = "ios";
 
         public iOSGetStateCommand() : base()
         {
-            Options = new OptionSet() {
-                "usage: ios state",
-                "",
-                "Print information about the current machine, such as host machine info and device status",
-                { "include-simulator-uuid:", "Include the simulators UUID. Defaults to false.", v =>  bool.TryParse(v, out _showSimulatorsUUID)},
-                { "include-devices-uuid:", "Include the devices UUID.", v => bool.TryParse(v, out _showDevicesUUID)},
-                { "json", "Use json as the output format.", v => _useJson = v != null},
-            };
+            Options = CommonOptions;
+
+            Options.Add("mlaunch=", "Path to the mlaunch binary", v => _arguments.MlaunchPath = v);
+            Options.Add("include-simulator-uuid", "Include the simulators UUID. Defaults to false.", v => _arguments.ShowSimulatorsUUID = v != null);
+            Options.Add("include-devices-uuid", "Include the devices UUID.", v => _arguments.ShowDevicesUUID = v != null);
+            Options.Add("json", "Use json as the output format.", v => _arguments.UseJson = v != null);
         }
 
         private async Task AsJson(SystemInfo info)
@@ -76,36 +82,74 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             Console.WriteLine("Developer Tools:");
 
-            Console.WriteLine($"  Xcode:\t{info.XcodePath} - ({info.XcodeVersion})");
+            Console.WriteLine($"  Xcode:\t{info.XcodeVersion} - {info.XcodePath}");
+            Console.WriteLine($"  Mlaunch:\t{info.MlaunchVersion} - {info.MlaunchPath}");
 
             Console.WriteLine();
 
             Console.WriteLine("Installed Simulators:");
 
-            foreach (var sim in info.Simulators)
+            if (info.Simulators.Any())
             {
-                var uuid = _showSimulatorsUUID ? $" ({sim.UDID})" : "";
-                Console.WriteLine($"  {sim.Name}{uuid}: {sim.Type} {sim.OSVersion})");
+                var maxLength = info.Simulators.Select(s => s.Name.Length).Max();
+
+                foreach (var sim in info.Simulators)
+                {
+                    var uuid = _arguments.ShowSimulatorsUUID ? $" {sim.UDID}   " : "";
+                    Console.WriteLine($"  {sim.Name.PadRight(maxLength)}{uuid} {sim.OSVersion,-13} {sim.Type}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("  none");
             }
 
             Console.WriteLine();
 
             Console.WriteLine("Connected Devices:");
 
-            foreach (var dev in info.Devices)
+            if (info.Devices.Any())
             {
-                var uuid = _showDevicesUUID ? $" ({dev.UDID})" : "";
-                Console.WriteLine($"  {dev.Name}{uuid}: {dev.Type} {dev.OSVersion})");
-            }
+                var maxLength = info.Devices.Select(s => s.Name.Length).Max();
 
+                foreach (var dev in info.Devices)
+                {
+                    var uuid = _arguments.ShowDevicesUUID ? $" {dev.UDID}   " : "";
+                    Console.WriteLine($"  {dev.Name.PadRight(maxLength)}{uuid} {dev.OSVersion,-13} {dev.Type}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("  none");
+            }
         }
 
         protected override async Task<ExitCode> InvokeInternal()
         {
-            var processManager = new ProcessManager(null); 
+            var processManager = new ProcessManager(mlaunchPath: _arguments.MlaunchPath); 
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
             var log = new MemoryLog(); // do we really want to log this?
+
+            var mlaunchLog = new MemoryLog { Timestamp = false };
+
+            ProcessExecutionResult result;
+
+            try
+            {
+                result = await processManager.ExecuteCommandAsync(new MlaunchArguments(new MlaunchVersionArgument()), new MemoryLog(), mlaunchLog, new MemoryLog(), TimeSpan.FromSeconds(10));
+            }
+            catch (Exception e)
+            {
+                _log.LogError($"Failed to get mlaunch version info:{Environment.NewLine}{e}");
+                return ExitCode.GENERAL_FAILURE;
+            }
+
+            if (!result.Succeeded)
+            {
+                _log.LogError($"Failed to get mlaunch version info:{Environment.NewLine}{mlaunchLog}");
+                return ExitCode.GENERAL_FAILURE;
+            }
 
             // build the required data, then depending on the format print out
             var info = new SystemInfo
@@ -115,10 +159,21 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 OSVersion = Darwin.GetVersion() ?? "",
                 OSPlatform = "Darwin",
                 XcodePath = processManager.XcodeRoot,
-                XcodeVersion = processManager.XcodeVersion.ToString()
+                XcodeVersion = processManager.XcodeVersion.ToString(),
+                MlaunchPath = processManager.MlaunchPath,
+                MlaunchVersion = mlaunchLog.ToString().Trim(),
             };
 
-            await simulatorLoader.LoadDevices(log);
+            try
+            {
+                await simulatorLoader.LoadDevices(log);
+            }
+            catch (Exception e)
+            {
+                _log.LogError($"Failed to load simulators:{Environment.NewLine}{e}");
+                _log.LogInformation($"Execution log:{Environment.NewLine}{log}");
+                return ExitCode.GENERAL_FAILURE;
+            }
 
             foreach (var sim in simulatorLoader.AvailableDevices)
             {
@@ -131,7 +186,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 });
             }
 
-            await deviceLoader.LoadDevices(log);
+            try
+            {
+                await deviceLoader.LoadDevices(log);
+            }
+            catch (Exception e)
+            {
+                _log.LogError($"Failed to load connected devices:{Environment.NewLine}{e}");
+                _log.LogInformation($"Execution log:{Environment.NewLine}{log}");
+                return ExitCode.GENERAL_FAILURE;
+            }
 
             foreach (var dev in deviceLoader.ConnectedDevices)
             {
@@ -144,7 +208,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 });
             }
 
-            if (_useJson)
+            if (_arguments.UseJson)
             {
                 await AsJson(info);
             }
@@ -152,7 +216,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             {
                 AsText(info);
             }
+
             return ExitCode.SUCCESS;
+        }
+
+        private class MlaunchVersionArgument : OptionArgument
+        {
+            public MlaunchVersionArgument() : base("version")
+            {
+            }
         }
     }
 }
