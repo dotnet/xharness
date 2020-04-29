@@ -89,24 +89,38 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             Console.WriteLine("Installed Simulators:");
 
-            var maxLength = info.Simulators.Select(s => s.Name.Length).Max();
-
-            foreach (var sim in info.Simulators)
+            if (info.Simulators.Any())
             {
-                var uuid = _arguments.ShowSimulatorsUUID ? $" {sim.UDID}   " : "";
-                Console.WriteLine($"  {sim.Name.PadRight(maxLength)}{uuid} {sim.OSVersion,-13} {sim.Type}");
+                var maxLength = info.Simulators.Select(s => s.Name.Length).Max();
+
+                foreach (var sim in info.Simulators)
+                {
+                    var uuid = _arguments.ShowSimulatorsUUID ? $" {sim.UDID}   " : "";
+                    Console.WriteLine($"  {sim.Name.PadRight(maxLength)}{uuid} {sim.OSVersion,-13} {sim.Type}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("  none");
             }
 
             Console.WriteLine();
 
             Console.WriteLine("Connected Devices:");
 
-            maxLength = info.Devices.Select(s => s.Name.Length).Max();
-
-            foreach (var dev in info.Devices)
+            if (info.Devices.Any())
             {
-                var uuid = _arguments.ShowDevicesUUID ? $" {dev.UDID}   " : "";
-                Console.WriteLine($"  {dev.Name.PadRight(maxLength)}{uuid} {dev.OSVersion,-13} {dev.Type}");
+                var maxLength = info.Devices.Select(s => s.Name.Length).Max();
+
+                foreach (var dev in info.Devices)
+                {
+                    var uuid = _arguments.ShowDevicesUUID ? $" {dev.UDID}   " : "";
+                    Console.WriteLine($"  {dev.Name.PadRight(maxLength)}{uuid} {dev.OSVersion,-13} {dev.Type}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("  none");
             }
         }
 
