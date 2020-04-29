@@ -11,12 +11,13 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Mono.Options;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
     internal class iOSGetStateCommand : GetStateCommand
     {
-
         class DeviceInfo
         {
             public string Name { get; set; }
@@ -38,20 +39,21 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
         }
 
         private const string SimulatorPrefix = "com.apple.CoreSimulator.SimDeviceType.";
-        private bool _showSimulatorsUUID = false;
-        private bool _showDevicesUUID = true;
-        private bool _useJson = false;
+
+        private readonly iOSGetStateCommandArguments _arguments = new iOSGetStateCommandArguments();
+
+        protected override ICommandArguments Arguments => _arguments;
+
+        protected override string BaseCommand { get; } = "ios";
 
         public iOSGetStateCommand() : base()
         {
-            Options = new OptionSet() {
-                "usage: ios state",
-                "",
-                "Print information about the current machine, such as host machine info and device status",
-                { "include-simulator-uuid:", "Include the simulators UUID. Defaults to false.", v =>  bool.TryParse(v, out _showSimulatorsUUID)},
-                { "include-devices-uuid:", "Include the devices UUID.", v => bool.TryParse(v, out _showDevicesUUID)},
-                { "json", "Use json as the output format.", v => _useJson = v != null},
-            };
+            Options = CommonOptions;
+
+            Options.Add("mlaunch=", "Path to the mlaunch binary", v => _arguments.MlaunchPath = v);
+            Options.Add("include-simulator-uuid", "Include the simulators UUID. Defaults to false.", v => _arguments.ShowSimulatorsUUID = v != null);
+            Options.Add("include-devices-uuid", "Include the devices UUID.", v => _arguments.ShowDevicesUUID = v != null);
+            Options.Add("json", "Use json as the output format.", v => _arguments.UseJson = v != null);
         }
 
         private async Task AsJson(SystemInfo info)
@@ -84,7 +86,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             foreach (var sim in info.Simulators)
             {
-                var uuid = _showSimulatorsUUID ? $" ({sim.UDID})" : "";
+                var uuid = _arguments.ShowSimulatorsUUID ? $" ({sim.UDID})" : "";
                 Console.WriteLine($"  {sim.Name}{uuid}: {sim.Type} {sim.OSVersion})");
             }
 
@@ -94,7 +96,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             foreach (var dev in info.Devices)
             {
-                var uuid = _showDevicesUUID ? $" ({dev.UDID})" : "";
+                var uuid = _arguments.ShowDevicesUUID ? $" ({dev.UDID})" : "";
                 Console.WriteLine($"  {dev.Name}{uuid}: {dev.Type} {dev.OSVersion})");
             }
 
@@ -144,7 +146,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 });
             }
 
-            if (_useJson)
+            if (_arguments.UseJson)
             {
                 await AsJson(info);
             }
@@ -152,6 +154,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             {
                 AsText(info);
             }
+
             return ExitCode.SUCCESS;
         }
     }

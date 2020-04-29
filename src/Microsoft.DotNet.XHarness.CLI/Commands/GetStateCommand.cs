@@ -2,19 +2,24 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands
 {
     internal abstract class GetStateCommand : XHarnessCommand
     {
-        protected override ICommandArguments Arguments => null;
+        protected abstract string BaseCommand { get; }
 
-        protected readonly OptionSet CommonOptions = new OptionSet();
+        protected OptionSet CommonOptions { get; }
 
         public GetStateCommand() : base("state")
         {
+            CommonOptions = new OptionSet
+            {
+                $"usage: {BaseCommand} state",
+                "",
+                "Print information about the current machine, such as host machine info and device status",
+            };
         }
     }
 }
