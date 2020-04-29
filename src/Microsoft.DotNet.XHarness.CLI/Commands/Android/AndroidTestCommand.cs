@@ -9,51 +9,17 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.Extensions.Logging;
-using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
     internal class AndroidTestCommand : TestCommand
     {
         private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
-        protected override ITestCommandArguments TestArguments => _arguments;
+        protected override TestCommandArguments TestArguments => _arguments;
 
         // nunit2 one should go away eventually
         private readonly string[] _xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
-
-        public AndroidTestCommand() : base()
-        {
-            Options = new OptionSet() {
-                "usage: android test [OPTIONS]",
-                "",
-                "Executes tests on and Android device, waits up to a given timeout, then copies files off the device.",
-                { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
-                    {
-                        string[] argPair = v.Split('=');
-
-                        if (argPair.Length != 2)
-                        {
-                            Options.WriteOptionDescriptions(Console.Out);
-                            return;
-                        }
-                        else
-                        {
-                            _arguments.InstrumentationArguments.Add(argPair[0].Trim(), argPair[1].Trim());
-                        }
-                    }
-                },
-                { "device-out-folder=|dev-out=", "If specified, copy this folder recursively off the device to the path specified by the output directory",  v => _arguments.DeviceOutputFolder = v},
-                { "instrumentation:|i:", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.",  v => _arguments.InstrumentationName = v},
-                { "package-name=|p=", "Package name contained within the supplied APK",  v => _arguments.PackageName = v},
-            };
-
-            foreach (var option in CommonOptions)
-            {
-                Options.Add(option);
-            }
-        }
 
         protected override Task<ExitCode> InvokeInternal()
         {

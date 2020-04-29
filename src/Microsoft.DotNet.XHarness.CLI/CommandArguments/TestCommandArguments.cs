@@ -4,69 +4,79 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using Microsoft.Extensions.Logging;
+using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
-    internal interface ITestCommandArguments : ICommandArguments
+    internal abstract class TestCommandArguments : XHarnessCommandArguments
     {
+        private string? _appPackagePath = null;
+        private string? _outputDirectory = null;
+
         /// <summary>
         /// Path to packaged app
         /// </summary>
-        string AppPackagePath { get; set; }
+        public string AppPackagePath
+        {
+            get => _appPackagePath ?? throw new ArgumentException("You must provide a path for the app bundle that will be tested.");
+            set => _appPackagePath = value;
+        }
+
+        // TODO: Create directory
+        /// <summary>
+        /// Path where the outputs of execution will be stored
+        /// </summary>
+        public string OutputDirectory
+        {
+            get => _outputDirectory ?? throw new ArgumentException("You must provide an output directory where results will be stored.");
+            set => _outputDirectory = value;
+        }
 
         /// <summary>
         /// List of targets to test
         /// </summary>
-        IReadOnlyCollection<string> Targets { get; set; }
+        [DisallowNull]
+        public virtual IReadOnlyCollection<string> Targets { get; protected set; } = Array.Empty<string>();
 
         /// <summary>
         /// How long XHarness should wait until a test execution completes before clean up (kill running apps, uninstall, etc)
         /// </summary>
-        TimeSpan Timeout { get; set; }
-
-        /// <summary>
-        /// Path where the outputs of execution will be stored
-        /// </summary>
-        string OutputDirectory { get; set; }
-    }
-
-    internal abstract class TestCommandArguments : ITestCommandArguments
-    {
-        public string AppPackagePath { get; set; }
-        public IReadOnlyCollection<string> Targets { get; set; }
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(15);
-        public string OutputDirectory { get; set; }
-        public LogLevel Verbosity { get; set; }
 
-        public virtual IList<string> GetValidationErrors()
+        protected override OptionSet GetOptions()
         {
-            var errors = new List<string>();
-
-            if (string.IsNullOrEmpty(AppPackagePath))
+            var options = new OptionSet
             {
-                errors.Add("You must provide a name for the application that will be tested.");
+                { "app|a=", "Path to already-packaged app",
+                    v => AppPackagePath = RootPath(v)
+                },
+                { "output-directory=|o=", "Directory in which the resulting package will be outputted",
+                    v => OutputDirectory = RootPath(v)
+                },
+                { "targets=", "Comma-delineated list of targets to test for",
+                    v => Targets = v.Split(',')
+                },
+                { "timeout=|t=", "Time span, in seconds, to wait for instrumentation to complete.",
+                    v =>
+                    {
+                        if (!int.TryParse(v, out var timeout))
+                        {
+                            throw new ArgumentException("timeout must be an integer - a number of seconds");
+                        }
+
+                        Timeout = TimeSpan.FromSeconds(timeout);
+                    }
+                },
+            };
+
+            foreach (var option in base.GetOptions())
+            {
+                options.Add(option);
             }
 
-            if (string.IsNullOrEmpty(OutputDirectory))
-            {
-                errors.Add("Output directory path missing.");
-            }
-            else
-            {
-                if (!Path.IsPathRooted(OutputDirectory))
-                {
-                    OutputDirectory = Path.Combine(Directory.GetCurrentDirectory(), OutputDirectory);
-                }
-
-                if (!Directory.Exists(OutputDirectory))
-                {
-                    Directory.CreateDirectory(OutputDirectory);
-                }
-            }
-
-            return errors;
+            return options;
         }
     }
 }

@@ -11,10 +11,10 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
-    internal abstract class XHarnessCommandArguments : ICommandArguments
+    internal abstract class XHarnessCommandArguments
     {
-        public LogLevel Verbosity { get; set; }
-        public bool ShowHelp { get; set; }
+        public LogLevel Verbosity { get; set; } = LogLevel.Information;
+        public bool ShowHelp { get; set; } = false;
 
         protected virtual OptionSet GetOptions() => new OptionSet
         {
@@ -28,8 +28,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
             },
             { "help|h", "Show this message", v => ShowHelp = v != null }
         };
-
-        public abstract IList<string> GetValidationErrors();
 
         protected static string RootPath(string path)
         {
@@ -52,6 +50,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 
             if (Enum.TryParse(value, ignoreCase: true, out TEnum result))
             {
+                if (invalidValues != null && invalidValues.Contains(result))
+                {
+                    throw new ArgumentException($"{result} is an invalid value for {argumentName}");
+                }
+
                 return result;
             }
 
@@ -64,8 +67,21 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 
             throw new ArgumentException(
                 $"Invalid value '{value}' supplied in {argumentName}. " +
-                $"Valid values are:{Environment.NewLine}" +
-                $"\t- {string.Join($"{Environment.NewLine}\t- ", validOptions.Select(t => t.ToString()))}");
+                $"Valid values are:" + GetAllowedValues<TEnum>());
         }
+
+        protected static string GetAllowedValues<TEnum>(params TEnum[]? invalidValues) where TEnum : struct, IConvertible
+        {
+            var values = Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
+
+            if (invalidValues != null)
+            {
+                values = values.Where(v => !invalidValues.Contains(v));
+            }
+
+            return Environment.NewLine + "\t- " + string.Join($"{Environment.NewLine}\t- ", values.Select(t => t.ToString()));
+        }
+
+        public abstract void Validate();
     }
 }

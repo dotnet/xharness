@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 {
     internal abstract class XHarnessCommand : Command
     {
-        protected abstract ICommandArguments Arguments { get; }
+        protected abstract XHarnessCommandArguments Arguments { get; }
 
         protected bool ShowHelp = false;
 

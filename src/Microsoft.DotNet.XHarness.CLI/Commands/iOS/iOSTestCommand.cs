@@ -4,7 +4,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
@@ -17,7 +16,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.Extensions.Logging;
-using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
@@ -29,40 +27,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
         private readonly iOSTestCommandArguments _arguments = new iOSTestCommandArguments();
         private readonly ErrorKnowledgeBase _errorKnowledgeBase = new ErrorKnowledgeBase();
 
-        protected override ITestCommandArguments TestArguments => _arguments;
-
-        public iOSTestCommand() : base()
-        {
-            Options = new OptionSet()
-            {
-                "usage: ios test [OPTIONS]",
-                "",
-                "Packaging command that will create a iOS/tvOS/watchOS or macOS application that can be used to run NUnit or XUnit-based test dlls",
-                { "xcode=", "Path where Xcode is installed", v => _arguments.XcodeRoot = v},
-                { "mlaunch=", "Path to the mlaunch binary", v => _arguments.MlaunchPath = v},
-                { "device-name=", "Name of a specific device, if you wish to target one", v => _arguments.DeviceName = v},
-                { "communication-channel=", $"The communication channel to use to communicate with the default. Can be {CommunicationChannel.Network} and {CommunicationChannel.UsbTunnel}. Default is {CommunicationChannel.UsbTunnel}", v =>
-                    {
-                        if (Enum.TryParse(v, out CommunicationChannel channel))
-                        {
-                            _arguments.CommunicationChannel = channel;
-                        }
-                    }
-                },
-                { "launch-timeout=|lt=", "Time span, in seconds, to wait for the iOS app to start.", v => _arguments.LaunchTimeout = TimeSpan.FromSeconds(int.Parse(v))},
-                { "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit} {XmlResultJargon.NUnitV2} {XmlResultJargon.NUnitV3} and {XmlResultJargon.xUnit}", v =>
-                    {
-                        // if we cannot parse it, set it as missing and the error will notify the issue
-                        _arguments.XmlResultJargon = Enum.TryParse(v, out XmlResultJargon jargon) ? jargon : XmlResultJargon.Missing;
-                    }
-                },
-            };
-
-            foreach (var option in CommonOptions)
-            {
-                Options.Add(option);
-            }
-        }
+        protected override TestCommandArguments TestArguments => _arguments;
 
         protected override async Task<ExitCode> InvokeInternal()
         {

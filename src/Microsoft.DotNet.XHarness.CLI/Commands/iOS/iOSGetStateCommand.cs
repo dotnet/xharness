@@ -22,22 +22,22 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     {
         class DeviceInfo
         {
-            public string Name { get; set; }
-            public string UDID { get; set; }
-            public string Type { get; set; }
-            public string OSVersion { get; set; }
+            public string? Name { get; set; }
+            public string? UDID { get; set; }
+            public string? Type { get; set; }
+            public string? OSVersion { get; set; }
         }
 
         class SystemInfo
         {
-            public string MachineName { get; set; }
-            public string OSName { get; set; }
-            public string OSVersion { get; set; }
-            public string OSPlatform { get; set; }
-            public string XcodePath { get; set; }
-            public string XcodeVersion { get; set; }
-            public string MlaunchPath { get; set; }
-            public string MlaunchVersion { get; set; }
+            public string? MachineName { get; set; }
+            public string? OSName { get; set; }
+            public string? OSVersion { get; set; }
+            public string? OSPlatform { get; set; }
+            public string? XcodePath { get; set; }
+            public string? XcodeVersion { get; set; }
+            public string? MlaunchPath { get; set; }
+            public string? MlaunchVersion { get; set; }
             public List<DeviceInfo> Simulators { get; } = new List<DeviceInfo>();
             public List<DeviceInfo> Devices { get; } = new List<DeviceInfo>();
         }
@@ -46,19 +46,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         private readonly iOSGetStateCommandArguments _arguments = new iOSGetStateCommandArguments();
 
-        protected override ICommandArguments Arguments => _arguments;
-
-        protected override string BaseCommand { get; } = "ios";
-
-        public iOSGetStateCommand() : base()
-        {
-            Options = CommonOptions;
-
-            Options.Add("mlaunch=", "Path to the mlaunch binary", v => _arguments.MlaunchPath = v);
-            Options.Add("include-simulator-uuid", "Include the simulators UUID. Defaults to false.", v => _arguments.ShowSimulatorsUUID = v != null);
-            Options.Add("include-devices-uuid", "Include the devices UUID.", v => _arguments.ShowDevicesUUID = v != null);
-            Options.Add("json", "Use json as the output format.", v => _arguments.UseJson = v != null);
-        }
+        protected override XHarnessCommandArguments Arguments => _arguments;
 
         private async Task AsJson(SystemInfo info)
         {
