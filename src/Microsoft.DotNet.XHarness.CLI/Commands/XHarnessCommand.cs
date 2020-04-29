@@ -46,14 +46,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 if (ShowHelp)
                 {
                     Options.WriteOptionDescriptions(Console.Out);
-                    return 0;
+                    return (int)ExitCode.HELP_SHOWN;
                 }
 
                 if (extra.Count > 0)
                 {
                     _log.LogError($"Unknown arguments{string.Join(" ", extra)}");
                     Options.WriteOptionDescriptions(Console.Out);
-                    return 1;
+                    return (int)ExitCode.INVALID_ARGUMENTS;
                 }
 
                 var validationErrors = Arguments?.GetValidationErrors();
@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 
                     _log.LogError(message.ToString());
 
-                    return 1;
+                    return (int)ExitCode.INVALID_ARGUMENTS;
                 }
 
                 return (int)InvokeInternal().GetAwaiter().GetResult();
