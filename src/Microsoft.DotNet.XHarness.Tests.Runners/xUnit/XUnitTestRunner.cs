@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
         public int GenerateHash(string name) => seed++;
     }
 
-    internal class XUnitTestRunner : TestRunner 
+    internal class XUnitTestRunner : TestRunner
     {
         readonly TestMessageSink messageSink;
 
@@ -1024,7 +1024,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                     ITestFrameworkExecutionOptions executionOptions = GetFrameworkOptionsForExecution(configuration);
                     executionOptions.SetDisableParallelization(!RunInParallel);
                     executionOptions.SetSynchronousMessageReporting(true);
-                    executionOptions.SetMaxParallelThreads(MaxParallelThreads); 
+                    executionOptions.SetMaxParallelThreads(MaxParallelThreads);
 
                     // set the wait for event cb first, then execute the tests
                     var resultTask = WaitForEvent(resultsSink.Finished, TimeSpan.FromDays(10)).ConfigureAwait(false);
@@ -1097,6 +1097,13 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
 
                     string testClassNamespace = testClassName.Substring(0, dot);
                     if (String.Compare(testClassNamespace, filter.SelectorValue, StringComparison.OrdinalIgnoreCase) == 0)
+                        return ReportFilteredTest(filter);
+                    continue;
+                }
+
+                if (filter.FilterType == XUnitFilterType.Attribute)
+                {
+                    if (testCase.TestMethod.Method.GetCustomAttributes(filter.SelectorName).Any())
                         return ReportFilteredTest(filter);
                     continue;
                 }
@@ -1175,9 +1182,20 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                     if (traitInfo.Length == 2)
                     {
                         filters.Add(XUnitFilter.CreateTraitFilter(traitInfo[0], traitInfo[1], true));
-                    } else { 
+                    } else {
                         filters.Add(XUnitFilter.CreateTraitFilter(c, null, true));
 					}
+                }
+            }
+        }
+
+        public override void SkipAttributes(IEnumerable<string> attributes)
+        {
+            if (attributes.Any())
+            {
+                foreach (var attr in attributes)
+                {
+                    filters.Add(XUnitFilter.CreateAttributeFilter(attr, true));
                 }
             }
         }
