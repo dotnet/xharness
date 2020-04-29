@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json;
 
@@ -88,22 +89,25 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             Console.WriteLine("Installed Simulators:");
 
+            var maxLength = info.Simulators.Select(s => s.Name.Length).Max();
+
             foreach (var sim in info.Simulators)
             {
-                var uuid = _arguments.ShowSimulatorsUUID ? $" ({sim.UDID})" : "";
-                Console.WriteLine($"  {sim.Name}{uuid}: {sim.Type} {sim.OSVersion})");
+                var uuid = _arguments.ShowSimulatorsUUID ? $" {sim.UDID}   " : "";
+                Console.WriteLine($"  {sim.Name.PadRight(maxLength)}{uuid} {sim.OSVersion,-13} {sim.Type}");
             }
 
             Console.WriteLine();
 
             Console.WriteLine("Connected Devices:");
 
+            maxLength = info.Devices.Select(s => s.Name.Length).Max();
+
             foreach (var dev in info.Devices)
             {
-                var uuid = _arguments.ShowDevicesUUID ? $" ({dev.UDID})" : "";
-                Console.WriteLine($"  {dev.Name}{uuid}: {dev.Type} {dev.OSVersion})");
+                var uuid = _arguments.ShowDevicesUUID ? $" {dev.UDID}   " : "";
+                Console.WriteLine($"  {dev.Name.PadRight(maxLength)}{uuid} {dev.OSVersion,-13} {dev.Type}");
             }
-
         }
 
         protected override async Task<ExitCode> InvokeInternal()
