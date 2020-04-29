@@ -43,6 +43,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     internal class iOSTestCommand : TestCommand
     {
         private readonly iOSTestCommandArguments _arguments = new iOSTestCommandArguments();
+        private readonly ErrorKnowledgeBase _errorKnowledgeBase = new ErrorKnowledgeBase();
         private CommunicationChannel _channel = CommunicationChannel.UsbTunnel; // use the tunnel as default since it is more reliable.
         protected override ITestCommandArguments TestArguments => _arguments;
 
@@ -154,7 +155,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                 if (!result.Succeeded)
                 {
-                    _log.LogError($"Failed to install the app bundle (exit code={result.ExitCode})");
+                    // use the knowledge base class to decide if the error is known, if it is, let the user know
+                    // the failure reason
+                    if (_errorKnowledgeBase.IsKnownInstallIssue(mainLog, out var errorMessage))
+                    {
+                        _log.LogError(
+                            $"Failed to install the app bundle (exit code={result.ExitCode}): {errorMessage}");
+                    }
+                    else
+                    {
+                        _log.LogError($"Failed to install the app bundle (exit code={result.ExitCode})");
+                    }
+
                     return ExitCode.PACKAGE_INSTALLATION_FAILURE;
                 }
 
@@ -231,7 +243,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             catch (Exception e)
             {
-                _log.LogError($"Application run failed:{Environment.NewLine}{e}");
+                if (_errorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
+                {
+                    _log.LogError($"Application run failed:{Environment.NewLine}{failureMessage}");
+                }
+                else
+                {
+                    _log.LogError($"Application run failed:{Environment.NewLine}{e}");
+                }
+
                 return ExitCode.APP_CRASH;
             }
             finally
