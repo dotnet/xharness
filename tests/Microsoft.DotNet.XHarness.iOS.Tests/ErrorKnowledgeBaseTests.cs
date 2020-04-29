@@ -16,42 +16,51 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         [Fact]
         public void WrongArchPresentTest()
         {
+            var logPath = Path.GetTempFileName();
             var expectedFailureMessage =
                 "IncorrectArchitecture: Failed to find matching arch for 64-bit Mach-O input file /private/var/installd/Library/Caches/com.apple.mobile.installd.staging/temp.Ic8Ank/extracted/monotouchtest.app/monotouchtest";
-            using var log = new LogFile("test", Path.GetTempFileName());
-            // write some data in it
-            log.WriteLine("InstallingEmbeddedProfile: 65%");
-            log.WriteLine("PercentComplete: 30");
-            log.WriteLine("Status: InstallingEmbeddedProfile");
-            log.WriteLine("VerifyingApplication: 70%");
-            log.WriteLine("PercentComplete: 40");
-            log.WriteLine("Status: VerifyingApplication");
-            log.WriteLine("IncorrectArchitecture: Failed to find matching arch for 64-bit Mach-O input file /private/var/installd/Library/Caches/com.apple.mobile.installd.staging/temp.Ic8Ank/extracted/monotouchtest.app/monotouchtest");
-            log.Flush();
+            using (var log = new LogFile("test", logPath))
+            {
+                // write some data in it
+                log.WriteLine("InstallingEmbeddedProfile: 65%");
+                log.WriteLine("PercentComplete: 30");
+                log.WriteLine("Status: InstallingEmbeddedProfile");
+                log.WriteLine("VerifyingApplication: 70%");
+                log.WriteLine("PercentComplete: 40");
+                log.WriteLine("Status: VerifyingApplication");
+                log.WriteLine(
+                    "IncorrectArchitecture: Failed to find matching arch for 64-bit Mach-O input file /private/var/installd/Library/Caches/com.apple.mobile.installd.staging/temp.Ic8Ank/extracted/monotouchtest.app/monotouchtest");
+                log.Flush();
 
-            Assert.True(_errorKnowledgeBase.IsKnownInstallIssue(log, out var failureMessage));
-            Assert.Equal(expectedFailureMessage, failureMessage);
-            if (File.Exists(log.FullPath))
-                File.Delete(log.FullPath);
+                Assert.True(_errorKnowledgeBase.IsKnownInstallIssue(log, out var failureMessage));
+                Assert.Equal(expectedFailureMessage, failureMessage);
+            }
+
+            if (File.Exists(logPath))
+                File.Delete(logPath);
         }
 
         [Fact]
         public void WrongArchNotPresentTest()
         {
-            using var log = new LogFile("test", Path.GetTempFileName());
-            // write some data in it
-            log.WriteLine("InstallingEmbeddedProfile: 65%");
-            log.WriteLine("PercentComplete: 30");
-            log.WriteLine("Status: InstallingEmbeddedProfile");
-            log.WriteLine("VerifyingApplication: 70%");
-            log.WriteLine("PercentComplete: 40");
-            log.WriteLine("Status: VerifyingApplication");
-            log.Flush();
+            var logPath = Path.GetTempFileName();
+            using (var log = new LogFile("test", logPath))
+            {
+                // write some data in it
+                log.WriteLine("InstallingEmbeddedProfile: 65%");
+                log.WriteLine("PercentComplete: 30");
+                log.WriteLine("Status: InstallingEmbeddedProfile");
+                log.WriteLine("VerifyingApplication: 70%");
+                log.WriteLine("PercentComplete: 40");
+                log.WriteLine("Status: VerifyingApplication");
+                log.Flush();
 
-            Assert.False(_errorKnowledgeBase.IsKnownInstallIssue(log, out var failureMessage));
-            Assert.Null(failureMessage);
-            if (File.Exists(log.FullPath))
-                File.Delete(log.FullPath);
+                Assert.False(_errorKnowledgeBase.IsKnownInstallIssue(log, out var failureMessage));
+                Assert.Null(failureMessage);
+            }
+
+            if (File.Exists(logPath))
+                File.Delete(logPath);
         }
     }
 }
