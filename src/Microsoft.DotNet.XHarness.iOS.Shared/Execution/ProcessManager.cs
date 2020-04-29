@@ -72,14 +72,28 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             return await RunAsync(p, log, stdout, stderr, timeout, environmentVariables, cancellationToken);
         }
 
-        public async Task<ProcessExecutionResult> ExecuteCommandAsync(MlaunchArguments args,
+        public async Task<ProcessExecutionResult> ExecuteCommandAsync(
+            MlaunchArguments args,
             ILog log,
             TimeSpan timeout,
             Dictionary<string, string> environmentVariables = null,
             CancellationToken? cancellationToken = null)
         {
             using var p = new Process();
-            return await RunAsync(p, args, log, timeout, environmentVariables, cancellationToken);
+            return await RunAsync(p, args, log, log, log, timeout, environmentVariables, cancellationToken);
+        }
+
+        public async Task<ProcessExecutionResult> ExecuteCommandAsync(
+            MlaunchArguments args,
+            ILog log,
+            ILog stdout,
+            ILog stderr,
+            TimeSpan timeout,
+            Dictionary<string, string> environmentVariables = null,
+            CancellationToken? cancellationToken = null)
+        {
+            using var p = new Process();
+            return await RunAsync(p, args, log, stdout, stderr, timeout, environmentVariables, cancellationToken);
         }
 
         public Task<ProcessExecutionResult> ExecuteXcodeCommandAsync(string executable, IList<string> args, ILog log, TimeSpan timeout)
@@ -91,7 +105,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         [DllImport("/usr/lib/libc.dylib")]
         internal static extern int kill(int pid, int sig);
 
-        public Task<ProcessExecutionResult> RunAsync(Process process,
+        public Task<ProcessExecutionResult> RunAsync(
+            Process process,
             ILog log,
             TimeSpan? timeout = null,
             Dictionary<string, string> environmentVariables = null,
@@ -101,7 +116,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             return RunAsync(process, log, log, log, timeout, environmentVariables, cancellationToken, diagnostics);
         }
 
-        public Task<ProcessExecutionResult> RunAsync(Process process,
+        public Task<ProcessExecutionResult> RunAsync(
+            Process process,
             MlaunchArguments args,
             ILog log,
             TimeSpan? timeout = null,
@@ -115,10 +131,31 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             process.StartInfo.FileName = MlaunchPath;
             process.StartInfo.Arguments = args.AsCommandLine();
 
-            return RunAsync(process, log, timeout, environmentVariables, cancellationToken, diagnostics);
+            return RunAsync(process, log, log, log, timeout, environmentVariables, cancellationToken, diagnostics);
         }
 
-        public Task<ProcessExecutionResult> RunAsync(Process process,
+        public Task<ProcessExecutionResult> RunAsync(
+            Process process,
+            MlaunchArguments args,
+            ILog log,
+            ILog stdout,
+            ILog stderr,
+            TimeSpan? timeout = null,
+            Dictionary<string, string> environmentVariables = null,
+            CancellationToken? cancellationToken = null,
+            bool? diagnostics = null)
+        {
+            if (!args.Any(a => a is SdkRootArgument))
+                args.Prepend(new SdkRootArgument(XcodeRoot));
+
+            process.StartInfo.FileName = MlaunchPath;
+            process.StartInfo.Arguments = args.AsCommandLine();
+
+            return RunAsync(process, log, stdout, stderr, timeout, environmentVariables, cancellationToken, diagnostics);
+        }
+
+        public Task<ProcessExecutionResult> RunAsync(
+            Process process,
             ILog log,
             ILog stdout,
             ILog stderr,
@@ -140,7 +177,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             return KillTreeAsyncInternal(pid, log, diagnostics);
         }
 
-        static async Task<ProcessExecutionResult> RunAsyncInternal(Process process,
+        static async Task<ProcessExecutionResult> RunAsyncInternal(
+            Process process,
             ILog log,
             ILog stdout,
             ILog stderr,
