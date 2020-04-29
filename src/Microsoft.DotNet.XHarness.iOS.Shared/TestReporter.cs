@@ -539,30 +539,40 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             {
                 WrenchLog.WriteLine("AddSummary: <b><i>{0} never launched</i></b><br/>", runMode);
                 mainLog.WriteLine("Test run never launched");
+                result.ResultMessage = "Test runner never started";
                 Success = false;
             }
             else if (launchFailure)
             {
                 WrenchLog.WriteLine("AddSummary: <b><i>{0} failed to launch</i></b><br/>", runMode);
                 mainLog.WriteLine("Test run failed to launch");
+                result.ResultMessage = "Test runner failed to launch";
                 Success = false;
             }
             else
             {
                 WrenchLog.WriteLine("AddSummary: <b><i>{0} crashed at startup (no log)</i></b><br/>", runMode);
                 mainLog.WriteLine("Test run crashed before it started (no log file produced)");
+                result.ResultMessage = "No test log file was produced";
                 crashed = true;
                 Success = false;
             }
 
             if (!Success.HasValue)
+            {
                 Success = false;
+            }
 
             var crashLogWaitTime = 0;
             if (!Success.Value)
+            {
                 crashLogWaitTime = 5;
+            }
+
             if (crashed)
+            {
                 crashLogWaitTime = 30;
+            }
 
             await crashReporter.EndCaptureAsync(TimeSpan.FromSeconds(crashLogWaitTime));
 
@@ -634,6 +644,5 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             return result;
         }
-
     }
 }

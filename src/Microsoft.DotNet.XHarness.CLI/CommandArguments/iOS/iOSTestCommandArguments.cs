@@ -12,6 +12,21 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 {
+    /// <summary>
+    /// Specifies the channel that is used to comminicate with the device.
+    /// </summary>
+    internal enum CommunicationChannel
+    {
+        /// <summary>
+        /// Connect to the device using the LAN or WAN.
+        /// </summary>
+        Network,
+        /// <summary>
+        /// Connect to the device using a tcp-tunnel
+        /// </summary>
+        UsbTunnel,
+    }
+
     internal class iOSTestCommandArguments : TestCommandArguments
     {
         /// <summary>
@@ -42,6 +57,14 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// </summary>
         public XmlResultJargon XmlResultJargon { get; set; } = XmlResultJargon.xUnit; // default by mono
 
+        /// <summary>
+        /// The way the simulator/device talks back to XHarness.
+        /// </summary>
+        public CommunicationChannel CommunicationChannel { get; set; } = CommunicationChannel.UsbTunnel;
+
+        /// <summary>
+        /// Parsed strong-typed targets.
+        /// </summary>
         public IReadOnlyCollection<TestTarget> TestTargets { get; set; }
 
         public override IList<string> GetValidationErrors()

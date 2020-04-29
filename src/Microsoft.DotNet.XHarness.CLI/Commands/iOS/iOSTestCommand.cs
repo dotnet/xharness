@@ -21,22 +21,6 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
-
-    /// <summary>
-    /// Specifies the channel that is used to comminicate with the device.
-    /// </summary>
-    public enum CommunicationChannel
-    {
-        /// <summary>
-        /// Connect to the device using the LAN or WAN.
-        /// </summary>
-        Network,
-        /// <summary>
-        /// Connect to the device using a tcp-tunnel
-        /// </summary>
-        UsbTunnel,
-    }
-
     /// <summary>
     /// Command which executes a given, already-packaged iOS application, waits on it and returns status based on the outcome.
     /// </summary>
@@ -44,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     {
         private readonly iOSTestCommandArguments _arguments = new iOSTestCommandArguments();
         private readonly ErrorKnowledgeBase _errorKnowledgeBase = new ErrorKnowledgeBase();
-        private CommunicationChannel _channel = CommunicationChannel.UsbTunnel; // use the tunnel as default since it is more reliable.
+
         protected override ITestCommandArguments TestArguments => _arguments;
 
         public iOSTestCommand() : base()
@@ -57,9 +41,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 { "xcode=", "Path where Xcode is installed", v => _arguments.XcodeRoot = v},
                 { "mlaunch=", "Path to the mlaunch binary", v => _arguments.MlaunchPath = v},
                 { "device-name=", "Name of a specific device, if you wish to target one", v => _arguments.DeviceName = v},
-                { "communication-channel:", $"The communication channel to use to communicate with the default. Can be {CommunicationChannel.Network} and {CommunicationChannel.UsbTunnel}. Default is {CommunicationChannel.UsbTunnel}", v => Enum.TryParse (v, out _channel)},
+                { "communication-channel=", $"The communication channel to use to communicate with the default. Can be {CommunicationChannel.Network} and {CommunicationChannel.UsbTunnel}. Default is {CommunicationChannel.UsbTunnel}", v =>
+                    {
+                        if (Enum.TryParse(v, out CommunicationChannel channel))
+                        {
+                            _arguments.CommunicationChannel = channel;
+                        }
+                    }
+                },
                 { "launch-timeout=|lt=", "Time span, in seconds, to wait for the iOS app to start.", v => _arguments.LaunchTimeout = TimeSpan.FromSeconds(int.Parse(v))},
-                { "xml-jargon:|xj:", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit} {XmlResultJargon.NUnitV2} {XmlResultJargon.NUnitV3} and {XmlResultJargon.xUnit}", v =>
+                { "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit} {XmlResultJargon.NUnitV2} {XmlResultJargon.NUnitV3} and {XmlResultJargon.xUnit}", v =>
                     {
                         // if we cannot parse it, set it as missing and the error will notify the issue
                         _arguments.XmlResultJargon = Enum.TryParse(v, out XmlResultJargon jargon) ? jargon : XmlResultJargon.Missing;
@@ -88,7 +79,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             foreach (TestTarget target in _arguments.TestTargets)
             {
-                var tunnelBore = (_channel == CommunicationChannel.UsbTunnel && !target.IsSimulator())
+                var tunnelBore = (_arguments.CommunicationChannel == CommunicationChannel.UsbTunnel && !target.IsSimulator())
                     ? new TunnelBore(processManager)
                     : null;
                 var exitCodeForRun = await RunTest(target, logs, processManager, deviceLoader, simulatorLoader,
@@ -207,33 +198,49 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                 switch (testResult)
                 {
-                    case TestExecutingResult.Finished:
                     case TestExecutingResult.Succeeded:
-                    case TestExecutingResult.Failed:
-                        _log.LogInformation($"Application finished the test run with result '{testResult}'");
+                        _log.LogInformation($"Application finished the test run successfully");
                         _log.LogInformation(resultMessage);
+
                         return ExitCode.SUCCESS;
 
+                    case TestExecutingResult.Failed:
+                        _log.LogInformation($"Application finished the test run successfully with some failed tests");
+                        _log.LogInformation(resultMessage);
+
+                        return ExitCode.TESTS_FAILED;
+
                     case TestExecutingResult.Crashed:
-                        _log.LogError($"Application run crashed. Check logs for more information");
 
                         if (resultMessage != null)
                         {
-                            _log.LogError(resultMessage);
+                            _log.LogError($"Application run crashed:{Environment.NewLine}" +
+                                $"{resultMessage}{Environment.NewLine}{Environment.NewLine}" +
+                                $"Check logs for more information.");
+                        }
+                        else
+                        {
+                            _log.LogError($"Application run crashed. Check logs for more information");
                         }
 
                         return ExitCode.APP_CRASH;
 
                     case TestExecutingResult.TimedOut:
                         _log.LogWarning($"Application run timed out");
+
                         return ExitCode.TIMED_OUT;
 
                     default:
-                        _log.LogError($"Application run ended in an unexpected way: '{testResult}'. Check logs for more information");
 
                         if (resultMessage != null)
                         {
-                            _log.LogError(resultMessage);
+                            _log.LogError($"Application run ended in an unexpected way: '{testResult}'{Environment.NewLine}" +
+                                $"{resultMessage}{Environment.NewLine}{Environment.NewLine}" +
+                                $"Check logs for more information.");
+                        }
+                        else
+                        {
+                            _log.LogError($"Application run ended in an unexpected way: '{testResult}'. Check logs for more information");
                         }
 
                         return ExitCode.GENERAL_FAILURE;
