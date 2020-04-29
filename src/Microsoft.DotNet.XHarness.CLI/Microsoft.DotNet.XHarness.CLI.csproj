@@ -43,12 +43,20 @@
 
   <Target Name="DownloadAndroidSdks" BeforeTargets="Build">
     <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="True" />
+    <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)"   DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
+    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(LinuxAndroidSdkFileName)"   DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/linux" OverwriteReadOnlyFiles="true" />
     <ItemGroup>
       <WindowsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
+      <LinuxAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />
       <Content Include="@(WindowsAdbFiles)">
         <Pack>true</Pack>
         <PackagePath>runtimes/any/native/adb/windows</PackagePath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="@(LinuxAdbFiles)">
+        <Pack>true</Pack>
+        <PackagePath>runtimes/any/native/adb/linux</PackagePath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
