@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!-- We include mlaunch and adb binaries we didn't build and which do not need sympkgs -->
+  <PropertyGroup>
+    <AutoGenerateSymbolPackages>false</AutoGenerateSymbolPackages>
+  </PropertyGroup>
+
+</Project>

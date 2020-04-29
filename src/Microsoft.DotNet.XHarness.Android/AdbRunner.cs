@@ -57,8 +57,10 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 return Path.Join(currentAssemblyDirectory, @"..\..\..\runtimes\any\native\adb\windows\adb.exe");
             }
-            // TODO: Figure out a minimum set of linux ADB binaries (or just bring the whole thing if we must)
-            else throw new NotImplementedException("Non-Windows ADB support not added yet");
+            else
+            {
+                return Path.Join(currentAssemblyDirectory, @"../../../runtimes/any/native/adb/linux/adb");
+            }
         }
 
         #endregion
