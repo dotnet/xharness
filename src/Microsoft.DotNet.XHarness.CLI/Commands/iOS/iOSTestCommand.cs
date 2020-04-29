@@ -21,22 +21,6 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
-
-    /// <summary>
-    /// Specifies the channel that is used to comminicate with the device.
-    /// </summary>
-    public enum CommunicationChannel
-    {
-        /// <summary>
-        /// Connect to the device using the LAN or WAN.
-        /// </summary>
-        Network,
-        /// <summary>
-        /// Connect to the device using a tcp-tunnel
-        /// </summary>
-        UsbTunnel,
-    }
-
     /// <summary>
     /// Command which executes a given, already-packaged iOS application, waits on it and returns status based on the outcome.
     /// </summary>
