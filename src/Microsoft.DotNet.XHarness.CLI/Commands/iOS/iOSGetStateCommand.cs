@@ -81,8 +81,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             Console.WriteLine("Developer Tools:");
 
-            Console.WriteLine($"  Xcode:\t{info.XcodePath} - ({info.XcodeVersion})");
-            Console.WriteLine($"  Mlaunch:\t{info.MlaunchPath} - ({info.MlaunchVersion})");
+            Console.WriteLine($"  Xcode:\t{info.XcodeVersion} - {info.XcodePath}");
+            Console.WriteLine($"  Mlaunch:\t{info.MlaunchVersion} - {info.MlaunchPath}");
 
             Console.WriteLine();
 
@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             var simulatorLoader = new SimulatorLoader(processManager);
             var log = new MemoryLog(); // do we really want to log this?
 
-            var mlaunchLog = new MemoryLog();
+            var mlaunchLog = new MemoryLog { Timestamp = false };
 
             ProcessExecutionResult result;
 
