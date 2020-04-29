@@ -13,6 +13,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Mono.Options;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
@@ -120,7 +121,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 XcodeVersion = processManager.XcodeVersion.ToString()
             };
 
-            await simulatorLoader.LoadDevices(log);
+            try
+            {
+                await simulatorLoader.LoadDevices(log);
+            }
+            catch (Exception e)
+            {
+                _log.LogError($"Failed to load simulators:{Environment.NewLine}{e}");
+                _log.LogInformation($"Execution log:{Environment.NewLine}{log}");
+                return ExitCode.GENERAL_FAILURE;
+            }
 
             foreach (var sim in simulatorLoader.AvailableDevices)
             {
@@ -133,7 +143,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 });
             }
 
-            await deviceLoader.LoadDevices(log);
+            try
+            {
+                await deviceLoader.LoadDevices(log);
+            }
+            catch (Exception e)
+            {
+                _log.LogError($"Failed to load connected devices:{Environment.NewLine}{e}");
+                _log.LogInformation($"Execution log:{Environment.NewLine}{log}");
+                return ExitCode.GENERAL_FAILURE;
+            }
 
             foreach (var dev in deviceLoader.ConnectedDevices)
             {
