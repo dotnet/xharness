@@ -209,28 +209,40 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     case TestExecutingResult.Failed:
                         _log.LogInformation($"Application finished the test run with result '{testResult}'");
                         _log.LogInformation(resultMessage);
+
                         return ExitCode.SUCCESS;
 
                     case TestExecutingResult.Crashed:
-                        _log.LogError($"Application run crashed. Check logs for more information");
 
                         if (resultMessage != null)
                         {
-                            _log.LogError(resultMessage);
+                            _log.LogError($"Application run crashed:{Environment.NewLine}" +
+                                $"{resultMessage}{Environment.NewLine}{Environment.NewLine}" +
+                                $"Check logs for more information.");
+                        }
+                        else
+                        {
+                            _log.LogError($"Application run crashed. Check logs for more information");
                         }
 
                         return ExitCode.APP_CRASH;
 
                     case TestExecutingResult.TimedOut:
                         _log.LogWarning($"Application run timed out");
+
                         return ExitCode.TIMED_OUT;
 
                     default:
-                        _log.LogError($"Application run ended in an unexpected way: '{testResult}'. Check logs for more information");
 
                         if (resultMessage != null)
                         {
-                            _log.LogError(resultMessage);
+                            _log.LogError($"Application run ended in an unexpected way: '{testResult}'{Environment.NewLine}" +
+                                $"{resultMessage}{Environment.NewLine}{Environment.NewLine}" +
+                                $"Check logs for more information.");
+                        }
+                        else
+                        {
+                            _log.LogError($"Application run ended in an unexpected way: '{testResult}'. Check logs for more information");
                         }
 
                         return ExitCode.GENERAL_FAILURE;
