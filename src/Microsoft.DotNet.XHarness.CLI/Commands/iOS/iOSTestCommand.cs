@@ -221,7 +221,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                         _log.LogInformation($"Application finished the test run successfully with some failed tests");
                         _log.LogInformation(resultMessage);
 
-                        return ExitCode.SUCCESS;
+                        return ExitCode.TESTS_FAILED;
 
                     case TestExecutingResult.Crashed:
 
