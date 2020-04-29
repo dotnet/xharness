@@ -221,18 +221,17 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 if (!target.IsWatchOSTarget())
                 {
-                    var stderr_tty = _helpers.GetTerminalName(2);
-                    if (!string.IsNullOrEmpty(stderr_tty))
+                    var stderrTty = _helpers.GetTerminalName(2);
+                    if (!string.IsNullOrEmpty(stderrTty))
                     {
-                        args.Add(new SetStdoutArgument(stderr_tty));
-                        args.Add(new SetStderrArgument(stderr_tty));
+                        args.Add(new SetStderrArgument(stderrTty));
                     }
                     else
                     {
-                        var stdout_log = _logs.CreateFile($"stdout-{_helpers.Timestamp}.log", "Standard output");
-                        var stderr_log = _logs.CreateFile($"stderr-{_helpers.Timestamp}.log", "Standard error");
-                        args.Add(new SetStdoutArgument(stdout_log));
-                        args.Add(new SetStderrArgument(stderr_log));
+                        var stdoutLog = _logs.CreateFile($"mlaunch-stdout-{_helpers.Timestamp}.log", "Standard output");
+                        var stderrLog = _logs.CreateFile($"mlaunch-stderr-{_helpers.Timestamp}.log", "Standard error");
+                        args.Add(new SetStdoutArgument(stdoutLog));
+                        args.Add(new SetStderrArgument(stderrLog));
                     }
                 }
 
