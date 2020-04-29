@@ -13,6 +13,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
 using Microsoft.Extensions.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
@@ -34,6 +35,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             public string OSPlatform { get; set; }
             public string XcodePath { get; set; }
             public string XcodeVersion { get; set; }
+            public string MlaunchPath { get; set; }
+            public string MlaunchVersion { get; set; }
             public List<DeviceInfo> Simulators { get; } = new List<DeviceInfo>();
             public List<DeviceInfo> Devices { get; } = new List<DeviceInfo>();
         }
@@ -79,6 +82,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             Console.WriteLine("Developer Tools:");
 
             Console.WriteLine($"  Xcode:\t{info.XcodePath} - ({info.XcodeVersion})");
+            Console.WriteLine($"  Mlaunch:\t{info.MlaunchPath} - ({info.MlaunchVersion})");
 
             Console.WriteLine();
 
@@ -109,6 +113,26 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             var simulatorLoader = new SimulatorLoader(processManager);
             var log = new MemoryLog(); // do we really want to log this?
 
+            var mlaunchLog = new MemoryLog();
+
+            ProcessExecutionResult result;
+
+            try
+            {
+                result = await processManager.ExecuteCommandAsync(new MlaunchArguments(new MlaunchVersionArgument()), mlaunchLog, TimeSpan.FromSeconds(10));
+            }
+            catch (Exception e)
+            {
+                _log.LogError($"Failed to get mlaunch version info:{Environment.NewLine}{e}");
+                return ExitCode.GENERAL_FAILURE;
+            }
+
+            if (!result.Succeeded)
+            {
+                _log.LogError($"Failed to get mlaunch version info:{Environment.NewLine}{mlaunchLog}");
+                return ExitCode.GENERAL_FAILURE;
+            }
+
             // build the required data, then depending on the format print out
             var info = new SystemInfo
             {
@@ -117,7 +141,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 OSVersion = Darwin.GetVersion() ?? "",
                 OSPlatform = "Darwin",
                 XcodePath = processManager.XcodeRoot,
-                XcodeVersion = processManager.XcodeVersion.ToString()
+                XcodeVersion = processManager.XcodeVersion.ToString(),
+                MlaunchPath = processManager.MlaunchPath,
+                MlaunchVersion = mlaunchLog.ToString().Trim(),
             };
 
             try
@@ -174,6 +200,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
 
             return ExitCode.SUCCESS;
+        }
+
+        private class MlaunchVersionArgument : OptionArgument
+        {
+            public MlaunchVersionArgument() : base("version")
+            {
+            }
         }
     }
 }
