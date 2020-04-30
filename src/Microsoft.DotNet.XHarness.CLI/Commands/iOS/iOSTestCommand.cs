@@ -120,8 +120,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     // the failure reason
                     if (_errorKnowledgeBase.IsKnownInstallIssue(mainLog, out var errorMessage))
                     {
-                        logger.LogError(
-                            $"Failed to install the app bundle (exit code={result.ExitCode}): {errorMessage}");
+                        logger.LogError($"Failed to install the app bundle (exit code={result.ExitCode}): {errorMessage}");
                     }
                     else
                     {
@@ -136,22 +135,22 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? $"device '{deviceName}'" : target.AsString()));
 
+            var appRunner = new AppRunner(
+                processManager,
+                deviceLoader,
+                simulatorLoader,
+                new SimpleListenerFactory(tunnelBore),
+                new CrashSnapshotReporterFactory(processManager),
+                new CaptureLogFactory(),
+                new DeviceLogCapturerFactory(processManager),
+                new TestReporterFactory(processManager),
+                mainLog,
+                logs,
+                new Helpers(),
+                useXmlOutput: true); // the cli ALWAYS will get the output as xml
+
             try
             {
-                var appRunner = new AppRunner(
-                    processManager,
-                    deviceLoader,
-                    simulatorLoader,
-                    new SimpleListenerFactory(tunnelBore),
-                    new CrashSnapshotReporterFactory(processManager),
-                    new CaptureLogFactory(),
-                    new DeviceLogCapturerFactory(processManager),
-                    new TestReporterFactory(processManager),
-                    mainLog,
-                    logs,
-                    new Helpers(),
-                    useXmlOutput: true); // the cli ALWAYS will get the output as xml
-
                 string resultMessage;
                 TestExecutingResult testResult;
                 (deviceName, testResult, resultMessage) = await appRunner.RunApp(appBundleInfo,
@@ -233,7 +232,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             finally
             {
-                if (!target.IsSimulator())
+                if (!target.IsSimulator() && deviceName != null)
                 {
                     logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from device '{deviceName}'");
 

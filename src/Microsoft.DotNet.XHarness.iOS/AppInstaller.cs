@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             _verbosity = verbosity;
         }
 
-        public async Task<(string deviceName, ProcessExecutionResult result)> InstallApp(string appPath, TestTarget target, string deviceName = null, CancellationToken cancellationToken = default)
+        public async Task<(string deviceName, ProcessExecutionResult result)> InstallApp(string appPath, TestTarget target, string? deviceName = null, CancellationToken cancellationToken = default)
         {
             if (target.IsSimulator())
             {
