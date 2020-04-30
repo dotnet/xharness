@@ -11,14 +11,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         public string AppPath { get; }
         public string Variation { get; set; }
         public string LaunchAppPath { get; }
+        public bool Supports32Bit { get; }
         public Extension? Extension { get; }
 
-        public AppBundleInformation(string appName, string bundleIdentifier, string appPath, string launchAppPath, Extension? extension)
+        public AppBundleInformation(string appName, string bundleIdentifier, string appPath, string launchAppPath, bool supports32b, Extension? extension)
         {
             AppName = appName;
             BundleIdentifier = bundleIdentifier;
             AppPath = appPath;
             LaunchAppPath = launchAppPath;
+            Supports32Bit = supports32b;
             Extension = extension;
         }
     }

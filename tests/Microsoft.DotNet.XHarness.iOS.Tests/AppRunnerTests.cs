@@ -172,7 +172,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _helpers.Object,
                 useXmlOutput);
 
-            var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
+            var appInformation = new AppBundleInformation(
+                appName: AppName,
+                bundleIdentifier: AppBundleIdentifier,
+                appPath: s_appPath,
+                launchAppPath: s_appPath,
+                supports32b: false,
+                extension:null);
 
             await Assert.ThrowsAsync<NoDeviceFoundException>(
                 async () => await appRunner.RunApp(
@@ -247,7 +253,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _helpers.Object,
                 useXml);
 
-            var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
+            var appInformation = new AppBundleInformation(
+                appName: AppName,
+                bundleIdentifier: AppBundleIdentifier,
+                appPath: s_appPath,
+                launchAppPath: s_appPath,
+                supports32b: false,
+                extension: null);
 
             var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
@@ -319,7 +331,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _helpers.Object,
                 true);
 
-            var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
+            var appInformation = new AppBundleInformation(
+                appName: AppName,
+                bundleIdentifier: AppBundleIdentifier,
+                appPath:s_appPath,
+                launchAppPath:s_appPath,
+                supports32b: false,
+                extension:null);
 
             await Assert.ThrowsAsync<NoDeviceFoundException>(
                 async () => await appRunner.RunApp(
@@ -379,7 +397,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _helpers.Object,
                 useXml);
 
-            var appInformation = new AppBundleInformation(AppName, AppBundleIdentifier, s_appPath, s_appPath, null);
+            var appInformation = new AppBundleInformation(
+                appName: AppName,
+                bundleIdentifier: AppBundleIdentifier,
+                appPath: s_appPath,
+                launchAppPath:s_appPath,
+                supports32b: false,
+                extension: null);
 
             var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,

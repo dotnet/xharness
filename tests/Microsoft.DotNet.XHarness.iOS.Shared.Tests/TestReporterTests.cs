@@ -37,7 +37,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             _mainLog = new Mock<ILog>();
             _logs = new Mock<ILogs>();
             _listener = new Mock<ISimpleListener>();
-            _appInformation = new AppBundleInformation("test app", "my.id.com", "/path/to/app", "/launch/app/path", null) { Variation = "Debug" };
+            _appInformation = new AppBundleInformation(
+                appName: "test app",
+                bundleIdentifier: "my.id.com",
+                appPath:"/path/to/app",
+                launchAppPath: "/launch/app/path",
+                supports32b:false,
+                extension: null)
+            {
+                Variation = "Debug"
+            };
             _logsDirectory = Path.GetTempFileName();
             File.Delete(_logsDirectory);
             Directory.CreateDirectory(_logsDirectory);
