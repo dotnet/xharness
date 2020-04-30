@@ -86,6 +86,23 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             };
         }
 
+        public static XUnitFilter CreateAttributeFilter(string attributeName, bool exclude)
+        {
+            if (string.IsNullOrEmpty((attributeName)))
+            {
+                throw new ArgumentException("must not be null or empty", nameof(attributeName));
+            }
+
+            return new XUnitFilter
+            {
+                AssemblyName = null,
+                SelectorName = attributeName,
+                SelectorValue = null,
+                FilterType = XUnitFilterType.Attribute,
+                Exclude = exclude
+            };
+        }
+
         public override string ToString()
         {
             var sb = new StringBuilder("XUnitFilter [");
@@ -118,6 +135,10 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                     AppendDesc("Class", SelectorValue);
                     break;
 
+                case XUnitFilterType.Attribute:
+                    AppendDesc("Attribute", SelectorValue);
+                    break;
+                
                 default:
                     sb.Append("; Unknown filter type");
                     break;

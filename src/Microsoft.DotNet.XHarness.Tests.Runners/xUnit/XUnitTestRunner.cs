@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
         public int GenerateHash(string name) => seed++;
     }
 
-    internal class XUnitTestRunner : TestRunner 
+    internal class XUnitTestRunner : TestRunner
     {
         readonly TestMessageSink messageSink;
 
@@ -1024,7 +1024,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                     ITestFrameworkExecutionOptions executionOptions = GetFrameworkOptionsForExecution(configuration);
                     executionOptions.SetDisableParallelization(!RunInParallel);
                     executionOptions.SetSynchronousMessageReporting(true);
-                    executionOptions.SetMaxParallelThreads(MaxParallelThreads); 
+                    executionOptions.SetMaxParallelThreads(MaxParallelThreads);
 
                     // set the wait for event cb first, then execute the tests
                     var resultTask = WaitForEvent(resultsSink.Finished, TimeSpan.FromDays(10)).ConfigureAwait(false);
@@ -1101,6 +1101,13 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                     continue;
                 }
 
+                if (filter.FilterType == XUnitFilterType.Attribute)
+                {
+                    if (testCase.TestMethod.Method.GetCustomAttributes(filter.SelectorName).Any())
+                        return ReportFilteredTest(filter);
+                    continue;
+                }
+
                 if (filter.FilterType == XUnitFilterType.Assembly)
                 {
                     continue; // Ignored: handled elsewhere
@@ -1167,18 +1174,29 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
 
         public override void SkipCategories(IEnumerable<string> categories)
         {
-            if (categories.Any())
+            if (categories == null)
+                throw new ArgumentNullException(nameof(categories));
+            
+            foreach (var c in categories)
             {
-                foreach (var c in categories)
+                var traitInfo = c.Split('=');
+                if (traitInfo.Length == 2)
                 {
-                    var traitInfo = c.Split('=');
-                    if (traitInfo.Length == 2)
-                    {
-                        filters.Add(XUnitFilter.CreateTraitFilter(traitInfo[0], traitInfo[1], true));
-                    } else { 
-                        filters.Add(XUnitFilter.CreateTraitFilter(c, null, true));
-					}
+                    filters.Add(XUnitFilter.CreateTraitFilter(traitInfo[0], traitInfo[1], true));
+                } else {
+                    filters.Add(XUnitFilter.CreateTraitFilter(c, null, true));
                 }
+            }
+        }
+
+        public override void SkipAttributes(IEnumerable<string> attributes)
+        {
+            if (attributes == null)
+                throw new ArgumentNullException(nameof(attributes));
+
+            foreach (var attr in attributes)
+            {
+                filters.Add(XUnitFilter.CreateAttributeFilter(attr, true));
             }
         }
     }

@@ -22,27 +22,27 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
 
     /// <summary>
     /// Abstract class that represents the entry point of the test application.
-    /// 
-    /// Subclasses must provide the minimun implementation to ensure that:
+    ///
+    /// Subclasses must provide the minimum implementation to ensure that:
     ///
     /// Device: We do have the required device information for the logger.
     /// Assemblies: Provide a list of the assembly information to run.
-    ///     assemblies can be loaded from disk or from memory, is up to the 
+    ///     assemblies can be loaded from disk or from memory, this is up to the
     ///     implementor.
     ///
     /// Clients that register to the class events and want to update the UI
-    /// are responsable to do so in the main UI thread. The application entry
+    /// are responsible to do so in the main UI thread. The application entry
     /// point does not guarantee that the tests are executed in the ui thread.
     ///
     /// </summary>
     public abstract class ApplicationEntryPoint
     {
-        const string ActiveIssueCategory = "ActiveIssue";
+        const string ActiveIssueAttribute = "ActiveIssue";
         /// <summary>
         /// Event raised when the test run has started.
         /// </summary>
         public event EventHandler TestsStarted;
-       
+
         /// <summary>
         /// Event raised when the test run has completed.
         /// </summary>
@@ -105,14 +105,14 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         {
             var handler = TestStarted;
             if (handler != null)
-                handler(sender, testName); 
+                handler(sender, testName);
         }
 
         void OnTestCompleted(object sender, (string TestName, TestResult Testresult) result)
         {
             var handler = TestCompleted;
             if (handler != null)
-                handler(sender, result); 
+                handler(sender, result);
         }
 
         protected async Task<TestRunner> InternalRunAsync (LogWriter logger)
@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
             // connect to the runner events so that we fwd them to the client
             runner.TestStarted += OnTestStarted;
             runner.TestCompleted += OnTestCompleted;
-            var categories = new List<string> { ActiveIssueCategory }; // default known category to ignore
+            var categories = new List<string> { }; // default known category to ignore
 
             if (!string.IsNullOrEmpty(IgnoreFilesDirectory))
             {
@@ -147,8 +147,10 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
                     runner.SkipTests(skippedTests);
                 }
             }
-
             runner.SkipCategories(categories);
+
+            var attributes = new List<string> {ActiveIssueAttribute}; // known attrs to skip
+            runner.SkipAttributes(attributes);
 
             var testAssemblies = GetTestAssemblies();
             // notify the clients we are starting

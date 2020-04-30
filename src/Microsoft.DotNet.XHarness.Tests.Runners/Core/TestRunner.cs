@@ -123,6 +123,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         public abstract void SkipTests(IEnumerable<string> tests);
         public abstract void SkipCategories(IEnumerable<string> categories);
 
+        public abstract void SkipAttributes(IEnumerable<string> attributes);
+
         protected void OnError(string message)
         {
             Logger.OnError(message);
