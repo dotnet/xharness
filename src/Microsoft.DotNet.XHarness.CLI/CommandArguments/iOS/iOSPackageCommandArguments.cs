@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// </summary>
         public string DotnetPath { get => _dotnetPath; set => _dotnetPath = value; }
 
-        protected override OptionSet GetOptions()
+        public override OptionSet GetOptions()
         {
             var options = new OptionSet
             {

@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 
         public bool UseJson { get; set; } = false;
 
-        protected override OptionSet GetOptions()
+        public override OptionSet GetOptions()
         {
             var options = base.GetOptions();
 

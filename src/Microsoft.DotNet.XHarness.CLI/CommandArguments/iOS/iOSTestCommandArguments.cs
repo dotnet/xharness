@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// </summary>
         public IReadOnlyCollection<TestTarget> TestTargets { get; private set; } = Array.Empty<TestTarget>();
 
-        protected override OptionSet GetOptions()
+        public override OptionSet GetOptions()
         {
             var options = new OptionSet
             {

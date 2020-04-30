@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
     {
         protected abstract string BaseCommand { get; }
 
-        protected override OptionSet GetOptions()
+        public override OptionSet GetOptions()
         {
             var options = new OptionSet
             {

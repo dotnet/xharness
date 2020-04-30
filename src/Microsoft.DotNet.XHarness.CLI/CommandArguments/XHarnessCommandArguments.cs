@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         public LogLevel Verbosity { get; set; } = LogLevel.Information;
         public bool ShowHelp { get; set; } = false;
 
-        protected virtual OptionSet GetOptions() => new OptionSet
+        public virtual OptionSet GetOptions() => new OptionSet
         {
             {
                 "verbosity=|v=",

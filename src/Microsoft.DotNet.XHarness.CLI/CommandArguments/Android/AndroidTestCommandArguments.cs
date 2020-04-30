@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         public Dictionary<string, string> InstrumentationArguments { get; } = new Dictionary<string, string>();
 
-        protected override OptionSet GetOptions()
+        public override OptionSet GetOptions()
         {
             var options = new OptionSet
             {

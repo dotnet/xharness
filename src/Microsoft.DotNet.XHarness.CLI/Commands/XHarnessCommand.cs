@@ -4,8 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
@@ -17,90 +15,49 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
     {
         protected abstract XHarnessCommandArguments Arguments { get; }
 
-        protected bool ShowHelp = false;
-
-        protected ILogger _log;
-        protected ILoggerFactory _logFactory;
-        protected string _name;
-
         protected XHarnessCommand(string name) : base(name)
         {
-            _name = name;
         }
 
         public override sealed int Invoke(IEnumerable<string> arguments)
         {
+            OptionSet options = Arguments.GetOptions();
+
             try
             {
-                var extra = Options.Parse(arguments);
-
-                if (Arguments != null)
-                {
-                    InitializeLog(Arguments.Verbosity, _name);
-                }
-                else
-                {
-                    InitializeLog(LogLevel.Information, _name);
-                }
-
-                if (ShowHelp)
-                {
-                    Options.WriteOptionDescriptions(Console.Out);
-                    return (int)ExitCode.HELP_SHOWN;
-                }
+                var extra = options.Parse(arguments);
 
                 if (extra.Count > 0)
                 {
-                    _log.LogError($"Unknown arguments{string.Join(" ", extra)}");
-                    Options.WriteOptionDescriptions(Console.Out);
-                    return (int)ExitCode.INVALID_ARGUMENTS;
+                    throw new ArgumentException($"Unknown arguments{string.Join(" ", extra)}");
                 }
-
-                var validationErrors = Arguments?.GetValidationErrors();
-
-                if (validationErrors?.Any() ?? false)
-                {
-                    var message = new StringBuilder("Invalid arguments:");
-                    foreach (string error in validationErrors)
-                    {
-                        // errors can have more than one line, if the do, add
-                        // some nice indentation
-                        var lines = error.Split(Environment.NewLine);
-                        if (lines.Length > 1)
-                        {
-                            // first line is in the same distance, rest have
-                            // and indentation
-                            message.Append(Environment.NewLine + "  - " + lines[0]);
-                            for (int index = 1; index < lines.Length; index++)
-                            {
-                                message.Append($"{Environment.NewLine}\t{lines[index]}");
-                            }
-                        }
-                        else
-                        {
-                            message.Append(Environment.NewLine + "  - " + error);
-                        }
-                    }
-
-                    _log.LogError(message.ToString());
-
-                    return (int)ExitCode.INVALID_ARGUMENTS;
-                }
-
-                return (int)InvokeInternal().GetAwaiter().GetResult();
             }
-            finally
+            catch (Exception e)
             {
-                // Needed for quick execution to flush out all output.
-                _logFactory.Dispose();
+                Console.Error.WriteLine("Invalid arguments: " + e.Message);
+                Options.WriteOptionDescriptions(Console.Out);
+                return (int)ExitCode.INVALID_ARGUMENTS;
             }
+
+            if (Arguments.ShowHelp)
+            {
+                Options.WriteOptionDescriptions(Console.Out);
+                return (int)ExitCode.HELP_SHOWN;
+            }
+
+            var logger = CreateLogger(Arguments.Verbosity);
+
+            return (int)InvokeInternal(logger).GetAwaiter().GetResult();
         }
 
-        private void InitializeLog(LogLevel verbosity, string name)
+        protected abstract Task<ExitCode> InvokeInternal(ILogger logger);
+
+        private ILogger CreateLogger(LogLevel verbosity)
         {
-            _logFactory = LoggerFactory.Create(builder =>
-            {
-                builder
+            return LoggerFactory
+                .Create(builder =>
+                {
+                    builder
                     .AddConsole(options =>
                     {
                         if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
@@ -114,10 +71,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                         }
                     })
                     .AddFilter(level => level >= verbosity);
-            });
-            _log = _logFactory.CreateLogger(name);
+                })
+                .CreateLogger(Name);
         }
-
-        protected abstract Task<ExitCode> InvokeInternal();
     }
 }

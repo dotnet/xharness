@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
@@ -17,7 +16,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.DotNet.XHarness.iOS.TestImporter;
 using Microsoft.Extensions.Logging;
-using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
@@ -31,20 +29,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
         private readonly TimeSpan _nugetRestoreTimeout = TimeSpan.FromMinutes(10);
         private readonly TimeSpan _msBuildTimeout = TimeSpan.FromMinutes(30);
 
-        private readonly IProcessManager _processManager;
-
         private readonly iOSPackageCommandArguments _arguments = new iOSPackageCommandArguments();
         protected override XHarnessCommandArguments Arguments => _arguments;
-        public iOSPackageCommand(IProcessManager processManager = null) : base("package")
-        {
-            _processManager = processManager ?? new ProcessManager();
 
-            Options = new OptionSet() {
-            };
+        public iOSPackageCommand() : base("package")
+        {
         }
 
-        protected async override Task<ExitCode> InvokeInternal()
+        protected async override Task<ExitCode> InvokeInternal(ILogger logger)
         {
+            var processManager = new ProcessManager();
+
             // Validate the presence of Xamarin.iOS
             var missingXamariniOS = false;
             if (_arguments.TemplateType == TemplateType.Managed)
@@ -54,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 process.StartInfo.FileName = "bash";
                 process.StartInfo.Arguments = "-c \"" + _arguments.DotnetPath + " --info | grep \\\"Base Path\\\" | cut -d':' -f 2 | tr -d '[:space:]'\"";
 
-                var result = await _processManager.RunAsync(process, new MemoryLog(), dotnetLog, new MemoryLog(), TimeSpan.FromSeconds(5));
+                var result = await processManager.RunAsync(process, new MemoryLog(), dotnetLog, new MemoryLog(), TimeSpan.FromSeconds(5));
 
                 if (result.Succeeded)
                 {
@@ -65,7 +60,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                         if (!File.Exists(xamarinIosPath))
                         {
                             missingXamariniOS = true;
-                            _log.LogWarning("Failed to find the Xamarin iOS package which is needed for the Managed template: " + xamarinIosPath);
+                            logger.LogWarning("Failed to find the Xamarin iOS package which is needed for the Managed template: " + xamarinIosPath);
                         }
                     }
                 }
@@ -90,7 +85,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             var logs = new Logs(_arguments.WorkingDirectory);
             var runLog = logs.Create("package-log.txt", "Package Log");
-            var consoleLog = new CallbackLog(s => _log.LogInformation(s))
+            var consoleLog = new CallbackLog(s => logger.LogInformation(s))
             {
                 Timestamp = false
             };
@@ -136,7 +131,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                 dotnetRestore.StartInfo.Arguments = StringUtils.FormatArguments(args);
 
-                var result = await _processManager.RunAsync(dotnetRestore, aggregatedLog, _nugetRestoreTimeout);
+                var result = await processManager.RunAsync(dotnetRestore, aggregatedLog, _nugetRestoreTimeout);
                 if (result.TimedOut)
                 {
                     aggregatedLog.WriteLine("nuget restore timedout.");
@@ -161,14 +156,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 // https://github.com/dotnet/xharness/issues/105
                 if (_arguments.Platforms.Count > 1)
                 {
-                    _log.LogWarning($"Multi-platform targetting is not supported yet. Targetting {_arguments.Platforms[0]} only.");
+                    logger.LogWarning($"Multi-platform targetting is not supported yet. Targetting {_arguments.Platforms[0]} only.");
                 }
 
                 dotnetBuild.StartInfo.Arguments = GetBuildArguments(projectPath, _arguments.Platforms[0].ToString());
 
                 aggregatedLog.WriteLine($"Building {_arguments.AppPackageName} ({projectPath})");
 
-                var result = await _processManager.RunAsync(dotnetBuild, aggregatedLog, _msBuildTimeout);
+                var result = await processManager.RunAsync(dotnetBuild, aggregatedLog, _msBuildTimeout);
                 if (result.TimedOut)
                 {
                     aggregatedLog.WriteLine("Build timed out after {0} seconds.", _msBuildTimeout.TotalSeconds);
@@ -179,13 +174,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 }
                 else if (!result.Succeeded)
                 {
-                    _log.LogError($"Build failed with return code: {result.ExitCode}");
+                    logger.LogError($"Build failed with return code: {result.ExitCode}");
 
                     finalResult = ExitCode.PACKAGE_BUNDLING_FAILURE_BUILD;
 
                     if (missingXamariniOS)
                     {
-                        _log.LogWarning("Possible cause of the failure may be missing Xamarin iOS package");
+                        logger.LogWarning("Possible cause of the failure may be missing Xamarin iOS package");
                     }
                 }
             }

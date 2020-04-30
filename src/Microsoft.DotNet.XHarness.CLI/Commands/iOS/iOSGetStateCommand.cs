@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
         }
 
-        protected override async Task<ExitCode> InvokeInternal()
+        protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
             var processManager = new ProcessManager(mlaunchPath: _arguments.MlaunchPath); 
             var deviceLoader = new HardwareDeviceLoader(processManager);
@@ -129,13 +129,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             catch (Exception e)
             {
-                _log.LogError($"Failed to get mlaunch version info:{Environment.NewLine}{e}");
+                logger.LogError($"Failed to get mlaunch version info:{Environment.NewLine}{e}");
                 return ExitCode.GENERAL_FAILURE;
             }
 
             if (!result.Succeeded)
             {
-                _log.LogError($"Failed to get mlaunch version info:{Environment.NewLine}{mlaunchLog}");
+                logger.LogError($"Failed to get mlaunch version info:{Environment.NewLine}{mlaunchLog}");
                 return ExitCode.GENERAL_FAILURE;
             }
 
@@ -158,8 +158,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             catch (Exception e)
             {
-                _log.LogError($"Failed to load simulators:{Environment.NewLine}{e}");
-                _log.LogInformation($"Execution log:{Environment.NewLine}{log}");
+                logger.LogError($"Failed to load simulators:{Environment.NewLine}{e}");
+                logger.LogInformation($"Execution log:{Environment.NewLine}{log}");
                 return ExitCode.GENERAL_FAILURE;
             }
 
@@ -180,8 +180,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             catch (Exception e)
             {
-                _log.LogError($"Failed to load connected devices:{Environment.NewLine}{e}");
-                _log.LogInformation($"Execution log:{Environment.NewLine}{log}");
+                logger.LogError($"Failed to load connected devices:{Environment.NewLine}{e}");
+                logger.LogInformation($"Execution log:{Environment.NewLine}{log}");
                 return ExitCode.GENERAL_FAILURE;
             }
 

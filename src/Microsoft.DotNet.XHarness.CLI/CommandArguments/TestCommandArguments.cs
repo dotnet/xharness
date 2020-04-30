@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(15);
 
-        protected override OptionSet GetOptions()
+        public override OptionSet GetOptions()
         {
             var options = new OptionSet
             {
