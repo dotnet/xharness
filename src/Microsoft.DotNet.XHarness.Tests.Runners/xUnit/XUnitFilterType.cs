@@ -11,6 +11,5 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
         Assembly,
         Single,
         Namespace,
-        Attribute,
     }
 }
