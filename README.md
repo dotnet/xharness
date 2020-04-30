@@ -5,18 +5,18 @@ This repo contains the code to build the **XHarness dotnet tool**.
 ## What is XHarness
 
 XHarness is primarily a command line tool that enables running tests on Android and iOS (WatchOS and tvOS are also supported).
-It can locate devices/emulators, install given application, run it and collect results (uninstall it after).
-It handles crashes gracefully and supports different types of connection modes (Network, USB cable).
-It can output test result in various different formats from text to Xunit/NUnit XML.
+It can locate devices/emulators, install a given application, run it and collect results uninstalling it after.
+It handles application crashes by collecting crash dumps and supports different types of connection modes (Network, USB cable).
+It can output test results in various different formats from text to Xunit/NUnit XML.
 
-The tool can also package given .NET test DLLs (Xunit, NUnit v2/3) into an iOS app bundle that can be ran on the device/emulator.
+The tool can also package given .NET test DLLs (Xunit, NUnit v2/3) into an iOS app bundle that can be run on the device/emulator.
 
 ## Running the tool
 
 The tool requires **.NET 3.1.201** and later to be run. It is packaged as a `dotnet tool` command and can be installed using the [dotnet tool CLI](https://docs.microsoft.com/en-us/dotnet/core/tools/).
 
 - The iOS scenarios require you to run the tool on MacOS with Xcode 11.4.
-- Android part is supported on both Linux and Windows devices
+- Android scenarios are supported on all Linux, MacOS and Windows
 
 To install the tool run:
 
