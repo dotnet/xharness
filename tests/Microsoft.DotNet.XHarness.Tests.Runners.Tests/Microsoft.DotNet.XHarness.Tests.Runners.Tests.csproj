@@ -1,73 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-<PropertyGroup>
-  <TargetFramework>netcoreapp3.1</TargetFramework>
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
 
-  <IsPackable>false</IsPackable>
-</PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
 
-<ItemGroup>
-  <PackageReference Include="Moq" Version="4.13.1" />
-  <PackageReference Include="xunit.runner.utility" Version="2.4.1" />
-</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Moq" Version="4.13.1" />
+    <PackageReference Include="xunit.runner.utility" Version="2.4.1" />
+  </ItemGroup>
 
-<ItemGroup>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Core\Extensions.cs">
-    <Link>Core\Extensions.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Core\IDevice.cs">
-    <Link>Core\IDevice.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Core\LogWriter.cs">
-    <Link>Core\LogWriter.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Core\MinimumLogLevel.cs">
-    <Link>Core\MinimumLogLevel.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Core\TcpTextWriter.cs">
-    <Link>Core\TcpTextWriter.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Core\TestAssemblyInfo.cs">
-    <Link>Core\TestAssemblyInfo.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Core\TestCompletionStatus.cs">
-    <Link>Core\TestCompletionStatus.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Core\TestExecutionState.cs">
-    <Link>Core\TestExecutionState.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Core\TestFailureInfo.cs">
-    <Link>Core\TestFailureInfo.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Core\TestResult.cs">
-    <Link>Core\TestResult.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Core\TestRunner.cs">
-    <Link>Core\TestRunner.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Core\TestRunSelector.cs">
-    <Link>Core\TestRunSelector.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Core\TestRunSelectorType.cs">
-    <Link>Core\TestRunSelectorType.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\xUnit\XUnitFilter.cs">
-    <Link>xUnit\XUnitFilter.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\xUnit\XUnitFilterType.cs">
-    <Link>xUnit\XUnitFilterType.cs</Link>
-  </Compile>
-  <Compile Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\xUnit\XUnitTestRunner.cs">
-    <Link>xUnit\XUnitTestRunner.cs</Link>
-  </Compile>
-</ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\xUnit\NUnit3Xml.xslt">
+      <Link>xUnit\NUnit3Xml.xslt</Link>
+    </Content>
+    <Content Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\xUnit\NUnitXml.xslt">
+      <Link>xUnit\NUnitXml.xslt</Link>
+    </Content>
+  </ItemGroup>
 
-<ItemGroup>
-  <Content Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\xUnit\NUnit3Xml.xslt">
-    <Link>xUnit\NUnit3Xml.xslt</Link>
-  </Content>
-  <Content Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\xUnit\NUnitXml.xslt">
-    <Link>xUnit\NUnitXml.xslt</Link>
-  </Content>
-</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Microsoft.DotNet.XHarness.Tests.Runners.csproj" />
+  </ItemGroup>
+
 </Project>
