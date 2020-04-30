@@ -119,24 +119,5 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Tests
             Assert.Equal(XUnitFilterType.Trait, filter.FilterType);
         }
 
-        [Fact]
-        public void CreateAttributeFilterNullName()
-        {
-            Assert.Throws<ArgumentException>(() => XUnitFilter.CreateAttributeFilter(null, true));
-            Assert.Throws<ArgumentException>(() => XUnitFilter.CreateAttributeFilter("", true));
-        }
-
-        [Theory]
-        [InlineData("MyAttribute", true)]
-        [InlineData("MyAttribute", false)]
-        public void CreateAttributeFilter(string attributeName, bool excluded)
-        {
-            var filter = XUnitFilter.CreateAttributeFilter(attributeName, excluded);
-            Assert.Equal(attributeName, filter.SelectorName);
-            Assert.Null(filter.AssemblyName);
-            Assert.Null(filter.SelectorValue);
-            Assert.Equal(excluded, filter.Exclude);
-            Assert.Equal(XUnitFilterType.Attribute, filter.FilterType);
-        }
     }
 }

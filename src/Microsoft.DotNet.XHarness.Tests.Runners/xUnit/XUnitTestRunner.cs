@@ -1101,13 +1101,6 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                     continue;
                 }
 
-                if (filter.FilterType == XUnitFilterType.Attribute)
-                {
-                    if (testCase.TestMethod.Method.GetCustomAttributes(filter.SelectorName).Any())
-                        return ReportFilteredTest(filter);
-                    continue;
-                }
-
                 if (filter.FilterType == XUnitFilterType.Assembly)
                 {
                     continue; // Ignored: handled elsewhere
@@ -1176,7 +1169,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
         {
             if (categories == null)
                 throw new ArgumentNullException(nameof(categories));
-            
+
             foreach (var c in categories)
             {
                 var traitInfo = c.Split('=');
@@ -1186,17 +1179,6 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                 } else {
                     filters.Add(XUnitFilter.CreateTraitFilter(c, null, true));
                 }
-            }
-        }
-
-        public override void SkipAttributes(IEnumerable<string> attributes)
-        {
-            if (attributes == null)
-                throw new ArgumentNullException(nameof(attributes));
-
-            foreach (var attr in attributes)
-            {
-                filters.Add(XUnitFilter.CreateAttributeFilter(attr, true));
             }
         }
     }

@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
     /// </summary>
     public abstract class ApplicationEntryPoint
     {
-        const string ActiveIssueAttribute = "ActiveIssue";
+
         /// <summary>
         /// Event raised when the test run has started.
         /// </summary>
@@ -81,9 +81,31 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         protected abstract TestRunnerType TestRunner { get; }
 
         /// <summary>
-        /// Returns the directory that contains the ignore files.
+        /// Returns the directory that contains the ignore files. In order to ignore certain traits in the
+        /// runner the directory most contain one of the two following files:
+        ///
+        /// * xunit-excludes.txt: Contains the traits to be ignored in xunit.
+        /// * nunit-excludes.txt: Contains the categories to be ignored in nunit.
+        ///
+        /// The default implementation returns null and therefore no traits/categories are ignored.
+        ///
+        /// If the directory contains any *.ignore files, those will be parse to ignore specific tests that
+        /// are known to fail. The format of the file is as follows:
+        ///
+        /// * A test name per line
+        /// * lines that start with # will be ignored and can be used as comments.
+        /// * the 'KLASS:' prefix can be used to ignore all the tests in a class.
+        /// * the 'Platform32:' prefix can be used to ignore a test but only in a 32b arch device.
         /// </summary>
-        protected abstract string IgnoreFilesDirectory { get; }
+        protected virtual string IgnoreFilesDirectory => null;
+
+        /// <summary>
+        /// Returns the path to a file that contains the list of traits to ignore in the following format:
+        /// traitname=traitvalue
+        ///
+        /// The default implementation will return null and therefore no traits will be ignored.
+        /// </summary>
+        protected virtual string IgnoredTraitsFilePath => null;
 
         /// <summary>
         /// Terminates the application. This should ensure that it is executed
@@ -115,6 +137,26 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
                 handler(sender, result);
         }
 
+        private async Task<List<string>> GetIgnoredCategories()
+        {
+            var categories = new List<string> { }; // default known category to ignore
+
+            // check if the child does have an ignore files dir
+            if (!string.IsNullOrEmpty(IgnoreFilesDirectory))
+            {
+                categories.AddRange(await IgnoreFileParser.ParseTraitsContentFileAsync(IgnoreFilesDirectory,
+                    TestRunner == TestRunnerType.Xunit));
+            }
+
+            // check if the child provides a specific traits file.
+            if (!string.IsNullOrEmpty((IgnoredTraitsFilePath)))
+            {
+                categories.AddRange(await IgnoreFileParser.ParseTraitsFileAsync(IgnoredTraitsFilePath));
+            }
+
+            return categories;
+        }
+
         protected async Task<TestRunner> InternalRunAsync (LogWriter logger)
         {
             logger.MinimumLogLevel = MinimumLogLevel;
@@ -133,24 +175,10 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
             // connect to the runner events so that we fwd them to the client
             runner.TestStarted += OnTestStarted;
             runner.TestCompleted += OnTestCompleted;
-            var categories = new List<string> { }; // default known category to ignore
 
-            if (!string.IsNullOrEmpty(IgnoreFilesDirectory))
-            {
-                categories.AddRange (await IgnoreFileParser.ParseTraitsContentFileAsync(IgnoreFilesDirectory, TestRunner == TestRunnerType.Xunit));
-                // add category filters if they have been added
-
-                var skippedTests = await IgnoreFileParser.ParseContentFilesAsync(IgnoreFilesDirectory);
-                if (skippedTests.Any())
-                {
-                    // ensure that we skip those tests that have been passed via the ignore files
-                    runner.SkipTests(skippedTests);
-                }
-            }
-            runner.SkipCategories(categories);
-
-            var attributes = new List<string> {ActiveIssueAttribute}; // known attrs to skip
-            runner.SkipAttributes(attributes);
+            // add ignored categories and specific files
+            runner.SkipCategories(await GetIgnoredCategories());
+            runner.SkipTests(await IgnoreFileParser.ParseContentFilesAsync(IgnoreFilesDirectory));
 
             var testAssemblies = GetTestAssemblies();
             // notify the clients we are starting
