@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 appName + (extension != null ? ".appex" : ".app"));
 
             string arch = csproj.GetMtouchArch(platform, buildConfiguration);
-            bool supports32 = arch.Contains("ARMv7") || arch.Contains("i386");
+            bool supports32 = arch.Contains("ARMv7", StringComparison.InvariantCultureIgnoreCase) || arch.Contains("i386", StringComparison.InvariantCultureIgnoreCase);
 
             if (!Directory.Exists(appPath))
                 throw new DirectoryNotFoundException($"The app bundle directory `{appPath}` does not exist");
