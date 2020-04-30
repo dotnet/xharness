@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             aggregatedLog.WriteLine($"\tExtraArgs: '{_arguments.MtouchExtraArgs}'");
 
             // first step, generate the required info to be passed to the factory
-            var projects = new List<(string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier)> {
+            var projects = new List<(string Name, string[] Assemblies, string? ExtraArgs, double TimeoutMultiplier)> {
                 // TODO: Timeout multiplier handling
                 (Name: _arguments.AppPackageName, Assemblies: _arguments.Assemblies.ToArray(), ExtraArgs: _arguments.MtouchExtraArgs, TimeoutMultiplier: 1.0),
             };

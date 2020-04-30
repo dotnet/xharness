@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
             var runner = new AdbRunner(logger);
 
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
-            string apkPackageName = _arguments.PackageName;
+            string? apkPackageName = _arguments.PackageName;
 
             int instrumentationExitCode = (int)ExitCode.GENERAL_FAILURE;
 

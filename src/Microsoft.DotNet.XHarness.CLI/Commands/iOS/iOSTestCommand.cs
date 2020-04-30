@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             ProcessManager processManager,
             IHardwareDeviceLoader deviceLoader,
             ISimulatorLoader simulatorLoader,
-            ITunnelBore tunnelBore,
+            ITunnelBore? tunnelBore,
             CancellationToken cancellationToken = default)
         {
             logger.LogInformation($"Starting test for {target.AsString()}{ (_arguments.DeviceName != null ? " targeting " + _arguments.DeviceName : null) }..");
@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             ILog mainLog = logs.Create(mainLogFile, LogType.ExecutionLog.ToString(), true);
             int verbosity = GetMlaunchVerbosity(_arguments.Verbosity);
 
-            string deviceName = _arguments.DeviceName;
+            string? deviceName = _arguments.DeviceName;
 
             var appBundleInformationParser = new AppBundleInformationParser(processManager);
 
