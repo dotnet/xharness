@@ -13,13 +13,15 @@
          If you change the version, please run /eng/download-mlaunch.sh to get this version into your environment -->
     <MlaunchVersion>3fbdcdb97459ca2c699d47e33028a106b95a7f1f</MlaunchVersion>
 
-    <!-- When updating, avoid using 'latest' url as this can make the same commit build differently on different days -->
+    <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
     <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-windows.zip</WindowsAndroidSdkUrl>
     <WindowsAndroidSdkFileName>windows-android-platform-tools.zip</WindowsAndroidSdkFileName>
 
-    <!-- TODO: Figure out minimal set of binaries for linux, then copy them.  Until then this is unsued. -->
     <LinuxAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-linux.zip</LinuxAndroidSdkUrl>
     <LinuxAndroidSdkFileName>linux-android-platform-tools.zip</LinuxAndroidSdkFileName>
+
+    <MacOsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-darwin.zip</MacOsAndroidSdkUrl>
+    <MacOsAndroidSdkFileName>macos-android-platform-tools.zip</MacOsAndroidSdkFileName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -43,12 +45,15 @@
 
   <Target Name="DownloadAndroidSdks" BeforeTargets="Build">
     <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="True" />
-    <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)"   DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />
+    <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)"   DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)"   SkipUnchangedFiles="True" />
+    <DownloadFile SourceUrl="$(MacOsAndroidSdkUrl)"   DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(MacOsAndroidSdkFileName)"   SkipUnchangedFiles="True" />
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
-    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(LinuxAndroidSdkFileName)"   DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/linux" OverwriteReadOnlyFiles="true" />
+    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(LinuxAndroidSdkFileName)"   DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/linux"   OverwriteReadOnlyFiles="true" />
+    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(MacOsAndroidSdkFileName)"   DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/macos"   OverwriteReadOnlyFiles="true" />
     <ItemGroup>
       <WindowsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
       <LinuxAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />
+      <MacOsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/adb" />
       <Content Include="@(WindowsAdbFiles)">
         <Pack>true</Pack>
         <PackagePath>runtimes/any/native/adb/windows</PackagePath>
@@ -59,6 +64,11 @@
         <PackagePath>runtimes/any/native/adb/linux</PackagePath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <Content Include="@(MacOsAdbFiles)">
+        <Pack>true</Pack>
+        <PackagePath>runtimes/any/native/adb/macos</PackagePath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>      
     </ItemGroup>
   </Target>
 

@@ -57,10 +57,15 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 return Path.Join(currentAssemblyDirectory, @"..\..\..\runtimes\any\native\adb\windows\adb.exe");
             }
-            else
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 return Path.Join(currentAssemblyDirectory, @"../../../runtimes/any/native/adb/linux/adb");
             }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return Path.Join(currentAssemblyDirectory, @"../../../runtimes/any/native/adb/macos/adb");
+            }
+            throw new NotSupportedException("Cannot determine OS platform being used, thus we can not select ADB executable.");
         }
 
         #endregion
