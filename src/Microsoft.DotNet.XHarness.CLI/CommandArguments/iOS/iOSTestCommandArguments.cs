@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                     catch (ArgumentOutOfRangeException)
                     {
                         throw new ArgumentException(
-                            $"Failed to parse test target '{targetName}'" +
+                            $"Failed to parse test target '{targetName}'. " +
                             $"Available targets are:{Environment.NewLine}\t" +
                             $"{string.Join(Environment.NewLine + "\t", GetAvailableTargets())}");
                     }
@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                     }
                 },
                 { "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit} {XmlResultJargon.NUnitV2} {XmlResultJargon.NUnitV3} and {XmlResultJargon.xUnit}",
-                    v => XmlResultJargon = ParseArgument("xml-jargon", v, XmlResultJargon.Missing)
+                    v => XmlResultJargon = ParseArgument("xml-jargon", v, invalidValues: XmlResultJargon.Missing)
                 },
             };
 
@@ -139,6 +139,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 
         public override void Validate()
         {
+            base.Validate();
+
             if (!Directory.Exists(AppPackagePath))
             {
                 throw new ArgumentException($"Failed to find the app bundle at {AppPackagePath}");
@@ -147,7 +149,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
             if (TestTargets.Count == 0)
             {
                 throw new ArgumentException($@"No targets specified. At least one target must be provided. " +
-                    $"Available targets are:" + GetAllowedValues<TestTarget>());
+                    $"Available targets are:" + Environment.NewLine + "\t- " + string.Join($"{Environment.NewLine}\t- ", GetAvailableTargets()));
             }
 
             if (!File.Exists(MlaunchPath))
@@ -164,6 +166,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         private static IEnumerable<string> GetAvailableTargets() =>
             Enum.GetValues(typeof(TestTarget))
                 .Cast<TestTarget>()
+                .Where(t => t != TestTarget.None)
                 .Select(t => t.AsString());
     }
 }

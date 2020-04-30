@@ -71,10 +71,5 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
             return options;
         }
-
-        public override void Validate()
-        {
-            // TODO: Validate Android arguments
-        }
     }
 }

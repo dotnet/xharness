@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 
             throw new ArgumentException(
                 $"Invalid value '{value}' supplied in {argumentName}. " +
-                $"Valid values are:" + GetAllowedValues<TEnum>());
+                $"Valid values are:" + GetAllowedValues(invalidValues));
         }
 
         protected static string GetAllowedValues<TEnum>(params TEnum[]? invalidValues) where TEnum : struct, IConvertible

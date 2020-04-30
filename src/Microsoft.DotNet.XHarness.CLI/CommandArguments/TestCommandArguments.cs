@@ -24,7 +24,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
             set => _appPackagePath = value;
         }
 
-        // TODO: Create directory
         /// <summary>
         /// Path where the outputs of execution will be stored
         /// </summary>
@@ -77,6 +76,14 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
             }
 
             return options;
+        }
+
+        public override void Validate()
+        {
+            if (!Directory.Exists(OutputDirectory))
+            {
+                Directory.CreateDirectory(OutputDirectory);
+            }
         }
     }
 }

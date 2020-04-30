@@ -41,7 +41,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         private string? _appPackageName = null;
         private string? _outputDirectory = null;
         private string? _workingDirectory = null;
-        private string _dotnetPath = "dotnet";
 
         /// <summary>
         /// Name of the packaged app
@@ -66,8 +65,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// </summary>
         public string WorkingDirectory
         {
-            get => _outputDirectory ?? throw new ArgumentException("You must provide an output directory where results will be stored.");
-            set => _outputDirectory = RootPath(value);
+            get => _workingDirectory ?? throw new ArgumentException("You must provide an output directory where results will be stored.");
+            set => _workingDirectory = RootPath(value);
         }
 
         public List<string> Assemblies { get; } = new List<string>();
@@ -95,7 +94,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// <summary>
         /// Path to the 'dotnet' command
         /// </summary>
-        public string DotnetPath { get => _dotnetPath; set => _dotnetPath = value; }
+        public string DotnetPath { get; set; } = "dotnet";
 
         public override OptionSet GetOptions()
         {
@@ -115,7 +114,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                     v => IgnoreFilesRootDirectory = RootPath(v)
                 },
                 { "template=|t=", "Indicates which template to use. There are two available ones: Managed, which uses Xamarin.[iOS|Mac] and Native (default:Managed).",
-                    v => TemplateType = ParseArgument("template", v, TemplateType.Unknown)
+                    v => TemplateType = ParseArgument("template", v, invalidValues: TemplateType.Unknown)
                 },
                 { "traits-directory=|td=", "Root directory that contains all the .txt files with traits that will be skipped if needed.",
                     v =>  TraitsRootDirectory = RootPath(v)
@@ -133,7 +132,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                     v => BuildConfiguration = ParseArgument<BuildConfiguration>("configuration", v)
                 },
                 { "testing-framework=|tf=", "The testing framework that is used by the given assemblies.",
-                    v => TestingFramework = ParseArgument("testing framework", v, TestingFramework.Unknown)
+                    v => TestingFramework = ParseArgument("testing framework", v, invalidValues: TestingFramework.Unknown)
                 },
                 { "platform=|p=", "Plaform to be added as the target for the application. Can be used multiple times to target more platforms.",
                     v => Platforms.Add(ParseArgument<Platform>("platform", v))
@@ -153,37 +152,18 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 
         public override void Validate()
         {
-            if (string.IsNullOrEmpty(AppPackageName))
+            // This validates them
+            AppPackageName = AppPackageName;
+            TestingFramework = TestingFramework;
+
+            if (!Directory.Exists(OutputDirectory))
             {
-                throw new ArgumentException("You must provide a name for the application to be created.");
+                Directory.CreateDirectory(OutputDirectory);
             }
 
-            if (string.IsNullOrEmpty(OutputDirectory))
+            if (!Directory.Exists(WorkingDirectory))
             {
-                throw new ArgumentException("Output directory path missing.");
-            }
-            else
-            {
-                OutputDirectory = RootPath(OutputDirectory);
-
-                if (!Directory.Exists(OutputDirectory))
-                {
-                    Directory.CreateDirectory(OutputDirectory);
-                }
-            }
-
-            if (string.IsNullOrEmpty(WorkingDirectory))
-            {
-                throw new ArgumentException("Working directory path missing.");
-            }
-            else
-            {
-                WorkingDirectory = RootPath(WorkingDirectory);
-
-                if (!Directory.Exists(WorkingDirectory))
-                {
-                    Directory.CreateDirectory(WorkingDirectory);
-                }
+                Directory.CreateDirectory(WorkingDirectory);
             }
 
             if (Assemblies.Count == 0)
@@ -205,11 +185,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
             if (Platforms.Count == 0)
             {
                 throw new ArgumentException($"No platforms provided. Available platforms are: {GetAllowedValues<Platform>()}");
-            }
-
-            if (TestingFramework == TestingFramework.Unknown)
-            {
-                throw new ArgumentException($"Unknown testing framework. Supported frameworks are: {GetAllowedValues<TestingFramework>()}");
             }
 
             if (TemplateType == TemplateType.Native)

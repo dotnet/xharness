@@ -23,6 +23,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
         {
             OptionSet options = Arguments.GetOptions();
 
+            using var factory = CreateLoggerFactory(Arguments.Verbosity);
+            var logger = factory.CreateLogger(Name);
+
             try
             {
                 var extra = options.Parse(arguments);
@@ -31,48 +34,49 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 {
                     throw new ArgumentException($"Unknown arguments{string.Join(" ", extra)}");
                 }
+
+                Arguments.Validate();
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine("Invalid arguments: " + e.Message);
-                Options.WriteOptionDescriptions(Console.Out);
+                logger.LogError("Invalid argument: " + e.Message);
+
+                if (Arguments.ShowHelp)
+                {
+                    options.WriteOptionDescriptions(Console.Out);
+                }
+
                 return (int)ExitCode.INVALID_ARGUMENTS;
             }
 
             if (Arguments.ShowHelp)
             {
-                Options.WriteOptionDescriptions(Console.Out);
+                options.WriteOptionDescriptions(Console.Out);
                 return (int)ExitCode.HELP_SHOWN;
             }
-
-            var logger = CreateLogger(Arguments.Verbosity);
 
             return (int)InvokeInternal(logger).GetAwaiter().GetResult();
         }
 
         protected abstract Task<ExitCode> InvokeInternal(ILogger logger);
 
-        private ILogger CreateLogger(LogLevel verbosity)
-        {
-            return LoggerFactory
-                .Create(builder =>
+        private ILoggerFactory CreateLoggerFactory(LogLevel verbosity) => LoggerFactory
+            .Create(builder =>
+            {
+                builder
+                .AddConsole(options =>
                 {
-                    builder
-                    .AddConsole(options =>
+                    if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
                     {
-                        if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
-                        {
-                            options.DisableColors = true;
-                        }
+                        options.DisableColors = true;
+                    }
 
-                        if (Environment.GetEnvironmentVariable("XHARNESS_LOG_WITH_TIMESTAMPS")?.ToLower().Equals("true") ?? false)
-                        {
-                            options.TimestampFormat = "[HH:mm:ss] ";
-                        }
-                    })
-                    .AddFilter(level => level >= verbosity);
+                    if (Environment.GetEnvironmentVariable("XHARNESS_LOG_WITH_TIMESTAMPS")?.ToLower().Equals("true") ?? false)
+                    {
+                        options.TimestampFormat = "[HH:mm:ss] ";
+                    }
                 })
-                .CreateLogger(Name);
-        }
+                .AddFilter(level => level >= verbosity);
+            });
     }
 }
