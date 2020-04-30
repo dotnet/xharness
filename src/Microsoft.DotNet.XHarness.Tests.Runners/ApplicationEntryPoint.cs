@@ -108,10 +108,10 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         protected virtual string IgnoredTraitsFilePath => null;
 
         /// <summary>
-        /// States if the skipped tests should be logger. Helpful to determine why some tests are ran and others
+        /// States if the skipped tests should be logged. Helpful to determine why some tests are executed and others
         /// are not.
         /// </summary>
-        protected virtual bool LogExcludedTests { get; }
+        protected virtual bool LogExcludedTests { get; } = false;
 
         /// <summary>
         /// Terminates the application. This should ensure that it is executed
