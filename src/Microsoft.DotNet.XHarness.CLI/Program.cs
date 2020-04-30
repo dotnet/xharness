@@ -21,12 +21,13 @@ namespace Microsoft.DotNet.XHarness.CLI
             // Root command: will use the platform specific commands to perform the appropriate action.
             var commands = new CommandSet("xharness")
             {
-                // Add per-platform CommandSets - If adding  a new supported set, that goes here. 
+                // Add per-platform CommandSets - If adding  a new supported set, that goes here.
                 new iOSCommandSet(),
                 new AndroidCommandSet(),
 
                 // add shared commands, for example, help and so on. --version, --help, --verbosity and so on
-                new XHarnessHelpCommand()
+                new XHarnessHelpCommand(),
+                new XHarnessVersionCommand(),
             };
 
             int result = commands.Run(args);
