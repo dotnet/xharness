@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
     public class AppBundleInformationParser : IAppBundleInformationParser
     {
         private const string PlistBuddyPath = "/usr/libexec/PlistBuddy";
+        private const string Armv7 = "armv7";
 
         private readonly IProcessManager _processManager;
 
@@ -56,6 +57,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 csproj.GetOutputPath(platform, buildConfiguration).Replace('\\', Path.DirectorySeparatorChar),
                 appName + (extension != null ? ".appex" : ".app"));
 
+            string arch = csproj.GetMtouchArch(platform, buildConfiguration);
+            bool supports32 = arch.Contains("ARMv7", StringComparison.InvariantCultureIgnoreCase) || arch.Contains("i386", StringComparison.InvariantCultureIgnoreCase);
+
             if (!Directory.Exists(appPath))
                 throw new DirectoryNotFoundException($"The app bundle directory `{appPath}` does not exist");
 
@@ -63,7 +67,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 ? Directory.GetDirectories(Path.Combine(appPath, "Watch"), "*.app")[0]
                 : appPath;
 
-            return new AppBundleInformation(appName, bundleIdentifier, appPath, launchAppPath, extension);
+            return new AppBundleInformation(appName, bundleIdentifier, appPath, launchAppPath, supports32, extension);
         }
 
         public async Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default)
@@ -77,12 +81,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             var appName = await GetPlistProperty(plistPath, PListExtensions.BundleNamePropertyName, log, cancellationToken);
             var bundleIdentifier = await GetPlistProperty(plistPath, PListExtensions.BundleIdentifierPropertyName, log, cancellationToken);
+            var supports32 = await GetPlistProperty(plistPath, PListExtensions.RequiredDeviceCapabilities, log, cancellationToken);
 
             string launchAppPath = target.ToRunMode() == RunMode.WatchOS
                 ? Directory.GetDirectories(Path.Combine(appPackagePath, "Watch"), "*.app")[0]
                 : appPackagePath;
 
-            return new AppBundleInformation(appName, appPackagePath, bundleIdentifier, launchAppPath, extension: null);
+            return new AppBundleInformation(appName, appPackagePath, bundleIdentifier, launchAppPath, supports32.Contains(Armv7, StringComparison.InvariantCultureIgnoreCase), extension: null);
         }
 
         private async Task<string> GetPlistProperty(string plistPath, string propertyName, ILog log, CancellationToken cancellationToken = default)

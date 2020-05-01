@@ -166,6 +166,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             return GetElementValue(csproj, platform, configuration, "OutputPath");
         }
 
+        public static string GetMtouchArch(this XmlDocument csproj, string platform, string configuration)
+        { 
+            return GetElementValue(csproj, platform, configuration, "MtouchArch");
+		}
+
         static string GetElementValue(this XmlDocument csproj, string platform, string configuration, string elementName)
         {
             var nodes = csproj.SelectNodes($"/*/*/*[local-name() = '{elementName}']");
