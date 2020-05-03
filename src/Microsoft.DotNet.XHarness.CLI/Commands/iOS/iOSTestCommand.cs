@@ -27,6 +27,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
         private readonly iOSTestCommandArguments _arguments = new iOSTestCommandArguments();
         private readonly ErrorKnowledgeBase _errorKnowledgeBase = new ErrorKnowledgeBase();
 
+        protected override string CommandUsage { get; } = "ios test [OPTIONS]";
+        protected override string CommandDescription { get; } = "Packaging command that will create a iOS/tvOS/watchOS or macOS application that can be used to run NUnit or XUnit-based test dlls";
         protected override TestCommandArguments TestArguments => _arguments;
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)

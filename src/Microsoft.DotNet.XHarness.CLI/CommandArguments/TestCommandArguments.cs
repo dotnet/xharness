@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(15);
 
-        public override OptionSet GetOptions()
+        protected sealed override OptionSet GetCommandOptions()
         {
             var options = new OptionSet
             {
@@ -54,10 +54,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                 { "output-directory=|o=", "Directory in which the resulting package will be outputted",
                     v => OutputDirectory = RootPath(v)
                 },
-                { "targets=", "Comma-delineated list of targets to test for",
+                { "targets=|t=", "Comma-delineated list of targets to test for",
                     v => Targets = v.Split(',')
                 },
-                { "timeout=|t=", "Time span, in seconds, to wait for instrumentation to complete.",
+                { "timeout=", "Time span, in seconds, to wait for instrumentation to complete.",
                     v =>
                     {
                         if (!int.TryParse(v, out var timeout))
@@ -70,13 +70,15 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                 },
             };
 
-            foreach (var option in base.GetOptions())
+            foreach (var option in GetTestCommandOptions())
             {
                 options.Add(option);
             }
 
             return options;
         }
+
+        protected abstract OptionSet GetTestCommandOptions();
 
         public override void Validate()
         {

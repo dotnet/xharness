@@ -16,18 +16,19 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         public LogLevel Verbosity { get; set; } = LogLevel.Information;
         public bool ShowHelp { get; set; } = false;
 
-        public virtual OptionSet GetOptions() => new OptionSet
+        public OptionSet GetOptions()
         {
-            {
-                "verbosity=|v=",
-                "Verbosity level (1-6) where higher means less logging. (default = 2 / Information)",
-                v =>
-                {
-                    Verbosity = ParseArgument<LogLevel>("verbosity", v);
-                }
-            },
-            { "help|h", v => ShowHelp = v != null }
-        };
+            var options = GetCommandOptions();
+
+            options.Add("verbosity=|v=", "Verbosity level (1-6) where higher means less logging. (default = 2 / Information)", v => Verbosity = ParseArgument<LogLevel>("verbosity", v));
+            options.Add("help|h", v => ShowHelp = v != null);
+
+            return options;
+        }
+
+        public abstract void Validate();
+
+        protected abstract OptionSet GetCommandOptions();
 
         protected static string RootPath(string path)
         {
@@ -81,7 +82,5 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 
             return Environment.NewLine + "\t- " + string.Join($"{Environment.NewLine}\t- ", values.Select(t => display?.Invoke(t) ?? t.ToString()));
         }
-
-        public abstract void Validate();
     }
 }

@@ -20,6 +20,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
     internal class iOSGetStateCommand : GetStateCommand
     {
+        protected override string CommandUsage { get; } = "ios state [OPTIONS]";
+
         class DeviceInfo
         {
             public string? Name { get; set; }

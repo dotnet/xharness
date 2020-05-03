@@ -30,6 +30,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
         private readonly TimeSpan _msBuildTimeout = TimeSpan.FromMinutes(30);
 
         private readonly iOSPackageCommandArguments _arguments = new iOSPackageCommandArguments();
+
+        protected override string CommandUsage { get; } = "ios package [OPTIONS]";
+        protected override string CommandDescription { get; } = "Packaging command that will create a iOS/tvOS/watchOS or macOS application that can be used to run NUnit or XUnit-based test dlls";
+
         protected override XHarnessCommandArguments Arguments => _arguments;
 
         public iOSPackageCommand() : base("package")

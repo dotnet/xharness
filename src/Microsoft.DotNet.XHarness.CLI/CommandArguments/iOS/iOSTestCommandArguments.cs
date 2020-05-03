@@ -92,49 +92,35 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// </summary>
         public IReadOnlyCollection<TestTarget> TestTargets { get; private set; } = Array.Empty<TestTarget>();
 
-        public override OptionSet GetOptions()
+        protected override OptionSet GetTestCommandOptions() => new OptionSet
         {
-            var options = new OptionSet
-            {
-                "usage: ios test [OPTIONS]",
-                "",
-                "Packaging command that will create a iOS/tvOS/watchOS or macOS application that can be used to run NUnit or XUnit-based test dlls",
-
-                { "xcode=", "Path where Xcode is installed",
-                    v => XcodeRoot = RootPath(v)
-                },
-                { "mlaunch=", "Path to the mlaunch binary",
-                    v => MlaunchPath = RootPath(v)
-                },
-                { "device-name=", "Name of a specific device, if you wish to target one",
-                    v => DeviceName = v
-                },
-                { "communication-channel=", $"The communication channel to use to communicate with the default. Can be {CommunicationChannel.Network} and {CommunicationChannel.UsbTunnel}. Default is {CommunicationChannel.UsbTunnel}",
-                    v => CommunicationChannel = ParseArgument<CommunicationChannel>("communication-channel", v)
-                },
-                { "launch-timeout=|lt=", "Time span, in seconds, to wait for the iOS app to start.",
-                    v =>
+            { "xcode=", "Path where Xcode is installed",
+                v => XcodeRoot = RootPath(v)
+            },
+            { "mlaunch=", "Path to the mlaunch binary",
+                v => MlaunchPath = RootPath(v)
+            },
+            { "device-name=", "Name of a specific device, if you wish to target one",
+                v => DeviceName = v
+            },
+            { "communication-channel=", $"The communication channel to use to communicate with the default. Can be {CommunicationChannel.Network} and {CommunicationChannel.UsbTunnel}. Default is {CommunicationChannel.UsbTunnel}",
+                v => CommunicationChannel = ParseArgument<CommunicationChannel>("communication-channel", v)
+            },
+            { "launch-timeout=|lt=", "Time span, in seconds, to wait for the iOS app to start.",
+                v =>
+                {
+                    if (!int.TryParse(v, out var launchTimeout))
                     {
-                        if (!int.TryParse(v, out var launchTimeout))
-                        {
-                            throw new ArgumentException("launch-timeout must be an integer - a number of seconds");
-                        }
-
-                        LaunchTimeout = TimeSpan.FromSeconds(launchTimeout);
+                        throw new ArgumentException("launch-timeout must be an integer - a number of seconds");
                     }
-                },
-                { "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.",
-                    v => XmlResultJargon = ParseArgument("xml-jargon", v, invalidValues: XmlResultJargon.Missing)
-                },
-            };
 
-            foreach (var option in base.GetOptions())
-            {
-                options.Add(option);
-            }
-
-            return options;
-        }
+                    LaunchTimeout = TimeSpan.FromSeconds(launchTimeout);
+                }
+            },
+            { "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.",
+                v => XmlResultJargon = ParseArgument("xml-jargon", v, invalidValues: XmlResultJargon.Missing)
+            },
+        };
 
         public override void Validate()
         {

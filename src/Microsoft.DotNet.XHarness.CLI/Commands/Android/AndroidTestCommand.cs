@@ -15,11 +15,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
     internal class AndroidTestCommand : TestCommand
     {
-        private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
-        protected override TestCommandArguments TestArguments => _arguments;
-
         // nunit2 one should go away eventually
         private readonly string[] _xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
+        private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
+
+        protected override TestCommandArguments TestArguments => _arguments;
+
+        protected override string CommandUsage { get; } = "android test [OPTIONS]";
+
+        protected override string CommandDescription { get; } = "Executes tests on and Android device, waits up to a given timeout, then copies files off the device.";
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
@@ -155,6 +159,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                     }
                 }
             }
+
             return (outputs, exitCode);
         }
     }

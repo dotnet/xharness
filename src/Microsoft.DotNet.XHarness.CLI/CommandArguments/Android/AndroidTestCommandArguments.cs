@@ -28,48 +28,34 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         public Dictionary<string, string> InstrumentationArguments { get; } = new Dictionary<string, string>();
 
-        public override OptionSet GetOptions()
+        protected override OptionSet GetTestCommandOptions() => new OptionSet
         {
-            var options = new OptionSet
-            {
-                "usage: android test [OPTIONS]",
-                "",
-                "Executes tests on and Android device, waits up to a given timeout, then copies files off the device.",
+            { "device-out-folder=|dev-out=", "If specified, copy this folder recursively off the device to the path specified by the output directory",
+                v => DeviceOutputFolder = RootPath(v)
+            },
+            { "instrumentation:|i:", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.",
+                v => InstrumentationName = v
+            },
+            { "package-name=|p=", "Package name contained within the supplied APK",
+                v => PackageName = v
+            },
+            { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
+                {
+                    var argPair = v.Split('=');
 
-                { "device-out-folder=|dev-out=", "If specified, copy this folder recursively off the device to the path specified by the output directory",
-                    v => DeviceOutputFolder = RootPath(v)
-                },
-                { "instrumentation:|i:", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.",
-                    v => InstrumentationName = v
-                },
-                { "package-name=|p=", "Package name contained within the supplied APK",
-                    v => PackageName = v
-                },
-                { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
+                    if (argPair.Length != 2)
                     {
-                        var argPair = v.Split('=');
-
-                        if (argPair.Length != 2)
-                        {
-                            throw new ArgumentException($"The --arg argument expects 'key=value' format. Invalid format found in '{v}'");
-                        }
-
-                        if (InstrumentationArguments.ContainsKey(argPair[0]))
-                        {
-                            throw new ArgumentException($"Duplicate arg name '{argPair[0]}' found");
-                        }
-
-                        InstrumentationArguments.Add(argPair[0].Trim(), argPair[1].Trim());
+                        throw new ArgumentException($"The --arg argument expects 'key=value' format. Invalid format found in '{v}'");
                     }
-                },
-            };
 
-            foreach (var option in base.GetOptions())
-            {
-                options.Add(option);
-            }
+                    if (InstrumentationArguments.ContainsKey(argPair[0]))
+                    {
+                        throw new ArgumentException($"Duplicate arg name '{argPair[0]}' found");
+                    }
 
-            return options;
-        }
+                    InstrumentationArguments.Add(argPair[0].Trim(), argPair[1].Trim());
+                }
+            },
+        };
     }
 }

@@ -13,6 +13,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 {
     internal abstract class XHarnessCommand : Command
     {
+        protected abstract string CommandUsage { get; }
+        protected abstract string CommandDescription { get; }
         protected abstract XHarnessCommandArguments Arguments { get; }
 
         protected XHarnessCommand(string name) : base(name)
@@ -37,6 +39,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 
                 if (Arguments.ShowHelp)
                 {
+                    Console.WriteLine("usage: " + CommandUsage + Environment.NewLine + Environment.NewLine + CommandDescription + Environment.NewLine);
                     options.WriteOptionDescriptions(Console.Out);
                     return (int)ExitCode.HELP_SHOWN;
                 }

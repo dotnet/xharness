@@ -13,6 +13,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
     internal class AndroidGetStateCommand : GetStateCommand
     {
+        protected override string CommandUsage { get; } = "android state";
+
         protected override XHarnessCommandArguments Arguments => new AndroidGetStateCommandArguments();
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)

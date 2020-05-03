@@ -96,59 +96,45 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// </summary>
         public string DotnetPath { get; set; } = "dotnet";
 
-        public override OptionSet GetOptions()
+        protected override OptionSet GetCommandOptions() => new OptionSet
         {
-            var options = new OptionSet
-            {
-                "usage: ios package [OPTIONS]",
-                "",
-                "Packaging command that will create a iOS/tvOS/watchOS or macOS application that can be used to run NUnit or XUnit-based test dlls",
-
-                { "name=|n=", "Name of the test application",
-                    v => AppPackageName = v
-                },
-                { "mtouch-extraargs=|m=", "Extra arguments to be passed to mtouch.",
-                    v => MtouchExtraArgs = v
-                },
-                { "ignore-directory=|i=", "Root directory containing all the *.ignore files used to skip tests if needed.",
-                    v => IgnoreFilesRootDirectory = RootPath(v)
-                },
-                { "template=|t=", "Indicates which template to use. There are two available ones: Managed, which uses Xamarin.[iOS|Mac] and Native (default:Managed).",
-                    v => TemplateType = ParseArgument("template", v, invalidValues: TemplateType.Unknown)
-                },
-                { "traits-directory=|td=", "Root directory that contains all the .txt files with traits that will be skipped if needed.",
-                    v =>  TraitsRootDirectory = RootPath(v)
-                },
-                { "working-directory=|w=", "Directory that will be used to output generated projects",
-                    v => WorkingDirectory = RootPath(v)
-                },
-                { "output-directory=|o=", "Directory in which the resulting package will be outputted",
-                    v => OutputDirectory = RootPath(v)
-                },
-                { "assembly=|a=", "An assembly to be added as part of the testing application",
-                    v => Assemblies.Add(v)
-                },
-                { "configuration=", "The configuration that will be used to build the app. Default is 'Debug'",
-                    v => BuildConfiguration = ParseArgument<BuildConfiguration>("configuration", v)
-                },
-                { "testing-framework=|tf=", "The testing framework that is used by the given assemblies.",
-                    v => TestingFramework = ParseArgument("testing framework", v, invalidValues: TestingFramework.Unknown)
-                },
-                { "platform=|p=", "Plaform to be added as the target for the application. Can be used multiple times to target more platforms.",
-                    v => Platforms.Add(ParseArgument<Platform>("platform", v))
-                },
-                { "dotnet=", "Path to the 'dotnet' command. Default is 'dotnet'",
-                    v => DotnetPath = v
-                },
-            };
-
-            foreach (var option in base.GetOptions())
-            {
-                options.Add(option);
-            }
-
-            return options;
-        }
+            { "name=|n=", "Name of the test application",
+                v => AppPackageName = v
+            },
+            { "mtouch-extraargs=|m=", "Extra arguments to be passed to mtouch.",
+                v => MtouchExtraArgs = v
+            },
+            { "ignore-directory=|i=", "Root directory containing all the *.ignore files used to skip tests if needed.",
+                v => IgnoreFilesRootDirectory = RootPath(v)
+            },
+            { "template=|t=", "Indicates which template to use. There are two available ones: Managed, which uses Xamarin.[iOS|Mac] and Native (default:Managed).",
+                v => TemplateType = ParseArgument("template", v, invalidValues: TemplateType.Unknown)
+            },
+            { "traits-directory=|td=", "Root directory that contains all the .txt files with traits that will be skipped if needed.",
+                v =>  TraitsRootDirectory = RootPath(v)
+            },
+            { "working-directory=|w=", "Directory that will be used to output generated projects",
+                v => WorkingDirectory = RootPath(v)
+            },
+            { "output-directory=|o=", "Directory in which the resulting package will be outputted",
+                v => OutputDirectory = RootPath(v)
+            },
+            { "assembly=|a=", "An assembly to be added as part of the testing application",
+                v => Assemblies.Add(v)
+            },
+            { "configuration=", "The configuration that will be used to build the app. Default is 'Debug'",
+                v => BuildConfiguration = ParseArgument<BuildConfiguration>("configuration", v)
+            },
+            { "testing-framework=|tf=", "The testing framework that is used by the given assemblies.",
+                v => TestingFramework = ParseArgument("testing framework", v, invalidValues: TestingFramework.Unknown)
+            },
+            { "platform=|p=", "Plaform to be added as the target for the application. Can be used multiple times to target more platforms.",
+                v => Platforms.Add(ParseArgument<Platform>("platform", v))
+            },
+            { "dotnet=", "Path to the 'dotnet' command. Default is 'dotnet'",
+                v => DotnetPath = v
+            },
+        };
 
         public override void Validate()
         {
