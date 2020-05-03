@@ -68,6 +68,9 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 
         public static async Task<IEnumerable<string>> ParseContentFilesAsync(string contentDir)
         {
+            if (string.IsNullOrEmpty(contentDir))
+                return Array.Empty<string>();
+
             var ignoredTests = new List<string>();
             foreach (var f in Directory.GetFiles(contentDir, "*.ignore"))
             {
@@ -80,21 +83,24 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
             return ignoredTests;
         }
 
-        public static async Task<IEnumerable<string>> ParseTraitsContentFileAsync(string contentDir, bool isXUnit)
+        public static async Task<IEnumerable<string>> ParseTraitsFileAsync (string filePath)
         {
             var ignoredTraits = new List<string>();
-            var ignoreFile = Path.Combine(contentDir, isXUnit ? "xunit-excludes.txt" : "nunit-excludes.txt");
-            using (var reader = new StreamReader(ignoreFile))
+            using var reader = new StreamReader(filePath);
+            string line;
+            while ((line = await reader.ReadLineAsync()) != null)
             {
-                string line;
-                while ((line = await reader.ReadLineAsync()) != null)
-                {
-                    if (string.IsNullOrEmpty(line))
-                        continue;
-                    ignoredTraits.Add(line);
-                }
+                if (string.IsNullOrEmpty(line))
+                    continue;
+                ignoredTraits.Add(line);
             }
             return ignoredTraits;
+        }
+
+        public static Task<IEnumerable<string>> ParseTraitsContentFileAsync(string contentDir, bool isXUnit)
+        {
+            var ignoreFile = Path.Combine(contentDir, isXUnit ? "xunit-excludes.txt" : "nunit-excludes.txt");
+            return ParseTraitsFileAsync( ignoreFile);
         }
 
         public static IEnumerable<string> ParseTraitsContentFile(string contentDir, bool isXUnit)

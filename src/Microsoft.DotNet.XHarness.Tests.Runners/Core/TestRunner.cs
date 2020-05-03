@@ -58,8 +58,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         public long ExecutedTests { get; protected set; } = 0;
 
         /// <summary>
-        /// Total number of tests. This icludes, executed, ignored, filtered 
-		/// and skipped tests.
+        /// Total number of tests. This icludes, executed, ignored, filtered
+        /// and skipped tests.
         /// </summary>
         public long TotalTests { get; protected set; } = 0;
 
@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 
         /// <summary>
         /// Specify if the runner should log those tests that have been excluded
-        /// due to a filter. Default is false. 
+        /// due to a filter. Default is false.
         /// </summary>
         public bool LogExcludedTests { get; set; }
 
@@ -122,8 +122,6 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         public abstract void WriteResultsToFile(TextWriter writer, Jargon jargon);
         public abstract void SkipTests(IEnumerable<string> tests);
         public abstract void SkipCategories(IEnumerable<string> categories);
-
-        public abstract void SkipAttributes(IEnumerable<string> attributes);
 
         protected void OnError(string message)
         {
@@ -203,7 +201,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         {
             var handler = TestCompleted;
             if (handler != null)
-                handler(this, result); 
+                handler(this, result);
 		}
     }
 }

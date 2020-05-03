@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.IO;
 using System.Xml;
 
@@ -11,6 +12,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
     {
         public const string BundleIdentifierPropertyName = "CFBundleIdentifier";
         public const string BundleNamePropertyName = "CFBundleName";
+        public const string RequiredDeviceCapabilities = "UIRequiredDeviceCapabilities";
 
         public static void LoadWithoutNetworkAccess(this XmlDocument doc, string filename)
         {
@@ -54,43 +56,44 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             plist.SetPListStringValue("LSMinimumSystemVersion", value);
         }
 
-        public static void SetCFBundleDisplayName(this XmlDocument plist, string value)
-        {
+        public static void SetCFBundleDisplayName(this XmlDocument plist, string value) =>
             plist.SetPListStringValue("CFBundleDisplayName", value);
-        }
 
-        public static string GetMinimumOSVersion(this XmlDocument plist)
-        {
-            return plist.GetPListStringValue("MinimumOSVersion");
-        }
+        public static string GetCFBundleDisplayName(this XmlDocument plist) =>
+            plist.GetPListStringValue("CFBundleDisplayName");
 
-        public static void SetCFBundleIdentifier(this XmlDocument plist, string value)
-        {
+        public static string GetMinimumOSVersion(this XmlDocument plist) =>
+            plist.GetPListStringValue("MinimumOSVersion");
+
+        public static string GetMinimummacOSVersion(this XmlDocument plist) =>
+            plist.GetPListStringValue("LSMinimumSystemVersion");
+
+        public static void SetCFBundleIdentifier(this XmlDocument plist, string value) =>
             plist.SetPListStringValue(BundleIdentifierPropertyName, value);
-        }
 
-        public static void SetCFBundleName(this XmlDocument plist, string value)
-        {
+        public static void SetCFBundleName(this XmlDocument plist, string value) =>
             plist.SetPListStringValue(BundleNamePropertyName, value);
-        }
 
-        public static void SetUIDeviceFamily(this XmlDocument plist, params int[] families)
-        {
+        public static void SetUIDeviceFamily(this XmlDocument plist, params int[] families) =>
             plist.SetPListArrayOfIntegerValues("UIDeviceFamily", families);
-        }
 
-        public static string GetCFBundleIdentifier(this XmlDocument plist)
-        {
-            return plist.GetPListStringValue(BundleIdentifierPropertyName);
-        }
+        public static string GetCFBundleIdentifier(this XmlDocument plist) =>
+            plist.GetPListStringValue(BundleIdentifierPropertyName);
 
-        public static string GetNSExtensionPointIdentifier(this XmlDocument plist)
-        {
-            return plist.SelectSingleNode("//dict/key[text()='NSExtensionPointIdentifier']")?.NextSibling?.InnerText;
-        }
+        public static string GetCFBundleName(this XmlDocument plist) =>
+            plist.GetPListStringValue(BundleNamePropertyName);
+
+        public static string GetNSExtensionPointIdentifier(this XmlDocument plist) =>
+            plist.SelectSingleNode("//dict/key[text()='NSExtensionPointIdentifier']")?.NextSibling?.InnerText;
 
         public static void SetPListStringValue(this XmlDocument plist, string node, string value)
         {
+            if (node == null)
+                throw new ArgumentNullException(nameof(node));
+
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+
             var element = plist.SelectSingleNode("//dict/key[text()='" + node + "']");
             if (element == null)
             {
@@ -124,10 +127,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             root.AppendChild(valueElement);
         }
 
-        public static bool ContainsKey(this XmlDocument plist, string key)
-        {
-            return plist.SelectSingleNode("//dict/key[text()='" + key + "']") != null;
-        }
+        public static bool ContainsKey(this XmlDocument plist, string key) =>
+            plist.SelectSingleNode("//dict/key[text()='" + key + "']") != null;
 
         private static void SetPListArrayOfIntegerValues(this XmlDocument plist, string node, params int[] values)
         {
@@ -143,9 +144,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             key.ParentNode.InsertAfter(array, key);
         }
 
-        private static string GetPListStringValue(this XmlDocument plist, string node)
-        {
-            return plist.SelectSingleNode("//dict/key[text()='" + node + "']").NextSibling.InnerText;
-        }
+        private static string GetPListStringValue(this XmlDocument plist, string node) =>
+            plist.SelectSingleNode("//dict/key[text()='" + node + "']").NextSibling.InnerText;
     }
 }
