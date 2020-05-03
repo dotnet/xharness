@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
             }
             catch (ArgumentException e)
             {
-                logger.LogError("Invalid argument: " + e.Message);
+                logger.LogError(e.Message);
 
                 if (Arguments.ShowHelp)
                 {
