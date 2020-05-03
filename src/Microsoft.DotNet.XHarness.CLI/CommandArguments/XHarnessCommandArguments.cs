@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                     Verbosity = ParseArgument<LogLevel>("verbosity", v);
                 }
             },
-            { "help|h", "Show this message", v => ShowHelp = v != null }
+            { "help|h", v => ShowHelp = v != null }
         };
 
         protected static string RootPath(string path)
@@ -67,10 +67,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 
             throw new ArgumentException(
                 $"Invalid value '{value}' supplied in {argumentName}. " +
-                $"Valid values are:" + GetAllowedValues(invalidValues));
+                $"Valid values are:" + GetAllowedValues(invalidValues: invalidValues));
         }
 
-        protected static string GetAllowedValues<TEnum>(params TEnum[]? invalidValues) where TEnum : struct, IConvertible
+        protected static string GetAllowedValues<TEnum>(Func<TEnum, string>? display = null, params TEnum[]? invalidValues) where TEnum : struct, IConvertible
         {
             var values = Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
 
@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                 values = values.Where(v => !invalidValues.Contains(v));
             }
 
-            return Environment.NewLine + "\t- " + string.Join($"{Environment.NewLine}\t- ", values.Select(t => t.ToString()));
+            return Environment.NewLine + "\t- " + string.Join($"{Environment.NewLine}\t- ", values.Select(t => display?.Invoke(t) ?? t.ToString()));
         }
 
         public abstract void Validate();

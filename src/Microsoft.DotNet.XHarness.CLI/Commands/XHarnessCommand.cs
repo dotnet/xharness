@@ -32,12 +32,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 
                 if (extra.Count > 0)
                 {
-                    throw new ArgumentException($"Unknown arguments{string.Join(" ", extra)}");
+                    throw new ArgumentException($"Unknown arguments: {string.Join(" ", extra)}");
+                }
+
+                if (Arguments.ShowHelp)
+                {
+                    options.WriteOptionDescriptions(Console.Out);
+                    return (int)ExitCode.HELP_SHOWN;
                 }
 
                 Arguments.Validate();
             }
-            catch (Exception e)
+            catch (ArgumentException e)
             {
                 logger.LogError("Invalid argument: " + e.Message);
 
@@ -48,11 +54,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 
                 return (int)ExitCode.INVALID_ARGUMENTS;
             }
-
-            if (Arguments.ShowHelp)
+            catch (Exception e)
             {
-                options.WriteOptionDescriptions(Console.Out);
-                return (int)ExitCode.HELP_SHOWN;
+                logger.LogCritical("Unexpected failure argument: " + e);
+                return (int)ExitCode.GENERAL_FAILURE;
             }
 
             return (int)InvokeInternal(logger).GetAwaiter().GetResult();

@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.DotNet.XHarness.CLI.Commands.iOS;
 using Microsoft.DotNet.XHarness.iOS.TestImporter;
 using Mono.Options;
 
@@ -29,7 +28,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         Release64,
     }
 
-    // TODO: not nice, I'd like to be able to choose tvOS, watchOS, etc
+    // TODO: Support other platforms such as tvOS, watchOS, etc
+    //       https://github.com/dotnet/xharness/issues/105
     public enum Platform
     {
         iPhone,
@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 
         public override void Validate()
         {
-            // This validates them
+            // This validates required fields
             AppPackageName = AppPackageName;
             TestingFramework = TestingFramework;
 

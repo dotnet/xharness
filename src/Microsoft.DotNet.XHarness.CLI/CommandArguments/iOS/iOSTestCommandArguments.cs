@@ -78,9 +78,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                     catch (ArgumentOutOfRangeException)
                     {
                         throw new ArgumentException(
-                            $"Failed to parse test target '{targetName}'. " +
-                            $"Available targets are:{Environment.NewLine}\t" +
-                            $"{string.Join(Environment.NewLine + "\t", GetAvailableTargets())}");
+                            $"Failed to parse test target '{targetName}'. Available targets are:" +
+                            GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None));
                     }
                 }
 
@@ -124,7 +123,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                         LaunchTimeout = TimeSpan.FromSeconds(launchTimeout);
                     }
                 },
-                { "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit} {XmlResultJargon.NUnitV2} {XmlResultJargon.NUnitV3} and {XmlResultJargon.xUnit}",
+                { "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.",
                     v => XmlResultJargon = ParseArgument("xml-jargon", v, invalidValues: XmlResultJargon.Missing)
                 },
             };
@@ -148,8 +147,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 
             if (TestTargets.Count == 0)
             {
-                throw new ArgumentException($@"No targets specified. At least one target must be provided. " +
-                    $"Available targets are:" + Environment.NewLine + "\t- " + string.Join($"{Environment.NewLine}\t- ", GetAvailableTargets()));
+                throw new ArgumentException(
+                    "No targets specified. At least one target must be provided. Available targets are:" +
+                    GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None));
             }
 
             if (!File.Exists(MlaunchPath))
@@ -162,11 +162,5 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                 throw new ArgumentException($"Failed to find Xcode root at {XcodeRoot}");
             }
         }
-
-        private static IEnumerable<string> GetAvailableTargets() =>
-            Enum.GetValues(typeof(TestTarget))
-                .Cast<TestTarget>()
-                .Where(t => t != TestTarget.None)
-                .Select(t => t.AsString());
     }
 }

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.Commands.iOS;
 using Mono.Options;
@@ -14,42 +15,55 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
     {
         public override int Invoke(IEnumerable<string> arguments)
         {
-            string[] args = new List<string>(arguments).ToArray();
+            string[] args = arguments.ToArray();
 
             if (args.Length == 0)
             {
-                return base.Invoke(arguments);
+                base.Invoke(arguments);
+                return (int)ExitCode.HELP_SHOWN;
             }
 
-            string subCommand = "";
+            var command = args[0].ToLowerInvariant();
+
+            string? subCommand = null;
             if (args.Length >= 2)
             {
                 subCommand = args[1];
             }
 
-            switch (args[0].ToLowerInvariant())
+            switch (command)
             {
                 case "android":
-                    Console.WriteLine("All supported Android commands: (run 'XHarness android {command} --help' for more details)");
-                    PrintAllHelp(new AndroidCommandSet(), subCommand);
+                    PrintCommandHelp(new AndroidCommandSet(), subCommand);
                     break;
                 case "ios":
-                    Console.WriteLine("All supported iOS commands: (run 'XHarness ios {command} --help' for more details)");
-                    PrintAllHelp(new iOSCommandSet(), subCommand);
+                    PrintCommandHelp(new iOSCommandSet(), subCommand);
                     break;
                 default:
-                    Console.WriteLine($"No help available for command '{args[0]}'");
-                    return -1;
+                    Console.WriteLine($"No help available for command '{command}'. Allowed commands are 'ios' and 'android'");
+                    break;
             }
 
-            return 0;
+            return (int)ExitCode.HELP_SHOWN;
         }
 
-        private void PrintAllHelp(CommandSet commandSet, string v)
+        private void PrintCommandHelp(CommandSet commandSet, string? subcommand)
         {
-            var helpCommand = new HelpCommand();
-            commandSet.Add(helpCommand);
+            if (subcommand != null)
+            {
+                var command = commandSet.Where(c => c.Name == subcommand).FirstOrDefault();
+                if (command != null)
+                {
+                    command.Invoke(new string[] { "--help" });
+                    return;
+                }
+
+                Console.WriteLine($"Unknown sub-command '{subcommand}'.{Environment.NewLine}");
+            }
+
+            Console.WriteLine("All supported sub-commands:");
             commandSet.Run(new string[] { "help" });
+            Console.WriteLine($"{Environment.NewLine}Run 'xharness {commandSet.Suite} {{command}} --help' for more details");
         }
     }
 }

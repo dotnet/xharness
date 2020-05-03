@@ -26,12 +26,22 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 
         public override OptionSet GetOptions()
         {
-            var options = base.GetOptions();
+            var options = new OptionSet
+            {
+                $"usage: ios state [OPTIONS]",
+                "",
+                "Print information about the current machine, such as host machine info and device status",
 
-            options.Add("mlaunch=", "Path to the mlaunch binary", v => MlaunchPath = RootPath(v));
-            options.Add("include-simulator-uuid", "Include the simulators UUID. Defaults to false.", v => ShowSimulatorsUUID = v != null);
-            options.Add("include-devices-uuid", "Include the devices UUID.", v => ShowDevicesUUID = v != null);
-            options.Add("json", "Use json as the output format.", v => UseJson = v != null);
+                { "mlaunch=", "Path to the mlaunch binary", v => MlaunchPath = RootPath(v) },
+                { "include-simulator-uuid", "Include the simulators UUID. Defaults to false.", v => ShowSimulatorsUUID = v != null },
+                { "include-devices-uuid", "Include the devices UUID.", v => ShowDevicesUUID = v != null },
+                { "json", "Use json as the output format.", v => UseJson = v != null },
+            };
+
+            foreach (var option in base.GetOptions())
+            {
+                options.Add(option);
+            }
 
             return options;
         }
