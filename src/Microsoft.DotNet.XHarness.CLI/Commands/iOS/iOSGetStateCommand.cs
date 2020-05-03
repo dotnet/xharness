@@ -15,6 +15,7 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
 using Microsoft.Extensions.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
