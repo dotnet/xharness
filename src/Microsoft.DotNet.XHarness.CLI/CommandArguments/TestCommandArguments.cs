@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Mono.Options;
 
@@ -36,7 +35,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         /// <summary>
         /// List of targets to test
         /// </summary>
-        [DisallowNull]
         public virtual IReadOnlyCollection<string> Targets { get; protected set; } = Array.Empty<string>();
 
         /// <summary>

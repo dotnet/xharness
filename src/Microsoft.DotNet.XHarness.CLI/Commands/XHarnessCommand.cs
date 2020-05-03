@@ -68,23 +68,22 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 
         protected abstract Task<ExitCode> InvokeInternal(ILogger logger);
 
-        private ILoggerFactory CreateLoggerFactory(LogLevel verbosity) => LoggerFactory
-            .Create(builder =>
+        private ILoggerFactory CreateLoggerFactory(LogLevel verbosity) => LoggerFactory.Create(builder =>
+        {
+            builder
+            .AddConsole(options =>
             {
-                builder
-                .AddConsole(options =>
+                if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
                 {
-                    if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
-                    {
-                        options.DisableColors = true;
-                    }
+                    options.DisableColors = true;
+                }
 
-                    if (Environment.GetEnvironmentVariable("XHARNESS_LOG_WITH_TIMESTAMPS")?.ToLower().Equals("true") ?? false)
-                    {
-                        options.TimestampFormat = "[HH:mm:ss] ";
-                    }
-                })
-                .AddFilter(level => level >= verbosity);
-            });
+                if (Environment.GetEnvironmentVariable("XHARNESS_LOG_WITH_TIMESTAMPS")?.ToLower().Equals("true") ?? false)
+                {
+                    options.TimestampFormat = "[HH:mm:ss] ";
+                }
+            })
+            .AddFilter(level => level >= verbosity);
+        });
     }
 }

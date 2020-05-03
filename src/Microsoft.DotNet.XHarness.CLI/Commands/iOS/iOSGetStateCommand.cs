@@ -25,24 +25,44 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         class DeviceInfo
         {
-            public string? Name { get; set; }
-            public string? UDID { get; set; }
-            public string? Type { get; set; }
-            public string? OSVersion { get; set; }
+            public string Name { get; }
+            public string UDID { get; }
+            public string Type { get; }
+            public string OSVersion { get; }
+
+            public DeviceInfo(string name, string uDID, string type, string oSVersion)
+            {
+                Name = name;
+                UDID = uDID;
+                Type = type;
+                OSVersion = oSVersion;
+            }
         }
 
         class SystemInfo
         {
-            public string? MachineName { get; set; }
-            public string? OSName { get; set; }
-            public string? OSVersion { get; set; }
-            public string? OSPlatform { get; set; }
-            public string? XcodePath { get; set; }
-            public string? XcodeVersion { get; set; }
-            public string? MlaunchPath { get; set; }
-            public string? MlaunchVersion { get; set; }
+            public string MachineName { get; }
+            public string OSName { get; }
+            public string OSVersion { get; }
+            public string OSPlatform { get; }
+            public string XcodePath { get; }
+            public string XcodeVersion { get; }
+            public string MlaunchPath { get; }
+            public string MlaunchVersion { get; }
             public List<DeviceInfo> Simulators { get; } = new List<DeviceInfo>();
             public List<DeviceInfo> Devices { get; } = new List<DeviceInfo>();
+
+            public SystemInfo(string machineName, string oSName, string oSVersion, string oSPlatform, string xcodePath, string xcodeVersion, string mlaunchPath, string mlaunchVersion)
+            {
+                MachineName = machineName;
+                OSName = oSName;
+                OSVersion = oSVersion;
+                OSPlatform = oSPlatform;
+                XcodePath = xcodePath;
+                XcodeVersion = xcodeVersion;
+                MlaunchPath = mlaunchPath;
+                MlaunchVersion = mlaunchVersion;
+            }
         }
 
         private const string SimulatorPrefix = "com.apple.CoreSimulator.SimDeviceType.";
@@ -82,12 +102,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             if (info.Simulators.Any())
             {
-                var maxLength = info.Simulators.Select(s => s.Name?.Length ?? 0).Max();
+                var maxLength = info.Simulators.Select(s => s.Name.Length).Max();
 
                 foreach (var sim in info.Simulators)
                 {
                     var uuid = _arguments.ShowSimulatorsUUID ? $" {sim.UDID}   " : "";
-                    Console.WriteLine($"  {sim.Name?.PadRight(maxLength)}{uuid} {sim.OSVersion,-13} {sim.Type}");
+                    Console.WriteLine($"  {sim.Name.PadRight(maxLength)}{uuid} {sim.OSVersion,-13} {sim.Type}");
                 }
             }
             else
@@ -101,12 +121,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             if (info.Devices.Any())
             {
-                var maxLength = info.Devices.Select(s => s.Name?.Length ?? 0).Max();
+                var maxLength = info.Devices.Select(s => s.Name.Length).Max();
 
                 foreach (var dev in info.Devices)
                 {
                     var uuid = _arguments.ShowDevicesUUID ? $" {dev.UDID}   " : "";
-                    Console.WriteLine($"  {dev.Name?.PadRight(maxLength)}{uuid} {dev.OSVersion,-13} {dev.Type}");
+                    Console.WriteLine($"  {dev.Name.PadRight(maxLength)}{uuid} {dev.OSVersion,-13} {dev.Type}");
                 }
             }
             else
@@ -117,7 +137,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            var processManager = new ProcessManager(mlaunchPath: _arguments.MlaunchPath); 
+            var processManager = new ProcessManager(mlaunchPath: _arguments.MlaunchPath);
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
             var log = new MemoryLog(); // do we really want to log this?
@@ -143,17 +163,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
 
             // build the required data, then depending on the format print out
-            var info = new SystemInfo
-            {
-                MachineName = Environment.MachineName,
-                OSName = "Mac OS X",
-                OSVersion = Darwin.GetVersion() ?? "",
-                OSPlatform = "Darwin",
-                XcodePath = processManager.XcodeRoot,
-                XcodeVersion = processManager.XcodeVersion.ToString(),
-                MlaunchPath = processManager.MlaunchPath,
-                MlaunchVersion = mlaunchLog.ToString().Trim(),
-            };
+            var info = new SystemInfo(
+                machineName: Environment.MachineName,
+                oSName: "Mac OS X",
+                oSVersion: Darwin.GetVersion() ?? "",
+                oSPlatform: "Darwin",
+                xcodePath: processManager.XcodeRoot,
+                xcodeVersion: processManager.XcodeVersion.ToString(),
+                mlaunchPath: processManager.MlaunchPath,
+                mlaunchVersion: mlaunchLog.ToString().Trim());
 
             try
             {
@@ -168,13 +186,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             foreach (var sim in simulatorLoader.AvailableDevices)
             {
-                info.Simulators.Add(new DeviceInfo
-                {
-                    Name = sim.Name,
-                    UDID = sim.UDID,
-                    Type = sim.SimDeviceType.Remove(0, SimulatorPrefix.Length).Replace('-', ' '),
-                    OSVersion = sim.OSVersion,
-                });
+                info.Simulators.Add(new DeviceInfo(
+                    name: sim.Name,
+                    uDID: sim.UDID,
+                    type: sim.SimDeviceType.Remove(0, SimulatorPrefix.Length).Replace('-', ' '),
+                    oSVersion: sim.OSVersion));
             }
 
             try
@@ -190,13 +206,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             foreach (var dev in deviceLoader.ConnectedDevices)
             {
-                info.Devices.Add(new DeviceInfo
-                {
-                    Name = dev.Name,
-                    UDID = dev.DeviceIdentifier,
-                    Type = $"{dev.DeviceClass} {dev.DevicePlatform}",
-                    OSVersion = dev.OSVersion,
-                });
+                info.Devices.Add(new DeviceInfo(
+                    name: dev.Name,
+                    uDID: dev.DeviceIdentifier,
+                    type: $"{dev.DeviceClass} {dev.DevicePlatform}",
+                    oSVersion: dev.OSVersion));
             }
 
             if (_arguments.UseJson)
