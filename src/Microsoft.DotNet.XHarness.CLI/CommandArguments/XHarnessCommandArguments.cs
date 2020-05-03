@@ -40,6 +40,15 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
             return path;
         }
 
+        /// <summary>
+        /// Helper method that enables parsing of enums from string.
+        /// When an invalid value is supplied, available values are printed.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum type</typeparam>
+        /// <param name="argumentName">Name of the argument that is being parsed, strictly for help printing purposes</param>
+        /// <param name="value">Value of the arg to be parsed</param>
+        /// <param name="invalidValues">List of values that should not be available to set</param>
+        /// <returns>Parsed enum value</returns>
         protected static TEnum ParseArgument<TEnum>(string argumentName, string? value, params TEnum[]? invalidValues) where TEnum : struct, IConvertible
         {
             var type = typeof(TEnum);
@@ -71,6 +80,13 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                 $"Valid values are:" + GetAllowedValues(invalidValues: invalidValues));
         }
 
+        /// <summary>
+        /// Helper method that returns a bullet list of available enum values ready for printing to console.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum type</typeparam>
+        /// <param name="display">How to print each enum value. Default is ToString()</param>
+        /// <param name="invalidValues">List of values that should not be available to set and are not listed then</param>
+        /// <returns>Print-ready list of allowed values</returns>
         protected static string GetAllowedValues<TEnum>(Func<TEnum, string>? display = null, params TEnum[]? invalidValues) where TEnum : struct, IConvertible
         {
             var values = Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
@@ -80,7 +96,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                 values = values.Where(v => !invalidValues.Contains(v));
             }
 
-            return Environment.NewLine + "\t- " + string.Join($"{Environment.NewLine}\t- ", values.Select(t => display?.Invoke(t) ?? t.ToString()));
+            var separator = Environment.NewLine + "\t- ";
+            IEnumerable<string?> allowedValued = values.Select(t => display?.Invoke(t) ?? t.ToString());
+
+            return separator + string.Join(separator, allowedValued);
         }
     }
 }

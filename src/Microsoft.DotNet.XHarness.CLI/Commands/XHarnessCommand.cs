@@ -13,15 +13,25 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 {
     internal abstract class XHarnessCommand : Command
     {
+        /// <summary>
+        /// Will be printed in the header when help is invoked.
+        /// Example: 'ios package [OPTIONS]'
+        /// </summary>
         protected abstract string CommandUsage { get; }
+
+        /// <summary>
+        /// Will be printed in the header when help is invoked.
+        /// Example: 'Allows to package DLLs into an app bundle'
+        /// </summary>
         protected abstract string CommandDescription { get; }
+
         protected abstract XHarnessCommandArguments Arguments { get; }
 
         protected XHarnessCommand(string name) : base(name)
         {
         }
 
-        public override sealed int Invoke(IEnumerable<string> arguments)
+        public sealed override int Invoke(IEnumerable<string> arguments)
         {
             OptionSet options = Arguments.GetOptions();
 
