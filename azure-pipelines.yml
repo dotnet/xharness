@@ -145,17 +145,16 @@ stages:
             displayName: Build and run tests
             condition: succeeded()
 
-          - ${{ if eq(variables._BuildConfig, 'Debug') }}:
-            - bash: |
-                targetDir=$(Build.ArtifactStagingDirectory)/OSX.IntegrationTests
-                mkdir $targetDir
-                cp tests/integration-tests/osx-helix-payload.sh $targetDir
-                cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI* $targetDir
-              displayName: Prepare the IntegrationTests artifact
-              workingDirectory: $(Build.SourcesDirectory)
+          - bash: |
+              targetDir=$(Build.ArtifactStagingDirectory)/OSX.IntegrationTests.$(_BuildConfig)
+              mkdir $targetDir
+              cp tests/integration-tests/osx-helix-payload.sh $targetDir
+              cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI* $targetDir
+            displayName: Prepare the IntegrationTests artifact
+            workingDirectory: $(Build.SourcesDirectory)
 
-            - publish: $(Build.ArtifactStagingDirectory)/OSX.IntegrationTests
-              artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests
+          - publish: $(Build.ArtifactStagingDirectory)/OSX.IntegrationTests.$(_BuildConfig)
+            artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.$(_BuildConfig)
 
           - task: PublishTestResults@2
             displayName: 'Publish Unit Test Results'
@@ -187,7 +186,7 @@ stages:
           name: Hosted macOS
       steps:
       - download: current
-        artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests
+        artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
 
       - template: /eng/common/templates/steps/send-to-helix.yml
         parameters:
@@ -201,7 +200,7 @@ stages:
           EnableXUnitReporter: true
           HelixTargetQueues: osx.1015.amd64.ios.open
           Creator: xharness
-          WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests
+          WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
           WorkItemCommand: ./osx-helix-payload.sh
           WorkItemTimeout: 00:15:00
 
