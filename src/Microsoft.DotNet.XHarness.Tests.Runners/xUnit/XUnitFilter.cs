@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                 return log (Exclude);
             }
 
-            // nor path of name matched the filter, therefore return the oposite of the Exclude value
+            // No path of the name matched the filter, therefore return the opposite of the Exclude value
             return log (!Exclude);
         }
 
