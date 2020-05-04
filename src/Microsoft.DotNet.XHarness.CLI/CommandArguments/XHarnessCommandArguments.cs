@@ -16,6 +16,14 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         public LogLevel Verbosity { get; set; } = LogLevel.Information;
         public bool ShowHelp { get; set; } = false;
 
+        /// <summary>
+        /// Collects together all options from this class and from GetCommandOptions()
+        /// Options from this class are appended to the bottom of the list.
+        /// </summary>
+        /// <remarks>
+        /// If you don't want the verbosity option, feel free to override this method
+        /// but the help option is important for the help command to work correctly.
+        /// </remarks>
         public OptionSet GetOptions()
         {
             var options = GetCommandOptions();
@@ -26,8 +34,15 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
             return options;
         }
 
+        /// <summary>
+        /// Allows to implement additional validation (e.g. "directory exists?").
+        /// Should throw an ArgumentException if validation fails.
+        /// </summary>
         public abstract void Validate();
 
+        /// <summary>
+        /// Returns additional option for your specific command.
+        /// </summary>
         protected abstract OptionSet GetCommandOptions();
 
         protected static string RootPath(string path)
