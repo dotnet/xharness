@@ -10,6 +10,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
     internal class AndroidTestCommandArguments : TestCommandArguments
     {
+        private string? _packageName;
+
         /// <summary>
         /// If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.
         /// If a given package has multiple instrumentations, failing to specify this may cause execution failure.
@@ -19,7 +21,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// <summary>
         /// If specified, attempt to run instrumentation with this name instead of the default for the supplied APK
         /// </summary>
-        public string? PackageName { get; set; }
+        public string PackageName
+        {
+            get => _packageName ?? throw new ArgumentException("Package name not specified");
+            set => _packageName = value;
+        }
 
         /// <summary>
         /// Folder to copy off for output of executing the specified APK
@@ -57,5 +63,13 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
                 }
             },
         };
+
+        public override void Validate()
+        {
+            base.Validate();
+
+            // Validate this field
+            PackageName = PackageName;
+        }
     }
 }
