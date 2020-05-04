@@ -34,7 +34,7 @@ pr:
     - master
 
 stages:
-- stage: build
+- stage: build_Windows_NT
   displayName: Build
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
@@ -82,17 +82,6 @@ stages:
             displayName: Build and run tests
             condition: succeeded()
 
-          - bash: |
-              targetDir=$(Build.ArtifactStagingDirectory)/OSX.IntegrationTests
-              mkdir $targetDir
-              cp tests/integration-tests/osx-helix-payload.sh $targetDir
-              cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI* $targetDir
-              displayName: Prepare the IntegrationTests artifact
-              workingDirectory: $(Build.SourcesDirectory)
-
-          - publish: $(Build.ArtifactStagingDirectory)/OSX.IntegrationTests
-            artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests
-
           - task: PublishTestResults@2
             displayName: 'Publish Unit Test Results'
             inputs:
@@ -112,6 +101,19 @@ stages:
           continueOnError: true
           condition: always()
 
+- stage: build_OSX
+  displayName: Build
+  jobs:
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableTelemetry: true
+      enablePublishBuildArtifacts: true
+      enableMicrobuild: true
+      enablePublishUsingPipelines: true
+      enablePublishBuildAssets: true
+      helixRepo: dotnet/xharness
+
+      jobs:
       - job: OSX
         pool:
           name: Hosted macOS
@@ -142,6 +144,17 @@ stages:
             displayName: Build and run tests
             condition: succeeded()
 
+          - bash: |
+              targetDir=$(Build.ArtifactStagingDirectory)/OSX.IntegrationTests
+              mkdir $targetDir
+              cp tests/integration-tests/osx-helix-payload.sh $targetDir
+              cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI* $targetDir
+              displayName: Prepare the IntegrationTests artifact
+              workingDirectory: $(Build.SourcesDirectory)
+
+          - publish: $(Build.ArtifactStagingDirectory)/OSX.IntegrationTests
+            artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests
+
           - task: PublishTestResults@2
             displayName: 'Publish Unit Test Results'
             inputs:
@@ -164,7 +177,7 @@ stages:
 - ${{ if eq(variables._RunAsPublic, True) }}:
   - stage: test
     displayName: Run Integration Tests
-    dependsOn: build
+    dependsOn: build_OSX
     jobs:
     - job: integration_tests
       displayName: iOS Integration Tests
@@ -197,6 +210,9 @@ stages:
       enableSymbolValidation: true
       # Reenable once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false
+      validateDependsOn:
+      - build_Windows_NT
+      - test
       publishDependsOn:
       - Validate
       # This is to enable SDL runs part of Post-Build Validation Stage
