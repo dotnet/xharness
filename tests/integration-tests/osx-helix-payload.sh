@@ -40,9 +40,8 @@ dotnet xharness ios test \
     --app="$here/$app_name" \
     --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" \
     --targets=ios-simulator-64 \
-    --communication-channel=Network \
-    --timeout=800 \
-    --launch-timeout=500
+    --timeout=600 \
+    --launch-timeout=360
 
 result=$?
 
