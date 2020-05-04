@@ -82,6 +82,17 @@ stages:
             displayName: Build and run tests
             condition: succeeded()
 
+          - bash: |
+              targetDir=$(Build.ArtifactStagingDirectory)/OSX.IntegrationTests
+              mkdir $targetDir
+              cp tests/integration-tests/osx-helix-payload.sh $targetDir
+              cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI* $targetDir
+              displayName: Prepare the IntegrationTests artifact
+              workingDirectory: $(Build.SourcesDirectory)
+
+          - publish: $(Build.ArtifactStagingDirectory)/OSX.IntegrationTests
+            artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests
+
           - task: PublishTestResults@2
             displayName: 'Publish Unit Test Results'
             inputs:
@@ -149,6 +160,36 @@ stages:
             ArtifactName: $(Agent.Os)_$(Agent.JobName)
           continueOnError: true
           condition: always()
+
+- ${{ if eq(variables._RunAsPublic, True) }}:
+  - stage: test
+    displayName: Run Integration Tests
+    dependsOn: build
+    jobs:
+    - job: integration_tests
+      displayName: iOS Integration Tests
+      pool:
+          name: Hosted macOS
+      steps:
+      - download: current
+        artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests
+
+      - template: /eng/common/templates/steps/send-to-helix.yml
+        parameters:
+          DisplayNamePrefix: Run Tests
+          HelixBaseUri: https://helix.int-dot.net/
+          HelixType: test/product/
+          IncludeDotNetCli: true
+          DotNetCliPackageType: sdk
+          DotNetCliVersion: 3.1.201
+          WaitForWorkItemCompletion: true
+          EnableXUnitReporter: true
+          HelixTargetQueues: osx.1015.amd64.ios.open
+          Creator: xharness
+          WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests
+          WorkItemCommand: ./osx-helix-payload.sh
+          WorkItemTimeout: 00:15:00
+
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml
