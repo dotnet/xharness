@@ -103,6 +103,7 @@ stages:
 
 - stage: build_OSX
   displayName: Build
+  dependsOn:
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
