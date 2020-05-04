@@ -5,6 +5,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
@@ -22,9 +23,17 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
         public static bool HasTraits(this ITestCase testCase) =>
             testCase.Traits != null && testCase.Traits.Count > 0;
 
-        public static bool TryGetTrait(this ITestCase testCase, string trait, out List<string>? values,
-            StringComparison comparer = StringComparison.InvariantCultureIgnoreCase)
+        public static bool TryGetTrait(this ITestCase testCase,
+                                       string trait,
+                                       [NotNullWhen(true)] out List<string>? values,
+                                       StringComparison comparer = StringComparison.InvariantCultureIgnoreCase)
         {
+            if (trait == null)
+            {
+                values = null;
+                return false;
+            }
+
             // there is no guarantee that the dict created by xunit is case insensitive, therefor, trygetvalue might
             // not return the value we are interested in. We have to loop, which is not ideal, but will be better
             // for our use case.
