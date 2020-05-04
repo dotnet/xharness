@@ -35,7 +35,7 @@ pr:
 
 stages:
 - stage: build_Windows_NT
-  displayName: Build
+  displayName: Build Windows
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
@@ -102,7 +102,7 @@ stages:
           condition: always()
 
 - stage: build_OSX
-  displayName: Build
+  displayName: Build OSX
   dependsOn:
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
