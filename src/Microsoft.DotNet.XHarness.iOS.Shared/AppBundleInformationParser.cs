@@ -81,7 +81,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             var appName = await GetPlistProperty(plistPath, PListExtensions.BundleNamePropertyName, log, cancellationToken);
             var bundleIdentifier = await GetPlistProperty(plistPath, PListExtensions.BundleIdentifierPropertyName, log, cancellationToken);
-            var supports32 = await GetPlistProperty(plistPath, PListExtensions.RequiredDeviceCapabilities, log, cancellationToken);
+
+            string supports32 = string.Empty;
+
+            try
+            {
+                supports32 = await GetPlistProperty(plistPath, PListExtensions.RequiredDeviceCapabilities, log, cancellationToken);
+            }
+            catch
+            {
+                // The property might not be present
+                log.WriteLine("Failed to get the UIRequiredDeviceCapabilities Info.plist property. Assumes 32 bit is not supported");
+            }
 
             string launchAppPath = target.ToRunMode() == RunMode.WatchOS
                 ? Directory.GetDirectories(Path.Combine(appPackagePath, "Watch"), "*.app")[0]
