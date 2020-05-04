@@ -580,7 +580,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             {
                 result.ExecutingResult = TestExecutingResult.TimedOut;
             }
-            else if (crashed)
+            else if (crashed || launchFailure)
             {
                 result.ExecutingResult = TestExecutingResult.Crashed;
             }

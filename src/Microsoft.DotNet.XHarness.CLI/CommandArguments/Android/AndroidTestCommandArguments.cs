@@ -70,6 +70,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
             // Validate this field
             PackageName = PackageName;
+            AppPackagePath = AppPackagePath;
         }
     }
 }
