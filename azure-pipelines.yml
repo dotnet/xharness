@@ -153,9 +153,6 @@ stages:
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
-      # Disabling signing validation until we can get the issues sorted. This should be re-enabled
-      # after https://github.com/dotnet/arcade/issues/5328 is resolved.
-      enableSigningValidation: false
       enableSymbolValidation: true
       # Reenable once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false
