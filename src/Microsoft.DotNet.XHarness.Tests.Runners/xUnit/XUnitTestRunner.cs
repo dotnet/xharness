@@ -34,7 +34,6 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
 
         XElement assembliesElement;
         XUnitFiltersCollection filters = new XUnitFiltersCollection();
-        bool runAssemblyByDefault;
 
         public AppDomainSupport AppDomainSupport { get; set; } = AppDomainSupport.Denied;
         protected override string ResultsFileName { get; set; } = "TestResults.xUnit.xml";
