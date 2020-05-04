@@ -2,23 +2,28 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable enable
 using System;
+using System.IO;
+using System.Linq;
 using System.Text;
+using Microsoft.DotNet.XHarness.Tests.Runners.Core;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
 {
     internal class XUnitFilter
     {
-        public string AssemblyName { get; private set; }
-        public string SelectorName { get; private set; }
-        public string SelectorValue { get; private set; }
+        public string? AssemblyName { get; private set; }
+        public string? SelectorName { get; private set; }
+        public string? SelectorValue { get; private set; }
 
         public bool Exclude { get; private set; }
         public XUnitFilterType FilterType { get; private set; }
 
-        public static XUnitFilter CreateSingleFilter(string singleTestName, bool exclude, string assemblyName = null)
+        public static XUnitFilter CreateSingleFilter(string singleTestName, bool exclude, string? assemblyName = null)
         {
-            if (String.IsNullOrEmpty(singleTestName))
+            if (string.IsNullOrEmpty(singleTestName))
                 throw new ArgumentException("must not be null or empty", nameof(singleTestName));
 
             return new XUnitFilter
@@ -32,9 +37,13 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
 
         public static XUnitFilter CreateAssemblyFilter(string assemblyName, bool exclude)
         {
-            if (String.IsNullOrEmpty(assemblyName))
+            if (string.IsNullOrEmpty(assemblyName))
                 throw new ArgumentException("must not be null or empty", nameof(assemblyName));
 
+            // ensure that the assembly name does have one of the valid extensions
+            var fileExtension = Path.GetExtension(assemblyName);
+            if (fileExtension != ".dll" && fileExtension != ".exe")
+                throw new ArgumentException($"Assembly name must have .dll or .exe as extensions. Found extension {fileExtension}");
             return new XUnitFilter
             {
                 AssemblyName = assemblyName,
@@ -43,9 +52,9 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             };
         }
 
-        public static XUnitFilter CreateNamespaceFilter(string namespaceName, bool exclude, string assemblyName = null)
+        public static XUnitFilter CreateNamespaceFilter(string namespaceName, bool exclude, string? assemblyName = null)
         {
-            if (String.IsNullOrEmpty(namespaceName))
+            if (string.IsNullOrEmpty(namespaceName))
                 throw new ArgumentException("must not be null or empty", nameof(namespaceName));
 
             return new XUnitFilter
@@ -57,9 +66,9 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             };
         }
 
-        public static XUnitFilter CreateClassFilter(string className, bool exclude, string assemblyName = null)
+        public static XUnitFilter CreateClassFilter(string className, bool exclude, string? assemblyName = null)
         {
-            if (String.IsNullOrEmpty(className))
+            if (string.IsNullOrEmpty(className))
                 throw new ArgumentException("must not be null or empty", nameof(className));
 
             return new XUnitFilter
@@ -71,19 +80,166 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             };
         }
 
-        public static XUnitFilter CreateTraitFilter(string traitName, string traitValue, bool exclude)
+        public static XUnitFilter CreateTraitFilter(string traitName, string? traitValue, bool exclude)
         {
-            if (String.IsNullOrEmpty(traitName))
+            if (string.IsNullOrEmpty(traitName))
                 throw new ArgumentException("must not be null or empty", nameof(traitName));
 
             return new XUnitFilter
             {
                 AssemblyName = null,
                 SelectorName = traitName,
-                SelectorValue = traitValue ?? String.Empty,
+                SelectorValue = traitValue ?? string.Empty,
                 FilterType = XUnitFilterType.Trait,
                 Exclude = exclude
             };
+        }
+
+        bool ApplyTraitFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
+        {
+            Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
+
+            if (!testCase.HasTraits())
+            {
+                return log (!Exclude);
+            }
+
+            if (testCase.TryGetTrait(SelectorName!, out var values))
+            {
+                if (values == null || values.Count == 0)
+                {
+                    // We have no values and the filter doesn't specify one - that means we match on
+                    // the trait name only.
+                    if (string.IsNullOrEmpty(SelectorValue))
+                    {
+                        return log (Exclude);
+                    }
+                }
+
+                return values.Any (value => value.Equals(SelectorValue, StringComparison.InvariantCultureIgnoreCase)) ?
+                    log (Exclude) : log (!Exclude);
+            }
+
+            // no traits found, that means that we return the opposite of the setting of the filter
+            return log (!Exclude);
+        }
+
+        bool ApplyTypeNameFilter(ITestCase testCase, Func<bool,bool>? reportFilteredTest = null)
+        {
+            Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
+            var testClassName = testCase.GetTestClass();
+            if (!string.IsNullOrEmpty(testClassName))
+            {
+                if (string.Equals(testClassName, SelectorValue, StringComparison.InvariantCulture))
+                {
+                    return log(Exclude);
+                }
+            }
+
+            return log (!Exclude);
+        }
+
+        bool ApplySingleFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
+        {
+            Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
+            if (string.Equals(testCase.DisplayName, SelectorValue, StringComparison.InvariantCulture))
+            {
+                // if there is a match, return the exclude value
+                return log (Exclude);
+            }
+            // if there is not match, return the opposite
+            return log (!Exclude);
+        }
+
+        bool ApplyNamespaceFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
+        {
+            Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
+            var testClassNamespace = testCase.GetNamespace();
+            if (string.IsNullOrEmpty(testClassNamespace))
+            {
+                // if we exclude, since we have no namespace, we include the test
+                return log (!Exclude);
+            }
+
+            if (string.Equals(testClassNamespace, SelectorValue, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return log (Exclude);
+            }
+
+            // same logic as with no namespace
+            return log (!Exclude);
+        }
+
+        public bool IsExcluded(TestAssemblyInfo assembly, Action<string>? reportFilteredAssembly = null)
+        {
+            if (FilterType != XUnitFilterType.Assembly)
+                throw new InvalidOperationException("Filter is not targeting assemblies.");
+
+            Func<bool, bool> log = (result) => ReportFilteredAssembly(assembly, result, reportFilteredAssembly);
+
+            if (string.Equals(AssemblyName, assembly.FullPath, StringComparison.Ordinal))
+            {
+                return log(Exclude);
+            }
+
+            string fileName = Path.GetFileName(assembly.FullPath);
+            if (string.Equals(fileName, AssemblyName, StringComparison.Ordinal))
+            {
+                return log (Exclude);
+            }
+
+            // No path of the name matched the filter, therefore return the opposite of the Exclude value
+            return log (!Exclude);
+        }
+
+        public bool IsExcluded(ITestCase testCase, Action<string>? log = null)
+        {
+            Func<bool, bool>? reportFilteredTest = null;
+            if (log != null)
+                reportFilteredTest = (result) => ReportFilteredTest(testCase, result, log);
+            return FilterType switch
+            {
+                XUnitFilterType.Trait => ApplyTraitFilter(testCase, reportFilteredTest),
+                XUnitFilterType.TypeName => ApplyTypeNameFilter(testCase, reportFilteredTest),
+                XUnitFilterType.Single => ApplySingleFilter(testCase, reportFilteredTest),
+                XUnitFilterType.Namespace => ApplyNamespaceFilter(testCase, reportFilteredTest),
+                _ => throw new InvalidOperationException($"Unsupported filter type {FilterType}")
+            };
+        }
+
+        bool ReportFilteredTest(ITestCase testCase, bool excluded, Action<string>? log = null)
+        {
+            const string includedText = "Included";
+            const string excludedText = "Excluded";
+
+            if (log == null)
+                return excluded;
+
+            var selector = FilterType == XUnitFilterType.Trait ?
+                $"'{SelectorName}':'{SelectorValue}'" : $"'{SelectorValue}'";
+
+            log($"[FILTER] {(excluded? excludedText : includedText)} test (filtered by {FilterType}; {selector}): {testCase.DisplayName}");
+            return excluded;
+        }
+
+        bool ReportFilteredAssembly(TestAssemblyInfo assemblyInfo, bool excluded, Action<string>? log = null)
+        {
+            if (log == null)
+                return excluded;
+
+            const string includedPrefix = "Included";
+            const string excludedPrefix = "Excluded";
+
+            log($"[FILTER] {(excluded? excludedPrefix : includedPrefix)} assembly: {assemblyInfo.FullPath}");
+            return excluded;
+        }
+
+        private static void AppendDesc(StringBuilder sb, string name, string? value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return;
+
+            sb.Append($"; {name}: {value}");
         }
 
         public override string ToString()
@@ -93,7 +249,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             sb.Append($"Type: {FilterType}; ");
             sb.Append(Exclude ? "exclude" : "include");
 
-            if (!String.IsNullOrEmpty(AssemblyName))
+            if (!string.IsNullOrEmpty(AssemblyName))
                 sb.Append($"; AssemblyName: {AssemblyName}");
 
             switch (FilterType)
@@ -102,20 +258,20 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                     break;
 
                 case XUnitFilterType.Namespace:
-                    AppendDesc("Namespace", SelectorValue);
+                    AppendDesc(sb, "Namespace", SelectorValue);
                     break;
 
                 case XUnitFilterType.Single:
-                    AppendDesc("Method", SelectorValue);
+                    AppendDesc(sb, "Method", SelectorValue);
                     break;
 
                 case XUnitFilterType.Trait:
-                    AppendDesc("Trait name", SelectorName);
-                    AppendDesc("Trait value", SelectorValue);
+                    AppendDesc(sb, "Trait name", SelectorName);
+                    AppendDesc(sb, "Trait value", SelectorValue);
                     break;
 
                 case XUnitFilterType.TypeName:
-                    AppendDesc("Class", SelectorValue);
+                    AppendDesc(sb, "Class", SelectorValue);
                     break;
 
                 default:
@@ -125,14 +281,6 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             sb.Append(']');
 
             return sb.ToString();
-
-            void AppendDesc(string name, string value)
-            {
-                if (String.IsNullOrEmpty(value))
-                    return;
-
-                sb.Append($"; {name}: {value}");
-            }
         }
     }
 }

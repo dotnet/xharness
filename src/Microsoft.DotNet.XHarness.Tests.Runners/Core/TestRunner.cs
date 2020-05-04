@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         /// Specify if all the tests found in the assemblies should be ran.
         /// Default is true.
         /// </summary>
-        public bool RunAllTestsByDefault { get; set; } = true;
+        public virtual bool RunAllTestsByDefault { get; set; } = true;
 
         /// <summary>
         /// Specify if the runner should log those tests that have been excluded
