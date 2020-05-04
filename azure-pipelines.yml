@@ -150,8 +150,8 @@ stages:
               mkdir $targetDir
               cp tests/integration-tests/osx-helix-payload.sh $targetDir
               cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI* $targetDir
-              displayName: Prepare the IntegrationTests artifact
-              workingDirectory: $(Build.SourcesDirectory)
+            displayName: Prepare the IntegrationTests artifact
+            workingDirectory: $(Build.SourcesDirectory)
 
           - publish: $(Build.ArtifactStagingDirectory)/OSX.IntegrationTests
             artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests
