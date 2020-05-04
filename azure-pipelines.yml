@@ -155,6 +155,7 @@ stages:
 
           - publish: $(Build.ArtifactStagingDirectory)/OSX.IntegrationTests.$(_BuildConfig)
             artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.$(_BuildConfig)
+            displayName: Publish the tool artifact
 
           - task: PublishTestResults@2
             displayName: 'Publish Unit Test Results'
