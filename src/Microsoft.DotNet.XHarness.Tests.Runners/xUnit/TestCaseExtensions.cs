@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
     /// <summary>
     /// Useful extensions that make working with the ITestCase interface nicer within the runner.
     /// </summary>
-    public static class ITestCaseExtenstions
+    public static class TestCaseExtensions
     {
         /// <summary>
         /// Returns if the test case does have traits.
