@@ -152,10 +152,12 @@ stages:
               cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI* $targetDir
             displayName: Prepare the IntegrationTests artifact
             workingDirectory: $(Build.SourcesDirectory)
+            condition: succeeded()
 
           - publish: $(Build.ArtifactStagingDirectory)/OSX.IntegrationTests.$(_BuildConfig)
             artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.$(_BuildConfig)
             displayName: Publish the tool artifact
+            condition: succeeded()
 
           - task: PublishTestResults@2
             displayName: 'Publish Unit Test Results'
