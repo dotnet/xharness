@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Tests
                         true,
                     };
 
-                    // single filter that includes
+                    // single filter that includes the test case in the run
                     filter = XUnitFilter.CreateSingleFilter(
                         singleTestName: testDisplayName,
                         exclude: false);

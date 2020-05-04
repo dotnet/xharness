@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
     public static class TestCaseExtensions
     {
         /// <summary>
-        /// Returns if the test case does have traits.
+        /// Returns boolean indicating whether the test case does have traits.
         /// </summary>
         /// <param name="testCase">The test case under test.</param>
         /// <returns>true if the test case has traits, false otherwise.</returns>
