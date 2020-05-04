@@ -760,15 +760,6 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                 }
             }
 
-            List<XUnitFilter> assemblyFilters = filters?.Where(sel => sel != null && sel.FilterType == XUnitFilterType.Assembly)?.ToList();
-            if (assemblyFilters == null || assemblyFilters.Count == 0)
-            {
-                runAssemblyByDefault = true;
-                assemblyFilters = null;
-            }
-            else
-                runAssemblyByDefault = assemblyFilters.Any(f => f != null && f.Exclude);
-
             assembliesElement = new XElement("assemblies");
             Action<string> log = LogExcludedTests ? (s) => do_log(s) : (Action<string>)null;
             foreach (TestAssemblyInfo assemblyInfo in testAssemblies)
