@@ -1,3 +1,8 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+#nullable enable
 using System;
 using System.IO;
 using Microsoft.DotNet.XHarness.iOS.Shared;
@@ -9,7 +14,7 @@ namespace Microsoft.DotNet.XHarness.iOS
     {
         const string IncorrectArchPrefix = "IncorrectArchitecture";
 
-        public bool IsKnownInstallIssue(ILog installLog, out string knownFailureMessage)
+        public bool IsKnownInstallIssue(ILog installLog, out string? knownFailureMessage)
         {
             knownFailureMessage = null;
             if (installLog == null)
@@ -41,13 +46,13 @@ namespace Microsoft.DotNet.XHarness.iOS
             return false;
         }
 
-        public bool IsKnownBuildIssue(ILog buildLog, out string knownFailureMessage)
+        public bool IsKnownBuildIssue(ILog buildLog, out string? knownFailureMessage)
         {
             knownFailureMessage = null;
             return false;
         }
 
-        public bool IsKnownTestIssue(ILog runLog, out string knownFailureMessage)
+        public bool IsKnownTestIssue(ILog runLog, out string? knownFailureMessage)
         {
             knownFailureMessage = null;
             return false;
