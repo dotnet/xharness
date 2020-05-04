@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                 return false;
             }
 
-            // there is no guarantee that the dict created by xunit is case insensitive, therefor, trygetvalue might
+            // there is no guarantee that the dict created by xunit is case insensitive, therefore, trygetvalue might
             // not return the value we are interested in. We have to loop, which is not ideal, but will be better
             // for our use case.
             foreach (var t in testCase.Traits.Keys)
