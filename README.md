@@ -20,8 +20,11 @@ The tool requires **.NET 3.1.201** and later to be run. It is packaged as a `dot
 
 To install the tool run:
 
-```console
-dotnet tool install --global --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json Microsoft.DotNet.XHarness.CLI --version 1.0.0-prerelease.20229.6
+```bash
+dotnet tool install Microsoft.DotNet.XHarness.CLI \
+    --global \
+    --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json \
+    --version 1.0.0-prerelease.20229.6
 ```
 
 You can get the specific version from [the dotnet-eng feed](https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&view=versions&package=Microsoft.DotNet.XHarness.CLI&protocolType=NuGet) where it is published.
@@ -57,15 +60,15 @@ To run an iOS app bundle on a 64bit iPhone Simulator:
 
 ```bash
 dotnet xharness ios test \
-    --app='/path/to/an.app' \
-    --output-directory='out' \
-    --targets='ios-simulator-64'
+    --app=/path/to/an.app \
+    --output-directory=out \
+    --targets=ios-simulator-64
 ```
 
 or the same can be achieved via the shorthand versions of the same options:
 
 ```bash
-dotnet xharness ios test -a='/path/to/an.app' -o='out' -t='ios-simulator-64'
+dotnet xharness ios test -a=/path/to/an.app -o=out -t=ios-simulator-64
 ```
 
 The `out` dir will then contain log files such as these:
