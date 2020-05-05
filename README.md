@@ -15,7 +15,7 @@ The tool can also package given .NET test DLLs (Xunit, NUnit v2/3) into an iOS a
 
 The tool requires **.NET 3.1.201** and later to be run. It is packaged as a `dotnet tool` command and can be installed using the [dotnet tool CLI](https://docs.microsoft.com/en-us/dotnet/core/tools/).
 
-- The iOS scenarios require you to run the tool on MacOS with Xcode 11.4.
+- The iOS scenarios require you to run the tool on MacOS with Xcode 11.4. **(and pre-installed iOS simulator 13.3 - this will be improved later and specific version won't be needed)**
 - Android scenarios are supported on all Linux, MacOS and Windows
 
 To install the tool run:
