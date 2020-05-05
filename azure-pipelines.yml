@@ -34,7 +34,7 @@ pr:
     - master
 
 stages:
-- stage: build_Windows_NT
+- stage: Build_Windows_NT
   displayName: Build Windows
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
@@ -101,7 +101,7 @@ stages:
           continueOnError: true
           condition: always()
 
-- stage: build_OSX
+- stage: Build_OSX
   displayName: Build OSX
   dependsOn:
   jobs:
@@ -181,12 +181,12 @@ stages:
 - ${{ if eq(variables._RunAsPublic, True) }}:
   - stage: test
     displayName: Run Integration Tests
-    dependsOn: build_OSX
+    dependsOn: Build_OSX
     jobs:
     - job: integration_tests
       displayName: iOS Integration Tests
       pool:
-          name: Hosted macOS
+        name: Hosted macOS
       steps:
       - download: current
         artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
@@ -215,8 +215,8 @@ stages:
       # Reenable once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false
       validateDependsOn:
-      - build_Windows_NT
-      - test
+      - Build_Windows_NT
+      - Build_OSX
       publishDependsOn:
       - Validate
       # This is to enable SDL runs part of Post-Build Validation Stage
