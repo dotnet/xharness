@@ -4,8 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
@@ -15,109 +13,87 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 {
     internal abstract class XHarnessCommand : Command
     {
-        protected abstract ICommandArguments Arguments { get; }
+        /// <summary>
+        /// Will be printed in the header when help is invoked.
+        /// Example: 'ios package [OPTIONS]'
+        /// </summary>
+        protected abstract string CommandUsage { get; }
 
-        protected bool ShowHelp = false;
+        /// <summary>
+        /// Will be printed in the header when help is invoked.
+        /// Example: 'Allows to package DLLs into an app bundle'
+        /// </summary>
+        protected abstract string CommandDescription { get; }
 
-        protected ILogger _log;
-        protected ILoggerFactory _logFactory;
-        protected string _name;
+        protected abstract XHarnessCommandArguments Arguments { get; }
 
         protected XHarnessCommand(string name) : base(name)
         {
-            _name = name;
         }
 
-        public override sealed int Invoke(IEnumerable<string> arguments)
+        public sealed override int Invoke(IEnumerable<string> arguments)
         {
+            OptionSet options = Arguments.GetOptions();
+
+            using var factory = CreateLoggerFactory(Arguments.Verbosity);
+            var logger = factory.CreateLogger(Name);
+
             try
             {
-                var extra = Options.Parse(arguments);
-
-                if (Arguments != null)
-                {
-                    InitializeLog(Arguments.Verbosity, _name);
-                }
-                else
-                {
-                    InitializeLog(LogLevel.Information, _name);
-                }
-
-                if (ShowHelp)
-                {
-                    Options.WriteOptionDescriptions(Console.Out);
-                    return (int)ExitCode.HELP_SHOWN;
-                }
+                var extra = options.Parse(arguments);
 
                 if (extra.Count > 0)
                 {
-                    _log.LogError($"Unknown arguments{string.Join(" ", extra)}");
-                    Options.WriteOptionDescriptions(Console.Out);
-                    return (int)ExitCode.INVALID_ARGUMENTS;
+                    throw new ArgumentException($"Unknown arguments: {string.Join(" ", extra)}");
                 }
 
-                var validationErrors = Arguments?.GetValidationErrors();
-
-                if (validationErrors?.Any() ?? false)
+                if (Arguments.ShowHelp)
                 {
-                    var message = new StringBuilder("Invalid arguments:");
-                    foreach (string error in validationErrors)
-                    {
-                        // errors can have more than one line, if the do, add
-                        // some nice indentation
-                        var lines = error.Split(Environment.NewLine);
-                        if (lines.Length > 1)
-                        {
-                            // first line is in the same distance, rest have
-                            // and indentation
-                            message.Append(Environment.NewLine + "  - " + lines[0]);
-                            for (int index = 1; index < lines.Length; index++)
-                            {
-                                message.Append($"{Environment.NewLine}\t{lines[index]}");
-                            }
-                        }
-                        else
-                        {
-                            message.Append(Environment.NewLine + "  - " + error);
-                        }
-                    }
-
-                    _log.LogError(message.ToString());
-
-                    return (int)ExitCode.INVALID_ARGUMENTS;
+                    Console.WriteLine("usage: " + CommandUsage + Environment.NewLine + Environment.NewLine + CommandDescription + Environment.NewLine);
+                    options.WriteOptionDescriptions(Console.Out);
+                    return (int)ExitCode.HELP_SHOWN;
                 }
 
-                return (int)InvokeInternal().GetAwaiter().GetResult();
+                Arguments.Validate();
             }
-            finally
+            catch (ArgumentException e)
             {
-                // Needed for quick execution to flush out all output.
-                _logFactory.Dispose();
+                logger.LogError(e.Message);
+
+                if (Arguments.ShowHelp)
+                {
+                    options.WriteOptionDescriptions(Console.Out);
+                }
+
+                return (int)ExitCode.INVALID_ARGUMENTS;
             }
+            catch (Exception e)
+            {
+                logger.LogCritical("Unexpected failure argument: " + e);
+                return (int)ExitCode.GENERAL_FAILURE;
+            }
+
+            return (int)InvokeInternal(logger).GetAwaiter().GetResult();
         }
 
-        private void InitializeLog(LogLevel verbosity, string name)
+        protected abstract Task<ExitCode> InvokeInternal(ILogger logger);
+
+        private ILoggerFactory CreateLoggerFactory(LogLevel verbosity) => LoggerFactory.Create(builder =>
         {
-            _logFactory = LoggerFactory.Create(builder =>
+            builder
+            .AddConsole(options =>
             {
-                builder
-                    .AddConsole(options =>
-                    {
-                        if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
-                        {
-                            options.DisableColors = true;
-                        }
+                if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
+                {
+                    options.DisableColors = true;
+                }
 
-                        if (Environment.GetEnvironmentVariable("XHARNESS_LOG_WITH_TIMESTAMPS")?.ToLower().Equals("true") ?? false)
-                        {
-                            options.TimestampFormat = "[HH:mm:ss] ";
-                        }
-                    })
-                    .AddFilter(level => level >= verbosity);
-            });
-            _log = _logFactory.CreateLogger(name);
-        }
-
-        protected abstract Task<ExitCode> InvokeInternal();
+                if (Environment.GetEnvironmentVariable("XHARNESS_LOG_WITH_TIMESTAMPS")?.ToLower().Equals("true") ?? false)
+                {
+                    options.TimestampFormat = "[HH:mm:ss] ";
+                }
+            })
+            .AddFilter(level => level >= verbosity);
+        });
     }
 }

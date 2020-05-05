@@ -2,8 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
+using System;
 using System.IO;
+using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 {
@@ -14,7 +15,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// Default comes from the NuGet.
         /// </summary>
         public string MlaunchPath { get; set; } = Path.Join(
-            Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(iOSTestCommandArguments)).Location),
+            Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(iOSTestCommandArguments))?.Location),
             "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
 
         public bool ShowSimulatorsUUID { get; set; } = false;
@@ -23,17 +24,20 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 
         public bool UseJson { get; set; } = false;
 
-        public override IList<string> GetValidationErrors()
+        protected override OptionSet GetCommandOptions() => new OptionSet
         {
-            var errors = new List<string>();
+            { "mlaunch=", "Path to the mlaunch binary", v => MlaunchPath = RootPath(v) },
+            { "include-simulator-uuid", "Include the simulators UUID. Defaults to false.", v => ShowSimulatorsUUID = v != null },
+            { "include-devices-uuid", "Include the devices UUID.", v => ShowDevicesUUID = v != null },
+            { "json", "Use json as the output format.", v => UseJson = v != null },
+        };
 
-            MlaunchPath = RootPath(MlaunchPath);
+        public override void Validate()
+        {
             if (!File.Exists(MlaunchPath))
             {
-                errors.Add($"Failed to find mlaunch at {MlaunchPath}");
+                throw new ArgumentException($"Failed to find mlaunch at {MlaunchPath}");
             }
-
-            return errors;
         }
     }
 }

@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
@@ -17,7 +16,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.DotNet.XHarness.iOS.TestImporter;
 using Microsoft.Extensions.Logging;
-using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
@@ -31,108 +29,31 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
         private readonly TimeSpan _nugetRestoreTimeout = TimeSpan.FromMinutes(10);
         private readonly TimeSpan _msBuildTimeout = TimeSpan.FromMinutes(30);
 
-        private readonly IProcessManager _processManager;
-
         private readonly iOSPackageCommandArguments _arguments = new iOSPackageCommandArguments();
-        protected override ICommandArguments Arguments => _arguments;
 
-        public iOSPackageCommand(IProcessManager processManager = null) : base("package")
+        protected override string CommandUsage { get; } = "ios package [OPTIONS]";
+        protected override string CommandDescription { get; } = "Packaging command that will create a iOS/tvOS/watchOS or macOS application that can be used to run NUnit or XUnit-based test dlls";
+
+        protected override XHarnessCommandArguments Arguments => _arguments;
+
+        public iOSPackageCommand() : base("package")
         {
-            _processManager = processManager ?? new ProcessManager();
-
-            Options = new OptionSet() {
-                "usage: ios package [OPTIONS]",
-                "",
-                "Packaging command that will create a iOS/tvOS/watchOS or macOS application that can be used to run NUnit or XUnit-based test dlls",
-                { "name=|n=", "Name of the test application",  v => _arguments.AppPackageName = v },
-                { "mtouch-extraargs=|m=", "Extra arguments to be passed to mtouch.", v => _arguments.MtouchExtraArgs = v },
-                { "ignore-directory=|i=", "Root directory containing all the *.ignore files used to skip tests if needed.", v => _arguments.IgnoreFilesRootDirectory = v },
-                { "template=|t=", "Indicates which template to use. There are two available ones: Managed, which uses Xamarin.[iOS|Mac] and Native (default:Managed).",
-                    v => {
-                        if (Enum.TryParse(v, out TemplateType template))
-                        {
-                            _arguments.SelectedTemplateType = template;
-                        }
-                        else
-                        {
-                            Console.Error.WriteLine(
-                                $"Unknown template type '{v}'. " +
-                                $"Allowed values are: {GetAllowedValues<TemplateType>()}");
-
-                            ShowHelp = true;
-                        }
-                    }
-                },
-                { "traits-directory=|td=", "Root directory that contains all the .txt files with traits that will be skipped if needed.", v =>  _arguments.TraitsRootDirectory = v },
-                { "working-directory=|w=", "Directory that will be used to output generated projects", v => _arguments.WorkingDirectory = v },
-                { "output-directory=|o=", "Directory in which the resulting package will be outputted", v => _arguments.OutputDirectory = v },
-                { "assembly=|a=", "An assembly to be added as part of the testing application", v => _arguments.Assemblies.Add(v) },
-                { "configuration=", "The configuration that will be used to build the app. Default is 'Debug'",
-                    v => {
-                        if (Enum.TryParse(v, out BuildConfiguration configuration))
-                        {
-                            _arguments.BuildConfiguration = configuration;
-                        }
-                        else
-                        {
-                            Console.Error.WriteLine(
-                                $"Unknown build configuration '{v}'. " +
-                                $"Allowed values are: {GetAllowedValues<BuildConfiguration>()}");
-
-                            ShowHelp = true;
-                        }
-                    }
-                },
-                { "testing-framework=|tf=", "The testing framework that is used by the given assemblies.",
-                    v => {
-                        if (Enum.TryParse(v, out TestingFramework testingFramework))
-                        {
-                            _arguments.TestingFramework = testingFramework;
-                        }
-                        else
-                        {
-                            Console.Error.WriteLine(
-                                $"Unknown build configuration '{v}'. " +
-                                $"Allowed values are: {GetAllowedValues<TestingFramework>()}");
-
-                            ShowHelp = true;
-                        }
-                    }
-                },
-                { "platform=|p=", "Plaform to be added as the target for the application. Can be used multiple times to target more platforms.",
-                    v => { 
-                        // split the platforms and try to parse each of them
-                        if (Enum.TryParse(v, out Platform platform))
-                        {
-                            _arguments.Platforms.Add(platform);
-                        }
-                        else
-                        {
-                            Console.Error.WriteLine(
-                                $"Unknown target platform '{v}'. " +
-                                $"Allowed values are: {GetAllowedValues<Platform>()}");
-
-                            ShowHelp = true;
-                        }
-                    }
-                },
-                { "dotnet=", "Path to the 'dotnet' command. Default is 'dotnet'", v => _arguments.DotNetPath = v },
-                { "help|h", "Show this message", v => ShowHelp = v != null },
-            };
         }
 
-        protected async override Task<ExitCode> InvokeInternal()
+        protected async override Task<ExitCode> InvokeInternal(ILogger logger)
         {
+            var processManager = new ProcessManager();
+
             // Validate the presence of Xamarin.iOS
             var missingXamariniOS = false;
-            if (_arguments.SelectedTemplateType == TemplateType.Managed)
+            if (_arguments.TemplateType == TemplateType.Managed)
             {
                 var dotnetLog = new MemoryLog() { Timestamp = false };
                 var process = new Process();
                 process.StartInfo.FileName = "bash";
-                process.StartInfo.Arguments = "-c \"" + _arguments.DotNetPath + " --info | grep \\\"Base Path\\\" | cut -d':' -f 2 | tr -d '[:space:]'\"";
+                process.StartInfo.Arguments = "-c \"" + _arguments.DotnetPath + " --info | grep \\\"Base Path\\\" | cut -d':' -f 2 | tr -d '[:space:]'\"";
 
-                var result = await _processManager.RunAsync(process, new MemoryLog(), dotnetLog, new MemoryLog(), TimeSpan.FromSeconds(5));
+                var result = await processManager.RunAsync(process, new MemoryLog(), dotnetLog, new MemoryLog(), TimeSpan.FromSeconds(5));
 
                 if (result.Succeeded)
                 {
@@ -143,7 +64,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                         if (!File.Exists(xamarinIosPath))
                         {
                             missingXamariniOS = true;
-                            _log.LogWarning("Failed to find the Xamarin iOS package which is needed for the Managed template: " + xamarinIosPath);
+                            logger.LogWarning("Failed to find the Xamarin iOS package which is needed for the Managed template: " + xamarinIosPath);
                         }
                     }
                 }
@@ -153,7 +74,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             var assemblyLocator = new AssemblyLocator(Directory.GetCurrentDirectory());
             var assemblyDefinitionFactory = new AssemblyDefinitionFactory(_arguments.TestingFramework, assemblyLocator);
 
-            ITemplatedProject template = _arguments.SelectedTemplateType switch
+            ITemplatedProject template = _arguments.TemplateType switch
             {
                 TemplateType.Managed => new XamariniOSTemplate
                 {
@@ -168,7 +89,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             var logs = new Logs(_arguments.WorkingDirectory);
             var runLog = logs.Create("package-log.txt", "Package Log");
-            var consoleLog = new CallbackLog(s => _log.LogInformation(s))
+            var consoleLog = new CallbackLog(s => logger.LogInformation(s))
             {
                 Timestamp = false
             };
@@ -180,7 +101,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             aggregatedLog.WriteLine($"\tExtraArgs: '{_arguments.MtouchExtraArgs}'");
 
             // first step, generate the required info to be passed to the factory
-            var projects = new List<(string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier)> {
+            var projects = new List<(string Name, string[] Assemblies, string? ExtraArgs, double TimeoutMultiplier)> {
                 // TODO: Timeout multiplier handling
                 (Name: _arguments.AppPackageName, Assemblies: _arguments.Assemblies.ToArray(), ExtraArgs: _arguments.MtouchExtraArgs, TimeoutMultiplier: 1.0),
             };
@@ -204,7 +125,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             using (var dotnetRestore = new Process())
             {
-                dotnetRestore.StartInfo.FileName = _arguments.DotNetPath;
+                dotnetRestore.StartInfo.FileName = _arguments.DotnetPath;
                 var args = new List<string>
                 {
                     "restore",
@@ -214,7 +135,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                 dotnetRestore.StartInfo.Arguments = StringUtils.FormatArguments(args);
 
-                var result = await _processManager.RunAsync(dotnetRestore, aggregatedLog, _nugetRestoreTimeout);
+                var result = await processManager.RunAsync(dotnetRestore, aggregatedLog, _nugetRestoreTimeout);
                 if (result.TimedOut)
                 {
                     aggregatedLog.WriteLine("nuget restore timedout.");
@@ -233,20 +154,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             // perform the build of the application
             using (var dotnetBuild = new Process())
             {
-                dotnetBuild.StartInfo.FileName = _arguments.DotNetPath;
+                dotnetBuild.StartInfo.FileName = _arguments.DotnetPath;
 
                 // TODO: Only taking into account one platform
                 // https://github.com/dotnet/xharness/issues/105
                 if (_arguments.Platforms.Count > 1)
                 {
-                    _log.LogWarning($"Multi-platform targetting is not supported yet. Targetting {_arguments.Platforms[0]} only.");
+                    logger.LogWarning($"Multi-platform targetting is not supported yet. Targetting {_arguments.Platforms[0]} only.");
                 }
 
                 dotnetBuild.StartInfo.Arguments = GetBuildArguments(projectPath, _arguments.Platforms[0].ToString());
 
                 aggregatedLog.WriteLine($"Building {_arguments.AppPackageName} ({projectPath})");
 
-                var result = await _processManager.RunAsync(dotnetBuild, aggregatedLog, _msBuildTimeout);
+                var result = await processManager.RunAsync(dotnetBuild, aggregatedLog, _msBuildTimeout);
                 if (result.TimedOut)
                 {
                     aggregatedLog.WriteLine("Build timed out after {0} seconds.", _msBuildTimeout.TotalSeconds);
@@ -257,27 +178,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 }
                 else if (!result.Succeeded)
                 {
-                    _log.LogError($"Build failed with return code: {result.ExitCode}");
+                    logger.LogError($"Build failed with return code: {result.ExitCode}");
 
                     finalResult = ExitCode.PACKAGE_BUNDLING_FAILURE_BUILD;
 
                     if (missingXamariniOS)
                     {
-                        _log.LogWarning("Possible cause of the failure may be missing Xamarin iOS package");
+                        logger.LogWarning("Possible cause of the failure may be missing Xamarin iOS package");
                     }
                 }
             }
 
             return finalResult;
-        }
-
-        public static string GetAllowedValues<T>()
-        {
-            var names = Enum.GetValues(typeof(T))
-                .Cast<T>()
-                .Select(t => t.ToString());
-
-            return string.Join(", ", names);
         }
 
         private string GetBuildArguments(string projectPath, string projectPlatform)

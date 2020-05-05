@@ -6,9 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 {
@@ -32,20 +32,20 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// <summary>
         /// Path to where Xcode is located.
         /// </summary>
-        public string XcodeRoot { get; set; }
+        public string? XcodeRoot { get; set; }
 
         /// <summary>
         /// Path to the mlaunch binary.
         /// Default comes from the NuGet.
         /// </summary>
         public string MlaunchPath { get; set; } = Path.Join(
-            Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(iOSTestCommandArguments)).Location),
+            Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(iOSTestCommandArguments))?.Location),
             "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
 
         /// <summary>
         /// Name of a specific device we want to target.
         /// </summary>
-        public string DeviceName { get; set; }
+        public string? DeviceName { get; set; }
 
         /// <summary>
         /// How long we wait before app starts and first test should start running.
@@ -62,26 +62,14 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// </summary>
         public CommunicationChannel CommunicationChannel { get; set; } = CommunicationChannel.UsbTunnel;
 
-        /// <summary>
-        /// Parsed strong-typed targets.
-        /// </summary>
-        public IReadOnlyCollection<TestTarget> TestTargets { get; set; }
-
-        public override IList<string> GetValidationErrors()
+        public override IReadOnlyCollection<string> Targets
         {
-            IList<string> errors = base.GetValidationErrors();
-
-            if (Targets == null || Targets.Count == 0)
-            {
-                errors.Add($@"No targets specified. At least one target must be provided. " +
-                    $"Available targets are:{Environment.NewLine}\t" +
-                    $"{string.Join(Environment.NewLine + "\t", GetAvailableTargets())}");
-            }
-            else
+            get => TestTargets.Select(t => t.AsString()).ToArray();
+            protected set
             {
                 var testTargets = new List<TestTarget>();
 
-                foreach (string targetName in Targets)
+                foreach (string targetName in value ?? throw new ArgumentNullException("Targets cannot be empty"))
                 {
                     try
                     {
@@ -89,61 +77,76 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                     }
                     catch (ArgumentOutOfRangeException)
                     {
-                        // let the user know that the target is not known
-                        // and all the available ones.
-                        var sb = new StringBuilder();
-                        sb.AppendLine($"Failed to parse test target '{targetName}'. Available targets are:");
-                        sb.AppendLine();
-                        foreach (var val in Enum.GetValues(typeof(TestTarget)))
-                        {
-                            var enumString = ((TestTarget)val).AsString();
-                            if (!string.IsNullOrEmpty(enumString))
-                                sb.AppendLine($"\t* {enumString}");
-                        }
-                        errors.Add(sb.ToString());
+                        throw new ArgumentException(
+                            $"Failed to parse test target '{targetName}'. Available targets are:" +
+                            GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None));
                     }
                 }
 
                 TestTargets = testTargets;
             }
+        }
 
-            if (!Path.IsPathRooted(MlaunchPath))
+        /// <summary>
+        /// Parsed strong-typed targets.
+        /// </summary>
+        public IReadOnlyCollection<TestTarget> TestTargets { get; private set; } = Array.Empty<TestTarget>();
+
+        protected override OptionSet GetTestCommandOptions() => new OptionSet
+        {
+            { "xcode=", "Path where Xcode is installed",
+                v => XcodeRoot = RootPath(v)
+            },
+            { "mlaunch=", "Path to the mlaunch binary",
+                v => MlaunchPath = RootPath(v)
+            },
+            { "device-name=", "Name of a specific device, if you wish to target one",
+                v => DeviceName = v
+            },
+            { "communication-channel=", $"The communication channel to use to communicate with the default. Can be {CommunicationChannel.Network} and {CommunicationChannel.UsbTunnel}. Default is {CommunicationChannel.UsbTunnel}",
+                v => CommunicationChannel = ParseArgument<CommunicationChannel>("communication-channel", v)
+            },
+            { "launch-timeout=|lt=", "Time span, in seconds, to wait for the iOS app to start.",
+                v =>
+                {
+                    if (!int.TryParse(v, out var launchTimeout))
+                    {
+                        throw new ArgumentException("launch-timeout must be an integer - a number of seconds");
+                    }
+
+                    LaunchTimeout = TimeSpan.FromSeconds(launchTimeout);
+                }
+            },
+            { "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.",
+                v => XmlResultJargon = ParseArgument("xml-jargon", v, invalidValues: XmlResultJargon.Missing)
+            },
+        };
+
+        public override void Validate()
+        {
+            base.Validate();
+
+            if (!Directory.Exists(AppPackagePath))
             {
-                MlaunchPath = Path.Combine(Directory.GetCurrentDirectory(), MlaunchPath);
+                throw new ArgumentException($"Failed to find the app bundle at {AppPackagePath}");
+            }
+
+            if (TestTargets.Count == 0)
+            {
+                throw new ArgumentException(
+                    "No targets specified. At least one target must be provided. Available targets are:" +
+                    GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None));
             }
 
             if (!File.Exists(MlaunchPath))
             {
-                errors.Add($"Failed to find mlaunch at {MlaunchPath}");
-            }
-
-            if (XcodeRoot != null && !Path.IsPathRooted(XcodeRoot))
-            {
-                XcodeRoot = Path.Combine(Directory.GetCurrentDirectory(), XcodeRoot);
+                throw new ArgumentException($"Failed to find mlaunch at {MlaunchPath}");
             }
 
             if (XcodeRoot != null && !Directory.Exists(XcodeRoot))
             {
-                errors.Add($"Failed to find Xcode root at {XcodeRoot}");
+                throw new ArgumentException($"Failed to find Xcode root at {XcodeRoot}");
             }
-
-            if (XmlResultJargon == XmlResultJargon.Missing)
-            {
-                var sb = new StringBuilder();
-                sb.AppendLine($"Failed to parse xml jargon. Available targets are:");
-                sb.AppendLine();
-                foreach (var val in new [] {XmlResultJargon.NUnitV2, XmlResultJargon.NUnitV3, XmlResultJargon.TouchUnit, XmlResultJargon.xUnit})
-                {
-                    sb.AppendLine($"\t* {val.ToString()}");
-                }
-                errors.Add(sb.ToString());
-            }
-            return errors;
         }
-
-        private static IEnumerable<string> GetAvailableTargets() =>
-            Enum.GetValues(typeof(TestTarget))
-                .Cast<TestTarget>()
-                .Select(t => t.AsString());
     }
 }

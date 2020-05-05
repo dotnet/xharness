@@ -3,7 +3,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
+namespace Microsoft.DotNet.XHarness.iOS
 {
     public static class Darwin
     {
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         public static string GetVersion()
         {
-            Version version;
+            Version? version;
             var kernelRelease = GetKernelRelease();
             if (!Version.TryParse(kernelRelease, out version) || version.Major < 5)
             {

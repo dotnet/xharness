@@ -6,39 +6,35 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
     internal class AndroidGetStateCommand : GetStateCommand
     {
-        protected override ICommandArguments Arguments => null;
+        protected override string CommandUsage { get; } = "android state";
 
-        protected override string BaseCommand { get; } = "android";
+        protected override XHarnessCommandArguments Arguments { get; } = new AndroidGetStateCommandArguments();
 
-        public AndroidGetStateCommand()
+        protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            Options = CommonOptions;
-        }
-
-        protected override Task<ExitCode> InvokeInternal()
-        {
-            _log.LogInformation("Getting state of ADB and attached Android device(s)");
+            logger.LogInformation("Getting state of ADB and attached Android device(s)");
             try
             {
-                var runner = new AdbRunner(_log);
+                var runner = new AdbRunner(logger);
                 string state = runner.GetAdbState();
                 if (string.IsNullOrEmpty(state))
                 {
                     state = "No device attached";
                 }
-                _log.LogInformation($"ADB Version info:{Environment.NewLine}{runner.GetAdbVersion()}");
-                _log.LogInformation($"ADB State ('device' if physically attached):{Environment.NewLine}{state}");
+                logger.LogInformation($"ADB Version info:{Environment.NewLine}{runner.GetAdbVersion()}");
+                logger.LogInformation($"ADB State ('device' if physically attached):{Environment.NewLine}{state}");
                 return Task.FromResult(ExitCode.SUCCESS);
             }
             catch (Exception toLog)
             {
-                _log.LogCritical(toLog, $"Error: {toLog.Message}");
+                logger.LogCritical(toLog, $"Error: {toLog.Message}");
                 return Task.FromResult(ExitCode.GENERAL_FAILURE);
             }
         }

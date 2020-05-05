@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.XHarness.iOS.TestImporter
         private readonly string _ignoredFilesRootPath;
         private readonly string _traitFilesRootPath;
 
-        public ProjectFilter(string ignoredFilesRootPath, string traitFilesRootPath)
+        public ProjectFilter(string? ignoredFilesRootPath, string? traitFilesRootPath)
         {
             if (string.IsNullOrEmpty(ignoredFilesRootPath))
                 // use the current directory as the source of the ignore files

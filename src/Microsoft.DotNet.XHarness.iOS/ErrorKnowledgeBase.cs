@@ -4,6 +4,7 @@
 
 #nullable enable
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
@@ -14,7 +15,7 @@ namespace Microsoft.DotNet.XHarness.iOS
     {
         const string IncorrectArchPrefix = "IncorrectArchitecture";
 
-        public bool IsKnownInstallIssue(ILog installLog, out string? knownFailureMessage)
+        public bool IsKnownInstallIssue(ILog installLog, [NotNullWhen(true)] out string? knownFailureMessage)
         {
             knownFailureMessage = null;
             if (installLog == null)
@@ -33,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                         continue;
                     }
 
-                    var index = line.IndexOf("IncorrectArchitecture", StringComparison.Ordinal);
+                    var index = line.IndexOf(IncorrectArchPrefix, StringComparison.Ordinal);
                     if (index >= 0)
                     {
                         // add the information from the line, which is good enough
@@ -46,13 +47,13 @@ namespace Microsoft.DotNet.XHarness.iOS
             return false;
         }
 
-        public bool IsKnownBuildIssue(ILog buildLog, out string? knownFailureMessage)
+        public bool IsKnownBuildIssue(ILog buildLog, [NotNullWhen(true)] out string? knownFailureMessage)
         {
             knownFailureMessage = null;
             return false;
         }
 
-        public bool IsKnownTestIssue(ILog runLog, out string? knownFailureMessage)
+        public bool IsKnownTestIssue(ILog runLog, [NotNullWhen(true)] out string? knownFailureMessage)
         {
             knownFailureMessage = null;
             return false;

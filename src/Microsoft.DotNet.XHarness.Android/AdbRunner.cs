@@ -293,7 +293,7 @@ namespace Microsoft.DotNet.XHarness.Android
             RunApkInstrumentation(apkName, "", args, timeout);
 
 
-        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, string instrumentationClassName, Dictionary<string, string> args, TimeSpan timeout)
+        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, string? instrumentationClassName, Dictionary<string, string> args, TimeSpan timeout)
         {
             string displayName = string.IsNullOrEmpty(instrumentationClassName) ? "{default}" : instrumentationClassName;
 

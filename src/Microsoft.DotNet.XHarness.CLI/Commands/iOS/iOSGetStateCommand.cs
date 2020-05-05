@@ -15,50 +15,61 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
 using Microsoft.Extensions.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
     internal class iOSGetStateCommand : GetStateCommand
     {
+        protected override string CommandUsage { get; } = "ios state [OPTIONS]";
+
         class DeviceInfo
         {
-            public string Name { get; set; }
-            public string UDID { get; set; }
-            public string Type { get; set; }
-            public string OSVersion { get; set; }
+            public string Name { get; }
+            public string UDID { get; }
+            public string Type { get; }
+            public string OSVersion { get; }
+
+            public DeviceInfo(string name, string uDID, string type, string oSVersion)
+            {
+                Name = name;
+                UDID = uDID;
+                Type = type;
+                OSVersion = oSVersion;
+            }
         }
 
         class SystemInfo
         {
-            public string MachineName { get; set; }
-            public string OSName { get; set; }
-            public string OSVersion { get; set; }
-            public string OSPlatform { get; set; }
-            public string XcodePath { get; set; }
-            public string XcodeVersion { get; set; }
-            public string MlaunchPath { get; set; }
-            public string MlaunchVersion { get; set; }
+            public string MachineName { get; }
+            public string OSName { get; }
+            public string OSVersion { get; }
+            public string OSPlatform { get; }
+            public string XcodePath { get; }
+            public string XcodeVersion { get; }
+            public string MlaunchPath { get; }
+            public string MlaunchVersion { get; }
             public List<DeviceInfo> Simulators { get; } = new List<DeviceInfo>();
             public List<DeviceInfo> Devices { get; } = new List<DeviceInfo>();
+
+            public SystemInfo(string machineName, string oSName, string oSVersion, string oSPlatform, string xcodePath, string xcodeVersion, string mlaunchPath, string mlaunchVersion)
+            {
+                MachineName = machineName;
+                OSName = oSName;
+                OSVersion = oSVersion;
+                OSPlatform = oSPlatform;
+                XcodePath = xcodePath;
+                XcodeVersion = xcodeVersion;
+                MlaunchPath = mlaunchPath;
+                MlaunchVersion = mlaunchVersion;
+            }
         }
 
         private const string SimulatorPrefix = "com.apple.CoreSimulator.SimDeviceType.";
 
         private readonly iOSGetStateCommandArguments _arguments = new iOSGetStateCommandArguments();
 
-        protected override ICommandArguments Arguments => _arguments;
-
-        protected override string BaseCommand { get; } = "ios";
-
-        public iOSGetStateCommand() : base()
-        {
-            Options = CommonOptions;
-
-            Options.Add("mlaunch=", "Path to the mlaunch binary", v => _arguments.MlaunchPath = v);
-            Options.Add("include-simulator-uuid", "Include the simulators UUID. Defaults to false.", v => _arguments.ShowSimulatorsUUID = v != null);
-            Options.Add("include-devices-uuid", "Include the devices UUID.", v => _arguments.ShowDevicesUUID = v != null);
-            Options.Add("json", "Use json as the output format.", v => _arguments.UseJson = v != null);
-        }
+        protected override XHarnessCommandArguments Arguments => _arguments;
 
         private async Task AsJson(SystemInfo info)
         {
@@ -124,9 +135,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
         }
 
-        protected override async Task<ExitCode> InvokeInternal()
+        protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            var processManager = new ProcessManager(mlaunchPath: _arguments.MlaunchPath); 
+            var processManager = new ProcessManager(mlaunchPath: _arguments.MlaunchPath);
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
             var log = new MemoryLog(); // do we really want to log this?
@@ -141,28 +152,26 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             catch (Exception e)
             {
-                _log.LogError($"Failed to get mlaunch version info:{Environment.NewLine}{e}");
+                logger.LogError($"Failed to get mlaunch version info:{Environment.NewLine}{e}");
                 return ExitCode.GENERAL_FAILURE;
             }
 
             if (!result.Succeeded)
             {
-                _log.LogError($"Failed to get mlaunch version info:{Environment.NewLine}{mlaunchLog}");
+                logger.LogError($"Failed to get mlaunch version info:{Environment.NewLine}{mlaunchLog}");
                 return ExitCode.GENERAL_FAILURE;
             }
 
             // build the required data, then depending on the format print out
-            var info = new SystemInfo
-            {
-                MachineName = Environment.MachineName,
-                OSName = "Mac OS X",
-                OSVersion = Darwin.GetVersion() ?? "",
-                OSPlatform = "Darwin",
-                XcodePath = processManager.XcodeRoot,
-                XcodeVersion = processManager.XcodeVersion.ToString(),
-                MlaunchPath = processManager.MlaunchPath,
-                MlaunchVersion = mlaunchLog.ToString().Trim(),
-            };
+            var info = new SystemInfo(
+                machineName: Environment.MachineName,
+                oSName: "Mac OS X",
+                oSVersion: Darwin.GetVersion() ?? "",
+                oSPlatform: "Darwin",
+                xcodePath: processManager.XcodeRoot,
+                xcodeVersion: processManager.XcodeVersion.ToString(),
+                mlaunchPath: processManager.MlaunchPath,
+                mlaunchVersion: mlaunchLog.ToString().Trim());
 
             try
             {
@@ -170,20 +179,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             catch (Exception e)
             {
-                _log.LogError($"Failed to load simulators:{Environment.NewLine}{e}");
-                _log.LogInformation($"Execution log:{Environment.NewLine}{log}");
+                logger.LogError($"Failed to load simulators:{Environment.NewLine}{e}");
+                logger.LogInformation($"Execution log:{Environment.NewLine}{log}");
                 return ExitCode.GENERAL_FAILURE;
             }
 
             foreach (var sim in simulatorLoader.AvailableDevices)
             {
-                info.Simulators.Add(new DeviceInfo
-                {
-                    Name = sim.Name,
-                    UDID = sim.UDID,
-                    Type = sim.SimDeviceType.Remove(0, SimulatorPrefix.Length).Replace('-', ' '),
-                    OSVersion = sim.OSVersion,
-                });
+                info.Simulators.Add(new DeviceInfo(
+                    name: sim.Name,
+                    uDID: sim.UDID,
+                    type: sim.SimDeviceType.Remove(0, SimulatorPrefix.Length).Replace('-', ' '),
+                    oSVersion: sim.OSVersion));
             }
 
             try
@@ -192,20 +199,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             catch (Exception e)
             {
-                _log.LogError($"Failed to load connected devices:{Environment.NewLine}{e}");
-                _log.LogInformation($"Execution log:{Environment.NewLine}{log}");
+                logger.LogError($"Failed to load connected devices:{Environment.NewLine}{e}");
+                logger.LogInformation($"Execution log:{Environment.NewLine}{log}");
                 return ExitCode.GENERAL_FAILURE;
             }
 
             foreach (var dev in deviceLoader.ConnectedDevices)
             {
-                info.Devices.Add(new DeviceInfo
-                {
-                    Name = dev.Name,
-                    UDID = dev.DeviceIdentifier,
-                    Type = $"{dev.DeviceClass} {dev.DevicePlatform}",
-                    OSVersion = dev.OSVersion,
-                });
+                info.Devices.Add(new DeviceInfo(
+                    name: dev.Name,
+                    uDID: dev.DeviceIdentifier,
+                    type: $"{dev.DeviceClass} {dev.DevicePlatform}",
+                    oSVersion: dev.OSVersion));
             }
 
             if (_arguments.UseJson)

@@ -65,10 +65,9 @@ namespace Microsoft.DotNet.XHarness.iOS
             TestTarget target,
             TimeSpan timeout,
             TimeSpan testLaunchTimeout,
-            string deviceName = null,
-            string companionDeviceName = null,
+            string? deviceName = null,
+            string? companionDeviceName = null,
             bool ensureCleanSimulatorState = false,
-            string variation = null,
             int verbosity = 1,
             XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
             CancellationToken cancellationToken = default)
@@ -177,7 +176,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
             if (isSimulator)
             {
-                crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName: null);
+                crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName: null!);
                 testReporter = _testReporterFactory.Create(_mainLog,
                     _mainLog,
                     _logs,
@@ -291,7 +290,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 if (deviceName == null)
                 {
-                    IHardwareDevice companionDevice = null;
+                    IHardwareDevice? companionDevice = null;
                     IHardwareDevice device = await _hardwareDeviceLoader.FindDevice(runMode, _mainLog, includeLocked: false, force: false);
 
                     if (target.IsWatchOSTarget())

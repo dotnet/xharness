@@ -9,64 +9,34 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.Extensions.Logging;
-using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
     internal class AndroidTestCommand : TestCommand
     {
-        private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
-        protected override ITestCommandArguments TestArguments => _arguments;
-
         // nunit2 one should go away eventually
         private readonly string[] _xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
+        private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
 
-        public AndroidTestCommand() : base()
+        protected override TestCommandArguments TestArguments => _arguments;
+
+        protected override string CommandUsage { get; } = "android test [OPTIONS]";
+
+        protected override string CommandDescription { get; } = "Executes tests on and Android device, waits up to a given timeout, then copies files off the device.";
+
+        protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            Options = new OptionSet() {
-                "usage: android test [OPTIONS]",
-                "",
-                "Executes tests on and Android device, waits up to a given timeout, then copies files off the device.",
-                { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
-                    {
-                        string[] argPair = v.Split('=');
-
-                        if (argPair.Length != 2)
-                        {
-                            Options.WriteOptionDescriptions(Console.Out);
-                            return;
-                        }
-                        else
-                        {
-                            _arguments.InstrumentationArguments.Add(argPair[0].Trim(), argPair[1].Trim());
-                        }
-                    }
-                },
-                { "device-out-folder=|dev-out=", "If specified, copy this folder recursively off the device to the path specified by the output directory",  v => _arguments.DeviceOutputFolder = v},
-                { "instrumentation:|i:", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.",  v => _arguments.InstrumentationName = v},
-                { "package-name=|p=", "Package name contained within the supplied APK",  v => _arguments.PackageName = v},
-            };
-
-            foreach (var option in CommonOptions)
-            {
-                Options.Add(option);
-            }
-        }
-
-        protected override Task<ExitCode> InvokeInternal()
-        {
-            _log.LogDebug($"Android Test command called: App = {_arguments.AppPackagePath}{Environment.NewLine}Instrumentation Name = {_arguments.InstrumentationName}");
-            _log.LogDebug($"Output Directory:{_arguments.OutputDirectory}{Environment.NewLine}Timeout = {_arguments.Timeout.TotalSeconds} seconds.");
-            _log.LogDebug("Arguments to instrumentation:");
+            logger.LogDebug($"Android Test command called: App = {_arguments.AppPackagePath}{Environment.NewLine}Instrumentation Name = {_arguments.InstrumentationName}");
+            logger.LogDebug($"Output Directory:{_arguments.OutputDirectory}{Environment.NewLine}Timeout = {_arguments.Timeout.TotalSeconds} seconds.");
+            logger.LogDebug("Arguments to instrumentation:");
 
             if (!File.Exists(_arguments.AppPackagePath))
             {
-                _log.LogCritical($"Couldn't find {_arguments.AppPackagePath}!");
+                logger.LogCritical($"Couldn't find {_arguments.AppPackagePath}!");
                 return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
             }
-            var runner = new AdbRunner(_log);
+            var runner = new AdbRunner(logger);
 
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
             string apkPackageName = _arguments.PackageName;
@@ -75,20 +45,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
             try
             {
-                using (_log.BeginScope("Initialization and setup of APK on device"))
+                using (logger.BeginScope("Initialization and setup of APK on device"))
                 {
                     runner.KillAdbServer();
                     runner.StartAdbServer();
                     runner.ClearAdbLog();
 
-                    _log.LogDebug($"Working with {runner.GetAdbVersion()}");
+                    logger.LogDebug($"Working with {runner.GetAdbVersion()}");
 
                     // If anything changed about the app, Install will fail; uninstall it first.
                     // (we'll ignore if it's not present)
                     runner.UninstallApk(apkPackageName);
                     if (runner.InstallApk(_arguments.AppPackagePath) != 0)
                     {
-                        _log.LogCritical("Install failure: Test command cannot continue");
+                        logger.LogCritical("Install failure: Test command cannot continue");
                         return Task.FromResult(ExitCode.PACKAGE_INSTALLATION_FAILURE);
                     }
                     runner.KillApk(apkPackageName);
@@ -97,11 +67,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                 // No class name = default Instrumentation
                 (string stdOut, _, int exitCode) = runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
 
-                using (_log.BeginScope("Post-test copy and cleanup"))
+                using (logger.BeginScope("Post-test copy and cleanup"))
                 {
                     if (exitCode == (int)ExitCode.SUCCESS)
                     {
-                        (var resultValues, var instrExitCode) = ParseInstrumentationOutputs(stdOut);
+                        (var resultValues, var instrExitCode) = ParseInstrumentationOutputs(logger, stdOut);
 
                         instrumentationExitCode = instrExitCode;
 
@@ -109,7 +79,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                         {
                             if (resultValues.ContainsKey(possibleResultKey))
                             {
-                                _log.LogInformation($"Found XML result file: '{resultValues[possibleResultKey]}'(key: {possibleResultKey})");
+                                logger.LogInformation($"Found XML result file: '{resultValues[possibleResultKey]}'(key: {possibleResultKey})");
                                 runner.PullFiles(resultValues[possibleResultKey], _arguments.OutputDirectory);
                             }
                         }
@@ -121,7 +91,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                         var logs = runner.PullFiles(_arguments.DeviceOutputFolder, _arguments.OutputDirectory);
                         foreach (string log in logs)
                         {
-                            _log.LogDebug($"Detected output file: {log}");
+                            logger.LogDebug($"Detected output file: {log}");
                         }
                     }
                     runner.DumpAdbLog(Path.Combine(_arguments.OutputDirectory, $"adb-logcat-{_arguments.PackageName}.log"));
@@ -130,7 +100,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
                 if (instrumentationExitCode != (int)ExitCode.SUCCESS)
                 {
-                    _log.LogError($"Non-success instrumentation exit code: {instrumentationExitCode}");
+                    logger.LogError($"Non-success instrumentation exit code: {instrumentationExitCode}");
                 }
                 else
                 {
@@ -139,7 +109,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
             }
             catch (Exception toLog)
             {
-                _log.LogCritical(toLog, $"Failure to run test package: {toLog.Message}");
+                logger.LogCritical(toLog, $"Failure to run test package: {toLog.Message}");
             }
             finally
             {
@@ -149,7 +119,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
             return Task.FromResult(ExitCode.GENERAL_FAILURE);
         }
 
-        private (Dictionary<string, string> values, int exitCode) ParseInstrumentationOutputs(string stdOut)
+        private (Dictionary<string, string> values, int exitCode) ParseInstrumentationOutputs(ILogger logger, string stdOut)
         {
             // If ADB.exe's output changes (which we control when we take updates in this repo), we'll need to fix this.
             string resultPrefix = "INSTRUMENTATION_RESULT:";
@@ -168,7 +138,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                     {
                         if (outputs.ContainsKey(results[0]))
                         {
-                            _log.LogWarning($"Key '{results[0]}' defined more than once");
+                            logger.LogWarning($"Key '{results[0]}' defined more than once");
                             outputs[results[0]] = results[1];
                         }
                         else
@@ -178,17 +148,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                     }
                     else
                     {
-                        _log.LogWarning($"Skipping output line due to key-value-pair parse failure: '{line}'");
+                        logger.LogWarning($"Skipping output line due to key-value-pair parse failure: '{line}'");
                     }
                 }
                 else if (line.StartsWith(exitCodePrefix))
                 {
                     if (!int.TryParse(line.Substring(exitCodePrefix.Length).Trim(), out exitCode))
                     {
-                        _log.LogError($"Failure parsing ADB Exit code from line: '{line}'");
+                        logger.LogError($"Failure parsing ADB Exit code from line: '{line}'");
                     }
                 }
             }
+
             return (outputs, exitCode);
         }
     }
