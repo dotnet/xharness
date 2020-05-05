@@ -95,6 +95,20 @@ namespace Microsoft.DotNet.XHarness.Android
             }
         }
 
+        public void WaitForDevice()
+        {
+            // This command waits for ANY kind of device to be available (emulator or real)
+            // Needed because emulators start up asynchronously and take a while.
+            // (Returns instantly if device is ready)
+            _log.LogInformation("Waiting for device to be available (max 5 minutes)");
+            var result = RunAdbCommand("wait-for-device", TimeSpan.FromMinutes(5));
+            _log.LogDebug($"{result.StandardOutput}");
+            if (result.ExitCode != 0)
+            {
+                throw new Exception($"Error waiting for Android device/emulator.  Std out:{result.StandardOutput} Std. Err: {result.StandardError}");
+            }
+        }
+
         public void StartAdbServer()
         {
             var result = RunAdbCommand("start-server");

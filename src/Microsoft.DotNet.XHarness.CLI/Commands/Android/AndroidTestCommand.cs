@@ -79,6 +79,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                 {
                     runner.KillAdbServer();
                     runner.StartAdbServer();
+                    runner.WaitForDevice();
                     runner.ClearAdbLog();
 
                     _log.LogDebug($"Working with {runner.GetAdbVersion()}");
