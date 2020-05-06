@@ -6,7 +6,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Xunit.Abstractions;
+using Xunit.Sdk;
+using Microsoft.DotNet.XUnitExtensions;
+using NullMessageSink = Xunit.Sdk.NullMessageSink;
 
 namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
 {
@@ -15,13 +19,51 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
     /// </summary>
     public static class TestCaseExtensions
     {
+        static void DiscoverAllTraits(this ITestCase testCase)
+        {
+            if (testCase.Traits == null)
+                return;
+
+            // the following code is a work around an issue in the extensions that
+            // was fixed in https://github.com/dotnet/arcade/pull/5425 but until we get the
+            // arcade update, we do the following, check for the discoverer and then add
+            // the expected category for the ActiveIssue
+            var nullMessageSink = new NullMessageSink();
+            var traitAttributes =  testCase.TestMethod?.Method?.GetCustomAttributes(typeof (ITraitAttribute));
+            if (traitAttributes == null)
+                return;
+            foreach (var traitAttribute in traitAttributes)
+            {
+                var discovererAttribute = traitAttribute.GetCustomAttributes(typeof(TraitDiscovererAttribute)).FirstOrDefault();
+                if (discovererAttribute == null)  continue;
+
+                var discoverer = ExtensibilityPointFactory.GetTraitDiscoverer(nullMessageSink, discovererAttribute);
+
+                if (discoverer == null || !(discoverer is ActiveIssueDiscoverer)) continue;
+
+                // add the missing trait
+                if (testCase.Traits.ContainsKey(XunitConstants.Category))
+                {
+                    if (!testCase.Traits[XunitConstants.Category].Contains("failing"))
+                        testCase.Traits[XunitConstants.Category].Add("failing");
+                }
+                else
+                {
+                    testCase.Traits.Add(XunitConstants.Category, new List<string> {"failing"});
+                }
+            }
+        }
+
         /// <summary>
         /// Returns boolean indicating whether the test case does have traits.
         /// </summary>
         /// <param name="testCase">The test case under test.</param>
         /// <returns>true if the test case has traits, false otherwise.</returns>
-        public static bool HasTraits(this ITestCase testCase) =>
-            testCase.Traits != null && testCase.Traits.Count > 0;
+        public static bool HasTraits(this ITestCase testCase)
+        {
+            testCase.DiscoverAllTraits();
+            return testCase.Traits != null && testCase.Traits.Count > 0;
+        }
 
         public static bool TryGetTrait(this ITestCase testCase,
                                        string trait,
