@@ -35,8 +35,8 @@ export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
 set +e
-
-sudo launchctl asuser 510 dotnet xharness ios test \
+user_id=`id -u`
+sudo launchctl asuser $user_id dotnet xharness ios test \
     --app="$here/$app_name" \
     --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" \
     --targets=ios-simulator-64 \
