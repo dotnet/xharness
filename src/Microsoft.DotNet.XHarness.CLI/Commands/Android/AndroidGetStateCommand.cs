@@ -30,6 +30,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                 }
                 logger.LogInformation($"ADB Version info:{Environment.NewLine}{runner.GetAdbVersion()}");
                 logger.LogInformation($"ADB State ('device' if physically attached):{Environment.NewLine}{state}");
+
+                logger.LogInformation($"List of devices:");
+                var deviceAndArchList = runner.GetAttachedDevicesAndArchitectures();
+                foreach (string device in deviceAndArchList.Keys)
+                {
+                    logger.LogInformation($"Device: '{device}' - Architecture: {deviceAndArchList[device]}");
+                }
+
                 return Task.FromResult(ExitCode.SUCCESS);
             }
             catch (Exception toLog)
