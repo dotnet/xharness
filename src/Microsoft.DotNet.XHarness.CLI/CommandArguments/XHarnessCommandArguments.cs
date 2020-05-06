@@ -28,7 +28,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         {
             var options = GetCommandOptions();
 
-            options.Add("verbosity=|v=", "Verbosity level (1-6) where higher means less logging. (default = 2 / Information)", v => Verbosity = ParseArgument<LogLevel>("verbosity", v));
+            options.Add("verbosity:|v:", "Verbosity level - defaults to 'Information' if not specified. If passed without value, 'Debug' is assumed (highest)",
+                v => Verbosity = string.IsNullOrEmpty(v) ? LogLevel.Debug : ParseArgument<LogLevel>("verbosity", v));
+
             options.Add("help|h", v => ShowHelp = v != null);
 
             return options;
@@ -66,6 +68,19 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         /// <returns>Parsed enum value</returns>
         protected static TEnum ParseArgument<TEnum>(string argumentName, string? value, params TEnum[]? invalidValues) where TEnum : struct, IConvertible
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException(message: $"Empty value supplied to {argumentName}", null);
+            }
+
+            if (value.All(c => char.IsDigit(c)))
+            {
+                // Any int would parse into enum successfully, so we forbid that
+                throw new ArgumentException(
+                    $"Invalid value '{value}' supplied for {argumentName}. " +
+                    $"Valid values are:" + GetAllowedValues(invalidValues: invalidValues));
+            }
+
             var type = typeof(TEnum);
 
             if (!type.IsEnum)
