@@ -36,7 +36,9 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
 set +e
 
-dotnet xharness ios test \
+sudo launchctl asuser 510 open -a /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
+
+sudo launchctl asuser 510 dotnet xharness ios test \
     --app="$here/$app_name" \
     --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" \
     --targets=ios-simulator-64 \
