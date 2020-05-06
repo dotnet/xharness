@@ -32,7 +32,10 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Tests.xUnit
                         traitValue:null,
                         exclude:true);
                     var testCase = new Mock<ITestCase>();
+                    var method = new Mock<ITestMethod>();
                     testCase.Setup(t => t.Traits).Returns(new Dictionary<string, List<string>>());
+                    testCase.Setup(t => t.TestMethod).Returns(method.Object);
+                    method.Setup(m => m.Method).Returns((IMethodInfo)null!);
                     yield return new object[]
                     {
                         filter,
@@ -47,6 +50,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Tests.xUnit
                         exclude:false);
                     testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.Traits).Returns(new Dictionary<string, List<string>>());
+                    testCase.Setup(t => t.TestMethod).Returns(method.Object);
+                    method.Setup(m => m.Method).Returns((IMethodInfo)null!);
                     yield return new object[]
                     {
                         filter,
@@ -64,6 +69,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Tests.xUnit
                     {
                         [traitName] = null!,
                     });
+                    testCase.Setup(t => t.TestMethod).Returns(method.Object);
+                    method.Setup(m => m.Method).Returns((IMethodInfo)null!);
                     yield return new object[]
                     {
                         filter,
@@ -81,6 +88,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Tests.xUnit
                     {
                         [traitName] = null!,
                     });
+                    testCase.Setup(t => t.TestMethod).Returns(method.Object);
+                    method.Setup(m => m.Method).Returns((IMethodInfo)null!);
 
                     yield return new object[]
                     {
@@ -99,6 +108,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Tests.xUnit
                     {
                         [traitName] = new List<string> {traitValue},
                     });
+                    testCase.Setup(t => t.TestMethod).Returns(method.Object);
+                    method.Setup(m => m.Method).Returns((IMethodInfo)null!);
 
                     yield return new object[]
                     {
@@ -117,6 +128,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Tests.xUnit
                     {
                         [traitName] = new List<string>{traitValue},
                     });
+                    testCase.Setup(t => t.TestMethod).Returns(method.Object);
+                    method.Setup(m => m.Method).Returns((IMethodInfo)null!);
                     yield return new object[]
                     {
                         filter,
@@ -134,6 +147,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Tests.xUnit
                     {
                         [traitName] = new List<string>{new string('$', 4)},
                     });
+                    testCase.Setup(t => t.TestMethod).Returns(method.Object);
+                    method.Setup(m => m.Method).Returns((IMethodInfo)null!);
                     yield return new object[]
                     {
                         filter,
@@ -151,6 +166,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Tests.xUnit
                     {
                         [traitName] = new List<string>{new string('$', 4)},
                     });
+                    testCase.Setup(t => t.TestMethod).Returns(method.Object);
+                    method.Setup(m => m.Method).Returns((IMethodInfo)null!);
                     yield return new object[]
                     {
                         filter,

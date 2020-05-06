@@ -24,12 +24,14 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             if (testCase.Traits == null)
                 return;
 
-            // the following is a hack to work around an issue in the extensions that
+            // the following code is a work around an issue in the extensions that
             // was fixed in https://github.com/dotnet/arcade/pull/5425 but until we get the
-            // arcade update, we do the following, check for the discoverer and the add
+            // arcade update, we do the following, check for the discoverer and then add
             // the expected category for the ActiveIssue
             var nullMessageSink = new NullMessageSink();
-            var traitAttributes =  testCase.TestMethod.Method.GetCustomAttributes(typeof (ITraitAttribute));
+            var traitAttributes =  testCase.TestMethod?.Method?.GetCustomAttributes(typeof (ITraitAttribute));
+            if (traitAttributes == null)
+                return;
             foreach (var traitAttribute in traitAttributes)
             {
                 var discovererAttribute = traitAttribute.GetCustomAttributes(typeof(TraitDiscovererAttribute)).FirstOrDefault();
