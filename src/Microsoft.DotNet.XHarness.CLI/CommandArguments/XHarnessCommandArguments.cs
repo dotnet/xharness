@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 
             if (value.All(c => char.IsDigit(c)))
             {
-                // Any into would parse into enum successfully, so we forbid that
+                // Any int would parse into enum successfully, so we forbid that
                 throw new ArgumentException(
                     $"Invalid value '{value}' supplied for {argumentName}. " +
                     $"Valid values are:" + GetAllowedValues(invalidValues: invalidValues));
