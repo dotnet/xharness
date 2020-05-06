@@ -28,7 +28,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         {
             var options = GetCommandOptions();
 
-            options.Add("verbosity=|v=", "Verbosity level (1-6) where higher means less logging. (default = 2 / Information)", v => Verbosity = ParseArgument<LogLevel>("verbosity", v));
+            options.Add("verbosity:|v:", "Verbosity level - defaults to 'Information'. If passed without value, 'Debug' is assumed (highest)",
+                v => Verbosity = string.IsNullOrEmpty(v) ? LogLevel.Debug : ParseArgument("verbosity", v, invalidValues: LogLevel.None));
+
             options.Add("help|h", v => ShowHelp = v != null);
 
             return options;
