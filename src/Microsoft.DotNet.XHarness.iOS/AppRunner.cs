@@ -140,9 +140,9 @@ namespace Microsoft.DotNet.XHarness.iOS
             if (_useXmlOutput)
             {
                 // let the runner now via envars that we want to get a xml output, else the runner will default to plain text
-                args.Add (new SetEnvVariableArgument (EnviromentVariables.EnableXmlOutput, true));
-                args.Add (new SetEnvVariableArgument (EnviromentVariables.XmlMode, "wrapped"));
-                args.Add (new SetEnvVariableArgument (EnviromentVariables.XmlVersion, $"{xmlResultJargon}"));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.EnableXmlOutput, true));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlMode, "wrapped"));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlVersion, $"{xmlResultJargon}"));
             }
 
             listener.StartAsync();
@@ -253,35 +253,46 @@ namespace Microsoft.DotNet.XHarness.iOS
                     systemLogs.Add(log);
                 }
 
-                _mainLog.WriteLine("*** Executing {0}/{1} in the simulator ***", appInformation.AppName, target);
-
-                if (ensureCleanSimulatorState)
+                try
                 {
-                    foreach (var sim in simulators)
+                    _mainLog.WriteLine("*** Executing {0}/{1} in the simulator ***", appInformation.AppName, target);
+
+                    if (ensureCleanSimulatorState)
                     {
-                        await sim.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
+                        foreach (var sim in simulators)
+                        {
+                            await sim.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
+                        }
+                    }
+
+                    args.Add(new SimulatorUDIDArgument(simulator.UDID));
+
+                    await crashReporter.StartCaptureAsync();
+
+                    _mainLog.WriteLine("Starting test run");
+
+                    var result = _processManager.ExecuteCommandAsync(args, _mainLog, timeout, cancellationToken: linkedCts.Token);
+
+                    await testReporter.CollectSimulatorResult(result);
+
+                    // cleanup after us
+                    if (ensureCleanSimulatorState)
+                    {
+                        await simulator.KillEverything(_mainLog);
+                    }
+
+                    foreach (var log in systemLogs)
+                    {
+                        log.StopCapture();
                     }
                 }
-
-                args.Add(new SimulatorUDIDArgument(simulator.UDID));
-
-                await crashReporter.StartCaptureAsync();
-
-                _mainLog.WriteLine("Starting test run");
-
-                var result = _processManager.ExecuteCommandAsync(args, _mainLog, timeout, cancellationToken: linkedCts.Token);
-
-                await testReporter.CollectSimulatorResult(result);
-
-                // cleanup after us
-                if (ensureCleanSimulatorState)
+                finally
                 {
-                    await simulator.KillEverything(_mainLog);
-                }
-
-                foreach (var log in systemLogs)
-                {
-                    log.StopCapture();
+                    foreach (var log in systemLogs)
+                    {
+                        log.StopCapture();
+                        log.Dispose();
+                    }
                 }
             }
             else
@@ -378,7 +389,9 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                     // close a tunnel if it was created
                     if (!isSimulator && _listenerFactory.UseTunnel)
+                    {
                         await _listenerFactory.TunnelBore.Close(deviceName);
+                    }
                 }
 
                 // Upload the system log
