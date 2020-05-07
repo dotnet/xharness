@@ -9,8 +9,8 @@ version='1.0.0-ci'
 echo "Cleaning the NuGet cache from the previous version of the tool..."
 cache_dirs=`dotnet nuget locals All -l | cut -d':' -f 2 | tr -d ' '`
 while IFS= read -r path; do
-    rm -rfv "$path/microsoft.dotnet.xharness.cli/$version"
-    rm -rfv "$path/Microsoft.DotNet.XHarness.CLI/$version"
+    rm -rf "$path/microsoft.dotnet.xharness.cli/$version"
+    rm -rf "$path/Microsoft.DotNet.XHarness.CLI/$version"
 done <<< "$cache_dirs"
 
 set -x
@@ -31,12 +31,15 @@ dotnet new tool-manifest
 
 dotnet tool install --no-cache --version $version --add-source .. Microsoft.DotNet.XHarness.CLI
 
-export XHARNESS_DISABLE_COLORED_OUTPUT=true
-export XHARNESS_LOG_WITH_TIMESTAMPS=true
+user_id=`id -u`
+launchctl="sudo launchctl asuser $user_id"
+
+$launchctl export XHARNESS_DISABLE_COLORED_OUTPUT=true
+$launchctl export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
 set +e
-user_id=`id -u`
-sudo launchctl asuser $user_id dotnet xharness ios test \
+
+$launchctl dotnet xharness ios test \
     --app="$here/$app_name" \
     --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" \
     --targets=ios-simulator-64 \
