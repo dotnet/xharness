@@ -54,6 +54,13 @@ dotnet xharness help ios
 dotnet xharness help ios package
 ```
 
+### Other settings
+
+There are other settings which can be controlled via **environmental variables** and are primarily meant for build pipeline scenarios:
+
+- `XHARNESS_DISABLE_COLORED_OUTPUT` - disable colored logging so that control characters are not making the logs hard to read
+- `XHARNESS_LOG_WITH_TIMESTAMPS` - enable timestamps for logging
+
 ## Examples
 
 To run an iOS app bundle on a 64bit iPhone Simulator:
