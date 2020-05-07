@@ -17,8 +17,8 @@ set -x
 
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# TODO - Call: dotnet xharness ios package ...
-# For now we download it:
+# TODO - Package the app bundle here using `dotnet xharness ios package ..`
+# For now we download a pre-bundled app:
 curl -L --output $here/app.zip "https://netcorenativeassets.blob.core.windows.net/resource-packages/external/macos/test-ios-app/System.Numerics.Vectors.Tests.app.zip?sp=r&st=2020-05-04T13:23:20Z&se=2028-05-04T21:23:20Z&spr=https&sv=2019-10-10&sr=b&sig=7sKBDMZrlk%2FA58zlbaUYptb98kK7EacQpmJ9RxlLLrE%3D"
 app_name='System.Numerics.Vectors.Tests.app'
 
@@ -34,6 +34,7 @@ dotnet tool install --no-cache --version $version --add-source .. Microsoft.DotN
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
+# We have to call this otherwise mlaunch fails to spawn it properly
 open -a /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
 
 dotnet xharness ios test \
