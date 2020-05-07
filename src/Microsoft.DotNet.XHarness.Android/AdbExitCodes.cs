@@ -13,5 +13,6 @@ namespace Microsoft.DotNet.XHarness.Android
         INSTRUMENTATION_SUCCESS = -1,
         INSTRUMENTATION_TIMEOUT = -2,
         ADB_UNINSTALL_APP_NOT_ON_DEVICE = 255,
+        ADB_UNINSTALL_APP_NOT_ON_EMULATOR = 1,
     }
 }

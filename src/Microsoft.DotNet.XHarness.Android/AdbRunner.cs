@@ -20,6 +20,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
         private readonly string _absoluteAdbExePath;
         private readonly ILogger _log;
+        private string? _currentDevice;
 
         public AdbRunner(ILogger log, string adbExePath = "")
         {
@@ -50,6 +51,11 @@ namespace Microsoft.DotNet.XHarness.Android
             }
         }
 
+        public void SetActiveDevice(string? deviceSerialNumber)
+        {
+            _currentDevice = deviceSerialNumber;
+        }
+
         private static string GetCliAdbExePath()
         {
             var currentAssemblyDirectory = Path.GetDirectoryName(typeof(AdbRunner).Assembly.Location);
@@ -65,7 +71,7 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 return Path.Join(currentAssemblyDirectory, @"../../../runtimes/any/native/adb/macos/adb");
             }
-            throw new NotSupportedException("Cannot determine OS platform being used, thus we can not select ADB executable.");
+            throw new NotSupportedException("Cannot determine OS platform being used, thus we can not select an ADB executable.");
         }
 
         #endregion
@@ -164,7 +170,8 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 _log.LogInformation($"Successfully uninstalled {apkName}.");
             }
-            else if (result.ExitCode == (int)AdbExitCodes.ADB_UNINSTALL_APP_NOT_ON_DEVICE)
+            else if (result.ExitCode == (int)AdbExitCodes.ADB_UNINSTALL_APP_NOT_ON_DEVICE ||
+                     result.ExitCode == (int)AdbExitCodes.ADB_UNINSTALL_APP_NOT_ON_EMULATOR)
             {
                 _log.LogInformation($"APK '{apkName}' not on device.");
             }
@@ -298,19 +305,63 @@ namespace Microsoft.DotNet.XHarness.Android
             _log.LogDebug($"Copied {filesToCopy.Length} files");
         }
 
-        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, TimeSpan timeout)
+        public Dictionary<string, string?> GetAttachedDevicesAndArchitectures()
         {
-            return RunApkInstrumentation(apkName, "", new Dictionary<string, string>(), timeout);
+            Dictionary<string, string?> devicesAndArchitectures = new Dictionary<string, string?>();
+
+            var result = RunAdbCommand("devices -l");
+            string standardOutput = result.StandardOutput;
+
+            // If the adb server is dead, this can return 0 exit code and no output; retry a few times if so)
+            int retriesLeft = 5;
+            while (retriesLeft-- > 0 && result.ExitCode == (int)AdbExitCodes.SUCCESS && standardOutput == "")
+            {
+                result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
+                standardOutput = result.StandardOutput;
+            }
+
+            if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
+            {
+                string[] lines = standardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+
+                // Start at 1 to skip first line, which is always 'List of devices attached'
+                for (int lineNumber = 1; lineNumber < lines.Length; lineNumber++)
+                {
+                    _log.LogDebug($"Evaluating line: {lines[lineNumber]}");
+                    var lineParts = lines[lineNumber].Split(' ');
+                    if (!string.IsNullOrEmpty(lineParts[0]))
+                    {
+                        var deviceSerial = lineParts[0];
+                        var shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi");
+
+                        if (shellArchitecture.ExitCode == (int)AdbExitCodes.SUCCESS)
+                        {
+                            devicesAndArchitectures.Add(deviceSerial, shellArchitecture.StandardOutput.Trim());
+                        }
+                        else
+                        {
+                            _log.LogError($"Error trying to get device architecture: {shellArchitecture.StandardError}");
+                            devicesAndArchitectures.Add(deviceSerial, null);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}");
+            }
+            return devicesAndArchitectures;
         }
+
+        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, TimeSpan timeout) =>
+            RunApkInstrumentation(apkName, "", new Dictionary<string, string>(), timeout);
 
         public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, Dictionary<string, string> args, TimeSpan timeout) =>
             RunApkInstrumentation(apkName, "", args, timeout);
 
-
         public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, string? instrumentationClassName, Dictionary<string, string> args, TimeSpan timeout)
         {
             string displayName = string.IsNullOrEmpty(instrumentationClassName) ? "{default}" : instrumentationClassName;
-
             string appArguments = "";
             if (args.Count > 0)
             {
@@ -323,7 +374,7 @@ namespace Microsoft.DotNet.XHarness.Android
             string command = $"shell am instrument {appArguments} -w {apkName}";
             if (string.IsNullOrEmpty(instrumentationClassName))
             {
-                _log.LogInformation($"Starting default instrumentation class on {apkName} (exit code -1 == success)");
+                _log.LogInformation($"Starting default instrumentation class on {apkName} (exit code 0 == success)");
             }
             else
             {
@@ -377,7 +428,9 @@ namespace Microsoft.DotNet.XHarness.Android
                 throw new FileNotFoundException($"Provided path for adb.exe was not valid ('{_absoluteAdbExePath}')");
             }
 
-            _log.LogDebug($"Executing command: '{_absoluteAdbExePath} {command}'");
+            string deviceSerialArgs = string.IsNullOrEmpty(_currentDevice) ? string.Empty : $"-s {_currentDevice}";
+
+            _log.LogDebug($"Executing command: '{_absoluteAdbExePath} {deviceSerialArgs} {command}'");
 
             ProcessStartInfo processStartInfo = new ProcessStartInfo
             {
@@ -387,11 +440,11 @@ namespace Microsoft.DotNet.XHarness.Android
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 FileName = _absoluteAdbExePath,
-                Arguments = command,
+                Arguments = $"{deviceSerialArgs} {command}",
             };
-            Process p = new Process() { StartInfo = processStartInfo };
-            StringBuilder standardOut = new StringBuilder();
-            StringBuilder standardErr = new StringBuilder();
+            var p = new Process() { StartInfo = processStartInfo };
+            var standardOut = new StringBuilder();
+            var standardErr = new StringBuilder();
 
             p.OutputDataReceived += delegate (object sender, DataReceivedEventArgs e)
             {

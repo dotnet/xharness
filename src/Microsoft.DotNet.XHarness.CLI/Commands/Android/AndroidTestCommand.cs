@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
@@ -23,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
         protected override string CommandUsage { get; } = "android test [OPTIONS]";
 
-        protected override string CommandDescription { get; } = "Executes tests on and Android device, waits up to a given timeout, then copies files off the device.";
+        protected override string CommandDescription { get; } = "Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app";
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
@@ -38,6 +39,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
             }
             var runner = new AdbRunner(logger);
 
+            // Assumption: APKs we test will only have one arch for now
+            string apkRequiredArchitecture;
+
+            if (!string.IsNullOrEmpty(_arguments.DeviceArchitecture))
+            {
+                apkRequiredArchitecture = _arguments.DeviceArchitecture; 
+                logger.LogInformation($"Will attempt to run device on specified architecture: '{apkRequiredArchitecture}'");
+            }
+            else
+            {
+                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath).FirstOrDefault();
+                logger.LogInformation($"Will attempt to run device on detected architecture: '{apkRequiredArchitecture}'");
+            }
+
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
             string apkPackageName = _arguments.PackageName;
 
@@ -47,8 +62,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
             {
                 using (logger.BeginScope("Initialization and setup of APK on device"))
                 {
+                    // Make sure the adb server is freshly started
                     runner.KillAdbServer();
                     runner.StartAdbServer();
+
+                    // enumerate the devices attached and their architectures
+                    // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
+                    runner.SetActiveDevice(GetDeviceToUse(logger, runner, apkRequiredArchitecture));
+
+                    // Wait til the device is ready then empty its log
                     runner.WaitForDevice();
                     runner.ClearAdbLog();
 
@@ -56,6 +78,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
                     // If anything changed about the app, Install will fail; uninstall it first.
                     // (we'll ignore if it's not present)
+                    // This is where mismatched architecture APKs fail.
                     runner.UninstallApk(apkPackageName);
                     if (runner.InstallApk(_arguments.AppPackagePath) != 0)
                     {
@@ -92,7 +115,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                         var logs = runner.PullFiles(_arguments.DeviceOutputFolder, _arguments.OutputDirectory);
                         foreach (string log in logs)
                         {
-                            logger.LogDebug($"Detected output file: {log}");
+                            logger.LogDebug($"Found output file: {log}");
                         }
                     }
                     runner.DumpAdbLog(Path.Combine(_arguments.OutputDirectory, $"adb-logcat-{_arguments.PackageName}.log"));
@@ -118,6 +141,36 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
             }
 
             return Task.FromResult(ExitCode.GENERAL_FAILURE);
+        }
+
+        private string? GetDeviceToUse(ILogger logger, AdbRunner runner, string apkRequiredArchitecture)
+        {
+            var allDevicesAndTheirArchitectures = runner.GetAttachedDevicesAndArchitectures();
+            if (allDevicesAndTheirArchitectures.Count == 1)
+            {
+                // There's only one device, so -s argument isn't needed but still check
+                if (!allDevicesAndTheirArchitectures.Values.Contains(apkRequiredArchitecture, StringComparer.InvariantCultureIgnoreCase))
+                {
+                    logger.LogWarning($"Single device available has architecture '{allDevicesAndTheirArchitectures.Values.First()}', != '{apkRequiredArchitecture}'. Package installation will likely fail, but we'll try anyways."); 
+                }
+                return null; // null = Use default device
+            }
+            else if (allDevicesAndTheirArchitectures.Count > 1)
+            {
+                if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)))
+                { 
+                    var firstAvailableCompatible = allDevicesAndTheirArchitectures.Where(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                    logger.LogInformation($"Using first-found compatible device of {allDevicesAndTheirArchitectures.Count} total- serial: '{firstAvailableCompatible.Key}' - Arch: {firstAvailableCompatible.Value}");
+                    return firstAvailableCompatible.Key;
+                }
+                else
+                {
+                    logger.LogWarning($"No devices found with architecture '{apkRequiredArchitecture}'.  Just returning first available device; installation will likely fail, but we'll try anyways.");
+                    return allDevicesAndTheirArchitectures.Keys.First();
+                }
+            }
+            logger.LogError("No attached device detected");
+            return null;
         }
 
         private (Dictionary<string, string> values, int exitCode) ParseInstrumentationOutputs(ILogger logger, string stdOut)
