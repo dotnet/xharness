@@ -204,7 +204,7 @@ stages:
           HelixTargetQueues: osx.1015.amd64.ios.open
           Creator: xharness
           WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
-          WorkItemCommand: sudo launchctl asuser 510 sh osx-helix-payload.sh $HELIX_WORKITEM_UPLOAD_ROOT
+          WorkItemCommand: id -u | sudo launchctl asuser `id -u` sh osx-helix-payload.sh $HELIX_WORKITEM_UPLOAD_ROOT
           WorkItemTimeout: 00:12:00
 
 

@@ -34,16 +34,10 @@ dotnet tool install --no-cache --version $version --add-source .. Microsoft.DotN
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
-set +e
-
-sudo launchctl asuser $user_id dotnet xharness ios test \
+dotnet xharness ios test \
     --app="$here/$app_name" \
     --output-directory="$1" \
     --targets=ios-simulator-64 \
     --timeout=600 \
     --launch-timeout=360 \
     --communication-channel=Network
-
-result=$?
-
-exit $result
