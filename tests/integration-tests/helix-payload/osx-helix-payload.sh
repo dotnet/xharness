@@ -38,15 +38,12 @@ set +e
 
 sudo launchctl asuser $user_id dotnet xharness ios test \
     --app="$here/$app_name" \
-    --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" \
+    --output-directory="$1" \
     --targets=ios-simulator-64 \
     --timeout=600 \
     --launch-timeout=360 \
     --communication-channel=Network
 
 result=$?
-
-echo "Remove empty logs"
-find "$HELIX_WORKITEM_UPLOAD_ROOT/" -size 0 -print -delete
 
 exit $result
