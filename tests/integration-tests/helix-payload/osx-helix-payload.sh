@@ -34,8 +34,6 @@ dotnet tool install --no-cache --version $version --add-source .. Microsoft.DotN
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
-open -a /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
-
 dotnet xharness ios test \
     --app="$here/$app_name" \
     --output-directory="$1" \
