@@ -307,7 +307,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public Dictionary<string, string?> GetAttachedDevicesAndArchitectures()
         {
-            Dictionary<string, string?> devicesAndArchitectures = new Dictionary<string, string>();
+            Dictionary<string, string?> devicesAndArchitectures = new Dictionary<string, string?>();
 
             var result = RunAdbCommand("devices -l");
             string standardOutput = result.StandardOutput;
