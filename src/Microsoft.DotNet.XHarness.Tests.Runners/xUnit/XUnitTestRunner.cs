@@ -142,18 +142,6 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                 return;
 
             RaiseTestSkippedCase(args.Message, args.Message.TestCases, args.Message.TestCase);
-            /*
-            SkippedTests++;
-            OnInfo($"\t[IGNORED] {args.Message.TestCase.DisplayName}");
-            LogTestDetails(args.Message.Test, log: OnDebug);
-            LogTestOutput(args.Message, log: OnDiagnostic);
-            ReportTestCases("   Associated", args.Message.TestCases, log: OnDiagnostic);
-            // notify that the test completed because it was skipped
-            OnTestCompleted((
-                TestName: args.Message.Test.DisplayName,
-                TestResult: TestResult.Skipped
-            ));
-            */
         }
 
         void HandleTestPassed(MessageHandlerArgs<ITestPassed> args)
