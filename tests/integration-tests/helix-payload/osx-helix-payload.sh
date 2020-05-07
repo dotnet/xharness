@@ -31,8 +31,18 @@ dotnet new tool-manifest
 
 dotnet tool install --no-cache --version $version --add-source .. Microsoft.DotNet.XHarness.CLI
 
-user_id=`id -u`
-sudo launchctl asuser $user_id sh ./xharness.sh "$here/$app_name" "$HELIX_WORKITEM_UPLOAD_ROOT"
+export XHARNESS_DISABLE_COLORED_OUTPUT=true
+export XHARNESS_LOG_WITH_TIMESTAMPS=true
+
+set +e
+
+sudo launchctl asuser $user_id dotnet xharness ios test \
+    --app="$here/$app_name" \
+    --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" \
+    --targets=ios-simulator-64 \
+    --timeout=600 \
+    --launch-timeout=360 \
+    --communication-channel=Network
 
 result=$?
 
