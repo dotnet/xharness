@@ -200,7 +200,6 @@ stages:
           DotNetCliPackageType: sdk
           DotNetCliVersion: 3.1.201
           WaitForWorkItemCompletion: true
-          EnableXUnitReporter: true
           HelixTargetQueues: osx.1015.amd64.ios.open
           Creator: xharness
           WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
