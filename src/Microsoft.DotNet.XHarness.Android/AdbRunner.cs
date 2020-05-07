@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
         }
 
-        public void SetActiveDevice(string deviceSerialNumber)
+        public void SetActiveDevice(string? deviceSerialNumber)
         {
             _currentDevice = deviceSerialNumber;
         }
@@ -305,9 +305,9 @@ namespace Microsoft.DotNet.XHarness.Android
             _log.LogDebug($"Copied {filesToCopy.Length} files");
         }
 
-        public Dictionary<string, string> GetAttachedDevicesAndArchitectures()
+        public Dictionary<string, string?> GetAttachedDevicesAndArchitectures()
         {
-            Dictionary<string, string> devicesAndArchitectures = new Dictionary<string, string>();
+            Dictionary<string, string?> devicesAndArchitectures = new Dictionary<string, string>();
 
             var result = RunAdbCommand("devices -l");
             string standardOutput = result.StandardOutput;
@@ -316,22 +316,23 @@ namespace Microsoft.DotNet.XHarness.Android
             int retriesLeft = 5;
             while (retriesLeft-- > 0 && result.ExitCode == (int)AdbExitCodes.SUCCESS && standardOutput == "")
             {
-                result = RunAdbCommand("devices -l");
+                result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
                 standardOutput = result.StandardOutput;
             }
 
             if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
             {
                 string[] lines = standardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-                
+
+                // Start at 1 to skip first line, which is always 'List of devices attached'
                 for (int lineNumber = 1; lineNumber < lines.Length; lineNumber++)
                 {
                     _log.LogDebug($"Evaluating line: {lines[lineNumber]}");
                     var lineParts = lines[lineNumber].Split(' ');
-                    if (lineParts.Length > 0)
+                    if (!string.IsNullOrEmpty(lineParts[0]))
                     {
-                        var shellArchitecture = RunAdbCommand($"-s {lineParts[0]} shell getprop ro.product.cpu.abi");
                         var deviceSerial = lineParts[0];
+                        var shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi");
 
                         if (shellArchitecture.ExitCode == (int)AdbExitCodes.SUCCESS)
                         {
@@ -340,14 +341,14 @@ namespace Microsoft.DotNet.XHarness.Android
                         else
                         {
                             _log.LogError($"Error trying to get device architecture: {shellArchitecture.StandardError}");
-                            devicesAndArchitectures.Add(deviceSerial, "unknown");
+                            devicesAndArchitectures.Add(deviceSerial, null);
                         }
                     }
                 }
             }
             else
             {
-                _log.LogError($"Error: {result.StandardError}");
+                _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}");
             }
             return devicesAndArchitectures;
         }
@@ -427,7 +428,7 @@ namespace Microsoft.DotNet.XHarness.Android
                 throw new FileNotFoundException($"Provided path for adb.exe was not valid ('{_absoluteAdbExePath}')");
             }
 
-            string deviceSerialArgs = string.IsNullOrEmpty(_currentDevice) ? "" : $"-s {_currentDevice}";
+            string deviceSerialArgs = string.IsNullOrEmpty(_currentDevice) ? string.Empty : $"-s {_currentDevice}";
 
             _log.LogDebug($"Executing command: '{_absoluteAdbExePath} {deviceSerialArgs} {command}'");
 

@@ -40,16 +40,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
             var runner = new AdbRunner(logger);
 
             // Assumption: APKs we test will only have one arch for now
-            string apkRequiredArchitecture = string.IsNullOrEmpty(_arguments.DeviceArchitecture) ?
-                ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath).FirstOrDefault() :
-                _arguments.DeviceArchitecture;
+            string apkRequiredArchitecture;
 
             if (!string.IsNullOrEmpty(_arguments.DeviceArchitecture))
             {
+                apkRequiredArchitecture = _arguments.DeviceArchitecture; 
                 logger.LogInformation($"Will attempt to run device on specified architecture: '{apkRequiredArchitecture}'");
             }
             else
             {
+                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath).FirstOrDefault();
                 logger.LogInformation($"Will attempt to run device on detected architecture: '{apkRequiredArchitecture}'");
             }
 
@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
             return Task.FromResult(ExitCode.GENERAL_FAILURE);
         }
 
-        private string GetDeviceToUse(ILogger logger, AdbRunner runner, string apkRequiredArchitecture)
+        private string? GetDeviceToUse(ILogger logger, AdbRunner runner, string apkRequiredArchitecture)
         {
             var allDevicesAndTheirArchitectures = runner.GetAttachedDevicesAndArchitectures();
             if (allDevicesAndTheirArchitectures.Count == 1)
@@ -151,26 +151,26 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                 // There's only one device, so -s argument isn't needed but still check
                 if (!allDevicesAndTheirArchitectures.Values.Contains(apkRequiredArchitecture, StringComparer.InvariantCultureIgnoreCase))
                 {
-                    logger.LogError($"Single device available has architecture '{allDevicesAndTheirArchitectures.Values.First()}', != '{apkRequiredArchitecture}'. Package installation will likely fail, but we'll try anyways."); 
+                    logger.LogWarning($"Single device available has architecture '{allDevicesAndTheirArchitectures.Values.First()}', != '{apkRequiredArchitecture}'. Package installation will likely fail, but we'll try anyways."); 
                 }
-                return ""; // Empty = Use default device
+                return null; // null = Use default device
             }
             else if (allDevicesAndTheirArchitectures.Count > 1)
             {
-                if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)))
+                if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)))
                 { 
-                    var firstAvailableCompatible = allDevicesAndTheirArchitectures.Where(kvp => kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-                    logger.LogDebug($"Using first-found compatible device - serial: '{firstAvailableCompatible.Key}' - Arch: {firstAvailableCompatible.Value}");
+                    var firstAvailableCompatible = allDevicesAndTheirArchitectures.Where(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                    logger.LogInformation($"Using first-found compatible device of {allDevicesAndTheirArchitectures.Count} total- serial: '{firstAvailableCompatible.Key}' - Arch: {firstAvailableCompatible.Value}");
                     return firstAvailableCompatible.Key;
                 }
                 else
                 {
-                    logger.LogError($"No devices found with architecture '{apkRequiredArchitecture}'.  Just returning first available device; installation will likely fail, but we'll try anyways.");
+                    logger.LogWarning($"No devices found with architecture '{apkRequiredArchitecture}'.  Just returning first available device; installation will likely fail, but we'll try anyways.");
                     return allDevicesAndTheirArchitectures.Keys.First();
                 }
             }
-            logger.LogError("Unable to detect an attached device.");
-            return "";
+            logger.LogError("No attached device detected");
+            return null;
         }
 
         private (Dictionary<string, string> values, int exitCode) ParseInstrumentationOutputs(ILogger logger, string stdOut)

@@ -10,6 +10,10 @@ namespace Microsoft.DotNet.XHarness.Android
     {
         public static List<string> GetApkSupportedArchitectures(string apkPath)
         {
+            if (string.IsNullOrEmpty(apkPath))
+            {
+                throw new ArgumentException("Please supply a value for apkPath");
+            }
             if (!File.Exists(apkPath))
             {
                 throw new FileNotFoundException($"Invalid APK Path: '{apkPath}'");
