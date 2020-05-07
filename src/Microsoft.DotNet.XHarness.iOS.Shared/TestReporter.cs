@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -472,7 +472,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         // generate all the xml failures that will help the integration with the CI and return the failure reason
         async Task GenerateXmlFailures(string failure, bool crashed, string? crashReason)
         {
-            using var logReader = mainLog.GetReader();
             if (!ResultsUseXml) // nothing to do
                 return;
             if (!string.IsNullOrEmpty(crashReason))
@@ -484,7 +483,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     appInfo.Variation,
                     $"App Crash {appInfo.AppName} {appInfo.Variation}",
                     $"App crashed: {failure}",
-                    logReader,
+                    mainLog.FullPath,
                     xmlJargon);
             }
             else if (launchFailure)
@@ -496,7 +495,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     appInfo.Variation,
                     $"App Launch {appInfo.AppName} {appInfo.Variation} on {deviceName}",
                     $"{failure} on {deviceName}",
-                    logReader,
+                    mainLog.FullPath,
                     xmlJargon);
             }
             else if (!isSimulatorTest && crashed && string.IsNullOrEmpty(crashReason))
@@ -513,7 +512,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         appInfo.Variation,
                         $"TcpConnection on {deviceName}",
                         $"Device {deviceName} could not reach the host over tcp.",
-                        logReader,
+                        mainLog.FullPath,
                         xmlJargon);
                 }
             }
@@ -533,7 +532,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         public async Task<(TestExecutingResult ExecutingResult, string? ResultMessage)> ParseResult()
         {
-            var result = (ExecutingResult: TestExecutingResult.Finished, ResultMessage: (string) null!);
+            (TestExecutingResult ExecutingResult, string? ResultMessage)result = (ExecutingResult: TestExecutingResult.Finished, ResultMessage: null);
             var crashed = false;
             if (File.Exists(listener.TestLog.FullPath))
             {
