@@ -4,12 +4,12 @@ set -e
 
 version='1.0.0-ci'
 
-export DOTNET_CLI_TELEMETRY_OPTOUT=true
-export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
-
 # Clean the NuGet cache from the previous 1.0.0-ci version of the tool
 # TODO: This might have a better solution: https://github.com/dotnet/xharness/issues/123
 echo "Cleaning the NuGet cache from the previous version of the tool..."
+
+# Call dotnet to get rid of the welcome message since the nuget command doesn't respect the --no-logo
+dotnet nuget locals All -l
 cache_dirs=`dotnet nuget locals All -l | cut -d':' -f 2 | tr -d ' '`
 while IFS= read -r path; do
     echo "Purging cache in $path..."
