@@ -1,3 +1,4 @@
+#nullable enable
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -34,39 +35,38 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             if (!File.Exists(path))
                 return false;
 
-            using (var stream = File.OpenText(path))
-            {
-                string line;
-                while ((line = stream.ReadLine()) != null)
-                { // special case when get got the tcp connection
-                    if (line.Contains("ping"))
-                        continue;
-                    if (line.Contains("test-run"))
-                    { // first element of the NUnitV3 test collection
-                        type = XmlResultJargon.NUnitV3;
-                        return true;
-                    }
-                    if (line.Contains("TouchUnitTestRun"))
-                    {
-                        type = XmlResultJargon.TouchUnit;
-                        return true;
-                    }
-                    if (line.Contains("test-results"))
-                    { // first element of the NUnitV3 test collection
-                        type = XmlResultJargon.NUnitV2;
-                        return true;
-                    }
-                    if (line.Contains("<assemblies>"))
-                    { // first element of the xUnit test collection
-                        type = XmlResultJargon.xUnit;
-                        return true;
-                    }
+            using var stream = File.OpenText(path);
+            string? line;
+            while ((line = stream.ReadLine()) != null)
+            { // special case when get got the tcp connection
+                if (line.Contains("ping"))
+                    continue;
+                if (line.Contains("test-run"))
+                { // first element of the NUnitV3 test collection
+                    type = XmlResultJargon.NUnitV3;
+                    return true;
+                }
+                if (line.Contains("TouchUnitTestRun"))
+                {
+                    type = XmlResultJargon.TouchUnit;
+                    return true;
+                }
+                if (line.Contains("test-results"))
+                { // first element of the NUnitV3 test collection
+                    type = XmlResultJargon.NUnitV2;
+                    return true;
+                }
+                if (line.Contains("<assemblies>"))
+                { // first element of the xUnit test collection
+                    type = XmlResultJargon.xUnit;
+                    return true;
                 }
             }
+
             return false;
         }
 
-        static (string resultLine, bool failed) ParseNUnitV3Xml(StreamReader stream, StreamWriter writer)
+        static (string resultLine, bool failed) ParseNUnitV3Xml(StreamReader stream, StreamWriter? writer)
         {
             long testcasecount, passed, failed, inconclusive, skipped;
             bool failedTestRun = false; // result = "Failed"
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return (resultLine, failedTestRun);
         }
 
-        static (string resultLine, bool failed) ParseTouchUnitXml(StreamReader stream, StreamWriter writer)
+        static (string resultLine, bool failed) ParseTouchUnitXml(StreamReader stream, StreamWriter? writer)
         {
             long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
             total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return (resultLine, total == 0 || errors != 0 || failed != 0);
         }
 
-        static (string resultLine, bool failed) ParseNUnitXml(StreamReader stream, StreamWriter writer)
+        static (string resultLine, bool failed) ParseNUnitXml(StreamReader stream, StreamWriter? writer)
         {
             long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
             total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
@@ -253,7 +253,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return (resultLine, total == 0 | errors != 0 || failed != 0);
         }
 
-        static (string resultLine, bool failed) ParsexUnitXml(StreamReader stream, StreamWriter writer)
+        static (string resultLine, bool failed) ParsexUnitXml(StreamReader stream, StreamWriter? writer)
         {
             long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
             total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
@@ -343,7 +343,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             using (var reader = new StreamReader(source))
             using (var writer = new StreamWriter(destination))
             {
-                string line;
+                string? line;
                 while ((line = reader.ReadLine()) != null)
                 {
                     if (line.StartsWith("ping", StringComparison.Ordinal) || line.Contains("TouchUnitTestRun") || line.Contains("NUnitOutput") || line.Contains("<!--")) continue;
@@ -356,9 +356,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        public (string resultLine, bool failed) ParseResults(string source, XmlResultJargon xmlType, string humanReadableReportDestination = null)
+        public (string resultLine, bool failed) ParseResults(string source, XmlResultJargon xmlType, string? humanReadableReportDestination = null)
         {
-            StreamWriter writer = null;
+            StreamWriter? writer = null;
             if (humanReadableReportDestination != null)
             {
                 writer = new StreamWriter(humanReadableReportDestination, true);
@@ -676,7 +676,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             ("skipped", "0"),
             ("asserts", "0"));
 
-        static void WriteFailure(XmlWriter writer, string message, StreamReader stderr = null)
+        static void WriteFailure(XmlWriter writer, string message, TextReader? stderr = null)
         {
             writer.WriteStartElement("failure");
             writer.WriteStartElement("message");
@@ -691,7 +691,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             writer.WriteEndElement(); // failure
         }
 
-        static void GenerateNUnitV3Failure(XmlWriter writer, string title, string message, StreamReader stderr)
+        static void GenerateNUnitV3Failure(XmlWriter writer, string title, string message, TextReader stderr)
         {
             var date = DateTime.Now;
             writer.WriteStartElement("test-run");
@@ -780,11 +780,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             writer.WriteEndElement(); // assemblies
         }
 
-        static void GenerateFailureXml(string destination, string title, string message, string stderrPath, XmlResultJargon jargon)
+        static void GenerateFailureXml(string destination, string title, string message, StreamReader stderrReader, XmlResultJargon jargon)
         {
             XmlWriterSettings settings = new XmlWriterSettings { Indent = true };
             using (var stream = File.CreateText(destination))
-            using (var stderrReader = new StreamReader(stderrPath))
             using (var xmlWriter = XmlWriter.Create(stream, settings))
             {
                 xmlWriter.WriteStartDocument();
@@ -806,24 +805,36 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         public void GenerateFailure(ILogs logs, string source, string appName, string variation, string title, string message, string stderrPath, XmlResultJargon jargon)
         {
+            using var stderrReader = new StreamReader(stderrPath);
+            GenerateFailure(logs, source, appName, variation, title, message, stderrReader, jargon);
+        }
+
+        public void GenerateFailure(ILogs logs, string source, string appName, string variation, string title,
+            string message, StreamReader stderrReader, XmlResultJargon jargon)
+        {
             // VSTS does not provide a nice way to report build errors, create a fake
             // test result with a failure in the case the build did not work
             var failureLogXml = logs.Create($"vsts-nunit-{source}-{helpers.Timestamp}.xml", LogType.XmlLog.ToString());
             if (jargon == XmlResultJargon.NUnitV3)
             {
                 var failureXmlTmp = logs.Create($"nunit-{source}-{helpers.Timestamp}.tmp", "Failure Log tmp");
-                GenerateFailureXml(failureXmlTmp.FullPath, title, message, stderrPath, jargon);
+                GenerateFailureXml(failureXmlTmp.FullPath, title, message, stderrReader, jargon);
                 // add the required attachments and the info of the application that failed to install
                 var failure_logs = Directory.GetFiles(logs.Directory).Where(p => !p.Contains("nunit")); // all logs but ourself
                 UpdateMissingData(failureXmlTmp.FullPath, failureLogXml.FullPath, $"{appName} {variation}", failure_logs);
             }
             else
             {
-                GenerateFailureXml(failureLogXml.FullPath, title, message, stderrPath, jargon);
+                GenerateFailureXml(failureLogXml.FullPath, title, message, stderrReader, jargon);
             }
         }
 
         public static string GetVSTSFilename(string filename)
-            => Path.Combine(Path.GetDirectoryName(filename), $"vsts-{Path.GetFileName(filename)}");
+        {
+            if (filename == null)
+                throw new ArgumentNullException(nameof(filename));
+            var dirName = Path.GetDirectoryName(filename);
+            return dirName == null ? $"vsts-{Path.GetFileName(filename)}" : Path.Combine(dirName, $"vsts-{Path.GetFileName(filename)}");
+        }
     }
 }

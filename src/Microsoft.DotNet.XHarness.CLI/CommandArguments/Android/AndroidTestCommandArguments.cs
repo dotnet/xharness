@@ -28,6 +28,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         }
 
         /// <summary>
+        /// If specified, attempt to run on a compatible attached device, failing if unavailable.
+        /// If not specified, we will open the apk using Zip APIs and guess what's usable based off folders found in under /lib
+        /// </summary>
+        public string? DeviceArchitecture { get; set; }
+
+        /// <summary>
         /// Folder to copy off for output of executing the specified APK
         /// </summary>
         public string? DeviceOutputFolder { get; set; }
@@ -36,6 +42,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         protected override OptionSet GetTestCommandOptions() => new OptionSet
         {
+            { "device-arch=", "If specified, only run on a device with the listed architecture (x86, x86-64, or arm64-v8a).  Otherwise infer from supplied APK",
+                v => DeviceArchitecture = v
+            },
             { "device-out-folder=|dev-out=", "If specified, copy this folder recursively off the device to the path specified by the output directory",
                 v => DeviceOutputFolder = RootPath(v)
             },

@@ -141,16 +141,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             if (args == null || args.Message == null)
                 return;
 
-            SkippedTests++;
-            OnInfo($"\t[IGNORED] {args.Message.TestCase.DisplayName}");
-            LogTestDetails(args.Message.Test, log: OnDebug);
-            LogTestOutput(args.Message, log: OnDiagnostic);
-            ReportTestCases("   Associated", args.Message.TestCases, log: OnDiagnostic);
-            // notify that the test completed because it was skipped
-            OnTestCompleted((
-                TestName: args.Message.Test.DisplayName,
-                TestResult: TestResult.Skipped
-            ));
+            RaiseTestSkippedCase(args.Message, args.Message.TestCases, args.Message.TestCase);
         }
 
         void HandleTestPassed(MessageHandlerArgs<ITestPassed> args)
@@ -228,6 +219,13 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
         {
             if (args == null || args.Message == null)
                 return;
+
+            // For SkipTestExceptions, we treat as a skip instead of a failure
+            var exceptionType = args.Message.ExceptionTypes.FirstOrDefault();
+            if (exceptionType == "Microsoft.DotNet.XUnitExtensions.SkipTestException")
+            {
+                RaiseTestSkippedCase(args.Message, args.Message.TestCases, args.Message.TestCase);
+            }
 
             FailedTests++;
             string assemblyInfo = GetAssemblyInfo(args.Message.TestAssembly);
@@ -575,6 +573,20 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             ITestCase singleTestCase = args.Message.TestCase;
             ReportTestCases("Discovered", args.Message.TestCases, log: OnInfo, ignore: (ITestCase tc) => tc == singleTestCase);
             ReportTestCase("Discovered", singleTestCase, log: OnInfo);
+        }
+
+        void RaiseTestSkippedCase(ITestResultMessage message, IEnumerable<ITestCase> testCases, ITestCase testCase)
+        {
+            SkippedTests++;
+            OnInfo($"\t[IGNORED] {testCase.DisplayName}");
+            LogTestDetails(message.Test, log: OnDebug);
+            LogTestOutput(message, log: OnDiagnostic);
+            ReportTestCases("   Associated", testCases, log: OnDiagnostic);
+            // notify that the test completed because it was skipped
+            OnTestCompleted((
+                TestName: message.Test.DisplayName,
+                TestResult: TestResult.Skipped
+            ));
         }
 
         void ReportTestCases(string verb, IEnumerable<ITestCase> testCases, ITestCase ignoreTestCase, Action<string> log = null)
