@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.iOS;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
@@ -17,6 +17,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
     public class AppInstallerTests : IDisposable
     {
         private static readonly string s_appPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        static readonly string s_appIdentifier = Guid.NewGuid().ToString();
         private static readonly IHardwareDevice s_mockDevice = new Device(
             buildVersion: "17A577",
             deviceClass: DeviceClass.iPhone,
@@ -29,6 +30,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
         readonly Mock<IProcessManager> _processManager;
         readonly Mock<ILog> _mainLog;
+        readonly AppBundleInformation _appBundleInformation;
         private Mock<IHardwareDeviceLoader> _hardwareDeviceLoader;
 
         public AppInstallerTests()
@@ -40,10 +42,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             _hardwareDeviceLoader = new Mock<IHardwareDeviceLoader>();
             _hardwareDeviceLoader
-                .Setup(x => x.FindDevice(RunMode.iOS, _mainLog.Object, false, false))
-                .ReturnsAsync(s_mockDevice);
+                .Setup(x => x.Connected64BitIOS).Returns(new List<IHardwareDevice> {s_mockDevice});
 
             Directory.CreateDirectory(s_appPath);
+            _appBundleInformation = new AppBundleInformation(
+                appName: "AppName",
+                bundleIdentifier: s_appIdentifier,
+                appPath: s_appPath,
+                launchAppPath:s_appPath,
+                supports32b: false,
+                extension: null);
         }
 
         public void Dispose()
@@ -57,7 +65,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 1);
 
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await appInstaller.InstallApp(s_appPath, TestTarget.Simulator_iOS64));
+                async () => await appInstaller.InstallApp(_appBundleInformation, TestTarget.Simulator_iOS64));
         }
 
         [Fact]
@@ -71,7 +79,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 1);
 
             await Assert.ThrowsAsync<NoDeviceFoundException>(
-                async () => await appInstaller.InstallApp(s_appPath, TestTarget.Device_iOS));
+                async () => await appInstaller.InstallApp(_appBundleInformation, TestTarget.Device_iOS));
         }
 
         [Fact]
@@ -80,7 +88,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             // Act
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 2);
 
-            var (deviceName, result) = await appInstaller.InstallApp(s_appPath, TestTarget.Device_iOS);
+            var (deviceName, result) = await appInstaller.InstallApp(_appBundleInformation, TestTarget.Device_iOS);
 
             // Verify
             Assert.Equal(0, result.ExitCode);
@@ -102,7 +110,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             // Act
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 2);
 
-            var (deviceName, result) = await appInstaller.InstallApp(s_appPath, TestTarget.Device_iOS, deviceName: "OtherDevice");
+            var (deviceName, result) = await appInstaller.InstallApp(_appBundleInformation, TestTarget.Device_iOS, deviceName: "OtherDevice");
 
             // Verify
             Assert.Equal(0, result.ExitCode);
@@ -116,6 +124,23 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                It.IsAny<TimeSpan>(),
                null,
                It.IsAny<CancellationToken>()));
+        }
+
+        [Fact]
+        public async Task InstallOn32bMissingDevice()
+        {
+            var appBundle32b = new AppBundleInformation(
+                appName: "AppName",
+                bundleIdentifier: s_appIdentifier,
+                appPath: s_appPath,
+                launchAppPath:s_appPath,
+                supports32b: true,
+                extension: null);
+
+            var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 1);
+
+            await Assert.ThrowsAsync<NoDeviceFoundException>(
+                async () => await appInstaller.InstallApp(appBundle32b, TestTarget.Device_iOS));
         }
     }
 }
