@@ -7,6 +7,7 @@ version='1.0.0-ci'
 # Clean the NuGet cache from the previous 1.0.0-ci version of the tool
 # TODO: This might have a better solution: https://github.com/dotnet/xharness/issues/123
 echo "Cleaning the NuGet cache from the previous version of the tool..."
+dotnet --version # --no-logo doesn't seem to work anymore
 cache_dirs=`dotnet nuget locals All -l | cut -d':' -f 2 | tr -d ' '`
 while IFS= read -r path; do
     echo "Purging cache in $path..."
