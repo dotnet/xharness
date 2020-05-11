@@ -198,7 +198,7 @@ stages:
           HelixType: test/product/
           IncludeDotNetCli: true
           DotNetCliPackageType: sdk
-          DotNetCliVersion: 5.0.100-preview.3.20216.6
+          DotNetCliVersion: 5.0.0-preview.5.20230.9
           WaitForWorkItemCompletion: true
           HelixTargetQueues: osx.1015.amd64.ios.open
           Creator: xharness
