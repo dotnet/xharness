@@ -41,7 +41,7 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
 # We have to call this otherwise mlaunch fails to spawn it properly
 open -a /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
 
-dotnet tool restore
+dotnet tool restore --no-cache
 dotnet xharness ios test           \
     --app="$here/$app_name"        \
     --output-directory="$1"        \
