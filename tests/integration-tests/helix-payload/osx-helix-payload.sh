@@ -44,3 +44,17 @@ dotnet xharness ios test \
     --timeout=600 \
     --launch-timeout=360 \
     --communication-channel=Network
+
+result=$?
+
+test_results=`ls $1/xunit-*`
+
+if [ ! -f "$test_results" ]; then
+    echo "Failed to find xUnit tests results in the output directory. Existing files:"
+    ls -la $1
+    exit 1
+fi
+
+mv $1/$test_results $1/testResults.xml
+
+exit $?
