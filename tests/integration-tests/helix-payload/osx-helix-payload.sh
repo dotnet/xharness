@@ -55,6 +55,8 @@ if [ ! -f "$test_results" ]; then
     exit 1
 fi
 
+echo "Found test results in $1/$test_results. Renaming to testResults.xml"
+
 mv $1/$test_results $1/testResults.xml
 
 exit $?
