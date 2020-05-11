@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                 try
                 {
-                    (deviceName, result) = await appInstaller.InstallApp(_arguments.AppPackagePath, target, cancellationToken: cancellationToken);
+                    (deviceName, result) = await appInstaller.InstallApp(appBundleInfo, target, cancellationToken: cancellationToken);
                 }
                 catch (NoDeviceFoundException)
                 {

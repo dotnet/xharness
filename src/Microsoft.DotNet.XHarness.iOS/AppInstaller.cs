@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             _verbosity = verbosity;
         }
 
-        public async Task<(string deviceName, ProcessExecutionResult result)> InstallApp(string appPath, TestTarget target, string? deviceName = null, CancellationToken cancellationToken = default)
+        public async Task<(string deviceName, ProcessExecutionResult result)> InstallApp(AppBundleInformation appBundleInformation, TestTarget target, string? deviceName = null, CancellationToken cancellationToken = default)
         {
             if (target.IsSimulator())
             {
@@ -38,23 +38,34 @@ namespace Microsoft.DotNet.XHarness.iOS
                 throw new InvalidOperationException("Installing to a simulator is not supported.");
             }
 
-            if (!Directory.Exists(appPath))
+            if (!Directory.Exists(appBundleInformation.LaunchAppPath))
             {
                 throw new DirectoryNotFoundException("Failed to find the app bundle directory");
             }
 
             if (deviceName == null)
             {
-                var device = await _deviceLoader.FindDevice(target.ToRunMode(), _mainLog, false, false);
-
-                if (target.IsWatchOSTarget())
+                // the _deviceLoader.FindDevice will return the fist device of the type, but we want to make sure that
+                // the device we use is if the correct arch, therefore, we will use the LoadDevices and return the
+                // correct one
+                await _deviceLoader.LoadDevices(_mainLog, false, false);
+                IHardwareDevice? device = null;
+                if (appBundleInformation.Supports32Bit)
                 {
-                    deviceName = (await _deviceLoader.FindCompanionDevice(_mainLog, device)).Name;
+                    // we only support 32b on iOS, therefore we can ignore the target
+                    device = _deviceLoader.Connected32BitIOS.FirstOrDefault();
                 }
                 else
                 {
-                    deviceName = device.Name;
+                    device = target switch
+                    {
+                        TestTarget.Device_iOS => _deviceLoader.Connected64BitIOS.FirstOrDefault(),
+                        TestTarget.Device_tvOS => _deviceLoader.ConnectedTV.FirstOrDefault(),
+                        _ => device
+                    };
                 }
+
+                deviceName = target.IsWatchOSTarget() ? (await _deviceLoader.FindCompanionDevice(_mainLog, device)).Name : device?.Name;
             }
 
             if (deviceName == null)
@@ -69,7 +80,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 args.Add(new VerbosityArgument());
             }
 
-            args.Add(new InstallAppOnDeviceArgument(appPath));
+            args.Add(new InstallAppOnDeviceArgument(appBundleInformation.LaunchAppPath));
             args.Add(new DeviceNameArgument(deviceName));
 
             if (target.IsWatchOSTarget())
@@ -77,8 +88,8 @@ namespace Microsoft.DotNet.XHarness.iOS
                 args.Add(new DeviceArgument("ios,watchos"));
             }
 
-            var totalSize = Directory.GetFiles(appPath, "*", SearchOption.AllDirectories).Select((v) => new FileInfo(v).Length).Sum();
-            _mainLog.WriteLine($"Installing '{appPath}' to '{deviceName}' ({totalSize / 1024.0 / 1024.0:N2} MB)");
+            var totalSize = Directory.GetFiles(appBundleInformation.LaunchAppPath, "*", SearchOption.AllDirectories).Select((v) => new FileInfo(v).Length).Sum();
+            _mainLog.WriteLine($"Installing '{appBundleInformation.LaunchAppPath}' to '{deviceName}' ({totalSize / 1024.0 / 1024.0:N2} MB)");
 
             ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(args, _mainLog, TimeSpan.FromHours(1), cancellationToken: cancellationToken);
 
