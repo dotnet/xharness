@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
             }
             else
             {
-                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath).FirstOrDefault();
+                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath).First();
                 logger.LogInformation($"Will attempt to run device on detected architecture: '{apkRequiredArchitecture}'");
             }
 
