@@ -4,16 +4,18 @@ set -e
 
 version='1.0.0-ci'
 
+export DOTNET_CLI_TELEMETRY_OPTOUT=true
+export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
+
 # Clean the NuGet cache from the previous 1.0.0-ci version of the tool
 # TODO: This might have a better solution: https://github.com/dotnet/xharness/issues/123
 echo "Cleaning the NuGet cache from the previous version of the tool..."
-dotnet --version # --no-logo doesn't seem to work anymore
 cache_dirs=`dotnet nuget locals All -l | cut -d':' -f 2 | tr -d ' '`
 while IFS= read -r path; do
     echo "Purging cache in $path..."
     rm -vrf "$path/microsoft.dotnet.xharness.cli/$version"
     rm -vrf "$path/Microsoft.DotNet.XHarness.CLI/$version"
-done <<< $cache_dirs
+done <<< "$cache_dirs"
 
 set -x
 
@@ -47,6 +49,8 @@ dotnet xharness ios test           \
     --launch-timeout=360           \
     --communication-channel=Network
 
+set +e
+
 result=$?
 
 test_results=`ls $1/xunit-*.xml`
@@ -59,6 +63,6 @@ fi
 
 echo "Found test results in $1/$test_results. Renaming to testResults.xml"
 
-mv $1/$test_results $1/testResults.xml
+mv $test_results $1/testResults.xml
 
 exit $?
