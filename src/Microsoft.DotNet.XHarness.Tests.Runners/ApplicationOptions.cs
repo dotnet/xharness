@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         /// <summary>
         /// Specify the version of Xml to be used for the results.
         /// </summary>
-        public XmlVersion XmlVersion { get; set; } = XmlVersion.NUnitV2;
+        public XmlVersion XmlVersion { get; set; } = XmlVersion.xUnit;
 
         /// <summary>
         /// Return the test results as xml.
