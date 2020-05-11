@@ -9,9 +9,10 @@ version='1.0.0-ci'
 echo "Cleaning the NuGet cache from the previous version of the tool..."
 cache_dirs=`dotnet nuget locals All -l | cut -d':' -f 2 | tr -d ' '`
 while IFS= read -r path; do
-    rm -rf "$path/microsoft.dotnet.xharness.cli/$version"
-    rm -rf "$path/Microsoft.DotNet.XHarness.CLI/$version"
-done <<< "$cache_dirs"
+    echo "Purging cache in $path..."
+    rm -vrf "$path/microsoft.dotnet.xharness.cli/$version"
+    rm -vrf "$path/Microsoft.DotNet.XHarness.CLI/$version"
+done <<< $cache_dirs
 
 set -x
 
@@ -37,17 +38,17 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
 # We have to call this otherwise mlaunch fails to spawn it properly
 open -a /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
 
-dotnet xharness ios test \
-    --app="$here/$app_name" \
-    --output-directory="$1" \
-    --targets=ios-simulator-64 \
-    --timeout=600 \
-    --launch-timeout=360 \
+dotnet xharness ios test           \
+    --app="$here/$app_name"        \
+    --output-directory="$1"        \
+    --targets=ios-simulator-64     \
+    --timeout=600                  \
+    --launch-timeout=360           \
     --communication-channel=Network
 
 result=$?
 
-test_results=`ls $1/xunit-*`
+test_results=`ls $1/xunit-*.xml`
 
 if [ ! -f "$test_results" ]; then
     echo "Failed to find xUnit tests results in the output directory. Existing files:"
