@@ -39,7 +39,8 @@ export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
 # We have to call this otherwise mlaunch fails to spawn it properly
-open -a /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
+xcode_path=`xcode-select -p`
+open -a $xcode_path/Applications/Simulator.app
 
 dotnet tool restore --no-cache
 dotnet xharness ios test           \
