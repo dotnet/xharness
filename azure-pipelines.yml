@@ -34,8 +34,8 @@ pr:
     - master
 
 stages:
-- stage: build
-  displayName: Build
+- stage: Build_Windows_NT
+  displayName: Build Windows
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
@@ -101,6 +101,20 @@ stages:
           continueOnError: true
           condition: always()
 
+- stage: Build_OSX
+  displayName: Build OSX
+  dependsOn:
+  jobs:
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableTelemetry: true
+      enablePublishBuildArtifacts: true
+      enableMicrobuild: true
+      enablePublishUsingPipelines: true
+      enablePublishBuildAssets: true
+      helixRepo: dotnet/xharness
+
+      jobs:
       - job: OSX
         pool:
           name: Hosted macOS
@@ -131,6 +145,20 @@ stages:
             displayName: Build and run tests
             condition: succeeded()
 
+          - bash: |
+              targetDir=$(Build.ArtifactStagingDirectory)/OSX.IntegrationTests.$(_BuildConfig)
+              mkdir $targetDir
+              cp tests/integration-tests/helix-payload/* $targetDir
+              cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI* $targetDir
+            displayName: Prepare the IntegrationTests artifact
+            workingDirectory: $(Build.SourcesDirectory)
+            condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
+
+          - publish: $(Build.ArtifactStagingDirectory)/OSX.IntegrationTests.$(_BuildConfig)
+            artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.$(_BuildConfig)
+            displayName: Publish the tool artifact
+            condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
+
           - task: PublishTestResults@2
             displayName: 'Publish Unit Test Results'
             inputs:
@@ -150,12 +178,44 @@ stages:
           continueOnError: true
           condition: always()
 
+- ${{ if eq(variables._RunAsPublic, True) }}:
+  - stage: test
+    displayName: Run Integration Tests
+    dependsOn: Build_OSX
+    jobs:
+    - job: integration_tests
+      displayName: iOS Integration Tests
+      pool:
+        name: Hosted macOS
+      steps:
+      - download: current
+        artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
+
+      - template: /eng/common/templates/steps/send-to-helix.yml
+        parameters:
+          DisplayNamePrefix: Run Tests
+          HelixBaseUri: https://helix.int-dot.net/
+          HelixType: test/product/
+          IncludeDotNetCli: true
+          DotNetCliPackageType: sdk
+          DotNetCliVersion: 5.0.100-preview.5.20251.2
+          WaitForWorkItemCompletion: true
+          HelixTargetQueues: osx.1015.amd64.ios.open
+          Creator: xharness
+          WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
+          WorkItemCommand: sudo launchctl asuser `id -u` sh osx-helix-payload.sh $HELIX_WORKITEM_UPLOAD_ROOT
+          WorkItemTimeout: 00:12:00
+
+
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
       enableSymbolValidation: true
       # Reenable once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false
+      validateDependsOn:
+      - Build_Windows_NT
+      - Build_OSX
       publishDependsOn:
       - Validate
       # This is to enable SDL runs part of Post-Build Validation Stage
