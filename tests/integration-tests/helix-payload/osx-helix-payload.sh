@@ -42,13 +42,14 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
 open -a /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
 
 dotnet tool restore --no-cache
-dotnet xharness ios test           \
-    --app="$here/$app_name"        \
-    --output-directory="$1"        \
-    --targets=ios-simulator-64     \
-    --timeout=600                  \
-    --launch-timeout=360           \
-    --communication-channel=Network
+dotnet xharness ios test            \
+    --app="$here/$app_name"         \
+    --output-directory="$1"         \
+    --targets=ios-simulator-64      \
+    --timeout=600                   \
+    --launch-timeout=360            \
+    --communication-channel=Network \
+    -v
 
 set +e
 
