@@ -6,6 +6,7 @@ using System;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.Commands.iOS;
+using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI
@@ -24,6 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI
                 // Add per-platform CommandSets - If adding  a new supported set, that goes here.
                 new iOSCommandSet(),
                 new AndroidCommandSet(),
+                new WasmCommandSet(),
 
                 // add shared commands, for example, help and so on. --version, --help, --verbosity and so on
                 new XHarnessHelpCommand(),
