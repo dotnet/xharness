@@ -550,6 +550,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
         private static ILoggerFactory CreateLoggerFactory(LogLevel verbosity, bool checkOnly) =>
             LoggerFactory.Create(builder =>
             {
+                // For the --only-check mode, we want to turn off logging as it should print not installed simulators only
                 if (!checkOnly)
                 {
                     builder.AddConsole(options => options.TimestampFormat = "[HH:mm:ss] ");
