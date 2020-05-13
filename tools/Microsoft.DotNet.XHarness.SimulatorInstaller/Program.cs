@@ -26,41 +26,26 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
     /// </summary>
     public static class Program
     {
+        private enum Command
+        {
+            Unknown,
+            Install,
+            Find,
+            List,
+            Help,
+        }
+
         private static ProcessManager s_processManager = new ProcessManager();
         private static ILogger? s_logger = null!;
 
-        private static bool s_printSimulators;
-        private static int s_verbose;
+        private static bool s_listSimulators;
 
-        private static string TempDirectory
+        private static Command ParseCommand(string command) => command.ToLowerInvariant() switch
         {
-            get
-            {
-                string? path = Path.Combine(Path.GetTempPath(), "x-provisioning");
-
-                if (!Directory.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
-                }
-
-                return path;
-            }
-        }
-
-        private static async Task<(bool Succeeded, string Stdout)> ExecuteCommand(string filename, TimeSpan? timeout = null, params string[] arguments)
-        {
-            var stdoutLog = new MemoryLog() { Timestamp = false };
-            var stderrLog = new MemoryLog() { Timestamp = false };
-
-            var result = await s_processManager.ExecuteCommandAsync(filename, arguments, new CallbackLog(m => s_logger.LogDebug(m)), stdoutLog, stderrLog, timeout ?? TimeSpan.FromSeconds(30));
-
-            string stderr = stderrLog.ToString();
-            if (stderr.Length > 0)
-            {
-                s_logger.LogDebug("Error output: " + stderr);
-            }
-
-            return (result.Succeeded, stdoutLog.ToString());
+            "install" => Command.Install,
+            "find" => Command.Find,
+            "list" => Command.List,
+            ""
         }
 
         public static async Task<int> Main(string[] args)
@@ -68,18 +53,17 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
             var exitCode = 0;
             string? xCodeRoot = null;
             var simulatorsToInstall = new List<string>();
-            var checkOnly = false;
-            var force = false;
-            var help = false;
+            var verbosity = LogLevel.Information;
 
             var options = new OptionSet
             {
-                { "xcode=", "Path to where Xcode is located, e.g. /Application/Xcode114.app", v => xCodeRoot = v },
-                { "install=", "ID of simulator to install. Can be repeated multiple times.", v => simulatorsToInstall.Add (v) },
-                { "only-check", "Only check if the simulators are installed or not. Prints the name of any missing simulators, and returns 1 if any non-installed simulators were found.", v => checkOnly = true },
-                { "print-simulators", "Print all detected simulators.", v => s_printSimulators = true },
-                { "f|force", "Install again even if already installed.", v => force = true },
-                { "v|verbose", "Increase verbosity", v => s_verbose++ },
+                { "s|simulator=", "ID of the Simulator to install. Repeat multiple times to define more", v => simulatorsToInstall.Add (v) },
+                { "xcode=", "Path to where Xcode is located, e.g. /Application/Xcode114.app. If not set, xcode-select is used to determine the location", v => xCodeRoot = v },
+                { "f|find", "Find if supplied simulators are installed or not. Prints the name of any missing simulators and returns 1 if any non-installed simulators found", v => find = true },
+                { "i|install", "Installs given simulators", v => install = true },
+                { "l|list", "Print all detected simulators", v => s_listSimulators = true },
+                { "force", "Install again even if already installed", v => force = true },
+                { "v|verbose", "Increase verbosity", v => verbosity = LogLevel.Debug },
                 { "h|help", "Print help", v => help = true },
             };
 
@@ -87,6 +71,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 
             if (help)
             {
+                Console.WriteLine("usage: dotnet simulator-installer COMMAND [OPTIONS]");
                 options.WriteOptionDescriptions(Console.Out);
                 return 2;
             }
@@ -97,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                 xCodeRoot = s_processManager.XcodeRoot;
             }
 
-            s_logger = CreateLoggerFactory(s_verbose > 0 ? LogLevel.Debug : LogLevel.Information, checkOnly).CreateLogger("SimulatorInstaller");
+            s_logger = CreateLoggerFactory(verbosity, find).CreateLogger("SimulatorInstaller");
 
             if (others.Count() > 0)
             {
@@ -178,7 +163,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                             {
                                 s_logger.LogError($"The simulator '{name}' is not installed.");
 
-                                if (checkOnly)
+                                if (find)
                                 {
                                     Console.WriteLine(name);
                                 }
@@ -245,7 +230,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                 var installed = false;
                 var updateAvailable = false;
 
-                if (checkOnly && !simulatorsToInstall.Contains(identifier))
+                if (find && !simulatorsToInstall.Contains(identifier))
                 {
                     continue;
                 }
@@ -286,7 +271,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                     simulatorsToInstall.Remove(identifier);
                 }
 
-                if (s_printSimulators)
+                if (s_listSimulators)
                 {
                     var output = new StringBuilder();
                     output.AppendLine(name);
@@ -311,7 +296,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                     s_logger.LogInformation(output.ToString());
                 }
 
-                if (checkOnly)
+                if (find)
                 {
                     if (doInstall)
                     {
@@ -353,7 +338,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                 var message = "Unknown simulators: " + string.Join(", ", simulatorsToInstall);
                 s_logger.LogError(message);
 
-                if (checkOnly)
+                if (find)
                 {
                     Console.WriteLine(message);
                 }
@@ -558,5 +543,36 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 
                 builder.AddFilter(level => level >= verbosity);
             });
+
+        private static string TempDirectory
+        {
+            get
+            {
+                string? path = Path.Combine(Path.GetTempPath(), "x-provisioning");
+
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+
+                return path;
+            }
+        }
+
+        private static async Task<(bool Succeeded, string Stdout)> ExecuteCommand(string filename, TimeSpan? timeout = null, params string[] arguments)
+        {
+            var stdoutLog = new MemoryLog() { Timestamp = false };
+            var stderrLog = new MemoryLog() { Timestamp = false };
+
+            var result = await s_processManager.ExecuteCommandAsync(filename, arguments, new CallbackLog(m => s_logger.LogDebug(m)), stdoutLog, stderrLog, timeout ?? TimeSpan.FromSeconds(30));
+
+            string stderr = stderrLog.ToString();
+            if (stderr.Length > 0)
+            {
+                s_logger.LogDebug("Error output: " + stderr);
+            }
+
+            return (result.Succeeded, stdoutLog.ToString());
+        }
     }
 }
