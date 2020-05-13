@@ -16,7 +16,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
     internal class WasmTestCommand : TestCommand
     {
-        // nunit2 one should go away eventually
         private readonly WasmTestCommandArguments _arguments = new WasmTestCommandArguments();
 
         protected override TestCommandArguments TestArguments => _arguments;
