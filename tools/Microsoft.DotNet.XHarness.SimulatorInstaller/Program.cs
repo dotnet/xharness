@@ -318,14 +318,14 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                             s_logger.LogDebug($"The simulator '{name}' is not installed.");
                         }
                         exitCode = 1;
+
+                        // If we provide --check-only, we want a human readable list out
+                        Console.WriteLine(name);
                     }
                     else
                     {
                         s_logger.LogDebug($"The simulator '{name}' is installed.");
                     }
-
-                    // If we provide --check-only, we want a human readable list out
-                    Console.WriteLine(name);
                 }
                 if (doInstall && !checkOnly)
                 {
