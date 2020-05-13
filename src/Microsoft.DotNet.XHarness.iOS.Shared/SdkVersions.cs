@@ -20,12 +20,12 @@
 		public static string MinTVOSSimulator { get; private set; } = "10.2";
 
 		public static string MaxiOSSimulator { get; private set; } = "13.4";
-		public static string MaxWatchOSSimulator { get; private set; } = "6.1";
+		public static string MaxWatchOSSimulator { get; private set; } = "6.2";
 		public static string MaxWatchOSCompanionSimulator { get; private set; } = "13.4";
 
 		public static string MaxTVOSSimulator { get; private set; } = "13.4";
 		public static string MaxiOSDeploymentTarget { get; private set; } = "13.4";
-		public static string MaxWatchDeploymentTarget { get; private set; } = "6.1";
+		public static string MaxWatchDeploymentTarget { get; private set; } = "6.2";
 		public static string MaxTVOSDeploymentTarget { get; private set; } = "13.4";
 
 		public static void OverrideVersions (string xcode,
