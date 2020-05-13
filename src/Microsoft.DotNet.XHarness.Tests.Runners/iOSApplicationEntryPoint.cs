@@ -35,18 +35,9 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
             // if we have ignore files, ignore those tests
             var runner = await InternalRunAsync(logger);
 
-            TestRunner.Jargon jargon = options.XmlVersion.ToTestRunnerJargon();
+            ConfigureRunner(runner, options);
 
-            if (options.EnableXml)
-            {
-                runner.WriteResultsToFile(writer ?? Console.Out, jargon);
-                logger.Info("Xml file was written to the tcp listener.");
-            }
-            else
-            {
-                string resultsFilePath = runner.WriteResultsToFile(jargon);
-                logger.Info($"Xml result can be found {resultsFilePath}");
-            }
+            WriteResults(runner, options, logger, writer);
 
             logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests + runner.SkippedTests}");
 
