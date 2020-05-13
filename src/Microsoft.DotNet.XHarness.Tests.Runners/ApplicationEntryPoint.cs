@@ -4,8 +4,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using Microsoft.DotNet.XHarness.Tests.Runners.Core;
 using Microsoft.DotNet.XHarness.Tests.Runners.Xunit;
 
@@ -161,6 +163,30 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
             }
 
             return categories;
+        }
+
+        internal static void ConfigureRunner(TestRunner runner, ApplicationOptions options)
+        {
+            runner.RunAllTestsByDefault = options.RunAllTestsByDefault;
+        }
+
+        internal static string WriteResults(TestRunner runner, ApplicationOptions options, LogWriter logger, TextWriter writer = null)
+        {
+            TestRunner.Jargon jargon = options.XmlVersion.ToTestRunnerJargon();
+            string resultsFilePath = null;
+
+            if (options.EnableXml)
+            {
+                runner.WriteResultsToFile(writer ?? Console.Out, jargon);
+                logger.Info("Xml file was written to the tcp listener.");
+            }
+            else
+            {
+                resultsFilePath = runner.WriteResultsToFile(jargon);
+                logger.Info($"XML results can be found in '{resultsFilePath}'");
+            }
+
+            return resultsFilePath;
         }
 
         protected async Task<TestRunner> InternalRunAsync (LogWriter logger)
