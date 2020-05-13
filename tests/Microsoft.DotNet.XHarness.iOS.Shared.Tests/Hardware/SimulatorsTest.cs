@@ -79,6 +79,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                 string line;
                 while ((line = sampleStream.ReadLine()) != null)
                 {
+                    line = line.Replace("{{MAX-IOS.VERSION}}", SdkVersions.MaxiOSDeploymentTarget);
+                    line = line.Replace("{{MAX-IOS-VERSION}}", SdkVersions.MaxiOSDeploymentTarget.Replace(".", "-"));
+
+                    line = line.Replace("{{MAX-WATCH.VERSION}}", SdkVersions.MaxWatchDeploymentTarget);
+                    line = line.Replace("{{MAX-WATCH-VERSION}}", SdkVersions.MaxWatchDeploymentTarget.Replace(".", "-"));
+
+                    line = line.Replace("{{MAX-TVOS.VERSION}}", SdkVersions.MaxTVOSDeploymentTarget);
+                    line = line.Replace("{{MAX-TVOS-VERSION}}", SdkVersions.MaxTVOSDeploymentTarget.Replace(".", "-"));
+
                     outputStream.WriteLine(line);
                 }
             }
