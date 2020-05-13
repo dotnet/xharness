@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
             string stderr = stderrLog.ToString();
             if (stderr.Length > 0)
             {
-                s_logger.LogWarning("Error output: " + stderr);
+                s_logger.LogDebug("Error output: " + stderr);
             }
 
             return (result.Succeeded, stdoutLog.ToString());
