@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
 {
     class MsgBus : IMessageBus
     {
-        public MsgBus(IMessageSink messageSink, bool stopOnFail = false)
+        public MsgBus(IMessageSink messageSink)
         {
             Sink = messageSink;
         }
@@ -35,11 +35,12 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
 
     class Discoverer : XunitTestFrameworkDiscoverer
     {
-        List<ITestClass> TestClasses;
-        IEnumerator<ITestClass> TestClassesEnumerator;
-        IMessageSink Sink;
-        ITestFrameworkDiscoveryOptions DiscoveryOptions;
-        IXunitTestCollectionFactory TestCollectionFactory;
+        List<ITestClass> _testClasses;
+        IEnumerator<ITestClass> _testClassesEnumerator;
+        IMessageSink _sink;
+        ITestFrameworkDiscoveryOptions _discoveryOptions;
+        IXunitTestCollectionFactory _testCollectionFactory;
+        int _nenumerated;
 
         public Discoverer(IAssemblyInfo assemblyInfo,
                           ISourceInformationProvider sourceProvider,
@@ -48,38 +49,36 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                           IXunitTestCollectionFactory collectionFactory = null)
             : base(assemblyInfo, sourceProvider, diagnosticMessageSink, collectionFactory)
         {
-            TestCollectionFactory = collectionFactory;
-            Sink = diagnosticMessageSink;
-            DiscoveryOptions = discoveryOptions ?? throw new ArgumentNullException($"No value supplied for {nameof(discoveryOptions)} ");
+            _testCollectionFactory = collectionFactory;
+            _sink = diagnosticMessageSink;
+            _discoveryOptions = discoveryOptions ?? throw new ArgumentNullException($"No value supplied for {nameof(discoveryOptions)} ");
 
-            TestClasses = new List<ITestClass>();
+            _testClasses = new List<ITestClass>();
             foreach (var type in AssemblyInfo.GetTypes(false).Where(IsValidTestClass))
-                TestClasses.Add(CreateTestClass(type));
-            TestClassesEnumerator = TestClasses.GetEnumerator();
+                _testClasses.Add(CreateTestClass(type));
+            _testClassesEnumerator = _testClasses.GetEnumerator();
         }
 
         protected override ITestClass CreateTestClass(ITypeInfo @class)
         {
-            return new TestClass(TestCollectionFactory.Get(@class), @class);
+            return new TestClass(_testCollectionFactory.Get(@class), @class);
         }
-
-        int nenumerated;
 
         public bool Step()
         {
-            if (!TestClassesEnumerator.MoveNext())
+            if (!_testClassesEnumerator.MoveNext())
                 return false;
 
-            using (var messageBus = new MsgBus(Sink))
+            using (var messageBus = new MsgBus(_sink))
             {
-                var testClass = TestClassesEnumerator.Current;
+                var testClass = _testClassesEnumerator.Current;
                 //Console.WriteLine (testClass.Class.Name);
                 if (testClass.Class.Name == "System.Threading.ThreadPools.Tests.ThreadPoolTests")
                     // FIXME: This invokes the static ctor which creates threads
                     return true;
                 try
                 {
-                    FindTestsForType(testClass, false, messageBus, DiscoveryOptions);
+                    FindTestsForType(testClass, false, messageBus, _discoveryOptions);
                 }
                 catch (Exception ex)
                 {
@@ -87,9 +86,9 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                 }
             }
 
-            nenumerated++;
-            if (nenumerated % 10 == 0)
-                Console.WriteLine("" + (nenumerated * 100) / TestClasses.Count + "%");
+            _nenumerated++;
+            if (_nenumerated % 10 == 0)
+                Console.WriteLine("" + (_nenumerated * 100) / _testClasses.Count + "%");
 
             return true;
         }
@@ -97,7 +96,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
 
     class WasmRunner : IMessageSink
     {
-        ITestFrameworkDiscoveryOptions DiscoveryOptions;
+        ITestFrameworkDiscoveryOptions _discoveryOptions;
         Discoverer discoverer;
         ITestFrameworkExecutor executor;
         ITestFrameworkExecutionOptions executionOptions;
@@ -125,10 +124,10 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             Console.WriteLine ("DISC2: " + res);
             */
 
-            DiscoveryOptions = TestFrameworkOptions.ForDiscovery(null);
+            _discoveryOptions = TestFrameworkOptions.ForDiscovery(null);
             executionOptions = TestFrameworkOptions.ForExecution(null);
 
-            discoverer = new Discoverer(assemblyInfo, new NullSourceInformationProvider(), this, DiscoveryOptions, collectionFactory);
+            discoverer = new Discoverer(assemblyInfo, new NullSourceInformationProvider(), this, _discoveryOptions, collectionFactory);
 
             executor = new XunitTestFrameworkExecutor(assembly.GetName(), new NullSourceInformationProvider(), this);
         }
@@ -310,7 +309,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                 }
                 else
                 {
-                    if (!String.IsNullOrEmpty(tc.SkipReason))
+                    if (!string.IsNullOrEmpty(tc.SkipReason))
                     {
                         nskipped++;
                         continue;
