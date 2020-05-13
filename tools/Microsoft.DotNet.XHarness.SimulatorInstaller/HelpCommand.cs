@@ -3,40 +3,54 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.DotNet.XHarness.CLI;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments;
-using Microsoft.DotNet.XHarness.CLI.Commands;
-using Microsoft.Extensions.Logging;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 {
-    internal class HelpCommandArguments : XHarnessCommandArguments
+    internal class CustomHelpCommand : HelpCommand
     {
-        protected override OptionSet GetCommandOptions() => new OptionSet();
-
-        public override void Validate()
+        public override int Invoke(IEnumerable<string> arguments)
         {
-        }
-    }
+            string[] args = arguments.ToArray();
 
-    internal class HelpCommand : XHarnessCommand
-    {
-        protected override string CommandUsage => Name;
+            if (args.Length == 0)
+            {
+                base.Invoke(arguments);
+                return (int)ExitCode.HELP_SHOWN;
+            }
 
-        protected override string CommandDescription => "Shows help";
+            var command = args[0].ToLowerInvariant();
+            PrintCommandHelp(command);
 
-        private readonly HelpCommandArguments _arguments = new HelpCommandArguments();
-        protected override XHarnessCommandArguments Arguments => _arguments;
-
-        public HelpCommand() : base("help")
-        {
+            return (int)ExitCode.HELP_SHOWN;
         }
 
-        protected override Task<ExitCode> InvokeInternal(ILogger logger)
+        private void PrintCommandHelp(string commandName)
         {
-            throw new NotImplementedException();
+            Command command;
+            switch(commandName.ToLowerInvariant())
+            {
+                case "install":
+                    command = new InstallCommand();
+                    break;
+
+                case "list":
+                    command = new ListCommand();
+                    break;
+
+                case "find":
+                    command = new FindCommand();
+                    break;
+
+                default:
+                    Console.WriteLine($"Unknown command '{commandName}'.{Environment.NewLine}");
+                    return;
+            }
+
+            command.Invoke(new string[] { "--help" });
         }
     }
 }

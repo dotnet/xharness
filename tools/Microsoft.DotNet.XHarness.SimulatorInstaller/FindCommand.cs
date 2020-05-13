@@ -7,18 +7,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments;
-using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 {
-    internal class FindCommandArguments : XHarnessCommandArguments
+    internal class FindCommandArguments : SimulatorInstallerCommandArguments
     {
         public IEnumerable<string> Simulators { get; } = new List<string>();
 
-        protected override OptionSet GetCommandOptions() => new OptionSet
+        protected override OptionSet GetAdditionalOptions() => new OptionSet
         {
             { "s|simulator=", "ID of the Simulator to look for. Repeat multiple times to define more", v => ((IList<string>)Simulators).Add(v) },
         };
@@ -32,14 +30,14 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
         }
     }
 
-    internal class FindCommand : XHarnessCommand
+    internal class FindCommand : SimulatorInstallerCommand
     {
         protected override string CommandUsage => "find [OPTIONS]";
 
         protected override string CommandDescription => "Finds whether given simulators are installed";
 
         private readonly FindCommandArguments _arguments = new FindCommandArguments();
-        protected override XHarnessCommandArguments Arguments => _arguments;
+        protected override SimulatorInstallerCommandArguments SimulatorInstallerArguments => _arguments;
 
         public FindCommand() : base("find")
         {

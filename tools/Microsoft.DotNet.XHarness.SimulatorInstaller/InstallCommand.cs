@@ -7,19 +7,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments;
-using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 {
-    internal class InstallCommandArguments : XHarnessCommandArguments
+    internal class InstallCommandArguments : SimulatorInstallerCommandArguments
     {
         public IEnumerable<string> Simulators { get; } = new List<string>();
         public bool Force { get; private set; } = false;
 
-        protected override OptionSet GetCommandOptions() => new OptionSet
+        protected override OptionSet GetAdditionalOptions() => new OptionSet
         {
             { "s|simulator=", "ID of the Simulator to install. Repeat multiple times to define more", v => ((IList<string>)Simulators).Add(v) },
             { "force", "Install again even if already installed", v => Force = true },
@@ -34,14 +32,14 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
         }
     }
 
-    internal class InstallCommand : XHarnessCommand
+    internal class InstallCommand : SimulatorInstallerCommand
     {
         protected override string CommandUsage => "install [OPTIONS]";
 
         protected override string CommandDescription => "Installs given simulators";
 
         private readonly InstallCommandArguments _arguments = new InstallCommandArguments();
-        protected override XHarnessCommandArguments Arguments => _arguments;
+        protected override SimulatorInstallerCommandArguments SimulatorInstallerArguments => _arguments;
 
         public InstallCommand() : base("install")
         {

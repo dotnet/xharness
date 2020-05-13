@@ -5,30 +5,28 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments;
-using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 {
-    internal class ListCommandArguments : XHarnessCommandArguments
+    internal class ListCommandArguments : SimulatorInstallerCommandArguments
     {
-        protected override OptionSet GetCommandOptions() => new OptionSet();
+        protected override OptionSet GetAdditionalOptions() => new OptionSet();
 
         public override void Validate()
         {
         }
     }
 
-    internal class ListCommand : XHarnessCommand
+    internal class ListCommand : SimulatorInstallerCommand
     {
         protected override string CommandUsage => Name;
 
         protected override string CommandDescription => "Lists installed simulators";
 
         private readonly ListCommandArguments _arguments = new ListCommandArguments();
-        protected override XHarnessCommandArguments Arguments => _arguments;
+        protected override SimulatorInstallerCommandArguments SimulatorInstallerArguments => _arguments;
 
         public ListCommand() : base("list")
         {

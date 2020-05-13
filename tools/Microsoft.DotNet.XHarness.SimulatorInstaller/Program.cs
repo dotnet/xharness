@@ -3,22 +3,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.Extensions.Logging;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 {
+
     /// <summary>
     /// This command line tool allows management of Xcode iOS/WatchOS/tvOS Simulators on MacOS.
     /// It is used for automated update of OSX servers.
@@ -28,28 +18,27 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
     {
         private enum Command
         {
-            Unknown,
-            Install,
-            Find,
             List,
             Help,
         }
 
-        private static ProcessManager s_processManager = new ProcessManager();
-        private static ILogger? s_logger = null!;
-
-        private static bool s_listSimulators;
-
-        private static Command ParseCommand(string command) => command.ToLowerInvariant() switch
-        {
-            "install" => Command.Install,
-            "find" => Command.Find,
-            "list" => Command.List,
-            ""
-        }
-
         public static async Task<int> Main(string[] args)
         {
+            Console.WriteLine($"XHarness command issued: {string.Join(' ', args)}");
+
+            var commands = new CommandSet("simulator-installer")
+            {
+                new InstallCommand(),
+                new ListCommand(),
+                new FindCommand(),
+                new HelpCommand(),
+            };
+
+            int result = commands.Run(args);
+            Console.WriteLine($"simulator-installer exit code: {result}");
+            return result;
+            /*
+
             var exitCode = 0;
             string? xCodeRoot = null;
             var simulatorsToInstall = new List<string>();
@@ -58,7 +47,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
             var options = new OptionSet
             {
                 { "s|simulator=", "ID of the Simulator to install. Repeat multiple times to define more", v => simulatorsToInstall.Add (v) },
-                { "xcode=", "Path to where Xcode is located, e.g. /Application/Xcode114.app. If not set, xcode-select is used to determine the location", v => xCodeRoot = v },
+                
                 { "f|find", "Find if supplied simulators are installed or not. Prints the name of any missing simulators and returns 1 if any non-installed simulators found", v => find = true },
                 { "i|install", "Installs given simulators", v => install = true },
                 { "l|list", "Print all detected simulators", v => s_listSimulators = true },
@@ -538,7 +527,18 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                 // For the --only-check mode, we want to turn off logging as it should print not installed simulators only
                 if (!checkOnly)
                 {
-                    builder.AddConsole(options => options.TimestampFormat = "[HH:mm:ss] ");
+                    builder.AddConsole(options =>
+                    {
+                        if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
+                        {
+                            options.DisableColors = true;
+                        }
+
+                        if (Environment.GetEnvironmentVariable("XHARNESS_LOG_WITH_TIMESTAMPS")?.ToLower().Equals("true") ?? false)
+                        {
+                            options.TimestampFormat = "[HH:mm:ss] ";
+                        }
+                    });
                 }
 
                 builder.AddFilter(level => level >= verbosity);
@@ -573,6 +573,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
             }
 
             return (result.Succeeded, stdoutLog.ToString());
+        }*/
         }
     }
 }
