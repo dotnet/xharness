@@ -18,6 +18,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
     {
         // nunit2 one should go away eventually
         private readonly string[] _xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
+        private readonly string _testRunSummaryVariableName = "test-execution-summary";
+
         private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
 
         protected override TestCommandArguments TestArguments => _arguments;
@@ -66,12 +68,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                     runner.KillAdbServer();
                     runner.StartAdbServer();
 
-                    // Wait til at least device(s) are ready 
-                    runner.WaitForDevice();
-
                     // enumerate the devices attached and their architectures
                     // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
                     runner.SetActiveDevice(GetDeviceToUse(logger, runner, apkRequiredArchitecture));
+
+                    // Wait til at least device(s) are ready 
+                    runner.WaitForDevice();
 
                     // Empty log as we'll be uploading the full logcat for this execution
                     runner.ClearAdbLog();
@@ -99,8 +101,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                     {
                         (var resultValues, var instrExitCode) = ParseInstrumentationOutputs(logger, stdOut);
 
+                        // This is where test instrumentation can communicate outwardly that test execution failed
                         instrumentationExitCode = instrExitCode;
 
+                        // Pull XUnit result XMLs off the device
                         foreach (string possibleResultKey in _xmlOutputVariableNames)
                         {
                             if (resultValues.ContainsKey(possibleResultKey))
@@ -108,6 +112,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                                 logger.LogInformation($"Found XML result file: '{resultValues[possibleResultKey]}'(key: {possibleResultKey})");
                                 runner.PullFiles(resultValues[possibleResultKey], _arguments.OutputDirectory);
                             }
+                        }
+                        if (resultValues.ContainsKey(_testRunSummaryVariableName))
+                        {
+                            logger.LogInformation($"Test execution summary:{Environment.NewLine}{resultValues[_testRunSummaryVariableName]}");
                         }
                     }
 
@@ -148,16 +156,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
         private string? GetDeviceToUse(ILogger logger, AdbRunner runner, string apkRequiredArchitecture)
         {
             var allDevicesAndTheirArchitectures = runner.GetAttachedDevicesAndArchitectures();
-            if (allDevicesAndTheirArchitectures.Count == 1)
-            {
-                // There's only one device, so -s argument isn't needed but still check
-                if (!allDevicesAndTheirArchitectures.Values.Contains(apkRequiredArchitecture, StringComparer.InvariantCultureIgnoreCase))
-                {
-                    logger.LogWarning($"Single device available has architecture '{allDevicesAndTheirArchitectures.Values.First()}', != '{apkRequiredArchitecture}'. Package installation will likely fail, but we'll try anyways."); 
-                }
-                return null; // null = Use default device
-            }
-            else if (allDevicesAndTheirArchitectures.Count > 1)
+            if (allDevicesAndTheirArchitectures.Count > 0)
             {
                 if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)))
                 { 
