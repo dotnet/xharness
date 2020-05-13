@@ -542,22 +542,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                 }
 
                 builder.AddFilter(level => level >= verbosity);
-            });
-
-        private static string TempDirectory
-        {
-            get
-            {
-                string? path = Path.Combine(Path.GetTempPath(), "x-provisioning");
-
-                if (!Directory.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
-                }
-
-                return path;
-            }
-        }*/
+            });*/
         }
     }
 }
