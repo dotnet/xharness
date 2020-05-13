@@ -14,8 +14,8 @@
         <Version>786944</Version>
       </SimRuntime>
       <SimRuntime>
-        <Name>iOS 13.3</Name>
-        <Identifier>com.apple.CoreSimulator.SimRuntime.iOS-13-3</Identifier>
+        <Name>iOS {{MAX-IOS.VERSION}}</Name>
+        <Identifier>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</Identifier>
         <Version>852736</Version>
       </SimRuntime>
       <SimRuntime>
@@ -29,8 +29,8 @@
         <Version>786944</Version>
       </SimRuntime>
       <SimRuntime>
-        <Name>tvOS 13.3</Name>
-        <Identifier>com.apple.CoreSimulator.SimRuntime.tvOS-13-3</Identifier>
+        <Name>tvOS {{MAX-TVOS.VERSION}}</Name>
+        <Identifier>com.apple.CoreSimulator.SimRuntime.tvOS-{{MAX-TVOS-VERSION}}</Identifier>
         <Version>852736</Version>
       </SimRuntime>
       <SimRuntime>
@@ -44,8 +44,8 @@
         <Version>328192</Version>
       </SimRuntime>
       <SimRuntime>
-        <Name>watchOS 6.1</Name>
-        <Identifier>com.apple.CoreSimulator.SimRuntime.watchOS-6-1</Identifier>
+        <Name>watchOS {{MAX-WATCH.VERSION}}</Name>
+        <Identifier>com.apple.CoreSimulator.SimRuntime.watchOS-{{MAX-WATCH-VERSION}}</Identifier>
         <Version>393473</Version>
       </SimRuntime>
     </SupportedRuntimes>
@@ -699,67 +699,67 @@
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/02177DD5-3EE1-4A8D-8277-BE95F4ACB1A5</LogPath>
       </SimDevice>
       <SimDevice UDID="CFD33BF1-FC9A-4674-BB49-80CFA47450A5" Name="iPhone 8">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-13-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-8</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/CFD33BF1-FC9A-4674-BB49-80CFA47450A5</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/CFD33BF1-FC9A-4674-BB49-80CFA47450A5</LogPath>
       </SimDevice>
       <SimDevice UDID="9D61D008-5A27-4B98-801A-0709897EA981" Name="iPhone 8 Plus">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-13-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-8-Plus</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/9D61D008-5A27-4B98-801A-0709897EA981</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/9D61D008-5A27-4B98-801A-0709897EA981</LogPath>
       </SimDevice>
-      <SimDevice UDID="18F485DC-7F0A-440F-BEF9-5BE5954B0FB1" Name="iPhone X (iOS 13.3) - created by xharness">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-13-3</SimRuntime>
+      <SimDevice UDID="18F485DC-7F0A-440F-BEF9-5BE5954B0FB1" Name="iPhone X (iOS {{MAX-IOS.VERSION}}) - created by xharness">
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-X</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/18F485DC-7F0A-440F-BEF9-5BE5954B0FB1</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/18F485DC-7F0A-440F-BEF9-5BE5954B0FB1</LogPath>
       </SimDevice>
       <SimDevice UDID="ABC2A44A-789D-4C8B-88A7-0CD7C6BF316C" Name="iPhone 11">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-13-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-11</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/ABC2A44A-789D-4C8B-88A7-0CD7C6BF316C</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/ABC2A44A-789D-4C8B-88A7-0CD7C6BF316C</LogPath>
       </SimDevice>
       <SimDevice UDID="1840A231-2033-42A6-AEB4-B223235A2707" Name="iPhone 11 Pro">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-13-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-11-Pro</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/1840A231-2033-42A6-AEB4-B223235A2707</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/1840A231-2033-42A6-AEB4-B223235A2707</LogPath>
       </SimDevice>
       <SimDevice UDID="FB4347FF-11B6-4487-BECC-0B556BAD3E89" Name="iPhone 11 Pro Max">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-13-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-11-Pro-Max</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/FB4347FF-11B6-4487-BECC-0B556BAD3E89</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/FB4347FF-11B6-4487-BECC-0B556BAD3E89</LogPath>
       </SimDevice>
       <SimDevice UDID="972FB6FB-6BC5-4FD8-B8FB-BC4B08DAC817" Name="iPad Pro (9.7-inch)">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-13-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPad-Pro--9-7-inch-</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/972FB6FB-6BC5-4FD8-B8FB-BC4B08DAC817</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/972FB6FB-6BC5-4FD8-B8FB-BC4B08DAC817</LogPath>
       </SimDevice>
       <SimDevice UDID="C519CBBA-AAAD-4777-B599-8A30085AABCB" Name="iPad (7th generation)">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-13-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPad--7th-generation-</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/C519CBBA-AAAD-4777-B599-8A30085AABCB</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/C519CBBA-AAAD-4777-B599-8A30085AABCB</LogPath>
       </SimDevice>
       <SimDevice UDID="F7FCC57E-97CA-410F-B759-DFB395F0062C" Name="iPad Pro (11-inch)">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-13-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPad-Pro--11-inch-</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/F7FCC57E-97CA-410F-B759-DFB395F0062C</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/F7FCC57E-97CA-410F-B759-DFB395F0062C</LogPath>
       </SimDevice>
       <SimDevice UDID="80096DEA-A0BC-4755-8AB4-F941B6DD7438" Name="iPad Pro (12.9-inch) (3rd generation)">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-13-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPad-Pro--12-9-inch---3rd-generation-</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/80096DEA-A0BC-4755-8AB4-F941B6DD7438</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/80096DEA-A0BC-4755-8AB4-F941B6DD7438</LogPath>
       </SimDevice>
       <SimDevice UDID="8094F147-86A1-4196-BFB9-040BAC65B9BF" Name="iPad Air (3rd generation)">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-13-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPad-Air--3rd-generation-</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/8094F147-86A1-4196-BFB9-040BAC65B9BF</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/8094F147-86A1-4196-BFB9-040BAC65B9BF</LogPath>
@@ -789,19 +789,19 @@
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/73EAFA5D-04C7-4194-8D51-6E32C913C3B6</LogPath>
       </SimDevice>
       <SimDevice UDID="3A12BAFF-0DAA-4052-AB0D-743AB85CE030" Name="Apple TV">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.tvOS-13-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.tvOS-{{MAX-TVOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/3A12BAFF-0DAA-4052-AB0D-743AB85CE030</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/3A12BAFF-0DAA-4052-AB0D-743AB85CE030</LogPath>
       </SimDevice>
       <SimDevice UDID="FD2A3BE2-3E95-473E-99D2-DF0733F1CEED" Name="Apple TV 4K">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.tvOS-13-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.tvOS-{{MAX-TVOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-4K</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/FD2A3BE2-3E95-473E-99D2-DF0733F1CEED</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/FD2A3BE2-3E95-473E-99D2-DF0733F1CEED</LogPath>
       </SimDevice>
       <SimDevice UDID="2599FF00-17DD-43F7-BFC4-90693C145398" Name="Apple TV 4K (at 1080p)">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.tvOS-13-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.tvOS-{{MAX-TVOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-1080p</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/2599FF00-17DD-43F7-BFC4-90693C145398</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/2599FF00-17DD-43F7-BFC4-90693C145398</LogPath>
@@ -866,38 +866,38 @@
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/7764F572-0B81-4353-9D19-AA5E358425C2</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/7764F572-0B81-4353-9D19-AA5E358425C2</LogPath>
       </SimDevice>
-      <SimDevice UDID="BB2F9CF0-A928-4909-867A-525A937D7390" Name="Apple Watch Series 3 - 38mm (watchOS 6.1) - created by xharness">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.watchOS-6-1</SimRuntime>
+      <SimDevice UDID="BB2F9CF0-A928-4909-867A-525A937D7390" Name="Apple Watch Series 3 - 38mm (watchOS 6.2) - created by xharness">
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.watchOS-{{MAX-WATCH-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-3-38mm</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/BB2F9CF0-A928-4909-867A-525A937D7390</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/BB2F9CF0-A928-4909-867A-525A937D7390</LogPath>
       </SimDevice>
-      <SimDevice UDID="D9FC8E35-8CD2-4E3F-A660-24CAF1304479" Name="Apple Watch Series 3 - 38mm (watchOS 6.1) - created by xharness">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.watchOS-6-1</SimRuntime>
+      <SimDevice UDID="D9FC8E35-8CD2-4E3F-A660-24CAF1304479" Name="Apple Watch Series 3 - 38mm (watchOS 6.2) - created by xharness">
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.watchOS-{{MAX-WATCH-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-3-38mm</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/D9FC8E35-8CD2-4E3F-A660-24CAF1304479</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/D9FC8E35-8CD2-4E3F-A660-24CAF1304479</LogPath>
       </SimDevice>
       <SimDevice UDID="8EC34527-72DB-4A4D-B268-79C838189492" Name="Apple Watch Series 4 - 40mm">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.watchOS-6-1</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.watchOS-{{MAX-WATCH-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-4-40mm</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/8EC34527-72DB-4A4D-B268-79C838189492</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/8EC34527-72DB-4A4D-B268-79C838189492</LogPath>
       </SimDevice>
       <SimDevice UDID="CC509130-B1EC-4400-B2AB-730B602F7E03" Name="Apple Watch Series 4 - 44mm">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.watchOS-6-1</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.watchOS-{{MAX-WATCH-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-4-44mm</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/CC509130-B1EC-4400-B2AB-730B602F7E03</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/CC509130-B1EC-4400-B2AB-730B602F7E03</LogPath>
       </SimDevice>
       <SimDevice UDID="9B798995-5A29-45E1-BF89-6D29BB2864D3" Name="Apple Watch Series 5 - 40mm">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.watchOS-6-1</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.watchOS-{{MAX-WATCH-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-5-40mm</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/9B798995-5A29-45E1-BF89-6D29BB2864D3</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/9B798995-5A29-45E1-BF89-6D29BB2864D3</LogPath>
       </SimDevice>
       <SimDevice UDID="77F07B96-D2E4-4F04-B958-B68E2FBCC2ED" Name="Apple Watch Series 5 - 44mm">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.watchOS-6-1</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.watchOS-{{MAX-WATCH-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-5-44mm</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/77F07B96-D2E4-4F04-B958-B68E2FBCC2ED</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/77F07B96-D2E4-4F04-B958-B68E2FBCC2ED</LogPath>
