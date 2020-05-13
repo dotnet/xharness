@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
     /// </summary>
     public static class Program
     {
-        private static readonly ProcessManager s_processManager = new ProcessManager();
+        private static ProcessManager s_processManager = new ProcessManager();
         private static ILogger? s_logger = null!;
 
         private static bool s_printSimulators;
@@ -66,13 +66,13 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
         public static async Task<int> Main(string[] args)
         {
             var exit_code = 0;
-            string? xcode_app = null;
+            string? xCodeRoot = null;
             var simulatorsToInstall = new List<string>();
             var checkOnly = false;
             var force = false;
             var os = new OptionSet
             {
-                { "xcode=", "Path to where Xcode is located, e.g. /Application/Xcode114.app", v => xcode_app = v },
+                { "xcode=", "Path to where Xcode is located, e.g. /Application/Xcode114.app", v => xCodeRoot = v },
                 { "install=", "ID of simulator to install. Can be repeated multiple times.", v => simulatorsToInstall.Add (v) },
                 { "only-check", "Only check if the simulators are installed or not. Prints the name of any missing simulators, and returns 1 if any non-installed simulators were found.", v => checkOnly = true },
                 { "print-simulators", "Print all detected simulators.", v => s_printSimulators = true },
@@ -81,6 +81,12 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
             };
 
             var others = os.Parse(args);
+
+            s_processManager = new ProcessManager(xCodeRoot);
+            if (string.IsNullOrEmpty(xCodeRoot))
+            {
+                xCodeRoot = s_processManager.XcodeRoot;
+            }
 
             s_logger = CreateLoggerFactory(s_verbose > 0 ? LogLevel.Debug : LogLevel.Information).CreateLogger("SimulatorInstaller");
 
@@ -95,18 +101,13 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                 return 1;
             }
 
-            if (string.IsNullOrEmpty(xcode_app))
+            if (!Directory.Exists(xCodeRoot))
             {
-                s_logger.LogError("--xcode is required.");
-                return 1;
-            }
-            else if (!Directory.Exists(xcode_app))
-            {
-                s_logger.LogError("The Xcode directory {0} does not exist.", xcode_app);
+                s_logger.LogError("The Xcode directory '{0}' does not exist.", xCodeRoot);
                 return 1;
             }
 
-            var plistPath = Path.Combine(xcode_app, "Contents", "Info.plist");
+            var plistPath = Path.Combine(xCodeRoot, "Contents", "Info.plist");
             if (!File.Exists(plistPath))
             {
                 s_logger.LogError($"'{plistPath}' does not exist.");

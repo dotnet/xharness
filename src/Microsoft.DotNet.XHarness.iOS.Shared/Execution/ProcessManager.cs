@@ -16,17 +16,18 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 {
     public class ProcessManager : IProcessManager
     {
         static readonly Lazy<string> s_autoDetectedXcodeRoot = new Lazy<string>(DetectXcodePath, LazyThreadSafetyMode.PublicationOnly);
 
-        readonly string _xcodeRoot;
+        readonly string? _xcodeRoot;
         public string XcodeRoot => _xcodeRoot ?? s_autoDetectedXcodeRoot.Value;
         public string MlaunchPath { get; }
 
-        Version _xcode_version;
+        Version? _xcode_version;
         public Version XcodeVersion
         {
             get
@@ -41,9 +42,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             }
         }
 
-        public ProcessManager(string xcodeRoot = null, string mlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch")
+        public ProcessManager(string? xcodeRoot = null, string mlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch")
         {
-            this._xcodeRoot = xcodeRoot;
+            _xcodeRoot = xcodeRoot;
             MlaunchPath = mlaunchPath;
         }
 
@@ -51,7 +52,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             IList<string> args,
             ILog log,
             TimeSpan timeout,
-            Dictionary<string, string> environmentVariables = null,
+            Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null)
         {
             return await ExecuteCommandAsync(filename, args, log, log, log, timeout, environmentVariables, cancellationToken);
@@ -63,7 +64,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             ILog stdout,
             ILog stderr,
             TimeSpan timeout,
-            Dictionary<string, string> environmentVariables = null,
+            Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null)
         {
             using var p = new Process();
@@ -76,7 +77,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             MlaunchArguments args,
             ILog log,
             TimeSpan timeout,
-            Dictionary<string, string> environmentVariables = null,
+            Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null)
         {
             using var p = new Process();
@@ -89,7 +90,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             ILog stdout,
             ILog stderr,
             TimeSpan timeout,
-            Dictionary<string, string> environmentVariables = null,
+            Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null)
         {
             using var p = new Process();
@@ -109,7 +110,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             Process process,
             ILog log,
             TimeSpan? timeout = null,
-            Dictionary<string, string> environmentVariables = null,
+            Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null,
             bool? diagnostics = null)
         {
@@ -121,12 +122,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             MlaunchArguments args,
             ILog log,
             TimeSpan? timeout = null,
-            Dictionary<string, string> environmentVariables = null,
+            Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null,
             bool? diagnostics = null)
         {
             if (!args.Any(a => a is SdkRootArgument))
+            {
                 args.Prepend(new SdkRootArgument(XcodeRoot));
+            }
 
             process.StartInfo.FileName = MlaunchPath;
             process.StartInfo.Arguments = args.AsCommandLine();
@@ -141,12 +144,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             ILog stdout,
             ILog stderr,
             TimeSpan? timeout = null,
-            Dictionary<string, string> environmentVariables = null,
+            Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null,
             bool? diagnostics = null)
         {
             if (!args.Any(a => a is SdkRootArgument))
+            {
                 args.Prepend(new SdkRootArgument(XcodeRoot));
+            }
 
             process.StartInfo.FileName = MlaunchPath;
             process.StartInfo.Arguments = args.AsCommandLine();
@@ -160,7 +165,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             ILog stdout,
             ILog stderr,
             TimeSpan? timeout = null,
-            Dictionary<string, string> environmentVariables = null,
+            Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null,
             bool? diagnostics = null)
         {
@@ -183,7 +188,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             ILog stdout,
             ILog stderr,
             TimeSpan? timeout = null,
-            Dictionary<string, string> environmentVariables = null,
+            Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null,
             bool? diagnostics = null)
         {
@@ -248,18 +253,21 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             var sb = new StringBuilder();
             if (process.StartInfo.EnvironmentVariables != null)
             {
-                var currentEnvironment = Environment.GetEnvironmentVariables().Cast<System.Collections.DictionaryEntry>().ToDictionary((v) => (string)v.Key, (v) => (string)v.Value, StringComparer.Ordinal);
-                var processEnvironment = process.StartInfo.EnvironmentVariables.Cast<System.Collections.DictionaryEntry>().ToDictionary((v) => (string)v.Key, (v) => (string)v.Value, StringComparer.Ordinal);
+                var currentEnvironment = Environment.GetEnvironmentVariables().Cast<System.Collections.DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
+                var processEnvironment = process.StartInfo.EnvironmentVariables.Cast<System.Collections.DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
                 var allKeys = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
                 foreach (var key in allKeys)
                 {
-                    string a = null, b = null;
+                    string? a = null, b = null;
                     currentEnvironment.TryGetValue(key, out a);
                     processEnvironment.TryGetValue(key, out b);
                     if (a != b)
+                    {
                         sb.Append($"{key}={StringUtils.Quote(b)} ");
+                    }
                 }
             }
+
             sb.Append($"{StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
             log.WriteLine(sb);
 
@@ -297,7 +305,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                     await KillTreeAsyncInternal(process.Id, log, diagnostics ?? true);
                     rv.TimedOut = true;
                     lock (stderr)
+                    {
                         log.WriteLine($"{pid} Execution timed out after {timeout.Value.TotalSeconds} seconds and the process was killed.");
+                    }
                 }
             }
             await WaitForExitAsync(process);
@@ -368,21 +378,27 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             // Send SIGABRT since that produces a crash report
             // lldb may fail to attach to system processes, but crash reports will still be produced with potentially helpful stack traces.
             for (int i = 0; i < pids.Count; i++)
+            {
                 kill(pids[i], 6);
+            }
 
             // send kill -9 anyway as a last resort
             for (int i = 0; i < pids.Count; i++)
+            {
                 kill(pids[i], 9);
+            }
         }
 
         static async Task<bool> WaitForExitAsync(Process process, TimeSpan? timeout = null)
         {
             if (process.HasExited)
+            {
                 return true;
+            }
 
             var tcs = new TaskCompletionSource<bool>();
 
-            void ProcessExited(object sender, EventArgs ea)
+            void ProcessExited(object? sender, EventArgs ea)
             {
                 process.Exited -= ProcessExited;
                 tcs.TrySetResult(true);
@@ -432,12 +448,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                 }
 
                 if (ps.ExitCode != 0)
+                {
                     return list;
+                }
 
                 stdout = stdout.Trim();
 
                 if (string.IsNullOrEmpty(stdout))
+                {
                     return list;
+                }
 
                 var dict = new Dictionary<int, List<int>>();
                 foreach (string line in stdout.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
@@ -445,7 +465,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                     var l = line.Trim();
                     var space = l.IndexOf(' ');
                     if (space <= 0)
+                    {
                         continue;
+                    }
 
                     var parent = l.Substring(0, space);
                     var process = l.Substring(space + 1);
@@ -453,7 +475,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                     if (int.TryParse(parent, out var parent_id) && int.TryParse(process, out var process_id))
                     {
                         if (!dict.TryGetValue(parent_id, out var children))
+                        {
                             dict[parent_id] = children = new List<int>();
+                        }
 
                         children.Add(process_id);
                     }
@@ -469,7 +493,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                     if (dict.TryGetValue(parent_id, out var children))
                     {
                         foreach (var child in children)
+                        {
                             queue.Enqueue(child);
+                        }
                     }
                 } while (queue.Count > 0);
             }
@@ -491,16 +517,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             var result = RunAsyncInternal(process, log, stdout, stderr, timeout).GetAwaiter().GetResult();
 
             if (!result.Succeeded)
+            {
                 throw new Exception("Failed to detect Xcode path from xcode-select!");
+            }
 
             // Something like /Applications/Xcode114.app/Contents/Developers
-            var xcodeRoot = stdout.ToString().Trim();
+            string xcodeRoot = stdout.ToString().Trim();
 
             if (string.IsNullOrEmpty(xcodeRoot))
+            {
                 throw new Exception("Failed to detect Xcode path from xcode-select!");
+            }
 
             // We need /Applications/Xcode114.app only
-            return Path.GetDirectoryName(Path.GetDirectoryName(xcodeRoot));
+            return Path.GetDirectoryName(Path.GetDirectoryName(xcodeRoot))!;
         }
     }
 }
