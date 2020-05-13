@@ -254,22 +254,20 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                     if (force)
                     {
                         doInstall = true;
-                        if (!checkOnly && s_verbose >= 0 && installed)
+                        if (!checkOnly && installed)
                         {
                             s_logger.LogInformation($"The simulator '{identifier}' is already installed, but will be installed again because --force was specified.");
                         }
                     }
-                    else if (installed)
+                    else if (installed && !checkOnly)
                     {
-                        if (!checkOnly && s_verbose >= 0)
-                        {
-                            s_logger.LogInformation($"Not installing '{identifier}' because it's already installed and up-to-date.");
-                        }
+                        s_logger.LogInformation($"Not installing '{identifier}' because it's already installed and up-to-date.");
                     }
                     else
                     {
                         doInstall = true;
                     }
+
                     simulatorsToInstall.Remove(identifier);
                 }
 
@@ -304,18 +302,21 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                     {
                         if (updateAvailable)
                         {
-                            s_logger.LogInformation(s_verbose > 0 ? $"The simulator '{name}' is installed, but an update is available." : name);
+                            s_logger.LogDebug($"The simulator '{name}' is installed, but an update is available.");
                         }
                         else
                         {
-                            s_logger.LogInformation(s_verbose > 0 ? $"The simulator '{name}' is not installed." : name);
+                            s_logger.LogDebug($"The simulator '{name}' is not installed.");
                         }
                         exit_code = 1;
                     }
                     else
                     {
-                        s_logger.LogInformation($"The simulator '{name}' is installed.");
+                        s_logger.LogDebug($"The simulator '{name}' is installed.");
                     }
+
+                    // If we provide --check-only, we want a human readable list out
+                    Console.WriteLine(name);
                 }
                 if (doInstall && !checkOnly)
                 {
