@@ -202,7 +202,6 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             tc_index = 0;
 
             Console.WriteLine(".");
-            int ncases = 0;
             string last_name = "";
             while (true)
             {
