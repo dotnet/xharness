@@ -65,12 +65,14 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 
         public static async Task<int> Main(string[] args)
         {
-            var exit_code = 0;
+            var exitCode = 0;
             string? xCodeRoot = null;
             var simulatorsToInstall = new List<string>();
             var checkOnly = false;
             var force = false;
-            var os = new OptionSet
+            var help = false;
+
+            var options = new OptionSet
             {
                 { "xcode=", "Path to where Xcode is located, e.g. /Application/Xcode114.app", v => xCodeRoot = v },
                 { "install=", "ID of simulator to install. Can be repeated multiple times.", v => simulatorsToInstall.Add (v) },
@@ -78,9 +80,16 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                 { "print-simulators", "Print all detected simulators.", v => s_printSimulators = true },
                 { "f|force", "Install again even if already installed.", v => force = true },
                 { "v|verbose", "Increase verbosity", v => s_verbose++ },
+                { "h|help", "Print help", v => help = true },
             };
 
-            var others = os.Parse(args);
+            var others = options.Parse(args);
+
+            if (help)
+            {
+                options.WriteOptionDescriptions(Console.Out);
+                return 2;
+            }
 
             s_processManager = new ProcessManager(xCodeRoot);
             if (string.IsNullOrEmpty(xCodeRoot))
@@ -115,7 +124,6 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
             }
 
             var (succeeded, xcodeVersion) = await ExecuteCommand("/usr/libexec/PlistBuddy", TimeSpan.FromSeconds(5), "-c", "Print :DTXcode", plistPath);
-
             if (!succeeded)
             {
                 return 1;
@@ -169,7 +177,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                             if ((await IsInstalled(name)) == null)
                             {
                                 s_logger.LogError($"The simulator '{name}' is not installed.");
-                                exit_code = 1;
+                                exitCode = 1;
                             }
                             else
                             {
@@ -177,7 +185,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                             }
                         }
                         // We can't install any missing simulators, because we don't have the download url (since we couldn't download the .dvtdownloadableindex file), so just exit.
-                        return exit_code;
+                        return exitCode;
                     }
                     return 1;
                 }
@@ -309,7 +317,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                         {
                             s_logger.LogDebug($"The simulator '{name}' is not installed.");
                         }
-                        exit_code = 1;
+                        exitCode = 1;
                     }
                     else
                     {
@@ -340,7 +348,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                 return 1;
             }
 
-            return exit_code;
+            return exitCode;
         }
 
         private static async Task<Version?> IsInstalled(string identifier)
