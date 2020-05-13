@@ -35,11 +35,11 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
 
     class Discoverer : XunitTestFrameworkDiscoverer
     {
-        List<ITestClass> _testClasses;
-        IEnumerator<ITestClass> _testClassesEnumerator;
-        IMessageSink _sink;
-        ITestFrameworkDiscoveryOptions _discoveryOptions;
-        IXunitTestCollectionFactory _testCollectionFactory;
+        private readonly List<ITestClass> _testClasses;
+        private readonly IEnumerator<ITestClass> _testClassesEnumerator;
+        private readonly IMessageSink _sink;
+        private readonly ITestFrameworkDiscoveryOptions _discoveryOptions;
+        private readonly IXunitTestCollectionFactory _testCollectionFactory;
         int _nenumerated;
 
         public Discoverer(IAssemblyInfo assemblyInfo,
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             _discoveryOptions = discoveryOptions ?? throw new ArgumentNullException($"No value supplied for {nameof(discoveryOptions)} ");
 
             _testClasses = new List<ITestClass>();
-            foreach (var type in AssemblyInfo.GetTypes(false).Where(IsValidTestClass))
+            foreach (ITypeInfo type in AssemblyInfo.GetTypes(false).Where(IsValidTestClass))
                 _testClasses.Add(CreateTestClass(type));
             _testClassesEnumerator = _testClasses.GetEnumerator();
         }
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
 
             using (var messageBus = new MsgBus(_sink))
             {
-                var testClass = _testClassesEnumerator.Current;
+                ITestClass testClass = _testClassesEnumerator.Current;
                 //Console.WriteLine (testClass.Class.Name);
                 if (testClass.Class.Name == "System.Threading.ThreadPools.Tests.ThreadPoolTests")
                     // FIXME: This invokes the static ctor which creates threads
@@ -96,27 +96,27 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
 
     class WasmRunner : IMessageSink
     {
-        ITestFrameworkDiscoveryOptions _discoveryOptions;
-        Discoverer discoverer;
-        ITestFrameworkExecutor executor;
-        ITestFrameworkExecutionOptions executionOptions;
-        List<ITestCase> testCases;
-        XunitProject project;
+        private readonly ITestFrameworkDiscoveryOptions _discoveryOptions;
+        private readonly Discoverer _discoverer;
+        private readonly ITestFrameworkExecutor _executor;
+        private readonly ITestFrameworkExecutionOptions _executionOptions;
+        private readonly List<ITestCase> _testCases;
+        private readonly XunitProject _project;
 
         public WasmRunner(XunitProject project)
         {
-            this.project = project;
+            _project = project;
 
-            var assemblyFileName = "/" + project.Assemblies.First().AssemblyFilename;
-            testCases = new List<ITestCase>();
+            string assemblyFileName = "/" + project.Assemblies.First().AssemblyFilename;
+            _testCases = new List<ITestCase>();
 
             var assembly = Assembly.LoadFrom(assemblyFileName);
             var assemblyInfo = new Xunit.Sdk.ReflectionAssemblyInfo(assembly);
 
-            var collectionBehaviorAttribute = assemblyInfo.GetCustomAttributes(typeof(CollectionBehaviorAttribute)).SingleOrDefault();
+            IAttributeInfo collectionBehaviorAttribute = assemblyInfo.GetCustomAttributes(typeof(CollectionBehaviorAttribute)).SingleOrDefault();
             var testAssembly = new TestAssembly(assemblyInfo, null);
 
-            var collectionFactory = ExtensibilityPointFactory.GetXunitTestCollectionFactory(this, collectionBehaviorAttribute, testAssembly);
+            IXunitTestCollectionFactory collectionFactory = ExtensibilityPointFactory.GetXunitTestCollectionFactory(this, collectionBehaviorAttribute, testAssembly);
 
             /*
             object res = null;
@@ -125,11 +125,11 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             */
 
             _discoveryOptions = TestFrameworkOptions.ForDiscovery(null);
-            executionOptions = TestFrameworkOptions.ForExecution(null);
+            _executionOptions = TestFrameworkOptions.ForExecution(null);
 
-            discoverer = new Discoverer(assemblyInfo, new NullSourceInformationProvider(), this, _discoveryOptions, collectionFactory);
+            _discoverer = new Discoverer(assemblyInfo, new NullSourceInformationProvider(), this, _discoveryOptions, collectionFactory);
 
-            executor = new XunitTestFrameworkExecutor(assembly.GetName(), new NullSourceInformationProvider(), this);
+            _executor = new XunitTestFrameworkExecutor(assembly.GetName(), new NullSourceInformationProvider(), this);
         }
 
         static object ConvertArg(object arg, Type argType)
@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                 Type t = typeof(IEnumerable<>).MakeGenericType(argType.GetElementType());
                 if (t.IsAssignableFrom(arg.GetType()))
                 {
-                    var m = typeof(Enumerable).GetMethod("ToArray").MakeGenericMethod(new Type[] { argType.GetElementType() });
+                    MethodInfo m = typeof(Enumerable).GetMethod("ToArray").MakeGenericMethod(new Type[] { argType.GetElementType() });
                     return m.Invoke(null, new object[] { arg });
                 }
             }
@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
         {
             if (msg is Xunit.Sdk.TestCaseDiscoveryMessage disc_msg)
             {
-                testCases.Add(disc_msg.TestCase);
+                _testCases.Add(disc_msg.TestCase);
                 return true;
             }
             //Console.WriteLine ("MSG:" + msg);		
@@ -190,27 +190,27 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             int n = 0;
             while (n < 20)
             {
-                bool res = discoverer.Step();
+                bool res = _discoverer.Step();
                 if (!res)
                 {
                     break;
                 }
             }
 
-            Console.WriteLine("Running " + testCases.Count + " tests...");
+            Console.WriteLine("Running " + _testCases.Count + " tests...");
             tc_index = 0;
 
             Console.WriteLine(".");
             string last_name = "";
             while (true)
             {
-                if (tc_index == testCases.Count)
+                if (tc_index == _testCases.Count)
                     break;
-                var tc = testCases[tc_index] as XunitTestCase;
+                var tc = _testCases[tc_index] as XunitTestCase;
 
                 tc_index++;
 
-                if (!project.Filters.Filter(tc))
+                if (!_project.Filters.Filter(tc))
                 {
                     nfiltered++;
                     continue;
@@ -233,7 +233,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                 }
                 */
 
-                var method = (tc.Method as ReflectionMethodInfo).MethodInfo;
+                MethodInfo method = (tc.Method as ReflectionMethodInfo).MethodInfo;
 
                 if (method.ReflectedType.IsGenericTypeDefinition)
                 {
@@ -252,11 +252,11 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                     }
 
                     // From XunitTheoryTestCaseRunner
-                    var attrs = tc.TestMethod.Method.GetCustomAttributes(typeof(DataAttribute));
+                    IEnumerable<IAttributeInfo> attrs = tc.TestMethod.Method.GetCustomAttributes(typeof(DataAttribute));
                     bool failed = false;
-                    foreach (var dataAttribute in attrs)
+                    foreach (IAttributeInfo dataAttribute in attrs)
                     {
-                        var discovererAttribute = dataAttribute.GetCustomAttributes(typeof(DataDiscovererAttribute)).First();
+                        IAttributeInfo discovererAttribute = dataAttribute.GetCustomAttributes(typeof(DataDiscovererAttribute)).First();
                         var args = discovererAttribute.GetConstructorArguments().Cast<string>().ToList();
 
                         Type discovererType = null;
@@ -273,23 +273,23 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
 
                         try
                         {
-                            var data = discoverer.GetData(dataAttribute, tc.TestMethod.Method);
-                            var data_arr = data.ToArray();
+                            IEnumerable<object[]> data = discoverer.GetData(dataAttribute, tc.TestMethod.Method);
+                            object[][] data_arr = data.ToArray();
                             Console.WriteLine(tc.DisplayName + " [" + data_arr.Length + "]");
-                            foreach (var dataRow in data_arr)
+                            foreach (object[] dataRow in data_arr)
                             {
                                 nrun++;
                                 object obj = null;
                                 if (!method.IsStatic)
                                 {
-                                    var constructor = method.ReflectedType.GetConstructor(Type.EmptyTypes);
+                                    ConstructorInfo constructor = method.ReflectedType.GetConstructor(Type.EmptyTypes);
                                     if (constructor != null)
                                         obj = constructor.Invoke(null);
                                     else
                                         obj = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(method.ReflectedType);
                                 }
 
-                                var pars = method.GetParameters();
+                                ParameterInfo[] pars = method.GetParameters();
                                 for (int i = 0; i < dataRow.Length; ++i)
                                     dataRow[i] = ConvertArg(dataRow[i], pars[i].ParameterType);
                                 method.Invoke(obj, BindingFlags.Default, null, dataRow, null);
@@ -315,7 +315,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                         continue;
                     }
                     nrun++;
-                    var name = tc.DisplayName;
+                    string name = tc.DisplayName;
                     if (name.Contains("("))
                         name = name.Substring(0, name.IndexOf("("));
                     if (name != last_name)
@@ -327,16 +327,16 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                         object obj = null;
                         if (!method.IsStatic)
                         {
-                            var constructor = method.ReflectedType.GetConstructor(Type.EmptyTypes);
+                            ConstructorInfo constructor = method.ReflectedType.GetConstructor(Type.EmptyTypes);
                             if (constructor != null)
                                 obj = constructor.Invoke(null);
                             else
                                 obj = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(method.ReflectedType);
                         }
-                        var args = tc.TestMethodArguments;
+                        object[] args = tc.TestMethodArguments;
                         if (args != null)
                         {
-                            var pars = method.GetParameters();
+                            ParameterInfo[] pars = method.GetParameters();
                             for (int i = 0; i < args.Length; ++i)
                             {
                                 args[i] = ConvertArg(args[i], pars[i].ParameterType);
@@ -356,23 +356,23 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             //foreach (var tc in testCases)
             //	Console.WriteLine (tc.DisplayName);
             //executor.RunTests (testCases, this, executionOptions);
-            Console.WriteLine("TESTS = " + testCases.Count + ", RUN = " + nrun + ", SKIP = " + nfiltered + ", FAIL = " + nfail);
+            Console.WriteLine("TESTS = " + _testCases.Count + ", RUN = " + nrun + ", SKIP = " + nfiltered + ", FAIL = " + nfail);
             return nfail == 0 ? 0 : 1;
         }
     }
 
     class CmdLineParser : CommandLine
     {
-        public CmdLineParser(String[] args) : base(args, s => true)
+        public CmdLineParser(string[] args) : base(args, s => true)
         {
         }
     }
 
     public class XunitDriver
     {
-        static WasmRunner testRunner;
+        static WasmRunner s_testRunner;
 
-        static int Main(String[] args)
+        static int Main(string[] args)
         {
             // Process rsp files
             // FIXME: This doesn't work with wasm
@@ -388,8 +388,8 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             }
             */
             var cmdline = new CmdLineParser(args);
-            testRunner = new WasmRunner(cmdline.Project);
-            return testRunner.Run();
+            s_testRunner = new WasmRunner(cmdline.Project);
+            return s_testRunner.Run();
         }
     }
 }
