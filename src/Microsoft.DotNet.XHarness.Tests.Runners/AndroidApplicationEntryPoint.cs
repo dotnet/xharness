@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
             var runner = await InternalRunAsync(logger);
             ConfigureRunner(runner, options);
 
-            TextWriter writer = null;
+            TextWriter? writer = null;
 
             if (options.EnableXml)
             {

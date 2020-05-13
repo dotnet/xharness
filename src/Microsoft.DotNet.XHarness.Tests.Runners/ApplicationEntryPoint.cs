@@ -183,7 +183,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
             else
             {
                 resultsFilePath = runner.WriteResultsToFile(jargon);
-                logger.Info($"Xml result can be found {resultsFilePath}");
+                logger.Info($"XML results can be found in '{resultsFilePath}'");
             }
 
             return resultsFilePath;

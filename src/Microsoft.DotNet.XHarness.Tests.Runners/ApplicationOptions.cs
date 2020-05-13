@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
                 { "xmlversion", "The xml version.", v => XmlVersion = (XmlVersion) Enum.Parse (typeof (XmlVersion), v, false) },
                 { "logfile=", "A path where output will be saved.", v => LogFile = v },
                 { "result=", "The path to be used to store the result", v => ResultFile = v},
-                { "run-all-tests:", "Run all the tests fund in the assembly. Defaults to true.", v =>
+                { "run-all-tests:", "Run all the tests found in the assembly. Defaults to true.", v =>
                 {
                     // if cannot parse, use default
                     if (Boolean.TryParse(v, out var runAll))
