@@ -344,7 +344,15 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 
             if (simulatorsToInstall.Count > 0)
             {
-                s_logger.LogError("Unknown simulators: {0}", string.Join(", ", simulatorsToInstall));
+                if (checkOnly)
+                {
+                    Console.WriteLine("Unknown simulators: {0}", string.Join(", ", simulatorsToInstall));
+                }
+                else
+                {
+                    s_logger.LogError("Unknown simulators: {0}", string.Join(", ", simulatorsToInstall));
+                }
+
                 return 1;
             }
 
