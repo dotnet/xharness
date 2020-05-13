@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                 xCodeRoot = s_processManager.XcodeRoot;
             }
 
-            s_logger = CreateLoggerFactory(s_verbose > 0 ? LogLevel.Debug : LogLevel.Information).CreateLogger("SimulatorInstaller");
+            s_logger = CreateLoggerFactory(s_verbose > 0 ? LogLevel.Debug : LogLevel.Information, checkOnly).CreateLogger("SimulatorInstaller");
 
             if (others.Count() > 0)
             {
@@ -177,6 +177,12 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                             if ((await IsInstalled(name)) == null)
                             {
                                 s_logger.LogError($"The simulator '{name}' is not installed.");
+
+                                if (checkOnly)
+                                {
+                                    Console.WriteLine(name);
+                                }
+
                                 exitCode = 1;
                             }
                             else
@@ -263,12 +269,12 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                     if (force)
                     {
                         doInstall = true;
-                        if (!checkOnly && installed)
+                        if (installed)
                         {
                             s_logger.LogInformation($"The simulator '{identifier}' is already installed, but will be installed again because --force was specified.");
                         }
                     }
-                    else if (installed && !checkOnly)
+                    else if (installed)
                     {
                         s_logger.LogInformation($"Not installing '{identifier}' because it's already installed and up-to-date.");
                     }
@@ -317,17 +323,17 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                         {
                             s_logger.LogDebug($"The simulator '{name}' is not installed.");
                         }
-                        exitCode = 1;
 
                         // If we provide --check-only, we want a human readable list out
                         Console.WriteLine(name);
+                        exitCode = 1;
                     }
                     else
                     {
                         s_logger.LogDebug($"The simulator '{name}' is installed.");
                     }
                 }
-                if (doInstall && !checkOnly)
+                else if (doInstall)
                 {
                     s_logger.LogInformation($"Installing {name}...");
                     if (await Install(source, fileSize, installPrefix))
@@ -344,15 +350,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 
             if (simulatorsToInstall.Count > 0)
             {
-                if (checkOnly)
-                {
-                    Console.WriteLine("Unknown simulators: {0}", string.Join(", ", simulatorsToInstall));
-                }
-                else
-                {
-                    s_logger.LogError("Unknown simulators: {0}", string.Join(", ", simulatorsToInstall));
-                }
-
+                s_logger.LogError("Unknown simulators: {0}", string.Join(", ", simulatorsToInstall));
                 return 1;
             }
 
@@ -542,9 +540,15 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
             return value;
         }
 
-        private static ILoggerFactory CreateLoggerFactory(LogLevel verbosity) => LoggerFactory.Create(builder =>
-            builder
-                .AddConsole(options => options.TimestampFormat = "[HH:mm:ss] ")
-                .AddFilter(level => level >= verbosity));
+        private static ILoggerFactory CreateLoggerFactory(LogLevel verbosity, bool checkOnly) =>
+            LoggerFactory.Create(builder =>
+            {
+                if (!checkOnly)
+                {
+                    builder.AddConsole(options => options.TimestampFormat = "[HH:mm:ss] ");
+                }
+
+                builder.AddFilter(level => level >= verbosity);
+            });
     }
 }
