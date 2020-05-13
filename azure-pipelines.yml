@@ -205,7 +205,9 @@ stages:
           WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
           WorkItemCommand: sudo launchctl asuser `id -u` sh osx-helix-payload.sh $HELIX_WORKITEM_UPLOAD_ROOT
           WorkItemTimeout: 00:12:00
-
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            HelixAccessToken: ''     
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml
@@ -232,4 +234,3 @@ stages:
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
         -TsaPublish $True'
-
