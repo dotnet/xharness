@@ -225,6 +225,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             if (exceptionType == "Microsoft.DotNet.XUnitExtensions.SkipTestException")
             {
                 RaiseTestSkippedCase(args.Message, args.Message.TestCases, args.Message.TestCase);
+                return;
             }
 
             FailedTests++;
