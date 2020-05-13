@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 
         protected abstract XHarnessCommandArguments Arguments { get; }
 
-        protected XHarnessCommand(string name) : base(name)
+        protected XHarnessCommand(string name, string? help = null) : base(name, help)
         {
         }
 

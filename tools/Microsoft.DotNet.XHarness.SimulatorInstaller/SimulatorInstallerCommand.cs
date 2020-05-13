@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
         {
             var options = GetAdditionalOptions();
 
-            options.Add("xcode=", "Path where Xcode is installed", v => XcodeRoot = RootPath(v));
+            options.Add("xcode=", "Path to where Xcode is located, e.g. /Application/Xcode114.app. If not set, xcode-select is used to determine the location", v => XcodeRoot = RootPath(v));
 
             return options;
         }
@@ -42,14 +42,13 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
         }
     }
 
-
     internal abstract class SimulatorInstallerCommand : XHarnessCommand
     {
         protected override XHarnessCommandArguments Arguments => SimulatorInstallerArguments;
 
         protected abstract SimulatorInstallerCommandArguments SimulatorInstallerArguments { get; }
 
-        protected SimulatorInstallerCommand(string name) : base(name)
+        protected SimulatorInstallerCommand(string name, string help) : base(name, help)
         {
         }
     }

@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
         private readonly InstallCommandArguments _arguments = new InstallCommandArguments();
         protected override SimulatorInstallerCommandArguments SimulatorInstallerArguments => _arguments;
 
-        public InstallCommand() : base("install")
+        public InstallCommand() : base("install", "Installs given simulators")
         {
         }
 

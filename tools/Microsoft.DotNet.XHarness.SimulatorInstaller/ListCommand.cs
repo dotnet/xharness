@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
         private readonly ListCommandArguments _arguments = new ListCommandArguments();
         protected override SimulatorInstallerCommandArguments SimulatorInstallerArguments => _arguments;
 
-        public ListCommand() : base("list")
+        public ListCommand() : base("list", "Lists installed simulators")
         {
         }
 

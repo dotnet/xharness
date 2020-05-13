@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 
         public static async Task<int> Main(string[] args)
         {
-            Console.WriteLine($"XHarness command issued: {string.Join(' ', args)}");
+            Console.WriteLine($"simulator-installer command issued: {string.Join(' ', args)}");
 
             var commands = new CommandSet("simulator-installer")
             {

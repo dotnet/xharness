@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
         private readonly FindCommandArguments _arguments = new FindCommandArguments();
         protected override SimulatorInstallerCommandArguments SimulatorInstallerArguments => _arguments;
 
-        public FindCommand() : base("find")
+        public FindCommand() : base("find", "Finds whether given simulators are installed")
         {
         }
 
