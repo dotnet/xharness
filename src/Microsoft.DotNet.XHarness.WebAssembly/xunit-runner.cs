@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
         {
             TestCollectionFactory = collectionFactory;
             Sink = diagnosticMessageSink;
-            DiscoveryOptions = discoveryOptions;
+            DiscoveryOptions = discoveryOptions ?? throw new ArgumentNullException($"No value supplied for {nameof(discoveryOptions)} ");
 
             TestClasses = new List<ITestClass>();
             foreach (var type in AssemblyInfo.GetTypes(false).Where(IsValidTestClass))
