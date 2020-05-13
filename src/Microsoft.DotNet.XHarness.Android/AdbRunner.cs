@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.XHarness.Android
             // This command waits for ANY kind of device to be available (emulator or real)
             // Needed because emulators start up asynchronously and take a while.
             // (Returns instantly if device is ready)
-            // This fails if _currentDevice is unset  
+            // This can fail if _currentDevice is unset if there are multiple devices.
             _log.LogInformation("Waiting for device to be available (max 5 minutes)");
             var result = RunAdbCommand("wait-for-device", TimeSpan.FromMinutes(5));
             _log.LogDebug($"{result.StandardOutput}");
@@ -313,20 +313,23 @@ namespace Microsoft.DotNet.XHarness.Android
         {
             Dictionary<string, string?> devicesAndArchitectures = new Dictionary<string, string?>();
 
-            var result = RunAdbCommand("devices -l");
+            var result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
             string standardOutput = result.StandardOutput;
 
-            // If the adb server is dead, this can return 0 exit code and no output; retry a few times if so)
-            int retriesLeft = 5;
-            while (retriesLeft-- > 0 && result.ExitCode == (int)AdbExitCodes.SUCCESS && standardOutput == "")
+            // Retry for up to two minutes
+            int retriesLeft = 12;
+                   // Offline = waiting for emulators to be online
+            while (retriesLeft-- > 0 && (standardOutput.Contains("offline", StringComparison.OrdinalIgnoreCase) ||
+                   // Empty string = Adb started another process to do the work and we should call again
+                   string.IsNullOrEmpty(standardOutput))) 
             {
                 result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
                 standardOutput = result.StandardOutput;
                 // delay for retries
                 if (string.IsNullOrEmpty(standardOutput) && result.ExitCode == (int)AdbExitCodes.SUCCESS)
                 {
-                    _log.LogDebug("Waiting for device listing to work");
-                    Thread.Sleep(5000);
+                    _log.LogDebug("Waiting for all attached Android devices to be online");
+                    Thread.Sleep(10000);
                 }
             }
 
@@ -358,6 +361,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             else
             {
+                // May consider abandoning the run here instead of just printing errors.
                 _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}");
             }
             return devicesAndArchitectures;
