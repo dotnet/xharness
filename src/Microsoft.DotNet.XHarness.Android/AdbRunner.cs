@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Android
@@ -86,8 +87,10 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public void DumpAdbLog(string outputFilePath, string filterSpec = "")
         {
-            // This is somehow reaching full timeout, have to figure it out, allow 20s for demo?
-            var result = RunAdbCommand($"logcat -d {filterSpec}");
+            // Workaround: Doesn't seem to have a flush() function and sometimes it doesn't have the full log on emulators.
+            Thread.Sleep(3000);
+
+            var result = RunAdbCommand($"logcat -d {filterSpec}", TimeSpan.FromMinutes(2));
             if (result.ExitCode != 0)
             {
                 // Could throw here, but it would tear down a possibly otherwise acceptable execution.
@@ -106,12 +109,13 @@ namespace Microsoft.DotNet.XHarness.Android
             // This command waits for ANY kind of device to be available (emulator or real)
             // Needed because emulators start up asynchronously and take a while.
             // (Returns instantly if device is ready)
+            // This fails if _currentDevice is unset  
             _log.LogInformation("Waiting for device to be available (max 5 minutes)");
             var result = RunAdbCommand("wait-for-device", TimeSpan.FromMinutes(5));
             _log.LogDebug($"{result.StandardOutput}");
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Error waiting for Android device/emulator.  Std out:{result.StandardOutput} Std. Err: {result.StandardError}");
+                throw new Exception($"Error waiting for Android device/emulator.  Std out:{result.StandardOutput} Std. Err: {result.StandardError}.  Do you need to set the current device?");
             }
         }
 
@@ -318,6 +322,12 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
                 standardOutput = result.StandardOutput;
+                // delay for retries
+                if (string.IsNullOrEmpty(standardOutput) && result.ExitCode == (int)AdbExitCodes.SUCCESS)
+                {
+                    _log.LogDebug("Waiting for device listing to work");
+                    Thread.Sleep(5000);
+                }
             }
 
             if (result.ExitCode == (int)AdbExitCodes.SUCCESS)

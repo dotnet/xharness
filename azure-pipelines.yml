@@ -21,13 +21,7 @@ variables:
   - name: _HelixAccessToken
     value: ''
 
-# CI and PR triggers
-trigger:
-  batch: true
-  branches:
-    include:
-    - master
-
+# PR trigger only 
 pr:
   branches:
     include:
@@ -190,7 +184,13 @@ stages:
       steps:
       - download: current
         artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
-
+        
+      # Work around https://github.com/dotnet/core-eng/issues/9824
+      # AzDO API does not like to be called too soon relative to the beginning of the pipeline
+      - task: CmdLine@2
+        inputs:
+          script: 'echo Sleeping to work around ADO API issue && sleep 20s' 
+          
       - template: /eng/common/templates/steps/send-to-helix.yml
         parameters:
           DisplayNamePrefix: Run Tests
