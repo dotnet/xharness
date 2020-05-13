@@ -184,7 +184,6 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
 
         public int Run()
         {
-            int state;
             int tc_index;
 
             Console.WriteLine("Discovering tests...");
@@ -200,7 +199,6 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             }
 
             Console.WriteLine("Running " + testCases.Count + " tests...");
-            state = 3;
             tc_index = 0;
 
             Console.WriteLine(".");
