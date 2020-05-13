@@ -350,7 +350,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 
             if (simulatorsToInstall.Count > 0)
             {
-                var message = "Unknown simulators: {0}", string.Join(", ", simulatorsToInstall);
+                var message = "Unknown simulators: " + string.Join(", ", simulatorsToInstall);
                 s_logger.LogError(message);
 
                 if (checkOnly)
