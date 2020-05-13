@@ -153,9 +153,11 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                 if (arg != null && arg is IConvertible)
                     arg = Convert.ChangeType(arg, argType);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine("EX (ConvertArg): " + ex);
             }
+
             return arg;
         }
 
