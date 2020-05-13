@@ -66,12 +66,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                     runner.KillAdbServer();
                     runner.StartAdbServer();
 
+                    // Wait til at least device(s) are ready 
+                    runner.WaitForDevice();
+
                     // enumerate the devices attached and their architectures
                     // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
                     runner.SetActiveDevice(GetDeviceToUse(logger, runner, apkRequiredArchitecture));
 
-                    // Wait til the device is ready then empty its log
-                    runner.WaitForDevice();
+                    // Empty log as we'll be uploading the full logcat for this execution
                     runner.ClearAdbLog();
 
                     logger.LogDebug($"Working with {runner.GetAdbVersion()}");
