@@ -557,22 +557,6 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 
                 return path;
             }
-        }
-
-        private static async Task<(bool Succeeded, string Stdout)> ExecuteCommand(string filename, TimeSpan? timeout = null, params string[] arguments)
-        {
-            var stdoutLog = new MemoryLog() { Timestamp = false };
-            var stderrLog = new MemoryLog() { Timestamp = false };
-
-            var result = await s_processManager.ExecuteCommandAsync(filename, arguments, new CallbackLog(m => s_logger.LogDebug(m)), stdoutLog, stderrLog, timeout ?? TimeSpan.FromSeconds(30));
-
-            string stderr = stderrLog.ToString();
-            if (stderr.Length > 0)
-            {
-                s_logger.LogDebug("Error output: " + stderr);
-            }
-
-            return (result.Succeeded, stdoutLog.ToString());
         }*/
         }
     }

@@ -4,8 +4,12 @@
 
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.Commands;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.Extensions.Logging;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.SimulatorInstaller
@@ -44,12 +48,55 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 
     internal abstract class SimulatorInstallerCommand : XHarnessCommand
     {
+        private readonly IProcessManager _processManager = new ProcessManager();
+
         protected override XHarnessCommandArguments Arguments => SimulatorInstallerArguments;
 
         protected abstract SimulatorInstallerCommandArguments SimulatorInstallerArguments { get; }
 
         protected SimulatorInstallerCommand(string name, string help) : base(name, help)
         {
+        }
+
+        protected static string TempDirectory
+        {
+            get
+            {
+                string? path = Path.Combine(Path.GetTempPath(), "simulator-installer");
+
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+
+                return path;
+            }
+        }
+
+        protected async Task<(bool Succeeded, string Stdout)> ExecuteCommand(
+            string filename,
+            ILogger logger,
+            TimeSpan? timeout = null,
+            params string[] arguments)
+        {
+            var stdoutLog = new MemoryLog() { Timestamp = false };
+            var stderrLog = new MemoryLog() { Timestamp = false };
+
+            var result = await _processManager.ExecuteCommandAsync(
+                filename,
+                arguments,
+                new CallbackLog(m => logger.LogDebug(m)),
+                stdoutLog,
+                stderrLog,
+                timeout ?? TimeSpan.FromSeconds(30));
+
+            string stderr = stderrLog.ToString();
+            if (stderr.Length > 0)
+            {
+                logger.LogDebug("Error output: " + stderr);
+            }
+
+            return (result.Succeeded, stdoutLog.ToString());
         }
     }
 }
