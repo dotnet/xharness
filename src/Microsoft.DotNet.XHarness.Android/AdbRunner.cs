@@ -55,6 +55,7 @@ namespace Microsoft.DotNet.XHarness.Android
         public void SetActiveDevice(string? deviceSerialNumber)
         {
             _currentDevice = deviceSerialNumber;
+            _log.LogInformation($"Active Android device set to serial '{deviceSerialNumber}'");
         }
 
         private static string GetCliAdbExePath()
@@ -319,18 +320,13 @@ namespace Microsoft.DotNet.XHarness.Android
             // Retry for up to two minutes
             int retriesLeft = 12;
                    // Offline = waiting for emulators to be online
-            while (retriesLeft-- > 0 && (standardOutput.Contains("offline", StringComparison.OrdinalIgnoreCase) ||
+            while (retriesLeft-- > 0 && (result.StandardError.Contains("offline", StringComparison.OrdinalIgnoreCase) ||
                    // Empty string = Adb started another process to do the work and we should call again
                    string.IsNullOrEmpty(standardOutput))) 
             {
+                Thread.Sleep(10000);
                 result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
                 standardOutput = result.StandardOutput;
-                // delay for retries
-                if (string.IsNullOrEmpty(standardOutput) && result.ExitCode == (int)AdbExitCodes.SUCCESS)
-                {
-                    _log.LogDebug("Waiting for all attached Android devices to be online");
-                    Thread.Sleep(10000);
-                }
             }
 
             if (result.ExitCode == (int)AdbExitCodes.SUCCESS)

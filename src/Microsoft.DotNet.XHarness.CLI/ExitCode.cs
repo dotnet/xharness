@@ -49,6 +49,7 @@ namespace Microsoft.DotNet.XHarness.CLI
         FAILED_TO_GET_BUNDLE_INFO = 1003,
         APP_CRASH = 1004,
         DEVICE_NOT_FOUND = 1005,
+        RETURN_CODE_NOT_SET = 1006,
 
         #endregion
 
