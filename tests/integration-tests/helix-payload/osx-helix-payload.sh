@@ -41,7 +41,10 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
 # Restart the simulator to make sure it is tied to the right user session
 xcode_path=`xcode-select -p`
 pid=`ps aux | grep $xcode_path/Applications/Simulator.app | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
-sudo kill $pid
+if [ ! -z "$pid" ]; then
+    sudo kill $pid
+fi
+
 open -a $xcode_path/Applications/Simulator.app
 
 dotnet tool restore --no-cache
@@ -53,9 +56,9 @@ dotnet xharness ios test           \
     --launch-timeout=360           \
     --communication-channel=Network
 
-set +e
-
 result=$?
+
+set +e
 
 test_results=`ls $1/xunit-*.xml`
 
@@ -67,9 +70,10 @@ fi
 
 echo "Found test results in $1/$test_results. Renaming to testResults.xml"
 
-mv $test_results $1/testResults.xml
+# Prepare test results for Helix to pick up
+cp $test_results $2/testResults.xml
 
-if ! cat $1/testResults.xml | grep 'collection total="19" passed="19" failed="0" skipped="0"'; then
+if ! cat $2/testResults.xml | grep 'collection total="19" passed="19" failed="0" skipped="0"'; then
     echo "Failed to detect result line"
     exit 1
 fi

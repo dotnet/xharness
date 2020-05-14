@@ -200,7 +200,7 @@ stages:
           Creator: xharness
           EnableXUnitReporter: true
           WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
-          WorkItemCommand: sudo launchctl asuser `id -u` sh osx-helix-payload.sh $HELIX_WORKITEM_UPLOAD_ROOT
+          WorkItemCommand: sudo launchctl asuser `id -u` sh osx-helix-payload.sh $HELIX_WORKITEM_UPLOAD_ROOT $HELIX_WORKITEM_ROOT
           WorkItemTimeout: 00:12:00
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
