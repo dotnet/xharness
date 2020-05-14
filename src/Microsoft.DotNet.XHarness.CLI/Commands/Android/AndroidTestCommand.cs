@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
         // nunit2 one should go away eventually
         private readonly static string[] _xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
         private readonly static string _testRunSummaryVariableName = "test-execution-summary";
+        private readonly static string _shortMessageVariableName = "shortMsg";
         private readonly static string _returnCodeVariableName = "return-code";
 
         private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
@@ -39,8 +40,8 @@ Optional:
 Test results Paths:
 {string.Join('\n', _xmlOutputVariableNames)} - If specified, this file will be copied off the device after execution (used for external reporting)
 Reporting:
-{_testRunSummaryVariableName} - If specified, this will be printed to the console directly after execution (useful for printing summaries)
-
+{_testRunSummaryVariableName},{_shortMessageVariableName} - If specified, this will be printed to the console directly after execution (useful for printing summaries)
+ 
 Arguments:
 ";
 
@@ -132,6 +133,10 @@ Arguments:
                         if (resultValues.ContainsKey(_testRunSummaryVariableName))
                         {
                             logger.LogInformation($"Test execution summary:{Environment.NewLine}{resultValues[_testRunSummaryVariableName]}");
+                        }
+                        if (resultValues.ContainsKey(_shortMessageVariableName))
+                        {
+                            logger.LogInformation($"Short Message: {Environment.NewLine}{resultValues[_shortMessageVariableName]}");
                         }
 
                         // Due to the particulars of how instrumentations work, ADB will report a 0 exit code for crashed instrumentations
