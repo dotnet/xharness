@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
         {
             _project = project;
 
-            string assemblyFileName = "/" + project.Assemblies.First().AssemblyFilename;
+            string assemblyFileName = "/" + project.Assemblies.FirstOrDefault().AssemblyFilename;
 
             var assembly = Assembly.LoadFrom(assemblyFileName);
             var assemblyInfo = new Xunit.Sdk.ReflectionAssemblyInfo(assembly);
