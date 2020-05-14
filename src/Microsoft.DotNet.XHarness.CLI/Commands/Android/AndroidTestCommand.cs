@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
@@ -41,6 +40,8 @@ Test results Paths:
 {string.Join('\n', _xmlOutputVariableNames)} - If specified, this file will be copied off the device after execution (used for external reporting)
 Reporting:
 {_testRunSummaryVariableName} - If specified, this will be printed to the console directly after execution (useful for printing summaries)
+
+Arguments:
 ";
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)

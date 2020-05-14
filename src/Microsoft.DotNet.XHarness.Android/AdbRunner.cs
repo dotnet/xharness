@@ -55,6 +55,7 @@ namespace Microsoft.DotNet.XHarness.Android
         public void SetActiveDevice(string? deviceSerialNumber)
         {
             _currentDevice = deviceSerialNumber;
+            _log.LogInformation($"Active Android device set to serial '{deviceSerialNumber}'");
         }
 
         private static string GetCliAdbExePath()
