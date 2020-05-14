@@ -60,6 +60,8 @@ result=$?
 
 set +e
 
+chmod 0666 $1/*
+
 test_results=`ls $1/xunit-*.xml`
 
 if [ ! -f "$test_results" ]; then
