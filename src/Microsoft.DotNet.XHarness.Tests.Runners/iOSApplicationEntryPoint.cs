@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 
             ConfigureRunner(runner, options);
 
-            WriteResults(runner, options, logger, writer);
+            WriteResults(runner, options, logger, writer ?? Console.Out);
 
             logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests + runner.SkippedTests}");
 

@@ -39,19 +39,21 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
             var runner = await InternalRunAsync(logger);
             ConfigureRunner(runner, options);
 
-            TextWriter? writer = null;
-
             if (options.EnableXml)
             {
                 if (TestsResultsFinalPath == null)
                     throw new InvalidOperationException("Tests results final path cannot be null.");
 
-                using var stream = File.Create(TestsResultsFinalPath);
-                writer = new StreamWriter(stream);
+                using (var stream = File.Create(TestsResultsFinalPath))
+                using (var writer = new StreamWriter(stream))
+                {
+                    WriteResults(runner, options, logger, writer);
+                }
             }
-
-            WriteResults(runner, options, logger, writer);
-            writer?.Dispose();
+            else
+            {
+                WriteResults(runner, options, logger, Console.Out);
+            }
 
             logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests}");
             if (options.TerminateAfterExecution)
