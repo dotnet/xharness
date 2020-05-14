@@ -221,10 +221,10 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                 return;
 
             // For SkipTestExceptions, we treat as a skip instead of a failure
-            var exceptionType = args.Message.ExceptionTypes.FirstOrDefault();
-            if (exceptionType == "Microsoft.DotNet.XUnitExtensions.SkipTestException")
+            if (args.Message.ExceptionTypes.Contains("Microsoft.DotNet.XUnitExtensions.SkipTestException"))
             {
                 RaiseTestSkippedCase(args.Message, args.Message.TestCases, args.Message.TestCase);
+                return;
             }
 
             FailedTests++;
