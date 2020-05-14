@@ -70,7 +70,8 @@ fi
 
 echo "Found test results in $1/$test_results. Renaming to testResults.xml"
 
-mv $test_results $1/testResults.xml
+# Prepare test results for Helix to pick up
+cp $test_results $2/testResults.xml
 
 if ! cat $1/testResults.xml | grep 'collection total="19" passed="19" failed="0" skipped="0"'; then
     echo "Failed to detect result line"
