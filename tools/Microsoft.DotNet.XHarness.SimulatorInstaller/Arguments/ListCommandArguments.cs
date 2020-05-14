@@ -8,6 +8,11 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments
 {
     internal class ListCommandArguments : SimulatorInstallerCommandArguments
     {
-        protected override OptionSet GetAdditionalOptions() => new OptionSet();
+        public bool ListInstalledOnly { get; private set; } = false;
+
+        protected override OptionSet GetAdditionalOptions() => new OptionSet
+        {
+            { "installed", "Lists installed simulators only", v => ListInstalledOnly = true },
+        };
     }
 }

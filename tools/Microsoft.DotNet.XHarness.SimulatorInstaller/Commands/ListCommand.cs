@@ -41,9 +41,19 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                 output.Append($"  Version: {simulator.Version}");
 
                 var installedVersion = await IsInstalled(simulator.Identifier);
-                if (installedVersion != null)
+                if (installedVersion == null)
                 {
-                    if (installedVersion >= Version.Parse(simulator.Version))
+                    if (_arguments.ListInstalledOnly)
+                    {
+                        Logger.LogDebug($"The simulator '{simulator.Name}' is not installed");
+                        continue;
+                    }
+
+                    output.AppendLine($" (not installed)");
+                }
+                else
+                {
+                    if (installedVersion >= Version.Parse(simulator.Version) && !_arguments.ListInstalledOnly)
                     {
                         output.AppendLine($" (installed)");
                     }
@@ -51,10 +61,6 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                     {
                         output.AppendLine($" (an earlier version is installed: {installedVersion}");
                     }
-                }
-                else
-                {
-                    output.AppendLine($" (not installed)");
                 }
 
                 output.AppendLine($"  Source: {simulator.Source}");
