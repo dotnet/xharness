@@ -21,7 +21,13 @@ variables:
   - name: _HelixAccessToken
     value: ''
 
-# PR trigger only
+# CI and PR triggers
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+
 pr:
   branches:
     include:
