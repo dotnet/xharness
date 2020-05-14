@@ -172,17 +172,16 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
 
         internal static string WriteResults(TestRunner runner, ApplicationOptions options, LogWriter logger, TextWriter writer = null)
         {
-            TestRunner.Jargon jargon = options.XmlVersion.ToTestRunnerJargon();
             string resultsFilePath = null;
 
             if (options.EnableXml)
             {
-                runner.WriteResultsToFile(writer ?? Console.Out, jargon);
+                runner.WriteResultsToFile(writer ?? Console.Out, options.XmlVersion);
                 logger.Info("Xml file was written to the tcp listener.");
             }
             else
             {
-                resultsFilePath = runner.WriteResultsToFile(jargon);
+                resultsFilePath = runner.WriteResultsToFile(options.XmlVersion);
                 logger.Info($"XML results can be found in '{resultsFilePath}'");
             }
 

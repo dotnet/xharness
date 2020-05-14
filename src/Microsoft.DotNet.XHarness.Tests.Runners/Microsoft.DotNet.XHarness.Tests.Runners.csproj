@@ -31,4 +31,8 @@
       <Link>EnviromentVariables.cs</Link>
     </Compile>
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj" />
+  </ItemGroup>
 </Project>

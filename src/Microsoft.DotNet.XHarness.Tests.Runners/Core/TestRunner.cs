@@ -7,20 +7,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Common;
 
 
 namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 {
     public abstract class TestRunner
     {
-        public enum Jargon
-        {
-            TouchUnit,
-            NUnitV2,
-            NUnitV3,
-            xUnit,
-        }
-
         /// <summary>
         /// Event raised when a test has started.
         /// </summary>
@@ -118,8 +111,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         }
 
         public abstract Task Run(IEnumerable<TestAssemblyInfo> testAssemblies);
-        public abstract string WriteResultsToFile(Jargon jargon);
-        public abstract void WriteResultsToFile(TextWriter writer, Jargon jargon);
+        public abstract string WriteResultsToFile(XmlResultJargon jargon);
+        public abstract void WriteResultsToFile(TextWriter writer, XmlResultJargon jargon);
         public abstract void SkipTests(IEnumerable<string> tests);
         public abstract void SkipCategories(IEnumerable<string> categories);
 
