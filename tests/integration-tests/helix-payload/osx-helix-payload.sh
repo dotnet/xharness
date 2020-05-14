@@ -38,8 +38,10 @@ dotnet tool install --no-cache --version $version --add-source .. Microsoft.DotN
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
-# We have to call this otherwise mlaunch fails to spawn it properly
+# Restart the simulator to make sure it is tied to the right user session
 xcode_path=`xcode-select -p`
+pid=`ps aux | grep $xcode_path/Applications/Simulator.app | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
+sudo kill $pid
 open -a $xcode_path/Applications/Simulator.app
 
 dotnet tool restore --no-cache

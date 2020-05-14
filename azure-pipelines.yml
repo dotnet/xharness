@@ -21,7 +21,7 @@ variables:
   - name: _HelixAccessToken
     value: ''
 
-# PR trigger only 
+# PR trigger only
 pr:
   branches:
     include:
@@ -186,7 +186,7 @@ stages:
       steps:
       - download: current
         artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
-         
+
       - template: /eng/common/templates/steps/send-to-helix.yml
         parameters:
           DisplayNamePrefix: Run Tests
@@ -198,12 +198,13 @@ stages:
           WaitForWorkItemCompletion: true
           HelixTargetQueues: osx.1015.amd64.ios.open
           Creator: xharness
+          EnableXUnitReporter: true
           WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
           WorkItemCommand: sudo launchctl asuser `id -u` sh osx-helix-payload.sh $HELIX_WORKITEM_UPLOAD_ROOT
           WorkItemTimeout: 00:12:00
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-            HelixAccessToken: ''     
+            HelixAccessToken: ''
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml
