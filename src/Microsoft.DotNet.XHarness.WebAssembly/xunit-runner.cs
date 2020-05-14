@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
         private readonly Discoverer _discoverer;
         private readonly ITestFrameworkExecutor _executor;
         private readonly ITestFrameworkExecutionOptions _executionOptions;
-        private readonly List<ITestCase> _testCases;
+        private readonly List<ITestCase> _testCases = new List<ITestCase>();
         private readonly XunitProject _project;
 
         public WasmRunner(XunitProject project)
@@ -108,7 +108,6 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             _project = project;
 
             string assemblyFileName = "/" + project.Assemblies.First().AssemblyFilename;
-            _testCases = new List<ITestCase>();
 
             var assembly = Assembly.LoadFrom(assemblyFileName);
             var assemblyInfo = new Xunit.Sdk.ReflectionAssemblyInfo(assembly);
