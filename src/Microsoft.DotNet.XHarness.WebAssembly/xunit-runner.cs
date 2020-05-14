@@ -315,8 +315,9 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                     }
                     nrun++;
                     string name = tc.DisplayName;
-                    if (name.Contains("("))
-                        name = name.Substring(0, name.IndexOf("("));
+                    int indx = name.IndexOf("(");
+                    if (indx != -1)
+                        name = name.Substring(0, indx);
                     if (name != last_name)
                         Console.WriteLine(name);
                     last_name = name;
