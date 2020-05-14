@@ -23,8 +23,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
         #region Private variables
 
         static readonly Lazy<string> s_autoDetectedXcodeRoot = new Lazy<string>(DetectXcodePath, LazyThreadSafetyMode.PublicationOnly);
-        readonly string _xcodeRoot;
-        Version _xcode_version;
+        readonly string? _xcodeRoot;
+        Version? _xcode_version;
 
         #endregion
 
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
             }
         }
 
-        public MLaunchProcessManager(string xcodeRoot = null, string mlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch")
+        public MLaunchProcessManager(string? xcodeRoot = null, string mlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch")
         {
             this._xcodeRoot = xcodeRoot;
             MlaunchPath = mlaunchPath;
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
             MlaunchArguments args,
             ILog log,
             TimeSpan timeout,
-            Dictionary<string, string> environmentVariables = null,
+            Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null)
         {
             using var p = new Process();
@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
             ILog stdout,
             ILog stderr,
             TimeSpan timeout,
-            Dictionary<string, string> environmentVariables = null,
+            Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null)
         {
             using var p = new Process();
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
             MlaunchArguments args,
             ILog log,
             TimeSpan? timeout = null,
-            Dictionary<string, string> environmentVariables = null,
+            Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null,
             bool? diagnostics = null)
         {
@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
             ILog stdout,
             ILog stderr,
             TimeSpan? timeout = null,
-            Dictionary<string, string> environmentVariables = null,
+            Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null,
             bool? diagnostics = null)
         {
@@ -154,7 +154,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
                 throw new Exception("Failed to detect Xcode path from xcode-select!");
 
             // We need /Applications/Xcode114.app only
-            return Path.GetDirectoryName(Path.GetDirectoryName(xcodeRoot));
+            // should never be null, if it is return an ""
+            return Path.GetDirectoryName(Path.GetDirectoryName(xcodeRoot)) ?? string.Empty;
         }
 
         #endregion

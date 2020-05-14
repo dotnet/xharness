@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -271,8 +269,8 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                     if(key == null) continue;
 
                     string? a = null, b = null;
-                    currentEnvironment?.TryGetValue(key, out a);
-                    processEnvironment?.TryGetValue(key, out b);
+                    currentEnvironment?.TryGetValue(key!, out a);
+                    processEnvironment?.TryGetValue(key!, out b);
                     if (a != b)
                         sb.Append($"{key}={StringUtils.Quote(b)} ");
                 }
@@ -339,7 +337,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 
             var tcs = new TaskCompletionSource<bool>();
 
-            void ProcessExited(object sender, EventArgs ea)
+            void ProcessExited(object? sender, EventArgs ea)
             {
                 process.Exited -= ProcessExited;
                 tcs.TrySetResult(true);

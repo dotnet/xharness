@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable enable
 using System;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -12,6 +11,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 using ExceptionLogger = System.Action<int, string>;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
     public interface ITestReporterFactory
@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             AppBundleInformation appInformation,
             RunMode runMode,
             XmlResultJargon xmlJargon,
-            string device,
+            string? device,
             TimeSpan timeout,
             string? additionalLogsDirectory = null,
             ExceptionLogger? exceptionLogger = null,

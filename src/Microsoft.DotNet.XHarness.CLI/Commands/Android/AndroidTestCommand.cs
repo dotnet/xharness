@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
@@ -46,7 +47,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
             if (!string.IsNullOrEmpty(_arguments.DeviceArchitecture))
             {
-                apkRequiredArchitecture = _arguments.DeviceArchitecture; 
+                apkRequiredArchitecture = _arguments.DeviceArchitecture;
                 logger.LogInformation($"Will attempt to run device on specified architecture: '{apkRequiredArchitecture}'");
             }
             else
@@ -72,7 +73,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                     // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
                     runner.SetActiveDevice(GetDeviceToUse(logger, runner, apkRequiredArchitecture));
 
-                    // Wait til at least device(s) are ready 
+                    // Wait til at least device(s) are ready
                     runner.WaitForDevice();
 
                     // Empty log as we'll be uploading the full logcat for this execution
@@ -159,7 +160,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
             if (allDevicesAndTheirArchitectures.Count > 0)
             {
                 if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)))
-                { 
+                {
                     var firstAvailableCompatible = allDevicesAndTheirArchitectures.Where(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
                     logger.LogInformation($"Using first-found compatible device of {allDevicesAndTheirArchitectures.Count} total- serial: '{firstAvailableCompatible.Key}' - Arch: {firstAvailableCompatible.Value}");
                     return firstAvailableCompatible.Key;
