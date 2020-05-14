@@ -53,13 +53,16 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                 }
                 else
                 {
-                    if (installedVersion >= Version.Parse(simulator.Version) && !_arguments.ListInstalledOnly)
+                    if (installedVersion >= Version.Parse(simulator.Version))
                     {
-                        output.AppendLine($" (installed)");
+                        if (!_arguments.ListInstalledOnly)
+                        {
+                            output.AppendLine($" (installed)");
+                        }
                     }
                     else
                     {
-                        output.AppendLine($" (an earlier version is installed: {installedVersion}");
+                        output.AppendLine($" (an earlier version is installed: {installedVersion})");
                     }
                 }
 
