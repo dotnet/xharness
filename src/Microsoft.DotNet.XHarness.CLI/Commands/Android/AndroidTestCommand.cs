@@ -18,8 +18,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
     internal class AndroidTestCommand : TestCommand
     {
         // nunit2 one should go away eventually
-        private readonly string[] _xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
-        private readonly string _testRunSummaryVariableName = "test-execution-summary";
+        private readonly static string[] _xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
+        private readonly static string _testRunSummaryVariableName = "test-execution-summary";
+        private readonly static string _shortMessageVariableName = "shortMsg";
+        private readonly static string _returnCodeVariableName = "return-code";
 
         private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
 
@@ -27,7 +29,22 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
         protected override string CommandUsage { get; } = "android test [OPTIONS]";
 
-        protected override string CommandDescription { get; } = "Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app";
+        protected override string CommandDescription { get; } = @$"
+Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app
+
+APKs can communicate status back to XHarness using the results bundle:
+
+Required:
+{_returnCodeVariableName} - Exit code for instrumentation. Necessary because a crashing instrumentation may be indistinguishable from a passing one from exit codes.
+
+Optional:
+Test results Paths:
+{string.Join('\n', _xmlOutputVariableNames)} - If specified, this file will be copied off the device after execution (used for external reporting)
+Reporting:
+{_testRunSummaryVariableName},{_shortMessageVariableName} - If specified, this will be printed to the console directly after execution (useful for printing summaries)
+ 
+Arguments:
+";
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
@@ -117,6 +134,31 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                         if (resultValues.ContainsKey(_testRunSummaryVariableName))
                         {
                             logger.LogInformation($"Test execution summary:{Environment.NewLine}{resultValues[_testRunSummaryVariableName]}");
+                        }
+                        if (resultValues.ContainsKey(_shortMessageVariableName))
+                        {
+                            logger.LogInformation($"Short Message: {Environment.NewLine}{resultValues[_shortMessageVariableName]}");
+                        }
+
+                        // Due to the particulars of how instrumentations work, ADB will report a 0 exit code for crashed instrumentations
+                        // We'll change that to a specific value and print a message explaining why.
+                        if (resultValues.ContainsKey(_returnCodeVariableName))
+                        {
+                            if (int.TryParse(resultValues[_returnCodeVariableName], out int bundleExitCode))
+                            {
+                                logger.LogInformation($"Instrumentation finished normally with exit code {bundleExitCode}");
+                                instrumentationExitCode = bundleExitCode;
+                            }
+                            else
+                            {
+                                logger.LogError($"Un-parse-able value for '{_returnCodeVariableName}' : '{resultValues[_returnCodeVariableName]}'");
+                                instrumentationExitCode = (int)ExitCode.RETURN_CODE_NOT_SET;
+                            }
+                        }
+                        else
+                        {
+                            logger.LogError($"No value for '{_returnCodeVariableName}' provided in instrumentation result.  This may indicate a crashed test (see log)");
+                            instrumentationExitCode = (int)ExitCode.RETURN_CODE_NOT_SET;
                         }
                     }
 

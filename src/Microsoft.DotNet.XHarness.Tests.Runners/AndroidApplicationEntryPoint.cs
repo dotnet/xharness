@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         /// Implementors should provide a text writter than will be used to
         /// write the logging of the tests that are executed.
         /// </summary>
-        public abstract TextWriter Logger { get; }
+        public abstract TextWriter? Logger { get; }
 
         /// <summary>
         /// Implementors should provide a full path in which the final

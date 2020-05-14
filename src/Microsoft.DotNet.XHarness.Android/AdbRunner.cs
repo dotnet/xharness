@@ -55,6 +55,7 @@ namespace Microsoft.DotNet.XHarness.Android
         public void SetActiveDevice(string? deviceSerialNumber)
         {
             _currentDevice = deviceSerialNumber;
+            _log.LogInformation($"Active Android device set to serial '{deviceSerialNumber}'");
         }
 
         private static string GetCliAdbExePath()
@@ -316,21 +317,14 @@ namespace Microsoft.DotNet.XHarness.Android
             var result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
             string standardOutput = result.StandardOutput;
 
-            // Retry for up to two minutes
-            int retriesLeft = 12;
-                   // Offline = waiting for emulators to be online
-            while (retriesLeft-- > 0 && (standardOutput.Contains("offline", StringComparison.OrdinalIgnoreCase) ||
-                   // Empty string = Adb started another process to do the work and we should call again
-                   string.IsNullOrEmpty(standardOutput))) 
+            // Retry up to 1 min til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
+            int retriesLeft = 6;
+            // Empty string = Adb started another process to do the work and we should call again
+            while (retriesLeft-- > 0 && string.IsNullOrEmpty(standardOutput)) 
             {
+                Thread.Sleep(10000);
                 result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
                 standardOutput = result.StandardOutput;
-                // delay for retries
-                if (string.IsNullOrEmpty(standardOutput) && result.ExitCode == (int)AdbExitCodes.SUCCESS)
-                {
-                    _log.LogDebug("Waiting for all attached Android devices to be online");
-                    Thread.Sleep(10000);
-                }
             }
 
             if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
@@ -346,6 +340,15 @@ namespace Microsoft.DotNet.XHarness.Android
                     {
                         var deviceSerial = lineParts[0];
                         var shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi");
+
+                        // Assumption:  All Devices on a machine running Xharness should attempt to be be online or disconnected.
+                        retriesLeft = 12;
+                        while (retriesLeft-- > 0 && shellArchitecture.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
+                        {
+                            _log.LogWarning($"Device '{deviceSerial}' is offline; retrying up to one minute.");
+                            Thread.Sleep(5000);
+                            shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi");
+                        }
 
                         if (shellArchitecture.ExitCode == (int)AdbExitCodes.SUCCESS)
                         {

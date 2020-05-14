@@ -143,9 +143,9 @@ namespace Microsoft.DotNet.XHarness.iOS
             if (_useXmlOutput)
             {
                 // let the runner now via envars that we want to get a xml output, else the runner will default to plain text
-                args.Add (new SetEnvVariableArgument (EnviromentVariables.EnableXmlOutput, true));
-                args.Add (new SetEnvVariableArgument (EnviromentVariables.XmlMode, "wrapped"));
-                args.Add (new SetEnvVariableArgument (EnviromentVariables.XmlVersion, $"{xmlResultJargon}"));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.EnableXmlOutput, true));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlMode, "wrapped"));
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlVersion, $"{xmlResultJargon}"));
             }
 
             listener.StartAsync();
@@ -221,6 +221,8 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 deviceName = simulator.Name;
 
+                string? stdoutLogPath = null, stderrLogPath = null;
+
                 if (!target.IsWatchOSTarget())
                 {
                     var stderrTty = _helpers.GetTerminalName(2);
@@ -230,10 +232,10 @@ namespace Microsoft.DotNet.XHarness.iOS
                     }
                     else
                     {
-                        var stdoutLog = _logs.CreateFile($"mlaunch-stdout-{_helpers.Timestamp}.log", "Standard output");
-                        var stderrLog = _logs.CreateFile($"mlaunch-stderr-{_helpers.Timestamp}.log", "Standard error");
-                        args.Add(new SetStdoutArgument(stdoutLog));
-                        args.Add(new SetStderrArgument(stderrLog));
+                        stdoutLogPath = _logs.CreateFile($"mlaunch-stdout-{_helpers.Timestamp}.log", "Standard output");
+                        stderrLogPath = _logs.CreateFile($"mlaunch-stderr-{_helpers.Timestamp}.log", "Standard error");
+                        args.Add(new SetStdoutArgument(stdoutLogPath));
+                        args.Add(new SetStderrArgument(stderrLogPath));
                     }
                 }
 
@@ -256,35 +258,65 @@ namespace Microsoft.DotNet.XHarness.iOS
                     systemLogs.Add(log);
                 }
 
-                _mainLog.WriteLine("*** Executing {0}/{1} in the simulator ***", appInformation.AppName, target);
-
-                if (ensureCleanSimulatorState)
+                try
                 {
-                    foreach (var sim in simulators)
+                    _mainLog.WriteLine("*** Executing {0}/{1} in the simulator ***", appInformation.AppName, target);
+
+                    if (ensureCleanSimulatorState)
                     {
-                        await sim.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
+                        foreach (var sim in simulators)
+                        {
+                            await sim.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
+                        }
+                    }
+
+                    args.Add(new SimulatorUDIDArgument(simulator.UDID));
+
+                    await crashReporter.StartCaptureAsync();
+
+                    _mainLog.WriteLine("Starting test run");
+
+                    var result = _processManager.ExecuteCommandAsync(args, _mainLog, timeout, cancellationToken: linkedCts.Token);
+
+                    await testReporter.CollectSimulatorResult(result);
+
+                    // cleanup after us
+                    if (ensureCleanSimulatorState)
+                    {
+                        await simulator.KillEverything(_mainLog);
+                    }
+
+                    foreach (var log in systemLogs)
+                    {
+                        log.StopCapture();
                     }
                 }
-
-                args.Add(new SimulatorUDIDArgument(simulator.UDID));
-
-                await crashReporter.StartCaptureAsync();
-
-                _mainLog.WriteLine("Starting test run");
-
-                var result = _processManager.ExecuteCommandAsync(args, _mainLog, timeout, cancellationToken: linkedCts.Token);
-
-                await testReporter.CollectSimulatorResult(result);
-
-                // cleanup after us
-                if (ensureCleanSimulatorState)
+                finally
                 {
-                    await simulator.KillEverything(_mainLog);
-                }
+                    foreach (var log in systemLogs)
+                    {
+                        log.StopCapture();
+                        log.Dispose();
+                    }
 
-                foreach (var log in systemLogs)
-                {
-                    log.StopCapture();
+                    // Remove empty files
+                    if (stdoutLogPath != null)
+                    {
+                        var fileInfo = new FileInfo(stdoutLogPath);
+                        if (fileInfo.Exists && fileInfo.Length == 0)
+                        {
+                            fileInfo.Delete();
+                        }
+                    }
+
+                    if (stderrLogPath != null)
+                    {
+                        var fileInfo = new FileInfo(stderrLogPath);
+                        if (fileInfo.Exists && fileInfo.Length == 0)
+                        {
+                            fileInfo.Delete();
+                        }
+                    }
                 }
             }
             else
@@ -381,7 +413,9 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                     // close a tunnel if it was created
                     if (!isSimulator && _listenerFactory.UseTunnel)
+                    {
                         await _listenerFactory.TunnelBore.Close(deviceName);
+                    }
                 }
 
                 // Upload the system log
