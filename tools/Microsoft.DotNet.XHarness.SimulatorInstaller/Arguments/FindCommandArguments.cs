@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments

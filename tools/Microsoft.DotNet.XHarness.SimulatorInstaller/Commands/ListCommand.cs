@@ -14,14 +14,17 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
     internal class ListCommand : SimulatorInstallerCommand
     {
-        protected override string CommandUsage => Name;
+        private const string CommandName = "list";
+        private const string CommandHelp = "Lists available simulators";
 
-        protected override string CommandDescription => "Lists installed simulators";
+        protected override string CommandUsage => CommandName;
+
+        protected override string CommandDescription => CommandHelp;
 
         private readonly ListCommandArguments _arguments = new ListCommandArguments();
         protected override SimulatorInstallerCommandArguments SimulatorInstallerArguments => _arguments;
 
-        public ListCommand() : base("list", "Lists installed simulators")
+        public ListCommand() : base(CommandName, CommandHelp)
         {
         }
 

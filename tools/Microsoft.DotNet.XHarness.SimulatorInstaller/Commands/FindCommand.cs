@@ -13,15 +13,17 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 {
     internal class FindCommand : SimulatorInstallerCommand
     {
-        protected override string CommandUsage => "find [OPTIONS]";
+        private const string CommandName = "find";
+        private const string CommandHelp = "Finds whether given simulators are installed and outputs list of missing ones (returns 0 when none missing)";
 
-        private const string _commandDescription = "Finds whether given simulators are installed and outputs list of missing ones (returns 0 when none missing)";
-        protected override string CommandDescription => _commandDescription;
+        protected override string CommandUsage => CommandName + " [OPTIONS]";
+
+        protected override string CommandDescription => CommandHelp;
 
         private readonly FindCommandArguments _arguments = new FindCommandArguments();
         protected override SimulatorInstallerCommandArguments SimulatorInstallerArguments => _arguments;
 
-        public FindCommand() : base("find", _commandDescription)
+        public FindCommand() : base(CommandName, CommandHelp)
         {
         }
 

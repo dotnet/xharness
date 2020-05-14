@@ -18,15 +18,17 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 {
     internal class InstallCommand : SimulatorInstallerCommand
     {
-        protected override string CommandUsage => "install [OPTIONS]";
+        private const string CommandName = "install";
+        private const string CommandHelp = "Installs given simulators";
 
-        private const string _commandDescription = "Installs given simulators";
-        protected override string CommandDescription => _commandDescription;
+        protected override string CommandUsage => CommandName + " [OPTIONS]";
+
+        protected override string CommandDescription => CommandHelp;
 
         private readonly InstallCommandArguments _arguments = new InstallCommandArguments();
         protected override SimulatorInstallerCommandArguments SimulatorInstallerArguments => _arguments;
 
-        public InstallCommand() : base("install", _commandDescription)
+        public InstallCommand() : base(CommandName, CommandHelp)
         {
         }
 
@@ -78,7 +80,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                     }
                     else
                     {
-                        Logger.LogInformation($"The simulator '{simulator.Name}' is installed, but an update is available too ({simulator.Version}).");
+                        Logger.LogInformation($"The simulator '{simulator.Name}' is installed, but an update is available ({simulator.Version}).");
                     }
                 }
 
@@ -117,11 +119,15 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
             if (!File.Exists(downloadPath))
             {
-                Logger.LogInformation($"Downloading '{simulator.Source}' to '{downloadPath}' (size: {simulator.FileSize} bytes = {simulator.FileSize / 1024.0 / 1024.0:N2} MB)...");
+                Logger.LogInformation(
+                    $"Downloading '{simulator.Source}' to '{downloadPath}' " +
+                    $"(size: {simulator.FileSize} bytes = {simulator.FileSize / 1024.0 / 1024.0:N2} MB)...");
             }
             else if (new FileInfo(downloadPath).Length != simulator.FileSize)
             {
-                Logger.LogInformation($"Downloading '{simulator.Source}' to '{downloadPath}' because the existing file's size {new FileInfo(downloadPath).Length} does not match the expected size {fileSize}...");
+                Logger.LogInformation(
+                    $"Downloading '{simulator.Source}' to '{downloadPath}' because the existing file's " +
+                    $"size {new FileInfo(downloadPath).Length} does not match the expected size {simulator.FileSize}...");
             }
             else
             {
@@ -143,17 +149,22 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                         var duration = watch.Elapsed.TotalSeconds;
                         var speed = progressArgs.BytesReceived / duration;
                         var timeLeft = TimeSpan.FromSeconds((progressArgs.TotalBytesToReceive - progressArgs.BytesReceived) / speed);
-                        Logger.LogDebug($"Downloaded {progressArgs.BytesReceived:N0}/{simulator.FileSize:N0} bytes = {progress}% in {duration:N1}s ({speed / 1024.0 / 1024.0:N1} MB/s; approximately {new TimeSpan(timeLeft.Days, timeLeft.Hours, timeLeft.Minutes, timeLeft.Seconds)} left)");
+
+                        Logger.LogDebug($"Downloaded {progressArgs.BytesReceived:N0}/{simulator.FileSize:N0} bytes = " +
+                            $"{progress}% in {duration:N1}s ({speed / 1024.0 / 1024.0:N1} MB/s; approximately " +
+                            $"{new TimeSpan(timeLeft.Days, timeLeft.Hours, timeLeft.Minutes, timeLeft.Seconds)} left)");
                     }
                 };
 
                 wc.DownloadFileCompleted += (sender, completedArgs) =>
                 {
                     Logger.LogInformation($"Download completed in {watch.Elapsed.TotalSeconds}s");
+
                     if (completedArgs.Error != null)
                     {
                         Logger.LogError($"    with error: {completedArgs.Error}");
                     }
+
                     downloadDone.Set();
                 };
 

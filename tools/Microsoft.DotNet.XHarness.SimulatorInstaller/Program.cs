@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.SimulatorInstaller.Commands;
 using Mono.Options;
 
@@ -16,16 +14,8 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
     /// </summary>
     public static class Program
     {
-        private enum Command
+        public static int Main(string[] args)
         {
-            List,
-            Help,
-        }
-
-        public static async Task<int> Main(string[] args)
-        {
-            Console.WriteLine($"simulator-installer command issued: {string.Join(' ', args)}");
-
             var commands = new CommandSet("simulator-installer")
             {
                 new InstallCommand(),
@@ -34,9 +24,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                 new HelpCommand(),
             };
 
-            int result = commands.Run(args);
-            Console.WriteLine($"simulator-installer exit code: {result}");
-            return result;
+            return commands.Run(args);
         }
     }
 }
