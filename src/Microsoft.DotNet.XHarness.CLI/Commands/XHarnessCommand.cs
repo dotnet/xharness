@@ -82,6 +82,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
         private ILoggerFactory CreateLoggerFactory(LogLevel verbosity) => LoggerFactory.Create(builder =>
         {
             builder
+            .SetMinimumLevel(verbosity)
             .AddConsole(options =>
             {
                 if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
@@ -93,8 +94,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 {
                     options.TimestampFormat = "[HH:mm:ss] ";
                 }
-            })
-            .SetMinimumLevel(verbosity);
+            });
         });
     }
 }
