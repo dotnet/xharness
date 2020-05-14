@@ -39,7 +39,19 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
             if (unknownSimulators.Any())
             {
-                Logger.LogError("Unknown simulators: " + string.Join(", ", unknownSimulators));
+                // This output is actually matched in some tools, so please don't change
+                var message = "Unknown simulators: " + string.Join(", ", unknownSimulators);
+
+                if (_arguments.Verbosity == LogLevel.Debug)
+                {
+                    Logger.LogDebug(message);
+
+                }
+                else
+                {
+                    // For parsing
+                    Console.WriteLine(message);
+                }
                 return ExitCode.DEVICE_NOT_FOUND;
             }
 
