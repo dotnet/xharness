@@ -190,8 +190,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             int n = 0;
             while (n < 20)
             {
-                bool res = _discoverer.Step();
-                if (!res)
+                if (!_discoverer.Step())
                 {
                     break;
                 }
