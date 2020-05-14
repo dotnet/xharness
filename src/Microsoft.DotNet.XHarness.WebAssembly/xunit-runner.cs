@@ -232,7 +232,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                 }
                 */
 
-                MethodInfo method = (tc.Method as ReflectionMethodInfo).MethodInfo;
+                MethodInfo method = (tc.Method as ReflectionMethodInfo)?.MethodInfo;
 
                 if (method.ReflectedType.IsGenericTypeDefinition)
                 {
