@@ -16,10 +16,25 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 {
     internal abstract class SimulatorInstallerCommandArguments : XHarnessCommandArguments
     {
+        private string? _xcodeRoot;
+
         /// <summary>
         /// Path to where Xcode is located.
         /// </summary>
-        public string? XcodeRoot { get; set; }
+        public string XcodeRoot
+        {
+            get
+            {
+                if (_xcodeRoot == null)
+                {
+                    // Determine it automatically from xcode-select
+                    _xcodeRoot = new ProcessManager().XcodeRoot;
+                }
+
+                return _xcodeRoot;
+            }
+            set => _xcodeRoot = value;
+        }
 
         /// <summary>
         /// How long XHarness should wait until a test execution completes before clean up (kill running apps, uninstall, etc)
@@ -39,9 +54,15 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 
         public override void Validate()
         {
-            if (XcodeRoot != null && !Directory.Exists(XcodeRoot))
+            if (!Directory.Exists(XcodeRoot))
             {
                 throw new ArgumentException("Invalid Xcode path supplied");
+            }
+
+            var plistPath = Path.Combine(XcodeRoot, "Contents", "Info.plist");
+            if (!File.Exists(plistPath))
+            {
+                throw new ArgumentException($"Cannot find Xcode. The path '{plistPath}' does not exist.");
             }
         }
     }

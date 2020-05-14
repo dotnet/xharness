@@ -25,6 +25,8 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 
         public override void Validate()
         {
+            base.Validate();
+
             if (!Simulators.Any())
             {
                 throw new ArgumentException("At least one --simulator is expected");

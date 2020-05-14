@@ -13,10 +13,6 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
     internal class ListCommandArguments : SimulatorInstallerCommandArguments
     {
         protected override OptionSet GetAdditionalOptions() => new OptionSet();
-
-        public override void Validate()
-        {
-        }
     }
 
     internal class ListCommand : SimulatorInstallerCommand
