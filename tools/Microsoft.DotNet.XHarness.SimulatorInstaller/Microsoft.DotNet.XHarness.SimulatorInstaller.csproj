@@ -24,4 +24,10 @@
     <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\..\src\Microsoft.DotNet.XHarness.CLI\ExitCode.cs" Link="Microsoft.DotNet.XHarness.CLI\ExitCode.cs" />
+    <Compile Include="..\..\src\Microsoft.DotNet.XHarness.CLI\Commands\XHarnessCommand.cs" Link="Microsoft.DotNet.XHarness.CLI\Commands\XHarnessCommand.cs" />
+    <Compile Include="..\..\src\Microsoft.DotNet.XHarness.CLI\CommandArguments\XHarnessCommandArguments.cs" Link="Microsoft.DotNet.XHarness.CLI\CommandArguments\XHarnessCommandArguments.cs" />
+  </ItemGroup>
+
 </Project>

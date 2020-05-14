@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 
         protected abstract XHarnessCommandArguments Arguments { get; }
 
-        protected XHarnessCommand(string name) : base(name)
+        protected XHarnessCommand(string name, string? help = null) : base(name, help)
         {
         }
 
@@ -35,8 +35,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
         {
             OptionSet options = Arguments.GetOptions();
 
-            using var factory = CreateLoggerFactory(Arguments.Verbosity);
-            var logger = factory.CreateLogger(Name);
+            using var parseFactory = CreateLoggerFactory(Arguments.Verbosity);
+            var parseLogger = parseFactory.CreateLogger(Name);
 
             try
             {
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
             }
             catch (ArgumentException e)
             {
-                logger.LogError(e.Message);
+                parseLogger.LogError(e.Message);
 
                 if (Arguments.ShowHelp)
                 {
@@ -69,11 +69,22 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
             }
             catch (Exception e)
             {
-                logger.LogCritical("Unexpected failure argument: " + e);
+                parseLogger.LogCritical("Unexpected failure argument: " + e);
                 return (int)ExitCode.GENERAL_FAILURE;
             }
 
-            return (int)InvokeInternal(logger).GetAwaiter().GetResult();
+            try
+            {
+                using var factory = CreateLoggerFactory(Arguments.Verbosity);
+                var logger = factory.CreateLogger(Name);
+
+                return (int)InvokeInternal(logger).GetAwaiter().GetResult();
+            }
+            catch (Exception e)
+            {
+                parseLogger.LogCritical(e.ToString());
+                return (int)ExitCode.GENERAL_FAILURE;
+            }
         }
 
         protected abstract Task<ExitCode> InvokeInternal(ILogger logger);
@@ -93,7 +104,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                     options.TimestampFormat = "[HH:mm:ss] ";
                 }
             })
-            .AddFilter(level => level >= verbosity);
+            .SetMinimumLevel(verbosity);
         });
     }
 }
