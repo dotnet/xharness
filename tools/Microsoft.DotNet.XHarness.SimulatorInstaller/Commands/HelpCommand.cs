@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.XHarness.CLI;
+using Microsoft.DotNet.XHarness.SimulatorInstaller.Commands;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.SimulatorInstaller
