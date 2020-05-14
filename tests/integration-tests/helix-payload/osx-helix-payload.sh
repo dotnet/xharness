@@ -53,9 +53,11 @@ dotnet xharness ios test           \
     --launch-timeout=360           \
     --communication-channel=Network
 
-set +e
-
 result=$?
+
+ls -la $1
+
+set +e
 
 test_results=`ls $1/xunit-*.xml`
 
