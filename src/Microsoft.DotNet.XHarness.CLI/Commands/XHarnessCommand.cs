@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
 
@@ -93,7 +94,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                     options.TimestampFormat = "[HH:mm:ss] ";
                 }
             })
-            .AddFilter(level => level >= verbosity);
+            .SetMinimumLevel(verbosity);
         });
     }
 }

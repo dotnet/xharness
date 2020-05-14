@@ -54,7 +54,8 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                     {
                         Logger.LogDebug($"The simulator '{simulator.Name}' is not installed");
 
-                    } else
+                    }
+                    else
                     {
                         // For parsing
                         Console.WriteLine(simulator.Identifier);

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
@@ -85,7 +86,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
             }
 
             var doc = new XmlDocument();
-            doc.LoadXml(await GetSimulatorIndexXml());
+            doc.LoadXml((await GetSimulatorIndexXml()) ?? throw new FailedToGetIndexException());
 
             var simulators = new List<Simulator>();
 
@@ -173,35 +174,6 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                         Logger.LogWarning($"Failed to download {url}: {ex}");
                     }
 
-                    /*
-                    // We couldn't download the list of simulators, but the simulator(s) we were requested to install might already be installed.
-                    // Don't fail in that case (we'd miss any potential updates, but that's probably not too bad).
-                    if (simulatorsToInstall.Any())
-                    {
-                        Logger.LogDebug("Checking if all the requested simulators are already installed");
-
-                        foreach (var name in simulatorsToInstall)
-                        {
-                            if ((await IsInstalled(name)) == null)
-                            {
-                                Logger.LogError($"The simulator '{name}' is not installed.");
-
-                                if (find)
-                                {
-                                    Console.WriteLine(name);
-                                }
-
-                                exitCode = 1;
-                            }
-                            else
-                            {
-                                Logger.LogInformation($"The simulator '{name}' is installed.");
-                            }
-                        }
-                        // We can't install any missing simulators, because we don't have the download url (since we couldn't download the .dvtdownloadableindex file), so just exit.
-                        return exitCode;
-                    }*/
-
                     return null;
                 }
             }
@@ -241,6 +213,26 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
             xcodeVersion = xcodeVersion.Insert(xcodeVersion.Length - 1, ".");
 
             return (xcodeVersion, xcodeUuid);
+        }
+
+        [Serializable]
+        protected class FailedToGetIndexException : Exception
+        {
+            public FailedToGetIndexException() : this("Failed to download the list of available simulators from Apple")
+            {
+            }
+
+            public FailedToGetIndexException(string? message) : base(message)
+            {
+            }
+
+            public FailedToGetIndexException(string? message, Exception? innerException) : base(message, innerException)
+            {
+            }
+
+            protected FailedToGetIndexException(SerializationInfo info, StreamingContext context) : base(info, context)
+            {
+            }
         }
     }
 }
