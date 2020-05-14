@@ -14,6 +14,7 @@ using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 {
     public class MLaunchProcessManager : MacOSProcessManager, IMLaunchProcessManager
