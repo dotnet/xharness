@@ -55,9 +55,9 @@ dotnet xharness ios test           \
 
 result=$?
 
-ls -la $1
-
 set +e
+
+chmod 0666 $1/*
 
 test_results=`ls $1/xunit-*.xml`
 
