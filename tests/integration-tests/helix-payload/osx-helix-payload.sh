@@ -41,7 +41,7 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
 # Restart the simulator to make sure it is tied to the right user session
 xcode_path=`xcode-select -p`
 pid=`ps aux | grep $xcode_path/Applications/Simulator.app | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
-if [ -z "$pid" ]; then
+if [ ! -z "$pid" ]; then
     sudo kill $pid
 fi
 
@@ -72,10 +72,5 @@ echo "Found test results in $1/$test_results. Renaming to testResults.xml"
 
 # Prepare test results for Helix to pick up
 cp $test_results $2/testResults.xml
-
-if ! cat $1/testResults.xml | grep 'collection total="19" passed="19" failed="0" skipped="0"'; then
-    echo "Failed to detect result line"
-    exit 1
-fi
 
 exit $result
