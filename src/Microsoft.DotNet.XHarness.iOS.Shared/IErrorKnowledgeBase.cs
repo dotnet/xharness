@@ -4,7 +4,7 @@
 
 #nullable enable
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.DotNet.XHarness.Common.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared
 {

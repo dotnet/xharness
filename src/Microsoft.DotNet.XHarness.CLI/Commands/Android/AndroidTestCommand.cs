@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
@@ -89,7 +90,7 @@ Arguments:
                     // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
                     runner.SetActiveDevice(GetDeviceToUse(logger, runner, apkRequiredArchitecture));
 
-                    // Wait til at least device(s) are ready 
+                    // Wait til at least device(s) are ready
                     runner.WaitForDevice();
 
                     // Empty log as we'll be uploading the full logcat for this execution

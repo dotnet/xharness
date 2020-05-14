@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
     public class CrashSnapshotReporter : ICrashSnapshotReporter
     {
-        readonly IProcessManager processManager;
+        readonly IMLaunchProcessManager processManager;
         readonly ILog log;
         readonly ILogs logs;
         readonly bool isDevice;
@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         HashSet<string> initialCrashes;
 
-        public CrashSnapshotReporter(IProcessManager processManager,
+        public CrashSnapshotReporter(IMLaunchProcessManager processManager,
             ILog log,
             ILogs logs,
             bool isDevice,

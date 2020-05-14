@@ -1,7 +1,12 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
@@ -27,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
     public class TcpTunnel : ITcpTunnel
     {
         readonly object _processExecutionLock = new object();
-        readonly IProcessManager _processManager;
+        readonly IMLaunchProcessManager _processManager;
 
         Task<ProcessExecutionResult> _tcpTunnelExecutionTask = null;
         CancellationTokenSource _cancellationToken;
@@ -36,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         public Task<bool> Started => startedCompletionSource.Task;
         public int Port { get; private set; }
 
-        public TcpTunnel(IProcessManager processManager)
+        public TcpTunnel(IMLaunchProcessManager processManager)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }

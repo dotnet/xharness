@@ -9,7 +9,7 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
+namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 {
     internal abstract class XHarnessCommandArguments
     {

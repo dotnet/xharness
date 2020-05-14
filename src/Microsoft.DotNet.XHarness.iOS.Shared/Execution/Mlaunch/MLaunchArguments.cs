@@ -6,7 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 {

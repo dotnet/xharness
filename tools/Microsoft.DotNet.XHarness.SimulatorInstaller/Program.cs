@@ -12,7 +12,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
@@ -26,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
     /// </summary>
     public static class Program
     {
-        private static readonly ProcessManager s_processManager = new ProcessManager();
+        private static readonly ProcessManager s_processManager = new MLaunchProcessManager();
         private static ILogger? s_logger = null!;
 
         private static bool s_printSimulators;

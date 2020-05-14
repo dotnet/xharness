@@ -2,8 +2,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
@@ -12,9 +12,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
     /// manages the tunnels that are used to communicate with the devices. We want to create a single tunnel per device
     /// since we can only run one app per device, this should not be a problem.
     ///
-    /// definition: 
+    /// definition:
     /// A tunnel boring machine, also known as a "mole", is a machine used to excavate tunnels with a circular cross section
-    /// through a variety of soil and rock strata. They may also be used for microtunneling. 
+    /// through a variety of soil and rock strata. They may also be used for microtunneling.
     /// </summary>
     public interface ITunnelBore : IAsyncDisposable
     {
@@ -30,15 +30,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
     {
 
         readonly object _tunnelsLock = new object();
-        readonly IProcessManager _processManager;
+        readonly IMLaunchProcessManager _processManager;
         readonly ConcurrentDictionary<string, TcpTunnel> _tunnels = new ConcurrentDictionary<string, TcpTunnel>();
 
-        public TunnelBore(IProcessManager processManager)
+        public TunnelBore(IMLaunchProcessManager processManager)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
-        // Creates a new tcp tunnel to the given device that will use the port from the passed listener. 
+        // Creates a new tcp tunnel to the given device that will use the port from the passed listener.
         public ITcpTunnel Create(string device, ILog mainLog)
         {
             lock (_tunnelsLock)

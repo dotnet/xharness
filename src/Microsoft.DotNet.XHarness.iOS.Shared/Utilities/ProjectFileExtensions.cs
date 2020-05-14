@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 {

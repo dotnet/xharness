@@ -3,8 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS
@@ -16,9 +17,9 @@ namespace Microsoft.DotNet.XHarness.iOS
 
     public class CrashSnapshotReporterFactory : ICrashSnapshotReporterFactory
     {
-        readonly IProcessManager processManager;
+        readonly IMLaunchProcessManager processManager;
 
-        public CrashSnapshotReporterFactory(IProcessManager processManager)
+        public CrashSnapshotReporterFactory(IMLaunchProcessManager processManager)
         {
             this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }

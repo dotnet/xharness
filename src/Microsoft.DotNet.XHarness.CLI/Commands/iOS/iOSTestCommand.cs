@@ -8,9 +8,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
+using Microsoft.DotNet.XHarness.Common.CLI;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
@@ -33,7 +36,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            var processManager = new ProcessManager(_arguments.XcodeRoot, _arguments.MlaunchPath);
+            var processManager = new MLaunchProcessManager(_arguments.XcodeRoot, _arguments.MlaunchPath);
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
 
@@ -65,7 +68,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             ILogger logger,
             TestTarget target,
             Logs logs,
-            ProcessManager processManager,
+            MLaunchProcessManager processManager,
             IHardwareDeviceLoader deviceLoader,
             ISimulatorLoader simulatorLoader,
             ITunnelBore? tunnelBore,

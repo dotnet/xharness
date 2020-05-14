@@ -4,10 +4,10 @@
 
 using System;
 using System.Diagnostics;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Xunit;
 
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
+namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
 {
     public class StringUtilsTests
     {

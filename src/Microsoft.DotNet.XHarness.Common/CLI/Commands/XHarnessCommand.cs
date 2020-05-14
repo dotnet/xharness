@@ -5,11 +5,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands
+namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 {
     internal abstract class XHarnessCommand : Command
     {
