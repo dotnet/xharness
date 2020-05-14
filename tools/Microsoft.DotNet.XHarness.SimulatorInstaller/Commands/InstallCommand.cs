@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
                 if (shouldInstall)
                 {
-                    Logger.LogInformation($"Installing '{simulator.Name}'...");
+                    Logger.LogInformation($"Installing '{simulator.Name}' ({simulator.Version})...");
 
                     try
                     {
