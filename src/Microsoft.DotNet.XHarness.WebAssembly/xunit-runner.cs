@@ -186,14 +186,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
 
             Console.WriteLine("Discovering tests...");
 
-            int n = 0;
-            while (n < 20)
-            {
-                if (!_discoverer.Step())
-                {
-                    break;
-                }
-            }
+            while (_discoverer.Step());
 
             Console.WriteLine("Running " + _testCases.Count + " tests...");
             tc_index = 0;
