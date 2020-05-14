@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         readonly BlockingEnumerableCollection<SimDeviceType> supported_device_types = new BlockingEnumerableCollection<SimDeviceType>();
         readonly BlockingEnumerableCollection<SimulatorDevice> available_devices = new BlockingEnumerableCollection<SimulatorDevice>();
         readonly BlockingEnumerableCollection<SimDevicePair> available_device_pairs = new BlockingEnumerableCollection<SimDevicePair>();
-        readonly IProcessManager processManager;
+        readonly IMLaunchProcessManager processManager;
 
         bool loaded;
 
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         public IEnumerable<SimulatorDevice> AvailableDevices => available_devices;
         public IEnumerable<SimDevicePair> AvailableDevicePairs => available_device_pairs;
 
-        public SimulatorLoader(IProcessManager processManager)
+        public SimulatorLoader(IMLaunchProcessManager processManager)
         {
             this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }

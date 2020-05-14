@@ -9,10 +9,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Moq;
 using Xunit;
 
@@ -21,12 +21,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
     public class DevicesTest
     {
         private readonly HardwareDeviceLoader _devices;
-        private readonly Mock<IProcessManager> _processManager;
+        private readonly Mock<IMLaunchProcessManager> _processManager;
         private readonly Mock<ILog> _executionLog;
 
         public DevicesTest()
         {
-            _processManager = new Mock<IProcessManager>();
+            _processManager = new Mock<IMLaunchProcessManager>();
             _devices = new HardwareDeviceLoader(_processManager.Object);
             _executionLog = new Mock<ILog>();
         }

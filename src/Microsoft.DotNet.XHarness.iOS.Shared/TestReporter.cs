@@ -1,7 +1,8 @@
-#nullable enable
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -12,9 +13,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Runtime.Serialization.Json;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.Common.Utilities;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 
 using ExceptionLogger = System.Action<int, string>;
@@ -41,8 +45,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         readonly AppBundleInformation appInfo;
         readonly RunMode runMode;
         readonly XmlResultJargon xmlJargon;
-        readonly IProcessManager processManager;
-        readonly string deviceName;
+        readonly IMLaunchProcessManager processManager;
+        readonly string? deviceName;
 
         readonly TimeSpan timeout;
         readonly Stopwatch timeoutWatch;
@@ -73,7 +77,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        public TestReporter(IProcessManager processManager,
+        public TestReporter(IMLaunchProcessManager processManager,
             ILog mainLog,
             ILog runLog,
             ILogs logs,
@@ -83,7 +87,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             AppBundleInformation appInformation,
             RunMode runMode,
             XmlResultJargon xmlJargon,
-            string device,
+            string? device,
             TimeSpan timeout,
             string? additionalLogsDirectory = null,
             ExceptionLogger? exceptionLogger = null,
@@ -257,7 +261,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         {
             if (launchResult.IsFaulted)
             {
-                mainLog.WriteLine("Test launch failed: {0}", launchResult.Exception);
+                mainLog.WriteLine($"Test launch failed: {launchResult.Exception}");
             }
             else if (launchResult.IsCanceled)
             {

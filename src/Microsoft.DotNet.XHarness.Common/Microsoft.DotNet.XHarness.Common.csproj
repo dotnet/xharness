@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <TargetFrameworks>netstandard2.1;netcoreapp3.1</TargetFrameworks>
+  </PropertyGroup>
+
+</Project>

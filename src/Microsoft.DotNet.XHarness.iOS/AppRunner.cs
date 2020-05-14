@@ -8,8 +8,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Common;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
@@ -20,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 {
     public class AppRunner
     {
-        private readonly IProcessManager _processManager;
+        private readonly IMLaunchProcessManager _processManager;
         private readonly IHardwareDeviceLoader _hardwareDeviceLoader;
         private readonly ISimulatorLoader _simulatorLoader;
         private readonly ISimpleListenerFactory _listenerFactory;
@@ -33,7 +36,7 @@ namespace Microsoft.DotNet.XHarness.iOS
         private readonly IHelpers _helpers;
         private readonly bool _useXmlOutput;
 
-        public AppRunner(IProcessManager processManager,
+        public AppRunner(IMLaunchProcessManager processManager,
             IHardwareDeviceLoader hardwareDeviceLoader,
             ISimulatorLoader simulatorLoader,
             ISimpleListenerFactory simpleListenerFactory,

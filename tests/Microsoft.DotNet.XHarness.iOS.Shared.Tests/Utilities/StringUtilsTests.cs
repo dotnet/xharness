@@ -4,6 +4,7 @@
 
 using System;
 using System.Diagnostics;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Xunit;
 

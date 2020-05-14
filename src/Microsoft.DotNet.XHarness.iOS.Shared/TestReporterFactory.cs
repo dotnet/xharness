@@ -2,8 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable enable
 using System;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
@@ -24,16 +27,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             XmlResultJargon xmlJargon,
             string device,
             TimeSpan timeout,
-            string additionalLogsDirectory = null,
-            ExceptionLogger exceptionLogger = null,
+            string? additionalLogsDirectory = null,
+            ExceptionLogger? exceptionLogger = null,
 			bool generateHtml = false);
     }
 
     public class TestReporterFactory : ITestReporterFactory
     {
-        readonly IProcessManager processManager;
+        readonly IMLaunchProcessManager processManager;
 
-        public TestReporterFactory(IProcessManager processManager)
+        public TestReporterFactory(IMLaunchProcessManager processManager)
         {
             this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
@@ -47,10 +50,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             AppBundleInformation appInformation,
             RunMode runMode,
             XmlResultJargon xmlJargon,
-            string device,
+            string? device,
             TimeSpan timeout,
-            string additionalLogsDirectory = null,
-            ExceptionLogger exceptionLogger = null,
+            string? additionalLogsDirectory = null,
+            ExceptionLogger? exceptionLogger = null,
             bool generateHtml = false)
         {
             return new TestReporter(processManager,

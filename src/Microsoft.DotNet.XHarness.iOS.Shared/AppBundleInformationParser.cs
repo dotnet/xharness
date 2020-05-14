@@ -7,7 +7,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 

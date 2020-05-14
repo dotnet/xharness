@@ -6,8 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 {
@@ -24,9 +24,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         static readonly string tvOSSimRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.tvOS-";
         static readonly string watchOSRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.watchOS-";
 
-        readonly IProcessManager processManager;
+        readonly IMLaunchProcessManager processManager;
 
-        public TCCDatabase(IProcessManager processManager)
+        public TCCDatabase(IMLaunchProcessManager processManager)
         {
             this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }

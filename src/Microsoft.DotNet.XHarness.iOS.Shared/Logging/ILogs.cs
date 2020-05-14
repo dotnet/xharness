@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.DotNet.XHarness.Common.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {

@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using System.Threading;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
