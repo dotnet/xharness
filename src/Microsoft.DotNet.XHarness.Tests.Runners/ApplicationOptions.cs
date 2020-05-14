@@ -69,6 +69,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
                 XmlVersion = (XmlVersion)Enum.Parse(typeof(XmlVersion), xml_version, true);
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.LogFilePath)))
                 LogFile = Environment.GetEnvironmentVariable(EnviromentVariables.LogFilePath);
+            if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.RunAllTestsByDefault), out b))
+                RunAllTestsByDefault = b;
 
             var os = new OptionSet() {
                 { "autoexit", "Exit application once the test run has completed.", v => TerminateAfterExecution = true },
@@ -82,6 +84,12 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
                 { "xmlversion", "The xml version.", v => XmlVersion = (XmlVersion) Enum.Parse (typeof (XmlVersion), v, false) },
                 { "logfile=", "A path where output will be saved.", v => LogFile = v },
                 { "result=", "The path to be used to store the result", v => ResultFile = v},
+                { "run-all-tests:", "Run all the tests found in the assembly. Defaults to true.", v =>
+                {
+                    // if cannot parse, use default
+                    if (Boolean.TryParse(v, out var runAll))
+                        RunAllTestsByDefault = runAll;
+                }}
             };
 
             try
@@ -162,6 +170,11 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         /// Specify if test results should be sorted by name.
         /// </summary>
         public bool SortNames { get; set; }
+
+        /// <summary>
+        /// Specify if all the tests should be run by default or not. Defaults to true.
+        /// </summary>
+        public bool RunAllTestsByDefault { get; set; } = true;
 
     }
 }

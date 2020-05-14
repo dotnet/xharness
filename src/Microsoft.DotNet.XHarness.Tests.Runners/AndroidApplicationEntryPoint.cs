@@ -1,4 +1,5 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+﻿#nullable enable
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -34,29 +35,23 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
             // we will write the normal console output using the LogWriter
             var logger = (Logger == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, Logger);
             logger.MinimumLogLevel = MinimumLogLevel.Info;
-            var testAssemblies = GetTestAssemblies();
 
             var runner = await InternalRunAsync(logger);
+            ConfigureRunner(runner, options);
 
-
-            TestRunner.Jargon jargon = options.XmlVersion.ToTestRunnerJargon();
+            TextWriter? writer = null;
 
             if (options.EnableXml)
             {
                 if (TestsResultsFinalPath == null)
                     throw new InvalidOperationException("Tests results final path cannot be null.");
-                using (var stream = File.Create(TestsResultsFinalPath))
-                using (var writer = new StreamWriter(stream))
-                {
-                    runner.WriteResultsToFile(writer, jargon);
-                    logger.Info($"Xml file was written to {TestsResultsFinalPath}.");
-                }
+
+                using var stream = File.Create(TestsResultsFinalPath);
+                writer = new StreamWriter(stream);
             }
-            else
-            {
-                string resultsFilePath = runner.WriteResultsToFile(jargon);
-                logger.Info($"Xml result can be found {resultsFilePath}");
-            }
+
+            WriteResults(runner, options, logger, writer);
+            writer?.Dispose();
 
             logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests}");
             if (options.TerminateAfterExecution)
