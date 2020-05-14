@@ -7,15 +7,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 {
 
     public class SimulatorDevice : ISimulatorDevice
     {
-        readonly IProcessManager processManager;
+        readonly IMLaunchProcessManager processManager;
         readonly ITCCDatabase tCCDatabase;
 
         public string UDID { get; set; }
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         public string SystemLog => Path.Combine(LogPath, "system.log");
 
 
-        public SimulatorDevice(IProcessManager processManager, ITCCDatabase tccDatabase)
+        public SimulatorDevice(IMLaunchProcessManager processManager, ITCCDatabase tccDatabase)
         {
             this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             this.tCCDatabase = tccDatabase ?? throw new ArgumentNullException(nameof(tccDatabase));

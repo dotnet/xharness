@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.CLI
+namespace Microsoft.DotNet.XHarness.Common.CLI
 {
     /// <summary>
     /// Exit codes to use for common failure reasons; if you add a new exit code, add it here and use the enum.
@@ -49,6 +49,7 @@ namespace Microsoft.DotNet.XHarness.CLI
         FAILED_TO_GET_BUNDLE_INFO = 1003,
         APP_CRASH = 1004,
         DEVICE_NOT_FOUND = 1005,
+        RETURN_CODE_NOT_SET = 1006,
 
         #endregion
 

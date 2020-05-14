@@ -7,10 +7,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Moq;
 using Xunit;
 
@@ -20,13 +21,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
     {
         private readonly string _tempXcodeRoot;
         private readonly string _symbolicatePath;
-        private readonly Mock<IProcessManager> _processManager;
+        private readonly Mock<IMLaunchProcessManager> _processManager;
         private readonly Mock<ILog> _log;
         private readonly Mock<ILogs> _logs;
 
         public CrashReportSnapshotTests()
         {
-            _processManager = new Mock<IProcessManager>();
+            _processManager = new Mock<IMLaunchProcessManager>();
             _log = new Mock<ILog>();
             _logs = new Mock<ILogs>();
 

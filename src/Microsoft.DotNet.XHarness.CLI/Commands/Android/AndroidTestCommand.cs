@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
@@ -17,8 +18,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
     internal class AndroidTestCommand : TestCommand
     {
         // nunit2 one should go away eventually
-        private readonly string[] _xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
-        private readonly string _testRunSummaryVariableName = "test-execution-summary";
+        private readonly static string[] _xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
+        private readonly static string _testRunSummaryVariableName = "test-execution-summary";
+        private readonly static string _shortMessageVariableName = "shortMsg";
+        private readonly static string _returnCodeVariableName = "return-code";
 
         private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
 
@@ -26,7 +29,22 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
         protected override string CommandUsage { get; } = "android test [OPTIONS]";
 
-        protected override string CommandDescription { get; } = "Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app";
+        protected override string CommandDescription { get; } = @$"
+Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app
+
+APKs can communicate status back to XHarness using the results bundle:
+
+Required:
+{_returnCodeVariableName} - Exit code for instrumentation. Necessary because a crashing instrumentation may be indistinguishable from a passing one from exit codes.
+
+Optional:
+Test results Paths:
+{string.Join('\n', _xmlOutputVariableNames)} - If specified, this file will be copied off the device after execution (used for external reporting)
+Reporting:
+{_testRunSummaryVariableName},{_shortMessageVariableName} - If specified, this will be printed to the console directly after execution (useful for printing summaries)
+ 
+Arguments:
+";
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
@@ -46,7 +64,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
             if (!string.IsNullOrEmpty(_arguments.DeviceArchitecture))
             {
-                apkRequiredArchitecture = _arguments.DeviceArchitecture; 
+                apkRequiredArchitecture = _arguments.DeviceArchitecture;
                 logger.LogInformation($"Will attempt to run device on specified architecture: '{apkRequiredArchitecture}'");
             }
             else
@@ -72,7 +90,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                     // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
                     runner.SetActiveDevice(GetDeviceToUse(logger, runner, apkRequiredArchitecture));
 
-                    // Wait til at least device(s) are ready 
+                    // Wait til at least device(s) are ready
                     runner.WaitForDevice();
 
                     // Empty log as we'll be uploading the full logcat for this execution
@@ -117,6 +135,31 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                         {
                             logger.LogInformation($"Test execution summary:{Environment.NewLine}{resultValues[_testRunSummaryVariableName]}");
                         }
+                        if (resultValues.ContainsKey(_shortMessageVariableName))
+                        {
+                            logger.LogInformation($"Short Message: {Environment.NewLine}{resultValues[_shortMessageVariableName]}");
+                        }
+
+                        // Due to the particulars of how instrumentations work, ADB will report a 0 exit code for crashed instrumentations
+                        // We'll change that to a specific value and print a message explaining why.
+                        if (resultValues.ContainsKey(_returnCodeVariableName))
+                        {
+                            if (int.TryParse(resultValues[_returnCodeVariableName], out int bundleExitCode))
+                            {
+                                logger.LogInformation($"Instrumentation finished normally with exit code {bundleExitCode}");
+                                instrumentationExitCode = bundleExitCode;
+                            }
+                            else
+                            {
+                                logger.LogError($"Un-parse-able value for '{_returnCodeVariableName}' : '{resultValues[_returnCodeVariableName]}'");
+                                instrumentationExitCode = (int)ExitCode.RETURN_CODE_NOT_SET;
+                            }
+                        }
+                        else
+                        {
+                            logger.LogError($"No value for '{_returnCodeVariableName}' provided in instrumentation result.  This may indicate a crashed test (see log)");
+                            instrumentationExitCode = (int)ExitCode.RETURN_CODE_NOT_SET;
+                        }
                     }
 
                     // Optionally copy off an entire folder
@@ -159,7 +202,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
             if (allDevicesAndTheirArchitectures.Count > 0)
             {
                 if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)))
-                { 
+                {
                     var firstAvailableCompatible = allDevicesAndTheirArchitectures.Where(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
                     logger.LogInformation($"Using first-found compatible device of {allDevicesAndTheirArchitectures.Count} total- serial: '{firstAvailableCompatible.Key}' - Arch: {firstAvailableCompatible.Value}");
                     return firstAvailableCompatible.Key;

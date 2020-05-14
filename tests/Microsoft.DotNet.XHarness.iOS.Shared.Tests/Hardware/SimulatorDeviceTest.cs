@@ -6,9 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Moq;
 using Xunit;
 
@@ -17,13 +17,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
     public class SimulatorDeviceTest
     {
         private readonly Mock<ILog> _executionLog;
-        private readonly Mock<IProcessManager> _processManager;
+        private readonly Mock<IMLaunchProcessManager> _processManager;
         private readonly SimulatorDevice _simulator;
 
         public SimulatorDeviceTest()
         {
             _executionLog = new Mock<ILog>();
-            _processManager = new Mock<IProcessManager>();
+            _processManager = new Mock<IMLaunchProcessManager>();
             _simulator = new SimulatorDevice(_processManager.Object, new TCCDatabase(_processManager.Object))
             {
                 UDID = Guid.NewGuid().ToString()

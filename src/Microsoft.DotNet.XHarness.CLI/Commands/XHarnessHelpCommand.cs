@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.Commands.iOS;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands

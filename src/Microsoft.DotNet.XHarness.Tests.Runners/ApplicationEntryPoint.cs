@@ -5,9 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 using Microsoft.DotNet.XHarness.Tests.Runners.Core;
 using Microsoft.DotNet.XHarness.Tests.Runners.Xunit;
 
@@ -170,15 +168,17 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
             runner.RunAllTestsByDefault = options.RunAllTestsByDefault;
         }
 
-        internal static string WriteResults(TestRunner runner, ApplicationOptions options, LogWriter logger, TextWriter writer = null)
+        internal static string WriteResults(TestRunner runner, ApplicationOptions options, LogWriter logger, TextWriter writer)
         {
+            if (options.EnableXml && writer == null)
+                throw new ArgumentNullException(nameof(writer));
             TestRunner.Jargon jargon = options.XmlVersion.ToTestRunnerJargon();
             string resultsFilePath = null;
 
             if (options.EnableXml)
             {
-                runner.WriteResultsToFile(writer ?? Console.Out, jargon);
-                logger.Info("Xml file was written to the tcp listener.");
+                runner.WriteResultsToFile(writer, jargon);
+                logger.Info("Xml file was written to the provided writer.");
             }
             else
             {

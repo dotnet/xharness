@@ -9,10 +9,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Collections;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
@@ -33,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
     public class HardwareDeviceLoader : IHardwareDeviceLoader
     {
-        readonly IProcessManager _processManager;
+        readonly IMLaunchProcessManager _processManager;
         bool _loaded;
 
         readonly BlockingEnumerableCollection<IHardwareDevice> connectedDevices = new BlockingEnumerableCollection<IHardwareDevice>();
@@ -45,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         public IEnumerable<IHardwareDevice> ConnectedWatch => connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.watchOS && x.Architecture == Architecture.ARMv7k);
         public IEnumerable<IHardwareDevice> ConnectedWatch32_64 => connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.watchOS && x.Architecture == Architecture.ARM64_32);
 
-        public HardwareDeviceLoader(IProcessManager processManager)
+        public HardwareDeviceLoader(IMLaunchProcessManager processManager)
         {
             this._processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
@@ -182,7 +181,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         private Device GetDevice(XmlNode deviceNone)
         {
-            // get data, if we are missing some of them, we will return null, happens sometimes that we 
+            // get data, if we are missing some of them, we will return null, happens sometimes that we
             // have some empty nodes. We could do this with try/catch, but we want to throw the min amount
             // of exceptions. We do know that we will have issues with the parsing of the DeviceClass, check
             // the value, and if is there, get the rest, else return null
