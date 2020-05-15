@@ -47,7 +47,8 @@ namespace Microsoft.DotNet.XHarness.iOS
             ILog mainLog,
             ILogs logs,
             IHelpers helpers,
-            bool useXmlOutput)
+            bool useXmlOutput,
+            Action<string>? logCallback = null)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _hardwareDeviceLoader = hardwareDeviceLoader ?? throw new ArgumentNullException(nameof(hardwareDeviceLoader));
@@ -57,10 +58,19 @@ namespace Microsoft.DotNet.XHarness.iOS
             _captureLogFactory = captureLogFactory ?? throw new ArgumentNullException(nameof(captureLogFactory));
             _deviceLogCapturerFactory = deviceLogCapturerFactory ?? throw new ArgumentNullException(nameof(deviceLogCapturerFactory));
             _testReporterFactory = reporterFactory ?? throw new ArgumentNullException(nameof(_testReporterFactory));
-            _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
             _useXmlOutput = useXmlOutput;
+            if (logCallback == null)
+            {
+                _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
+            }
+            else
+            {
+                // create using the main as the default log
+                _mainLog = Log.CreateAggregatedLogWithDefault(mainLog, new CallbackLog(logCallback));
+            }
+
         }
 
         public async Task<(string DeviceName, TestExecutingResult Result, string ResultMessage)> RunApp(
@@ -397,7 +407,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                     _mainLog.WriteLine("Starting test run");
 
                     // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit).
-                    var aggregatedLog = Log.CreateAggregatedLog(testReporter.CallbackLog, _mainLog);
+                    var aggregatedLog = Log.CreateAggregatedLogWithDefault(_mainLog, testReporter.CallbackLog);
                     Task<ProcessExecutionResult> runTestTask = _processManager.ExecuteCommandAsync(
                         args,
                         aggregatedLog,

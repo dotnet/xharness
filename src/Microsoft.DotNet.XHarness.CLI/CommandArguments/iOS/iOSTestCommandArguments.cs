@@ -63,6 +63,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// </summary>
         public CommunicationChannel CommunicationChannel { get; set; } = CommunicationChannel.UsbTunnel;
 
+        /// <summary>
+        /// Enable the lldb debugger to be used with the launched application.
+        /// </summary>
+        public bool EnableLldb { get; set; }
+
         public override IReadOnlyCollection<string> Targets
         {
             get => TestTargets.Select(t => t.AsString()).ToArray();
@@ -121,6 +126,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
             { "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.",
                 v => XmlResultJargon = ParseArgument("xml-jargon", v, invalidValues: XmlResultJargon.Missing)
             },
+            { "enable-lldb", "Allow to debug the launched application using lldb.", v => EnableLldb = v != null },
         };
 
         public override void Validate()
