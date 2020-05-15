@@ -69,5 +69,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
         /// Env var used to notify the test application that the test should be sorted by name.
         /// </summary>
         public const string SortByName = "NUNIT_SORTNAMES";
+
+        /// <summary>
+        /// Env var used to notify the test application if all the tests should be ran by default.
+        /// </summary>
+        public const string RunAllTestsByDefault = "NUNIT_RUN_ALL";
     }
 }

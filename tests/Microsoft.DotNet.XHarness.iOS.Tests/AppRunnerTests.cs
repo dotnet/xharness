@@ -1,11 +1,16 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.iOS;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
@@ -34,7 +39,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             productType: "iPhone12,1",
             productVersion: "13.0");
 
-        private readonly Mock<IProcessManager> _processManager;
+        private readonly Mock<IMLaunchProcessManager> _processManager;
         private readonly Mock<ILogs> _logs;
         private readonly Mock<ILog> _mainLog;
         private readonly Mock<ISimulatorLoader> _simulatorLoader;
@@ -54,7 +59,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         {
             _mainLog = new Mock<ILog>();
 
-            _processManager = new Mock<IProcessManager>();
+            _processManager = new Mock<IMLaunchProcessManager>();
             _processManager.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult() { ExitCode = 0 }));
 
             _hardwareDeviceLoader = new Mock<IHardwareDeviceLoader>();

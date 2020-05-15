@@ -4,7 +4,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Tests.Runners.Core;
 using Microsoft.DotNet.XHarness.Tests.Runners.Xunit;
@@ -161,6 +161,32 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
             }
 
             return categories;
+        }
+
+        internal static void ConfigureRunner(TestRunner runner, ApplicationOptions options)
+        {
+            runner.RunAllTestsByDefault = options.RunAllTestsByDefault;
+        }
+
+        internal static string WriteResults(TestRunner runner, ApplicationOptions options, LogWriter logger, TextWriter writer)
+        {
+            if (options.EnableXml && writer == null)
+                throw new ArgumentNullException(nameof(writer));
+            TestRunner.Jargon jargon = options.XmlVersion.ToTestRunnerJargon();
+            string resultsFilePath = null;
+
+            if (options.EnableXml)
+            {
+                runner.WriteResultsToFile(writer, jargon);
+                logger.Info("Xml file was written to the provided writer.");
+            }
+            else
+            {
+                resultsFilePath = runner.WriteResultsToFile(jargon);
+                logger.Info($"XML results can be found in '{resultsFilePath}'");
+            }
+
+            return resultsFilePath;
         }
 
         protected async Task<TestRunner> InternalRunAsync (LogWriter logger)

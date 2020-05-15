@@ -9,20 +9,12 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
-
-    public enum XmlResultJargon
-    {
-        TouchUnit,
-        NUnitV2,
-        NUnitV3,
-        xUnit,
-        Missing,
-    }
 
     public class XmlResultParser : IResultParser
     {

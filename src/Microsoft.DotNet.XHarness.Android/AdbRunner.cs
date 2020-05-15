@@ -55,6 +55,7 @@ namespace Microsoft.DotNet.XHarness.Android
         public void SetActiveDevice(string? deviceSerialNumber)
         {
             _currentDevice = deviceSerialNumber;
+            _log.LogInformation($"Active Android device set to serial '{deviceSerialNumber}'");
         }
 
         private static string GetCliAdbExePath()
@@ -109,7 +110,7 @@ namespace Microsoft.DotNet.XHarness.Android
             // This command waits for ANY kind of device to be available (emulator or real)
             // Needed because emulators start up asynchronously and take a while.
             // (Returns instantly if device is ready)
-            // This fails if _currentDevice is unset  
+            // This can fail if _currentDevice is unset if there are multiple devices.
             _log.LogInformation("Waiting for device to be available (max 5 minutes)");
             var result = RunAdbCommand("wait-for-device", TimeSpan.FromMinutes(5));
             _log.LogDebug($"{result.StandardOutput}");
@@ -313,21 +314,17 @@ namespace Microsoft.DotNet.XHarness.Android
         {
             Dictionary<string, string?> devicesAndArchitectures = new Dictionary<string, string?>();
 
-            var result = RunAdbCommand("devices -l");
+            var result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
             string standardOutput = result.StandardOutput;
 
-            // If the adb server is dead, this can return 0 exit code and no output; retry a few times if so)
-            int retriesLeft = 5;
-            while (retriesLeft-- > 0 && result.ExitCode == (int)AdbExitCodes.SUCCESS && standardOutput == "")
+            // Retry up to 1 min til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
+            int retriesLeft = 6;
+            // Empty string = Adb started another process to do the work and we should call again
+            while (retriesLeft-- > 0 && string.IsNullOrEmpty(standardOutput)) 
             {
+                Thread.Sleep(10000);
                 result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
                 standardOutput = result.StandardOutput;
-                // delay for retries
-                if (string.IsNullOrEmpty(standardOutput) && result.ExitCode == (int)AdbExitCodes.SUCCESS)
-                {
-                    _log.LogDebug("Waiting for device listing to work");
-                    Thread.Sleep(5000);
-                }
             }
 
             if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
@@ -344,6 +341,15 @@ namespace Microsoft.DotNet.XHarness.Android
                         var deviceSerial = lineParts[0];
                         var shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi");
 
+                        // Assumption:  All Devices on a machine running Xharness should attempt to be be online or disconnected.
+                        retriesLeft = 12;
+                        while (retriesLeft-- > 0 && shellArchitecture.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
+                        {
+                            _log.LogWarning($"Device '{deviceSerial}' is offline; retrying up to one minute.");
+                            Thread.Sleep(5000);
+                            shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi");
+                        }
+
                         if (shellArchitecture.ExitCode == (int)AdbExitCodes.SUCCESS)
                         {
                             devicesAndArchitectures.Add(deviceSerial, shellArchitecture.StandardOutput.Trim());
@@ -358,6 +364,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             else
             {
+                // May consider abandoning the run here instead of just printing errors.
                 _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}");
             }
             return devicesAndArchitectures;

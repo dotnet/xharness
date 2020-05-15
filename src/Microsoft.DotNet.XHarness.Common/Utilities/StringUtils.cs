@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -7,12 +7,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
+namespace Microsoft.DotNet.XHarness.Common.Utilities
 {
     public class StringUtils
     {
         static readonly char shellQuoteChar;
-        static readonly char[] mustQuoteCharacters = new char[] { ' ', '\'', ',', '$', '\\' };
+        static readonly char[] mustQuoteCharacters = { ' ', '\'', ',', '$', '\\' };
         static readonly char[] mustQuoteCharactersProcess = { ' ', '\\', '"', '\'' };
 
         static StringUtils()
@@ -31,10 +31,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static string FormatArguments(IList<string> arguments)
         {
-            return string.Join(" ", QuoteForProcess(arguments));
+            return string.Join(" ", QuoteForProcess(arguments) ?? Array.Empty<string>());
         }
 
-        static string[] QuoteForProcess(params string[] array)
+        static string[]? QuoteForProcess(params string[] array)
         {
             if (array == null || array.Length == 0)
                 return array;
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             return rv;
         }
 
-        public static string Quote(string f)
+        public static string Quote(string? f)
         {
             if (string.IsNullOrEmpty(f))
                 return f ?? string.Empty;
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             return s.ToString();
         }
 
-        static string[] QuoteForProcess(IList<string> arguments)
+        static string[]? QuoteForProcess(IList<string> arguments)
         {
             if (arguments == null)
                 return Array.Empty<string>();

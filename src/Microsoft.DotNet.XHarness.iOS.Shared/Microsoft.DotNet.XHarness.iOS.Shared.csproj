@@ -434,4 +434,7 @@
     <Compile Remove="TestImporter\Templates\Managed\Resources\src\watchOS\Container\ViewController.designer.cs" />
     <Compile Remove="TestImporter\Templates\Managed\Resources\src\watchOS\Extension\InterfaceController.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj" />
+  </ItemGroup>
 </Project>

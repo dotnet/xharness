@@ -1,4 +1,5 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+﻿#nullable enable
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -16,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         /// Implementors should provide a text writter than will be used to
         /// write the logging of the tests that are executed.
         /// </summary>
-        public abstract TextWriter Logger { get; }
+        public abstract TextWriter? Logger { get; }
 
         /// <summary>
         /// Implementors should provide a full path in which the final
@@ -34,28 +35,24 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
             // we will write the normal console output using the LogWriter
             var logger = (Logger == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, Logger);
             logger.MinimumLogLevel = MinimumLogLevel.Info;
-            var testAssemblies = GetTestAssemblies();
 
             var runner = await InternalRunAsync(logger);
-
-
-            TestRunner.Jargon jargon = options.XmlVersion.ToTestRunnerJargon();
+            ConfigureRunner(runner, options);
 
             if (options.EnableXml)
             {
                 if (TestsResultsFinalPath == null)
                     throw new InvalidOperationException("Tests results final path cannot be null.");
+
                 using (var stream = File.Create(TestsResultsFinalPath))
                 using (var writer = new StreamWriter(stream))
                 {
-                    runner.WriteResultsToFile(writer, jargon);
-                    logger.Info($"Xml file was written to {TestsResultsFinalPath}.");
+                    WriteResults(runner, options, logger, writer);
                 }
             }
             else
             {
-                string resultsFilePath = runner.WriteResultsToFile(jargon);
-                logger.Info($"Xml result can be found {resultsFilePath}");
+                WriteResults(runner, options, logger, Console.Out);
             }
 
             logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests}");

@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments

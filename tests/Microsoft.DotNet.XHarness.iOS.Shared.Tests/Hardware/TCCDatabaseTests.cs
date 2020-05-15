@@ -7,9 +7,10 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Moq;
 using Xunit;
 
@@ -17,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 {
     public class TCCDatabaseTests
     {
-        private readonly Mock<IProcessManager> _processManager;
+        private readonly Mock<IMLaunchProcessManager> _processManager;
         private readonly TCCDatabase _database;
         private readonly Mock<ILog> _executionLog;
         private readonly string _simRuntime;
@@ -25,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
         public TCCDatabaseTests()
         {
-            _processManager = new Mock<IProcessManager>();
+            _processManager = new Mock<IMLaunchProcessManager>();
             _database = new TCCDatabase(_processManager.Object);
             _executionLog = new Mock<ILog>();
             _simRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-12-1";

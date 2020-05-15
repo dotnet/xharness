@@ -6,8 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.Common.Utilities;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
@@ -19,12 +20,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
     public class DeviceLogCapturer : IDeviceLogCapturer
     {
-        readonly IProcessManager processManager;
+        readonly IMLaunchProcessManager processManager;
         readonly ILog mainLog;
         readonly ILog deviceLog;
         readonly string deviceName;
 
-        public DeviceLogCapturer(IProcessManager processManager, ILog mainLog, ILog deviceLog, string deviceName)
+        public DeviceLogCapturer(IMLaunchProcessManager processManager, ILog mainLog, ILog deviceLog, string deviceName)
         {
             this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             this.mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));

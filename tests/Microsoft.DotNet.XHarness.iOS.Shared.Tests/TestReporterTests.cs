@@ -7,7 +7,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Moq;
@@ -18,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
     public class TestReporterTests : IDisposable
     {
         private readonly Mock<ICrashSnapshotReporter> _crashReporter;
-        private readonly Mock<IProcessManager> _processManager;
+        private readonly Mock<IMLaunchProcessManager> _processManager;
         private readonly IResultParser _parser;
         private readonly Mock<ILog> _runLog;
         private readonly Mock<ILog> _mainLog;
@@ -31,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         public TestReporterTests()
         {
             _crashReporter = new Mock<ICrashSnapshotReporter>();
-            _processManager = new Mock<IProcessManager>();
+            _processManager = new Mock<IMLaunchProcessManager>();
             _parser = new XmlResultParser();
             _runLog = new Mock<ILog>();
             _mainLog = new Mock<ILog>();
@@ -233,7 +236,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             testResult.LaunchCallback(t);
             // verify that we did report the launch proble
             _mainLog.Verify(l => l.WriteLine(
-               It.Is<string>(s => s.StartsWith($"Test launch failed:")), It.IsAny<object>()), Times.Once);
+               It.Is<string>(s => s.StartsWith($"Test launch failed:"))), Times.Once);
         }
 
         [Fact]

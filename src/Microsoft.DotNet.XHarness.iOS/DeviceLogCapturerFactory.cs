@@ -3,7 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS
@@ -15,9 +16,9 @@ namespace Microsoft.DotNet.XHarness.iOS
 
     public class DeviceLogCapturerFactory : IDeviceLogCapturerFactory
     {
-        readonly IProcessManager processManager;
+        readonly IMLaunchProcessManager processManager;
 
-        public DeviceLogCapturerFactory(IProcessManager processManager)
+        public DeviceLogCapturerFactory(IMLaunchProcessManager processManager)
         {
             this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }

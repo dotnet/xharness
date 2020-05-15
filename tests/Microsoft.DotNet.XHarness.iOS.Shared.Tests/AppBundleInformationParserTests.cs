@@ -5,7 +5,7 @@
 using System;
 using System.IO;
 using System.Reflection;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Moq;
 using Xunit;
 
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         [Fact]
         public void InitializeTest()
         {
-            var parser = new AppBundleInformationParser(Mock.Of<IProcessManager>());
+            var parser = new AppBundleInformationParser(Mock.Of<IMLaunchProcessManager>());
 
             var info = parser.ParseFromProject(s_projectFilePath, TestTarget.Simulator_iOS64, "Debug");
 
