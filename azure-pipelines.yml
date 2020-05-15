@@ -193,7 +193,7 @@ stages:
           condition: always()
 
 - ${{ if eq(variables._RunAsPublic, True) }}:
-  - stage: cli-test
+  - stage: Test_CLI
     displayName: Run CLI Integration Tests
     dependsOn: Build_OSX
     jobs:
@@ -226,7 +226,7 @@ stages:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
 
-  - stage: simulator-installer-test
+  - stage: Test_SimulatorInstaller
     displayName: Run SimulatorInstaller Integration Tests
     dependsOn: Build_OSX
     jobs:
