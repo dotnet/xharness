@@ -149,7 +149,7 @@ stages:
               targetDir=$(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.$(_BuildConfig)
               mkdir $targetDir
               cp tests/integration-tests/helix-payloads/cli-integration-tests.sh $targetDir
-              cp artifacts/packages/$(_BuildConfig)/Microsoft.DotNet.XHarness.CLI*.nupkg $targetDir
+              cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI*.nupkg $targetDir
             displayName: Prepare the CLI IntegrationTests artifact
             workingDirectory: $(Build.SourcesDirectory)
             condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
@@ -163,7 +163,7 @@ stages:
               targetDir=$(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
               mkdir $targetDir
               cp tests/integration-tests/helix-payloads/simulatorinstaller-integration-tests.sh $targetDir
-              cp artifacts/packages/$(_BuildConfig)/Microsoft.DotNet.XHarness.SimulatorInstaller*.nupkg $targetDir
+              cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.SimulatorInstaller*.nupkg $targetDir
             displayName: Prepare the SimulatorInstaller IntegrationTests artifact
             workingDirectory: $(Build.SourcesDirectory)
             condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
