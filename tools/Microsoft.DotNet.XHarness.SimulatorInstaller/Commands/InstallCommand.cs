@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
             {
                 if (!_arguments.Simulators.Any(identifier => simulator.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
                 {
-                    Logger.LogDebug($"Skipping '{simulator.Identifier}' as it was not listed");
+                    Logger.LogDebug($"Skipping '{simulator.Identifier}'");
                     continue;
                 }
 
@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                         }
                         else
                         {
-                            Logger.LogInformation($"The simulator '{simulator.Name}' is installed ({simulator.Version})");
+                            Logger.LogInformation($"The simulator '{simulator.Name}' is already installed ({simulator.Version})");
                         }
                     }
                     else
