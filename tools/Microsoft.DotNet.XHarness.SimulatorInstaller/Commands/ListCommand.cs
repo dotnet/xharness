@@ -5,13 +5,12 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.CLI;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 {
-
     internal class ListCommand : SimulatorInstallerCommand
     {
         private const string CommandName = "list";

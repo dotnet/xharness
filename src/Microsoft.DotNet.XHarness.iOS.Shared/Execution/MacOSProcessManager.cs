@@ -7,14 +7,56 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 {
-    public class MacOSProcessManager : ProcessManager
+    public class MacOSProcessManager : ProcessManager, IMacOSProcessManager
     {
+        #region Private variables
+
+        static readonly Lazy<string> s_autoDetectedXcodeRoot = new Lazy<string>(DetectXcodePath, LazyThreadSafetyMode.PublicationOnly);
+        readonly string? _xcodeRoot;
+        Version? _xcode_version;
+
+        #endregion
+
+        public MacOSProcessManager(string? xcodeRoot = null)
+        {
+            _xcodeRoot = xcodeRoot;
+        }
+
+        #region IMacOSProcessManager implementation
+
+        public string XcodeRoot => _xcodeRoot ?? s_autoDetectedXcodeRoot.Value;
+        public Version XcodeVersion
+        {
+            get
+            {
+                if (_xcode_version == null)
+                {
+                    var doc = new XmlDocument();
+                    doc.Load(Path.Combine(XcodeRoot, "Contents", "version.plist"));
+                    _xcode_version = Version.Parse(doc.SelectSingleNode("//key[text() = 'CFBundleShortVersionString']/following-sibling::string").InnerText);
+                }
+                return _xcode_version;
+            }
+        }
+
+        public Task<ProcessExecutionResult> ExecuteXcodeCommandAsync(string executable, IList<string> args, ILog log, TimeSpan timeout)
+        {
+            string filename = Path.Combine(XcodeRoot, "Contents", "Developer", "usr", "bin", executable);
+            return ExecuteCommandAsync(filename, args, log, timeout: timeout);
+        }
+
+        #endregion
 
         #region Protected methods
 
@@ -97,5 +139,44 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 
         #endregion
 
+        #region Private methods
+
+        static string DetectXcodePath()
+        {
+            using var process = new Process();
+            process.StartInfo.FileName = "xcode-select";
+            process.StartInfo.Arguments = "-p";
+
+            var log = new MemoryLog();
+            var stdout = new MemoryLog() { Timestamp = false };
+            var stderr = new ConsoleLog();
+            var timeout = TimeSpan.FromSeconds(30);
+
+            var result = RunAsyncInternal(
+                process: process,
+                log: log,
+                stdout: stdout,
+                stderr: stderr,
+                kill: (p, s) => kill(p, s),
+                getChildrenPS: (i, l) => GetChildrenPSInternal(i, l),
+                timeout: timeout).GetAwaiter().GetResult();
+
+            if (!result.Succeeded)
+                throw new Exception("Failed to detect Xcode path from xcode-select!");
+
+            // Something like /Applications/Xcode114.app/Contents/Developers
+            var xcodeRoot = stdout.ToString().Trim();
+
+            if (string.IsNullOrEmpty(xcodeRoot))
+            {
+                throw new Exception("Failed to detect Xcode path from xcode-select!");
+            }
+
+            // We need /Applications/Xcode114.app only
+            // should never be null, if it is return an ""
+            return Path.GetDirectoryName(Path.GetDirectoryName(xcodeRoot)) ?? string.Empty;
+        }
+
+        #endregion
     }
 }

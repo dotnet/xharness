@@ -10,7 +10,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.DotNet.XHarness.CLI;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments;
 using Microsoft.Extensions.Logging;
 

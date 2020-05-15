@@ -5,7 +5,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.CLI;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments;
 using Microsoft.Extensions.Logging;
 

@@ -4,7 +4,7 @@
 
 using System;
 using System.IO;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Mono.Options;
 
@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments
                 if (_xcodeRoot == null)
                 {
                     // Determine it automatically from xcode-select
-                    _xcodeRoot = new ProcessManager().XcodeRoot;
+                    _xcodeRoot = new MacOSProcessManager().XcodeRoot;
                 }
 
                 return _xcodeRoot;

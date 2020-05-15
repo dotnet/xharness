@@ -10,8 +10,8 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments;
-using Microsoft.DotNet.XHarness.CLI.Commands;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments;
@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 {
     internal abstract class SimulatorInstallerCommand : XHarnessCommand
     {
-        private readonly IProcessManager _processManager = new ProcessManager();
+        private readonly MacOSProcessManager _processManager = new MacOSProcessManager();
 
         protected ILogger Logger { get; set; } = null!;
 
