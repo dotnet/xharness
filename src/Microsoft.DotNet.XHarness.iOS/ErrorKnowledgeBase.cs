@@ -13,18 +13,18 @@ namespace Microsoft.DotNet.XHarness.iOS
 {
     public class ErrorKnowledgeBase : IErrorKnowledgeBase
     {
-        static readonly Dictionary<string, string> testErrorMaps = new Dictionary<string, string> {
+        static readonly Dictionary<string, string> _testErrorMaps = new Dictionary<string, string> {
             ["Failed to communicate with the device"] = "Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device",
         };
 
-        static readonly Dictionary<string, string> buildErrorMaps = new Dictionary<string, string> {
+        static readonly Dictionary<string, string> _buildErrorMaps = new Dictionary<string, string> {
         };
 
-        static readonly Dictionary<string, string> installErrorMaps = new Dictionary<string, string> {
+        static readonly Dictionary<string, string> _installErrorMaps = new Dictionary<string, string> {
             ["IncorrectArchitecture"] = "IncorrectArchitecture: Failed to find matching device arch for the application.",
         };
 
-        static bool TryFindErrors (ILog log, Dictionary<string, string> errorMap, out string? failureMessage)
+        static bool TryFindErrors (ILog log, Dictionary<string, string> errorMap, [NotNullWhen(true)] out string? failureMessage)
         {
             failureMessage = null;
             if (log == null) {
@@ -51,14 +51,14 @@ namespace Microsoft.DotNet.XHarness.iOS
             return false;
         }
 
-        public bool IsKnownBuildIssue (ILog buildLog, out string? knownFailureMessage) =>
-            TryFindErrors (buildLog, buildErrorMaps, out knownFailureMessage);
+        public bool IsKnownBuildIssue (ILog buildLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
+            TryFindErrors (buildLog, _buildErrorMaps, out knownFailureMessage);
 
-        public bool IsKnownTestIssue (ILog runLog, out string? knownFailureMessage) =>
-            TryFindErrors (runLog, testErrorMaps, out knownFailureMessage);
+        public bool IsKnownTestIssue (ILog runLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
+            TryFindErrors (runLog, _testErrorMaps, out knownFailureMessage);
 
         public bool IsKnownInstallIssue(ILog installLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
-            TryFindErrors (installLog, installErrorMaps, out knownFailureMessage);
+            TryFindErrors (installLog, _installErrorMaps, out knownFailureMessage);
 
     }
 }
