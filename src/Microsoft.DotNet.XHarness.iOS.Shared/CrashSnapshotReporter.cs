@@ -89,10 +89,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
                 log.WriteLine("Found {0} new crash report(s)", newCrashFiles.Count);
 
-                IEnumerable<ILog> crashReports;
+                IEnumerable<IFileBackedLog> crashReports;
                 if (!isDevice)
                 {
-                    crashReports = new List<ILog>(newCrashFiles.Count);
+                    crashReports = new List<IFileBackedLog>(newCrashFiles.Count);
                     foreach (var path in newCrashFiles)
                     {
                         logs.AddFile(path, $"Crash report: {Path.GetFileName(path)}");
@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             } while (true);
         }
 
-        async Task<ILog> ProcessCrash(string crashFile)
+        async Task<IFileBackedLog> ProcessCrash(string crashFile)
         {
             var name = Path.GetFileName(crashFile);
             var crashReportFile = logs.Create(name, $"Crash report: {name}", timestamp: false);
@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        async Task<ILog> GetSymbolicateCrashReportAsync(ILog report)
+        async Task<IFileBackedLog> GetSymbolicateCrashReportAsync(IFileBackedLog report)
         {
             if (symbolicateCrashPath == null)
             {

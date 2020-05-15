@@ -3,10 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.IO;
 using System.Text;
 using Microsoft.DotNet.XHarness.Common.Logging;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
 
@@ -14,10 +14,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     {
 
         public virtual Encoding Encoding => Encoding.UTF8;
-        public string Description { get; set; }
+        public string? Description { get; set; }
         public bool Timestamp { get; set; } = true;
 
-        protected Log(string description = null)
+        protected Log(string? description = null)
         {
             Description = description;
         }
@@ -50,13 +50,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             Write(string.Format(format, args) + "\n");
         }
 
-        public abstract string FullPath { get; }
-
         protected abstract void WriteImpl(string value);
 
-        public abstract StreamReader GetReader();
-
-        public override string ToString() => Description;
+        public override string ToString() => Description ?? string.Empty;
 
         public abstract void Flush();
 

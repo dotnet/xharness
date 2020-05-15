@@ -28,16 +28,16 @@ namespace Microsoft.DotNet.XHarness.iOS
                 "IncorrectArchitecture: Failed to find matching device arch for the application."
         };
 
-        public bool IsKnownBuildIssue(ILog buildLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
+        public bool IsKnownBuildIssue(IFileBackedLog buildLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
             TryFindErrors(buildLog, _buildErrorMaps, out knownFailureMessage);
 
-        public bool IsKnownTestIssue(ILog runLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
+        public bool IsKnownTestIssue(IFileBackedLog runLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
             TryFindErrors(runLog, _testErrorMaps, out knownFailureMessage);
 
-        public bool IsKnownInstallIssue(ILog installLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
+        public bool IsKnownInstallIssue(IFileBackedLog installLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
             TryFindErrors(installLog, _installErrorMaps, out knownFailureMessage);
 
-        private static bool TryFindErrors(ILog log, Dictionary<string, string> errorMap,
+        private static bool TryFindErrors(IFileBackedLog log, Dictionary<string, string> errorMap,
             [NotNullWhen(true)] out string? failureMessage)
         {
             failureMessage = null;

@@ -8,7 +8,7 @@ using Microsoft.DotNet.XHarness.Common.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
-    public class LogFile : Log, ILog
+    public class LogFile : FileBackedLog
     {
         readonly object lock_obj = new object();
 

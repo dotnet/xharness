@@ -30,14 +30,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
     public class TestReporter : ITestReporter
     {
 
-        const string timeoutMessage = "Test run timed out after {0} minute(s).";
-        const string completionMessage = "Test run completed";
-        const string failureMessage = "Test run failed";
+        private const string _timeoutMessage = "Test run timed out after {0} minute(s).";
+        private const string _completionMessage = "Test run completed";
+        private const string _failureMessage = "Test run failed";
 
         readonly ISimpleListener listener;
-        readonly ILog mainLog;
+        readonly IFileBackedLog mainLog;
         readonly ILogs crashLogs;
-        readonly ILog runLog;
+        readonly IReadableLog runLog;
         readonly ILogs logs;
         readonly ICrashSnapshotReporter crashReporter;
         readonly IResultParser resultParser;
@@ -77,8 +77,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
         public TestReporter(IMLaunchProcessManager processManager,
-            ILog mainLog,
-            ILog runLog,
+            IFileBackedLog mainLog,
+            IReadableLog runLog,
             ILogs logs,
             ICrashSnapshotReporter crashReporter,
             ISimpleListener simpleListener,
@@ -182,7 +182,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         }
 
         // return the reason for a crash found in a log
-        void GetCrashReason(int pid, ILog crashLog, out string? crashReason)
+        void GetCrashReason(int pid, IReadableLog crashLog, out string? crashReason)
         {
             crashReason = null;
             using var crashReader = crashLog.GetReader(); // dispose when we leave the method
@@ -242,16 +242,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             {
                 timedout = true;
                 Success = false;
-                mainLog.WriteLine(timeoutMessage, timeout.TotalMinutes);
+                mainLog.WriteLine(_timeoutMessage, timeout.TotalMinutes);
             }
             else if (result.Succeeded)
             {
-                mainLog.WriteLine(completionMessage);
+                mainLog.WriteLine(_completionMessage);
                 Success = true;
             }
             else
             {
-                mainLog.WriteLine(failureMessage);
+                mainLog.WriteLine(_failureMessage);
                 Success = false;
             }
         }

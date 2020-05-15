@@ -6,7 +6,6 @@ using System;
 using System.IO;
 using System.Threading;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
@@ -18,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public string Path { get; private set; }
 
-        public SimpleFileListener(string path, ILog log, ILog testLog, bool xmlOutput) : base(log, testLog)
+        public SimpleFileListener(string path, ILog log, IFileBackedLog testLog, bool xmlOutput) : base(log, testLog)
         {
             Path = path ?? throw new ArgumentNullException(nameof(path));
             _xmlOutput = xmlOutput;

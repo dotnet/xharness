@@ -23,8 +23,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         private readonly Mock<ICrashSnapshotReporter> _crashReporter;
         private readonly Mock<IMLaunchProcessManager> _processManager;
         private readonly IResultParser _parser;
-        private readonly Mock<ILog> _runLog;
-        private readonly Mock<ILog> _mainLog;
+        private readonly Mock<IReadableLog> _runLog;
+        private readonly Mock<IFileBackedLog> _mainLog;
         private readonly Mock<ILogs> _logs;
         private readonly Mock<ISimpleListener> _listener;
         private readonly AppBundleInformation _appInformation;
@@ -36,8 +36,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             _crashReporter = new Mock<ICrashSnapshotReporter>();
             _processManager = new Mock<IMLaunchProcessManager>();
             _parser = new XmlResultParser();
-            _runLog = new Mock<ILog>();
-            _mainLog = new Mock<ILog>();
+            _runLog = new Mock<IReadableLog>();
+            _mainLog = new Mock<IFileBackedLog>();
             _logs = new Mock<ILogs>();
             _listener = new Mock<ISimpleListener>();
             _appInformation = new AppBundleInformation(
@@ -279,7 +279,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         public async Task ParseResultFailingTestsTest()
         {
             var sample = CreateSampleFile("NUnitV3SampleFailure.xml");
-            var listenerLog = new Mock<ILog>();
+            var listenerLog = new Mock<IFileBackedLog>();
             _listener.Setup(l => l.TestLog).Returns(listenerLog.Object);
             listenerLog.Setup(l => l.FullPath).Returns(sample);
 
@@ -297,7 +297,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         {
             // get a file with a success result so that we can return it as part of the listener log
             var sample = CreateSampleFile("NUnitV3SampleSuccess.xml");
-            var listenerLog = new Mock<ILog>();
+            var listenerLog = new Mock<IFileBackedLog>();
             _listener.Setup(l => l.TestLog).Returns(listenerLog.Object);
             listenerLog.Setup(l => l.FullPath).Returns(sample);
 
@@ -317,7 +317,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             var tcs = new TaskCompletionSource<object>();
             _listener.Setup(l => l.CompletionTask).Returns(tcs.Task); // will never be set to be completed
 
-            var listenerLog = new Mock<ILog>();
+            var listenerLog = new Mock<IFileBackedLog>();
             _listener.Setup(l => l.TestLog).Returns(listenerLog.Object);
             listenerLog.Setup(l => l.FullPath).Returns("/my/missing/path");
 
@@ -326,7 +326,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
 
             var failurePath = Path.Combine(_logsDirectory, "my-failure.xml");
-            var failureLog = new Mock<ILog>();
+            var failureLog = new Mock<IFileBackedLog>();
             failureLog.Setup(l => l.FullPath).Returns(failurePath);
             _logs.Setup(l => l.Create(It.IsAny<string>(), It.IsAny<string>(), null)).Returns(failureLog.Object);
 

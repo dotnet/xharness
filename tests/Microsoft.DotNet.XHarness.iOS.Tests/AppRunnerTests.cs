@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
         private readonly Mock<IMLaunchProcessManager> _processManager;
         private readonly Mock<ILogs> _logs;
-        private readonly Mock<ILog> _mainLog;
+        private readonly Mock<IFileBackedLog> _mainLog;
         private readonly Mock<ISimulatorLoader> _simulatorLoader;
         private readonly Mock<ISimpleListener> _listener;
         private readonly Mock<ICrashSnapshotReporter> _snapshotReporter;
@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
         public AppRunnerTests()
         {
-            _mainLog = new Mock<ILog>();
+            _mainLog = new Mock<IFileBackedLog>();
 
             _processManager = new Mock<IMLaunchProcessManager>();
             _processManager.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult() { ExitCode = 0 }));
@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Setup(x => x.FindSimulators(TestTarget.Simulator_tvOS, _mainLog.Object, true, false))
                 .ReturnsAsync(new ISimulatorDevice[0]);
 
-            var listenerLogFile = new Mock<ILog>();
+            var listenerLogFile = new Mock<IFileBackedLog>();
 
             _logs
                 .Setup(x => x.Create(It.IsAny<string>(), "TestLog", It.IsAny<bool>()))
@@ -221,10 +221,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             _simulatorLoader
                 .Setup(x => x.FindSimulators(TestTarget.Simulator_tvOS, _mainLog.Object, true, false))
-                .ReturnsAsync(new ISimulatorDevice[] { simulator.Object });
+                .ReturnsAsync(new[] { simulator.Object });
 
             var testResultFilePath = Path.GetTempFileName();
-            var listenerLogFile = Mock.Of<ILog>(x => x.FullPath == testResultFilePath);
+            var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
             File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
 
             _logs
@@ -360,7 +360,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         [InlineData(true, true)] // tunnel and xml
         public async Task RunOnDeviceSuccessfullyTest(bool useTunnel, bool useXml)
         {
-            var deviceSystemLog = new Mock<ILog>();
+            var deviceSystemLog = new Mock<IFileBackedLog>();
             deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
 
             var deviceLogCapturer = new Mock<IDeviceLogCapturer>();
@@ -371,7 +371,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Returns(deviceLogCapturer.Object);
 
             var testResultFilePath = Path.GetTempFileName();
-            var listenerLogFile = Mock.Of<ILog>(x => x.FullPath == testResultFilePath);
+            var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
             File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
 
             _logs

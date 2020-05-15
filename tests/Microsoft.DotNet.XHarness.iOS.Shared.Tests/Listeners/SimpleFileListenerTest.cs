@@ -6,7 +6,6 @@ using System;
 using System.IO;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Moq;
 using Xunit;
 
@@ -15,13 +14,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
     public class SimpleFileListenerTest : IDisposable
     {
         private readonly string _path;
-        private readonly Mock<ILog> _testLog;
+        private readonly Mock<IFileBackedLog> _testLog;
         private readonly Mock<ILog> _log;
 
         public SimpleFileListenerTest()
         {
             _path = Path.GetTempFileName();
-            _testLog = new Mock<ILog>();
+            _testLog = new Mock<IFileBackedLog>();
             _log = new Mock<ILog>();
             File.Delete(_path);
         }
@@ -45,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
         [InlineData("<!-- the end -->", true)]
         public void TestProcess(string endLine, bool isXml)
         {
-            var lines = new string[] { "first line", "second line", "last line" };
+            var lines = new[] { "first line", "second line", "last line" };
             // set mock expectations
             _testLog.Setup(l => l.WriteLine("Tests have started executing"));
             _testLog.Setup(l => l.WriteLine("Tests have finished executing"));

@@ -4,7 +4,6 @@
 
 using System;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
@@ -20,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         (ListenerTransport transport, ISimpleListener listener, string listenerTempFile) Create(
             RunMode mode,
             ILog log,
-            ILog testLog,
+            IFileBackedLog testLog,
             bool isSimulator,
             bool autoExit,
             bool xmlOutput);
@@ -42,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         public (ListenerTransport transport, ISimpleListener listener, string listenerTempFile) Create(
             RunMode mode,
             ILog log,
-            ILog testLog,
+            IFileBackedLog testLog,
             bool isSimulator,
             bool autoExit,
             bool xmlOutput)

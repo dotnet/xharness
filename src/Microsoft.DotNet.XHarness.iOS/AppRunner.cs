@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.iOS
         private readonly IDeviceLogCapturerFactory _deviceLogCapturerFactory;
         private readonly ITestReporterFactory _testReporterFactory;
         private readonly ILogs _logs;
-        private readonly ILog _mainLog;
+        private readonly IFileBackedLog _mainLog;
         private readonly IHelpers _helpers;
         private readonly bool _useXmlOutput;
 
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             ICaptureLogFactory captureLogFactory,
             IDeviceLogCapturerFactory deviceLogCapturerFactory,
             ITestReporterFactory reporterFactory,
-            ILog mainLog,
+            IFileBackedLog mainLog,
             ILogs logs,
             IHelpers helpers,
             bool useXmlOutput,
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             else
             {
                 // create using the main as the default log
-                _mainLog = Log.CreateAggregatedLogWithDefault(mainLog, new CallbackLog(logCallback));
+                _mainLog = Log.CreateReadableAggregatedLog(mainLog, new CallbackLog(logCallback));
             }
 
         }
@@ -407,7 +407,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                     _mainLog.WriteLine("Starting test run");
 
                     // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit).
-                    var aggregatedLog = Log.CreateAggregatedLogWithDefault(_mainLog, testReporter.CallbackLog);
+                    var aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
                     Task<ProcessExecutionResult> runTestTask = _processManager.ExecuteCommandAsync(
                         args,
                         aggregatedLog,

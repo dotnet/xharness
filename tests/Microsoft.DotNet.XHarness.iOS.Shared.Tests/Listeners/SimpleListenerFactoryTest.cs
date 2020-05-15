@@ -4,7 +4,6 @@
 
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Moq;
 using Xunit;
 
@@ -12,12 +11,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
 {
     public class SimpleListenerFactoryTest
     {
-        private readonly Mock<ILog> _log;
+        private readonly Mock<IFileBackedLog> _log;
         private readonly SimpleListenerFactory _factory;
 
         public SimpleListenerFactoryTest()
         {
-            _log = new Mock<ILog>();
+            _log = new Mock<IFileBackedLog>();
             _factory = new SimpleListenerFactory();
         }
 

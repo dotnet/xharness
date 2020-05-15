@@ -27,13 +27,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public TaskCompletionSource<bool> TunnelHoleThrough { get; } = new TaskCompletionSource<bool>();
 
-        public SimpleTcpListener(ILog log, ILog testLog, bool autoExit, bool tunnel = false) : base(log, testLog)
+        public SimpleTcpListener(ILog log, IFileBackedLog testLog, bool autoExit, bool tunnel = false) : base(log, testLog)
         {
             _autoExit = autoExit;
             _useTcpTunnel = tunnel;
         }
 
-        public SimpleTcpListener(int port, ILog log, ILog testLog, bool autoExit, bool tunnel = false) : this(log, testLog, autoExit, tunnel)
+        public SimpleTcpListener(int port, ILog log, IFileBackedLog testLog, bool autoExit, bool tunnel = false) : this(log, testLog, autoExit, tunnel)
         {
             Port = port;
         }
@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             bool processed;
             try
             {
-                int timeout = TimeOutInit; ;
+                int timeout = TimeOutInit;
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
                 while (true)

@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
         private readonly iOSTestCommandArguments _arguments = new iOSTestCommandArguments();
         private readonly ErrorKnowledgeBase _errorKnowledgeBase = new ErrorKnowledgeBase();
         private static readonly string _mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
-        private bool _createdLldbFile = false;
+        private bool _createdLldbFile;
 
         protected override string CommandUsage { get; } = "ios test [OPTIONS]";
         protected override string CommandDescription { get; } = CommandHelp;
@@ -119,7 +119,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             logger.LogInformation($"Starting test for {target.AsString()}{ (_arguments.DeviceName != null ? " targeting " + _arguments.DeviceName : null) }..");
 
             string mainLogFile = Path.Join(_arguments.OutputDirectory, $"run-{target}{(_arguments.DeviceName != null ? "-" + _arguments.DeviceName : null)}.log");
-            ILog mainLog = Log.CreateAggregatedLogWithDefault(
+
+            IFileBackedLog mainLog = Log.CreateReadableAggregatedLog(
                 logs.Create(mainLogFile, LogType.ExecutionLog.ToString(), true),
                 new CallbackLog(message => logger.LogDebug(message)));
 

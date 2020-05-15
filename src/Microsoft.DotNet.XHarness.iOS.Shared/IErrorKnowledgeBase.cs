@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         /// <param name="installLog">The installation log.</param>
         /// <param name="knownFailureMessage">A string message for the user to understand the reason for the failure.</param>
         /// <returns>True if the failure is due to a known reason, false otherwise.</returns>
-        bool IsKnownInstallIssue(ILog installLog, [NotNullWhen(true)] out string? knownFailureMessage);
+        bool IsKnownInstallIssue(IFileBackedLog installLog, [NotNullWhen(true)] out string? knownFailureMessage);
 
         /// <summary>
         /// Identifies via the logs if the build failure is due to a known issue that the user can act upon.
@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         /// <param name="buildLog">The build log.</param>
         /// <param name="knownFailureMessage">A string message for the user to understand the reason for the failure.</param>
         /// <returns>True if the failure is due to a known reason, false otherwise.</returns>
-        bool IsKnownBuildIssue(ILog buildLog, [NotNullWhen(true)] out string? knownFailureMessage);
+        bool IsKnownBuildIssue(IFileBackedLog buildLog, [NotNullWhen(true)] out string? knownFailureMessage);
 
         /// <summary>
         /// Identifies via the logs if the run failure is due to a known issue that the user can act upon.
@@ -36,6 +36,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         /// <param name="runLog">The run log.</param>
         /// <param name="knownFailureMessage">A string message for the user to understand the reason for the failure.</param>
         /// <returns>True if the failure is due to a known reason, false otherwise.</returns>
-        bool IsKnownTestIssue(ILog runLog, [NotNullWhen(true)] out string? knownFailureMessage);
+        bool IsKnownTestIssue(IFileBackedLog runLog, [NotNullWhen(true)] out string? knownFailureMessage);
     }
 }

@@ -10,7 +10,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
-    public class Logs : List<ILog>, ILogs
+    public class Logs : List<IFileBackedLog>, ILogs
     {
         private readonly IHelpers _helpers = new Helpers();
 
@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         }
 
         // Create a new log backed with a file
-        public ILog Create(string filename, string name, bool? timestamp = null)
+        public IFileBackedLog Create(string filename, string name, bool? timestamp = null)
         {
             return Create(Directory, filename, name, timestamp);
         }
@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         // Adds an existing file to this collection of logs.
         // If the file is not inside the log directory, then it's copied there.
         // 'path' must be a full path to the file.
-        public ILog AddFile(string path)
+        public IFileBackedLog AddFile(string path)
         {
             return AddFile(path, Path.GetFileName(path));
         }
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         // Adds an existing file to this collection of logs.
         // If the file is not inside the log directory, then it's copied there.
         // 'path' must be a full path to the file.
-        public ILog AddFile(string path, string name)
+        public IFileBackedLog AddFile(string path, string name)
         {
             if (path == null)
                 throw new ArgumentNullException(nameof(path));

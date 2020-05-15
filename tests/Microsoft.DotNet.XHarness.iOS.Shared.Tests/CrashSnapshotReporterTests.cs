@@ -59,8 +59,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             const string crashLogPath = "/path/to/crash.log";
             const string symbolicateLogPath = "/path/to/" + deviceName + ".symbolicated.log";
 
-            var crashReport = Mock.Of<ILog>(x => x.FullPath == crashLogPath);
-            var symbolicateReport = Mock.Of<ILog>(x => x.FullPath == symbolicateLogPath);
+            var crashReport = Mock.Of<IFileBackedLog>(x => x.FullPath == crashLogPath);
+            var symbolicateReport = Mock.Of<IFileBackedLog>(x => x.FullPath == symbolicateLogPath);
 
             // Crash report is added
             _logs.Setup(x => x.Create(deviceName, "Crash report: " + deviceName, It.IsAny<bool>()))

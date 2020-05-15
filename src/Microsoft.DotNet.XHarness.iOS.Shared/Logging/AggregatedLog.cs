@@ -14,12 +14,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     public abstract partial class Log
     {
 
-        public static ILog CreateAggregatedLogWithDefault(ILog defaultLog, params ILog[] logs)
+        public static IFileBackedLog CreateReadableAggregatedLog (IFileBackedLog defaultLog, params ILog[] logs)
         {
-            return new AggregatedLog(defaultLog, logs);
+            return new ReadableAggregatedLog(defaultLog, logs);
         }
 
-        [Obsolete ("AggregatedLogs without a default log are dangerous. Use 'CreateAggregatedLogWithDefault' instead.")]
         public static ILog CreateAggregatedLog(params ILog[] logs)
         {
             return new AggregatedLog(logs);
@@ -28,30 +27,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         // Log that will duplicate log output to multiple other logs.
         class AggregatedLog : Log
         {
-            readonly ILog? _defaultLog;
-            readonly List<ILog> _logs = new List<ILog>();
-
-            public AggregatedLog(ILog defaultLog, params ILog[] logs)
-            {
-                _defaultLog = defaultLog ?? throw new ArgumentNullException(nameof(defaultLog));
-                _logs.Add(defaultLog);
-                _logs.AddRange(logs);
-            }
+            protected readonly List<ILog> _logs = new List<ILog>();
 
             public AggregatedLog(params ILog[] logs)
-                : base(null)
             {
                 _logs.AddRange(logs);
-            }
-
-            public override string FullPath
-            {
-                get
-                {
-                    if (_defaultLog == null)
-                        throw new InvalidOperationException("Default log not set.");
-                    return _defaultLog.FullPath;
-                }
             }
 
             protected override void WriteImpl(string value)
@@ -66,13 +46,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
                     log.Write(buffer, offset, count);
             }
 
-            public override StreamReader GetReader()
-            {
-                if (_defaultLog == null)
-                    throw new InvalidOperationException("Default log not set.");
-                return _defaultLog.GetReader();
-            }
-
             public override void Flush()
             {
                 foreach (var log in _logs)
@@ -84,6 +57,22 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
                 foreach (var log in _logs)
                     log.Dispose();
             }
+        }
+
+        class ReadableAggregatedLog : AggregatedLog, IFileBackedLog
+        {
+            readonly IFileBackedLog _defaultLog;
+
+            public ReadableAggregatedLog(IFileBackedLog defaultLog, params ILog[] logs) : base(logs)
+            {
+                _defaultLog = defaultLog ?? throw new ArgumentNullException(nameof(defaultLog));
+                // make sure that we also write in the default log
+                _logs.Add(defaultLog);
+            }
+
+            public StreamReader GetReader() => _defaultLog.GetReader();
+
+            public string FullPath => _defaultLog.FullPath;
         }
     }
 }

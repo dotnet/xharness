@@ -16,8 +16,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
     public interface ITestReporterFactory
     {
-        ITestReporter Create(ILog mainLog,
-            ILog runLog,
+        ITestReporter Create(IFileBackedLog mainLog,
+            IReadableLog runLog,
             ILogs logs,
             ICrashSnapshotReporter crashSnapshotReporter,
             ISimpleListener simpleListener,
@@ -41,8 +41,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
-        public ITestReporter Create(ILog mainLog,
-            ILog runLog,
+        public ITestReporter Create(IFileBackedLog mainLog,
+            IReadableLog runLog,
             ILogs logs,
             ICrashSnapshotReporter crashReporter,
             ISimpleListener simpleListener,
