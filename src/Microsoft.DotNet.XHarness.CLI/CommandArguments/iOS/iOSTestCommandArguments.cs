@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
             { "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.",
                 v => XmlResultJargon = ParseArgument("xml-jargon", v, invalidValues: XmlResultJargon.Missing)
             },
-            { "enable-lldb", "Allow to debug the launched application usinghe lldb.", v => EnableLldb = v != null },
+            { "enable-lldb", "Allow to debug the launched application using lldb.", v => EnableLldb = v != null },
         };
 
         public override void Validate()
