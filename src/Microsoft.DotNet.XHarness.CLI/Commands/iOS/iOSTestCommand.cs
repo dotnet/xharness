@@ -28,14 +28,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     /// </summary>
     internal class iOSTestCommand : TestCommand
     {
+        private const string CommandHelp = "Runs a given iOS/tvOS/watchOS application bundle in a target device/simulator";
+
         private readonly iOSTestCommandArguments _arguments = new iOSTestCommandArguments();
         private readonly ErrorKnowledgeBase _errorKnowledgeBase = new ErrorKnowledgeBase();
         private static readonly string _mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
         private bool _createdLldbFile = false;
 
         protected override string CommandUsage { get; } = "ios test [OPTIONS]";
-        protected override string CommandDescription { get; } = "Packaging command that will create a iOS/tvOS/watchOS or macOS application that can be used to run NUnit or XUnit-based test dlls";
+        protected override string CommandDescription { get; } = CommandHelp;
         protected override TestCommandArguments TestArguments => _arguments;
+
+        public iOSTestCommand() : base(CommandHelp)
+        {
+        }
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {

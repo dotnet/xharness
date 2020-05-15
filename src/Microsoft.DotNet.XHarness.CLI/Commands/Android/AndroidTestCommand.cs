@@ -29,8 +29,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
         protected override string CommandUsage { get; } = "android test [OPTIONS]";
 
+        private const string CommandHelp = "Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app";
         protected override string CommandDescription { get; } = @$"
-Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app
+{CommandHelp}
 
 APKs can communicate status back to XHarness using the results bundle:
 
@@ -45,6 +46,10 @@ Reporting:
  
 Arguments:
 ";
+
+        public AndroidTestCommand() : base(CommandHelp)
+        {
+        }
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {

@@ -8,9 +8,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 {
     internal abstract class GetStateCommand : XHarnessCommand
     {
-        protected override string CommandDescription { get; } = "Print information about the current machine, such as host machine info and device status";
+        private const string CommandHelp = "Print information about the current machine, such as host machine info and device status";
+        protected override string CommandDescription { get; } = CommandHelp;
 
-        public GetStateCommand() : base("state")
+        public GetStateCommand() : base("state", CommandHelp)
         {
         }
     }
