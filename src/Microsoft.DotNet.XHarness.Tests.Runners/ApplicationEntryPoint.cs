@@ -172,17 +172,16 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         {
             if (options.EnableXml && writer == null)
                 throw new ArgumentNullException(nameof(writer));
-            TestRunner.Jargon jargon = options.XmlVersion.ToTestRunnerJargon();
-            string resultsFilePath = null;
 
+            string resultsFilePath = null;
             if (options.EnableXml)
             {
-                runner.WriteResultsToFile(writer, jargon);
+                runner.WriteResultsToFile(writer, options.XmlVersion);
                 logger.Info("Xml file was written to the provided writer.");
             }
             else
             {
-                resultsFilePath = runner.WriteResultsToFile(jargon);
+                resultsFilePath = runner.WriteResultsToFile(options.XmlVersion);
                 logger.Info($"XML results can be found in '{resultsFilePath}'");
             }
 

@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Xsl;
+using Microsoft.DotNet.XHarness.Common;
 using Xunit;
 using Xunit.Abstractions;
 using Microsoft.DotNet.XHarness.Tests.Runners.Core;
@@ -809,7 +810,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             TotalTests += FilteredTests; // ensure that we do have in the total run the excluded ones.
         }
 
-        public override string WriteResultsToFile(Jargon jargon)
+        public override string WriteResultsToFile(XmlResultJargon jargon)
         {
             if (assembliesElement == null)
                 return String.Empty;
@@ -821,13 +822,14 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             {
                 switch (jargon)
                 {
-                    case Jargon.NUnitV2:
+                    case XmlResultJargon.TouchUnit:
+                    case XmlResultJargon.NUnitV2:
                         Transform_Results("NUnitXml.xslt", assembliesElement, xmlWriter);
                         break;
-                    case Jargon.NUnitV3:
+                    case XmlResultJargon.NUnitV3:
                         Transform_Results("NUnit3Xml.xslt", assembliesElement, xmlWriter);
                         break;
-                    default: // default to xunit until we implement NUnit v3 support.
+                    default: // xunit as default, includes when we got Missing
                         assembliesElement.Save(xmlWriter);
                         break;
                 }
@@ -835,7 +837,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
 
             return outputFilePath;
         }
-        public override void WriteResultsToFile(TextWriter writer, Jargon jargon)
+        public override void WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
         {
             if (assembliesElement == null)
                 return;
@@ -846,7 +848,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
             {
                 switch (jargon)
                 {
-                    case Jargon.NUnitV2:
+                    case XmlResultJargon.TouchUnit:
+                    case XmlResultJargon.NUnitV2:
                         try
                         {
                             Transform_Results("NUnitXml.xslt", assembliesElement, xmlWriter);
@@ -856,7 +859,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                             writer.WriteLine(e);
                         }
                         break;
-                    case Jargon.NUnitV3:
+                    case XmlResultJargon.NUnitV3:
                         try
                         {
                             Transform_Results("NUnit3Xml.xslt", assembliesElement, xmlWriter);
@@ -866,7 +869,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                             writer.WriteLine(e);
                         }
                         break;
-                    default: // defualt to xunit until we add NUnitv3 support
+                    default: // xunit as default, includes when we got Missing
                         assembliesElement.Save(xmlWriter);
                         break;
                 }

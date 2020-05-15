@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Mono.Options;
 
@@ -13,27 +14,6 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
     {
         Default = 0,
         Wrapped = 1,
-    }
-
-    internal enum XmlVersion
-    {
-        NUnitV2 = 0,
-        NUnitV3 = 1,
-        xUnit = 2,
-    }
-
-    internal static class XmlVersionExtensions {
-
-        public static TestRunner.Jargon ToTestRunnerJargon(this XmlVersion version)
-        {
-            return version switch
-            {
-                XmlVersion.NUnitV2 => TestRunner.Jargon.NUnitV2,
-                XmlVersion.NUnitV3 => TestRunner.Jargon.NUnitV3,
-                XmlVersion.xUnit => TestRunner.Jargon.xUnit,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
     }
 
     internal class ApplicationOptions
@@ -66,7 +46,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
                 XmlMode = (XmlMode)Enum.Parse(typeof(XmlMode), xml_mode, true);
             var xml_version = Environment.GetEnvironmentVariable(EnviromentVariables.XmlVersion);
             if (!string.IsNullOrEmpty(xml_version))
-                XmlVersion = (XmlVersion)Enum.Parse(typeof(XmlVersion), xml_version, true);
+                XmlVersion = (XmlResultJargon)Enum.Parse(typeof(XmlResultJargon), xml_version, true);
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.LogFilePath)))
                 LogFile = Environment.GetEnvironmentVariable(EnviromentVariables.LogFilePath);
             if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.RunAllTestsByDefault), out b))
@@ -81,7 +61,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
                 { "transport=", "Select transport method. Either TCP (default), HTTP or FILE.", v => Transport = v },
                 { "enablexml", "Enable the xml reported.", v => EnableXml = false },
                 { "xmlmode", "The xml mode.", v => XmlMode = (XmlMode) Enum.Parse (typeof (XmlMode), v, false) },
-                { "xmlversion", "The xml version.", v => XmlVersion = (XmlVersion) Enum.Parse (typeof (XmlVersion), v, false) },
+                { "xmlversion", "The xml version.", v => XmlVersion = (XmlResultJargon) Enum.Parse (typeof (XmlResultJargon), v, false) },
                 { "logfile=", "A path where output will be saved.", v => LogFile = v },
                 { "result=", "The path to be used to store the result", v => ResultFile = v},
                 { "run-all-tests:", "Run all the tests found in the assembly. Defaults to true.", v =>
@@ -113,7 +93,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         /// <summary>
         /// Specify the version of Xml to be used for the results.
         /// </summary>
-        public XmlVersion XmlVersion { get; set; } = XmlVersion.xUnit;
+        public XmlResultJargon XmlVersion { get; set; } = XmlResultJargon.xUnit;
 
         /// <summary>
         /// Return the test results as xml.
