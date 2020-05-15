@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj" />
   </ItemGroup>
 
 </Project>
