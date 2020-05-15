@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 #nullable enable
-using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -13,50 +13,52 @@ namespace Microsoft.DotNet.XHarness.iOS
 {
     public class ErrorKnowledgeBase : IErrorKnowledgeBase
     {
-        const string IncorrectArchPrefix = "IncorrectArchitecture";
+        static readonly Dictionary<string, string> testErrorMaps = new Dictionary<string, string> {
+            ["Failed to communicate with the device"] = "Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device",
+        };
 
-        public bool IsKnownInstallIssue(ILog installLog, [NotNullWhen(true)] out string? knownFailureMessage)
+        static readonly Dictionary<string, string> buildErrorMaps = new Dictionary<string, string> {
+        };
+
+        static readonly Dictionary<string, string> installErrorMaps = new Dictionary<string, string> {
+            ["IncorrectArchitecture"] = "IncorrectArchitecture: Failed to find matching device arch for the application.",
+        };
+
+        static bool TryFindErrors (ILog? log, Dictionary<string, string> errorMap, out string? failureMessage)
         {
-            knownFailureMessage = null;
-            if (installLog == null)
-            {
+            failureMessage = null;
+            if (log == null) {
                 return false;
             }
 
-            if (File.Exists(installLog.FullPath) && new FileInfo(installLog.FullPath).Length > 0)
-            {
-                using StreamReader reader = installLog.GetReader();
-                while (!reader.EndOfStream)
-                {
-                    string line = reader.ReadLine();
-                    if (line == null)
-                    {
-                        continue;
-                    }
+            if (!File.Exists (log.FullPath) || new FileInfo (log.FullPath).Length <= 0)
+                return false;
 
-                    var index = line.IndexOf(IncorrectArchPrefix, StringComparison.Ordinal);
-                    if (index >= 0)
-                    {
-                        // add the information from the line, which is good enough
-                        knownFailureMessage = line.Substring(index); // remove the timestamp if any
-                        return true;
-                    }
+            using var reader = log.GetReader ();
+            while (!reader.EndOfStream) {
+                string line = reader.ReadLine ();
+                if (line == null)
+                    continue;
+                //go over errors and return true as soon as we find one that matches
+                foreach (var error in errorMap.Keys) {
+                    if (!line.Contains (error))
+                        continue;
+                    failureMessage = errorMap [error];
+                    return true;
                 }
             }
 
             return false;
         }
 
-        public bool IsKnownBuildIssue(ILog buildLog, [NotNullWhen(true)] out string? knownFailureMessage)
-        {
-            knownFailureMessage = null;
-            return false;
-        }
+        public bool IsKnownBuildIssue (ILog buildLog, out string? knownFailureMessage) =>
+            TryFindErrors (buildLog, buildErrorMaps, out knownFailureMessage);
 
-        public bool IsKnownTestIssue(ILog runLog, [NotNullWhen(true)] out string? knownFailureMessage)
-        {
-            knownFailureMessage = null;
-            return false;
-        }
+        public bool IsKnownTestIssue (ILog runLog, out string? knownFailureMessage) =>
+            TryFindErrors (runLog, testErrorMaps, out knownFailureMessage);
+
+        public bool IsKnownInstallIssue(ILog installLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
+            TryFindErrors (installLog, installErrorMaps, out knownFailureMessage);
+
     }
 }
