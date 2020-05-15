@@ -21,6 +21,13 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 {
     internal abstract class SimulatorInstallerCommand : XHarnessCommand
     {
+        private const string MAJOR_VERSION_PLACEHOLDER = "DOWNLOADABLE_VERSION_MAJOR";
+        private const string MINOR_VERSION_PLACEHOLDER = "DOWNLOADABLE_VERSION_MINOR";
+        private const string VERSION_PLACEHOLDER = "DOWNLOADABLE_VERSION";
+        private const string IDENTIFIER_PLACEHOLDER = "DOWNLOADABLE_IDENTIFIER";
+
+        private const string SimulatorIndexUrl = "https://devimages-cdn.apple.com/downloads/xcode/simulators/index-{0}-{1}.dvtdownloadableindex";
+
         private readonly MacOSProcessManager _processManager = new MacOSProcessManager();
 
         protected ILogger Logger { get; set; } = null!;
@@ -110,14 +117,14 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                 var versionMajor = versions[0];
                 var versionMinor = versions[1];
                 var dict = new Dictionary<string, string>() {
-                    { "DOWNLOADABLE_VERSION_MAJOR", versionMajor },
-                    { "DOWNLOADABLE_VERSION_MINOR", versionMinor },
-                    { "DOWNLOADABLE_VERSION", version },
+                    { MAJOR_VERSION_PLACEHOLDER, versionMajor },
+                    { MINOR_VERSION_PLACEHOLDER, versionMinor },
+                    { VERSION_PLACEHOLDER, version },
                 };
 
                 var identifier = Replace(identifierNode.InnerText, dict);
 
-                dict.Add("DOWNLOADABLE_IDENTIFIER", identifier);
+                dict.Add(IDENTIFIER_PLACEHOLDER, identifier);
 
                 double.TryParse(fileSizeNode?.InnerText, out var parsedFileSize);
 
@@ -150,7 +157,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
         {
             var (xcodeVersion, xcodeUuid) = await GetXcodeInformation();
 
-            var url = $"https://devimages-cdn.apple.com/downloads/xcode/simulators/index-{xcodeVersion}-{xcodeUuid}.dvtdownloadableindex";
+            var url = string.Format(SimulatorIndexUrl, xcodeVersion, xcodeUuid);
             var uri = new Uri(url);
             var tmpfile = Path.Combine(TempDirectory, Path.GetFileName(uri.LocalPath));
 
