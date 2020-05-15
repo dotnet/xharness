@@ -4,6 +4,7 @@
 
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -13,49 +14,65 @@ namespace Microsoft.DotNet.XHarness.iOS
 {
     public class ErrorKnowledgeBase : IErrorKnowledgeBase
     {
-        const string IncorrectArchPrefix = "IncorrectArchitecture";
-
-        public bool IsKnownInstallIssue(ILog installLog, [NotNullWhen(true)] out string? knownFailureMessage)
+        private static readonly Dictionary<string, string> _testErrorMaps = new Dictionary<string, string>
         {
-            knownFailureMessage = null;
-            if (installLog == null)
+            ["Failed to communicate with the device"] =
+                "Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device"
+        };
+
+        private static readonly Dictionary<string, string> _buildErrorMaps = new Dictionary<string, string>();
+
+        private static readonly Dictionary<string, string> _installErrorMaps = new Dictionary<string, string>
+        {
+            ["IncorrectArchitecture"] =
+                "IncorrectArchitecture: Failed to find matching device arch for the application."
+        };
+
+        public bool IsKnownBuildIssue(ILog buildLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
+            TryFindErrors(buildLog, _buildErrorMaps, out knownFailureMessage);
+
+        public bool IsKnownTestIssue(ILog runLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
+            TryFindErrors(runLog, _testErrorMaps, out knownFailureMessage);
+
+        public bool IsKnownInstallIssue(ILog installLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
+            TryFindErrors(installLog, _installErrorMaps, out knownFailureMessage);
+
+        private static bool TryFindErrors(ILog log, Dictionary<string, string> errorMap,
+            [NotNullWhen(true)] out string? failureMessage)
+        {
+            failureMessage = null;
+            if (log == null)
             {
                 return false;
             }
 
-            if (File.Exists(installLog.FullPath) && new FileInfo(installLog.FullPath).Length > 0)
+            if (!File.Exists(log.FullPath) || new FileInfo(log.FullPath).Length <= 0)
             {
-                using StreamReader reader = installLog.GetReader();
-                while (!reader.EndOfStream)
+                return false;
+            }
+
+            using var reader = log.GetReader();
+            while (!reader.EndOfStream)
+            {
+                string line = reader.ReadLine();
+                if (line == null)
                 {
-                    string line = reader.ReadLine();
-                    if (line == null)
+                    continue;
+                }
+
+                //go over errors and return true as soon as we find one that matches
+                foreach (var error in errorMap.Keys)
+                {
+                    if (!line.Contains(error, StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;
                     }
 
-                    var index = line.IndexOf(IncorrectArchPrefix, StringComparison.Ordinal);
-                    if (index >= 0)
-                    {
-                        // add the information from the line, which is good enough
-                        knownFailureMessage = line.Substring(index); // remove the timestamp if any
-                        return true;
-                    }
+                    failureMessage = errorMap[error];
+                    return true;
                 }
             }
 
-            return false;
-        }
-
-        public bool IsKnownBuildIssue(ILog buildLog, [NotNullWhen(true)] out string? knownFailureMessage)
-        {
-            knownFailureMessage = null;
-            return false;
-        }
-
-        public bool IsKnownTestIssue(ILog runLog, [NotNullWhen(true)] out string? knownFailureMessage)
-        {
-            knownFailureMessage = null;
             return false;
         }
     }
