@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 Timestamp = false
             };
 
-            var aggregatedLog = Log.CreateAggregatedLog(runLog, consoleLog);
+            var aggregatedLog = Log.CreateAggregatedLogWithDefault(runLog, consoleLog);
             aggregatedLog.WriteLine("Generating scaffold app with:");
             aggregatedLog.WriteLine($"\tAppname: '{_arguments.AppPackageName}'");
             aggregatedLog.WriteLine($"\tAssemblies: '{string.Join(" ", _arguments.Assemblies)}'");
