@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
 
             if (args.Length == 0)
             {
-                Console.Error.Write("Please, supply a command. Call `simulator-installer help` for more details.");
+                Console.Error.WriteLine("Please, supply a command. Call `simulator-installer help` for more details.");
                 return (int)ExitCode.INVALID_ARGUMENTS;
             }
 
