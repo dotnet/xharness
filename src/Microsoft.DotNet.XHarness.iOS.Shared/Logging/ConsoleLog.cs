@@ -9,7 +9,7 @@ using System.Text;
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
     // A log that writes to standard output
-    public class ConsoleLog : Log
+    public class ConsoleLog : ReadableLog
     {
         readonly StringBuilder captured = new StringBuilder();
 
@@ -18,8 +18,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             captured.Append(value);
             Console.Write(value);
         }
-
-        public override string FullPath => throw new NotSupportedException();
 
         public override StreamReader GetReader()
         {

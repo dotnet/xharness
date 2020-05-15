@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         }
     }
 
-    public interface ICaptureLog : ILog
+    public interface ICaptureLog : IFileBackedLog
     {
         void StartCapture();
         void StopCapture();
@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
     // A log that captures data written to a separate file between two moments in time
     // (between StartCapture and StopCapture).
-    public class CaptureLog : Log, ICaptureLog
+    public class CaptureLog : FileBackedLog, ICaptureLog
     {
         readonly bool entireFile;
 
@@ -45,7 +45,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public override string FullPath { get; }
 
         public CaptureLog(string path, string capture_path, bool entireFile = false)
-            : base()
         {
             FullPath = path ?? throw new ArgumentNullException(nameof(path));
             CapturePath = capture_path ?? throw new ArgumentNullException(nameof(path));

@@ -24,9 +24,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         }
 
         [Fact]
-        public void FullPathTest() => Assert.Throws<NotSupportedException>(() => { string path = _log.FullPath; });
-
-        [Fact]
         public void TestWrite()
         {
             var message = "This is a log message";

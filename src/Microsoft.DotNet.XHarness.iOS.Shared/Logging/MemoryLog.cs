@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     /// <summary>
     /// Log that only writes to memory
     /// </summary>
-    public class MemoryLog : Log
+    public class MemoryLog : ReadableLog
     {
         readonly StringBuilder captured = new StringBuilder();
 
@@ -19,8 +19,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         {
             captured.Append(value);
         }
-
-        public override string FullPath => throw new NotSupportedException();
 
         public override StreamReader GetReader()
         {

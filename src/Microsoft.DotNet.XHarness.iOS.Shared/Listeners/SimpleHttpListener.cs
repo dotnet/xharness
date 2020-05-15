@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         private HttpListener _server;
         private bool _connected_once;
 
-        public SimpleHttpListener(ILog log, ILog testLog, bool autoExit) : base(log, testLog)
+        public SimpleHttpListener(ILog log, IFileBackedLog testLog, bool autoExit) : base(log, testLog)
         {
             _autoExit = autoExit;
         }

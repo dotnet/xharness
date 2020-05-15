@@ -18,19 +18,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             this.onWrite = onWrite;
         }
 
-        public override string FullPath => throw new NotSupportedException();
-
         public override void Dispose()
         {
         }
 
         public override void Flush()
         {
-        }
-
-        public override StreamReader GetReader()
-        {
-            throw new NotSupportedException();
         }
 
         protected override void WriteImpl(string value)

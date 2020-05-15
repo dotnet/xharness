@@ -12,10 +12,10 @@ using Microsoft.DotNet.XHarness.Common.Logging;
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
     // Monitor the output from 'mlaunch --installdev' and cancel the installation if there's no output for 1 minute.
-    public class AppInstallMonitorLog : Log
+    public class AppInstallMonitorLog : FileBackedLog
     {
 
-        readonly ILog copy_to;
+        readonly IFileBackedLog copy_to;
         readonly CancellationTokenSource cancellationSource;
 
         public override string FullPath => copy_to.FullPath;
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public long AppTotalBytes;
         public long WatchAppTotalBytes;
 
-        public AppInstallMonitorLog(ILog copy_to)
+        public AppInstallMonitorLog(IFileBackedLog copy_to)
                 : base($"Watch transfer log for {copy_to.Description}")
         {
             this.copy_to = copy_to;

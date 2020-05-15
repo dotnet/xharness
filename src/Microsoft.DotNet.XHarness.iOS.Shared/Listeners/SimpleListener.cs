@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         Task CompletionTask { get; }
         Task ConnectedTask { get; }
         int Port { get; }
-        ILog TestLog { get; }
+        IFileBackedLog TestLog { get; }
 
         void Cancel();
         void Initialize();
@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         private readonly TaskCompletionSource<bool> _stopped = new TaskCompletionSource<bool>();
         private readonly TaskCompletionSource<bool> _connected = new TaskCompletionSource<bool>();
 
-        public ILog TestLog { get; private set; }
+        public IFileBackedLog TestLog { get; private set; }
 
         protected readonly IPAddress Address = IPAddress.Any;
         protected ILog Log { get; }
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         public int Port { get; protected set; }
         public abstract void Initialize();
 
-        protected SimpleListener(ILog log, ILog testLog)
+        protected SimpleListener(ILog log, IFileBackedLog testLog)
         {
             Log = log ?? throw new ArgumentNullException(nameof(log));
             TestLog = testLog ?? throw new ArgumentNullException(nameof(testLog));

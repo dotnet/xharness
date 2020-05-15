@@ -50,12 +50,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             Write(string.Format(format, args) + "\n");
         }
 
-        public abstract string FullPath { get; }
-
         protected abstract void WriteImpl(string value);
-
-        public abstract StreamReader GetReader();
-
+        
         public override string ToString() => Description;
 
         public abstract void Flush();

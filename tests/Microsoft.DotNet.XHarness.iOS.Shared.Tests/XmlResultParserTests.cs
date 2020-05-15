@@ -266,8 +266,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 
             // create a path with data in it
             var logs = new Mock<ILogs>();
-            var tmpLogMock = new Mock<ILog>();
-            var xmlLogMock = new Mock<ILog>();
+            var tmpLogMock = new Mock<IFileBackedLog>();
+            var xmlLogMock = new Mock<IFileBackedLog>();
 
             var tmpPath = Path.GetTempFileName();
             var finalPath = Path.GetTempFileName();

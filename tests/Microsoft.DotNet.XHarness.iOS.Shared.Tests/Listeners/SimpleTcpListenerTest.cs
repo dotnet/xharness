@@ -14,13 +14,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
 {
     public class SimpleTcpListenerTest
     {
-        private readonly Mock<ILog> _log;
-        private readonly Mock<ILog> _testLog;
+        private readonly Mock<IReadableLog> _log;
+        private readonly Mock<IFileBackedLog> _testLog;
 
         public SimpleTcpListenerTest()
         {
-            _log = new Mock<ILog>();
-            _testLog = new Mock<ILog>();
+            _log = new Mock<IReadableLog>();
+            _testLog = new Mock<IFileBackedLog>();
         }
 
         [Fact(Skip = "Test is flaky - https://github.com/dotnet/xharness/issues/52")]
