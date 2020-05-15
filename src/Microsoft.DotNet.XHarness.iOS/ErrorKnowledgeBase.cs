@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             ["IncorrectArchitecture"] = "IncorrectArchitecture: Failed to find matching device arch for the application.",
         };
 
-        static bool TryFindErrors (ILog? log, Dictionary<string, string> errorMap, out string? failureMessage)
+        static bool TryFindErrors (ILog log, Dictionary<string, string> errorMap, out string? failureMessage)
         {
             failureMessage = null;
             if (log == null) {
