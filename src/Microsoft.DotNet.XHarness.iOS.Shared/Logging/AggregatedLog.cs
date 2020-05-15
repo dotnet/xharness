@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
             public AggregatedLog(ILog defaultLog, params ILog[] logs)
             {
-                _defaultLog = defaultLog;
+                _defaultLog = defaultLog ?? throw new ArgumentNullException(nameof(defaultLog));
                 _logs.Add(defaultLog);
                 _logs.AddRange(logs);
             }
