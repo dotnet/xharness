@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
@@ -27,12 +28,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     /// </summary>
     internal class iOSTestCommand : TestCommand
     {
+        private const string CommandHelp = "Runs a given iOS/tvOS/watchOS application bundle in a target device/simulator";
+
         private readonly iOSTestCommandArguments _arguments = new iOSTestCommandArguments();
         private readonly ErrorKnowledgeBase _errorKnowledgeBase = new ErrorKnowledgeBase();
+        private static readonly string _mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
+        private bool _createdLldbFile = false;
 
         protected override string CommandUsage { get; } = "ios test [OPTIONS]";
-        protected override string CommandDescription { get; } = "Packaging command that will create a iOS/tvOS/watchOS or macOS application that can be used to run NUnit or XUnit-based test dlls";
+        protected override string CommandDescription { get; } = CommandHelp;
         protected override TestCommandArguments TestArguments => _arguments;
+
+        public iOSTestCommand() : base(CommandHelp)
+        {
+        }
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
@@ -64,6 +73,21 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             return exitCode;
         }
 
+        static bool IsLldbEnabled() => File.Exists(_mlaunchLldbConfigFile);
+
+        void NotifyUserLldbCommand(ILogger logger, string line)
+        {
+            if (!line.Contains("mtouch-lldb-prep-cmds")) return;
+
+            // let the user know the command to execute. Might change in mlaunch so trust the log
+            var sb = new StringBuilder();
+            sb.AppendLine("LLDB debugging is enabled.");
+            sb.AppendLine("You must now execute:");
+            sb.AppendLine(line.Substring(line.IndexOf("lldb", StringComparison.Ordinal)));
+
+            logger.LogInformation(sb.ToString());
+        }
+
         private async Task<ExitCode> RunTest(
             ILogger logger,
             TestTarget target,
@@ -74,6 +98,24 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             ITunnelBore? tunnelBore,
             CancellationToken cancellationToken = default)
         {
+            var isLldbEnabled = IsLldbEnabled();
+            if (isLldbEnabled && !_arguments.EnableLldb)
+            {
+                // the file is present, but the user did not set it, warn him about it
+                logger.LogWarning("Lldb will be used since '~/.mtouch-launch-with-lldb' was found in the system but it was not created by xharness.");
+            }
+            else if (_arguments.EnableLldb)
+            {
+                if (!File.Exists(_mlaunchLldbConfigFile))
+                {
+                    // create empty file
+                    var f = File.Create(_mlaunchLldbConfigFile);
+                    f.Dispose();
+                    _createdLldbFile = true;
+                }
+            }
+
+
             logger.LogInformation($"Starting test for {target.AsString()}{ (_arguments.DeviceName != null ? " targeting " + _arguments.DeviceName : null) }..");
 
             string mainLogFile = Path.Join(_arguments.OutputDirectory, $"run-{target}{(_arguments.DeviceName != null ? "-" + _arguments.DeviceName : null)}.log");
@@ -143,6 +185,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? $"device '{deviceName}'" : target.AsString()));
 
+            // only add the extra callback if we do know that the feature was indeed enabled
+            Action<string>? logCallback = isLldbEnabled ? (l) => NotifyUserLldbCommand(logger, l) : (Action<string>?)null;
+
             var appRunner = new AppRunner(
                 processManager,
                 deviceLoader,
@@ -155,7 +200,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 mainLog,
                 logs,
                 new Helpers(),
-                useXmlOutput: true); // the cli ALWAYS will get the output as xml
+                useXmlOutput: true, // the cli ALWAYS will get the output as xml
+                logCallback: logCallback);
 
             try
             {
@@ -254,6 +300,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     {
                         logger.LogInformation($"Application '{appBundleInfo.AppName}' was uninstalled successfully");
                     }
+                }
+
+                if (_createdLldbFile) // clean after the setting
+                {
+                    File.Delete(_mlaunchLldbConfigFile);
                 }
             }
         }
