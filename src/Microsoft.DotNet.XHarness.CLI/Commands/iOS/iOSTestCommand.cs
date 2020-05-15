@@ -28,14 +28,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     /// </summary>
     internal class iOSTestCommand : TestCommand
     {
+        private const string CommandHelp = "Runs a given iOS/tvOS/watchOS application bundle in a target device/simulator";
+
         private readonly iOSTestCommandArguments _arguments = new iOSTestCommandArguments();
         private readonly ErrorKnowledgeBase _errorKnowledgeBase = new ErrorKnowledgeBase();
         private static readonly string _mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
         private bool _createdLldbFile;
 
         protected override string CommandUsage { get; } = "ios test [OPTIONS]";
-        protected override string CommandDescription { get; } = "Packaging command that will create a iOS/tvOS/watchOS or macOS application that can be used to run NUnit or XUnit-based test dlls";
+        protected override string CommandDescription { get; } = CommandHelp;
         protected override TestCommandArguments TestArguments => _arguments;
+
+        public iOSTestCommand() : base(CommandHelp)
+        {
+        }
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
@@ -113,7 +119,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             logger.LogInformation($"Starting test for {target.AsString()}{ (_arguments.DeviceName != null ? " targeting " + _arguments.DeviceName : null) }..");
 
             string mainLogFile = Path.Join(_arguments.OutputDirectory, $"run-{target}{(_arguments.DeviceName != null ? "-" + _arguments.DeviceName : null)}.log");
-            IFileBackedLog mainLog = logs.Create(mainLogFile, LogType.ExecutionLog.ToString(), true);
+
+            IFileBackedLog mainLog = Log.CreateReadableAggregatedLog(
+                logs.Create(mainLogFile, LogType.ExecutionLog.ToString(), true),
+                new CallbackLog(message => logger.LogDebug(message)));
+
             int verbosity = GetMlaunchVerbosity(_arguments.Verbosity);
 
             string? deviceName = _arguments.DeviceName;

@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
         protected override XHarnessCommandArguments Arguments => TestArguments;
         protected abstract TestCommandArguments TestArguments { get; }
 
-        public TestCommand() : base("test")
+        public TestCommand(string? help) : base("test", help)
         {
         }
     }

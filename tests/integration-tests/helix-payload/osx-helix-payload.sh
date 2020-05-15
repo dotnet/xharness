@@ -48,13 +48,14 @@ fi
 open -a $xcode_path/Applications/Simulator.app
 
 dotnet tool restore --no-cache
-dotnet xharness ios test           \
-    --app="$here/$app_name"        \
-    --output-directory="$1"        \
-    --targets=ios-simulator-64     \
-    --timeout=600                  \
-    --launch-timeout=360           \
-    --communication-channel=Network
+dotnet xharness ios test            \
+    --app="$here/$app_name"         \
+    --output-directory="$1"         \
+    --targets=ios-simulator-64      \
+    --timeout=600                   \
+    --launch-timeout=360            \
+    --communication-channel=Network \
+    -v
 
 result=$?
 
