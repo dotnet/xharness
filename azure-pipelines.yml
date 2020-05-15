@@ -146,15 +146,15 @@ stages:
             condition: succeeded()
 
           - bash: |
-              targetDir=$(Build.ArtifactStagingDirectory)/OSX.IntegrationTests.$(_BuildConfig)
+              targetDir=$(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.$(_BuildConfig)
               mkdir $targetDir
-              cp tests/integration-tests/helix-payloads/* $targetDir
+              cp tests/integration-tests/helix-payloads/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.sh $targetDir
               cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI* $targetDir
             displayName: Prepare the IntegrationTests artifact
             workingDirectory: $(Build.SourcesDirectory)
             condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
 
-          - publish: $(Build.ArtifactStagingDirectory)/OSX.IntegrationTests.$(_BuildConfig)
+          - publish: $(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.$(_BuildConfig)
             artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.$(_BuildConfig)
             displayName: Publish the tool artifact
             condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
@@ -206,7 +206,7 @@ stages:
           Creator: xharness
           EnableXUnitReporter: true
           WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
-          WorkItemCommand: sudo launchctl asuser `id -u` sh osx-helix-payload.sh $HELIX_WORKITEM_UPLOAD_ROOT $HELIX_WORKITEM_ROOT
+          WorkItemCommand: sudo launchctl asuser `id -u` sh Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.sh $HELIX_WORKITEM_UPLOAD_ROOT $HELIX_WORKITEM_ROOT
           WorkItemTimeout: 00:12:00
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
