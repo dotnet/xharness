@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             logger.LogInformation($"Starting test for {target.AsString()}{ (_arguments.DeviceName != null ? " targeting " + _arguments.DeviceName : null) }..");
 
             string mainLogFile = Path.Join(_arguments.OutputDirectory, $"run-{target}{(_arguments.DeviceName != null ? "-" + _arguments.DeviceName : null)}.log");
-            ILog mainLog = Log.CreateAggregatedLog(
+            ILog mainLog = Log.CreateAggregatedLogWithDefault(
                 logs.Create(mainLogFile, LogType.ExecutionLog.ToString(), true),
                 new CallbackLog(message => logger.LogDebug(message)));
 
