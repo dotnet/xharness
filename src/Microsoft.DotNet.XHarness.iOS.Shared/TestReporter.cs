@@ -30,9 +30,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
     public class TestReporter : ITestReporter
     {
 
-        const string _timeoutMessage = "Test run timed out after {0} minute(s).";
-        const string _completionMessage = "Test run completed";
-        const string _failureMessage = "Test run failed";
+        private const string _timeoutMessage = "Test run timed out after {0} minute(s).";
+        private const string _completionMessage = "Test run completed";
+        private const string _failureMessage = "Test run failed";
 
         readonly ISimpleListener listener;
         readonly IFileBackedLog mainLog;

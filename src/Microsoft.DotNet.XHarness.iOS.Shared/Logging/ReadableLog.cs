@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
     public abstract class FileBackedLog : ReadableLog, IFileBackedLog
     {
-        protected FileBackedLog(string description = null) : base(description) { }
+        protected FileBackedLog(string? description = null) : base(description) { }
 
         public abstract string FullPath { get; }
     }
