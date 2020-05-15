@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
 
     public interface ILog : IDisposable
     {
-        string Description { get; set; }
+        string? Description { get; set; }
         bool Timestamp { get; set; }
         Encoding Encoding { get; }
         void Write(byte[] buffer, int offset, int count);
@@ -22,17 +22,10 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
         void Flush();
     }
 
-    /// <summary>
-    /// Interface to be implemented by those loggers that provide a StreamReader to read
-    /// the already added info.
-    /// </summary>
-    public interface IReadable
+    public interface IReadableLog : ILog
     {
         StreamReader GetReader();
-
     }
-
-    public interface IReadableLog : ILog, IReadable { }
 
     public interface IFileBackedLog : IReadableLog
     {
