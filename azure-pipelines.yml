@@ -231,7 +231,7 @@ stages:
     dependsOn: Build_OSX
     jobs:
     - job: integration_tests
-      displayName: SimulatorInstaller iOS Integration Tests
+      displayName: SimulatorInstaller Integration Tests
       pool:
         name: Hosted macOS
       variables:
