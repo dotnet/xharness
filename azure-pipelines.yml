@@ -146,16 +146,30 @@ stages:
             condition: succeeded()
 
           - bash: |
-              targetDir=$(Build.ArtifactStagingDirectory)/OSX.IntegrationTests.$(_BuildConfig)
+              targetDir=$(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.$(_BuildConfig)
               mkdir $targetDir
-              cp tests/integration-tests/helix-payload/* $targetDir
-              cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI* $targetDir
-            displayName: Prepare the IntegrationTests artifact
+              cp tests/integration-tests/helix-payloads/cli-integration-tests.sh $targetDir
+              cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI*.nupkg $targetDir
+            displayName: Prepare the CLI IntegrationTests artifact
             workingDirectory: $(Build.SourcesDirectory)
             condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
 
-          - publish: $(Build.ArtifactStagingDirectory)/OSX.IntegrationTests.$(_BuildConfig)
-            artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.$(_BuildConfig)
+          - publish: $(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.$(_BuildConfig)
+            artifact: Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.$(_BuildConfig)
+            displayName: Publish the tool artifact
+            condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
+
+          - bash: |
+              targetDir=$(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
+              mkdir $targetDir
+              cp tests/integration-tests/helix-payloads/simulatorinstaller-integration-tests.sh $targetDir
+              cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.SimulatorInstaller*.nupkg $targetDir
+            displayName: Prepare the SimulatorInstaller IntegrationTests artifact
+            workingDirectory: $(Build.SourcesDirectory)
+            condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
+
+          - publish: $(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
+            artifact: Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
             displayName: Publish the tool artifact
             condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
 
@@ -179,19 +193,19 @@ stages:
           condition: always()
 
 - ${{ if eq(variables._RunAsPublic, True) }}:
-  - stage: test
-    displayName: Run Integration Tests
+  - stage: Test_CLI
+    displayName: Run CLI Integration Tests
     dependsOn: Build_OSX
     jobs:
     - job: integration_tests
-      displayName: iOS Integration Tests
+      displayName: CLI iOS Integration Tests
       pool:
         name: Hosted macOS
       variables:
         _BuildConfig: debug
       steps:
       - download: current
-        artifact: Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
+        artifact: Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.Debug
 
       - template: /eng/common/templates/steps/send-to-helix.yml
         parameters:
@@ -205,9 +219,42 @@ stages:
           HelixTargetQueues: osx.1015.amd64.ios.open
           Creator: xharness
           EnableXUnitReporter: true
-          WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.OSX.IntegrationTests.Debug
-          WorkItemCommand: sudo launchctl asuser `id -u` sh osx-helix-payload.sh $HELIX_WORKITEM_UPLOAD_ROOT $HELIX_WORKITEM_ROOT
+          WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.Debug
+          WorkItemCommand: sudo launchctl asuser `id -u` sh cli-integration-tests.sh $HELIX_WORKITEM_UPLOAD_ROOT $HELIX_WORKITEM_ROOT
           WorkItemTimeout: 00:12:00
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            HelixAccessToken: ''
+
+  - stage: Test_SimulatorInstaller
+    displayName: Run SimulatorInstaller Integration Tests
+    dependsOn: Build_OSX
+    jobs:
+    - job: integration_tests
+      displayName: SimulatorInstaller Integration Tests
+      pool:
+        name: Hosted macOS
+      variables:
+        _BuildConfig: debug
+      steps:
+      - download: current
+        artifact: Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.Debug
+
+      - template: /eng/common/templates/steps/send-to-helix.yml
+        parameters:
+          DisplayNamePrefix: Run Tests
+          HelixBaseUri: https://helix.int-dot.net/
+          HelixType: test/product/
+          IncludeDotNetCli: true
+          DotNetCliPackageType: sdk
+          DotNetCliVersion: 3.1.201
+          WaitForWorkItemCompletion: true
+          HelixTargetQueues: osx.1015.amd64.ios.open
+          Creator: xharness
+          EnableXUnitReporter: false
+          WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.Debug
+          WorkItemCommand: ./simulatorinstaller-integration-tests.sh
+          WorkItemTimeout: 00:05:00
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
