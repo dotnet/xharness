@@ -11,7 +11,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed;
 using Moq;
 using Xunit;
 
-namespace Xharness.Tests.TestImporter.Xamarin.Tests
+namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Managed
 {
     public class XamariniOSTemplateTest : IDisposable
     {

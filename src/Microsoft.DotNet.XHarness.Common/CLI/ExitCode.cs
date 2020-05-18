@@ -45,18 +45,19 @@ namespace Microsoft.DotNet.XHarness.Common.CLI
 
         #region Running the test package
 
-        PACKAGE_INSTALLATION_FAILURE = 1002,
-        FAILED_TO_GET_BUNDLE_INFO = 1003,
-        APP_CRASH = 1004,
-        DEVICE_NOT_FOUND = 1005,
-        RETURN_CODE_NOT_SET = 1006,
+        PACKAGE_INSTALLATION_FAILURE = 1102,
+        FAILED_TO_GET_BUNDLE_INFO = 1103,
+        APP_CRASH = 1104,
+        DEVICE_NOT_FOUND = 1105,
+        RETURN_CODE_NOT_SET = 1106,
+        APP_LAUNCH_FAILURE = 1107,
 
         #endregion
 
         #region Packaging the bundle
 
-        PACKAGE_BUNDLING_FAILURE_NUGET_RESTORE = 1101,
-        PACKAGE_BUNDLING_FAILURE_BUILD = 1102,
+        PACKAGE_BUNDLING_FAILURE_NUGET_RESTORE = 1201,
+        PACKAGE_BUNDLING_FAILURE_BUILD = 1202,
 
         #endregion
     }

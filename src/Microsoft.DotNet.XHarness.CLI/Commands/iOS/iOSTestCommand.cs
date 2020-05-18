@@ -231,6 +231,21 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                         return ExitCode.TESTS_FAILED;
 
+                    case TestExecutingResult.LaunchFailure:
+
+                        if (resultMessage != null)
+                        {
+                            logger.LogError($"Failed to launch the application:{Environment.NewLine}" +
+                                $"{resultMessage}{Environment.NewLine}{Environment.NewLine}" +
+                                $"Check logs for more information.");
+                        }
+                        else
+                        {
+                            logger.LogError($"Failed to launch the application. Check logs for more information");
+                        }
+
+                        return ExitCode.APP_LAUNCH_FAILURE;
+
                     case TestExecutingResult.Crashed:
 
                         if (resultMessage != null)
