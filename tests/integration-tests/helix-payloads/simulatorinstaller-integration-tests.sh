@@ -13,8 +13,8 @@ dotnet nuget locals All -l
 cache_dirs=`dotnet nuget locals All -l | cut -d':' -f 2 | tr -d ' '`
 while IFS= read -r path; do
     echo "Purging cache in $path..."
-    rm -vrf "$path/microsoft.dotnet.xharness.simulatorinstaller/$version"
-    rm -vrf "$path/Microsoft.DotNet.XHarness.SimulatorInstaller/$version"
+    sudo rm -vrf "$path/microsoft.dotnet.xharness.simulatorinstaller/$version"
+    sudo rm -vrf "$path/Microsoft.DotNet.XHarness.SimulatorInstaller/$version"
 done <<< "$cache_dirs"
 
 set -x
