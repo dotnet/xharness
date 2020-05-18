@@ -231,24 +231,6 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 deviceName = simulator.Name;
 
-                string? stdoutLogPath = null, stderrLogPath = null;
-
-                if (!target.IsWatchOSTarget())
-                {
-                    var stderrTty = _helpers.GetTerminalName(2);
-                    if (!string.IsNullOrEmpty(stderrTty))
-                    {
-                        args.Add(new SetStderrArgument(stderrTty));
-                    }
-                    else
-                    {
-                        stdoutLogPath = _logs.CreateFile($"mlaunch-stdout-{_helpers.Timestamp}.log", "Standard output");
-                        stderrLogPath = _logs.CreateFile($"mlaunch-stderr-{_helpers.Timestamp}.log", "Standard error");
-                        args.Add(new SetStdoutArgument(stdoutLogPath));
-                        args.Add(new SetStderrArgument(stderrLogPath));
-                    }
-                }
-
                 var systemLogs = new List<ICaptureLog>();
                 foreach (var sim in simulators)
                 {
@@ -307,25 +289,6 @@ namespace Microsoft.DotNet.XHarness.iOS
                     {
                         log.StopCapture();
                         log.Dispose();
-                    }
-
-                    // Remove empty files
-                    if (stdoutLogPath != null)
-                    {
-                        var fileInfo = new FileInfo(stdoutLogPath);
-                        if (fileInfo.Exists && fileInfo.Length == 0)
-                        {
-                            fileInfo.Delete();
-                        }
-                    }
-
-                    if (stderrLogPath != null)
-                    {
-                        var fileInfo = new FileInfo(stderrLogPath);
-                        if (fileInfo.Exists && fileInfo.Length == 0)
-                        {
-                            fileInfo.Delete();
-                        }
                     }
                 }
             }
