@@ -58,7 +58,7 @@ result=0
 for (( i=0; i<3; i++ )); do
     random_line=${list[$RANDOM % ${#list[@]}]}
     url=`echo $random_line | tr -s ' ' | cut -d ' ' -f 3`
-    echo "Testing $url..."
+    echo "Testing accessibility of $url..."
 
     status_code=`curl --silent --head -o /dev/null --write-out %{http_code} "$url"`
 
@@ -81,27 +81,31 @@ installed_simulators=($(dotnet simulator-installer list --installed | grep 'Iden
 
 length="${#installed_simulators[@]}"
 
-echo "Found $length installed simulators:"
+if [ ! "$length" -gt 0 ]; then
+    echo "Found $length installed simulators:"
 
-simulator_args=""
+    simulator_args=""
 
-for i in "${installed_simulators[@]}"
-do
-    pkg_name=`echo $i | tr -s ' ' | cut -d ' ' -f 3`
-    echo "  $pkg_name"
-    simulator_args="--simulator=$pkg_name $simulator_args"
-done
+    for i in "${installed_simulators[@]}"
+    do
+        pkg_name=`echo $i | tr -s ' ' | cut -d ' ' -f 3`
+        echo "  $pkg_name"
+        simulator_args="--simulator=$pkg_name $simulator_args"
+    done
 
-echo ""
-set -x
+    echo ""
+    set -x
 
-eval dotnet simulator-installer find $simulator_args
+    eval dotnet simulator-installer find $simulator_args
 
-if [ "$?" != 0 ]; then
-    echo "Failed to find listed simulators"
-    result=1
+    if [ "$?" != 0 ]; then
+        echo "Failed to find listed simulators"
+        result=1
+    else
+        echo "Found all listed simulators"
+    fi
 else
-    echo "Found all listed simulators"
+    echo "No additional simulators found (probably only those coming with Xcode)"
 fi
 
 cd $here
