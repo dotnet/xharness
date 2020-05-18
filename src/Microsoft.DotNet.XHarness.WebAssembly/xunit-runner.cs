@@ -69,7 +69,6 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             {
                 foreach (ITestClass testClass in _testClasses)
                 {
-                    //Console.WriteLine (testClass.Class.Name);
                     if (testClass.Class.Name == "System.Threading.ThreadPools.Tests.ThreadPoolTests")
                         // FIXME: This invokes the static ctor which creates threads
                         continue;
@@ -94,8 +93,6 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
     {
         private readonly ITestFrameworkDiscoveryOptions _discoveryOptions;
         private readonly Discoverer _discoverer;
-        //private readonly ITestFrameworkExecutor _executor;
-        //private readonly ITestFrameworkExecutionOptions _executionOptions;
         private List<ITestCase> _testCases;
         private readonly XunitProject _project;
         private string _last_name = string.Empty;
@@ -131,18 +128,8 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
 
             IXunitTestCollectionFactory collectionFactory = ExtensibilityPointFactory.GetXunitTestCollectionFactory(this, collectionBehaviorAttribute, testAssembly);
 
-            /*
-            object res = null;
-            res = Activator.CreateInstance (typeof (Xunit.Sdk.MemberDataDiscoverer), true, true);
-            Console.WriteLine ("DISC2: " + res);
-            */
-
             _discoveryOptions = TestFrameworkOptions.ForDiscovery(null);
-            //_executionOptions = TestFrameworkOptions.ForExecution(null);
-
             _discoverer = new Discoverer(assemblyInfo, new NullSourceInformationProvider(), this, _discoveryOptions, collectionFactory);
-
-            //_executor = new XunitTestFrameworkExecutor(assembly.GetName(), new NullSourceInformationProvider(), this);
         }
 
         static object ConvertArg(object arg, Type argType)
@@ -180,15 +167,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                 _testCases.Add(disc_msg.TestCase);
                 return true;
             }
-            //Console.WriteLine ("MSG:" + msg);		
-            /*
-            if (msg is Xunit.Sdk.DiagnosticMessage dmsg)
-                Console.WriteLine ("MSG:" + dmsg.Message);
-            else if (msg is Xunit.Sdk.TestCaseDiscoveryMessage disc_msg)
-                Console.WriteLine ("TEST:" + disc_msg.TestCase.DisplayName);
-            else
-                Console.WriteLine ("MSG:" + msg);
-            */
+
             return true;
         }
 
@@ -202,9 +181,6 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                 RunTestCase(testCase);
             }
 
-            //foreach (var tc in testCases)
-            //	Console.WriteLine (tc.DisplayName);
-            //executor.RunTests (testCases, this, executionOptions);
             Console.WriteLine($"TESTS = { TestCases.Count() }, RUN = { nrun }, SKIP = { nfiltered }, FAIL = { nfail }");
             return nfail == 0 ? 0 : 1;
         }
@@ -325,7 +301,6 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
                 if (name != _last_name)
                     Console.WriteLine(name);
                 _last_name = name;
-                //Console.WriteLine (tc.DisplayName);
                 try
                 {
                     object obj = null;
