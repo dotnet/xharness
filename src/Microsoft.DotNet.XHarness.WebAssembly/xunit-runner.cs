@@ -346,19 +346,6 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
 
         static int Main(string[] args)
         {
-            // Process rsp files
-            // FIXME: This doesn't work with wasm
-            /*
-            var new_args = new List<string> ();
-            foreach (var arg in args) {
-                if (arg [0] == '@') {
-                    foreach (var line in File.ReadAllLines ("/" + arg.Substring (1)))
-                        new_args.Add (line);
-                } else {
-                    new_args.Add (arg);
-                }
-            }
-            */
             var cmdline = new CmdLineParser(args);
             s_testRunner = new WasmRunner(cmdline.Project);
             return s_testRunner.Run();
