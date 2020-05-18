@@ -12,18 +12,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
     internal class WasmTestCommand : TestCommand
     {
+        private const string CommandHelp = "Executes BCL xunit tests on WASM";
         private readonly WasmTestCommandArguments _arguments = new WasmTestCommandArguments();
-
         protected override TestCommandArguments TestArguments => _arguments;
-
         protected override string CommandUsage { get; } = "wasm test [OPTIONS]";
-
-        protected override string CommandDescription { get; } = "Executes BCL xunit tests on WASM";
+        protected override string CommandDescription { get; } = CommandHelp;
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
             logger.LogDebug($"Wasm Test command called");
             return Task.FromResult(ExitCode.GENERAL_FAILURE);
+        }
+
+        public WasmTestCommand() : base(CommandHelp)
+        {
         }
     }
 }
