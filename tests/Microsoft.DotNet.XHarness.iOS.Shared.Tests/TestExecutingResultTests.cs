@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Linq;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
@@ -9,56 +11,54 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
     public class TestExecutingResultTests
     {
         [Theory]
-        [InlineData(TestExecutingResult.Building)]
-        [InlineData(TestExecutingResult.BuildQueued)]
-        [InlineData(TestExecutingResult.Built)]
-        [InlineData(TestExecutingResult.Running)]
-        [InlineData(TestExecutingResult.RunQueued)]
-        public void InProgressFlagIsPresent(TestExecutingResult result)
+        [InlineData(
+            new[]
+            {
+                TestExecutingResult.Crashed,
+                TestExecutingResult.TimedOut,
+                TestExecutingResult.HarnessException,
+                TestExecutingResult.LaunchFailure,
+                TestExecutingResult.BuildFailure,
+                TestExecutingResult.Failed,
+            },
+            TestExecutingResult.Failed
+        )]
+        [InlineData(
+            new[]
+            {
+                TestExecutingResult.Building,
+                TestExecutingResult.BuildQueued,
+                TestExecutingResult.Built,
+                TestExecutingResult.Running,
+                TestExecutingResult.RunQueued,
+                TestExecutingResult.InProgress,
+                TestExecutingResult.StateMask,
+            },
+            TestExecutingResult.InProgress
+        )]
+        [InlineData(
+            new[]
+            {
+                TestExecutingResult.Succeeded,
+                TestExecutingResult.BuildSucceeded,
+            },
+            TestExecutingResult.Succeeded
+        )]
+        public void FlaggedIsPresentWhereItShouldBe(TestExecutingResult[] withFlag, TestExecutingResult flag)
         {
-            Assert.True(result.HasFlag(TestExecutingResult.InProgress));
-        }
+            var withoutFlag = Enum.GetValues(typeof(TestExecutingResult))
+                .Cast<TestExecutingResult>()
+                .Except(withFlag);
 
-        [Theory]
-        [InlineData(TestExecutingResult.Crashed)]
-        [InlineData(TestExecutingResult.TimedOut)]
-        [InlineData(TestExecutingResult.HarnessException)]
-        [InlineData(TestExecutingResult.LaunchFailure)]
-        [InlineData(TestExecutingResult.BuildFailure)]
-        [InlineData(TestExecutingResult.Failed)]
-        public void FailedFlaggedIsPresent(TestExecutingResult result)
-        {
-            Assert.True(result.HasFlag(TestExecutingResult.Failed));
-        }
+            foreach (var result in withoutFlag)
+            {
+                Assert.False(result.HasFlag(flag), $"{result} should not have {flag}");
+            }
 
-        [Theory]
-        [InlineData(TestExecutingResult.Succeeded)]
-        [InlineData(TestExecutingResult.Failed)]
-        [InlineData(TestExecutingResult.Ignored)]
-        [InlineData(TestExecutingResult.DeviceNotFound)]
-        [InlineData(TestExecutingResult.Finished)]
-        public void FinishedFlagIsPresent(TestExecutingResult result)
-        {
-            Assert.True(result.HasFlag(TestExecutingResult.Finished));
-        }
-
-        [Theory]
-        [InlineData(TestExecutingResult.Succeeded)]
-        public void FailedFlaggedIsNotPresent(TestExecutingResult result)
-        {
-            Assert.False(result.HasFlag(TestExecutingResult.Failed));
-        }
-
-        [Theory]
-        [InlineData(TestExecutingResult.Crashed)]
-        [InlineData(TestExecutingResult.TimedOut)]
-        [InlineData(TestExecutingResult.HarnessException)]
-        [InlineData(TestExecutingResult.LaunchFailure)]
-        [InlineData(TestExecutingResult.BuildFailure)]
-        [InlineData(TestExecutingResult.Failed)]
-        public void SucceededFlaggedIsNotPresent(TestExecutingResult result)
-        {
-            Assert.False(result.HasFlag(TestExecutingResult.Succeeded));
+            foreach (var result in withFlag)
+            {
+                Assert.True(result.HasFlag(flag), $"{result} should have {flag}");
+            }
         }
     }
 }
