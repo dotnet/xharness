@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         Crashed = 0x1000 + Failed,
         TimedOut = 0x2000 + Failed,
         HarnessException = 0x4000 + Failed,
+        LaunchFailure = 0x6000 + Failed,
         BuildFailure = 0x8000 + Failed,
 
         // Other results
