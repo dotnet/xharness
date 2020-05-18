@@ -36,7 +36,6 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
     class Discoverer : XunitTestFrameworkDiscoverer
     {
         private readonly List<ITestClass> _testClasses;
-        private readonly IEnumerator<ITestClass> _testClassesEnumerator;
         private readonly IMessageSink _sink;
         private readonly ITestFrameworkDiscoveryOptions _discoveryOptions;
         private readonly IXunitTestCollectionFactory _testCollectionFactory;
@@ -56,7 +55,6 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             _testClasses = new List<ITestClass>();
             foreach (ITypeInfo type in AssemblyInfo.GetTypes(false).Where(IsValidTestClass))
                 _testClasses.Add(CreateTestClass(type));
-            _testClassesEnumerator = _testClasses.GetEnumerator();
         }
 
         protected override ITestClass CreateTestClass(ITypeInfo @class)
@@ -64,33 +62,31 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             return new TestClass(_testCollectionFactory.Get(@class), @class);
         }
 
-        public bool Step()
+        public void Discover()
         {
-            if (!_testClassesEnumerator.MoveNext())
-                return false;
-
+            Console.WriteLine("Discovering tests...");
             using (var messageBus = new MsgBus(_sink))
             {
-                ITestClass testClass = _testClassesEnumerator.Current;
-                //Console.WriteLine (testClass.Class.Name);
-                if (testClass.Class.Name == "System.Threading.ThreadPools.Tests.ThreadPoolTests")
-                    // FIXME: This invokes the static ctor which creates threads
-                    return true;
-                try
+                foreach (ITestClass testClass in _testClasses)
                 {
-                    FindTestsForType(testClass, false, messageBus, _discoveryOptions);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("EX: " + ex);
+                    //Console.WriteLine (testClass.Class.Name);
+                    if (testClass.Class.Name == "System.Threading.ThreadPools.Tests.ThreadPoolTests")
+                        // FIXME: This invokes the static ctor which creates threads
+                        continue;
+                    try
+                    {
+                        FindTestsForType(testClass, false, messageBus, _discoveryOptions);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("EX: " + ex);
+                    }
+
+                    _nenumerated++;
+                    if (_nenumerated % 10 == 0)
+                        Console.WriteLine($" { _nenumerated * 100 / _testClasses.Count } %");
                 }
             }
-
-            _nenumerated++;
-            if (_nenumerated % 10 == 0)
-                Console.WriteLine("" + (_nenumerated * 100) / _testClasses.Count + "%");
-
-            return true;
         }
     }
 
@@ -98,10 +94,28 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
     {
         private readonly ITestFrameworkDiscoveryOptions _discoveryOptions;
         private readonly Discoverer _discoverer;
-        private readonly ITestFrameworkExecutor _executor;
-        private readonly ITestFrameworkExecutionOptions _executionOptions;
-        private readonly List<ITestCase> _testCases = new List<ITestCase>();
+        //private readonly ITestFrameworkExecutor _executor;
+        //private readonly ITestFrameworkExecutionOptions _executionOptions;
+        private List<ITestCase> _testCases;
         private readonly XunitProject _project;
+        private string _last_name = string.Empty;
+        public int nrun, nfail, nskipped, nfiltered;
+
+        IEnumerable<ITestCase> TestCases {
+            get {
+                if (_testCases == null)
+                {
+                    _testCases = new List<ITestCase>();
+                    _discoverer.Discover();
+                    Console.WriteLine($"Discovered tests: {_testCases.Count }");
+                }
+
+                foreach (ITestCase testCase in _testCases)
+                {
+                    yield return testCase;
+                }
+            }
+        }
 
         public WasmRunner(XunitProject project)
         {
@@ -110,7 +124,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             string assemblyFileName = "/" + project.Assemblies.FirstOrDefault().AssemblyFilename;
 
             var assembly = Assembly.LoadFrom(assemblyFileName);
-            var assemblyInfo = new Xunit.Sdk.ReflectionAssemblyInfo(assembly);
+            var assemblyInfo = new ReflectionAssemblyInfo(assembly);
 
             IAttributeInfo collectionBehaviorAttribute = assemblyInfo.GetCustomAttributes(typeof(CollectionBehaviorAttribute)).SingleOrDefault();
             var testAssembly = new TestAssembly(assemblyInfo, null);
@@ -124,11 +138,11 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             */
 
             _discoveryOptions = TestFrameworkOptions.ForDiscovery(null);
-            _executionOptions = TestFrameworkOptions.ForExecution(null);
+            //_executionOptions = TestFrameworkOptions.ForExecution(null);
 
             _discoverer = new Discoverer(assemblyInfo, new NullSourceInformationProvider(), this, _discoveryOptions, collectionFactory);
 
-            _executor = new XunitTestFrameworkExecutor(assembly.GetName(), new NullSourceInformationProvider(), this);
+            //_executor = new XunitTestFrameworkExecutor(assembly.GetName(), new NullSourceInformationProvider(), this);
         }
 
         static object ConvertArg(object arg, Type argType)
@@ -178,178 +192,169 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
             return true;
         }
 
-        public int nrun, nfail, nskipped, nfiltered;
-
         public int Run()
         {
-            int tc_index;
-
-            Console.WriteLine("Discovering tests...");
-
-            while (_discoverer.Step());
-
-            Console.WriteLine("Running " + _testCases.Count + " tests...");
-            tc_index = 0;
-
+            Console.WriteLine("Running tests...");
             Console.WriteLine(".");
-            string last_name = "";
-            while (true)
+
+            foreach (ITestCase testCase in TestCases)
             {
-                if (tc_index == _testCases.Count)
-                    break;
-                var tc = _testCases[tc_index] as XunitTestCase;
-
-                tc_index++;
-
-                if (!_project.Filters.Filter(tc))
-                {
-                    nfiltered++;
-                    continue;
-                }
-
-                // var itrait_attrs = tc.TestMethod.Method.GetCustomAttributes(typeof(ITraitAttribute));
-                // // FIXME:
-                // if (itrait_attrs.Count () > 0) {
-                // 	Console.WriteLine ("SKIP (ITraitAttribute): " + tc.DisplayName);
-                // 	nfiltered ++;
-                // 	continue;
-                // }
-                /*
-                foreach (var attr in itrait_attrs) {
-                    Console.WriteLine (attr);
-                    foreach (var disc_attr in attr.GetCustomAttributes (typeof (TraitDiscovererAttribute))) {
-                        Console.WriteLine (disc_attr);
-
-                    }
-                }
-                */
-
-                MethodInfo method = (tc.Method as ReflectionMethodInfo)?.MethodInfo;
-
-                if (method.ReflectedType.IsGenericTypeDefinition)
-                {
-                    Console.WriteLine("FAIL (generic): " + tc.DisplayName);
-                    nfail++;
-                    continue;
-                }
-
-                if (tc is Xunit.Sdk.XunitTheoryTestCase)
-                {
-                    if (method.IsGenericMethod)
-                    {
-                        Console.WriteLine("SKIP (generic): " + tc.DisplayName);
-                        nfiltered++;
-                        continue;
-                    }
-
-                    // From XunitTheoryTestCaseRunner
-                    IEnumerable<IAttributeInfo> attrs = tc.TestMethod.Method.GetCustomAttributes(typeof(DataAttribute));
-                    bool failed = false;
-                    foreach (IAttributeInfo dataAttribute in attrs)
-                    {
-                        IAttributeInfo discovererAttribute = dataAttribute.GetCustomAttributes(typeof(DataDiscovererAttribute)).First();
-                        var args = discovererAttribute.GetConstructorArguments().Cast<string>().ToList();
-
-                        Type discovererType = null;
-                        if (args[1] == "xunit.core")
-                            discovererType = typeof(IXunitTestCollectionFactory).Assembly.GetType(args[0]);
-                        if (discovererType == null)
-                        {
-                            Console.WriteLine("FAIL (discoverer): " + args[0] + " " + args[1]);
-                            failed = true;
-                        }
-
-                        IDataDiscoverer discoverer;
-                        discoverer = ExtensibilityPointFactory.GetDataDiscoverer(this, discovererType);
-
-                        try
-                        {
-                            IEnumerable<object[]> data = discoverer.GetData(dataAttribute, tc.TestMethod.Method);
-                            object[][] data_arr = data.ToArray();
-                            Console.WriteLine(tc.DisplayName + " [" + data_arr.Length + "]");
-                            foreach (object[] dataRow in data_arr)
-                            {
-                                nrun++;
-                                object obj = null;
-                                if (!method.IsStatic)
-                                {
-                                    ConstructorInfo constructor = method.ReflectedType.GetConstructor(Type.EmptyTypes);
-                                    if (constructor != null)
-                                        obj = constructor.Invoke(null);
-                                    else
-                                        obj = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(method.ReflectedType);
-                                }
-
-                                ParameterInfo[] pars = method.GetParameters();
-                                for (int i = 0; i < dataRow.Length; ++i)
-                                    dataRow[i] = ConvertArg(dataRow[i], pars[i].ParameterType);
-                                method.Invoke(obj, BindingFlags.Default, null, dataRow, null);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine("FAIL: " + tc.DisplayName + " " + ex);
-                            failed = true;
-                        }
-                    }
-                    if (failed)
-                    {
-                        nfail++;
-                        continue;
-                    }
-                }
-                else
-                {
-                    if (!string.IsNullOrEmpty(tc.SkipReason))
-                    {
-                        nskipped++;
-                        continue;
-                    }
-                    nrun++;
-                    string name = tc.DisplayName;
-                    int indx = name.IndexOf("(");
-                    if (indx != -1)
-                        name = name.Substring(0, indx);
-                    if (name != last_name)
-                        Console.WriteLine(name);
-                    last_name = name;
-                    //Console.WriteLine (tc.DisplayName);
-                    try
-                    {
-                        object obj = null;
-                        if (!method.IsStatic)
-                        {
-                            ConstructorInfo constructor = method.ReflectedType.GetConstructor(Type.EmptyTypes);
-                            if (constructor != null)
-                                obj = constructor.Invoke(null);
-                            else
-                                obj = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(method.ReflectedType);
-                        }
-                        object[] args = tc.TestMethodArguments;
-                        if (args != null)
-                        {
-                            ParameterInfo[] pars = method.GetParameters();
-                            for (int i = 0; i < args.Length; ++i)
-                            {
-                                args[i] = ConvertArg(args[i], pars[i].ParameterType);
-                            }
-                        }
-                        method.Invoke(obj, args);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("FAIL: " + tc.DisplayName);
-                        Console.WriteLine(ex);
-                        nfail++;
-                    }
-                }
+                RunTestCase(testCase);
             }
 
             //foreach (var tc in testCases)
             //	Console.WriteLine (tc.DisplayName);
             //executor.RunTests (testCases, this, executionOptions);
-            Console.WriteLine("TESTS = " + _testCases.Count + ", RUN = " + nrun + ", SKIP = " + nfiltered + ", FAIL = " + nfail);
+            Console.WriteLine($"TESTS = { TestCases.Count() }, RUN = { nrun }, SKIP = { nfiltered }, FAIL = { nfail }");
             return nfail == 0 ? 0 : 1;
+        }
+
+        private void RunTestCase(ITestCase testCase)
+        {
+            var tc = testCase as XunitTestCase;
+
+            if (!_project.Filters.Filter(tc))
+            {
+                nfiltered++;
+                return;
+            }
+
+            // var itrait_attrs = tc.TestMethod.Method.GetCustomAttributes(typeof(ITraitAttribute));
+            // // FIXME:
+            // if (itrait_attrs.Count () > 0) {
+            // 	Console.WriteLine ("SKIP (ITraitAttribute): " + tc.DisplayName);
+            // 	nfiltered ++;
+            // 	continue;
+            // }
+            /*
+            foreach (var attr in itrait_attrs) {
+                Console.WriteLine (attr);
+                foreach (var disc_attr in attr.GetCustomAttributes (typeof (TraitDiscovererAttribute))) {
+                    Console.WriteLine (disc_attr);
+
+                }
+            }
+            */
+
+            MethodInfo method = (tc.Method as ReflectionMethodInfo)?.MethodInfo;
+
+            if (method.ReflectedType.IsGenericTypeDefinition)
+            {
+                Console.WriteLine("FAIL (generic): " + tc.DisplayName);
+                nfail++;
+                return;
+            }
+
+            if (tc is XunitTheoryTestCase)
+            {
+                if (method.IsGenericMethod)
+                {
+                    Console.WriteLine("SKIP (generic): " + tc.DisplayName);
+                    nfiltered++;
+                    return;
+                }
+
+                // From XunitTheoryTestCaseRunner
+                IEnumerable<IAttributeInfo> attrs = tc.TestMethod.Method.GetCustomAttributes(typeof(DataAttribute));
+                bool failed = false;
+                foreach (IAttributeInfo dataAttribute in attrs)
+                {
+                    IAttributeInfo discovererAttribute = dataAttribute.GetCustomAttributes(typeof(DataDiscovererAttribute)).First();
+                    var args = discovererAttribute.GetConstructorArguments().Cast<string>().ToList();
+
+                    Type discovererType = null;
+                    if (args[1] == "xunit.core")
+                        discovererType = typeof(IXunitTestCollectionFactory).Assembly.GetType(args[0]);
+                    if (discovererType == null)
+                    {
+                        Console.WriteLine("FAIL (discoverer): " + args[0] + " " + args[1]);
+                        failed = true;
+                    }
+
+                    IDataDiscoverer discoverer;
+                    discoverer = ExtensibilityPointFactory.GetDataDiscoverer(this, discovererType);
+
+                    try
+                    {
+                        IEnumerable<object[]> data = discoverer.GetData(dataAttribute, tc.TestMethod.Method);
+                        object[][] data_arr = data.ToArray();
+                        Console.WriteLine(tc.DisplayName + " [" + data_arr.Length + "]");
+                        foreach (object[] dataRow in data_arr)
+                        {
+                            nrun++;
+                            object obj = null;
+                            if (!method.IsStatic)
+                            {
+                                ConstructorInfo constructor = method.ReflectedType.GetConstructor(Type.EmptyTypes);
+                                if (constructor != null)
+                                    obj = constructor.Invoke(null);
+                                else
+                                    obj = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(method.ReflectedType);
+                            }
+
+                            ParameterInfo[] pars = method.GetParameters();
+                            for (int i = 0; i < dataRow.Length; ++i)
+                                dataRow[i] = ConvertArg(dataRow[i], pars[i].ParameterType);
+                            method.Invoke(obj, BindingFlags.Default, null, dataRow, null);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("FAIL: " + tc.DisplayName + " " + ex);
+                        failed = true;
+                    }
+                }
+                if (failed)
+                {
+                    nfail++;
+                    return;
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(tc.SkipReason))
+                {
+                    nskipped++;
+                    return;
+                }
+                nrun++;
+                string name = tc.DisplayName;
+                int indx = name.IndexOf("(");
+                if (indx != -1)
+                    name = name.Substring(0, indx);
+                if (name != _last_name)
+                    Console.WriteLine(name);
+                _last_name = name;
+                //Console.WriteLine (tc.DisplayName);
+                try
+                {
+                    object obj = null;
+                    if (!method.IsStatic)
+                    {
+                        ConstructorInfo constructor = method.ReflectedType.GetConstructor(Type.EmptyTypes);
+                        if (constructor != null)
+                            obj = constructor.Invoke(null);
+                        else
+                            obj = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(method.ReflectedType);
+                    }
+                    object[] args = tc.TestMethodArguments;
+                    if (args != null)
+                    {
+                        ParameterInfo[] pars = method.GetParameters();
+                        for (int i = 0; i < args.Length; ++i)
+                        {
+                            args[i] = ConvertArg(args[i], pars[i].ParameterType);
+                        }
+                    }
+                    method.Invoke(obj, args);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("FAIL: " + tc.DisplayName);
+                    Console.WriteLine(ex);
+                    nfail++;
+                }
+            }
         }
     }
 
