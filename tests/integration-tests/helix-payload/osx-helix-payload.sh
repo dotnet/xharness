@@ -2,7 +2,7 @@
 
 set -e
 
-if [ $# -ne 2 ] || [ "$1" == "" ] || [ "$2" == "" ]; then
+if [ $# -ne 2 ] || [ -z "$1" ] || [ -z "$2" ]; then
     echo "The script expects 2 arguments: where to store result logs and where to upload test results (ie. \$HELIX_WORKITEM_UPLOAD_ROOT \$HELIX_WORKITEM_ROOT)" 1>2
     exit 1
 fi
