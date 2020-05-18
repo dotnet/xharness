@@ -87,8 +87,7 @@ Arguments:
             {
                 using (logger.BeginScope("Initialization and setup of APK on device"))
                 {
-                    // Make sure the adb server is freshly started
-                    runner.KillAdbServer();
+                    // Make sure the adb server is started
                     runner.StartAdbServer();
 
                     // enumerate the devices attached and their architectures
@@ -192,10 +191,6 @@ Arguments:
             catch (Exception toLog)
             {
                 logger.LogCritical(toLog, $"Failure to run test package: {toLog.Message}");
-            }
-            finally
-            {
-                runner.KillAdbServer();
             }
 
             return Task.FromResult(ExitCode.GENERAL_FAILURE);

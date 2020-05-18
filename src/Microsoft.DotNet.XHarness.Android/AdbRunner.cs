@@ -342,11 +342,11 @@ namespace Microsoft.DotNet.XHarness.Android
                         var shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi");
 
                         // Assumption:  All Devices on a machine running Xharness should attempt to be be online or disconnected.
-                        retriesLeft = 12;
+                        retriesLeft = 30; // Max 5 minutes (30 attempts * 10 second waits)
                         while (retriesLeft-- > 0 && shellArchitecture.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
                         {
                             _log.LogWarning($"Device '{deviceSerial}' is offline; retrying up to one minute.");
-                            Thread.Sleep(5000);
+                            Thread.Sleep(10000);
                             shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi");
                         }
 
@@ -365,7 +365,7 @@ namespace Microsoft.DotNet.XHarness.Android
             else
             {
                 // May consider abandoning the run here instead of just printing errors.
-                _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}");
+                _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}. Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, and unlocked.");
             }
             return devicesAndArchitectures;
         }
