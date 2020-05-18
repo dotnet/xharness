@@ -2,6 +2,11 @@
 
 set -e
 
+if [ $# -ne 2 ] || [ -z "$1" ] || [ -z "$2" ]; then
+    echo "The script expects 2 arguments: where to store result logs and where to upload test results (ie. \$HELIX_WORKITEM_UPLOAD_ROOT \$HELIX_WORKITEM_ROOT)" 1>2
+    exit 1
+fi
+
 version='1.0.0-ci'
 
 # Clean the NuGet cache from the previous 1.0.0-ci version of the tool
@@ -61,7 +66,7 @@ result=$?
 
 set +e
 
-chmod 0666 $1/*
+chmod 0666 "$1/*"
 
 test_results=`ls $1/xunit-*.xml`
 
