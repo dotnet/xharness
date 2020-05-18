@@ -286,7 +286,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 $"-argument=-app-arg:-hostname:127.0.0.1 -setenv=NUNIT_HOSTNAME=127.0.0.1 -argument=-app-arg:-transport:Tcp " +
                 $"-setenv=NUNIT_TRANSPORT=TCP -argument=-app-arg:-hostport:{_listener.Object.Port} " +
                 $"-setenv=NUNIT_HOSTPORT={_listener.Object.Port} {xmlParam}--launchsim {StringUtils.FormatArguments(s_appPath)} " +
-                $"--stderr=tty1 --device=:v2:udid={simulator.Object.UDID}";
+                $"--device=:v2:udid={simulator.Object.UDID}";
 
             _processManager
                 .Verify(
