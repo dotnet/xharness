@@ -166,6 +166,16 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         internal static void ConfigureRunner(TestRunner runner, ApplicationOptions options)
         {
             runner.RunAllTestsByDefault = options.RunAllTestsByDefault;
+            // add the provided method and class filters
+            foreach (string methodName in options.SingleMethodFilters)
+            {
+                runner.SkipMethod(methodName, !options.RunAllTestsByDefault);
+            }
+
+            foreach (string className in options.ClassMethodFilters)
+            {
+                runner.SkipClass(className, !options.RunAllTestsByDefault);
+            }
         }
 
         internal static string WriteResults(TestRunner runner, ApplicationOptions options, LogWriter logger, TextWriter writer)

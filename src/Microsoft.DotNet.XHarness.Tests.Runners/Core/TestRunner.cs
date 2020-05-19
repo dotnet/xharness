@@ -115,6 +115,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         public abstract void WriteResultsToFile(TextWriter writer, XmlResultJargon jargon);
         public abstract void SkipTests(IEnumerable<string> tests);
         public abstract void SkipCategories(IEnumerable<string> categories);
+        public abstract void SkipMethod(string method, bool isExcluded);
+        public abstract void SkipClass(string className, bool isExcluded);
 
         protected void OnError(string message)
         {

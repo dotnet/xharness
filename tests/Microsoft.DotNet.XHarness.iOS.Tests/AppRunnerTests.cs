@@ -463,5 +463,199 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
         }
+
+        [Theory]
+        [InlineData("MyClass.MyMethod")]
+        [InlineData("MyClass.MyMethod", "MyClass.MySecondMethod")]
+        public async Task RunOnDeviceWithSkippedTestsTest(params string[] skippedTests)
+        {
+            var deviceSystemLog = new Mock<IFileBackedLog>();
+            deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
+
+            var deviceLogCapturer = new Mock<IDeviceLogCapturer>();
+
+            var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
+            deviceLogCapturerFactory
+                .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, "Test iPhone"))
+                .Returns(deviceLogCapturer.Object);
+
+            var testResultFilePath = Path.GetTempFileName();
+            var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
+            File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
+
+            _logs
+                .Setup(x => x.Create("test-Device_iOS-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
+                .Returns(listenerLogFile);
+
+            _logs
+                .Setup(x => x.Create("device-Test iPhone-mocked_timestamp.log", "Device log", It.IsAny<bool?>()))
+                .Returns(deviceSystemLog.Object);
+
+            // Act
+            var appRunner = new AppRunner(_processManager.Object,
+                _hardwareDeviceLoader.Object,
+                _simulatorLoader.Object,
+                _listenerFactory.Object,
+                _snapshotReporterFactory,
+                Mock.Of<ICaptureLogFactory>(),
+                deviceLogCapturerFactory.Object,
+                _testReporterFactory,
+                _mainLog.Object,
+                _logs.Object,
+                _helpers.Object,
+                true);
+
+            var appInformation = new AppBundleInformation(
+                appName: AppName,
+                bundleIdentifier: AppBundleIdentifier,
+                appPath: s_appPath,
+                launchAppPath:s_appPath,
+                supports32b: false,
+                extension: null);
+
+            var (deviceName, result, resultMessage) = await appRunner.RunApp(
+                appInformation,
+                TestTarget.Device_iOS,
+                timeout:TimeSpan.FromSeconds(30),
+                testLaunchTimeout:TimeSpan.FromSeconds(30),
+                skippedMethods: skippedTests);
+
+            // Verify
+            Assert.Equal("Test iPhone", deviceName);
+            Assert.Equal(TestExecutingResult.Succeeded, result);
+            Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
+
+            var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
+            var ips = string.Join(",", ipAddresses);
+            var skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_METHODS={string.Join(',', skippedTests)}";
+
+            var expectedArgs = $"-argument=-connection-mode -argument=none -argument=-app-arg:-autostart " +
+                $"-setenv=NUNIT_AUTOSTART=true -argument=-app-arg:-autoexit -setenv=NUNIT_AUTOEXIT=true " +
+                $"-argument=-app-arg:-enablenetwork -setenv=NUNIT_ENABLE_NETWORK=true -setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 {skippedTestsArg} -v -v " +
+                $"-argument=-app-arg:-hostname:{ips} -setenv=NUNIT_HOSTNAME={ips} -argument=-app-arg:-transport:Tcp " +
+                $"-setenv=NUNIT_TRANSPORT=TCP -argument=-app-arg:-hostport:{_listener.Object.Port} " +
+                $"-setenv=NUNIT_HOSTPORT={_listener.Object.Port} -setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
+                $"-setenv=NUNIT_ENABLE_XML_MODE=wrapped -setenv=NUNIT_XML_VERSION=xUnit --launchdev {StringUtils.FormatArguments(s_appPath)} " +
+                $"--disable-memory-limits --wait-for-exit --devname \"Test iPhone\"";
+
+            _processManager
+                .Verify(
+                    x => x.ExecuteCommandAsync(
+                       It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
+                       It.IsAny<ILog>(),
+                       It.IsAny<TimeSpan>(),
+                       null,
+                       It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            _listener.Verify(x => x.Initialize(), Times.AtLeastOnce);
+            _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
+            _listener.Verify(x => x.Cancel(), Times.AtLeastOnce);
+            _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
+
+            _hardwareDeviceLoader.VerifyAll();
+
+            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
+            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
+
+            deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
+        }
+
+        [Theory]
+        [InlineData("MyClass")]
+        [InlineData("MyClass", "MySecondClass")]
+        public async Task RunOnDeviceWithSkippedClassesTestTest(params string[] skippedClasses)
+        {
+            var deviceSystemLog = new Mock<IFileBackedLog>();
+            deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
+
+            var deviceLogCapturer = new Mock<IDeviceLogCapturer>();
+
+            var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
+            deviceLogCapturerFactory
+                .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, "Test iPhone"))
+                .Returns(deviceLogCapturer.Object);
+
+            var testResultFilePath = Path.GetTempFileName();
+            var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
+            File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
+
+            _logs
+                .Setup(x => x.Create("test-Device_iOS-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
+                .Returns(listenerLogFile);
+
+            _logs
+                .Setup(x => x.Create("device-Test iPhone-mocked_timestamp.log", "Device log", It.IsAny<bool?>()))
+                .Returns(deviceSystemLog.Object);
+
+            // Act
+            var appRunner = new AppRunner(_processManager.Object,
+                _hardwareDeviceLoader.Object,
+                _simulatorLoader.Object,
+                _listenerFactory.Object,
+                _snapshotReporterFactory,
+                Mock.Of<ICaptureLogFactory>(),
+                deviceLogCapturerFactory.Object,
+                _testReporterFactory,
+                _mainLog.Object,
+                _logs.Object,
+                _helpers.Object,
+                true);
+
+            var appInformation = new AppBundleInformation(
+                appName: AppName,
+                bundleIdentifier: AppBundleIdentifier,
+                appPath: s_appPath,
+                launchAppPath:s_appPath,
+                supports32b: false,
+                extension: null);
+
+            var (deviceName, result, resultMessage) = await appRunner.RunApp(
+                appInformation,
+                TestTarget.Device_iOS,
+                timeout:TimeSpan.FromSeconds(30),
+                testLaunchTimeout:TimeSpan.FromSeconds(30),
+                skippedTestClasses: skippedClasses);
+
+            // Verify
+            Assert.Equal("Test iPhone", deviceName);
+            Assert.Equal(TestExecutingResult.Succeeded, result);
+            Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
+
+            var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
+            var ips = string.Join(",", ipAddresses);
+            var skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_CLASSES={string.Join(',', skippedClasses)}";
+
+            var expectedArgs = $"-argument=-connection-mode -argument=none -argument=-app-arg:-autostart " +
+                $"-setenv=NUNIT_AUTOSTART=true -argument=-app-arg:-autoexit -setenv=NUNIT_AUTOEXIT=true " +
+                $"-argument=-app-arg:-enablenetwork -setenv=NUNIT_ENABLE_NETWORK=true -setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 {skippedTestsArg} -v -v " +
+                $"-argument=-app-arg:-hostname:{ips} -setenv=NUNIT_HOSTNAME={ips} -argument=-app-arg:-transport:Tcp " +
+                $"-setenv=NUNIT_TRANSPORT=TCP -argument=-app-arg:-hostport:{_listener.Object.Port} " +
+                $"-setenv=NUNIT_HOSTPORT={_listener.Object.Port} -setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
+                $"-setenv=NUNIT_ENABLE_XML_MODE=wrapped -setenv=NUNIT_XML_VERSION=xUnit --launchdev {StringUtils.FormatArguments(s_appPath)} " +
+                $"--disable-memory-limits --wait-for-exit --devname \"Test iPhone\"";
+
+            _processManager
+                .Verify(
+                    x => x.ExecuteCommandAsync(
+                       It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
+                       It.IsAny<ILog>(),
+                       It.IsAny<TimeSpan>(),
+                       null,
+                       It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            _listener.Verify(x => x.Initialize(), Times.AtLeastOnce);
+            _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
+            _listener.Verify(x => x.Cancel(), Times.AtLeastOnce);
+            _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
+
+            _hardwareDeviceLoader.VerifyAll();
+
+            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
+            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
+
+            deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
+        }
     }
 }
