@@ -59,7 +59,6 @@ dotnet xharness ios test            \
     --targets=ios-simulator-64      \
     --timeout=600                   \
     --launch-timeout=360            \
-    --communication-channel=Network \
     -v
 
 result=$?
