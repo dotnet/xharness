@@ -163,10 +163,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
         public virtual bool OnMessage(IMessageSinkMessage msg)
         {
             if (msg is Xunit.Sdk.TestCaseDiscoveryMessage disc_msg)
-            {
                 _testCases.Add(disc_msg.TestCase);
-                return true;
-            }
 
             return true;
         }
