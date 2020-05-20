@@ -33,24 +33,24 @@ app_name='System.Numerics.Vectors.Tests.app'
 
 tar -xzf app.zip
 
-mkdir $here/tools
-cd $here/tools
+mkdir "$here/tools"
+cd "$here/tools"
 
 dotnet new tool-manifest
 
-dotnet tool install --no-cache --version $version --add-source .. Microsoft.DotNet.XHarness.CLI
+dotnet tool install --no-cache --version "$version" --add-source .. Microsoft.DotNet.XHarness.CLI
 
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
 # Restart the simulator to make sure it is tied to the right user session
 xcode_path=`xcode-select -p`
-pid=`ps aux | grep $xcode_path/Applications/Simulator.app | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
+pid=`ps aux | grep "$xcode_path/Applications/Simulator.app" | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
 if [ ! -z "$pid" ]; then
-    sudo kill $pid
+    sudo kill "$pid"
 fi
 
-open -a $xcode_path/Applications/Simulator.app
+open -a "$xcode_path/Applications/Simulator.app"
 
 dotnet tool restore --no-cache
 dotnet xharness ios test            \
@@ -59,7 +59,6 @@ dotnet xharness ios test            \
     --targets=ios-simulator-64      \
     --timeout=600                   \
     --launch-timeout=360            \
-    --communication-channel=Network \
     -v
 
 result=$?
@@ -72,16 +71,16 @@ test_results=`ls $1/xunit-*.xml`
 
 if [ ! -f "$test_results" ]; then
     echo "Failed to find xUnit tests results in the output directory. Existing files:"
-    ls -la $1
+    ls -la "$1"
     exit 1
 fi
 
-echo "Found test results in $1/$test_results. Renaming to testResults.xml"
+echo "Found test results in '$1/$test_results'. Renaming to testResults.xml"
 
 # Prepare test results for Helix to pick up
-cp $test_results $2/testResults.xml
+cp "$test_results" "$2/testResults.xml"
 
-if ! cat $2/testResults.xml | grep 'collection total="19" passed="19" failed="0" skipped="0"'; then
+if ! cat "$2/testResults.xml" | grep 'collection total="19" passed="19" failed="0" skipped="0"'; then
     echo "Failed to detect result line"
     exit 1
 fi
