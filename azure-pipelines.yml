@@ -253,7 +253,7 @@ stages:
           Creator: xharness
           EnableXUnitReporter: false
           WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.Debug
-          WorkItemCommand: ./simulatorinstaller-integration-tests.sh
+          WorkItemCommand: sudo ./simulatorinstaller-integration-tests.sh
           WorkItemTimeout: 00:05:00
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
