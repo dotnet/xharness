@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
         }
     }
 
-    class WasmRunner : IMessageSink
+    public class WasmRunner : IMessageSink
     {
         private readonly ITestFrameworkDiscoveryOptions _discoveryOptions;
         private readonly Discoverer _discoverer;
@@ -337,22 +337,10 @@ namespace Microsoft.DotNet.XHarness.WebAssembly
         }
     }
 
-    class CmdLineParser : CommandLine
+    public class CmdLineParser : CommandLine
     {
         public CmdLineParser(string[] args) : base(args, s => true)
         {
-        }
-    }
-
-    public class XunitDriver
-    {
-        static WasmRunner s_testRunner;
-
-        static int Main(string[] args)
-        {
-            var cmdline = new CmdLineParser(args);
-            s_testRunner = new WasmRunner(cmdline.Project);
-            return s_testRunner.Run();
         }
     }
 }
