@@ -85,12 +85,12 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
                 }},
                 {
                     "method|m=", "Method to be ran in the test application. When this parameter is used only the " +
-                    "tests that vave been provided my 'method' and 'class' will be ran. All other test will be " +
+                    "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
                     "ignored. Can be used more than once.",
                     v => _singleMethodFilters.Add(v)
                 },
                 {
-                    "class|c=", "Test class to be ran in the test application. When this parameter is used only the " +
+                    "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
                     "tests that vave been provided my 'method' and 'class' will be ran. All other test will be " +
                     "ignored. Can be used more than once.",
                     v => _classMethodFilters.Add(v)
