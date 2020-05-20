@@ -104,8 +104,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 new SetEnvVariableArgument(EnviromentVariables.DisableSystemPermissionTests, 1),
             };
 
-            if ((skippedMethods != null && skippedMethods.Length > 0) ||
-                (skippedTestClasses != null && skippedTestClasses.Length > 0))
+            if (skippedMethods?.Any() ?? skippedTestClasses?.Any() ?? false)
             {
                 // do not run all the tests, we are using filters
                 args.Add(new SetEnvVariableArgument(EnviromentVariables.RunAllTestsByDefault, false));
