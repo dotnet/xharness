@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             IFileBackedLog mainLog = Log.CreateReadableAggregatedLog(
                 logs.Create(mainLogFile, LogType.ExecutionLog.ToString(), true),
-                new CallbackLog(message => logger.LogDebug(message)));
+                new CallbackLog(message => logger.LogDebug(message)) { Timestamp = false });
 
             int verbosity = GetMlaunchVerbosity(_arguments.Verbosity);
 
