@@ -1054,5 +1054,11 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
                 }
             }
         }
+
+        public override void SkipMethod(string method, bool isExcluded)
+            => filters.Add(XUnitFilter.CreateSingleFilter(singleTestName: method, exclude: isExcluded));
+
+        public override void SkipClass(string className, bool isExcluded)
+            => filters.Add(XUnitFilter.CreateClassFilter(className: className, exclude: isExcluded));
     }
 }

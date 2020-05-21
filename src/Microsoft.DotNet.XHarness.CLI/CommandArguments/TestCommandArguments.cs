@@ -14,6 +14,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
     {
         private string? _appPackagePath = null;
         private string? _outputDirectory = null;
+        private List<string> _singleMethodFilters = new List<string>();
+        private List<string> _classMethodFilters = new List<string>();
 
         /// <summary>
         /// Path to packaged app
@@ -43,6 +45,16 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(15);
 
+        /// <summary>
+        /// Methods to be included in the test run while all others are ignored.
+        /// </summary>
+        public IEnumerable<string> SingleMethodFilters => _singleMethodFilters;
+
+        /// <summary>
+        /// Tests classes to be included in the run while all others are ignored.
+        /// </summary>
+        public List<string> ClassMethodFilters => _classMethodFilters;
+
         protected sealed override OptionSet GetCommandOptions()
         {
             var options = new OptionSet
@@ -67,6 +79,18 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                         Timeout = TimeSpan.FromSeconds(timeout);
                     }
                 },
+                {
+                    "method|m=", "Method to be ran in the test application. When this parameter is used only the " +
+                    "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
+                    "ignored. Can be used more than once.",
+                    v => _singleMethodFilters.Add(v)
+                },
+                {
+                    "class|c=", "Test class to be ran in the test application. When this parameter is used only the " +
+                    "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
+                    "ignored. Can be used more than once.",
+                    v => _classMethodFilters.Add(v)
+                }
             };
 
             foreach (var option in GetTestCommandOptions())

@@ -3,11 +3,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
+namespace Microsoft.DotNet.XHarness.Tests.Runners
 {
 
     internal enum XmlMode
@@ -20,6 +21,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
     {
 
         static public ApplicationOptions Current = new ApplicationOptions();
+        private List<string> _singleMethodFilters = new List<string>();
+        private List<string> _classMethodFilters = new List<string>();
 
         public ApplicationOptions()
         {
@@ -51,6 +54,16 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
                 LogFile = Environment.GetEnvironmentVariable(EnviromentVariables.LogFilePath);
             if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.RunAllTestsByDefault), out b))
                 RunAllTestsByDefault = b;
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.SkippedMethods)))
+            {
+                var methods = Environment.GetEnvironmentVariable(EnviromentVariables.SkippedMethods);
+                _singleMethodFilters.AddRange(methods.Split(','));
+            }
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.SkippedClasses)))
+            {
+                var classes = Environment.GetEnvironmentVariable(EnviromentVariables.SkippedClasses);
+                _classMethodFilters.AddRange(classes.Split(','));
+            }
 
             var os = new OptionSet() {
                 { "autoexit", "Exit application once the test run has completed.", v => TerminateAfterExecution = true },
@@ -69,7 +82,19 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
                     // if cannot parse, use default
                     if (Boolean.TryParse(v, out var runAll))
                         RunAllTestsByDefault = runAll;
-                }}
+                }},
+                {
+                    "method|m=", "Method to be ran in the test application. When this parameter is used only the " +
+                    "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
+                    "ignored. Can be used more than once.",
+                    v => _singleMethodFilters.Add(v)
+                },
+                {
+                    "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
+                    "tests that vave been provided my 'method' and 'class' will be ran. All other test will be " +
+                    "ignored. Can be used more than once.",
+                    v => _classMethodFilters.Add(v)
+                }
             };
 
             try
@@ -156,5 +181,14 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         /// </summary>
         public bool RunAllTestsByDefault { get; set; } = true;
 
+        /// <summary>
+        /// Specify the methods to be ran in the app.
+        /// </summary>
+        public IEnumerable<string> SingleMethodFilters => _singleMethodFilters;
+
+        /// <summary>
+        /// Specify the test classes to be ran in the app.
+        /// </summary>
+        public IEnumerable<string> ClassMethodFilters => _classMethodFilters;
     }
 }

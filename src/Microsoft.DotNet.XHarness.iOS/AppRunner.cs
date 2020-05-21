@@ -83,6 +83,8 @@ namespace Microsoft.DotNet.XHarness.iOS
             bool ensureCleanSimulatorState = false,
             int verbosity = 1,
             XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
+            string[]? skippedMethods = null,
+            string[]? skippedTestClasses = null,
             CancellationToken cancellationToken = default)
         {
             var args = new MlaunchArguments
@@ -101,6 +103,25 @@ namespace Microsoft.DotNet.XHarness.iOS
                 // So by default ignore any tests that would pop up permission dialogs in CI.
                 new SetEnvVariableArgument(EnviromentVariables.DisableSystemPermissionTests, 1),
             };
+
+            if (skippedMethods?.Any() ?? skippedTestClasses?.Any() ?? false)
+            {
+                // do not run all the tests, we are using filters
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.RunAllTestsByDefault, false));
+
+                // add the skipped test classes and methods
+                if (skippedMethods != null && skippedMethods.Length > 0)
+                {
+                    var skippedMethodsValue = string.Join(',', skippedMethods);
+                    args.Add(new SetEnvVariableArgument(EnviromentVariables.SkippedMethods, skippedMethodsValue));
+                }
+
+                if (skippedTestClasses != null && skippedTestClasses!.Length > 0)
+                {
+                    var skippedClassesValue = string.Join(',', skippedTestClasses);
+                    args.Add(new SetEnvVariableArgument(EnviromentVariables.SkippedClasses, skippedClassesValue));
+                }
+            }
 
             for (int i = -1; i < verbosity; i++)
             {

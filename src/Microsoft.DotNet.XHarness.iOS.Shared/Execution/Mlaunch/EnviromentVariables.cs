@@ -74,5 +74,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
         /// Env var used to notify the test application if all the tests should be ran by default.
         /// </summary>
         public const string RunAllTestsByDefault = "NUNIT_RUN_ALL";
+
+        /// <summary>
+        /// Env var used to notify the test application which tests will be excluded.
+        /// </summary>
+        public const string SkippedMethods = "NUNIT_SKIPPED_METHODS";
+
+        /// <summary>
+        /// Env var uses to notify the test application which test classes will be excluded.
+        /// </summary>
+        public const string SkippedClasses = "NUNIT_SKIPPED_CLASSES";
     }
 }

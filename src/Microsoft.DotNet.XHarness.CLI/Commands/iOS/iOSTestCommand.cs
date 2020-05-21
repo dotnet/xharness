@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -215,7 +216,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     deviceName,
                     verbosity: verbosity,
                     xmlResultJargon: _arguments.XmlResultJargon,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: cancellationToken,
+                    skippedMethods: _arguments.SingleMethodFilters?.ToArray(),
+                    skippedTestClasses:_arguments.ClassMethodFilters?.ToArray());
 
                 switch (testResult)
                 {
