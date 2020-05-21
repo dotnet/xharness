@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 log.Flush();
 
                 Assert.True(_errorKnowledgeBase.IsKnownInstallIssue(log, out var failureMessage));
-                Assert.Equal(expectedFailureMessage, failureMessage);
+                Assert.Equal(expectedFailureMessage, failureMessage.Value.HumanMessage);
             }
 
             if (File.Exists(logPath))
@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 log.WriteLine("Xamarin.Hosting.MobileDeviceException: Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device (error: 0xe8000065 kAMDMuxConnectError)");
                 log.Flush();
                 Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage));
-                Assert.Equal(expectedFailureMessage, failureMessage);
+                Assert.Equal(expectedFailureMessage, failureMessage.Value.HumanMessage);
             }
             if (File.Exists(logPath))
                 File.Delete(logPath);

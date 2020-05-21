@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -172,7 +173,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     // the failure reason
                     if (_errorKnowledgeBase.IsKnownInstallIssue(mainLog, out var errorMessage))
                     {
-                        logger.LogError($"Failed to install the app bundle (exit code={result.ExitCode}): {errorMessage}");
+                        var msg = $"Failed to install the app bundle (exit code={result.ExitCode}): {errorMessage.Value.HumanMessage}.";
+                        if (errorMessage.Value.IssueLink != null)
+                        {
+                            msg += $" Find more information at {errorMessage.Value.IssueLink}";
+                        }
+
+                        logger.LogError(msg);
                     }
                     else
                     {
@@ -294,7 +301,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             {
                 if (_errorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
                 {
-                    logger.LogError($"Application run failed:{Environment.NewLine}{failureMessage}");
+                    var msg = $"Application run failed:{Environment.NewLine}{failureMessage.Value.HumanMessage}.";
+                    if (failureMessage.Value.IssueLink != null)
+                    {
+                        msg += $" Find more information at {failureMessage.Value.IssueLink}";
+                    }
+
+                    logger.LogError(msg);
                 }
                 else
                 {

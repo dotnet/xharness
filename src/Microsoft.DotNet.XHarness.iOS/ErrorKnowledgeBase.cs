@@ -14,31 +14,39 @@ namespace Microsoft.DotNet.XHarness.iOS
 {
     public class ErrorKnowledgeBase : IErrorKnowledgeBase
     {
-        private static readonly Dictionary<string, string> _testErrorMaps = new Dictionary<string, string>
+        private static readonly Dictionary<string, (string HumanMessage, string? IssueLink)> _testErrorMaps = new Dictionary<string, (string HumanMessage, string? IssueLink)>
         {
-            ["Failed to communicate with the device"] =
-                "Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device"
+            ["Failed to communicate with the device"] = // Known issue but not a failure.
+                (HumanMessage: "Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device", IssueLink: (string?)null)
+
         };
 
-        private static readonly Dictionary<string, string> _buildErrorMaps = new Dictionary<string, string>();
+        private static readonly Dictionary<string, (string HumanMessage, string? IssueLink)> _buildErrorMaps = new Dictionary<string, (string HumanMessage, string? IssueLink)>();
 
-        private static readonly Dictionary<string, string> _installErrorMaps = new Dictionary<string, string>
+        private static readonly Dictionary<string, (string HumanMessage, string? IssueLink)> _installErrorMaps = new Dictionary<string, (string HumanMessage, string? IssueLink)>
         {
             ["IncorrectArchitecture"] =
-                "IncorrectArchitecture: Failed to find matching device arch for the application."
+                (HumanMessage: "IncorrectArchitecture: Failed to find matching device arch for the application.", IssueLink: (string?)null) // known failure, but not an issue
+
         };
 
-        public bool IsKnownBuildIssue(IFileBackedLog buildLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
-            TryFindErrors(buildLog, _buildErrorMaps, out knownFailureMessage);
+        public bool IsKnownBuildIssue(IFileBackedLog buildLog,
+                                      [NotNullWhen(true)]
+                                      out (string HumanMessage, string? IssueLink)? knownFailureMessage)
+            => TryFindErrors(buildLog, _buildErrorMaps, out knownFailureMessage);
 
-        public bool IsKnownTestIssue(IFileBackedLog runLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
-            TryFindErrors(runLog, _testErrorMaps, out knownFailureMessage);
+        public bool IsKnownTestIssue(IFileBackedLog runLog,
+                                    [NotNullWhen(true)]
+                                    out (string HumanMessage, string? IssueLink)? knownFailureMessage)
+            => TryFindErrors(runLog, _testErrorMaps, out knownFailureMessage);
 
-        public bool IsKnownInstallIssue(IFileBackedLog installLog, [NotNullWhen(true)] out string? knownFailureMessage) =>
-            TryFindErrors(installLog, _installErrorMaps, out knownFailureMessage);
+        public bool IsKnownInstallIssue(IFileBackedLog installLog,
+                                        [NotNullWhen(true)]
+                                        out (string HumanMessage, string? IssueLink)? knownFailureMessage)
+            => TryFindErrors(installLog, _installErrorMaps, out knownFailureMessage);
 
-        private static bool TryFindErrors(IFileBackedLog log, Dictionary<string, string> errorMap,
-            [NotNullWhen(true)] out string? failureMessage)
+        private static bool TryFindErrors(IFileBackedLog log, Dictionary<string, (string HumanMessage, string? IssueLink)> errorMap,
+            [NotNullWhen(true)] out (string HumanMessage, string? IssueLink)? failureMessage)
         {
             failureMessage = null;
             if (log == null)
