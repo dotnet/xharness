@@ -210,13 +210,13 @@ stages:
       - template: /eng/common/templates/steps/send-to-helix.yml
         parameters:
           DisplayNamePrefix: Run Tests
-          HelixBaseUri: https://helix.int-dot.net/
+          HelixBaseUri: https://helix.dot.net/
           HelixType: test/product/
           IncludeDotNetCli: true
           DotNetCliPackageType: sdk
           DotNetCliVersion: 3.1.201
           WaitForWorkItemCompletion: true
-          HelixTargetQueues: osx.1015.amd64.ios.open
+          HelixTargetQueues: osx.1015.amd64.open
           Creator: xharness
           EnableXUnitReporter: true
           WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.Debug
@@ -243,13 +243,13 @@ stages:
       - template: /eng/common/templates/steps/send-to-helix.yml
         parameters:
           DisplayNamePrefix: Run Tests
-          HelixBaseUri: https://helix.int-dot.net/
+          HelixBaseUri: https://helix.dot.net/
           HelixType: test/product/
           IncludeDotNetCli: true
           DotNetCliPackageType: sdk
           DotNetCliVersion: 3.1.201
           WaitForWorkItemCompletion: true
-          HelixTargetQueues: osx.1015.amd64.ios.open
+          HelixTargetQueues: osx.1015.amd64.open
           Creator: xharness
           EnableXUnitReporter: false
           WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.Debug
