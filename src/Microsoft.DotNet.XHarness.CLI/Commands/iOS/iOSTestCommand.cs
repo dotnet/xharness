@@ -172,7 +172,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     // the failure reason
                     if (_errorKnowledgeBase.IsKnownInstallIssue(mainLog, out var errorMessage))
                     {
-                        logger.LogError($"Failed to install the app bundle (exit code={result.ExitCode}): {errorMessage}");
+                        logger.LogError($"Failed to install the app bundle (exit code={result.ExitCode}): {errorMessage.Value.HumanMessage}");
                     }
                     else
                     {
@@ -294,7 +294,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             {
                 if (_errorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
                 {
-                    logger.LogError($"Application run failed:{Environment.NewLine}{failureMessage}");
+                    logger.LogError($"Application run failed:{Environment.NewLine}{failureMessage.Value.HumanMessage}");
                 }
                 else
                 {
