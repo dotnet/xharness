@@ -81,7 +81,7 @@ installed_simulators=($(dotnet simulator-installer list --installed | grep 'Iden
 
 length="${#installed_simulators[@]}"
 
-if [ ! "$length" -gt 0 ]; then
+if [ "$length" != "0" ]; then
     echo "Found $length installed simulators:"
 
     simulator_args=""
