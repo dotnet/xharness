@@ -317,11 +317,12 @@ namespace Microsoft.DotNet.XHarness.Android
             var result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
             string standardOutput = result.StandardOutput;
 
-            // Retry up to 1 min til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
-            int retriesLeft = 6;
-            // Empty string = Adb started another process to do the work and we should call again
-            while (retriesLeft-- > 0 && string.IsNullOrEmpty(standardOutput)) 
+            // Retry up to 5 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
+            int retriesLeft = 30;
+            // Empty string + success = Adb started another process to do the work and we should call again
+            while (retriesLeft-- > 0 && (string.IsNullOrEmpty(standardOutput) || (result.ExitCode != (int)AdbExitCodes.SUCCESS))) 
             {
+                _log.LogDebug($"Result: exit code={result.ExitCode} Output: {result.StandardOutput} {Environment.NewLine} {result.StandardError}");
                 Thread.Sleep(10000);
                 result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
                 standardOutput = result.StandardOutput;
