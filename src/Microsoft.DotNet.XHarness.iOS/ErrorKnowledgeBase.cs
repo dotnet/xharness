@@ -14,16 +14,16 @@ namespace Microsoft.DotNet.XHarness.iOS
 {
     public class ErrorKnowledgeBase : IErrorKnowledgeBase
     {
-        private static readonly Dictionary<string, (string HumanMessage, string IssueLink)?> _testErrorMaps = new Dictionary<string, (string HumanMessage, string IssueLink)?>
+        private static readonly Dictionary<string, (string HumanMessage, string IssueLink)> _testErrorMaps = new Dictionary<string, (string HumanMessage, string IssueLink)>
         {
             ["Failed to communicate with the device"] = // Known issue but not a failure.
                 (HumanMessage: "Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device", IssueLink: "")
 
         };
 
-        private static readonly Dictionary<string, (string HumanMessage, string IssueLink)?> _buildErrorMaps = new Dictionary<string, (string HumanMessage, string IssueLink)?>();
+        private static readonly Dictionary<string, (string HumanMessage, string IssueLink)> _buildErrorMaps = new Dictionary<string, (string HumanMessage, string IssueLink)>();
 
-        private static readonly Dictionary<string, (string HumanMessage, string IssueLink)?> _installErrorMaps = new Dictionary<string, (string HumanMessage, string IssueLink)?>
+        private static readonly Dictionary<string, (string HumanMessage, string IssueLink)> _installErrorMaps = new Dictionary<string, (string HumanMessage, string IssueLink)>
         {
             ["IncorrectArchitecture"] =
                 (HumanMessage: "IncorrectArchitecture: Failed to find matching device arch for the application.", IssueLink: "") // known failure, but not an issue
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                                         out (string HumanMessage, string IssueLink)? knownFailureMessage)
             => TryFindErrors(installLog, _installErrorMaps, out knownFailureMessage);
 
-        private static bool TryFindErrors(IFileBackedLog log, Dictionary<string, (string HumanMessage, string IssueLink)?> errorMap,
+        private static bool TryFindErrors(IFileBackedLog log, Dictionary<string, (string HumanMessage, string IssueLink)> errorMap,
             [NotNullWhen(true)] out (string HumanMessage, string IssueLink)? failureMessage)
         {
             failureMessage = null;
