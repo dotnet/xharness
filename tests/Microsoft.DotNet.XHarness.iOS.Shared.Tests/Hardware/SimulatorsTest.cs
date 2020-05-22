@@ -36,25 +36,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         [InlineData(true)] // timeout
         public async Task LoadAsyncProcessErrorTest(bool timeout)
         {
-            string processPath = null;
             MlaunchArguments passedArguments = null;
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
             _processManager
-                .Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
-                .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, CancellationToken?, bool?>((p, args, log, t, env, token, d) =>
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
                 {
                     // we are going set the used args to validate them later, will always return an error from this method
-                    processPath = p.StartInfo.FileName;
                     passedArguments = args;
-                    if (!timeout)
+                    return Task.FromResult(new ProcessExecutionResult
                     {
-                        return Task.FromResult(new ProcessExecutionResult { ExitCode = 1, TimedOut = false });
-                    }
-                    else
-                    {
-                        return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = true });
-                    }
+                        ExitCode = timeout ? 0 : 1,
+                        TimedOut = timeout
+                    });
                 });
 
             await Assert.ThrowsAsync<Exception>(async () =>
@@ -96,14 +91,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         [Fact]
         public async Task LoadAsyncProcessSuccess()
         {
-            string processPath = null;
             MlaunchArguments passedArguments = null;
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
-            _processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
-                .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, CancellationToken?, bool?>((p, args, log, t, env, token, d) =>
+            _processManager.Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
                 {
-                    processPath = p.StartInfo.FileName;
                     passedArguments = args;
 
                     // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
@@ -132,7 +125,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         [InlineData(TestTarget.Simulator_watchOS, 2)]
         public async Task FindAsyncDoNotCreateTest(TestTarget target, int expected)
         {
-            string processPath = null;
             MlaunchArguments passedArguments = null;
 
             _processManager
@@ -141,10 +133,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
             _processManager
-                .Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
-                .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, CancellationToken?, bool?>((p, args, log, t, env, token, d) =>
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
                 {
-                    processPath = p.StartInfo.FileName;
                     passedArguments = args;
 
                     // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
