@@ -34,7 +34,6 @@ namespace Microsoft.DotNet.XHarness.iOS
         private readonly ILogs _logs;
         private readonly IFileBackedLog _mainLog;
         private readonly IHelpers _helpers;
-        private readonly bool _useXmlOutput;
 
         public AppRunner(IMLaunchProcessManager processManager,
             IHardwareDeviceLoader hardwareDeviceLoader,
@@ -47,7 +46,6 @@ namespace Microsoft.DotNet.XHarness.iOS
             IFileBackedLog mainLog,
             ILogs logs,
             IHelpers helpers,
-            bool useXmlOutput,
             Action<string>? logCallback = null)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
@@ -60,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             _testReporterFactory = reporterFactory ?? throw new ArgumentNullException(nameof(_testReporterFactory));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
-            _useXmlOutput = useXmlOutput;
+
             if (logCallback == null)
             {
                 _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
@@ -87,64 +85,11 @@ namespace Microsoft.DotNet.XHarness.iOS
             string[]? skippedTestClasses = null,
             CancellationToken cancellationToken = default)
         {
-            var args = new MlaunchArguments
-            {
-                new SetAppArgumentArgument("-connection-mode"),
-                new SetAppArgumentArgument("none"), // This will prevent the app from trying to connect to any IDEs
-                new SetAppArgumentArgument("-autostart", true),
-                new SetEnvVariableArgument(EnviromentVariables.AutoStart, true),
-                new SetAppArgumentArgument("-autoexit", true),
-                new SetEnvVariableArgument(EnviromentVariables.AutoExit, true),
-                new SetAppArgumentArgument("-enablenetwork", true),
-                new SetEnvVariableArgument(EnviromentVariables.EnableNetwork, true),
-
-                // On macOS we can't edit the TCC database easily
-                // (it requires adding the mac has to be using MDM: https://carlashley.com/2018/09/28/tcc-round-up/)
-                // So by default ignore any tests that would pop up permission dialogs in CI.
-                new SetEnvVariableArgument(EnviromentVariables.DisableSystemPermissionTests, 1),
-            };
-
-            if (skippedMethods?.Any() ?? skippedTestClasses?.Any() ?? false)
-            {
-                // do not run all the tests, we are using filters
-                args.Add(new SetEnvVariableArgument(EnviromentVariables.RunAllTestsByDefault, false));
-
-                // add the skipped test classes and methods
-                if (skippedMethods != null && skippedMethods.Length > 0)
-                {
-                    var skippedMethodsValue = string.Join(',', skippedMethods);
-                    args.Add(new SetEnvVariableArgument(EnviromentVariables.SkippedMethods, skippedMethodsValue));
-                }
-
-                if (skippedTestClasses != null && skippedTestClasses!.Length > 0)
-                {
-                    var skippedClassesValue = string.Join(',', skippedTestClasses);
-                    args.Add(new SetEnvVariableArgument(EnviromentVariables.SkippedClasses, skippedClassesValue));
-                }
-            }
-
-            for (int i = -1; i < verbosity; i++)
-            {
-                args.Add(new VerbosityArgument());
-            }
-
             var isSimulator = target.IsSimulator();
 
-            if (isSimulator)
-            {
-                args.Add(new SetAppArgumentArgument("-hostname:127.0.0.1", true));
-                args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"));
-            }
-            else
-            {
-                var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
-                var ips = string.Join(",", ipAddresses);
-                args.Add(new SetAppArgumentArgument($"-hostname:{ips}", true));
-                args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, ips));
-            }
-
             var listenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
-            var (transport, listener, listenerTmpFile) = _listenerFactory.Create(target.ToRunMode(),
+            var (listenerTransport, listener, listenerTmpFile) = _listenerFactory.Create(
+                target.ToRunMode(),
                 log: _mainLog,
                 testLog: listenerLog,
                 isSimulator: isSimulator,
@@ -153,56 +98,27 @@ namespace Microsoft.DotNet.XHarness.iOS
 
             // Initialize has to be called before we try to get Port (internal implementation of the listener says so)
             // TODO: Improve this to not get into a broken state - it was really hard to debug when I moved this lower
-            listener.Initialize();
+            var listenerPort = listener.Initialize();
 
-            args.Add(new SetAppArgumentArgument($"-transport:{transport}", true));
-            args.Add(new SetEnvVariableArgument(EnviromentVariables.Transport, transport.ToString().ToUpper()));
-
-            if (transport == ListenerTransport.File)
-            {
-                args.Add(new SetEnvVariableArgument(EnviromentVariables.LogFilePath, listenerTmpFile));
-            }
-
-            args.Add(new SetAppArgumentArgument($"-hostport:{listener.Port}", true));
-            args.Add(new SetEnvVariableArgument(EnviromentVariables.HostPort, listener.Port));
+            var mlaunchArgs = GetMlaunchArguments(
+                appInformation,
+                isSimulator,
+                verbosity,
+                xmlResultJargon,
+                skippedMethods,
+                skippedTestClasses,
+                listenerTransport,
+                listenerPort,
+                listenerTmpFile);
 
             if (_listenerFactory.UseTunnel && !isSimulator) // simulators do not support tunnels
             {
-                args.Add(new SetEnvVariableArgument(EnviromentVariables.UseTcpTunnel, true));
-            }
-
-            if (_useXmlOutput)
-            {
-                // let the runner now via envars that we want to get a xml output, else the runner will default to plain text
-                args.Add(new SetEnvVariableArgument(EnviromentVariables.EnableXmlOutput, true));
-                args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlMode, "wrapped"));
-                args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlVersion, $"{xmlResultJargon}"));
+                mlaunchArgs.Add(new SetEnvVariableArgument(EnviromentVariables.UseTcpTunnel, true));
             }
 
             listener.StartAsync();
 
             var crashLogs = new Logs(_logs.Directory);
-
-            if (appInformation.Extension.HasValue)
-            {
-                switch (appInformation.Extension)
-                {
-                    case Extension.TodayExtension:
-                        args.Add(isSimulator
-                            ? (MlaunchArgument)new LaunchSimulatorExtensionArgument(appInformation.LaunchAppPath, appInformation.BundleIdentifier)
-                            : new LaunchDeviceExtensionArgument(appInformation.LaunchAppPath, appInformation.BundleIdentifier));
-                        break;
-                    case Extension.WatchKit2:
-                    default:
-                        throw new NotImplementedException();
-                }
-            }
-            else
-            {
-                args.Add(isSimulator
-                    ? (MlaunchArgument)new LaunchSimulatorArgument(appInformation.LaunchAppPath)
-                    : new LaunchDeviceArgument(appInformation.LaunchAppPath));
-            }
 
             var runMode = target.ToRunMode();
             ICrashSnapshotReporter crashReporter;
@@ -210,7 +126,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
             if (isSimulator)
             {
-                crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName: null!);
+                crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName: null!); // TODO: nullability
                 testReporter = _testReporterFactory.Create(_mainLog,
                     _mainLog,
                     _logs,
@@ -283,13 +199,13 @@ namespace Microsoft.DotNet.XHarness.iOS
                         }
                     }
 
-                    args.Add(new SimulatorUDIDArgument(simulator.UDID));
+                    mlaunchArgs.Add(new SimulatorUDIDArgument(simulator.UDID));
 
                     await crashReporter.StartCaptureAsync();
 
                     _mainLog.WriteLine("Starting test run");
 
-                    var result = _processManager.ExecuteCommandAsync(args, _mainLog, timeout, cancellationToken: linkedCts.Token);
+                    var result = _processManager.ExecuteCommandAsync(mlaunchArgs, _mainLog, timeout, cancellationToken: linkedCts.Token);
 
                     await testReporter.CollectSimulatorResult(result);
 
@@ -315,7 +231,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
             else
             {
-                args.Add(new DisableMemoryLimitsArgument());
+                mlaunchArgs.Add(new DisableMemoryLimitsArgument());
 
                 if (deviceName == null)
                 {
@@ -361,14 +277,14 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 if (target.IsWatchOSTarget())
                 {
-                    args.Add(new AttachNativeDebuggerArgument()); // this prevents the watch from backgrounding the app.
+                    mlaunchArgs.Add(new AttachNativeDebuggerArgument()); // this prevents the watch from backgrounding the app.
                 }
                 else
                 {
-                    args.Add(new WaitForExitArgument());
+                    mlaunchArgs.Add(new WaitForExitArgument());
                 }
 
-                args.Add(new DeviceNameArgument(deviceName));
+                mlaunchArgs.Add(new DeviceNameArgument(deviceName));
 
                 var deviceSystemLog = _logs.Create($"device-{deviceName}-{_helpers.Timestamp}.log", "Device log");
                 var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, deviceName);
@@ -379,7 +295,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                     await crashReporter.StartCaptureAsync();
 
                     // create a tunnel to communicate with the device
-                    if (transport == ListenerTransport.Tcp && _listenerFactory.UseTunnel && listener is SimpleTcpListener tcpListener)
+                    if (listenerTransport == ListenerTransport.Tcp && _listenerFactory.UseTunnel && listener is SimpleTcpListener tcpListener)
                     {
                         // create a new tunnel using the listener
                         var tunnel = _listenerFactory.TunnelBore.Create(deviceName, _mainLog);
@@ -393,7 +309,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                     // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit).
                     var aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
                     Task<ProcessExecutionResult> runTestTask = _processManager.ExecuteCommandAsync(
-                        args,
+                        mlaunchArgs,
                         aggregatedLog,
                         timeout,
                         cancellationToken: linkedCts.Token);
@@ -426,6 +342,138 @@ namespace Microsoft.DotNet.XHarness.iOS
             var (testResult, resultMessage) = await testReporter.ParseResult();
 
             return (deviceName, testResult, resultMessage);
+        }
+
+        private static MlaunchArguments GetMlaunchArguments(
+            AppBundleInformation appBundleInformation,
+            bool isSimulator,
+            int verbosity,
+            XmlResultJargon xmlResultJargon,
+            string[]? skippedMethods,
+            string[]? skippedTestClasses,
+            ListenerTransport listenerTransport,
+            int listenerPort,
+            string listenerTmpFile)
+        {
+            var args = new MlaunchArguments
+            {
+                new SetAppArgumentArgument("-connection-mode"),
+                new SetAppArgumentArgument("none"), // This will prevent the app from trying to connect to any IDEs
+                new SetAppArgumentArgument("-autostart", true),
+                new SetEnvVariableArgument(EnviromentVariables.AutoStart, true),
+                new SetAppArgumentArgument("-autoexit", true),
+                new SetEnvVariableArgument(EnviromentVariables.AutoExit, true),
+                new SetAppArgumentArgument("-enablenetwork", true),
+                new SetEnvVariableArgument(EnviromentVariables.EnableNetwork, true),
+
+                // On macOS we can't edit the TCC database easily
+                // (it requires adding the mac has to be using MDM: https://carlashley.com/2018/09/28/tcc-round-up/)
+                // So by default ignore any tests that would pop up permission dialogs in CI.
+                new SetEnvVariableArgument(EnviromentVariables.DisableSystemPermissionTests, 1),
+            };
+
+            if (skippedMethods?.Any() ?? skippedTestClasses?.Any() ?? false)
+            {
+                // do not run all the tests, we are using filters
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.RunAllTestsByDefault, false));
+
+                // add the skipped test classes and methods
+                if (skippedMethods != null && skippedMethods.Length > 0)
+                {
+                    var skippedMethodsValue = string.Join(',', skippedMethods);
+                    args.Add(new SetEnvVariableArgument(EnviromentVariables.SkippedMethods, skippedMethodsValue));
+                }
+
+                if (skippedTestClasses != null && skippedTestClasses!.Length > 0)
+                {
+                    var skippedClassesValue = string.Join(',', skippedTestClasses);
+                    args.Add(new SetEnvVariableArgument(EnviromentVariables.SkippedClasses, skippedClassesValue));
+                }
+            }
+
+            for (int i = -1; i < verbosity; i++)
+            {
+                args.Add(new VerbosityArgument());
+            }
+
+            // let the runner now via envars that we want to get a xml output, else the runner will default to plain text
+            args.Add(new SetEnvVariableArgument(EnviromentVariables.EnableXmlOutput, true));
+            args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlMode, "wrapped"));
+            args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlVersion, $"{xmlResultJargon}"));
+
+            args.AddRange(isSimulator ? GetSimulatorMlaunchArguments(appBundleInformation) : GetDeviceMlaunchArguments(appBundleInformation));
+
+            args.Add(new SetAppArgumentArgument($"-transport:{listenerTransport}", true));
+            args.Add(new SetEnvVariableArgument(EnviromentVariables.Transport, listenerTransport.ToString().ToUpper()));
+
+            if (listenerTransport == ListenerTransport.File)
+            {
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.LogFilePath, listenerTmpFile));
+            }
+
+            args.Add(new SetAppArgumentArgument($"-hostport:{listenerPort}", true));
+            args.Add(new SetEnvVariableArgument(EnviromentVariables.HostPort, listenerPort));
+
+            return args;
+        }
+
+        private static IEnumerable<MlaunchArgument> GetSimulatorMlaunchArguments(AppBundleInformation appInformation)
+        {
+            var args = new MlaunchArguments
+            {
+                new SetAppArgumentArgument("-hostname:127.0.0.1", true),
+                new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1")
+            };
+
+            if (appInformation.Extension.HasValue)
+            {
+                switch (appInformation.Extension)
+                {
+                    case Extension.TodayExtension:
+                        args.Add(new LaunchSimulatorExtensionArgument(appInformation.LaunchAppPath, appInformation.BundleIdentifier));
+                        break;
+                    case Extension.WatchKit2:
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
+            else
+            {
+                args.Add(new LaunchSimulatorArgument(appInformation.LaunchAppPath));
+            }
+
+            return args;
+        }
+
+        private static MlaunchArguments GetDeviceMlaunchArguments(AppBundleInformation appInformation)
+        {
+            var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
+            var ips = string.Join(",", ipAddresses);
+
+            var args = new MlaunchArguments
+            {
+                new SetAppArgumentArgument($"-hostname:{ips}", true),
+                new SetEnvVariableArgument(EnviromentVariables.HostName, ips)
+            };
+
+            if (appInformation.Extension.HasValue)
+            {
+                switch (appInformation.Extension)
+                {
+                    case Extension.TodayExtension:
+                        args.Add(new LaunchDeviceExtensionArgument(appInformation.LaunchAppPath, appInformation.BundleIdentifier));
+                        break;
+                    case Extension.WatchKit2:
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
+            else
+            {
+                args.Add(new LaunchDeviceArgument(appInformation.LaunchAppPath));
+            }
+
+            return args;
         }
     }
 }

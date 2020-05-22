@@ -209,7 +209,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 mainLog,
                 logs,
                 new Helpers(),
-                useXmlOutput: true, // the cli ALWAYS will get the output as xml
                 logCallback: logCallback);
 
             try
@@ -318,6 +317,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             finally
             {
+                mainLog.Dispose();
+
                 if (!target.IsSimulator() && deviceName != null)
                 {
                     logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from device '{deviceName}'");
