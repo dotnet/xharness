@@ -65,7 +65,7 @@ result=$?
 
 set +e
 
-chmod 0666 "$1/*"
+chmod 0644 "$1"/*.log "$1"/*.xml
 
 test_results=`ls $1/xunit-*.xml`
 
