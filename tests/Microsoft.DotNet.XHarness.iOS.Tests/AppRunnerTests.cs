@@ -139,7 +139,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             _simulatorLoader
                 .Setup(x => x.FindSimulators(TestTarget.Simulator_tvOS, _mainLog.Object, true, false))
-                .ReturnsAsync((null, null));
+                .ThrowsAsync(new NoDeviceFoundException("Failed to find simulator"));
 
             var listenerLogFile = new Mock<IFileBackedLog>();
 
