@@ -126,14 +126,16 @@ namespace Microsoft.DotNet.XHarness.iOS
                     throw;
                 }
 
-                (simulator, companionSimulator) = await _simulatorLoader.FindSimulators(target, _mainLog);
-                if (simulator == null)
+                try
                 {
-                    _mainLog.WriteLine("Didn't find any suitable simulator");
-                    throw new NoDeviceFoundException();
+                    (simulator, companionSimulator) = await _simulatorLoader.FindSimulators(target, _mainLog);
+                    deviceName = simulator.Name;
                 }
-
-                deviceName = simulator.Name;
+                catch (NoDeviceFoundException e)
+                {
+                    _mainLog.WriteLine($"Didn't find any suitable simulator: {e.Message}");
+                    throw;
+                }
 
                 mlaunchArguments.AddRange(GetSimulatorArguments(appInformation, simulator));
             }

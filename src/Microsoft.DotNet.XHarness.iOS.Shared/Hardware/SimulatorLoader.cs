@@ -159,14 +159,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         }
 
         // Will return all devices that match the runtime + devicetype (even if a new device was created, any other devices will also be returned)
-        private async Task<IEnumerable<ISimulatorDevice>?> FindOrCreateDevicesAsync(ILog log, string? runtime, string? devicetype, bool force = false)
+        private async Task<IEnumerable<ISimulatorDevice>> FindOrCreateDevicesAsync(ILog log, string runtime, string devicetype, bool force = false)
         {
-            if (runtime == null || devicetype == null)
+            if (runtime is null)
             {
-                return null;
+                throw new ArgumentNullException(nameof(runtime));
             }
 
-            IEnumerable<ISimulatorDevice>? devices = null;
+            if (devicetype is null)
+            {
+                throw new ArgumentNullException(nameof(devicetype));
+            }
+
+            IEnumerable<ISimulatorDevice> devices;
 
             if (!force)
             {
@@ -180,8 +185,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             var rv = await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "create", CreateName(devicetype, runtime), devicetype, runtime }, log, TimeSpan.FromMinutes(1));
             if (!rv.Succeeded)
             {
-                log.WriteLine($"Could not create device for runtime={runtime} and device type={devicetype}.");
-                return null;
+                var message = $"Could not create device for runtime={runtime} and device type={devicetype}.";
+                log.WriteLine(message);
+                throw new NoDeviceFoundException(message);
             }
 
             await LoadDevices(log, forceRefresh: true);
@@ -189,8 +195,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             devices = AvailableDevices.Where((ISimulatorDevice v) => v.SimRuntime == runtime && v.SimDeviceType == devicetype);
             if (!devices.Any())
             {
-                log.WriteLine($"No devices loaded after creating it? runtime={runtime} device type={devicetype}.");
-                return null;
+                var message = $"No devices loaded after creating it? runtime={runtime} device type={devicetype}.";
+                log.WriteLine(message);
+                throw new NoDeviceFoundException(message);
             }
 
             return devices;
@@ -202,10 +209,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             {
                 // watch device is already paired to some other phone. Create a new watch device
                 var matchingDevices = await FindOrCreateDevicesAsync(log, runtime, devicetype, force: true);
-                var unPairedDevices = matchingDevices.Where((v) => !AvailableDevicePairs.Any((p) => { return p.Gizmo == v.UDID; }));
-                if (device != null)                     // If we're creating a new watch device, assume that the one we were given is not usable.
+                var unPairedDevices = matchingDevices.Where(v => !AvailableDevicePairs.Any(p => p.Gizmo == v.UDID));
+                if (device != null)
                 {
-                    unPairedDevices = unPairedDevices.Where((v) => v.UDID != device.UDID);
+                    // If we're creating a new watch device, assume that the one we were given is not usable.
+                    unPairedDevices = unPairedDevices.Where(v => v.UDID != device.UDID);
                 }
 
                 if (unPairedDevices?.Any() != true)
@@ -270,7 +278,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             {
                 // No device pair. Create one.
                 // First check if the watch is already paired
-                var unPairedDevices = devices.Where((v) => !AvailableDevicePairs.Any((p) => { return p.Gizmo == v.UDID; }));
+                var unPairedDevices = devices.Where(v => !AvailableDevicePairs.Any(p => p.Gizmo == v.UDID));
                 var unpairedDevice = unPairedDevices.FirstOrDefault();
                 var companion_device = companionDevices.First();
                 var device = devices.First();
@@ -300,7 +308,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             return pairs.FirstOrDefault();
         }
 
-        public async Task<(ISimulatorDevice? Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTarget target, ILog log, bool createIfNeeded = true, bool minVersion = false)
+        public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTarget target, ILog log, bool createIfNeeded = true, bool minVersion = false)
         {
             string simulatorDeviceType;
             string simulatorRuntime;
@@ -336,12 +344,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             }
 
             var devices = await FindOrCreateDevicesAsync(log, simulatorRuntime, simulatorDeviceType);
-            var companionDevices = await FindOrCreateDevicesAsync(log, companionRuntime, companionDevicetype);
+            IEnumerable<ISimulatorDevice>? companionDevices = null;
+
+            if (companionRuntime != null && companionDevicetype != null)
+            {
+                companionDevices = await FindOrCreateDevicesAsync(log, companionRuntime, companionDevicetype);
+            }
 
             if (devices?.Any() != true)
             {
-                log.WriteLine($"Could not find or create devices runtime '{simulatorRuntime}' and device type '{simulatorDeviceType}'.");
-                return (null, null);
+                throw new Exception($"Could not find or create devices runtime '{simulatorRuntime}' and device type '{simulatorDeviceType}'.");
             }
 
             ISimulatorDevice? simulator = null;
@@ -355,15 +367,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             {
                 if (companionDevices?.Any() != true)
                 {
-                    log.WriteLine($"Could not find or create companion devices runtime '{companionRuntime}' and device type '{companionDevicetype}'.");
-                    return (null, null);
+                    throw new Exception($"Could not find or create companion devices runtime '{companionRuntime}' and device type '{companionDevicetype}'.");
                 }
 
                 var pair = await FindOrCreateDevicePairAsync(log, devices, companionDevices);
                 if (pair == null)
                 {
-                    log.WriteLine($"Could not find or create device pair runtime '{companionRuntime}' and device type '{companionDevicetype}'.");
-                    return (null, null);
+                    throw new Exception($"Could not find or create device pair runtime '{companionRuntime}' and device type '{companionDevicetype}'.");
                 }
 
                 simulator = devices.First(v => v.UDID == pair.Gizmo);
@@ -372,8 +382,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
             if (simulator == null)
             {
-                log.WriteLine($"Could not find simulator for runtime '{simulatorRuntime}' and device type '{simulatorDeviceType}'.");
-                return (null, null);
+                throw new Exception($"Could not find simulator for runtime '{simulatorRuntime}' and device type '{simulatorDeviceType}'.");
             }
 
             log.WriteLine("Found simulator: {0} {1}", simulator.Name, simulator.UDID);
@@ -426,39 +435,39 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         /// SimulatorLoader only finds 2 devices - the main simulator and an optional companion device.
         /// For backwards compatibility of this library with Xamarin Mac/iOS, we need to be able to enumerate them, hence this class.
         /// </summary>
-        private class SimulatorEnumerable : IEnumerable<ISimulatorDevice?>, IAsyncEnumerable
+        private class SimulatorEnumerable : IEnumerable<ISimulatorDevice>, IAsyncEnumerable
         {
-            private readonly Lazy<Task<(ISimulatorDevice?, ISimulatorDevice?)>> _findTask;
+            private readonly Lazy<Task<(ISimulatorDevice, ISimulatorDevice?)>> _findTask;
             private readonly string _toString;
 
             public SimulatorEnumerable(ISimulatorLoader simulators, TestTarget target, bool minVersion, ILog log)
             {
-                _findTask = new Lazy<Task<(ISimulatorDevice?, ISimulatorDevice?)>>(() => simulators.FindSimulators(target, log, minVersion: minVersion), LazyThreadSafetyMode.ExecutionAndPublication);
+                _findTask = new Lazy<Task<(ISimulatorDevice, ISimulatorDevice?)>>(() => simulators.FindSimulators(target, log, minVersion: minVersion), LazyThreadSafetyMode.ExecutionAndPublication);
                 _toString = $"Simulators for {target} (MinVersion: {minVersion})";
             }
 
             public override string ToString() => _toString;
 
-            public IEnumerator<ISimulatorDevice?> GetEnumerator() => new Enumerator(this);
+            public IEnumerator<ISimulatorDevice> GetEnumerator() => new Enumerator(this);
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
             public Task ReadyTask => _findTask.Value;
 
-            public Task<(ISimulatorDevice?, ISimulatorDevice?)> Find() => _findTask.Value;
+            public Task<(ISimulatorDevice, ISimulatorDevice?)> Find() => _findTask.Value;
 
-            private class Enumerator : IEnumerator<ISimulatorDevice?>
+            private class Enumerator : IEnumerator<ISimulatorDevice>
             {
-                private readonly Lazy<(ISimulatorDevice?, ISimulatorDevice?)> _devices;
+                private readonly Lazy<(ISimulatorDevice, ISimulatorDevice?)> _devices;
 
-                public Enumerator(SimulatorEnumerable? enumerable)
+                public Enumerator(SimulatorEnumerable enumerable)
                 {
-                    _devices = new Lazy<(ISimulatorDevice?, ISimulatorDevice?)>(() => enumerable?.Find().Result ?? (null, null), LazyThreadSafetyMode.ExecutionAndPublication);
+                    _devices = new Lazy<(ISimulatorDevice, ISimulatorDevice?)>(() => enumerable.Find().Result, LazyThreadSafetyMode.ExecutionAndPublication);
                 }
 
                 private bool _moved;
 
-                public ISimulatorDevice? Current => _moved ? _devices.Value.Item2 : _devices.Value.Item1;
+                public ISimulatorDevice Current => _moved ? _devices.Value.Item2! : _devices.Value.Item1;
 
                 object IEnumerator.Current => Current ?? throw new NullReferenceException("Simulator device not found");
 

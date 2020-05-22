@@ -160,11 +160,5 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                 Assert.Null(companion);
             }
         }
-
-        private void AssertArgumentValue(MlaunchArgument arg, string expected, string message = null)
-        {
-            var value = arg.AsCommandLineArgument().Split(new char[] { '=' }, 2).LastOrDefault();
-            Assert.Equal(expected, value);
-        }
     }
 }
