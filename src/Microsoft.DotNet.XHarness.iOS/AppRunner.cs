@@ -87,86 +87,37 @@ namespace Microsoft.DotNet.XHarness.iOS
             CancellationToken cancellationToken = default)
         {
             var runMode = target.ToRunMode();
-            var isSimulator = target.IsSimulator();
+            bool isSimulator = target.IsSimulator();
 
             var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
-                target.ToRunMode(),
+                runMode,
                 log: _mainLog,
                 testLog: deviceListenerLog,
                 isSimulator: isSimulator,
                 autoExit: true,
                 xmlOutput: true); // cli always uses xml
 
-            var listenerPort = deviceListener.InitializeAndGetPort();
-
-            var mlaunchArguments = GetCommonArguments(
-                verbosity,
-                xmlResultJargon,
-                skippedMethods,
-                skippedTestClasses,
-                deviceListenerTransport,
-                listenerPort,
-                deviceListenerTmpFile);
-
             ISimulatorDevice? simulator = null;
             ISimulatorDevice? companionSimulator = null;
 
+            // Find devices
             if (isSimulator)
             {
-                IFileBackedLog simulatorLoadingLogs = _logs.Create($"simulator-list-{_helpers.Timestamp}.log", "Simulator list");
-
-                try
-                {
-                    await _simulatorLoader.LoadDevices(simulatorLoadingLogs, false, false);
-                }
-                catch
-                {
-                    _mainLog.WriteLine("Failed to load simulators!");
-                    throw;
-                }
-
-                try
-                {
-                    (simulator, companionSimulator) = await _simulatorLoader.FindSimulators(target, _mainLog);
-                    deviceName = simulator.Name;
-                }
-                catch (NoDeviceFoundException e)
-                {
-                    _mainLog.WriteLine($"Didn't find any suitable simulator: {e.Message}");
-                    throw;
-                }
-
-                mlaunchArguments.AddRange(GetSimulatorArguments(appInformation, simulator));
+                (simulator, companionSimulator) = await FindSimulators(target);
+                deviceName = companionSimulator?.Name ?? simulator.Name;
             }
             else
             {
-                if (deviceName == null)
-                {
-                    IHardwareDevice? companionDevice = null;
-                    IHardwareDevice device = await _hardwareDeviceLoader.FindDevice(runMode, _mainLog, includeLocked: false, force: false);
-
-                    if (target.IsWatchOSTarget())
-                    {
-                        companionDevice = await _hardwareDeviceLoader.FindCompanionDevice(_mainLog, device);
-                    }
-
-                    deviceName = companionDevice?.Name ?? device.Name;
-                }
-
-                if (deviceName == null)
-                {
-                    throw new NoDeviceFoundException();
-                }
-
-                mlaunchArguments.AddRange(GetDeviceArguments(appInformation, deviceName, target.IsWatchOSTarget()));
+                deviceName ??= await FindDevice(target) ?? throw new NoDeviceFoundException();
             }
 
+            int deviceListenerPort = deviceListener.InitializeAndGetPort();
             deviceListener.StartAsync();
 
             var crashLogs = new Logs(_logs.Directory);
 
-            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName!); // TODO: nullability
+            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName);
             ITestReporter testReporter = _testReporterFactory.Create(_mainLog,
                 _mainLog,
                 _logs,
@@ -181,17 +132,17 @@ namespace Microsoft.DotNet.XHarness.iOS
                 null,
                 (level, message) => _mainLog.WriteLine(message));
 
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken);
-
             deviceListener.ConnectedTask
                 .TimeoutAfter(testLaunchTimeout)
                 .ContinueWith(testReporter.LaunchCallback)
                 .DoNotAwait();
 
-            _mainLog.WriteLine($"*** Executing {appInformation.AppName} on {target} '{deviceName}' ***");
+            _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target} '{deviceName}' ***");
 
             try
             {
+                using var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken);
+
                 if (isSimulator)
                 {
                     if (simulator == null)
@@ -199,6 +150,17 @@ namespace Microsoft.DotNet.XHarness.iOS
                         _mainLog.WriteLine("Didn't find any suitable simulator");
                         throw new NoDeviceFoundException();
                     }
+
+                    var mlaunchArguments = GetSimulatorArguments(
+                        appInformation,
+                        simulator,
+                        verbosity,
+                        xmlResultJargon,
+                        skippedMethods,
+                        skippedTestClasses,
+                        deviceListenerTransport,
+                        deviceListenerPort,
+                        deviceListenerTmpFile);
 
                     await RunSimulatorTests(
                         mlaunchArguments,
@@ -209,10 +171,22 @@ namespace Microsoft.DotNet.XHarness.iOS
                         companionSimulator,
                         ensureCleanSimulatorState,
                         timeout,
-                        cancellationToken);
+                        combinedCancellationToken.Token);
                 }
                 else
                 {
+                    var mlaunchArguments = GetDeviceArguments(
+                        appInformation,
+                        deviceName,
+                        target.IsWatchOSTarget(),
+                        verbosity,
+                        xmlResultJargon,
+                        skippedMethods,
+                        skippedTestClasses,
+                        deviceListenerTransport,
+                        deviceListenerPort,
+                        deviceListenerTmpFile);
+
                     await RunDeviceTests(
                         mlaunchArguments,
                         crashReporter,
@@ -220,7 +194,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                         deviceListener,
                         deviceName,
                         timeout,
-                        cancellationToken);
+                        combinedCancellationToken.Token);
                 }
             }
             finally
@@ -441,14 +415,29 @@ namespace Microsoft.DotNet.XHarness.iOS
             return args;
         }
 
-        private IEnumerable<MlaunchArgument> GetSimulatorArguments(AppBundleInformation appInformation, ISimulatorDevice simulator)
+        private MlaunchArguments GetSimulatorArguments(
+            AppBundleInformation appInformation,
+            ISimulatorDevice simulator,
+            int verbosity,
+            XmlResultJargon xmlResultJargon,
+            string[]? skippedMethods,
+            string[]? skippedTestClasses,
+            ListenerTransport deviceListenerTransport,
+            int deviceListenerPort,
+            string deviceListenerTmpFile)
         {
-            var args = new List<MlaunchArgument>
-            {
-                new SetAppArgumentArgument("-hostname:127.0.0.1", true),
-                new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"),
-                new SimulatorUDIDArgument(simulator.UDID),
-            };
+            var args = GetCommonArguments(
+                verbosity,
+                xmlResultJargon,
+                skippedMethods,
+                skippedTestClasses,
+                deviceListenerTransport,
+                deviceListenerPort,
+                deviceListenerTmpFile);
+
+            args.Add(new SetAppArgumentArgument("-hostname:127.0.0.1", true));
+            args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"));
+            args.Add(new SimulatorUDIDArgument(simulator.UDID));
 
             if (appInformation.Extension.HasValue)
             {
@@ -470,18 +459,34 @@ namespace Microsoft.DotNet.XHarness.iOS
             return args;
         }
 
-        private IEnumerable<MlaunchArgument> GetDeviceArguments(AppBundleInformation appInformation, string deviceName, bool isWatchTarget)
+        private MlaunchArguments GetDeviceArguments(
+            AppBundleInformation appInformation,
+            string deviceName,
+            bool isWatchTarget,
+            int verbosity,
+            XmlResultJargon xmlResultJargon,
+            string[]? skippedMethods,
+            string[]? skippedTestClasses,
+            ListenerTransport deviceListenerTransport,
+            int deviceListenerPort,
+            string deviceListenerTmpFile)
         {
+            var args = GetCommonArguments(
+                verbosity,
+                xmlResultJargon,
+                skippedMethods,
+                skippedTestClasses,
+                deviceListenerTransport,
+                deviceListenerPort,
+                deviceListenerTmpFile);
+
             var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
             var ips = string.Join(",", ipAddresses);
 
-            var args = new List<MlaunchArgument>
-            {
-                new SetAppArgumentArgument($"-hostname:{ips}", true),
-                new SetEnvVariableArgument(EnviromentVariables.HostName, ips),
-                new DisableMemoryLimitsArgument(),
-                new DeviceNameArgument(deviceName),
-            };
+            args.Add(new SetAppArgumentArgument($"-hostname:{ips}", true));
+            args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, ips));
+            args.Add(new DisableMemoryLimitsArgument());
+            args.Add(new DeviceNameArgument(deviceName));
 
             if (_listenerFactory.UseTunnel)
             {
@@ -515,6 +520,44 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
 
             return args;
+        }
+
+        private async Task<(ISimulatorDevice, ISimulatorDevice?)> FindSimulators(TestTarget target)
+        {
+            IFileBackedLog simulatorLoadingLog = _logs.Create($"simulator-list-{_helpers.Timestamp}.log", "Simulator list");
+
+            try
+            {
+                await _simulatorLoader.LoadDevices(simulatorLoadingLog, false, false);
+            }
+            catch
+            {
+                _mainLog.WriteLine("Failed to load simulators!");
+                throw;
+            }
+
+            try
+            {
+                return await _simulatorLoader.FindSimulators(target, _mainLog);
+            }
+            catch (NoDeviceFoundException e)
+            {
+                _mainLog.WriteLine($"Didn't find any suitable simulator: {e.Message}");
+                throw;
+            }
+        }
+
+        private async Task<string> FindDevice(TestTarget target)
+        {
+            IHardwareDevice? companionDevice = null;
+            IHardwareDevice device = await _hardwareDeviceLoader.FindDevice(target.ToRunMode(), _mainLog, includeLocked: false, force: false);
+
+            if (target.IsWatchOSTarget())
+            {
+                companionDevice = await _hardwareDeviceLoader.FindCompanionDevice(_mainLog, device);
+            }
+
+            return companionDevice?.Name ?? device.Name;
         }
     }
 }
