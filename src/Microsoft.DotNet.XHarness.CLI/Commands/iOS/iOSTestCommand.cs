@@ -111,12 +111,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 if (!File.Exists(_mlaunchLldbConfigFile))
                 {
                     // create empty file
-                    var f = File.Create(_mlaunchLldbConfigFile);
-                    f.Dispose();
+                    File.WriteAllText(_mlaunchLldbConfigFile, string.Empty);
                     _createdLldbFile = true;
                 }
             }
-
 
             logger.LogInformation($"Starting test for {target.AsString()}{ (_arguments.DeviceName != null ? " targeting " + _arguments.DeviceName : null) }..");
 
@@ -158,7 +156,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 }
                 catch (NoDeviceFoundException)
                 {
-                    logger.LogError($"Failed to find suitable device for target {target.AsString()}");
+                    logger.LogError($"Failed to find suitable device for target {target.AsString()}" + Environment.NewLine +
+                        "Please make sure the device is connected and unlocked.");
                     return ExitCode.DEVICE_NOT_FOUND;
                 }
                 catch (Exception e)
@@ -293,7 +292,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             catch (NoDeviceFoundException)
             {
-                logger.LogError($"Failed to find suitable device for target {target.AsString()}");
+                logger.LogError($"Failed to find suitable device for target {target.AsString()}" +
+                    (target.IsSimulator() ? Environment.NewLine + "Please make sure suitable Simulator is installed in Xcode" : string.Empty));
+
                 return ExitCode.DEVICE_NOT_FOUND;
             }
             catch (Exception e)
