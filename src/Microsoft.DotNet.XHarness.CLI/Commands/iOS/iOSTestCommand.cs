@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -75,11 +74,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             return exitCode;
         }
 
-        static bool IsLldbEnabled() => File.Exists(_mlaunchLldbConfigFile);
+        private static bool IsLldbEnabled() => File.Exists(_mlaunchLldbConfigFile);
 
-        void NotifyUserLldbCommand(ILogger logger, string line)
+        private void NotifyUserLldbCommand(ILogger logger, string line)
         {
-            if (!line.Contains("mtouch-lldb-prep-cmds")) return;
+            if (!line.Contains("mtouch-lldb-prep-cmds"))
+            {
+                return;
+            }
 
             // let the user know the command to execute. Might change in mlaunch so trust the log
             var sb = new StringBuilder();
@@ -224,7 +226,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     xmlResultJargon: _arguments.XmlResultJargon,
                     cancellationToken: cancellationToken,
                     skippedMethods: _arguments.SingleMethodFilters?.ToArray(),
-                    skippedTestClasses:_arguments.ClassMethodFilters?.ToArray());
+                    skippedTestClasses: _arguments.ClassMethodFilters?.ToArray());
 
                 switch (testResult)
                 {
