@@ -119,11 +119,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         }
 
         [Theory]
-        [InlineData(TestTarget.Simulator_iOS64, 1)]
-        [InlineData(TestTarget.Simulator_iOS32, 1)]
-        [InlineData(TestTarget.Simulator_tvOS, 1)]
-        [InlineData(TestTarget.Simulator_watchOS, 2)]
-        public async Task FindAsyncDoNotCreateTest(TestTarget target, int expected)
+        [InlineData(TestTarget.Simulator_iOS64, false)]
+        [InlineData(TestTarget.Simulator_iOS32, false)]
+        [InlineData(TestTarget.Simulator_tvOS, false)]
+        [InlineData(TestTarget.Simulator_watchOS, true)]
+        public async Task FindAsyncDoNotCreateTest(TestTarget target, bool shouldFindCompanion)
         {
             MlaunchArguments passedArguments = null;
 
@@ -147,9 +147,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                 });
 
             await _simulators.LoadDevices(_executionLog.Object);
-            var sims = await _simulators.FindSimulators(target, _executionLog.Object, false, false);
+            var (simulator, companion) = await _simulators.FindSimulators(target, _executionLog.Object, false, false);
 
-            Assert.Equal(expected, sims.Count());
+            Assert.NotNull(simulator);
+
+            if (shouldFindCompanion)
+            {
+                Assert.NotNull(companion);
+            }
+            else
+            {
+                Assert.Null(companion);
+            }
         }
 
         private void AssertArgumentValue(MlaunchArgument arg, string expected, string message = null)

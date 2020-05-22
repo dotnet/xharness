@@ -11,18 +11,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
     public interface ICaptureLogFactory
     {
-        ICaptureLog Create(string logDirectory, string systemLogPath, bool entireFile, string description = null);
+        ICaptureLog Create(string path, string systemLogPath, bool entireFile, string description = null);
     }
 
     public class CaptureLogFactory : ICaptureLogFactory
     {
-        public ICaptureLog Create(string logDirectory, string systemLogPath, bool entireFile, string description = null)
-        {
-            return new CaptureLog(logDirectory, systemLogPath, entireFile)
+        public ICaptureLog Create(string path, string systemLogPath, bool entireFile, string description = null) =>
+            new CaptureLog(path, systemLogPath, entireFile)
             {
                 Description = description
             };
-        }
     }
 
     public interface ICaptureLog : IFileBackedLog

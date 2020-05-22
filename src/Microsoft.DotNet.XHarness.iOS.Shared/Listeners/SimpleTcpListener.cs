@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             _server?.Server?.Shutdown(SocketShutdown.Both);
         }
 
-        public override int Initialize()
+        public override int InitializeAndGetPort()
         {
             if (_useTcpTunnel && Port != 0)
             {

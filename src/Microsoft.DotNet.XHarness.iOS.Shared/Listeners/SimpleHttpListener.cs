@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             _autoExit = autoExit;
         }
 
-        public override int Initialize()
+        public override int InitializeAndGetPort()
         {
             _server = new HttpListener();
 

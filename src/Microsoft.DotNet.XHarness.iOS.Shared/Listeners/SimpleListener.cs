@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         IFileBackedLog TestLog { get; }
 
         void Cancel();
-        int Initialize();
+        int InitializeAndGetPort();
         void StartAsync();
     }
 
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         protected abstract void Stop();
 
         public Task ConnectedTask => _connected.Task;
-        public abstract int Initialize();
+        public abstract int InitializeAndGetPort();
 
         protected SimpleListener(ILog log, IFileBackedLog testLog)
         {

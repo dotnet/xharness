@@ -9,7 +9,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common;
-using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared;
@@ -31,6 +30,7 @@ namespace Microsoft.DotNet.XHarness.iOS
         private readonly ICaptureLogFactory _captureLogFactory;
         private readonly IDeviceLogCapturerFactory _deviceLogCapturerFactory;
         private readonly ITestReporterFactory _testReporterFactory;
+        private readonly IResultParser _resultParser;
         private readonly ILogs _logs;
         private readonly IFileBackedLog _mainLog;
         private readonly IHelpers _helpers;
@@ -43,6 +43,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             ICaptureLogFactory captureLogFactory,
             IDeviceLogCapturerFactory deviceLogCapturerFactory,
             ITestReporterFactory reporterFactory,
+            IResultParser resultParser,
             IFileBackedLog mainLog,
             ILogs logs,
             IHelpers helpers,
@@ -56,6 +57,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             _captureLogFactory = captureLogFactory ?? throw new ArgumentNullException(nameof(captureLogFactory));
             _deviceLogCapturerFactory = deviceLogCapturerFactory ?? throw new ArgumentNullException(nameof(deviceLogCapturerFactory));
             _testReporterFactory = reporterFactory ?? throw new ArgumentNullException(nameof(_testReporterFactory));
+            _resultParser = resultParser ?? throw new ArgumentNullException(nameof(resultParser));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
 
@@ -68,7 +70,6 @@ namespace Microsoft.DotNet.XHarness.iOS
                 // create using the main as the default log
                 _mainLog = Log.CreateReadableAggregatedLog(mainLog, new CallbackLog(logCallback));
             }
-
         }
 
         public async Task<(string DeviceName, TestExecutingResult Result, string ResultMessage)> RunApp(
@@ -85,154 +86,59 @@ namespace Microsoft.DotNet.XHarness.iOS
             string[]? skippedTestClasses = null,
             CancellationToken cancellationToken = default)
         {
+            var runMode = target.ToRunMode();
             var isSimulator = target.IsSimulator();
 
-            var listenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
-            var (listenerTransport, listener, listenerTmpFile) = _listenerFactory.Create(
+            var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
+            var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 target.ToRunMode(),
                 log: _mainLog,
-                testLog: listenerLog,
+                testLog: deviceListenerLog,
                 isSimulator: isSimulator,
                 autoExit: true,
                 xmlOutput: true); // cli always uses xml
 
-            // Initialize has to be called before we try to get Port (internal implementation of the listener says so)
-            // TODO: Improve this to not get into a broken state - it was really hard to debug when I moved this lower
-            var listenerPort = listener.Initialize();
+            var listenerPort = deviceListener.InitializeAndGetPort();
 
-            var mlaunchArgs = GetMlaunchArguments(
-                appInformation,
-                isSimulator,
+            var mlaunchArguments = GetCommonArguments(
                 verbosity,
                 xmlResultJargon,
                 skippedMethods,
                 skippedTestClasses,
-                listenerTransport,
+                deviceListenerTransport,
                 listenerPort,
-                listenerTmpFile);
+                deviceListenerTmpFile);
 
-            if (_listenerFactory.UseTunnel && !isSimulator) // simulators do not support tunnels
-            {
-                mlaunchArgs.Add(new SetEnvVariableArgument(EnviromentVariables.UseTcpTunnel, true));
-            }
-
-            listener.StartAsync();
-
-            var crashLogs = new Logs(_logs.Directory);
-
-            var runMode = target.ToRunMode();
-            ICrashSnapshotReporter crashReporter;
-            ITestReporter testReporter;
+            ISimulatorDevice? simulator = null;
+            ISimulatorDevice? companionSimulator = null;
 
             if (isSimulator)
             {
-                crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName: null!); // TODO: nullability
-                testReporter = _testReporterFactory.Create(_mainLog,
-                    _mainLog,
-                    _logs,
-                    crashReporter,
-                    listener,
-                    new XmlResultParser(),
-                    appInformation,
-                    runMode,
-                    xmlResultJargon,
-                    device: null,
-                    timeout,
-                    null,
-                    (level, message) => _mainLog.WriteLine(message));
+                IFileBackedLog simulatorLoadingLogs = _logs.Create($"simulator-list-{_helpers.Timestamp}.log", "Simulator list");
 
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken);
-
-                listener.ConnectedTask
-                    .TimeoutAfter(testLaunchTimeout)
-                    .ContinueWith(testReporter.LaunchCallback)
-                    .DoNotAwait();
-
-                await _simulatorLoader.LoadDevices(_logs.Create($"simulator-list-{_helpers.Timestamp}.log", "Simulator list"), false, false);
-
-                var simulators = await _simulatorLoader.FindSimulators(target, _mainLog);
-                if (!(simulators?.Any() ?? false))
+                try
                 {
-                    _mainLog.WriteLine("Didn't find any suitable simulators");
-                    throw new NoDeviceFoundException();
+                    await _simulatorLoader.LoadDevices(simulatorLoadingLogs, false, false);
+                }
+                catch
+                {
+                    _mainLog.WriteLine("Failed to load simulators!");
+                    throw;
                 }
 
-                var simulator = string.IsNullOrEmpty(deviceName)
-                    ? simulators.FirstOrDefault()
-                    : simulators.FirstOrDefault(s => string.Equals(s.Name, deviceName, StringComparison.InvariantCultureIgnoreCase));
-
+                (simulator, companionSimulator) = await _simulatorLoader.FindSimulators(target, _mainLog);
                 if (simulator == null)
                 {
+                    _mainLog.WriteLine("Didn't find any suitable simulator");
                     throw new NoDeviceFoundException();
                 }
 
                 deviceName = simulator.Name;
 
-                var systemLogs = new List<ICaptureLog>();
-                foreach (var sim in simulators)
-                {
-                    // Upload the system log
-                    _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", sim.SystemLog, sim.Name);
-                    bool isCompanion = sim != simulator;
-
-                    var logDescription = isCompanion ? LogType.CompanionSystemLog.ToString() : LogType.SystemLog.ToString();
-                    var log = _captureLogFactory.Create(
-                        Path.Combine(_logs.Directory, sim.Name + ".log"),
-                        sim.SystemLog,
-                        true,
-                        logDescription);
-
-                    log.StartCapture();
-                    _logs.Add(log);
-                    systemLogs.Add(log);
-                }
-
-                try
-                {
-                    _mainLog.WriteLine("*** Executing {0}/{1} in the simulator ***", appInformation.AppName, target);
-
-                    if (ensureCleanSimulatorState)
-                    {
-                        foreach (var sim in simulators)
-                        {
-                            await sim.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
-                        }
-                    }
-
-                    mlaunchArgs.Add(new SimulatorUDIDArgument(simulator.UDID));
-
-                    await crashReporter.StartCaptureAsync();
-
-                    _mainLog.WriteLine("Starting test run");
-
-                    var result = _processManager.ExecuteCommandAsync(mlaunchArgs, _mainLog, timeout, cancellationToken: linkedCts.Token);
-
-                    await testReporter.CollectSimulatorResult(result);
-
-                    // cleanup after us
-                    if (ensureCleanSimulatorState)
-                    {
-                        await simulator.KillEverything(_mainLog);
-                    }
-
-                    foreach (var log in systemLogs)
-                    {
-                        log.StopCapture();
-                    }
-                }
-                finally
-                {
-                    foreach (var log in systemLogs)
-                    {
-                        log.StopCapture();
-                        log.Dispose();
-                    }
-                }
+                mlaunchArguments.AddRange(GetSimulatorArguments(appInformation, simulator));
             }
             else
             {
-                mlaunchArgs.Add(new DisableMemoryLimitsArgument());
-
                 if (deviceName == null)
                 {
                     IHardwareDevice? companionDevice = null;
@@ -251,102 +157,221 @@ namespace Microsoft.DotNet.XHarness.iOS
                     throw new NoDeviceFoundException();
                 }
 
-                crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName);
-                testReporter = _testReporterFactory.Create(_mainLog,
-                    _mainLog,
-                    _logs,
-                    crashReporter,
-                    listener,
-                    new XmlResultParser(),
-                    appInformation,
-                    runMode,
-                    xmlResultJargon,
-                    deviceName,
-                    timeout,
-                    null,
-                    (level, message) => _mainLog.WriteLine(message));
+                mlaunchArguments.AddRange(GetDeviceArguments(appInformation, deviceName, target.IsWatchOSTarget()));
+            }
 
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken);
+            deviceListener.StartAsync();
 
-                listener.ConnectedTask
-                    .TimeoutAfter(testLaunchTimeout)
-                    .ContinueWith(testReporter.LaunchCallback)
-                    .DoNotAwait();
+            var crashLogs = new Logs(_logs.Directory);
 
-                _mainLog.WriteLine("*** Executing {0}/{1} on device '{2}' ***", appInformation.AppName, target, deviceName);
+            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName!); // TODO: nullability
+            ITestReporter testReporter = _testReporterFactory.Create(_mainLog,
+                _mainLog,
+                _logs,
+                crashReporter,
+                deviceListener,
+                _resultParser,
+                appInformation,
+                runMode,
+                xmlResultJargon,
+                deviceName,
+                timeout,
+                null,
+                (level, message) => _mainLog.WriteLine(message));
 
-                if (target.IsWatchOSTarget())
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken);
+
+            deviceListener.ConnectedTask
+                .TimeoutAfter(testLaunchTimeout)
+                .ContinueWith(testReporter.LaunchCallback)
+                .DoNotAwait();
+
+            _mainLog.WriteLine($"*** Executing {appInformation.AppName} on {target} '{deviceName}' ***");
+
+            try
+            {
+                if (isSimulator)
                 {
-                    mlaunchArgs.Add(new AttachNativeDebuggerArgument()); // this prevents the watch from backgrounding the app.
+                    if (simulator == null)
+                    {
+                        _mainLog.WriteLine("Didn't find any suitable simulator");
+                        throw new NoDeviceFoundException();
+                    }
+
+                    await RunSimulatorTests(
+                        mlaunchArguments,
+                        appInformation,
+                        crashReporter,
+                        testReporter,
+                        simulator,
+                        companionSimulator,
+                        ensureCleanSimulatorState,
+                        timeout,
+                        cancellationToken);
                 }
                 else
                 {
-                    mlaunchArgs.Add(new WaitForExitArgument());
-                }
-
-                mlaunchArgs.Add(new DeviceNameArgument(deviceName));
-
-                var deviceSystemLog = _logs.Create($"device-{deviceName}-{_helpers.Timestamp}.log", "Device log");
-                var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, deviceName);
-                deviceLogCapturer.StartCapture();
-
-                try
-                {
-                    await crashReporter.StartCaptureAsync();
-
-                    // create a tunnel to communicate with the device
-                    if (listenerTransport == ListenerTransport.Tcp && _listenerFactory.UseTunnel && listener is SimpleTcpListener tcpListener)
-                    {
-                        // create a new tunnel using the listener
-                        var tunnel = _listenerFactory.TunnelBore.Create(deviceName, _mainLog);
-                        tunnel.Open(deviceName, tcpListener, timeout, _mainLog);
-                        // wait until we started the tunnel
-                        await tunnel.Started;
-                    }
-
-                    _mainLog.WriteLine("Starting test run");
-
-                    // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit).
-                    var aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
-                    Task<ProcessExecutionResult> runTestTask = _processManager.ExecuteCommandAsync(
-                        mlaunchArgs,
-                        aggregatedLog,
+                    await RunDeviceTests(
+                        mlaunchArguments,
+                        crashReporter,
+                        testReporter,
+                        deviceListener,
+                        deviceName,
                         timeout,
-                        cancellationToken: linkedCts.Token);
-
-                    await testReporter.CollectDeviceResult(runTestTask);
-                }
-                finally
-                {
-                    deviceLogCapturer.StopCapture();
-                    deviceSystemLog.Dispose();
-
-                    // close a tunnel if it was created
-                    if (!isSimulator && _listenerFactory.UseTunnel)
-                    {
-                        await _listenerFactory.TunnelBore.Close(deviceName);
-                    }
-                }
-
-                // Upload the system log
-                if (File.Exists(deviceSystemLog.FullPath))
-                {
-                    _mainLog.WriteLine("A capture of the device log is: {0}", deviceSystemLog.FullPath);
+                        cancellationToken);
                 }
             }
+            finally
+            {
+                deviceListener.Cancel();
+                deviceListener.Dispose();
+            }
 
-            listener.Cancel();
-            listener.Dispose();
-
-            // check the final status, copy all the required data
+            // Check the final status, copy all the required data
             var (testResult, resultMessage) = await testReporter.ParseResult();
 
             return (deviceName, testResult, resultMessage);
         }
 
-        private static MlaunchArguments GetMlaunchArguments(
-            AppBundleInformation appBundleInformation,
-            bool isSimulator,
+        private async Task RunSimulatorTests(
+            MlaunchArguments mlaunchArguments,
+            AppBundleInformation appInformation,
+            ICrashSnapshotReporter crashReporter,
+            ITestReporter testReporter,
+            ISimulatorDevice simulator,
+            ISimulatorDevice? companionSimulator,
+            bool ensureCleanSimulatorState,
+            TimeSpan timeout,
+            CancellationToken cancellationToken)
+        {
+            var systemLogs = new List<ICaptureLog>();
+
+            try
+            {
+                _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
+
+                var simulatorLog = _captureLogFactory.Create(
+                    path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
+                    systemLogPath: simulator.SystemLog,
+                    entireFile: true,
+                    LogType.SystemLog.ToString());
+
+                simulatorLog.StartCapture();
+                _logs.Add(simulatorLog);
+                systemLogs.Add(simulatorLog);
+
+                if (companionSimulator != null)
+                {
+                    _mainLog.WriteLine("System log for the '{1}' companion simulator is: {0}", companionSimulator.SystemLog, companionSimulator.Name);
+
+                    var companionLog = _captureLogFactory.Create(
+                        path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
+                        systemLogPath: companionSimulator.SystemLog,
+                        entireFile: true,
+                        LogType.CompanionSystemLog.ToString());
+
+                    companionLog.StartCapture();
+                    _logs.Add(companionLog);
+                    systemLogs.Add(companionLog);
+                }
+
+                if (ensureCleanSimulatorState)
+                {
+                    await simulator.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
+
+                    if (companionSimulator != null) {
+                        await companionSimulator.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
+                    }
+                }
+
+                await crashReporter.StartCaptureAsync();
+
+                _mainLog.WriteLine("Starting test run");
+
+                var result = _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+
+                await testReporter.CollectSimulatorResult(result);
+
+                // cleanup after us
+                if (ensureCleanSimulatorState)
+                {
+                    await simulator.KillEverything(_mainLog);
+
+                    if (companionSimulator != null)
+                    {
+                        await companionSimulator.KillEverything(_mainLog);
+                    }
+                }
+            }
+            finally
+            {
+                foreach (ICaptureLog? log in systemLogs)
+                {
+                    log.StopCapture();
+                    log.Dispose();
+                }
+            }
+        }
+
+        private async Task RunDeviceTests(
+            MlaunchArguments mlaunchArguments,
+            ICrashSnapshotReporter crashReporter,
+            ITestReporter testReporter,
+            ISimpleListener deviceListener,
+            string deviceName,
+            TimeSpan timeout,
+            CancellationToken cancellationToken)
+        {
+            var deviceSystemLog = _logs.Create($"device-{deviceName}-{_helpers.Timestamp}.log", "Device log");
+            var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, deviceName);
+            deviceLogCapturer.StartCapture();
+
+            try
+            {
+                await crashReporter.StartCaptureAsync();
+
+                // create a tunnel to communicate with the device
+                if (_listenerFactory.UseTunnel && deviceListener is SimpleTcpListener tcpListener)
+                {
+                    // create a new tunnel using the listener
+                    var tunnel = _listenerFactory.TunnelBore.Create(deviceName, _mainLog);
+                    tunnel.Open(deviceName, tcpListener, timeout, _mainLog);
+                    // wait until we started the tunnel
+                    await tunnel.Started;
+                }
+
+                _mainLog.WriteLine("Starting test run");
+
+                // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit).
+                var aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
+                var result = _processManager.ExecuteCommandAsync(
+                    mlaunchArguments,
+                    aggregatedLog,
+                    timeout,
+                    cancellationToken: cancellationToken);
+
+                await testReporter.CollectDeviceResult(result);
+            }
+            finally
+            {
+                deviceLogCapturer.StopCapture();
+                deviceSystemLog.Dispose();
+
+                // close a tunnel if it was created
+                if (_listenerFactory.UseTunnel)
+                {
+                    await _listenerFactory.TunnelBore.Close(deviceName);
+                }
+            }
+
+            // Upload the system log
+            if (File.Exists(deviceSystemLog.FullPath))
+            {
+                _mainLog.WriteLine("A capture of the device log is: {0}", deviceSystemLog.FullPath);
+            }
+        }
+
+        private static MlaunchArguments GetCommonArguments(
             int verbosity,
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
@@ -400,9 +425,6 @@ namespace Microsoft.DotNet.XHarness.iOS
             args.Add(new SetEnvVariableArgument(EnviromentVariables.EnableXmlOutput, true));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlMode, "wrapped"));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlVersion, $"{xmlResultJargon}"));
-
-            args.AddRange(isSimulator ? GetSimulatorMlaunchArguments(appBundleInformation) : GetDeviceMlaunchArguments(appBundleInformation));
-
             args.Add(new SetAppArgumentArgument($"-transport:{listenerTransport}", true));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.Transport, listenerTransport.ToString().ToUpper()));
 
@@ -417,12 +439,13 @@ namespace Microsoft.DotNet.XHarness.iOS
             return args;
         }
 
-        private static IEnumerable<MlaunchArgument> GetSimulatorMlaunchArguments(AppBundleInformation appInformation)
+        private IEnumerable<MlaunchArgument> GetSimulatorArguments(AppBundleInformation appInformation, ISimulatorDevice simulator)
         {
-            var args = new MlaunchArguments
+            var args = new List<MlaunchArgument>
             {
                 new SetAppArgumentArgument("-hostname:127.0.0.1", true),
-                new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1")
+                new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"),
+                new SimulatorUDIDArgument(simulator.UDID),
             };
 
             if (appInformation.Extension.HasValue)
@@ -445,16 +468,23 @@ namespace Microsoft.DotNet.XHarness.iOS
             return args;
         }
 
-        private static MlaunchArguments GetDeviceMlaunchArguments(AppBundleInformation appInformation)
+        private IEnumerable<MlaunchArgument> GetDeviceArguments(AppBundleInformation appInformation, string deviceName, bool isWatchTarget)
         {
             var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
             var ips = string.Join(",", ipAddresses);
 
-            var args = new MlaunchArguments
+            var args = new List<MlaunchArgument>
             {
                 new SetAppArgumentArgument($"-hostname:{ips}", true),
-                new SetEnvVariableArgument(EnviromentVariables.HostName, ips)
+                new SetEnvVariableArgument(EnviromentVariables.HostName, ips),
+                new DisableMemoryLimitsArgument(),
+                new DeviceNameArgument(deviceName),
             };
+
+            if (_listenerFactory.UseTunnel)
+            {
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.UseTcpTunnel, true));
+            }
 
             if (appInformation.Extension.HasValue)
             {
@@ -471,6 +501,15 @@ namespace Microsoft.DotNet.XHarness.iOS
             else
             {
                 args.Add(new LaunchDeviceArgument(appInformation.LaunchAppPath));
+            }
+
+            if (isWatchTarget)
+            {
+                args.Add(new AttachNativeDebuggerArgument()); // this prevents the watch from backgrounding the app.
+            }
+            else
+            {
+                args.Add(new WaitForExitArgument());
             }
 
             return args;

@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             Finished(true);
         }
 
-        public override int Initialize()
+        public override int InitializeAndGetPort()
         {
             _processorThread = new Thread(Processing);
             return 0;

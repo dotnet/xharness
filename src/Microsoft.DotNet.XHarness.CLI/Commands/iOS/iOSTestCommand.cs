@@ -205,6 +205,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 new CaptureLogFactory(),
                 new DeviceLogCapturerFactory(processManager),
                 new TestReporterFactory(processManager),
+                new XmlResultParser(),
                 mainLog,
                 logs,
                 new Helpers(),

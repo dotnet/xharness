@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             // create a linstener that will start in an other thread, connect to it
             // and send the data.
             var listener = new SimpleTcpListener(_log.Object, _testLog.Object, true, true);
-            listener.Initialize();
+            listener.InitializeAndGetPort();
             var connectionPort = listener.Port;
             listener.StartAsync();
             // create a tcp client which will write the logs, then verity that

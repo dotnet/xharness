@@ -300,10 +300,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             return pairs.FirstOrDefault();
         }
 
-        public async Task<ISimulatorDevice[]?> FindSimulators(TestTarget target, ILog log, bool createIfNeeded = true, bool minVersion = false)
+        public async Task<(ISimulatorDevice? Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTarget target, ILog log, bool createIfNeeded = true, bool minVersion = false)
         {
-            ISimulatorDevice[]? simulators = null;
-
             string simulatorDeviceType;
             string simulatorRuntime;
             string? companionDevicetype = null;
@@ -342,48 +340,50 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
             if (devices?.Any() != true)
             {
-                log.WriteLine($"Could not find or create devices runtime={simulatorRuntime} and device type={simulatorDeviceType}.");
-                return null;
+                log.WriteLine($"Could not find or create devices runtime '{simulatorRuntime}' and device type '{simulatorDeviceType}'.");
+                return (null, null);
             }
+
+            ISimulatorDevice? simulator = null;
+            ISimulatorDevice? companionSimulator = null;
 
             if (companionRuntime == null)
             {
-                simulators = new ISimulatorDevice[] { devices.First() };
+                simulator = devices.First();
             }
             else
             {
                 if (companionDevices?.Any() != true)
                 {
-                    log.WriteLine($"Could not find or create companion devices runtime={companionRuntime} and device type={companionDevicetype}.");
-                    return null;
+                    log.WriteLine($"Could not find or create companion devices runtime '{companionRuntime}' and device type '{companionDevicetype}'.");
+                    return (null, null);
                 }
 
                 var pair = await FindOrCreateDevicePairAsync(log, devices, companionDevices);
                 if (pair == null)
                 {
-                    log.WriteLine($"Could not find or create device pair runtime={companionRuntime} and device type={companionDevicetype}.");
-                    return null;
+                    log.WriteLine($"Could not find or create device pair runtime '{companionRuntime}' and device type '{companionDevicetype}'.");
+                    return (null, null);
                 }
 
-                simulators = new ISimulatorDevice[] {
-                    devices.First ((v) => v.UDID == pair.Gizmo),
-                    companionDevices.First ((v) => v.UDID == pair.Companion),
-                };
+                simulator = devices.First(v => v.UDID == pair.Gizmo);
+                companionSimulator = companionDevices.First(v => v.UDID == pair.Companion);
             }
 
-            if (simulators == null)
+            if (simulator == null)
             {
-                log.WriteLine($"Could not find simulator for runtime={simulatorRuntime} and device type={simulatorDeviceType}.");
-                return null;
+                log.WriteLine($"Could not find simulator for runtime '{simulatorRuntime}' and device type '{simulatorDeviceType}'.");
+                return (null, null);
             }
 
-            log.WriteLine("Found simulator: {0} {1}", simulators[0].Name, simulators[0].UDID);
-            if (simulators.Length > 1)
+            log.WriteLine("Found simulator: {0} {1}", simulator.Name, simulator.UDID);
+
+            if (companionSimulator != null)
             {
-                log.WriteLine("Found companion simulator: {0} {1}", simulators[1].Name, simulators[1].UDID);
+                log.WriteLine("Found companion simulator: {0} {1}", companionSimulator.Name, companionSimulator.UDID);
             }
 
-            return simulators;
+            return (simulator, companionSimulator);
         }
 
         public ISimulatorDevice FindCompanionDevice(ILog log, ISimulatorDevice device)
@@ -392,7 +392,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             return _availableDevices.Single((v) => v.UDID == pair.Companion);
         }
 
-        public IEnumerable<ISimulatorDevice> SelectDevices(TestTarget target, ILog log, bool minVersion) => new SimulatorEnumerable(this, target, minVersion, log);
+        public IEnumerable<ISimulatorDevice?> SelectDevices(TestTarget target, ILog log, bool minVersion) => new SimulatorEnumerable(this, target, minVersion, log);
 
         private class SimulatorXmlNodeComparer : IEqualityComparer<XmlNode>
         {
@@ -422,41 +422,45 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             }
         }
 
-        private class SimulatorEnumerable : IEnumerable<ISimulatorDevice>, IAsyncEnumerable
+        /// <summary>
+        /// SimulatorLoader only finds 2 devices - the main simulator and an optional companion device.
+        /// For backwards compatibility of this library with Xamarin Mac/iOS, we need to be able to enumerate them, hence this class.
+        /// </summary>
+        private class SimulatorEnumerable : IEnumerable<ISimulatorDevice?>, IAsyncEnumerable
         {
-            private readonly Lazy<Task<ISimulatorDevice[]?>> _findTask;
+            private readonly Lazy<Task<(ISimulatorDevice?, ISimulatorDevice?)>> _findTask;
             private readonly string _toString;
 
             public SimulatorEnumerable(ISimulatorLoader simulators, TestTarget target, bool minVersion, ILog log)
             {
-                _findTask = new Lazy<Task<ISimulatorDevice[]?>>(() => simulators.FindSimulators(target, log, minVersion: minVersion), LazyThreadSafetyMode.ExecutionAndPublication);
+                _findTask = new Lazy<Task<(ISimulatorDevice?, ISimulatorDevice?)>>(() => simulators.FindSimulators(target, log, minVersion: minVersion), LazyThreadSafetyMode.ExecutionAndPublication);
                 _toString = $"Simulators for {target} (MinVersion: {minVersion})";
             }
 
             public override string ToString() => _toString;
 
-            public IEnumerator<ISimulatorDevice> GetEnumerator() => new Enumerator(this);
+            public IEnumerator<ISimulatorDevice?> GetEnumerator() => new Enumerator(this);
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
             public Task ReadyTask => _findTask.Value;
 
-            public Task<ISimulatorDevice[]?> Find() => _findTask.Value;
+            public Task<(ISimulatorDevice?, ISimulatorDevice?)> Find() => _findTask.Value;
 
-            private class Enumerator : IEnumerator<ISimulatorDevice>
+            private class Enumerator : IEnumerator<ISimulatorDevice?>
             {
-                private readonly Lazy<ISimulatorDevice[]?> _devices;
+                private readonly Lazy<(ISimulatorDevice?, ISimulatorDevice?)> _devices;
 
                 public Enumerator(SimulatorEnumerable? enumerable)
                 {
-                    _devices = new Lazy<ISimulatorDevice[]?>(() => enumerable?.Find()?.Result?.ToArray(), LazyThreadSafetyMode.ExecutionAndPublication);
+                    _devices = new Lazy<(ISimulatorDevice?, ISimulatorDevice?)>(() => enumerable?.Find().Result ?? (null, null), LazyThreadSafetyMode.ExecutionAndPublication);
                 }
 
                 private bool _moved;
 
-                public ISimulatorDevice Current => _devices.Value.FirstOrDefault();
+                public ISimulatorDevice? Current => _moved ? _devices.Value.Item2 : _devices.Value.Item1;
 
-                object IEnumerator.Current => Current;
+                object IEnumerator.Current => Current ?? throw new NullReferenceException("Simulator device not found");
 
                 public bool MoveNext()
                 {
@@ -466,7 +470,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     }
 
                     _moved = true;
-                    return _devices.Value?.Length > 0;
+                    return _devices.Value.Item2 != null;
                 }
 
                 public void Reset()
