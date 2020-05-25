@@ -71,12 +71,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
                 var result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromSeconds(30));
 
-                if (!result.Succeeded)
+                // mlaunch can sometimes return 0 but hang and timeout. It still outputs returns valid content to the tmp file
+                if (result.ExitCode != 0)
                 {
-                    throw new Exception("Failed to list simulators.");
+                    throw new Exception($"Failed to list simulators (mlaunch returned {result.ExitCode})");
                 }
 
-                log.WriteLine("Result:" + Environment.NewLine + File.ReadAllText(tmpfile));
+                var xmlContent = File.ReadAllText(tmpfile);
+
+                log.WriteLine("Simulator listing returned:" + Environment.NewLine + xmlContent);
 
                 var simulatorData = new XmlDocument();
                 simulatorData.LoadWithoutNetworkAccess(tmpfile);
