@@ -71,10 +71,17 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
                 var result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromSeconds(30));
 
-                // mlaunch can sometimes return 0 but hang and timeout. It still outputs returns valid content to the tmp file
-                if (result.ExitCode != 0)
+                if (!result.Succeeded)
                 {
-                    throw new Exception($"Failed to list simulators (mlaunch returned {result.ExitCode})");
+                    // mlaunch can sometimes return 0 but hang and timeout. It still outputs returns valid content to the tmp file
+                    log.WriteLine($"mlaunch failed when listing simulators but trying to parse the results anyway");
+                }
+
+                var fileInfo = new FileInfo(tmpfile);
+                if (!fileInfo.Exists || fileInfo.Length == 0)
+                {
+                    throw new Exception($"Failed to list simulators - no XML with devices found. " +
+                        $"mlaunch {(result.TimedOut ? "timed out" : "exited")} with {result.ExitCode})");
                 }
 
                 var xmlContent = File.ReadAllText(tmpfile);
