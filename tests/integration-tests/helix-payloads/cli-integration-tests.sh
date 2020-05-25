@@ -53,6 +53,9 @@ fi
 open -a "$xcode_path/Applications/Simulator.app"
 
 dotnet tool restore --no-cache
+
+set +e
+
 dotnet xharness ios test            \
     --app="$here/$app_name"         \
     --output-directory="$1"         \
@@ -62,8 +65,6 @@ dotnet xharness ios test            \
     -v
 
 result=$?
-
-set +e
 
 chmod 0644 "$1"/*.log "$1"/*.xml
 
