@@ -44,6 +44,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         public async Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false)
         {
             await _semaphore.WaitAsync();
+
             if (_loaded)
             {
                 if (!forceRefresh)
@@ -51,104 +52,104 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     _semaphore.Release();
                     return;
                 }
+
                 _supportedRuntimes.Reset();
                 _supportedDeviceTypes.Reset();
                 _availableDevices.Reset();
                 _availableDevicePairs.Reset();
             }
+
             _loaded = true;
 
-            await Task.Run(async () =>
+            var tmpfile = Path.GetTempFileName();
+
+            try
             {
-                var tmpfile = Path.GetTempFileName();
-                try
+                var arguments = new MlaunchArguments(
+                    new ListSimulatorsArgument(tmpfile),
+                    new XmlOutputFormatArgument());
+
+                var result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromSeconds(30));
+
+                if (!result.Succeeded)
                 {
-                    var arguments = new MlaunchArguments(
-                        new ListSimulatorsArgument(tmpfile),
-                        new XmlOutputFormatArgument());
-
-                    var result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromSeconds(30));
-
-                    if (!result.Succeeded)
-                    {
-                        throw new Exception("Failed to list simulators.");
-                    }
-
-                    log.WriteLine("Result:");
-                    log.WriteLine(File.ReadAllText(tmpfile));
-                    var simulatorData = new XmlDocument();
-                    simulatorData.LoadWithoutNetworkAccess(tmpfile);
-                    foreach (XmlNode? sim in simulatorData.SelectNodes("/MTouch/Simulator/SupportedRuntimes/SimRuntime"))
-                    {
-                        if (sim == null)
-                        {
-                            continue;
-                        }
-
-                        _supportedRuntimes.Add(new SimRuntime(
-                            name: sim.SelectSingleNode("Name").InnerText,
-                            identifier: sim.SelectSingleNode("Identifier").InnerText,
-                            version: long.Parse(sim.SelectSingleNode("Version").InnerText)));
-                    }
-
-                    foreach (XmlNode? sim in simulatorData.SelectNodes("/MTouch/Simulator/SupportedDeviceTypes/SimDeviceType"))
-                    {
-                        if (sim == null)
-                        {
-                            continue;
-                        }
-
-                        _supportedDeviceTypes.Add(new SimDeviceType(
-                            name: sim.SelectSingleNode("Name").InnerText,
-                            identifier: sim.SelectSingleNode("Identifier").InnerText,
-                            productFamilyId: sim.SelectSingleNode("ProductFamilyId").InnerText,
-                            minRuntimeVersion: long.Parse(sim.SelectSingleNode("MinRuntimeVersion").InnerText),
-                            maxRuntimeVersion: long.Parse(sim.SelectSingleNode("MaxRuntimeVersion").InnerText),
-                            supports64Bits: bool.Parse(sim.SelectSingleNode("Supports64Bits").InnerText)));
-                    }
-
-                    foreach (XmlNode? sim in simulatorData.SelectNodes("/MTouch/Simulator/AvailableDevices/SimDevice"))
-                    {
-                        if (sim == null)
-                        {
-                            continue;
-                        }
-
-                        _availableDevices.Add(new SimulatorDevice(_processManager, new TCCDatabase(_processManager))
-                        {
-                            Name = sim.Attributes["Name"].Value,
-                            UDID = sim.Attributes["UDID"].Value,
-                            SimRuntime = sim.SelectSingleNode("SimRuntime").InnerText,
-                            SimDeviceType = sim.SelectSingleNode("SimDeviceType").InnerText,
-                            DataPath = sim.SelectSingleNode("DataPath").InnerText,
-                            LogPath = sim.SelectSingleNode("LogPath").InnerText,
-                        });
-                    }
-
-                    var sim_device_pairs = simulatorData.
-                        SelectNodes("/MTouch/Simulator/AvailableDevicePairs/SimDevicePair").
-                        Cast<XmlNode>().
-                        // There can be duplicates, so remove those.
-                        Distinct(new SimulatorXmlNodeComparer());
-
-                    foreach (XmlNode sim in sim_device_pairs)
-                    {
-                        _availableDevicePairs.Add(new SimDevicePair(
-                            uDID: sim.Attributes["UDID"].Value,
-                            companion: sim.SelectSingleNode("Companion").InnerText,
-                            gizmo: sim.SelectSingleNode("Gizmo").InnerText));
-                    }
+                    throw new Exception("Failed to list simulators.");
                 }
-                finally
+
+                log.WriteLine("Result:" + Environment.NewLine + File.ReadAllText(tmpfile));
+
+                var simulatorData = new XmlDocument();
+                simulatorData.LoadWithoutNetworkAccess(tmpfile);
+                foreach (XmlNode? sim in simulatorData.SelectNodes("/MTouch/Simulator/SupportedRuntimes/SimRuntime"))
                 {
-                    _supportedRuntimes.SetCompleted();
-                    _supportedDeviceTypes.SetCompleted();
-                    _availableDevices.SetCompleted();
-                    _availableDevicePairs.SetCompleted();
-                    File.Delete(tmpfile);
-                    _semaphore.Release();
+                    if (sim == null)
+                    {
+                        continue;
+                    }
+
+                    _supportedRuntimes.Add(new SimRuntime(
+                        name: sim.SelectSingleNode("Name").InnerText,
+                        identifier: sim.SelectSingleNode("Identifier").InnerText,
+                        version: long.Parse(sim.SelectSingleNode("Version").InnerText)));
                 }
-            });
+
+                foreach (XmlNode? sim in simulatorData.SelectNodes("/MTouch/Simulator/SupportedDeviceTypes/SimDeviceType"))
+                {
+                    if (sim == null)
+                    {
+                        continue;
+                    }
+
+                    _supportedDeviceTypes.Add(new SimDeviceType(
+                        name: sim.SelectSingleNode("Name").InnerText,
+                        identifier: sim.SelectSingleNode("Identifier").InnerText,
+                        productFamilyId: sim.SelectSingleNode("ProductFamilyId").InnerText,
+                        minRuntimeVersion: long.Parse(sim.SelectSingleNode("MinRuntimeVersion").InnerText),
+                        maxRuntimeVersion: long.Parse(sim.SelectSingleNode("MaxRuntimeVersion").InnerText),
+                        supports64Bits: bool.Parse(sim.SelectSingleNode("Supports64Bits").InnerText)));
+                }
+
+                foreach (XmlNode? sim in simulatorData.SelectNodes("/MTouch/Simulator/AvailableDevices/SimDevice"))
+                {
+                    if (sim == null)
+                    {
+                        continue;
+                    }
+
+                    _availableDevices.Add(new SimulatorDevice(_processManager, new TCCDatabase(_processManager))
+                    {
+                        Name = sim.Attributes["Name"].Value,
+                        UDID = sim.Attributes["UDID"].Value,
+                        SimRuntime = sim.SelectSingleNode("SimRuntime").InnerText,
+                        SimDeviceType = sim.SelectSingleNode("SimDeviceType").InnerText,
+                        DataPath = sim.SelectSingleNode("DataPath").InnerText,
+                        LogPath = sim.SelectSingleNode("LogPath").InnerText,
+                    });
+                }
+
+                var sim_device_pairs = simulatorData.
+                    SelectNodes("/MTouch/Simulator/AvailableDevicePairs/SimDevicePair").
+                    Cast<XmlNode>().
+                    // There can be duplicates, so remove those.
+                    Distinct(new SimulatorXmlNodeComparer());
+
+                foreach (XmlNode sim in sim_device_pairs)
+                {
+                    _availableDevicePairs.Add(new SimDevicePair(
+                        uDID: sim.Attributes["UDID"].Value,
+                        companion: sim.SelectSingleNode("Companion").InnerText,
+                        gizmo: sim.SelectSingleNode("Gizmo").InnerText));
+                }
+            }
+            finally
+            {
+                _supportedRuntimes.SetCompleted();
+                _supportedDeviceTypes.SetCompleted();
+                _availableDevices.SetCompleted();
+                _availableDevicePairs.SetCompleted();
+                File.Delete(tmpfile);
+                _semaphore.Release();
+            }
         }
 
         private string CreateName(string deviceType, string runtime)
