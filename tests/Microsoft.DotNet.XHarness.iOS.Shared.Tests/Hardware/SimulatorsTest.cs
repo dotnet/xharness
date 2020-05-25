@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -31,10 +30,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             _simulators = new SimulatorLoader(_processManager.Object);
         }
 
-        [Theory]
-        [InlineData(false)] // no timeout
-        [InlineData(true)] // timeout
-        public async Task LoadAsyncProcessErrorTest(bool timeout)
+        [Fact]
+        public async Task LoadAsyncProcessErrorTest()
         {
             MlaunchArguments passedArguments = null;
 
@@ -47,8 +44,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     passedArguments = args;
                     return Task.FromResult(new ProcessExecutionResult
                     {
-                        ExitCode = timeout ? 0 : 1,
-                        TimedOut = timeout
+                        ExitCode = 1,
+                        TimedOut = false
                     });
                 });
 
