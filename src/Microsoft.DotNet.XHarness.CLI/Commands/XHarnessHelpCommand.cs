@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.Commands.iOS;
+using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Mono.Options;
 
@@ -39,6 +40,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                     break;
                 case "ios":
                     PrintCommandHelp(new iOSCommandSet(), subCommand);
+                    break;
+                case "wasm":
+                    PrintCommandHelp(new WasmCommandSet(), subCommand);
                     break;
                 default:
                     Console.WriteLine($"No help available for command '{command}'. Allowed commands are 'ios' and 'android'");

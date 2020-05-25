@@ -38,6 +38,7 @@
     <ProjectReference Include="..\Microsoft.DotNet.XHarness.Android\Microsoft.DotNet.XHarness.Android.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.XHarness.iOS\Microsoft.DotNet.XHarness.iOS.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.XHarness.WebAssembly\Microsoft.DotNet.XHarness.WebAssembly.csproj" />
   </ItemGroup>
 
   <Target Name="DownloadAndroidSdks" BeforeTargets="Build">
