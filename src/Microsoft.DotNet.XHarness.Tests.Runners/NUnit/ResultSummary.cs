@@ -8,7 +8,6 @@ using Microsoft.DotNet.XHarness.Tests.Runners.Core;
 using NUnit.Engine;
 using NUnit.Framework.Interfaces;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.Tests.Runners.NUnit
 {
     /// <summary>
@@ -21,8 +20,8 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.NUnit
         private double? _duration;
         private long? _assertCount;
 
-        public string Name { get; set; }
-        public string FullName { get; set; }
+        public string Name => _testSuite;
+        public string FullName => _testSuite;
 
         public long InconclusiveTests => _runner.InconclusiveTests;
         public long FailedTests => _runner.FilteredTests;
