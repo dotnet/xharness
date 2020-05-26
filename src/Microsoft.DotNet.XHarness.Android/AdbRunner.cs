@@ -497,19 +497,17 @@ namespace Microsoft.DotNet.XHarness.Android
             // Lock the stringbuilders used as rarely this can cause concurrency issues
             // resulting in "Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'chunkLength')"
             lock (standardOut)
+            lock (standardErr)
             {
-                lock (standardErr)
+                // If we allow any timespan to be max value, it could cause unusual behavior, force max-int max (still a LOT)
+                // (int.MaxValue ms is about 24 days).  Large values are effectively timeouts for the outer harness
+                if (!finishedNormally)
                 {
-                    // If we allow any timespan to be max value, it could cause unusual behavior, force max-int max (still a LOT)
-                    // (int.MaxValue ms is about 24 days).  Large values are effectively timeouts for the outer harness
-                    if (!finishedNormally)
-                    {
-                        _log.LogError("Waiting for command timed out: execution may be compromised.");
-                        return (standardOut.ToString(), standardErr.ToString(), (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT);
-                    }
-
-                    return (standardOut.ToString(), standardErr.ToString(), p.ExitCode);
+                    _log.LogError("Waiting for command timed out: execution may be compromised.");
+                    return (standardOut.ToString(), standardErr.ToString(), (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT);
                 }
+
+                return (standardOut.ToString(), standardErr.ToString(), p.ExitCode);
             }
         }
 
