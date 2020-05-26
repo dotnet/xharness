@@ -104,7 +104,29 @@ namespace Microsoft.DotNet.XHarness.iOS
             // Find devices
             if (isSimulator)
             {
-                (simulator, companionSimulator) = await FindSimulators(target);
+                int attempt = 1;
+                const int maxAttempts = 3;
+                while (true) {
+                    try
+                    {
+                        (simulator, companionSimulator) = await FindSimulators(target);
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        _mainLog.WriteLine($"Failed to list simulator (attempt {attempt}/{maxAttempts}):" + Environment.NewLine + e);
+
+                        if (attempt == maxAttempts)
+                        {
+                            throw new NoDeviceFoundException("Failed to list simulators");
+                        }
+                    }
+                    finally
+                    {
+                        attempt++;
+                    }
+                }
+
                 deviceName = companionSimulator?.Name ?? simulator.Name;
             }
             else
