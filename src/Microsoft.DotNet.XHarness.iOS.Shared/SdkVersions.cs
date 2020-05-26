@@ -3,9 +3,9 @@
     /// This file decides what environment will XHarness expect and what Simulators to be preinstalled.
     /// </summary>
 	public static class SdkVersions {
-		public static string Xcode { get; private set; } = "11.4";
+		public static string Xcode { get; private set; } = "11.5";
 		public static string OSX { get; private set; } = "10.15";
-		public static string iOS { get; private set; } = "13.4";
+		public static string iOS { get; private set; } = "13.5";
 		public static string WatchOS { get; private set; } = "6.2";
 		public static string TVOS { get; private set; } = "13.4";
 
@@ -19,12 +19,12 @@
 		public static string MinWatchOSCompanionSimulator { get; private set; } = "10.3";
 		public static string MinTVOSSimulator { get; private set; } = "10.2";
 
-		public static string MaxiOSSimulator { get; private set; } = "13.4";
+		public static string MaxiOSSimulator { get; private set; } = "13.5";
 		public static string MaxWatchOSSimulator { get; private set; } = "6.2";
-		public static string MaxWatchOSCompanionSimulator { get; private set; } = "13.4";
-
+		public static string MaxWatchOSCompanionSimulator { get; private set; } = "13.5";
 		public static string MaxTVOSSimulator { get; private set; } = "13.4";
-		public static string MaxiOSDeploymentTarget { get; private set; } = "13.4";
+
+		public static string MaxiOSDeploymentTarget { get; private set; } = "13.5";
 		public static string MaxWatchDeploymentTarget { get; private set; } = "6.2";
 		public static string MaxTVOSDeploymentTarget { get; private set; } = "13.4";
 
