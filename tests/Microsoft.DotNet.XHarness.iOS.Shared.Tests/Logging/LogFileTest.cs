@@ -18,7 +18,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         {
             _description = "My log";
             _path = Path.GetTempFileName();
-            File.Delete(_path); // delete the empty file
         }
 
         public void Dispose()
@@ -51,25 +50,24 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             using var log = new LogFile(null, _path);
         }
 
-
         [Fact]
         public void WriteTest()
         {
-            string oldLine = "Hello world!";
-            string newLine = "Hola mundo!";
+            const string oldLine = "Hello world!";
+            const string newLine = "Hola mundo!";
+
             // create a log, write to it and assert that we have the expected data
-            using (var stream = File.Create(_path))
-            using (var writer = new StreamWriter(stream))
-            {
-                writer.WriteLine(oldLine);
-            }
+            File.WriteAllLines(_path, new[] { oldLine });
+
             using (var log = new LogFile(_description, _path))
             {
                 log.WriteLine(newLine);
                 log.Flush();
             }
+
             bool oldLineFound = false;
             bool newLineFound = false;
+
             using (var reader = new StreamReader(_path))
             {
                 string line;
@@ -94,21 +92,21 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         [Fact]
         public void WriteNotAppendTest()
         {
-            string oldLine = "Hello world!";
-            string newLine = "Hola mundo!";
+            const string oldLine = "Hello world!";
+            const string newLine = "Hola mundo!";
+
             // create a log, write to it and assert that we have the expected data
-            using (var stream = File.Create(_path))
-            using (var writer = new StreamWriter(stream))
-            {
-                writer.WriteLine(oldLine);
-            }
+            File.WriteAllLines(_path, new[] { oldLine });
+
             using (var log = new LogFile(_description, _path, false))
             {
                 log.WriteLine(newLine);
                 log.Flush();
             }
+
             bool oldLineFound = false;
             bool newLineFound = false;
+
             using (var reader = new StreamReader(_path))
             {
                 string line;
@@ -129,6 +127,5 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             Assert.False(oldLineFound, "old line");
             Assert.True(newLineFound, "new line");
         }
-
     }
 }
