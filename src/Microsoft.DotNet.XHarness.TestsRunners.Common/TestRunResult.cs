@@ -1,4 +1,4 @@
-﻿namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
+﻿namespace Microsoft.DotNet.XHarness.TestsRunners.Common
 {
     public struct TestRunResult
     {

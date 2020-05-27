@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
+namespace Microsoft.DotNet.XHarness.TestsRunners.Common
 {
     public abstract class TestRunner
     {

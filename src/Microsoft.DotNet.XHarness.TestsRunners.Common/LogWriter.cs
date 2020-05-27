@@ -5,7 +5,7 @@
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
+namespace Microsoft.DotNet.XHarness.TestsRunners.Common
 {
     public class LogWriter
     {
@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 
         public LogWriter(TextWriter w) : this(null, w) { }
 
-        public LogWriter(IDevice device, TextWriter writer) 
+        public LogWriter(IDevice device, TextWriter writer)
         {
             this.writer = writer ?? Console.Out;
             this.device = device;

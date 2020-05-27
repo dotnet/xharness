@@ -6,10 +6,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.XHarness.Tests.Runners.Core;
+using Microsoft.DotNet.XHarness.TestsRunners.Common;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
+namespace Microsoft.DotNet.XHarness.TestsRunners.Xunit
 {
     /// <summary>
     /// Class that contains a collection of filters and can be used to decide if a test should be executed or not.

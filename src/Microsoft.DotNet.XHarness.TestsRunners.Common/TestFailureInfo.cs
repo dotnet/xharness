@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
+namespace Microsoft.DotNet.XHarness.TestsRunners.Common
 {
     /// <summary>
     /// Contains information about a single test failure. Information is used at the end of the run to print
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         public string Message { get; set; }
 
         /// <summary>
-        /// Gets a value indicating whether this <see cref="T:Xamarin.Android.UnitTests.TestFailureInfo"/> has info 
+        /// Gets a value indicating whether this <see cref="T:Xamarin.Android.UnitTests.TestFailureInfo"/> has info
         /// about failure.
         /// </summary>
         /// <value><c>true</c> info exists; otherwise, <c>false</c>.</value>

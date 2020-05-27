@@ -6,13 +6,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Microsoft.DotNet.XHarness.Tests.Runners.Core;
-using Microsoft.DotNet.XHarness.Tests.Runners.Xunit;
+using Microsoft.DotNet.XHarness.TestsRunners.Common;
+using Microsoft.DotNet.XHarness.TestsRunners.Xunit;
 using Moq;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Tests
+namespace Microsoft.DotNet.XHarness.Tests.Runners.Tests.xUnit
 {
     public class XUnitFiltersCollectionTests
     {

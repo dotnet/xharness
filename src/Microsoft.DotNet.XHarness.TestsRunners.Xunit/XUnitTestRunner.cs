@@ -16,9 +16,9 @@ using System.Xml.Xsl;
 using Microsoft.DotNet.XHarness.Common;
 using Xunit;
 using Xunit.Abstractions;
-using Microsoft.DotNet.XHarness.Tests.Runners.Core;
+using Microsoft.DotNet.XHarness.TestsRunners.Common;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
+namespace Microsoft.DotNet.XHarness.TestsRunners.Xunit
 {
     internal class XsltIdGenerator
     {

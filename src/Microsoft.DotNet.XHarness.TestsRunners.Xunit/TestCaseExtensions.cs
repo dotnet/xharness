@@ -12,7 +12,7 @@ using Xunit.Sdk;
 using Microsoft.DotNet.XUnitExtensions;
 using NullMessageSink = Xunit.Sdk.NullMessageSink;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
+namespace Microsoft.DotNet.XHarness.TestsRunners.Xunit
 {
     /// <summary>
     /// Useful extensions that make working with the ITestCase interface nicer within the runner.

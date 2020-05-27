@@ -13,7 +13,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
+namespace Microsoft.DotNet.XHarness.TestsRunners.Common
 {
     internal class TcpTextWriter : TextWriter
     {

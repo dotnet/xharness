@@ -7,10 +7,10 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.DotNet.XHarness.Tests.Runners.Core;
+using Microsoft.DotNet.XHarness.TestsRunners.Common;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
+namespace Microsoft.DotNet.XHarness.TestsRunners.Xunit
 {
     internal class XUnitFilter
     {

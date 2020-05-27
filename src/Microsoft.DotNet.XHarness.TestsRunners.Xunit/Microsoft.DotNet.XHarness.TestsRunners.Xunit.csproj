@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.XHarness.Tests.Runners.Core\Microsoft.DotNet.XHarness.Tests.Runners.Core.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.XHarness.TestsRunners.Common\Microsoft.DotNet.XHarness.TestsRunners.Common.csproj" />
   </ItemGroup>
 
 </Project>

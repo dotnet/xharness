@@ -2,14 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
+namespace Microsoft.DotNet.XHarness.TestsRunners.Common
 {
-    internal enum TestCompletionStatus
+    internal static partial class Extensions
     {
-        Undefined,
-        Passed,
-        Failed,
-        Skipped,
-        Inconclusive,
+        public static string YesNo(this bool b)
+        {
+            return b ? "yes" : "no";
+        }
     }
 }

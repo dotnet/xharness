@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Reflection;
 using System;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
+namespace Microsoft.DotNet.XHarness.TestsRunners.Common
 {
 
     /// <summary>
