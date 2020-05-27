@@ -12,7 +12,7 @@ set -x
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export DOTNET_ROOT=$(dirname $(which dotnet))
-dotnet tool install --no-cache --tool-path "$here/xharness-cli" --version "1.0.0-ci" --add-source "$here" Microsoft.DotNet.XHarness.CLI
+dotnet tool install --no-cache --tool-path "$HELIX_CORRELATION_PAYLOAD/xharness-cli" --version "1.0.0-ci" --add-source "$here" Microsoft.DotNet.XHarness.CLI
 
 # TODO - Package the app bundle here using `dotnet xharness ios package ..`
 # For now we download a pre-bundled app:
@@ -35,17 +35,17 @@ set +e
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
-"$here/xharness-cli/xharness" ios test \
-    --app="$here/$app_name"            \
-    --output-directory="$1"            \
-    --targets=ios-simulator-64         \
-    --timeout=600                      \
-    --launch-timeout=360               \
+"$HELIX_CORRELATION_PAYLOAD/xharness-cli/xharness" ios test \
+    --app="$here/$app_name"     \
+    --output-directory="$1"     \
+    --targets=ios-simulator-64  \
+    --timeout=600               \
+    --launch-timeout=360        \
     -v
 
 result=$?
 
-# iPhone simulator logs are published under root and cannot be read
+# iPhone simulator logs are published with wrong permissions and the files cannot be read
 chmod 0644 "$1"/*.log "$1"/*.xml
 
 test_results=`ls $1/xunit-*.xml`
