@@ -12,7 +12,7 @@ using Moq;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Tests.xUnit
+namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
 {
     public class XUnitFiltersCollectionTests
     {
