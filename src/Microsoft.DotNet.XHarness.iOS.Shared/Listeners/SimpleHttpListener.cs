@@ -7,7 +7,6 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
@@ -17,12 +16,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         private HttpListener _server;
         private bool _connected_once;
 
+        public int Port { get; private set; }
+
         public SimpleHttpListener(ILog log, IFileBackedLog testLog, bool autoExit) : base(log, testLog)
         {
             _autoExit = autoExit;
         }
 
-        public override void Initialize()
+        public override int InitializeAndGetPort()
         {
             _server = new HttpListener();
 
@@ -50,6 +51,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     Log.WriteLine("Failed to listen on port {0}: {1}", newPort, ex.Message);
                 }
             }
+
+            return Port;
         }
 
         protected override void Stop()

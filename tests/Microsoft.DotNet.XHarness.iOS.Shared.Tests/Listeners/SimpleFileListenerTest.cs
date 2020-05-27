@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             using (var sourceWriter = new StreamWriter(_path))
             {
                 var listener = new SimpleFileListener(_path, _log.Object, _testLog.Object, isXml);
-                listener.Initialize();
+                listener.InitializeAndGetPort();
                 listener.StartAsync();
                 // write a number of lines and ensure that those are called in the mock
                 sourceWriter.WriteLine("[Runner executing:");

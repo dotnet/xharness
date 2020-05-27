@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -12,18 +11,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Samples\" />
-    <Folder Include="Samples\TestProject\" />
-    <Folder Include="Hardware\" />
-    <Folder Include="Listeners\" />
-    <Folder Include="Logging\" />
-    <Folder Include="TestImporter\" />
-    <Folder Include="TestImporter\Templates\" />
-    <Folder Include="TestImporter\Templates\Managed\" />
-    <Folder Include="Utilities\" />
-    <Folder Include="Execution\" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Samples\devices.xml" />

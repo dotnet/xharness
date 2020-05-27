@@ -321,6 +321,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             try
             {
                 rv.ExitCode = process.ExitCode;
+                log.WriteLine($"Process exited with {rv.ExitCode}");
             }
             catch (Exception e)
             {

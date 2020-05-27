@@ -7,7 +7,6 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
@@ -15,11 +14,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
     {
         Task CompletionTask { get; }
         Task ConnectedTask { get; }
-        int Port { get; }
         IFileBackedLog TestLog { get; }
 
         void Cancel();
-        void Initialize();
+        int InitializeAndGetPort();
         void StartAsync();
     }
 
@@ -36,8 +34,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         protected abstract void Stop();
 
         public Task ConnectedTask => _connected.Task;
-        public int Port { get; protected set; }
-        public abstract void Initialize();
+        public abstract int InitializeAndGetPort();
 
         protected SimpleListener(ILog log, IFileBackedLog testLog)
         {
