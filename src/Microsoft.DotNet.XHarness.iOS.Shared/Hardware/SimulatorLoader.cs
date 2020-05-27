@@ -59,8 +59,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 _availableDevicePairs.Reset();
             }
 
-            _loaded = true;
-
             var tmpfile = Path.GetTempFileName();
 
             try
@@ -153,6 +151,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             }
             finally
             {
+                _loaded = true;
                 _supportedRuntimes.SetCompleted();
                 _supportedDeviceTypes.SetCompleted();
                 _availableDevices.SetCompleted();
@@ -164,8 +163,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         private string CreateName(string deviceType, string runtime)
         {
-            var runtimeName = _supportedRuntimes?.Where((v) => v.Identifier == runtime).FirstOrDefault()?.Name ?? Path.GetExtension(runtime).Substring(1);
-            var deviceName = _supportedDeviceTypes?.Where((v) => v.Identifier == deviceType).FirstOrDefault()?.Name ?? Path.GetExtension(deviceType).Substring(1);
+            var runtimeName = _supportedRuntimes?.Where(v => v.Identifier == runtime).FirstOrDefault()?.Name ?? Path.GetExtension(runtime).Substring(1);
+            var deviceName = _supportedDeviceTypes?.Where(v => v.Identifier == deviceType).FirstOrDefault()?.Name ?? Path.GetExtension(deviceType).Substring(1);
             return $"{deviceName} ({runtimeName}) - created by XHarness";
         }
 
@@ -186,6 +185,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
             if (!force)
             {
+                if (!_loaded)
+                {
+                    await LoadDevices(log);
+                }
+
                 devices = AvailableDevices.Where(v => v.SimRuntime == runtime && v.SimDeviceType == devicetype);
                 if (devices.Any())
                 {
@@ -214,9 +218,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             return devices;
         }
 
-        private async Task<bool> CreateDevicePair(ILog log, ISimulatorDevice device, ISimulatorDevice companion_device, string runtime, string devicetype, bool create_device)
+        private async Task<bool> CreateDevicePair(ILog log, ISimulatorDevice device, ISimulatorDevice companion_device, string runtime, string devicetype, bool createDevice)
         {
-            if (create_device)
+            if (createDevice)
             {
                 // watch device is already paired to some other phone. Create a new watch device
                 var matchingDevices = await FindOrCreateDevicesAsync(log, runtime, devicetype, force: true);
@@ -247,7 +251,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             var rv = await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "pair", device.UDID, companion_device.UDID }, pairLog, TimeSpan.FromMinutes(1));
             if (!rv.Succeeded)
             {
-                if (!create_device)
+                if (!createDevice)
                 {
                     var try_creating_device = false;
                     var captured_log = capturedLog.ToString();
@@ -270,14 +274,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         private async Task<SimDevicePair?> FindOrCreateDevicePairAsync(ILog log, IEnumerable<ISimulatorDevice> devices, IEnumerable<ISimulatorDevice> companionDevices)
         {
             // Check if we already have a device pair with the specified devices
-            var pairs = AvailableDevicePairs.Where((pair) =>
+            var pairs = AvailableDevicePairs.Where(pair =>
             {
-                if (!devices.Any((v) => v.UDID == pair.Gizmo))
+                if (!devices.Any(v => v.UDID == pair.Gizmo))
                 {
                     return false;
                 }
 
-                if (!companionDevices.Any((v) => v.UDID == pair.Companion))
+                if (!companionDevices.Any(v => v.UDID == pair.Companion))
                 {
                     return false;
                 }
@@ -302,12 +306,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
                 pairs = AvailableDevicePairs.Where((pair) =>
                 {
-                    if (!devices.Any((v) => v.UDID == pair.Gizmo))
+                    if (!devices.Any(v => v.UDID == pair.Gizmo))
                     {
                         return false;
                     }
 
-                    if (!companionDevices.Any((v) => v.UDID == pair.Companion))
+                    if (!companionDevices.Any(v => v.UDID == pair.Companion))
                     {
                         return false;
                     }
@@ -408,8 +412,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         public ISimulatorDevice FindCompanionDevice(ILog log, ISimulatorDevice device)
         {
-            var pair = _availableDevicePairs.Where((v) => v.Gizmo == device.UDID).Single();
-            return _availableDevices.Single((v) => v.UDID == pair.Companion);
+            var pair = _availableDevicePairs.Where(v => v.Gizmo == device.UDID).Single();
+            return _availableDevices.Single(v => v.UDID == pair.Companion);
         }
 
         public IEnumerable<ISimulatorDevice?> SelectDevices(TestTarget target, ILog log, bool minVersion) => new SimulatorEnumerable(this, target, minVersion, log);
@@ -476,15 +480,32 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     _devices = new Lazy<(ISimulatorDevice, ISimulatorDevice?)>(() => enumerable.Find().Result, LazyThreadSafetyMode.ExecutionAndPublication);
                 }
 
-                private bool _moved;
+                private bool? _moved;
 
-                public ISimulatorDevice Current => _moved ? _devices.Value.Item2! : _devices.Value.Item1;
+                public ISimulatorDevice Current
+                {
+                    get
+                    {
+                        if (_moved == null)
+                        {
+                            throw new InvalidOperationException("Call MoveNext() first!");
+                        }
+
+                        return _moved.Value ? _devices.Value.Item2! : _devices.Value.Item1;
+                    }
+                }
 
                 object IEnumerator.Current => Current ?? throw new NullReferenceException("Simulator device not found");
 
                 public bool MoveNext()
                 {
-                    if (_moved)
+                    if (_moved == null)
+                    {
+                        _moved = false;
+                        return _devices.Value.Item1 != null;
+                    }
+
+                    if (_moved.Value)
                     {
                         return false;
                     }

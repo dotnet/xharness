@@ -157,5 +157,102 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                 Assert.Null(companion);
             }
         }
+
+        // This tests the SimulatorEnumerable
+        [Theory]
+        [InlineData(TestTarget.Simulator_iOS32)]
+        [InlineData(TestTarget.Simulator_iOS64)]
+        [InlineData(TestTarget.Simulator_tvOS)]
+        public void SelectDevicesDeviceOnlyTest(TestTarget testTarget)
+        {
+            // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
+            _processManager
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                {
+                    // We get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                    tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
+
+                    CopySampleData(tempPath);
+                    return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
+                });
+
+            var devices = _simulators.SelectDevices(testTarget, _executionLog.Object, false).ToList();
+
+            Assert.Single(devices);
+        }
+
+        // This tests the SimulatorEnumerable
+        [Fact]
+        public void SelectDevicesDeviceAndCompanionTest()
+        {
+            // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
+            _processManager
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                {
+                    // We get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                    tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
+
+                    CopySampleData(tempPath);
+                    return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
+                });
+
+            var devices = _simulators.SelectDevices(TestTarget.Simulator_watchOS, _executionLog.Object, false).ToList();
+
+            Assert.Equal(2, devices.Count);
+            Assert.True(devices.First().IsWatchSimulator);
+            Assert.False(devices.Last().IsWatchSimulator);
+        }
+
+        // This tests issues with mlaunch https://github.com/dotnet/xharness/issues/196
+        // Mlaunch sometimes times out/returns non-zero exit code and still outputs correct XML
+        [Theory]
+        [InlineData(0, true)]
+        [InlineData(137, false)]
+        [InlineData(1, true)]
+        public async Task FindSimulatorsWithSucceedingMlaunchTest(int mlaunchExitCode, bool mlaunchTimedout)
+        {
+            _processManager
+                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1)))
+                .ReturnsAsync(new ProcessExecutionResult() { ExitCode = 0 });
+
+            // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
+            _processManager
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                {
+                    // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                    tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
+
+                    CopySampleData(tempPath);
+                    return Task.FromResult(new ProcessExecutionResult { ExitCode = mlaunchExitCode, TimedOut = mlaunchTimedout });
+                });
+
+            await _simulators.LoadDevices(_executionLog.Object);
+            var (simulator, companion) = await _simulators.FindSimulators(TestTarget.Simulator_iOS64, _executionLog.Object, false, false);
+
+            Assert.NotNull(simulator);
+        }
+
+        // This tests issues with mlaunch https://github.com/dotnet/xharness/issues/196
+        // Mlaunch sometimes times out/returns non-zero exit code and doesn't output simulator list XML
+        [Fact]
+        public async Task FindSimulatorsWithFailingMlaunchTest()
+        {
+            _processManager
+                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1)))
+                .ReturnsAsync(new ProcessExecutionResult() { ExitCode = 0 });
+
+            // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
+            _processManager
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
+                .ReturnsAsync(new ProcessExecutionResult { ExitCode = 137, TimedOut = true });
+
+            await Assert.ThrowsAsync<Exception>(async () => await _simulators.LoadDevices(_executionLog.Object));
+        }
     }
 }
