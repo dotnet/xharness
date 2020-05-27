@@ -1,14 +1,12 @@
-﻿using Microsoft.DotNet.XHarness.Tests.Runners.Core;
-
-namespace Microsoft.DotNet.XHarness.Tests.Runners
+﻿namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 {
-    public struct TestRunResult 
+    public struct TestRunResult
     {
         /// <summary>
         /// Retrieve the number of executed tests in a run.
         /// </summary>
         public long ExecutedTests { get; private set; }
-        
+
         /// <summary>
         /// Retrieve the number of failed tests in a run.
         /// </summary>

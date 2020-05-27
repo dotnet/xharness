@@ -4,11 +4,17 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Tests.Runners.Core;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
+namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
 {
     public abstract class iOSApplicationEntryPoint : ApplicationEntryPoint
     {
+        protected override TestRunner GetTestRunner(LogWriter logWriter) =>
+            new XUnitTestRunner(logWriter) {MaxParallelThreads = MaxParallelThreads};
+
+        protected override bool IsXunit => true;
+
         public override async Task RunAsync()
         {
             var options = ApplicationOptions.Current;

@@ -1,5 +1,4 @@
-﻿using System;
-namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
+﻿namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 {
     /// <summary>
     /// Enumeration used to state the result of a test.

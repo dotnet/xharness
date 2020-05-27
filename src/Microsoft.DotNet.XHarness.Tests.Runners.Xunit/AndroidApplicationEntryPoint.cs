@@ -9,7 +9,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Tests.Runners.Core;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners
+namespace Microsoft.DotNet.XHarness.Tests.Runners.Xunit
 {
     public abstract class AndroidApplicationEntryPoint : ApplicationEntryPoint
     {
@@ -26,6 +26,10 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         /// </summary>
         public abstract string TestsResultsFinalPath { get; }
 
+        protected override bool IsXunit => true;
+
+        protected override TestRunner GetTestRunner(LogWriter logWriter) =>
+            new XUnitTestRunner(logWriter) {MaxParallelThreads = MaxParallelThreads};
 
         public override async Task RunAsync()
         {

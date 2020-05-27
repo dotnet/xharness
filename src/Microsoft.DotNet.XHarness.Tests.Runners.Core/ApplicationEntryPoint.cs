@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -6,10 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Tests.Runners.Core;
-using Microsoft.DotNet.XHarness.Tests.Runners.Xunit;
 
-namespace Microsoft.DotNet.XHarness.Tests.Runners
+namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 {
     /// <summary>
     /// States the type of runner to be used by the application.
@@ -76,9 +74,11 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         protected abstract IEnumerable<TestAssemblyInfo> GetTestAssemblies();
 
         /// <summary>
-        /// Returns the type of runner to use.
+        /// Returns the runner to be used.
         /// </summary>
-        protected abstract TestRunnerType TestRunner { get; }
+        protected abstract TestRunner GetTestRunner(LogWriter logWriter);
+
+        protected abstract bool IsXunit { get; }
 
         /// <summary>
         /// Returns the directory that contains the ignore files. In order to ignore certain traits in the
@@ -145,13 +145,12 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
 
         private async Task<List<string>> GetIgnoredCategories()
         {
-            var categories = new List<string> { }; // default known category to ignore
+            var categories = new List<string>(); // default known category to ignore
 
             // check if the child does have an ignore files dir
             if (!string.IsNullOrEmpty(IgnoreFilesDirectory))
             {
-                categories.AddRange(await IgnoreFileParser.ParseTraitsContentFileAsync(IgnoreFilesDirectory,
-                    TestRunner == TestRunnerType.Xunit));
+                categories.AddRange(await IgnoreFileParser.ParseTraitsContentFileAsync(IgnoreFilesDirectory, IsXunit));
             }
 
             // check if the child provides a specific traits file.
@@ -201,19 +200,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners
         protected async Task<TestRunner> InternalRunAsync (LogWriter logger)
         {
             logger.MinimumLogLevel = MinimumLogLevel;
-            TestRunner runner;
-            switch (TestRunner)
-            {
-                case TestRunnerType.NUnit:
-                    throw new NotImplementedException();
-                default:
-                    runner = new XUnitTestRunner(logger)
-                    {
-                        MaxParallelThreads = MaxParallelThreads
-                    };
-                    break;
-            }
-
+            var runner = GetTestRunner(logger);
             runner.LogExcludedTests = LogExcludedTests;
             // connect to the runner events so that we fwd them to the client
             runner.TestStarted += OnTestStarted;

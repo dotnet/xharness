@@ -9,7 +9,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common;
 
-
 namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
 {
     public abstract class TestRunner
@@ -111,7 +110,7 @@ namespace Microsoft.DotNet.XHarness.Tests.Runners.Core
         }
 
         public abstract Task Run(IEnumerable<TestAssemblyInfo> testAssemblies);
-        public abstract string WriteResultsToFile(XmlResultJargon jargon);
+        public abstract string WriteResultsToFile(XmlResultJargon xmlResultJargon);
         public abstract void WriteResultsToFile(TextWriter writer, XmlResultJargon jargon);
         public abstract void SkipTests(IEnumerable<string> tests);
         public abstract void SkipCategories(IEnumerable<string> categories);

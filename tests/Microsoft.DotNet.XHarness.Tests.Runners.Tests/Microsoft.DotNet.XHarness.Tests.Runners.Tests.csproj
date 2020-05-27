@@ -21,7 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\Microsoft.DotNet.XHarness.Tests.Runners.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners.Core\Microsoft.DotNet.XHarness.Tests.Runners.Core.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners.Xunit\Microsoft.DotNet.XHarness.Tests.Runners.Xunit.csproj" />
   </ItemGroup>
 
 </Project>
