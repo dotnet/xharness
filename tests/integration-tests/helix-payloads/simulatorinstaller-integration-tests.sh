@@ -1,38 +1,16 @@
 #!/bin/bash
 
-set -e
-
-version='1.0.0-ci'
-
-# Clean the NuGet cache from the previous 1.0.0-ci version of the tool
-# TODO: This might have a better solution: https://github.com/dotnet/xharness/issues/123
-echo "Cleaning the NuGet cache from the previous version of the tool..."
-
-# Call dotnet to get rid of the welcome message since the nuget command doesn't respect the --no-logo
-dotnet nuget locals All -l
-cache_dirs=`dotnet nuget locals All -l | cut -d':' -f 2 | tr -d ' '`
-while IFS= read -r path; do
-    echo "Purging cache in $path..."
-    sudo rm -vrf "$path/microsoft.dotnet.xharness.simulatorinstaller/$version"
-    sudo rm -vrf "$path/Microsoft.DotNet.XHarness.SimulatorInstaller/$version"
-done <<< "$cache_dirs"
-
-set -x
+set -ex
 
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd $here
 
-mkdir $here/tools
-cd $here/tools
+export DOTNET_ROOT=$(dirname $(which dotnet))
+dotnet tool install --no-cache --tool-path "$here/tools" --version "1.0.0-ci" --add-source "$here" Microsoft.DotNet.XHarness.SimulatorInstaller
 
-dotnet new tool-manifest
-
-dotnet tool install --no-cache --version $version --add-source .. Microsoft.DotNet.XHarness.SimulatorInstaller
+sim_installer="$here/tools/simulator-installer"
 
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
-
-dotnet tool restore --no-cache
 
 set +ex
 
@@ -40,7 +18,7 @@ echo "Testing simulator download availability"
 echo "Getting list of available simulators"
 
 IFS=$'\n'
-list=($(dotnet simulator-installer list | grep 'Source:'))
+list=($("$sim_installer" list | grep 'Source:'))
 
 length="${#list[@]}"
 
@@ -77,7 +55,7 @@ done
 echo "Testing installed simulators and the find command"
 
 IFS=$'\n'
-installed_simulators=($(dotnet simulator-installer list --installed | grep 'Identifier:'))
+installed_simulators=($("$sim_installer" list --installed | grep 'Identifier:'))
 
 length="${#installed_simulators[@]}"
 
@@ -96,7 +74,7 @@ if [ "$length" != "0" ]; then
     echo ""
     set -x
 
-    eval dotnet simulator-installer find $simulator_args
+    eval "$sim_installer" find $simulator_args
 
     if [ "$?" != 0 ]; then
         echo "Failed to find listed simulators"
