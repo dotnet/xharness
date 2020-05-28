@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 
             var assembly = Assembly.GetExecutingAssembly();
             AssemblyName assemblyName = AssemblyHelper.GetAssemblyName(assembly);
-            _xmlWriter.WriteAttributeString("nunit-version", assemblyName.Version.ToString());
+            _xmlWriter.WriteAttributeString("nunit-version", assemblyName?.Version?.ToString() ?? "unknown");
 
             _xmlWriter.WriteAttributeString("clr-version", Environment.Version.ToString());
             _xmlWriter.WriteAttributeString("os-version", Environment.OSVersion.ToString());

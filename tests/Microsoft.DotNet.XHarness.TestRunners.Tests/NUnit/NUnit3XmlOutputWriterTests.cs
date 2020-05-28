@@ -12,7 +12,6 @@ using Moq;
 using NUnit.Engine;
 using Xunit;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
 {
     public class NUnit3XmlOutputWriterTests : IDisposable
