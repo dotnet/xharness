@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.TestsRunners.Common
+namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     /// <summary>
     /// Interface to be implemented by those classes that provide the required

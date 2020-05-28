@@ -5,7 +5,7 @@
 using System;
 using System.Text;
 using System.Xml;
-using Microsoft.DotNet.XHarness.TestsRunners.Common;
+using Microsoft.DotNet.XHarness.TestRunners.Common;
 using NUnit;
 using NUnit.Engine;
 using NUnit.Framework.Interfaces;

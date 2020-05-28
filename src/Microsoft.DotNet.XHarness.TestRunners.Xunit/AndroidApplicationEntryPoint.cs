@@ -7,9 +7,9 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.TestsRunners.Common;
+using Microsoft.DotNet.XHarness.TestRunners.Common;
 
-namespace Microsoft.DotNet.XHarness.TestsRunners.Xunit
+namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 {
     public abstract class AndroidApplicationEntryPoint : ApplicationEntryPoint
     {

@@ -5,7 +5,7 @@
 using System;
 using System.Reflection;
 
-namespace Microsoft.DotNet.XHarness.TestsRunners.Common
+namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     public class TestAssemblyInfo
     {

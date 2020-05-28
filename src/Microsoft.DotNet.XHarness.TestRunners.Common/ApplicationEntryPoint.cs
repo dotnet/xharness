@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.XHarness.TestsRunners.Common
+namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     /// <summary>
     /// States the type of runner to be used by the application.

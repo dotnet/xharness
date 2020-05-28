@@ -4,7 +4,7 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.DotNet.XHarness.TestsRunners.Common;
+using Microsoft.DotNet.XHarness.TestRunners.Common;
 using NUnit.Engine;
 using NUnit.Framework.Interfaces;
 

@@ -8,7 +8,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.TestsRunners.Common
+namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
 
     internal enum XmlMode
