@@ -114,11 +114,11 @@ namespace Microsoft.DotNet.XHarness.iOS
                     }
                     catch (Exception e)
                     {
-                        _mainLog.WriteLine($"Failed to list simulator (attempt {attempt}/{maxAttempts}):" + Environment.NewLine + e);
+                        _mainLog.WriteLine($"Failed to find/create simulator (attempt {attempt}/{maxAttempts}):" + Environment.NewLine + e);
 
                         if (attempt == maxAttempts)
                         {
-                            throw new NoDeviceFoundException("Failed to list simulators");
+                            throw;
                         }
                     }
                     finally

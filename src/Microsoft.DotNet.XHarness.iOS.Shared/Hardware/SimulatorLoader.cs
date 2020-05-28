@@ -200,7 +200,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             var rv = await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "create", CreateName(devicetype, runtime), devicetype, runtime }, log, TimeSpan.FromMinutes(1));
             if (!rv.Succeeded)
             {
-                var message = $"Could not create device for runtime={runtime} and device type={devicetype}.";
+                var message = $"Could not create device{Environment.NewLine}" +
+                    $"runtime: {runtime}{Environment.NewLine}" +
+                    $"device type: {devicetype}";
                 log.WriteLine(message);
                 throw new NoDeviceFoundException(message);
             }
@@ -210,7 +212,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             devices = AvailableDevices.Where((ISimulatorDevice v) => v.SimRuntime == runtime && v.SimDeviceType == devicetype);
             if (!devices.Any())
             {
-                var message = $"No devices loaded after creating it? runtime={runtime} device type={devicetype}.";
+                var message = $"Simulator not found after creating it{Environment.NewLine}" +
+                    $"runtime: {runtime}{Environment.NewLine}" +
+                    $"device type: {devicetype}";
                 log.WriteLine(message);
                 throw new NoDeviceFoundException(message);
             }
@@ -327,7 +331,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         {
             string simulatorDeviceType;
             string simulatorRuntime;
-            string? companionDevicetype = null;
+            string? companionDeviceType = null;
             string? companionRuntime = null;
 
             switch (target)
@@ -351,7 +355,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 case TestTarget.Simulator_watchOS:
                     simulatorDeviceType = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "Apple-Watch-38mm" : "Apple-Watch-Series-3-38mm");
                     simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.watchOS-" + (minVersion ? SdkVersions.MinWatchOSSimulator : SdkVersions.MaxWatchOSSimulator).Replace('.', '-');
-                    companionDevicetype = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X");
+                    companionDeviceType = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X");
                     companionRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-" + (minVersion ? SdkVersions.MinWatchOSCompanionSimulator : SdkVersions.MaxWatchOSCompanionSimulator).Replace('.', '-');
                     break;
                 default:
@@ -361,14 +365,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             var devices = await FindOrCreateDevicesAsync(log, simulatorRuntime, simulatorDeviceType);
             IEnumerable<ISimulatorDevice>? companionDevices = null;
 
-            if (companionRuntime != null && companionDevicetype != null)
+            if (companionRuntime != null && companionDeviceType != null)
             {
-                companionDevices = await FindOrCreateDevicesAsync(log, companionRuntime, companionDevicetype);
+                companionDevices = await FindOrCreateDevicesAsync(log, companionRuntime, companionDeviceType);
             }
 
             if (devices?.Any() != true)
             {
-                throw new Exception($"Could not find or create devices runtime '{simulatorRuntime}' and device type '{simulatorDeviceType}'.");
+                throw new Exception($"Could not find or create devices{Environment.NewLine}" +
+                    $"runtime: {simulatorRuntime}{Environment.NewLine}" +
+                    $"device type: {simulatorDeviceType}");
             }
 
             ISimulatorDevice? simulator = null;
@@ -382,13 +388,17 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             {
                 if (companionDevices?.Any() != true)
                 {
-                    throw new Exception($"Could not find or create companion devices runtime '{companionRuntime}' and device type '{companionDevicetype}'.");
+                    throw new Exception($"Could not find or create companion devices{Environment.NewLine}" +
+                    $"runtime: {companionRuntime}{Environment.NewLine}" +
+                    $"device type: {companionDeviceType}");
                 }
 
                 var pair = await FindOrCreateDevicePairAsync(log, devices, companionDevices);
                 if (pair == null)
                 {
-                    throw new Exception($"Could not find or create device pair runtime '{companionRuntime}' and device type '{companionDevicetype}'.");
+                    throw new Exception($"Could not find or create device pair{Environment.NewLine}" +
+                    $"runtime: {companionRuntime}{Environment.NewLine}" +
+                    $"device type: {companionDeviceType}");
                 }
 
                 simulator = devices.First(v => v.UDID == pair.Gizmo);
@@ -397,7 +407,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
             if (simulator == null)
             {
-                throw new Exception($"Could not find simulator for runtime '{simulatorRuntime}' and device type '{simulatorDeviceType}'.");
+                throw new Exception($"Could not find simulator{Environment.NewLine}" +
+                    $"runtime: {simulatorRuntime}{Environment.NewLine}" +
+                    $"device type: {simulatorDeviceType}");
             }
 
             log.WriteLine("Found simulator: {0} {1}", simulator.Name, simulator.UDID);

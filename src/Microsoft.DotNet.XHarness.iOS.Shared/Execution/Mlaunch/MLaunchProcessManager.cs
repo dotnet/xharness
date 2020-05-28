@@ -59,7 +59,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
             bool? diagnostics = null)
         {
             if (!args.Any(a => a is SdkRootArgument))
-                args.Prepend(new SdkRootArgument(XcodeRoot));
+            {
+                args = new MlaunchArguments(args.Prepend(new SdkRootArgument(XcodeRoot)).ToArray());
+            }
 
             process.StartInfo.FileName = MlaunchPath;
             process.StartInfo.Arguments = args.AsCommandLine();
@@ -79,7 +81,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
             bool? diagnostics = null)
         {
             if (!args.Any(a => a is SdkRootArgument))
-                args.Prepend(new SdkRootArgument(XcodeRoot));
+            {
+                args = new MlaunchArguments(args.Prepend(new SdkRootArgument(XcodeRoot)).ToArray());
+            }
 
             process.StartInfo.FileName = MlaunchPath;
             process.StartInfo.Arguments = args.AsCommandLine();
