@@ -10,7 +10,6 @@ using NUnit;
 using NUnit.Engine;
 using NUnit.Framework.Interfaces;
 
-#nullable  enable
 namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 {
     internal class NUnitTestListener : ITestEventListener
@@ -99,11 +98,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
                     if (stacktraceNodes[0].ChildNodes.Count == 1) // should not happen, but I trust no one
                     {
                         var cDataNode = messageNodes[0].ChildNodes[0];
-                        var statckTrace = cDataNode?.InnerText?.Trim();
-                        if (!string.IsNullOrEmpty(statckTrace))
+                        var stackTrace = cDataNode?.InnerText?.Trim();
+                        if (!string.IsNullOrEmpty(stackTrace))
                         {
-                            statckTrace = statckTrace.Replace("\r\n", "\\r\\n");
-                            string[] lines = statckTrace.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                            stackTrace = stackTrace.Replace("\r\n", "\\r\\n");
+                            string[] lines = stackTrace.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                             foreach (string line in lines)
                                 sb.AppendLine($"\t\t{line}");
                         }

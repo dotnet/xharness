@@ -6,7 +6,6 @@ using System;
 using Microsoft.DotNet.XHarness.Common;
 using NUnit.Framework.Interfaces;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 {
     internal static class TestStatusExtensions

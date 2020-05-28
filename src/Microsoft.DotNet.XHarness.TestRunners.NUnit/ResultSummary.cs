@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             }
         }
 
-        void GetSummaryData()
+        private void GetSummaryData()
         {
             double duration = 0;
             long assertCount = 0;

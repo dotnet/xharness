@@ -6,11 +6,10 @@ using System;
 using System.Collections.Generic;
 using NUnit.Engine;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 {
     /// <summary>
-    /// Helper class that will build a NUnit v3 filter
+    /// Helper class that will build an NUnit v3 filter
     /// </summary>
     internal class FilterBuilder
     {
@@ -39,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             // On the other hand, when we are including them, we have to do the reverse:
             // test != "My.Skipped.Test" or cat != "outerloop"
             //
-            // The above filter will skip all tests that do not have the given fully qualify name of the category
+            // The above filter will skip all tests that do not have the given fully-qualified name of the category
             // build the comparison tuples, then use string.join with the or operation
             var comparisons = new List<string>();
             var filters = new Dictionary<string, List<string>>
@@ -55,11 +54,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
                 foreach (var filterReason  in filtersInCategory)
                 {
                     string currentComparison = $"{category} ";
-                    currentComparison += _runAssemblyByDefault ? $"== {filterReason}" : $"!= {filterReason}";
-                    comparisons.Add(currentComparison);
+                    var eq = _runAssemblyByDefault ? "==" : "!=";
+                    comparisons.Add($"{category} {eq} {filterReason}");
                 }
             }
-            return comparisons.Count == 0 ? null : string.Join("or", comparisons);
+            return comparisons.Count == 0 ? null : string.Join(" or ", comparisons);
         }
 
         public TestFilter GetFilter()

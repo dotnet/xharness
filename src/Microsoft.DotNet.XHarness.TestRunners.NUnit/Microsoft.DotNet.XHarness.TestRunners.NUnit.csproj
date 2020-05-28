@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  
+
   <PropertyGroup>
     <IsPackable>true</IsPackable>
+    <Nullable>enable</Nullable>
     <TargetFrameworks>netstandard2.1;netcoreapp3.1</TargetFrameworks>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>CS8002;</NoWarn>

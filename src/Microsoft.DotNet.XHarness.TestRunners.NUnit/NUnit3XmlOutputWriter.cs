@@ -10,7 +10,6 @@ using System.Xml;
 using Microsoft.DotNet.XHarness.Common;
 using NUnit.Framework.Internal;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 {
     /// <summary>
@@ -31,8 +30,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
         /// <param name="writer">A TextWriter to which the result is written</param>
         public override void WriteResultFile(IResultSummary result, TextWriter writer)
         {
-            // NOTE: Under .NET 1.1, XmlTextWriter does not implement IDisposable,
-            // but does implement Close(). Hence we cannot use a 'using' clause.
             var xmlWriter = new XmlTextWriter(writer);
             xmlWriter.Formatting = Formatting.Indented;
 
@@ -121,12 +118,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             {
                 for (var i = 0; i < testRun.Result.ChildNodes.Count; i++)
                 {
-                    var node = testRun.Result.ChildNodes[1];
-                    var envNodes = node.SelectNodes(".//environment"); // we already add our own data
-                    for (var j = 0; j < envNodes.Count; j++)
-                    {
-                        node.RemoveChild(envNodes[j]);
-                    }
+                    var node = testRun.Result.ChildNodes[i];
+                    if (node.Name == "environment") continue;
                     node.WriteTo(_xmlWriter);
                 }
             }
@@ -134,7 +127,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 
         void TerminateXmlFile()
         {
-            if (_xmlWriter == null) // should never happen, would mean a programmers error
+            if (_xmlWriter == null) // should never happen, would mean a programmer's error
                 throw new InvalidOperationException("Null writer");
             _xmlWriter.WriteEndElement(); // test-run
             _xmlWriter.WriteEndDocument();

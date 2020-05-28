@@ -4,7 +4,6 @@
 
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 {
     /// <summary>
