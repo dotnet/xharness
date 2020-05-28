@@ -5,7 +5,7 @@
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.XHarness.TestsRunners.Common
+namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     public class LogWriter
     {
