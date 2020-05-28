@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;netcoreapp3.1</TargetFrameworks>
+    <!-- Mono.Options is apparently not strong-name signed -->
+    <NoWarn>CS8002;</NoWarn>
+    <RootNamespace>Microsoft.DotNet.XHarness.TestsRunners.Common</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Options" Version="6.6.0.161" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.XHarness.Common\XmlResultJargon.cs">
+      <Link>XmlResultJargon.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Execution\Mlaunch\EnviromentVariables.cs">
+      <Link>EnviromentVariables.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+</Project>

@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Collections
 {
     // This is a collection whose enumerator will wait enumerating until 
@@ -15,94 +16,70 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Collections
     // delayed until later).
     public class BlockingEnumerableCollection<T> : IEnumerable<T> where T : class
     {
-        List<T> list = new List<T>();
-        TaskCompletionSource<bool> completed = new TaskCompletionSource<bool>();
+        private readonly List<T> _list = new List<T>();
+        private TaskCompletionSource<bool> _completed = new TaskCompletionSource<bool>();
 
         public int Count
         {
             get
             {
                 WaitForCompletion();
-                return list.Count;
+                return _list.Count;
             }
         }
 
         public void Add(T device)
         {
-            if (completed.Task.IsCompleted)
+            if (_completed.Task.IsCompleted)
+            {
                 Console.WriteLine("Adding to completed collection!");
-            list.Add(device);
+            }
+
+            _list.Add(device);
         }
 
-        public void SetCompleted()
-        {
-            completed.TrySetResult(true);
-        }
+        public void SetCompleted() => _completed.TrySetResult(true);
 
-        void WaitForCompletion()
-        {
-            completed.Task.Wait();
-        }
+        private void WaitForCompletion() => _completed.Task.Wait();
 
         public void Reset()
         {
-            completed = new TaskCompletionSource<bool>();
-            list.Clear();
+            _completed = new TaskCompletionSource<bool>();
+            _list.Clear();
         }
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            return new Enumerator(this);
-        }
+        public IEnumerator<T> GetEnumerator() => new Enumerator(this);
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        class Enumerator : IEnumerator<T>
+        private class Enumerator : IEnumerator<T>
         {
-            BlockingEnumerableCollection<T> collection;
-            IEnumerator<T> enumerator;
+            private readonly BlockingEnumerableCollection<T> _collection;
+            private IEnumerator<T>? _enumerator;
 
             public Enumerator(BlockingEnumerableCollection<T> collection)
             {
-                this.collection = collection;
+                _collection = collection;
             }
 
-            public T Current
-            {
-                get
-                {
-                    return enumerator.Current;
-                }
-            }
+            public T Current => _enumerator?.Current ?? throw new InvalidOperationException("Please call MoveNext() first!");
 
-            object IEnumerator.Current
-            {
-                get
-                {
-                    return enumerator.Current;
-                }
-            }
+            object IEnumerator.Current => _enumerator?.Current ?? throw new InvalidOperationException("Please call MoveNext() first!");
 
-            public void Dispose()
-            {
-                enumerator.Dispose();
-            }
+            public void Dispose() => _enumerator?.Dispose();
 
             public bool MoveNext()
             {
-                collection.WaitForCompletion();
-                if (enumerator == null)
-                    enumerator = collection.list.GetEnumerator();
-                return enumerator.MoveNext();
+                _collection.WaitForCompletion();
+                if (_enumerator == null)
+                {
+                    _enumerator = _collection._list.GetEnumerator();
+                }
+
+                return _enumerator.MoveNext();
             }
 
-            public void Reset()
-            {
-                enumerator.Reset();
-            }
+            public void Reset() => _enumerator?.Reset();
         }
     }
 }

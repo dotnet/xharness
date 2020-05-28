@@ -17,6 +17,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
     public interface ITunnelListener : ISimpleListener
     {
         TaskCompletionSource<bool> TunnelHoleThrough { get; }
+
+        int Port { get; }
     }
 
     // interface implemented by a tcp tunnel between the host and the device.

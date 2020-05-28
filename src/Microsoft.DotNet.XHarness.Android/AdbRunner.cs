@@ -315,28 +315,29 @@ namespace Microsoft.DotNet.XHarness.Android
             Dictionary<string, string?> devicesAndArchitectures = new Dictionary<string, string?>();
 
             var result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
-            string standardOutput = result.StandardOutput;
+            string[] standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
             // Retry up to 5 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
             int retriesLeft = 30;
-            // Empty string + success = Adb started another process to do the work and we should call again
-            while (retriesLeft-- > 0 && (string.IsNullOrEmpty(standardOutput) || (result.ExitCode != (int)AdbExitCodes.SUCCESS))) 
+
+            // We will keep retrying until we get something back like 'List of devices attached...{newline} {info about a device} ',
+            // which when split on newlines ignoring empties will be at least 2 lines when there are any available devices.
+            while (retriesLeft-- > 0 && standardOutputLines.Length < 2)
             {
-                _log.LogDebug($"Result: exit code={result.ExitCode} Output: {result.StandardOutput} {Environment.NewLine} {result.StandardError}");
+                _log.LogDebug($"Unexpected response from adb devices -l:{Environment.NewLine}Exit code={result.ExitCode}{Environment.NewLine}Std. Output: {result.StandardOutput} {Environment.NewLine}Std. Error: {result.StandardError}");
                 Thread.Sleep(10000);
                 result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
-                standardOutput = result.StandardOutput;
+                standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
             }
 
-            if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
+            // Two lines = At least one device was found.  On a multi-device machine, we can't function without specifying device serial number.
+            if (result.ExitCode == (int)AdbExitCodes.SUCCESS && standardOutputLines.Length >= 2)
             {
-                string[] lines = standardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-
                 // Start at 1 to skip first line, which is always 'List of devices attached'
-                for (int lineNumber = 1; lineNumber < lines.Length; lineNumber++)
+                for (int lineNumber = 1; lineNumber < standardOutputLines.Length; lineNumber++)
                 {
-                    _log.LogDebug($"Evaluating line: {lines[lineNumber]}");
-                    var lineParts = lines[lineNumber].Split(' ');
+                    _log.LogDebug($"Evaluating output line for device serial: {standardOutputLines[lineNumber]}");
+                    var lineParts = standardOutputLines[lineNumber].Split(' ');
                     if (!string.IsNullOrEmpty(lineParts[0]))
                     {
                         var deviceSerial = lineParts[0];
@@ -489,17 +490,25 @@ namespace Microsoft.DotNet.XHarness.Android
 
             // Allow the process time to send messages to the above delegates
             // if the process exits very quickly
-            System.Threading.Thread.Sleep(1000);
+            Thread.Sleep(1000);
 
-            // If we allow any timespan to be max value, it could cause unusual behavior, force max-int max (still a LOT)
-            // (int.MaxValue ms is about 24 days).  Large values are effectively timeouts for the outer harness
-            if (!p.WaitForExit((int)Math.Min(timeOut.TotalMilliseconds, int.MaxValue)))
+            bool finishedNormally = p.WaitForExit((int)Math.Min(timeOut.TotalMilliseconds, int.MaxValue));
+
+            // Lock the stringbuilders used as rarely this can cause concurrency issues
+            // resulting in "Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'chunkLength')"
+            lock (standardOut)
+            lock (standardErr)
             {
-                _log.LogError("Waiting for command timed out: execution may be compromised.");
-                return (standardOut.ToString(), standardErr.ToString(), (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT);
-            }
+                // If we allow any timespan to be max value, it could cause unusual behavior, force max-int max (still a LOT)
+                // (int.MaxValue ms is about 24 days).  Large values are effectively timeouts for the outer harness
+                if (!finishedNormally)
+                {
+                    _log.LogError("Waiting for command timed out: execution may be compromised.");
+                    return (standardOut.ToString(), standardErr.ToString(), (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT);
+                }
 
-            return (standardOut.ToString(), standardErr.ToString(), p.ExitCode);
+                return (standardOut.ToString(), standardErr.ToString(), p.ExitCode);
+            }
         }
 
         #endregion

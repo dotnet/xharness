@@ -9,7 +9,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
@@ -26,6 +25,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         private TcpClient _client;
 
         public TaskCompletionSource<bool> TunnelHoleThrough { get; } = new TaskCompletionSource<bool>();
+
+        public int Port { get; private set; }
 
         public SimpleTcpListener(ILog log, IFileBackedLog testLog, bool autoExit, bool tunnel = false) : base(log, testLog)
         {
@@ -48,11 +49,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             _server?.Server?.Shutdown(SocketShutdown.Both);
         }
 
-        public override void Initialize()
+        public override int InitializeAndGetPort()
         {
             if (_useTcpTunnel && Port != 0)
             {
-                return;
+                return Port;
             }
 
             _server = new TcpListener(Address, Port);
@@ -71,6 +72,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
                 _server.Stop();
             }
+
+            return Port;
         }
 
         private void StartNetworkTcp()
