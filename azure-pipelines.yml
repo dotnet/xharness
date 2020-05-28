@@ -210,13 +210,13 @@ stages:
       - template: /eng/common/templates/steps/send-to-helix.yml
         parameters:
           DisplayNamePrefix: Run Tests
-          HelixBaseUri: https://helix.dot.net/
+          HelixBaseUri: https://helix.int-dot.net/
           HelixType: test/product/
           IncludeDotNetCli: true
           DotNetCliPackageType: sdk
           DotNetCliVersion: 3.1.201
           WaitForWorkItemCompletion: true
-          HelixTargetQueues: osx.1015.amd64.open
+          HelixTargetQueues: osx.1015.amd64.ios.open
           Creator: xharness
           EnableXUnitReporter: true
           WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.Debug
