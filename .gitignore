@@ -357,3 +357,6 @@ MigrationBackup/
 
 # remove noise in mac os x
 .DS_Store
+
+# some ide stuff
+.idea
