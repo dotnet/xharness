@@ -6,8 +6,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Microsoft.DotNet.XHarness.TestsRunners.Common;
-using Microsoft.DotNet.XHarness.TestsRunners.Xunit;
+using Microsoft.DotNet.XHarness.TestRunners.Common;
+using Microsoft.DotNet.XHarness.TestRunners.Xunit;
 using Moq;
 using Xunit;
 using Xunit.Abstractions;

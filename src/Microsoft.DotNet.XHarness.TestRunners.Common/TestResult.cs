@@ -1,4 +1,4 @@
-﻿namespace Microsoft.DotNet.XHarness.TestsRunners.Common
+﻿namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     /// <summary>
     /// Enumeration used to state the result of a test.

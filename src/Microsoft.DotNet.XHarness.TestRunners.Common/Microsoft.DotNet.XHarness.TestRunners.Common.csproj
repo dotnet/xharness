@@ -5,7 +5,7 @@
     <TargetFrameworks>netstandard2.1;netcoreapp3.1</TargetFrameworks>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>CS8002;</NoWarn>
-    <RootNamespace>Microsoft.DotNet.XHarness.TestsRunners.Common</RootNamespace>
+    <RootNamespace>Microsoft.DotNet.XHarness.TestRunners.Common</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

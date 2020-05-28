@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Microsoft.DotNet.XHarness.TestsRunners.Common
+namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     /// <summary>
     /// Contains information about a single test failure. Information is used at the end of the run to print
