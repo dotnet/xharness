@@ -41,6 +41,7 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
     --targets=ios-simulator-64         \
     --timeout=600                      \
     --launch-timeout=360               \
+    --xcode=/Applications/Xcode115.app \
     -v
 
 result=$?
