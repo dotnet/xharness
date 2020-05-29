@@ -14,13 +14,19 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
 {
     public class XHarnessCommandTests
     {
+        private readonly SampleUnitTestArguments _arguments;
+        private readonly UnitTestCommand<SampleUnitTestArguments> _command;
+
+        public XHarnessCommandTests()
+        {
+            _arguments = new SampleUnitTestArguments();
+            _command = new UnitTestCommand<SampleUnitTestArguments>(_arguments);
+        }
+
         [Fact]
         public void ArgumentsWithEqualSignsAreParsed()
         {
-            var arguments = new SampleUnitTestArguments();
-            var command = new UnitTestCommand<SampleUnitTestArguments>(arguments);
-
-            var exitCode = command.Invoke(new[]
+            var exitCode = _command.Invoke(new[]
             {
                 "--number=50",
                 "--enum=Value2",
@@ -28,19 +34,16 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
             });
 
             Assert.Equal(0, exitCode);
-            Assert.True(command.CommandRun);
-            Assert.Equal(50, arguments.Number);
-            Assert.Equal(SampleEnum.Value2, arguments.Enum);
-            Assert.Equal("foobar", arguments.String);
+            Assert.True(_command.CommandRun);
+            Assert.Equal(50, _arguments.Number);
+            Assert.Equal(SampleEnum.Value2, _arguments.Enum);
+            Assert.Equal("foobar", _arguments.String);
         }
 
         [Fact]
         public void ArgumentsWithSpacesAreParsed()
         {
-            var arguments = new SampleUnitTestArguments();
-            var command = new UnitTestCommand<SampleUnitTestArguments>(arguments);
-
-            var exitCode = command.Invoke(new[]
+            var exitCode = _command.Invoke(new[]
             {
                 "--number",
                 "50",
@@ -51,19 +54,16 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
             });
 
             Assert.Equal(0, exitCode);
-            Assert.True(command.CommandRun);
-            Assert.Equal(50, arguments.Number);
-            Assert.Equal(SampleEnum.Value2, arguments.Enum);
-            Assert.Equal("foobar", arguments.String);
+            Assert.True(_command.CommandRun);
+            Assert.Equal(50, _arguments.Number);
+            Assert.Equal(SampleEnum.Value2, _arguments.Enum);
+            Assert.Equal("foobar", _arguments.String);
         }
 
         [Fact]
         public void ArgumentsAreValidated()
         {
-            var arguments = new SampleUnitTestArguments();
-            var command = new UnitTestCommand<SampleUnitTestArguments>(arguments);
-
-            var exitCode = command.Invoke(new[]
+            var exitCode = _command.Invoke(new[]
             {
                 "-n",
                 "200",
@@ -72,16 +72,13 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
             });
 
             Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, exitCode);
-            Assert.False(command.CommandRun);
+            Assert.False(_command.CommandRun);
         }
 
         [Fact]
         public void VerbosityArgumentIsDetected()
         {
-            var arguments = new SampleUnitTestArguments();
-            var command = new UnitTestCommand<SampleUnitTestArguments>(arguments);
-
-            var exitCode = command.Invoke(new[]
+            var exitCode = _command.Invoke(new[]
             {
                 "-n",
                 "50",
@@ -89,34 +86,28 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
             });
 
             Assert.Equal(0, exitCode);
-            Assert.True(command.CommandRun);
-            Assert.Equal(50, arguments.Number);
-            Assert.Equal(LogLevel.Warning, arguments.Verbosity);
+            Assert.True(_command.CommandRun);
+            Assert.Equal(50, _arguments.Number);
+            Assert.Equal(LogLevel.Warning, _arguments.Verbosity);
         }
 
         [Fact]
         public void HelpArgumentIsDetected()
         {
-            var arguments = new SampleUnitTestArguments();
-            var command = new UnitTestCommand<SampleUnitTestArguments>(arguments);
-
-            var exitCode = command.Invoke(new[]
+            var exitCode = _command.Invoke(new[]
             {
                 "--help",
             });
 
             Assert.Equal((int)ExitCode.HELP_SHOWN, exitCode);
-            Assert.False(command.CommandRun);
-            Assert.True(arguments.ShowHelp);
+            Assert.False(_command.CommandRun);
+            Assert.True(_arguments.ShowHelp);
         }
 
         [Fact]
         public void ExtraneousArgumentsAreDetected()
         {
-            var arguments = new SampleUnitTestArguments();
-            var command = new UnitTestCommand<SampleUnitTestArguments>(arguments);
-
-            var exitCode = command.Invoke(new[]
+            var exitCode = _command.Invoke(new[]
             {
                 "-n",
                 "50",
@@ -126,48 +117,39 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
             });
 
             Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, exitCode);
-            Assert.False(command.CommandRun);
+            Assert.False(_command.CommandRun);
         }
 
         [Fact]
         public void EnumsAreValidated()
         {
-            var arguments = new SampleUnitTestArguments();
-            var command = new UnitTestCommand<SampleUnitTestArguments>(arguments);
-
-            var exitCode = command.Invoke(new[]
+            var exitCode = _command.Invoke(new[]
             {
                 "--enum",
                 "Foo",
             });
 
             Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, exitCode);
-            Assert.False(command.CommandRun);
+            Assert.False(_command.CommandRun);
         }
 
         [Fact]
         public void ForbiddenEnumValuesAreValidated()
         {
-            var arguments = new SampleUnitTestArguments();
-            var command = new UnitTestCommand<SampleUnitTestArguments>(arguments);
-
-            var exitCode = command.Invoke(new[]
+            var exitCode = _command.Invoke(new[]
             {
                 "--enum",
                 "ForbiddenValue",
             });
 
             Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, exitCode);
-            Assert.False(command.CommandRun);
+            Assert.False(_command.CommandRun);
         }
 
         [Fact]
         public void PassThroughArgumentsAreParsed()
         {
-            var arguments = new SampleUnitTestArguments();
-            var command = new UnitTestCommand<SampleUnitTestArguments>(arguments);
-
-            var exitCode = command.Invoke(new[]
+            var exitCode = _command.Invoke(new[]
             {
                 "v8",
                 "--foo",
@@ -180,19 +162,16 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
             });
 
             Assert.Equal(0, exitCode);
-            Assert.True(command.CommandRun);
-            Assert.Equal(50, arguments.Number);
-            Assert.Equal(SampleEnum.Value2, arguments.Enum);
-            Assert.Equal(new[] { "v8", "--foo", "runtime.js" }, command.PassThroughArgs);
+            Assert.True(_command.CommandRun);
+            Assert.Equal(50, _arguments.Number);
+            Assert.Equal(SampleEnum.Value2, _arguments.Enum);
+            Assert.Equal(new[] { "v8", "--foo", "runtime.js" }, _command.PassThroughArgs);
         }
 
         [Fact]
         public void ExtraneousArgumentsDetectedInPassThroughMode()
         {
-            var arguments = new SampleUnitTestArguments();
-            var command = new UnitTestCommand<SampleUnitTestArguments>(arguments);
-
-            var exitCode = command.Invoke(new[]
+            var exitCode = _command.Invoke(new[]
             {
                 "v8",
                 "--foo",
@@ -205,7 +184,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
             });
 
             Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, exitCode);
-            Assert.False(command.CommandRun);
+            Assert.False(_command.CommandRun);
         }
 
         private class SampleUnitTestArguments : XHarnessCommandArguments
