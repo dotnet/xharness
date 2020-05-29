@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
@@ -11,8 +12,10 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 {
-    internal abstract class XHarnessCommand : Command
+    public abstract class XHarnessCommand : Command
     {
+        private readonly bool _allowsExtraArgs;
+
         /// <summary>
         /// Will be printed in the header when help is invoked.
         /// Example: 'ios package [OPTIONS]'
@@ -27,8 +30,23 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
         protected abstract XHarnessCommandArguments Arguments { get; }
 
-        protected XHarnessCommand(string name, string? help = null) : base(name, help)
+        /// <summary>
+        /// Contains all arguments after the verbatim "--" argument.
+        ///
+        /// Example:
+        ///   > xharness ios test --arg1=value1 -- --foo -v
+        ///   Will contain [ "foo", "v" ]
+        /// </summary>
+        protected IEnumerable<string> PassThroughArguments { get; private set; } = Enumerable.Empty<string>();
+
+        /// <summary>
+        /// Extra arguments parsed to the command (if the command allows it).
+        /// </summary>
+        protected IEnumerable<string> ExtraArguments { get; private set; } = Enumerable.Empty<string>();
+
+        protected XHarnessCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, help)
         {
+            _allowsExtraArgs = allowsExtraArgs;
         }
 
         public sealed override int Invoke(IEnumerable<string> arguments)
@@ -40,11 +58,25 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
             try
             {
+                var regularArguments = arguments.TakeWhile(arg => arg != "--");
+                if (regularArguments.Count() < arguments.Count())
+                {
+                    PassThroughArguments = arguments.Skip(regularArguments.Count() + 1);
+                    arguments = regularArguments;
+                }
+
                 var extra = options.Parse(arguments);
 
                 if (extra.Count > 0)
                 {
-                    throw new ArgumentException($"Unknown arguments: {string.Join(" ", extra)}");
+                    if (_allowsExtraArgs)
+                    {
+                        ExtraArguments = extra;
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Unknown arguments: {string.Join(" ", extra)}");
+                    }
                 }
 
                 if (Arguments.ShowHelp)

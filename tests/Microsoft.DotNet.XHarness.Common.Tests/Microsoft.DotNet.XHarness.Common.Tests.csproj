@@ -4,14 +4,16 @@
     <TargetFramework>net5.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <LangVersion>8.0</LangVersion>
+    <!-- Mono.Options is apparently not strong-name signed -->
+    <NoWarn>CS8002;</NoWarn>
   </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="1.2.0" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="1.2.0" />
+  </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj" />
+  </ItemGroup>
 
 </Project>

@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 
-        public iOSPackageCommand() : base("package", CommandHelp)
+        public iOSPackageCommand() : base("package", allowsExtraArgs: false, CommandHelp)
         {
         }
 

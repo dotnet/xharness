@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
         private const string CommandHelp = "Print information about the current machine, such as host machine info and device status";
         protected override string CommandDescription { get; } = CommandHelp;
 
-        public GetStateCommand() : base("state", CommandHelp)
+        public GetStateCommand() : base("state", allowsExtraArgs: false, CommandHelp)
         {
         }
     }

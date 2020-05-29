@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
         protected abstract SimulatorInstallerCommandArguments SimulatorInstallerArguments { get; }
 
-        protected SimulatorInstallerCommand(string name, string help) : base(name, help)
+        protected SimulatorInstallerCommand(string name, string help) : base(name, false, help)
         {
         }
 
