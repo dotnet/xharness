@@ -43,11 +43,11 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
             try
             {
-                var passThroughArguments = arguments.TakeWhile(arg => arg != "--");
-                if (passThroughArguments.Count() < arguments.Count())
+                var regularArguments = arguments.TakeWhile(arg => arg != "--");
+                if (regularArguments.Count() < arguments.Count())
                 {
-                    arguments = arguments.Skip(passThroughArguments.Count() + 1);
-                    PassThroughArguments = passThroughArguments;
+                    PassThroughArguments = arguments.Skip(regularArguments.Count() + 1);
+                    arguments = regularArguments;
                 }
 
                 var extra = options.Parse(arguments);

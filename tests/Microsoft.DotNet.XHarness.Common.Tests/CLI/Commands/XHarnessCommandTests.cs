@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Linq;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
@@ -151,21 +152,21 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         {
             var exitCode = _command.Invoke(new[]
             {
-                "v8",
-                "--foo",
-                "runtime.js",
-                "--",
                 "-n",
                 "50",
                 "--enum",
                 "Value2",
+                "--",
+                "v8",
+                "--foo",
+                "runtime.js",
             });
 
             Assert.Equal(0, exitCode);
             Assert.True(_command.CommandRun);
             Assert.Equal(50, _arguments.Number);
             Assert.Equal(SampleEnum.Value2, _arguments.Enum);
-            Assert.Equal(new[] { "v8", "--foo", "runtime.js" }, _command.PassThroughArgs);
+            Assert.Equal(new[] { "v8", "--foo", "runtime.js" }, _command.PassThroughArgs.ToArray());
         }
 
         [Fact]
