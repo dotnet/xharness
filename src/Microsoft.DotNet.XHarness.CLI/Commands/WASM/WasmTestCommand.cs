@@ -7,9 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.WebAssembly;
 using Microsoft.Extensions.Logging;
-using Xunit.ConsoleClient;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
@@ -25,17 +23,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         {
             logger.LogDebug($"Wasm Test command called");
 
-            // FIXME This command line parsing should be moved to CLI command arguments
-            //  Parameters: 
-            // - directory name
-            // - test assembly filename
-            // - command line arguments
-
-            var args = new List<string> { "test-assembly-filename" };
-            var cmdline = new CmdLineParser(args.ToArray());
-
-            var runner = new WasmRunner(cmdline.Project);
-            var result = runner.Run();
+            var result = 0;
             return Task.FromResult(result == 0 ? ExitCode.SUCCESS : ExitCode.GENERAL_FAILURE);
         }
 
