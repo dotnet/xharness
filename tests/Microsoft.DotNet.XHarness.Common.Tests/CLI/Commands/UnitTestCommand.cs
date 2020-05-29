@@ -22,10 +22,12 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
 
         public IEnumerable<string> PassThroughArgs => PassThroughArguments;
 
+        public IEnumerable<string> ExtraArgs => ExtraArguments;
+
         private readonly TArguments _arguments;
         protected override XHarnessCommandArguments Arguments => _arguments;
 
-        public UnitTestCommand(TArguments arguments) : base("unit-test")
+        public UnitTestCommand(TArguments arguments, bool allowExtraArgs) : base("unit-test", allowExtraArgs)
         {
             _arguments = arguments;
         }

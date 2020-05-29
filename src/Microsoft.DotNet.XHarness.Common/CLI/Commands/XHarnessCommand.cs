@@ -14,6 +14,8 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 {
     public abstract class XHarnessCommand : Command
     {
+        private readonly bool _allowsExtraArgs;
+
         /// <summary>
         /// Will be printed in the header when help is invoked.
         /// Example: 'ios package [OPTIONS]'
@@ -28,10 +30,23 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
         protected abstract XHarnessCommandArguments Arguments { get; }
 
+        /// <summary>
+        /// Contains all arguments after the verbatim "--" argument.
+        ///
+        /// Example:
+        ///   > xharness ios test --arg1=value1 -- --foo -v
+        ///   Will contain [ "foo", "v" ]
+        /// </summary>
         protected IEnumerable<string> PassThroughArguments { get; private set; } = Enumerable.Empty<string>();
 
-        protected XHarnessCommand(string name, string? help = null) : base(name, help)
+        /// <summary>
+        /// Extra arguments parsed to the command (if the command allows it).
+        /// </summary>
+        protected IEnumerable<string> ExtraArguments { get; private set; } = Enumerable.Empty<string>();
+
+        protected XHarnessCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, help)
         {
+            _allowsExtraArgs = allowsExtraArgs;
         }
 
         public sealed override int Invoke(IEnumerable<string> arguments)
@@ -54,7 +69,14 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
                 if (extra.Count > 0)
                 {
-                    throw new ArgumentException($"Unknown arguments: {string.Join(" ", extra)}");
+                    if (_allowsExtraArgs)
+                    {
+                        ExtraArguments = extra;
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Unknown arguments: {string.Join(" ", extra)}");
+                    }
                 }
 
                 if (Arguments.ShowHelp)

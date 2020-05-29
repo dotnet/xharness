@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         public XHarnessCommandTests()
         {
             _arguments = new SampleUnitTestArguments();
-            _command = new UnitTestCommand<SampleUnitTestArguments>(_arguments);
+            _command = new UnitTestCommand<SampleUnitTestArguments>(_arguments, false);
         }
 
         [Fact]
@@ -106,7 +106,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         }
 
         [Fact]
-        public void ExtraneousArgumentsAreDetected()
+        public void ExtraneousArgumentsAreRejected()
         {
             var exitCode = _command.Invoke(new[]
             {
@@ -119,6 +119,29 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
 
             Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, exitCode);
             Assert.False(_command.CommandRun);
+        }
+
+        [Fact]
+        public void ExtraneousArgumentsAreDetected()
+        {
+            var arguments = new SampleUnitTestArguments();
+            var command = new UnitTestCommand<SampleUnitTestArguments>(arguments, true);
+            var exitCode = command.Invoke(new[]
+            {
+                "-n",
+                "50",
+                "--enum",
+                "Value2",
+                "some",
+                "other=1",
+                "args",
+            });
+
+            Assert.Equal(0, exitCode);
+            Assert.True(command.CommandRun);
+            Assert.Equal(50, arguments.Number);
+            Assert.Equal(SampleEnum.Value2, arguments.Enum);
+            Assert.Equal(new[] { "some", "other=1", "args" }, command.ExtraArgs);
         }
 
         [Fact]
