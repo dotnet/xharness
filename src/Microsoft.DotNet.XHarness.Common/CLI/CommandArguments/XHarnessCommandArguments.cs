@@ -11,7 +11,7 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 {
-    internal abstract class XHarnessCommandArguments
+    public abstract class XHarnessCommandArguments
     {
         public LogLevel Verbosity { get; set; } = LogLevel.Information;
         public bool ShowHelp { get; set; } = false;

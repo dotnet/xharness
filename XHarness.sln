@@ -30,15 +30,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{D7D3EC29
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.SimulatorInstaller", "tools\Microsoft.DotNet.XHarness.SimulatorInstaller\Microsoft.DotNet.XHarness.SimulatorInstaller.csproj", "{2C1B5C97-7E17-45D4-8337-B4CBD6125CD7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Common", "src\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj", "{E6E90648-E24D-4681-B082-776DF3F4B8F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.Common", "src\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj", "{E6E90648-E24D-4681-B082-776DF3F4B8F6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Common.Tests", "tests\Microsoft.DotNet.XHarness.Common.Tests\Microsoft.DotNet.XHarness.Common.Tests.csproj", "{EB718364-434C-43F7-AE12-74F272B86C45}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.Common.Tests", "tests\Microsoft.DotNet.XHarness.Common.Tests\Microsoft.DotNet.XHarness.Common.Tests.csproj", "{EB718364-434C-43F7-AE12-74F272B86C45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.WebAssembly", "src\Microsoft.DotNet.XHarness.WebAssembly\Microsoft.DotNet.XHarness.WebAssembly.csproj", "{5FA41A33-FCB0-4F08-B974-13DCBB8F59A0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.WebAssembly", "src\Microsoft.DotNet.XHarness.WebAssembly\Microsoft.DotNet.XHarness.WebAssembly.csproj", "{5FA41A33-FCB0-4F08-B974-13DCBB8F59A0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.TestRunners.Xunit", "src\Microsoft.DotNet.XHarness.TestRunners.Xunit\Microsoft.DotNet.XHarness.TestRunners.Xunit.csproj", "{0F780F3E-8D05-428E-9C78-FEDDDA7DD3D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.TestRunners.Xunit", "src\Microsoft.DotNet.XHarness.TestRunners.Xunit\Microsoft.DotNet.XHarness.TestRunners.Xunit.csproj", "{0F780F3E-8D05-428E-9C78-FEDDDA7DD3D1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.TestRunners.Common", "src\Microsoft.DotNet.XHarness.TestRunners.Common\Microsoft.DotNet.XHarness.TestRunners.Common.csproj", "{37D41633-1E59-43EE-AFF9-8DA9AB25BD1D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.TestRunners.Common", "src\Microsoft.DotNet.XHarness.TestRunners.Common\Microsoft.DotNet.XHarness.TestRunners.Common.csproj", "{37D41633-1E59-43EE-AFF9-8DA9AB25BD1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

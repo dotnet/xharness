@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI
     /// Exit codes to use for common failure reasons; if you add a new exit code, add it here and use the enum.
     /// The first part conforms with xUnit: https://xunit.net/docs/getting-started/netfx/visual-studio
     /// </summary>
-    internal enum ExitCode
+    public enum ExitCode
     {
         /// <summary>
         /// The tests ran successfully

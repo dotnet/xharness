@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
@@ -11,7 +12,7 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 {
-    internal abstract class XHarnessCommand : Command
+    public abstract class XHarnessCommand : Command
     {
         /// <summary>
         /// Will be printed in the header when help is invoked.
@@ -27,6 +28,8 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
         protected abstract XHarnessCommandArguments Arguments { get; }
 
+        protected IEnumerable<string> PassThroughArguments { get; private set; } = Enumerable.Empty<string>();
+
         protected XHarnessCommand(string name, string? help = null) : base(name, help)
         {
         }
@@ -40,6 +43,13 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
             try
             {
+                var passThroughArguments = arguments.TakeWhile(arg => arg != "--");
+                if (passThroughArguments.Count() < arguments.Count())
+                {
+                    arguments = arguments.Skip(passThroughArguments.Count() + 1);
+                    PassThroughArguments = passThroughArguments;
+                }
+
                 var extra = options.Parse(arguments);
 
                 if (extra.Count > 0)

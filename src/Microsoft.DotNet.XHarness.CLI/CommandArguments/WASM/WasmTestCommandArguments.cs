@@ -10,6 +10,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {
     internal class WasmTestCommandArguments : TestCommandArguments
     {
-        protected override OptionSet GetTestCommandOptions() => new OptionSet();
+        protected override OptionSet GetTestCommandOptions() => new OptionSet
+        {
+
+        };
     }
 }
