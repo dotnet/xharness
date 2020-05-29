@@ -116,8 +116,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             // them. NUnit3 already gave us the xml we need to use
             foreach (var testRun in result)
             {
-                foreach (var node in testRun.Result.ChildNodes.Where(n => n.Name != "environment"))
+                for (var i = 0; i < testRun.Result.ChildNodes.Count; i++)
                 {
+                    var node = testRun.Result.ChildNodes[i];
+                    if (node.Name == "environment") continue;
                     node.WriteTo(_xmlWriter);
                 }
             }
