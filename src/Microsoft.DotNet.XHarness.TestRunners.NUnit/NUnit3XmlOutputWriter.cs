@@ -18,8 +18,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
     /// </summary>
     internal class NUnit3XmlOutputWriter : OutputWriter
     {
-        readonly DateTime _runStartTime;
-        XmlWriter? _xmlWriter;
+        private readonly DateTime _runStartTime;
+        private XmlWriter? _xmlWriter;
 
         public NUnit3XmlOutputWriter(DateTime runStartTime) => _runStartTime = runStartTime;
 
@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             }
         }
 
-        void WriteXmlOutput(IResultSummary result, XmlWriter xmlWriter)
+        private void WriteXmlOutput(IResultSummary result, XmlWriter xmlWriter)
         {
             _xmlWriter = xmlWriter;
 
@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             TerminateXmlFile();
         }
 
-        void InitializeXmlFile(IResultSummary result)
+        private void InitializeXmlFile(IResultSummary result)
         {
             if (_xmlWriter == null) // should never happen, would mean a programmers error
                 throw new InvalidOperationException("Null writer");
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             WriteEnvironmentElement();
         }
 
-        void WriteEnvironmentElement()
+        private void WriteEnvironmentElement()
         {
             if (_xmlWriter == null) // should never happen, would mean a programmers error
                 throw new InvalidOperationException("Null writer");
@@ -110,22 +110,20 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             _xmlWriter.WriteEndElement();
         }
 
-        void WriteResultElement(IResultSummary result)
+        private void WriteResultElement(IResultSummary result)
         {
             // much simpler than in other writers, we just need to get the child nodes of each of the test-run and write
             // them. NUnit3 already gave us the xml we need to use
             foreach (var testRun in result)
             {
-                for (var i = 0; i < testRun.Result.ChildNodes.Count; i++)
+                foreach (var node in testRun.Result.ChildNodes.Where(n => n.Name != "environment"))
                 {
-                    var node = testRun.Result.ChildNodes[i];
-                    if (node.Name == "environment") continue;
                     node.WriteTo(_xmlWriter);
                 }
             }
         }
 
-        void TerminateXmlFile()
+        private void TerminateXmlFile()
         {
             if (_xmlWriter == null) // should never happen, would mean a programmer's error
                 throw new InvalidOperationException("Null writer");
