@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
     internal class WasmTestCommand : TestCommand
     {
-        private const string CommandHelp = "Executes BCL xunit tests on WASM";
+        private const string CommandHelp = "Executes BCL xunit tests on WASM. It starts a JavaScript engine which calls a test runner inside of the WASM application.";
         private readonly WasmTestCommandArguments _arguments = new WasmTestCommandArguments();
         protected override TestCommandArguments TestArguments => _arguments;
         protected override string CommandUsage { get; } = "wasm test [OPTIONS] -- [ENGINE OPTIONS]";
