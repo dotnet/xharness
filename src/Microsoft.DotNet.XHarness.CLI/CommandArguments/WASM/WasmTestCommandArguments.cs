@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             { "engine-arg=", "Argument to pass to the JavaScript engine. Can be used more than once.",
                 v => EngineArgs.Add(v)
             },
-            { "js-file=", "Main JavaScript file to be run on the JavaScript engine",
+            { "js-file=", "Main JavaScript file to be run on the JavaScript engine. Default is runtime.js",
                 v => JSFile = v
             },
         };
