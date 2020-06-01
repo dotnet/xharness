@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         private const string CommandHelp = "Executes BCL xunit tests on WASM";
         private readonly WasmTestCommandArguments _arguments = new WasmTestCommandArguments();
         protected override TestCommandArguments TestArguments => _arguments;
-        protected override string CommandUsage { get; } = "wasm test [OPTIONS]";
+        protected override string CommandUsage { get; } = "wasm test [OPTIONS] -- [ENGINE OPTIONS]";
         protected override string CommandDescription { get; } = CommandHelp;
         public IEnumerable<string> PassThroughArgs => PassThroughArguments;
 
