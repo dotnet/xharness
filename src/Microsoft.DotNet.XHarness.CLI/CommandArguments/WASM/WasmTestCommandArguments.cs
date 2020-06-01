@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public string JSFile { get; set;} = "runtime.js";
 
         protected override OptionSet GetTestCommandOptions() => new OptionSet{
-            { "engine=|e=", "Run on the listed javascript engine.",
+            { "engine=|e=", "Specifies the JavaScript engine to be used",
                 v => Engine = ParseArgument<JavaScriptEngine>("engine", v)
             },
             { "engine-arg=", "Argument to pass to the javascript engine. It can be used more than once.",
