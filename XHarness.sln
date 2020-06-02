@@ -38,6 +38,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.TestRunners.Common", "src\Microsoft.DotNet.XHarness.TestRunners.Common\Microsoft.DotNet.XHarness.TestRunners.Common.csproj", "{37D41633-1E59-43EE-AFF9-8DA9AB25BD1D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.TestRunners.NUnit", "src\Microsoft.DotNet.XHarness.TestRunners.NUnit\Microsoft.DotNet.XHarness.TestRunners.NUnit.csproj", "{D51E7536-E698-42F4-939A-F259D543D1E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -92,6 +94,10 @@ Global
 		{37D41633-1E59-43EE-AFF9-8DA9AB25BD1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37D41633-1E59-43EE-AFF9-8DA9AB25BD1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37D41633-1E59-43EE-AFF9-8DA9AB25BD1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D51E7536-E698-42F4-939A-F259D543D1E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D51E7536-E698-42F4-939A-F259D543D1E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D51E7536-E698-42F4-939A-F259D543D1E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D51E7536-E698-42F4-939A-F259D543D1E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -109,6 +115,7 @@ Global
 		{EB718364-434C-43F7-AE12-74F272B86C45} = {1018BF4C-BD8F-49D7-9797-758E68B9FC9D}
 		{0F780F3E-8D05-428E-9C78-FEDDDA7DD3D1} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
 		{37D41633-1E59-43EE-AFF9-8DA9AB25BD1D} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
+		{D51E7536-E698-42F4-939A-F259D543D1E1} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {56D5F4DA-F710-4026-8F49-4A903BCAA9B5}
