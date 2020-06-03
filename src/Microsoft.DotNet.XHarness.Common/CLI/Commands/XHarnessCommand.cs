@@ -14,6 +14,12 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 {
     public abstract class XHarnessCommand : Command
     {
+        /// <summary>
+        /// The verbatim "--" argument used for pass-through args is removed by Mono.Options when parsing CommandSets,
+        /// so in Program.cs, we temporarily replace it with this string and then recognize it back here.
+        /// </summary>
+        public const string VerbatimArgumentPlaceholder = "[[%verbatim_argument%]]";
+
         private readonly bool _allowsExtraArgs;
 
         /// <summary>
@@ -58,7 +64,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
             try
             {
-                var regularArguments = arguments.TakeWhile(arg => arg != "--");
+                var regularArguments = arguments.TakeWhile(arg => arg != VerbatimArgumentPlaceholder);
                 if (regularArguments.Count() < arguments.Count())
                 {
                     PassThroughArguments = arguments.Skip(regularArguments.Count() + 1);
