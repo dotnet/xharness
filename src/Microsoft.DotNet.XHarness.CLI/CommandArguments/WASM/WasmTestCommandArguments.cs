@@ -9,9 +9,7 @@ using Mono.Options;
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {
     /// <summary>
-    /// Specifies a name of a JavaScript engine binary used to run WASM application.
-    /// The invocation of the engine binary doesn't depend on a case,
-    /// i.g. both "v8 ..." and "V8 ..." should work.
+    /// Specifies a name of a JavaScript engine used to run WASM application.
     /// </summary>
     internal enum JavaScriptEngine
     {
@@ -22,11 +20,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         /// <summary>
         /// JavaScriptCore
         /// </summary>
-        JSC,
+        JavaScriptCore,
         /// <summary>
         /// SpiderMonkey
         /// </summary>
-        SM,
+        SpiderMonkey,
     }
 
     internal class WasmTestCommandArguments : TestCommandArguments

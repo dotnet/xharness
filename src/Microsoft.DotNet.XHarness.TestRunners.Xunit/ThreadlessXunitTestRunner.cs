@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             var testCasesToRun = discoverySink.TestCases.Where(filters.Filter).ToList();
             Console.WriteLine($"Discovery finished.");
 
-            var summarySink = new DelegatingExecutionSummarySink(testSink, () => false, (completed, summary) => { Console.WriteLine($"Tests run: {summary.Total}, Errors: 0, Failures: {summary.Failed}, Skipped: {summary.Skipped}{Environment.NewLine}Time: {TimeSpan.FromSeconds((double)summary.Time).TotalSeconds}s"); });
+            var summarySink = new DelegatingExecutionSummarySink(testSink, () => false, (completed, summary) => { Console.WriteLine($"Tests run: {summary.Total}, Errors: 0, Failures: {summary.Failed}, Skipped: {summary.Skipped}. Time: {TimeSpan.FromSeconds((double)summary.Time).TotalSeconds}s"); });
             var resultsXmlAssembly = new XElement("assembly");
             var resultsSink = new DelegatingXmlCreationSink(summarySink, resultsXmlAssembly);
 
