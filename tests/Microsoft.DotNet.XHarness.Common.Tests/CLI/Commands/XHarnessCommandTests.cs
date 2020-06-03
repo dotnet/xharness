@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
 using Xunit;
@@ -179,7 +180,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
                 "50",
                 "--enum",
                 "Value2",
-                "--",
+                XHarnessCommand.VerbatimArgumentPlaceholder,
                 "v8",
                 "--foo",
                 "runtime.js",
@@ -193,6 +194,36 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         }
 
         [Fact]
+        public void PassThroughArgumentsAreParsedInCommandSet()
+        {
+            var arguments = new SampleUnitTestArguments();
+            var command = new UnitTestCommand<SampleUnitTestArguments>(arguments, false);
+            var commandSet = new CommandSet("set")
+            {
+                command
+            };
+
+            var exitCode = commandSet.Run(new[]
+            {
+                "unit-test",
+                "-n",
+                "50",
+                "--enum",
+                "Value2",
+                XHarnessCommand.VerbatimArgumentPlaceholder,
+                "v8",
+                "--foo",
+                "runtime.js",
+            });
+
+            Assert.Equal(0, exitCode);
+            Assert.True(command.CommandRun);
+            Assert.Equal(50, arguments.Number);
+            Assert.Equal(SampleEnum.Value2, arguments.Enum);
+            Assert.Equal(new[] { "v8", "--foo", "runtime.js" }, command.PassThroughArgs.ToArray());
+        }
+
+        [Fact]
         public void ExtraneousArgumentsDetectedInPassThroughMode()
         {
             var exitCode = _command.Invoke(new[]
@@ -200,7 +231,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
                 "v8",
                 "--foo",
                 "runtime.js",
-                "--",
+                XHarnessCommand.VerbatimArgumentPlaceholder,
                 "-n",
                 "50",
                 "--enum",
