@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         {
             var testRunner = new ThreadlessXunitTestRunner();
 
-            var result = testRunner.Run(TestAssembly, printXml: false, ExcludedTraits);
+            var result = testRunner.Run(TestAssembly, printXml: true, ExcludedTraits);
 
             return result;
         }
