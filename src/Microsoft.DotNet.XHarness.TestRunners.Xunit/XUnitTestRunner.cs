@@ -987,7 +987,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
                     var assemblyElement = new XElement("assembly");
                     IExecutionSink resultsSink = new DelegatingExecutionSummarySink(messageSink, null, null);
+                    // write the xml
                     resultsSink = new DelegatingXmlCreationSink(resultsSink, assemblyElement);
+                    // converts failed tests due to the SkipTestException to Skipped tests
+                    resultsSink = new DelegatingSkippedTestSink(resultsSink);
                     ITestFrameworkExecutionOptions executionOptions = GetFrameworkOptionsForExecution(configuration);
                     executionOptions.SetDisableParallelization(!RunInParallel);
                     executionOptions.SetSynchronousMessageReporting(true);
