@@ -221,13 +221,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             if (args == null || args.Message == null)
                 return;
 
-            // For SkipTestExceptions, we treat as a skip instead of a failure
-            if (args.Message.ExceptionTypes.Contains("Microsoft.DotNet.XUnitExtensions.SkipTestException"))
-            {
-                RaiseTestSkippedCase(args.Message, args.Message.TestCases, args.Message.TestCase);
-                return;
-            }
-
             FailedTests++;
             string assemblyInfo = GetAssemblyInfo(args.Message.TestAssembly);
             var sb = new StringBuilder($"\t[FAIL] {args.Message.TestCase.DisplayName}");
