@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                         if (attempt == maxAttempts)
                         {
-                            throw;
+                            throw new NoDeviceFoundException("Failed to find/create suitable simulator");
                         }
                     }
                     finally

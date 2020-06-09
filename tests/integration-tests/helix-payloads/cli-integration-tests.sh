@@ -41,6 +41,7 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
     --targets=ios-simulator-64         \
     --timeout=600                      \
     --launch-timeout=360               \
+    --xcode=/Applications/Xcode115.app \
     -v
 
 result=$?
@@ -59,7 +60,7 @@ fi
 echo "Found test results in '$1/$test_results'. Renaming to testResults.xml"
 
 # Prepare test results for Helix to pick up
-cp "$test_results" "$2/testResults.xml"
+mv "$test_results" "$2/testResults.xml"
 
 if ! cat "$2/testResults.xml" | grep 'collection total="19" passed="19" failed="0" skipped="0"'; then
     echo "Failed to detect result line"

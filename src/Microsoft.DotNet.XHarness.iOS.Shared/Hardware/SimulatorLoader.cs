@@ -389,16 +389,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 if (companionDevices?.Any() != true)
                 {
                     throw new Exception($"Could not find or create companion devices{Environment.NewLine}" +
-                    $"runtime: {companionRuntime}{Environment.NewLine}" +
-                    $"device type: {companionDeviceType}");
+                        $"runtime: {companionRuntime}{Environment.NewLine}" +
+                        $"device type: {companionDeviceType}");
                 }
 
                 var pair = await FindOrCreateDevicePairAsync(log, devices, companionDevices);
                 if (pair == null)
                 {
                     throw new Exception($"Could not find or create device pair{Environment.NewLine}" +
-                    $"runtime: {companionRuntime}{Environment.NewLine}" +
-                    $"device type: {companionDeviceType}");
+                        $"runtime: {companionRuntime}{Environment.NewLine}" +
+                        $"device type: {companionDeviceType}");
                 }
 
                 simulator = devices.First(v => v.UDID == pair.Gizmo);
