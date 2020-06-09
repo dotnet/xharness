@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         private static string s_currentDeviceSerial = "";
         private readonly Mock<ILogger> _mainLog;
         private readonly Mock<IAdbProcessManager> _processManager;
-        private Dictionary<Tuple<string, string>, int> _fakeDeviceList;
+        private readonly Dictionary<Tuple<string, string>, int> _fakeDeviceList;
 
 
         public AdbRunnerTests()

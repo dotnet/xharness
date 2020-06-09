@@ -5,7 +5,6 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
-using Microsoft.DotNet.XHarness.Android.Execution;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
