@@ -59,7 +59,8 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public void SetActiveDevice(string? deviceSerialNumber)
         {
-            _processManager.DeviceSerial = deviceSerialNumber ?? "";
+            _processManager.DeviceSerial = deviceSerialNumber ?? string.Empty;
+
             _log.LogInformation($"Active Android device set to serial '{deviceSerialNumber}'");
         }
 

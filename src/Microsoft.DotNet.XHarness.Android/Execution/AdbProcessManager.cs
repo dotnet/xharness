@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
         ///  Whenever there are multiple devices attached to a system, most ADB commands will fail
         ///  unless the specific device id is provided with -s {device serial #}
         /// </summary>
-        public string DeviceSerial { get; set; } = "";
+        public string DeviceSerial { get; set; } = string.Empty;
 
         public ProcessExecutionResults Run(string adbExePath, string arguments)
         { 
