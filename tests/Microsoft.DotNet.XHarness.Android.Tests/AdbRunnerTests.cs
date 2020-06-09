@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
             _processManager = new Mock<IAdbProcessManager>();
 
             // Fake devices to pretend are attached to the system
-            InitializeFakeDeviceList();
+            _fakeDeviceList = InitializeFakeDeviceList();
 
             // Fake ADB executable since its path is checked 
             Directory.CreateDirectory(s_scratchAndOutputPath);
@@ -180,13 +180,14 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         #region Helper Functions
         // Generates a list of fake devices, one per supported architecture so we can test AdbRunner's parsing of the output.
         // As with most of these tests, if adb.exe changes (we are locked into specific version) 
-        private void InitializeFakeDeviceList()
+        private Dictionary<Tuple<string, string>, int> InitializeFakeDeviceList()
         {
             var r = new Random();
-            _fakeDeviceList = new Dictionary<Tuple<string, string>, int>();
-            _fakeDeviceList.Add(new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86_64"), 0);
-            _fakeDeviceList.Add(new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86"), 0);
-            _fakeDeviceList.Add(new Tuple<string, string>($"somedevice-{r.Next(9999)}", "arm64v8"), 0);
+            Dictionary<Tuple<string, string>, int> values = new Dictionary<Tuple<string, string>, int>();
+            values.Add(new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86_64"), 0);
+            values.Add(new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86"), 0);
+            values.Add(new Tuple<string, string>($"somedevice-{r.Next(9999)}", "arm64v8"), 0);
+            return values;
         }
 
         private ProcessExecutionResults CallFakeProcessManager(string process, string arguments, TimeSpan timeout)
