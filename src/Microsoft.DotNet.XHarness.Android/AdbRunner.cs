@@ -7,8 +7,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
+using Microsoft.DotNet.XHarness.Android.Execution;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Android
@@ -18,14 +18,19 @@ namespace Microsoft.DotNet.XHarness.Android
         #region Constructor and state variables
 
         private const string AdbEnvironmentVariableName = "ADB_EXE_PATH";
-
         private readonly string _absoluteAdbExePath;
         private readonly ILogger _log;
-        private string? _currentDevice;
+        private IAdbProcessManager _processManager;
 
-        public AdbRunner(ILogger log, string adbExePath = "")
+
+        public AdbRunner(ILogger log, string adbExePath = "") : this(log, new AdbProcessManager(log), adbExePath) { }
+
+        public AdbRunner(ILogger log, IAdbProcessManager processManager, string adbExePath = "")
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
+
+            // If we don't get passed one in, use the real implementation
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
 
             // We need to find ADB.exe somewhere
             string environmentPath = Environment.GetEnvironmentVariable(AdbEnvironmentVariableName);
@@ -54,7 +59,8 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public void SetActiveDevice(string? deviceSerialNumber)
         {
-            _currentDevice = deviceSerialNumber;
+            _processManager.DeviceSerial = deviceSerialNumber ?? string.Empty;
+
             _log.LogInformation($"Active Android device set to serial '{deviceSerialNumber}'");
         }
 
@@ -95,7 +101,7 @@ namespace Microsoft.DotNet.XHarness.Android
             if (result.ExitCode != 0)
             {
                 // Could throw here, but it would tear down a possibly otherwise acceptable execution.
-                _log.LogError($"Error getting ADB log:{Environment.NewLine}{FormatProcessOutputs(result)}");
+                _log.LogError($"Error getting ADB log:{Environment.NewLine}{result}");
             }
             else
             {
@@ -153,7 +159,7 @@ namespace Microsoft.DotNet.XHarness.Android
             var result = RunAdbCommand($"install \"{apkPath}\"");
             if (result.ExitCode != 0)
             {
-                _log.LogError($"Error:{Environment.NewLine}{FormatProcessOutputs(result)}");
+                _log.LogError($"Error:{Environment.NewLine}{result}");
             }
             else
             {
@@ -182,7 +188,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             else
             {
-                _log.LogError($"Error: {FormatProcessOutputs(result)}");
+                _log.LogError(message: $"Error: {result}");
             }
             return result.ExitCode;
         }
@@ -194,7 +200,7 @@ namespace Microsoft.DotNet.XHarness.Android
             var result = RunAdbCommand($"shell am kill --user all {apkName}");
             if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
             {
-                _log.LogError($"Error:{Environment.NewLine}{FormatProcessOutputs(result)}");
+                _log.LogError($"Error:{Environment.NewLine}{result}");
             }
             else
             {
@@ -242,7 +248,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
                 if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
                 {
-                    _log.LogError($"ERROR: {FormatProcessOutputs(result)}");
+                    _log.LogError(message: $"ERROR: {result}");
                 }
                 else
                 {
@@ -302,7 +308,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
                 if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
                 {
-                    Exception theException = new Exception($"ERROR: {FormatProcessOutputs(result)}");
+                    Exception theException = new Exception($"ERROR: {result}");
                     _log.LogError(theException, "Failure pushing files");
                     throw theException;
                 }
@@ -372,13 +378,13 @@ namespace Microsoft.DotNet.XHarness.Android
             return devicesAndArchitectures;
         }
 
-        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, TimeSpan timeout) =>
+        public ProcessExecutionResults RunApkInstrumentation(string apkName, TimeSpan timeout) =>
             RunApkInstrumentation(apkName, "", new Dictionary<string, string>(), timeout);
 
-        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, Dictionary<string, string> args, TimeSpan timeout) =>
+        public ProcessExecutionResults RunApkInstrumentation(string apkName, Dictionary<string, string> args, TimeSpan timeout) =>
             RunApkInstrumentation(apkName, "", args, timeout);
 
-        public (string StandardOutput, string StandardError, int ExitCode) RunApkInstrumentation(string apkName, string? instrumentationClassName, Dictionary<string, string> args, TimeSpan timeout)
+        public ProcessExecutionResults RunApkInstrumentation(string apkName, string? instrumentationClassName, Dictionary<string, string> args, TimeSpan timeout)
         {
             string displayName = string.IsNullOrEmpty(instrumentationClassName) ? "{default}" : instrumentationClassName;
             string appArguments = "";
@@ -415,7 +421,7 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 _log.LogInformation($"Running instrumentation class {displayName} took {stopWatch.Elapsed.TotalSeconds} seconds");
             }
-            _log.LogDebug(FormatProcessOutputs(result));
+            _log.LogDebug(result.ToString());
             return result;
         }
 
@@ -423,92 +429,19 @@ namespace Microsoft.DotNet.XHarness.Android
 
         #region Process runner helpers
 
-        private string FormatProcessOutputs((string StandardOutput, string StandardError, int ExitCode) result)
-        {
-            StringBuilder output = new StringBuilder();
-            output.AppendLine($"Exit code: {result.ExitCode}");
-            output.AppendLine($"Standard Output:{Environment.NewLine}{result.StandardOutput}");
-            if (!string.IsNullOrEmpty(result.StandardError))
-            {
-                output.AppendLine($"Standard Error:{Environment.NewLine}{result.StandardOutput}");
-            }
-            return output.ToString();
-        }
-
-        public (string StandardOutput, string StandardError, int ExitCode) RunAdbCommand(string command)
+        public ProcessExecutionResults RunAdbCommand(string command)
         {
             return RunAdbCommand(command, TimeSpan.FromMinutes(5));
         }
 
-        public (string StandardOutput, string StandardError, int ExitCode) RunAdbCommand(string command, TimeSpan timeOut)
+        public ProcessExecutionResults RunAdbCommand(string command, TimeSpan timeOut)
         {
             if (!File.Exists(_absoluteAdbExePath))
             {
                 throw new FileNotFoundException($"Provided path for adb.exe was not valid ('{_absoluteAdbExePath}')");
             }
 
-            string deviceSerialArgs = string.IsNullOrEmpty(_currentDevice) ? string.Empty : $"-s {_currentDevice}";
-
-            _log.LogDebug($"Executing command: '{_absoluteAdbExePath} {deviceSerialArgs} {command}'");
-
-            ProcessStartInfo processStartInfo = new ProcessStartInfo
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                WorkingDirectory = Path.GetDirectoryName(_absoluteAdbExePath),
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                FileName = _absoluteAdbExePath,
-                Arguments = $"{deviceSerialArgs} {command}",
-            };
-            var p = new Process() { StartInfo = processStartInfo };
-            var standardOut = new StringBuilder();
-            var standardErr = new StringBuilder();
-
-            p.OutputDataReceived += delegate (object sender, DataReceivedEventArgs e)
-            {
-                lock (standardOut)
-                {
-                    if (e.Data != null)
-                        standardOut.AppendLine(e.Data);
-                }
-            };
-
-            p.ErrorDataReceived += delegate (object sender, DataReceivedEventArgs e)
-            {
-                lock (standardErr)
-                {
-                    if (e.Data != null)
-                        standardErr.AppendLine(e.Data);
-                }
-            };
-
-            p.Start();
-
-            p.BeginOutputReadLine();
-            p.BeginErrorReadLine();
-
-            // Allow the process time to send messages to the above delegates
-            // if the process exits very quickly
-            Thread.Sleep(1000);
-
-            bool finishedNormally = p.WaitForExit((int)Math.Min(timeOut.TotalMilliseconds, int.MaxValue));
-
-            // Lock the stringbuilders used as rarely this can cause concurrency issues
-            // resulting in "Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'chunkLength')"
-            lock (standardOut)
-            lock (standardErr)
-            {
-                // If we allow any timespan to be max value, it could cause unusual behavior, force max-int max (still a LOT)
-                // (int.MaxValue ms is about 24 days).  Large values are effectively timeouts for the outer harness
-                if (!finishedNormally)
-                {
-                    _log.LogError("Waiting for command timed out: execution may be compromised.");
-                    return (standardOut.ToString(), standardErr.ToString(), (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT);
-                }
-
-                return (standardOut.ToString(), standardErr.ToString(), p.ExitCode);
-            }
+            return _processManager.Run(_absoluteAdbExePath, command, timeOut);
         }
 
         #endregion

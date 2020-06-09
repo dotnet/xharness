@@ -115,13 +115,13 @@ Arguments:
                 }
 
                 // No class name = default Instrumentation
-                (string stdOut, _, int exitCode) = runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
+                var result = runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
 
                 using (logger.BeginScope("Post-test copy and cleanup"))
                 {
-                    if (exitCode == (int)ExitCode.SUCCESS)
+                    if (result.ExitCode == (int)ExitCode.SUCCESS)
                     {
-                        (var resultValues, var instrExitCode) = ParseInstrumentationOutputs(logger, stdOut);
+                        (var resultValues, var instrExitCode) = ParseInstrumentationOutputs(logger, result.StandardOutput);
 
                         // This is where test instrumentation can communicate outwardly that test execution failed
                         instrumentationExitCode = instrExitCode;
