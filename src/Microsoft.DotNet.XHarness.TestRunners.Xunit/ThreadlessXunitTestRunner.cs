@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 ParseEqualSeparatedArgument(filters.ExcludedTraits, trait);
             }
 
-            var configuration = new TestAssemblyConfiguration() { ShadowCopy = false, ParallelizeAssembly = false, ParallelizeTestCollections = false, MaxParallelThreads = 1 };
+            var configuration = new TestAssemblyConfiguration() { ShadowCopy = false, ParallelizeAssembly = false, ParallelizeTestCollections = false, MaxParallelThreads = 1, PreEnumerateTheories = false };
             var discoveryOptions = TestFrameworkOptions.ForDiscovery(configuration);
             var discoverySink = new TestDiscoverySink();
             var diagnosticSink = new ConsoleDiagnosticMessageSink();
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 Console.WriteLine($"STARTRESULTXML");
                 var resultsXml = new XElement("assemblies");
                 resultsXml.Add(resultsXmlAssembly);
-                Console.WriteLine(resultsXml.ToString());
+                resultsXml.Save(Console.OpenStandardOutput());
                 Console.WriteLine();
                 Console.WriteLine($"ENDRESULTXML");
             }
