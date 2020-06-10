@@ -46,6 +46,12 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
 result=$?
 
+# Kill the simulator after we're done
+pid=`ps aux | grep "$simulator_app" | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
+if [ ! -z "$pid" ]; then
+    sudo kill "$pid"
+fi
+
 # iPhone simulator logs are published under root and cannot be read
 chmod 0644 "$1"/*.log "$1"/*.xml
 
