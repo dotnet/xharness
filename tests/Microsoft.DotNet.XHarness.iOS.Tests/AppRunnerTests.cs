@@ -174,7 +174,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                Enumerable.Empty<string>());
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -253,7 +254,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                new[] { "--appArg1=value1", "--appArg2" });
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -293,6 +295,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 "-setenv=NUNIT_TRANSPORT=TCP " +
                 $"-argument=-app-arg:-hostport:{Port} " +
                 $"-setenv=NUNIT_HOSTPORT={Port} " +
+                "-argument=-app-arg:--appArg1=value1 " +
+                "-argument=-app-arg:--appArg2 " +
                 "-argument=-app-arg:-hostname:127.0.0.1 " +
                 "-setenv=NUNIT_HOSTNAME=127.0.0.1 " +
                 $"--device=:v2:udid={simulator.Object.UDID} " +
@@ -345,7 +349,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                Enumerable.Empty<string>());
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -409,7 +414,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                new[] { "--appArg1=value1", "--appArg2" });
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -451,6 +457,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 "-setenv=NUNIT_TRANSPORT=TCP " +
                 $"-argument=-app-arg:-hostport:{Port} " +
                 $"-setenv=NUNIT_HOSTPORT={Port} " +
+                "-argument=-app-arg:--appArg1=value1 " +
+                "-argument=-app-arg:--appArg2 " +
                 $"-argument=-app-arg:-hostname:{ips} " +
                 $"-setenv=NUNIT_HOSTNAME={ips} " +
                 "--disable-memory-limits " +
@@ -527,7 +535,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                Enumerable.Empty<string>());
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -641,7 +650,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                Enumerable.Empty<string>());
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
