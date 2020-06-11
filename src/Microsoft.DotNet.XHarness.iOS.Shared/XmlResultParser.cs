@@ -167,7 +167,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             var passed = total - errors - failed - notRun - inconclusive - ignored - skipped - invalid;
             var resultLine = $"Tests run: {total} Passed: {passed} Inconclusive: {inconclusive} Failed: {failed + errors} Ignored: {ignored + skipped + invalid}";
             writer?.WriteLine(resultLine);
-            return (resultLine, total == 0 || errors != 0 || failed != 0);
+            return (resultLine, errors != 0 || failed != 0);
         }
 
         static (string resultLine, bool failed) ParseNUnitXml(StreamReader stream, StreamWriter? writer)
@@ -242,7 +242,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             string resultLine = $"Tests run: {total} Passed: {passed} Inconclusive: {inconclusive} Failed: {failed + errors} Ignored: {ignored + skipped + invalid}";
             writer?.WriteLine(resultLine);
 
-            return (resultLine, total == 0 | errors != 0 || failed != 0);
+            return (resultLine, errors != 0 || failed != 0);
         }
 
         static (string resultLine, bool failed) ParsexUnitXml(StreamReader stream, StreamWriter? writer)
@@ -311,7 +311,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             string resultLine = $"Tests run: {total} Passed: {passed} Inconclusive: {inconclusive} Failed: {failed + errors} Ignored: {ignored + skipped + invalid}";
             writer?.WriteLine(resultLine);
 
-            return (resultLine, total == 0 | errors != 0 || failed != 0);
+            return (resultLine, errors != 0 || failed != 0);
         }
 
         public string GetXmlFilePath(string path, XmlResultJargon xmlType)
