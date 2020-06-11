@@ -7,90 +7,73 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 {
     public static class Extensions
     {
-        public static string AsString(this TestTarget @this)
+        public static string AsString(this TestTarget target) => target switch
         {
-            switch (@this)
+            TestTarget.Device_iOS => "ios-device",
+            TestTarget.Device_tvOS => "tvos-device",
+            TestTarget.Device_watchOS => "watchos-device",
+            TestTarget.Simulator_iOS => "ios-simulator",
+            TestTarget.Simulator_iOS32 => "ios-simulator-32",
+            TestTarget.Simulator_iOS64 => "ios-simulator-64",
+            TestTarget.Simulator_tvOS => "tvos-simulator",
+            TestTarget.Simulator_watchOS => "watchos-simulator",
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        public static string AsString(this TestTargetOs targetOs) =>
+            targetOs.Platform.AsString() + (targetOs.OSVersion != null ? "_" + targetOs.OSVersion : null);
+
+        public static TestTarget ParseAsAppRunnerTarget(this string target) => target switch
+        {
+            "ios-device" => TestTarget.Device_iOS,
+            "tvos-device" => TestTarget.Device_tvOS,
+            "watchos-device" => TestTarget.Device_watchOS,
+            "ios-simulator" => TestTarget.Simulator_iOS,
+            "ios-simulator-32" => TestTarget.Simulator_iOS32,
+            "ios-simulator-64" => TestTarget.Simulator_iOS64,
+            "tvos-simulator" => TestTarget.Simulator_tvOS,
+            "watchos-simulator" => TestTarget.Simulator_watchOS,
+            null => TestTarget.None,
+            "" => TestTarget.None,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        public static TestTargetOs ParseAsAppRunnerTargetOs(this string targetName)
+        {
+            var index = targetName.LastIndexOf('_');
+            TestTarget target;
+            string? osVersion = null;
+            if (index != -1)
             {
-                case TestTarget.None:
-                    return null;
-                case TestTarget.Device_iOS:
-                    return "ios-device";
-                case TestTarget.Device_tvOS:
-                    return "tvos-device";
-                case TestTarget.Device_watchOS:
-                    return "watchos-device";
-                case TestTarget.Simulator_iOS:
-                    return "ios-simulator";
-                case TestTarget.Simulator_iOS32:
-                    return "ios-simulator-32";
-                case TestTarget.Simulator_iOS64:
-                    return "ios-simulator-64";
-                case TestTarget.Simulator_tvOS:
-                    return "tvos-simulator";
-                case TestTarget.Simulator_watchOS:
-                    return "watchos-simulator";
-                default:
-                    throw new ArgumentOutOfRangeException();
+                target = targetName.Substring(0, index).ParseAsAppRunnerTarget();
+                osVersion = targetName.Substring(index + 1);
             }
+            else
+            {
+                target = targetName.ParseAsAppRunnerTarget();
+            }
+
+            return new TestTargetOs(target, osVersion);
         }
 
-        public static TestTarget ParseAsAppRunnerTarget(this string @this)
+        public static Extension ParseFromNSExtensionPointIdentifier(this string identifier) => identifier switch
         {
-            switch (@this)
-            {
-                case "ios-device":
-                    return TestTarget.Device_iOS;
-                case "tvos-device":
-                    return TestTarget.Device_tvOS;
-                case "watchos-device":
-                    return TestTarget.Device_watchOS;
-                case "ios-simulator":
-                    return TestTarget.Simulator_iOS;
-                case "ios-simulator-32":
-                    return TestTarget.Simulator_iOS32;
-                case "ios-simulator-64":
-                    return TestTarget.Simulator_iOS64;
-                case "tvos-simulator":
-                    return TestTarget.Simulator_tvOS;
-                case "watchos-simulator":
-                    return TestTarget.Simulator_watchOS;
-                case null:
-                case "":
-                    return TestTarget.None;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
+            "com.apple.widget-extension" => Extension.TodayExtension,
+            "com.apple.watchkit" => Extension.WatchKit2,
+            _ => throw new ArgumentOutOfRangeException()
+        };
 
-        public static Extension ParseFromNSExtensionPointIdentifier(this string @this)
+        public static string AsNSExtensionPointIdentifier(this Extension extension) => extension switch
         {
-            switch (@this)
-            {
-                case "com.apple.widget-extension":
-                    return Extension.TodayExtension;
-                case "com.apple.watchkit":
-                    return Extension.WatchKit2;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        public static string AsNSExtensionPointIdentifier(this Extension @this)
-        {
-            switch (@this)
-            {
-                case Extension.TodayExtension:
-                    return "com.apple.widget-extension";
-                case Extension.WatchKit2:
-                    return "com.apple.watchkit";
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
+            Extension.TodayExtension => "com.apple.widget-extension",
+            Extension.WatchKit2 => "com.apple.watchkit",
+            _ => throw new ArgumentOutOfRangeException()
+        };
 
         public static void DoNotAwait(this Task task)
         {

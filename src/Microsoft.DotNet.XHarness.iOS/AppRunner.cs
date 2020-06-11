@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
         public async Task<(string DeviceName, TestExecutingResult Result, string ResultMessage)> RunApp(
             AppBundleInformation appInformation,
-            TestTarget target,
+            TestTargetOs target,
             TimeSpan timeout,
             TimeSpan testLaunchTimeout,
             string? deviceName = null,
@@ -86,8 +86,8 @@ namespace Microsoft.DotNet.XHarness.iOS
             string[]? skippedTestClasses = null,
             CancellationToken cancellationToken = default)
         {
-            var runMode = target.ToRunMode();
-            bool isSimulator = target.IsSimulator();
+            var runMode = target.Platform.ToRunMode();
+            bool isSimulator = target.Platform.IsSimulator();
 
             var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
@@ -200,7 +200,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                     var mlaunchArguments = GetDeviceArguments(
                         appInformation,
                         deviceName,
-                        target.IsWatchOSTarget(),
+                        target.Platform.IsWatchOSTarget(),
                         verbosity,
                         xmlResultJargon,
                         skippedMethods,
@@ -543,7 +543,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             return args;
         }
 
-        private async Task<(ISimulatorDevice, ISimulatorDevice?)> FindSimulators(TestTarget target)
+        private async Task<(ISimulatorDevice, ISimulatorDevice?)> FindSimulators(TestTargetOs target)
         {
             IFileBackedLog simulatorLoadingLog = _logs.Create($"simulator-list-{_helpers.Timestamp}.log", "Simulator list");
 
@@ -568,12 +568,12 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
         }
 
-        private async Task<string> FindDevice(TestTarget target)
+        private async Task<string> FindDevice(TestTargetOs target)
         {
             IHardwareDevice? companionDevice = null;
-            IHardwareDevice device = await _hardwareDeviceLoader.FindDevice(target.ToRunMode(), _mainLog, includeLocked: false, force: false);
+            IHardwareDevice device = await _hardwareDeviceLoader.FindDevice(target.Platform.ToRunMode(), _mainLog, includeLocked: false, force: false);
 
-            if (target.IsWatchOSTarget())
+            if (target.Platform.IsWatchOSTarget())
             {
                 companionDevice = await _hardwareDeviceLoader.FindCompanionDevice(_mainLog, device);
             }

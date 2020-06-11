@@ -4,6 +4,7 @@
 
 using System;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
     public enum TestTarget
@@ -17,6 +18,25 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         Device_iOS,
         Device_tvOS,
         Device_watchOS,
+    }
+
+    public class TestTargetOs
+    {
+        /// <summary>
+        /// Platform, i.e. Simulator iOS x64
+        /// </summary>
+        public TestTarget Platform { get; }
+
+        /// <summary>
+        /// OS version, i.e. "13.4".
+        /// </summary>
+        public string? OSVersion { get; }
+
+        public TestTargetOs(TestTarget platform, string? osVersion)
+        {
+            Platform = platform;
+            OSVersion = osVersion;
+        }
     }
 
     public static class TestTargetExtensions
