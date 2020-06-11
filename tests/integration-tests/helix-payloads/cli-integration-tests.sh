@@ -23,7 +23,7 @@ tar -xzf app.zip
 
 # Restart the simulator to make sure it is tied to the right user session
 xcode_path=`xcode-select -p`
-pgrep "$xcode_path/Applications/Simulator.app" | xargs sudo kill
+sudo pkill -9 -f "$xcode_path/Applications/Simulator.app"
 open -a "$xcode_path/Applications/Simulator.app"
 
 set +e
@@ -43,7 +43,7 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
 result=$?
 
 # Kill the simulator after we're done
-pgrep "$xcode_path/Applications/Simulator.app" | xargs sudo kill
+sudo pkill -9 -f "$xcode_path/Applications/Simulator.app"
 
 # iPhone simulator logs are published under root and cannot be read
 chmod 0644 "$1"/*.log "$1"/*.xml
