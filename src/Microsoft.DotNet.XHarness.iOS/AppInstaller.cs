@@ -30,9 +30,9 @@ namespace Microsoft.DotNet.XHarness.iOS
             _verbosity = verbosity;
         }
 
-        public async Task<(string deviceName, ProcessExecutionResult result)> InstallApp(AppBundleInformation appBundleInformation, TestTarget target, string? deviceName = null, CancellationToken cancellationToken = default)
+        public async Task<(string deviceName, ProcessExecutionResult result)> InstallApp(AppBundleInformation appBundleInformation, TestTargetOs target, string? deviceName = null, CancellationToken cancellationToken = default)
         {
-            if (target.IsSimulator())
+            if (target.Platform.IsSimulator())
             {
                 // We reset the simulator when running, so a separate install step does not make much sense.
                 throw new InvalidOperationException("Installing to a simulator is not supported.");
@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 }
                 else
                 {
-                    device = target switch
+                    device = target.Platform switch
                     {
                         TestTarget.Device_iOS => _deviceLoader.Connected64BitIOS.FirstOrDefault(),
                         TestTarget.Device_tvOS => _deviceLoader.ConnectedTV.FirstOrDefault(),
@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                     };
                 }
 
-                deviceName = target.IsWatchOSTarget() ? (await _deviceLoader.FindCompanionDevice(_mainLog, device)).Name : device?.Name;
+                deviceName = target.Platform.IsWatchOSTarget() ? (await _deviceLoader.FindCompanionDevice(_mainLog, device)).Name : device?.Name;
             }
 
             if (deviceName == null)
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             args.Add(new InstallAppOnDeviceArgument(appBundleInformation.LaunchAppPath));
             args.Add(new DeviceNameArgument(deviceName));
 
-            if (target.IsWatchOSTarget())
+            if (target.Platform.IsWatchOSTarget())
             {
                 args.Add(new DeviceArgument("ios,watchos"));
             }

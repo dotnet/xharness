@@ -46,14 +46,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             _hardwareDeviceLoader = new Mock<IHardwareDeviceLoader>();
             _hardwareDeviceLoader
-                .Setup(x => x.Connected64BitIOS).Returns(new List<IHardwareDevice> {s_mockDevice});
+                .Setup(x => x.Connected64BitIOS).Returns(new List<IHardwareDevice> { s_mockDevice });
 
             Directory.CreateDirectory(s_appPath);
             _appBundleInformation = new AppBundleInformation(
                 appName: "AppName",
                 bundleIdentifier: s_appIdentifier,
                 appPath: s_appPath,
-                launchAppPath:s_appPath,
+                launchAppPath: s_appPath,
                 supports32b: false,
                 extension: null);
         }
@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 1);
 
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await appInstaller.InstallApp(_appBundleInformation, TestTarget.Simulator_iOS64));
+                async () => await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Simulator_iOS64, null)));
         }
 
         [Fact]
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 1);
 
             await Assert.ThrowsAsync<NoDeviceFoundException>(
-                async () => await appInstaller.InstallApp(_appBundleInformation, TestTarget.Device_iOS));
+                async () => await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Device_iOS, null)));
         }
 
         [Fact]
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             // Act
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 2);
 
-            var (deviceName, result) = await appInstaller.InstallApp(_appBundleInformation, TestTarget.Device_iOS);
+            var (deviceName, result) = await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Device_iOS, null));
 
             // Verify
             Assert.Equal(0, result.ExitCode);
@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             // Act
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 2);
 
-            var (deviceName, result) = await appInstaller.InstallApp(_appBundleInformation, TestTarget.Device_iOS, deviceName: "OtherDevice");
+            var (deviceName, result) = await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Device_iOS, null), deviceName: "OtherDevice");
 
             // Verify
             Assert.Equal(0, result.ExitCode);
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 1);
 
             await Assert.ThrowsAsync<NoDeviceFoundException>(
-                async () => await appInstaller.InstallApp(appBundle32b, TestTarget.Device_iOS));
+                async () => await appInstaller.InstallApp(appBundle32b, new TestTargetOs(TestTarget.Device_iOS, null)));
         }
     }
 }
