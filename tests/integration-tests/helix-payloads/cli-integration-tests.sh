@@ -21,12 +21,12 @@ app_name='System.Numerics.Vectors.Tests.app'
 
 tar -xzf app.zip
 
+set +e
+
 # Restart the simulator to make sure it is tied to the right user session
 xcode_path=`xcode-select -p`
 sudo pkill -9 -f "$xcode_path/Applications/Simulator.app"
 open -a "$xcode_path/Applications/Simulator.app"
-
-set +e
 
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
