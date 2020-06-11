@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             string simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
 
             _simulatorLoader
-                .Setup(x => x.FindSimulators(TestTarget.Simulator_tvOS, _mainLog.Object, true, false))
+                .Setup(x => x.FindSimulators(It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_tvOS), _mainLog.Object, true, false))
                 .ThrowsAsync(new NoDeviceFoundException("Failed to find simulator"));
 
             var listenerLogFile = new Mock<IFileBackedLog>();
@@ -191,7 +191,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             await Assert.ThrowsAsync<NoDeviceFoundException>(
                 async () => await appRunner.RunApp(
                     appInformation,
-                    TestTarget.Simulator_tvOS,
+                    new TestTargetOs(TestTarget.Simulator_tvOS, null),
                     TimeSpan.FromSeconds(30),
                     TimeSpan.FromSeconds(30)));
 
@@ -220,7 +220,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             simulator.SetupGet(x => x.SystemLog).Returns(Path.Combine(simulatorLogPath, "system.log"));
 
             _simulatorLoader
-                .Setup(x => x.FindSimulators(TestTarget.Simulator_tvOS, _mainLog.Object, true, false))
+                .Setup(x => x.FindSimulators(It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_tvOS), _mainLog.Object, true, false))
                 .ReturnsAsync((simulator.Object, null));
 
             var testResultFilePath = Path.GetTempFileName();
@@ -269,7 +269,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
-                TestTarget.Simulator_tvOS,
+                new TestTargetOs(TestTarget.Simulator_tvOS, null),
                 TimeSpan.FromSeconds(30),
                 TimeSpan.FromSeconds(30),
                 ensureCleanSimulatorState: true);
@@ -362,7 +362,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             await Assert.ThrowsAsync<NoDeviceFoundException>(
                 async () => await appRunner.RunApp(
                     appInformation,
-                    TestTarget.Device_iOS,
+                    new TestTargetOs(TestTarget.Device_iOS, null),
                     TimeSpan.FromSeconds(30),
                     TimeSpan.FromSeconds(30),
                     ensureCleanSimulatorState: true));
@@ -425,7 +425,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
-                TestTarget.Device_iOS,
+                new TestTargetOs(TestTarget.Device_iOS, null),
                 TimeSpan.FromSeconds(30),
                 TimeSpan.FromSeconds(30));
 
@@ -540,7 +540,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
-                TestTarget.Device_iOS,
+                new TestTargetOs(TestTarget.Device_iOS, null),
                 timeout:TimeSpan.FromSeconds(30),
                 testLaunchTimeout:TimeSpan.FromSeconds(30),
                 skippedMethods: skippedTests);
@@ -652,7 +652,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
-                TestTarget.Device_iOS,
+                new TestTargetOs(TestTarget.Device_iOS, null),
                 timeout:TimeSpan.FromSeconds(30),
                 testLaunchTimeout:TimeSpan.FromSeconds(30),
                 skippedTestClasses: skippedClasses);

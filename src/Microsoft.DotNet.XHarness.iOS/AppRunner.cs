@@ -568,12 +568,12 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
         }
 
-        private async Task<string> FindDevice(TestTarget target)
+        private async Task<string> FindDevice(TestTargetOs target)
         {
             IHardwareDevice? companionDevice = null;
-            IHardwareDevice device = await _hardwareDeviceLoader.FindDevice(target.ToRunMode(), _mainLog, includeLocked: false, force: false);
+            IHardwareDevice device = await _hardwareDeviceLoader.FindDevice(target.Platform.ToRunMode(), _mainLog, includeLocked: false, force: false);
 
-            if (target.IsWatchOSTarget())
+            if (target.Platform.IsWatchOSTarget())
             {
                 companionDevice = await _hardwareDeviceLoader.FindCompanionDevice(_mainLog, device);
             }

@@ -335,59 +335,56 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         /// <param name="log"></param>
         /// <param name="createIfNeeded"></param>
         /// <returns></returns>
-        public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, bool createIfNeeded = true)
+        public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, bool createIfNeeded = true, bool minVersion = false)
         {
-            if (target.OSVersion == null)
+            var runtimePrefix = target.Platform switch
+            {
+                TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimRuntime.iOS-10-3",
+                TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimRuntime.iOS-",
+                TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimRuntime.iOS-",
+                TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimRuntime.tvOS-",
+                TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimRuntime.watchOS-",
+                _ => throw new Exception(string.Format("Invalid simulator target: {0}", target))
+            };
+
+            var runtimeVersion = target.OSVersion;
+
+            if (runtimeVersion == null)
             {
                 if (!_loaded)
                 {
                     await LoadDevices(log);
                 }
 
-                var runtimePrefix = target.Platform switch
-                {
-                    TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimRuntime.iOS-10-3",
-                    TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimRuntime.iOS-",
-                    TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimRuntime.iOS-",
-                    TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimRuntime.tvOS-",
-                    TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimRuntime.watchOS-",
-                    _ => throw new Exception(string.Format("Unknown simulator target: {0}", target))
-                };
+                string? firstOsVersion = _supportedRuntimes
+                    .Where(r => r.Identifier.StartsWith(runtimePrefix))
+                    .OrderByDescending(r => r.Identifier)
+                    .FirstOrDefault()?
+                    .Identifier
+                    .Substring(runtimePrefix.Length + 1);
 
-                _supportedRuntimes.Where(r => r.Identifier.StartsWith(runtimePrefix)).OrderBy(r => );
+                runtimeVersion = firstOsVersion ?? throw new NoDeviceFoundException($"Failed to find a suitable OS runtime version for {target.AsString()}");
             }
 
-            string simulatorDeviceType;
-            string simulatorRuntime;
+            string simulatorRuntime = runtimePrefix + runtimeVersion.Replace('.', '-');
+            string simulatorDeviceType = target.Platform switch
+            {
+                TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
+                TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
+                TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X"),
+                TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p",
+                TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "Apple-Watch-38mm" : "Apple-Watch-Series-3-38mm"),
+                _ => throw new Exception(string.Format("Invalid simulator target: {0}", target))
+            };
+
             string? companionDeviceType = null;
             string? companionRuntime = null;
 
-            switch (target.Platform)
+            if (target.Platform == TestTarget.Simulator_watchOS)
             {
-                case TestTarget.Simulator_iOS32:
-                    simulatorDeviceType = "com.apple.CoreSimulator.SimDeviceType.iPhone-5";
-                    simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-" + target.OSVersion.Replace('.', '-');
-                    break;
-                case TestTarget.Simulator_iOS64:
-                    simulatorDeviceType = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X");
-                    simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-" + (minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator).Replace('.', '-');
-                    break;
-                case TestTarget.Simulator_iOS:
-                    simulatorDeviceType = "com.apple.CoreSimulator.SimDeviceType.iPhone-5";
-                    simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-" + (minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator).Replace('.', '-');
-                    break;
-                case TestTarget.Simulator_tvOS:
-                    simulatorDeviceType = "com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p";
-                    simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.tvOS-" + (minVersion ? SdkVersions.MinTVOSSimulator : SdkVersions.MaxTVOSSimulator).Replace('.', '-');
-                    break;
-                case TestTarget.Simulator_watchOS:
-                    simulatorDeviceType = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "Apple-Watch-38mm" : "Apple-Watch-Series-3-38mm");
-                    simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.watchOS-" + (minVersion ? SdkVersions.MinWatchOSSimulator : SdkVersions.MaxWatchOSSimulator).Replace('.', '-');
-                    companionDeviceType = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X");
-                    companionRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-" + (minVersion ? SdkVersions.MinWatchOSCompanionSimulator : SdkVersions.MaxWatchOSCompanionSimulator).Replace('.', '-');
-                    break;
-                default:
-                    throw new Exception(string.Format("Unknown simulator target: {0}", target));
+                // TODO: Allow to specify companion runtime
+                companionRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-" + (minVersion ? SdkVersions.MinWatchOSCompanionSimulator : SdkVersions.MaxWatchOSCompanionSimulator).Replace('.', '-');
+                companionDeviceType = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X");
             }
 
             var devices = await FindOrCreateDevicesAsync(log, simulatorRuntime, simulatorDeviceType);
@@ -474,7 +471,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     throw new Exception(string.Format("Unknown simulator target: {0}", target));
             }
 
-            return FindSimulators(testTarget, log, createIfNeeded);
+            return FindSimulators(testTarget, log, createIfNeeded: createIfNeeded, minVersion: minVersion);
         }
 
         public ISimulatorDevice FindCompanionDevice(ILog log, ISimulatorDevice device)

@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         };
 
         public static string AsString(this TestTargetOs targetOs) =>
-            targetOs.AsString() + (targetOs.OSVersion != null ? "_" + targetOs.OSVersion : null);
+            targetOs.Platform.AsString() + (targetOs.OSVersion != null ? "_" + targetOs.OSVersion : null);
 
         public static TestTarget ParseAsAppRunnerTarget(this string target) => target switch
         {

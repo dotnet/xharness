@@ -57,9 +57,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             var exitCode = ExitCode.SUCCESS;
 
-            foreach ((TestTarget target, string? osVersion) in _arguments.TestTargets)
+            foreach (var target in _arguments.TestTargets)
             {
-                var tunnelBore = (_arguments.CommunicationChannel == CommunicationChannel.UsbTunnel && !target.IsSimulator())
+                var tunnelBore = (_arguments.CommunicationChannel == CommunicationChannel.UsbTunnel && !target.Platform.IsSimulator())
                     ? new TunnelBore(processManager)
                     : null;
                 var exitCodeForRun = await RunTest(logger, target, logs, processManager, deviceLoader, simulatorLoader,
@@ -296,7 +296,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             catch (NoDeviceFoundException)
             {
                 logger.LogError($"Failed to find suitable device for target {target.AsString()}" +
-                    (target.IsSimulator() ? Environment.NewLine + "Please make sure suitable Simulator is installed in Xcode" : string.Empty));
+                    (target.Platform.IsSimulator() ? Environment.NewLine + "Please make sure suitable Simulator is installed in Xcode" : string.Empty));
 
                 return ExitCode.DEVICE_NOT_FOUND;
             }
@@ -323,7 +323,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             {
                 mainLog.Dispose();
 
-                if (!target.IsSimulator() && deviceName != null)
+                if (!target.Platform.IsSimulator() && deviceName != null)
                 {
                     logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from device '{deviceName}'");
 
