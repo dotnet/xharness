@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -16,6 +18,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         Guid GenerateStableGuid(string seed = null);
 
         string Timestamp { get; }
+
+        IEnumerable<IPAddress> GetLocalIpAddresses();
     }
 
     public class Helpers : IHelpers
@@ -50,5 +54,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             return Marshal.PtrToStringAuto(ttyname(filedescriptor));
         }
+
+        public IEnumerable<IPAddress> GetLocalIpAddresses() => Dns.GetHostEntry(Dns.GetHostName()).AddressList;
     }
 }
