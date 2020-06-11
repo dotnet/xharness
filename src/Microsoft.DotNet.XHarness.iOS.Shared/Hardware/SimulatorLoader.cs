@@ -327,18 +327,46 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             return pairs.FirstOrDefault();
         }
 
-        public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTarget target, ILog log, bool createIfNeeded = true, bool minVersion = false)
+        /// <summary>
+        /// This is a new implementation that can .
+        /// Old implementation of FindSimulators is kept intact because it is being used in Xamarin.
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="log"></param>
+        /// <param name="createIfNeeded"></param>
+        /// <returns></returns>
+        public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, bool createIfNeeded = true)
         {
+            if (target.OSVersion == null)
+            {
+                if (!_loaded)
+                {
+                    await LoadDevices(log);
+                }
+
+                var runtimePrefix = target.Platform switch
+                {
+                    TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimRuntime.iOS-10-3",
+                    TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimRuntime.iOS-",
+                    TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimRuntime.iOS-",
+                    TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimRuntime.tvOS-",
+                    TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimRuntime.watchOS-",
+                    _ => throw new Exception(string.Format("Unknown simulator target: {0}", target))
+                };
+
+                _supportedRuntimes.Where(r => r.Identifier.StartsWith(runtimePrefix)).OrderBy(r => );
+            }
+
             string simulatorDeviceType;
             string simulatorRuntime;
             string? companionDeviceType = null;
             string? companionRuntime = null;
 
-            switch (target)
+            switch (target.Platform)
             {
                 case TestTarget.Simulator_iOS32:
                     simulatorDeviceType = "com.apple.CoreSimulator.SimDeviceType.iPhone-5";
-                    simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-" + (minVersion ? SdkVersions.MiniOSSimulator : "10-3").Replace('.', '-');
+                    simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-" + target.OSVersion.Replace('.', '-');
                     break;
                 case TestTarget.Simulator_iOS64:
                     simulatorDeviceType = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X");
@@ -420,6 +448,33 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             }
 
             return (simulator, companionSimulator);
+        }
+
+        public Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTarget target, ILog log, bool createIfNeeded = true, bool minVersion = false)
+        {
+            TestTargetOs testTarget;
+            switch (target)
+            {
+                case TestTarget.Simulator_iOS32:
+                    testTarget = new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : "10.3");
+                    break;
+                case TestTarget.Simulator_iOS64:
+                    testTarget = new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator);
+                    break;
+                case TestTarget.Simulator_iOS:
+                    testTarget = new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator);
+                    break;
+                case TestTarget.Simulator_tvOS:
+                    testTarget = new TestTargetOs(target, minVersion ? SdkVersions.MinTVOSSimulator : SdkVersions.MaxTVOSSimulator);
+                    break;
+                case TestTarget.Simulator_watchOS:
+                    testTarget = new TestTargetOs(target, minVersion ? SdkVersions.MinWatchOSSimulator : SdkVersions.MaxWatchOSSimulator);
+                    break;
+                default:
+                    throw new Exception(string.Format("Unknown simulator target: {0}", target));
+            }
+
+            return FindSimulators(testTarget, log, createIfNeeded);
         }
 
         public ISimulatorDevice FindCompanionDevice(ILog log, ISimulatorDevice device)
