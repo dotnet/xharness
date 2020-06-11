@@ -449,27 +449,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         public Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTarget target, ILog log, bool createIfNeeded = true, bool minVersion = false)
         {
-            TestTargetOs testTarget;
-            switch (target)
+            TestTargetOs testTarget = target switch
             {
-                case TestTarget.Simulator_iOS32:
-                    testTarget = new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : "10.3");
-                    break;
-                case TestTarget.Simulator_iOS64:
-                    testTarget = new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator);
-                    break;
-                case TestTarget.Simulator_iOS:
-                    testTarget = new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator);
-                    break;
-                case TestTarget.Simulator_tvOS:
-                    testTarget = new TestTargetOs(target, minVersion ? SdkVersions.MinTVOSSimulator : SdkVersions.MaxTVOSSimulator);
-                    break;
-                case TestTarget.Simulator_watchOS:
-                    testTarget = new TestTargetOs(target, minVersion ? SdkVersions.MinWatchOSSimulator : SdkVersions.MaxWatchOSSimulator);
-                    break;
-                default:
-                    throw new Exception(string.Format("Unknown simulator target: {0}", target));
-            }
+                TestTarget.Simulator_iOS32 => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : "10.3"),
+                TestTarget.Simulator_iOS64 => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator),
+                TestTarget.Simulator_iOS => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator),
+                TestTarget.Simulator_tvOS => new TestTargetOs(target, minVersion ? SdkVersions.MinTVOSSimulator : SdkVersions.MaxTVOSSimulator),
+                TestTarget.Simulator_watchOS => new TestTargetOs(target, minVersion ? SdkVersions.MinWatchOSSimulator : SdkVersions.MaxWatchOSSimulator),
+                _ => throw new Exception(string.Format("Invalid simulator target: {0}", target))
+            };
 
             return FindSimulators(testTarget, log, createIfNeeded: createIfNeeded, minVersion: minVersion);
         }
