@@ -2,6 +2,7 @@
   <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/>
 
   <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <HelixType>test/product/</HelixType>
     <IncludeDotNetCli>true</IncludeDotNetCli>
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
@@ -10,6 +11,7 @@
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
+    <XHarnessNupkgPath>$(MSBuildThisFileDirectory)../../../artifacts/packages/$(Configuration)/Shipping/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
   </PropertyGroup>
 
   <ItemGroup>
