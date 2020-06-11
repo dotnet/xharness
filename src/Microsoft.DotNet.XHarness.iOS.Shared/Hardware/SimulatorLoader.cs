@@ -361,7 +361,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     .OrderByDescending(r => r.Identifier)
                     .FirstOrDefault()?
                     .Identifier
-                    .Substring(runtimePrefix.Length + 1);
+                    .Substring(runtimePrefix.Length);
 
                 runtimeVersion = firstOsVersion ?? throw new NoDeviceFoundException($"Failed to find a suitable OS runtime version for {target.AsString()}");
             }
