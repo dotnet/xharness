@@ -12,10 +12,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
     internal abstract class TestCommandArguments : XHarnessCommandArguments
     {
+        private readonly List<string> _singleMethodFilters = new List<string>();
+        private readonly List<string> _classMethodFilters = new List<string>();
+
         private string? _appPackagePath = null;
         private string? _outputDirectory = null;
-        private List<string> _singleMethodFilters = new List<string>();
-        private List<string> _classMethodFilters = new List<string>();
 
         /// <summary>
         /// Path to packaged app
@@ -53,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         /// <summary>
         /// Tests classes to be included in the run while all others are ignored.
         /// </summary>
-        public List<string> ClassMethodFilters => _classMethodFilters;
+        public IEnumerable<string> ClassMethodFilters => _classMethodFilters;
 
         protected sealed override OptionSet GetCommandOptions()
         {

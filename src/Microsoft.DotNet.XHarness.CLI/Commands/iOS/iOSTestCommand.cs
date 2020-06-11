@@ -31,12 +31,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     {
         private const string CommandHelp = "Runs a given iOS/tvOS/watchOS application bundle in a target device/simulator";
 
+        private static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
+
         private readonly iOSTestCommandArguments _arguments = new iOSTestCommandArguments();
         private readonly ErrorKnowledgeBase _errorKnowledgeBase = new ErrorKnowledgeBase();
-        private static readonly string _mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
         private bool _createdLldbFile;
 
-        protected override string CommandUsage { get; } = "ios test [OPTIONS]";
+        protected override string CommandUsage { get; } = "ios test [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
         protected override TestCommandArguments TestArguments => _arguments;
 
@@ -74,7 +75,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             return exitCode;
         }
 
-        private static bool IsLldbEnabled() => File.Exists(_mlaunchLldbConfigFile);
+        private static bool IsLldbEnabled() => File.Exists(s_mlaunchLldbConfigFile);
 
         private void NotifyUserLldbCommand(ILogger logger, string line)
         {
@@ -110,10 +111,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             else if (_arguments.EnableLldb)
             {
-                if (!File.Exists(_mlaunchLldbConfigFile))
+                if (!File.Exists(s_mlaunchLldbConfigFile))
                 {
                     // create empty file
-                    File.WriteAllText(_mlaunchLldbConfigFile, string.Empty);
+                    File.WriteAllText(s_mlaunchLldbConfigFile, string.Empty);
                     _createdLldbFile = true;
                 }
             }
@@ -211,7 +212,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 mainLog,
                 logs,
                 new Helpers(),
-                logCallback: logCallback);
+                logCallback: logCallback,
+                appArguments: PassThroughArguments);
 
             try
             {
@@ -341,7 +343,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                 if (_createdLldbFile) // clean after the setting
                 {
-                    File.Delete(_mlaunchLldbConfigFile);
+                    File.Delete(s_mlaunchLldbConfigFile);
                 }
             }
         }

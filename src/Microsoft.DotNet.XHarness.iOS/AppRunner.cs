@@ -34,6 +34,7 @@ namespace Microsoft.DotNet.XHarness.iOS
         private readonly ILogs _logs;
         private readonly IFileBackedLog _mainLog;
         private readonly IHelpers _helpers;
+        private readonly IEnumerable<string> _appArguments; // Arguments that will be passed to the iOS application
 
         public AppRunner(IMLaunchProcessManager processManager,
             IHardwareDeviceLoader hardwareDeviceLoader,
@@ -47,6 +48,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             IFileBackedLog mainLog,
             ILogs logs,
             IHelpers helpers,
+            IEnumerable<string> appArguments,
             Action<string>? logCallback = null)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
@@ -60,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             _resultParser = resultParser ?? throw new ArgumentNullException(nameof(resultParser));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
-
+            _appArguments = appArguments;
             if (logCallback == null)
             {
                 _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
@@ -369,7 +371,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
         }
 
-        private static MlaunchArguments GetCommonArguments(
+        private MlaunchArguments GetCommonArguments(
             int verbosity,
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
@@ -433,6 +435,9 @@ namespace Microsoft.DotNet.XHarness.iOS
 
             args.Add(new SetAppArgumentArgument($"-hostport:{listenerPort}", true));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostPort, listenerPort));
+
+            // Arguments passed to the iOS app bundle
+            args.AddRange(_appArguments.Select(arg => new SetAppArgumentArgument(arg, true)));
 
             return args;
         }
