@@ -339,7 +339,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         {
             var runtimePrefix = target.Platform switch
             {
-                TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimRuntime.iOS-10-3",
+                TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimRuntime.iOS-",
                 TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimRuntime.iOS-",
                 TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimRuntime.iOS-",
                 TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimRuntime.tvOS-",
