@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
@@ -120,6 +121,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             _helpers
                 .SetupGet(x => x.Timestamp)
                 .Returns("mocked_timestamp");
+            _helpers
+                .Setup(x => x.GetLocalIpAddresses())
+                .Returns(new[] { IPAddress.Loopback, IPAddress.IPv6Loopback });
 
             Directory.CreateDirectory(s_outputPath);
         }
@@ -430,9 +434,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
-            var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
-            var ips = string.Join(",", ipAddresses);
-
             var expectedArgs = "-argument=-connection-mode " +
                 "-argument=none " +
                 "-argument=-app-arg:-autostart " +
@@ -451,8 +452,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 "-setenv=NUNIT_TRANSPORT=TCP " +
                 $"-argument=-app-arg:-hostport:{Port} " +
                 $"-setenv=NUNIT_HOSTPORT={Port} " +
-                $"-argument=-app-arg:-hostname:{ips} " +
-                $"-setenv=NUNIT_HOSTNAME={ips} " +
+                "-argument=-app-arg:-hostname:127.0.0.1,::1 " +
+                "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
                 "--disable-memory-limits " +
                 "--devname \"Test iPhone\" " +
                 (useTunnel ? "-setenv=USE_TCP_TUNNEL=true " : null) +
@@ -549,8 +550,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
-            var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
-            var ips = string.Join(",", ipAddresses);
             var skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_METHODS={string.Join(',', skippedTests)} ";
 
             var expectedArgs = "-argument=-connection-mode " +
@@ -572,8 +571,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 "-setenv=NUNIT_TRANSPORT=TCP " +
                 $"-argument=-app-arg:-hostport:{Port} " +
                 $"-setenv=NUNIT_HOSTPORT={Port} " +
-                $"-argument=-app-arg:-hostname:{ips} " +
-                $"-setenv=NUNIT_HOSTNAME={ips} " +
+                "-argument=-app-arg:-hostname:127.0.0.1,::1 " +
+                "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
                 "--disable-memory-limits " +
                 "--devname \"Test iPhone\" " +
                 $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
@@ -663,8 +662,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
-            var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
-            var ips = string.Join(",", ipAddresses);
             var skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_CLASSES={string.Join(',', skippedClasses)} ";
 
             var expectedArgs = "-argument=-connection-mode " +
@@ -686,8 +683,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 "-setenv=NUNIT_TRANSPORT=TCP " +
                 $"-argument=-app-arg:-hostport:{Port} " +
                 $"-setenv=NUNIT_HOSTPORT={Port} " +
-                $"-argument=-app-arg:-hostname:{ips} " +
-                $"-setenv=NUNIT_HOSTNAME={ips} " +
+                "-argument=-app-arg:-hostname:127.0.0.1,::1 " +
+                "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
                 "--disable-memory-limits " +
                 "--devname \"Test iPhone\" " +
                 $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
