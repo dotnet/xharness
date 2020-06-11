@@ -502,8 +502,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 deviceListenerPort,
                 deviceListenerTmpFile);
 
-            var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
-            var ips = string.Join(",", ipAddresses);
+            var ips = string.Join(",", _helpers.GetLocalIpAddresses().Select(ip => ip.ToString()));           
 
             args.Add(new SetAppArgumentArgument($"-hostname:{ips}", true));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, ips));
