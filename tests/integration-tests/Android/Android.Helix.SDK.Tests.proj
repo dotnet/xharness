@@ -15,7 +15,7 @@
     <XHarnessNupkgPath>$(MSBuildThisFileDirectory)../../../artifacts/packages/$(Configuration)/Shipping/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
   </PropertyGroup>
 
-    <ItemGroup>
+  <ItemGroup>
     <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)Android.TestApks.proj" />
   </ItemGroup>
 
