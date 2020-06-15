@@ -31,12 +31,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     {
         private const string CommandHelp = "Runs a given iOS/tvOS/watchOS application bundle in a target device/simulator";
 
+        private static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
+
         private readonly iOSTestCommandArguments _arguments = new iOSTestCommandArguments();
         private readonly ErrorKnowledgeBase _errorKnowledgeBase = new ErrorKnowledgeBase();
-        private static readonly string _mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
         private bool _createdLldbFile;
 
-        protected override string CommandUsage { get; } = "ios test [OPTIONS]";
+        protected override string CommandUsage { get; } = "ios test [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
         protected override TestCommandArguments TestArguments => _arguments;
 
@@ -57,9 +58,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             var exitCode = ExitCode.SUCCESS;
 
-            foreach (TestTarget target in _arguments.TestTargets)
+            foreach (var target in _arguments.TestTargets)
             {
-                var tunnelBore = (_arguments.CommunicationChannel == CommunicationChannel.UsbTunnel && !target.IsSimulator())
+                var tunnelBore = (_arguments.CommunicationChannel == CommunicationChannel.UsbTunnel && !target.Platform.IsSimulator())
                     ? new TunnelBore(processManager)
                     : null;
                 var exitCodeForRun = await RunTest(logger, target, logs, processManager, deviceLoader, simulatorLoader,
@@ -74,7 +75,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             return exitCode;
         }
 
-        private static bool IsLldbEnabled() => File.Exists(_mlaunchLldbConfigFile);
+        private static bool IsLldbEnabled() => File.Exists(s_mlaunchLldbConfigFile);
 
         private void NotifyUserLldbCommand(ILogger logger, string line)
         {
@@ -94,7 +95,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         private async Task<ExitCode> RunTest(
             ILogger logger,
-            TestTarget target,
+            TestTargetOs target,
             Logs logs,
             MLaunchProcessManager processManager,
             IHardwareDeviceLoader deviceLoader,
@@ -110,10 +111,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             else if (_arguments.EnableLldb)
             {
-                if (!File.Exists(_mlaunchLldbConfigFile))
+                if (!File.Exists(s_mlaunchLldbConfigFile))
                 {
                     // create empty file
-                    File.WriteAllText(_mlaunchLldbConfigFile, string.Empty);
+                    File.WriteAllText(s_mlaunchLldbConfigFile, string.Empty);
                     _createdLldbFile = true;
                 }
             }
@@ -136,7 +137,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             try
             {
-                appBundleInfo = await appBundleInformationParser.ParseFromAppBundle(_arguments.AppPackagePath, target, mainLog, cancellationToken);
+                appBundleInfo = await appBundleInformationParser.ParseFromAppBundle(_arguments.AppPackagePath, target.Platform, mainLog, cancellationToken);
             }
             catch (Exception e)
             {
@@ -144,7 +145,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
             }
 
-            if (!target.IsSimulator())
+            if (!target.Platform.IsSimulator())
             {
                 logger.LogInformation($"Installing application '{appBundleInfo.AppName}' on " + (deviceName != null ? $" on device '{deviceName}'" : target.AsString()));
 
@@ -211,7 +212,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 mainLog,
                 logs,
                 new Helpers(),
-                logCallback: logCallback);
+                logCallback: logCallback,
+                appArguments: PassThroughArguments);
 
             try
             {
@@ -296,7 +298,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             catch (NoDeviceFoundException)
             {
                 logger.LogError($"Failed to find suitable device for target {target.AsString()}" +
-                    (target.IsSimulator() ? Environment.NewLine + "Please make sure suitable Simulator is installed in Xcode" : string.Empty));
+                    (target.Platform.IsSimulator() ? Environment.NewLine + "Please make sure suitable Simulator is installed in Xcode" : string.Empty));
 
                 return ExitCode.DEVICE_NOT_FOUND;
             }
@@ -323,7 +325,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             {
                 mainLog.Dispose();
 
-                if (!target.IsSimulator() && deviceName != null)
+                if (!target.Platform.IsSimulator() && deviceName != null)
                 {
                     logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from device '{deviceName}'");
 
@@ -341,7 +343,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                 if (_createdLldbFile) // clean after the setting
                 {
-                    File.Delete(_mlaunchLldbConfigFile);
+                    File.Delete(s_mlaunchLldbConfigFile);
                 }
             }
         }

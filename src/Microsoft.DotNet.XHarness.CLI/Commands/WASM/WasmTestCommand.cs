@@ -12,23 +12,22 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
+using System.ComponentModel;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
     internal class WasmTestCommand : TestCommand
     {
-        private const string CommandHelp = "Executes BCL xunit tests on WASM. It starts a JavaScript engine which calls a test runner inside of the WASM application.";
+        private const string CommandHelp = "Executes tests on WASM using a selected JavaScript engine";
+
         private readonly WasmTestCommandArguments _arguments = new WasmTestCommandArguments();
+
         private StreamWriter? _xmlResultsFileWriter = null;
-        private string _xmlResultsFilePath = "";
         private bool _hasWasmStdoutPrefix = false;
 
         protected override TestCommandArguments TestArguments => _arguments;
         protected override string CommandUsage { get; } = "wasm test [OPTIONS] -- [ENGINE OPTIONS]";
         protected override string CommandDescription { get; } = CommandHelp;
-        public IEnumerable<string> PassThroughArgs => PassThroughArguments;
 
         public WasmTestCommand() : base(CommandHelp, true)
         {
@@ -63,29 +62,37 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 engineArgs.Add("--");
             }
 
-            engineArgs.AddRange(PassThroughArgs);
+            engineArgs.AddRange(PassThroughArguments);
 
-            _xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
-            File.Delete(_xmlResultsFilePath);
+            var xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
+            File.Delete(xmlResultsFilePath);
 
-            var result = await processManager.ExecuteCommandAsync(
-                engineBinary,
-                engineArgs,
-                log: new CallbackLog(m => logger.LogInformation(m)),
-                stdout: new CallbackLog(m => WasmTestLogCallback(m, logger)) { Timestamp = false /* we need the plain XML string so disable timestamp */ },
-                stderr: new CallbackLog(m => logger.LogError(m)),
-                _arguments.Timeout);
+            try
+            {
+                var result = await processManager.ExecuteCommandAsync(
+                    engineBinary,
+                    engineArgs,
+                    log: new CallbackLog(m => logger.LogInformation(m)),
+                    stdout: new CallbackLog(m => WasmTestLogCallback(m, xmlResultsFilePath, logger)) { Timestamp = false /* we need the plain XML string so disable timestamp */ },
+                    stderr: new CallbackLog(m => logger.LogError(m)),
+                    _arguments.Timeout);
 
-            return result.Succeeded ? ExitCode.SUCCESS : (result.TimedOut ? ExitCode.TIMED_OUT : ExitCode.GENERAL_FAILURE);
+                return result.Succeeded ? ExitCode.SUCCESS : (result.TimedOut ? ExitCode.TIMED_OUT : ExitCode.GENERAL_FAILURE);
+            }
+            catch (Win32Exception e) when (e.Message == "No such file or directory")
+            {
+                logger.LogCritical($"The engine binary `{engineBinary}` was not found");
+                return ExitCode.APP_LAUNCH_FAILURE;
+            }
         }
 
-        private void WasmTestLogCallback(string line, ILogger logger)
+        private void WasmTestLogCallback(string line, string xmlResultsFilePath, ILogger logger)
         {
             if (_xmlResultsFileWriter == null)
             {
                 if (line.Contains("STARTRESULTXML"))
                 {
-                    _xmlResultsFileWriter = File.CreateText(_xmlResultsFilePath);
+                    _xmlResultsFileWriter = File.CreateText(xmlResultsFilePath);
                     _hasWasmStdoutPrefix = line.StartsWith("WASM: ");
                     return;
                 }

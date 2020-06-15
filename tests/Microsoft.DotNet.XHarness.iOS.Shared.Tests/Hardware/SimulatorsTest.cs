@@ -158,6 +158,65 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             }
         }
 
+        [Fact]
+        public async Task FindAsyncExactVersionNotFound()
+        {
+            MlaunchArguments passedArguments = null;
+
+            _processManager
+                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1)))
+                .ReturnsAsync(new ProcessExecutionResult() { ExitCode = 0 });
+
+            // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
+            _processManager
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                {
+                    passedArguments = args;
+
+                    // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                    tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
+
+                    CopySampleData(tempPath);
+                    return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
+                });
+
+            await _simulators.LoadDevices(_executionLog.Object);
+
+            await Assert.ThrowsAsync<NoDeviceFoundException>(async () => await _simulators.FindSimulators(new TestTargetOs(TestTarget.Simulator_iOS64, "12.8"), _executionLog.Object, false, false));
+        }
+
+        [Fact]
+        public async Task FindAsyncExactVersionFound()
+        {
+            MlaunchArguments passedArguments = null;
+
+            _processManager
+                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1)))
+                .ReturnsAsync(new ProcessExecutionResult() { ExitCode = 0 });
+
+            // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
+            _processManager
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                {
+                    passedArguments = args;
+
+                    // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                    tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
+
+                    CopySampleData(tempPath);
+                    return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
+                });
+
+            await _simulators.LoadDevices(_executionLog.Object);
+
+            var (simulator, _) = await _simulators.FindSimulators(new TestTargetOs(TestTarget.Simulator_iOS64, SdkVersions.MaxiOSSimulator), _executionLog.Object, false, false);
+            Assert.NotNull(simulator);
+        }
+
         // This tests the SimulatorEnumerable
         [Theory]
         [InlineData(TestTarget.Simulator_iOS32)]

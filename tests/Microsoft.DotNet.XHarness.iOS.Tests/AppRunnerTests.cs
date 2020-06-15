@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
@@ -120,6 +121,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             _helpers
                 .SetupGet(x => x.Timestamp)
                 .Returns("mocked_timestamp");
+            _helpers
+                .Setup(x => x.GetLocalIpAddresses())
+                .Returns(new[] { IPAddress.Loopback, IPAddress.IPv6Loopback });
 
             Directory.CreateDirectory(s_outputPath);
         }
@@ -138,7 +142,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             string simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
 
             _simulatorLoader
-                .Setup(x => x.FindSimulators(TestTarget.Simulator_tvOS, _mainLog.Object, true, false))
+                .Setup(x => x.FindSimulators(It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_tvOS), _mainLog.Object, true, false))
                 .ThrowsAsync(new NoDeviceFoundException("Failed to find simulator"));
 
             var listenerLogFile = new Mock<IFileBackedLog>();
@@ -174,7 +178,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                Enumerable.Empty<string>());
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -187,7 +192,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             await Assert.ThrowsAsync<NoDeviceFoundException>(
                 async () => await appRunner.RunApp(
                     appInformation,
-                    TestTarget.Simulator_tvOS,
+                    new TestTargetOs(TestTarget.Simulator_tvOS, null),
                     TimeSpan.FromSeconds(30),
                     TimeSpan.FromSeconds(30)));
 
@@ -216,7 +221,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             simulator.SetupGet(x => x.SystemLog).Returns(Path.Combine(simulatorLogPath, "system.log"));
 
             _simulatorLoader
-                .Setup(x => x.FindSimulators(TestTarget.Simulator_tvOS, _mainLog.Object, true, false))
+                .Setup(x => x.FindSimulators(It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_tvOS), _mainLog.Object, true, false))
                 .ReturnsAsync((simulator.Object, null));
 
             var testResultFilePath = Path.GetTempFileName();
@@ -253,7 +258,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                new[] { "--appArg1=value1", "--appArg2" });
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -265,7 +271,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
-                TestTarget.Simulator_tvOS,
+                new TestTargetOs(TestTarget.Simulator_tvOS, null),
                 TimeSpan.FromSeconds(30),
                 TimeSpan.FromSeconds(30),
                 ensureCleanSimulatorState: true);
@@ -293,6 +299,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 "-setenv=NUNIT_TRANSPORT=TCP " +
                 $"-argument=-app-arg:-hostport:{Port} " +
                 $"-setenv=NUNIT_HOSTPORT={Port} " +
+                "-argument=-app-arg:--appArg1=value1 " +
+                "-argument=-app-arg:--appArg2 " +
                 "-argument=-app-arg:-hostname:127.0.0.1 " +
                 "-setenv=NUNIT_HOSTNAME=127.0.0.1 " +
                 $"--device=:v2:udid={simulator.Object.UDID} " +
@@ -345,7 +353,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                Enumerable.Empty<string>());
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -358,7 +367,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             await Assert.ThrowsAsync<NoDeviceFoundException>(
                 async () => await appRunner.RunApp(
                     appInformation,
-                    TestTarget.Device_iOS,
+                    new TestTargetOs(TestTarget.Device_iOS, null),
                     TimeSpan.FromSeconds(30),
                     TimeSpan.FromSeconds(30),
                     ensureCleanSimulatorState: true));
@@ -409,7 +418,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                new[] { "--appArg1=value1", "--appArg2" });
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -421,7 +431,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
-                TestTarget.Device_iOS,
+                new TestTargetOs(TestTarget.Device_iOS, null),
                 TimeSpan.FromSeconds(30),
                 TimeSpan.FromSeconds(30));
 
@@ -429,9 +439,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal("Test iPhone", deviceName);
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
-
-            var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
-            var ips = string.Join(",", ipAddresses);
 
             var expectedArgs = "-argument=-connection-mode " +
                 "-argument=none " +
@@ -451,8 +458,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 "-setenv=NUNIT_TRANSPORT=TCP " +
                 $"-argument=-app-arg:-hostport:{Port} " +
                 $"-setenv=NUNIT_HOSTPORT={Port} " +
-                $"-argument=-app-arg:-hostname:{ips} " +
-                $"-setenv=NUNIT_HOSTNAME={ips} " +
+                "-argument=-app-arg:--appArg1=value1 " +
+                "-argument=-app-arg:--appArg2 " +
+                "-argument=-app-arg:-hostname:127.0.0.1,::1 " +
+                "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
                 "--disable-memory-limits " +
                 "--devname \"Test iPhone\" " +
                 (useTunnel ? "-setenv=USE_TCP_TUNNEL=true " : null) +
@@ -527,7 +536,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                Enumerable.Empty<string>());
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -539,7 +549,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
-                TestTarget.Device_iOS,
+                new TestTargetOs(TestTarget.Device_iOS, null),
                 timeout:TimeSpan.FromSeconds(30),
                 testLaunchTimeout:TimeSpan.FromSeconds(30),
                 skippedMethods: skippedTests);
@@ -549,8 +559,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
-            var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
-            var ips = string.Join(",", ipAddresses);
             var skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_METHODS={string.Join(',', skippedTests)} ";
 
             var expectedArgs = "-argument=-connection-mode " +
@@ -572,8 +580,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 "-setenv=NUNIT_TRANSPORT=TCP " +
                 $"-argument=-app-arg:-hostport:{Port} " +
                 $"-setenv=NUNIT_HOSTPORT={Port} " +
-                $"-argument=-app-arg:-hostname:{ips} " +
-                $"-setenv=NUNIT_HOSTNAME={ips} " +
+                "-argument=-app-arg:-hostname:127.0.0.1,::1 " +
+                "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
                 "--disable-memory-limits " +
                 "--devname \"Test iPhone\" " +
                 $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
@@ -641,7 +649,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object);
+                _helpers.Object,
+                Enumerable.Empty<string>());
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -653,7 +662,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
-                TestTarget.Device_iOS,
+                new TestTargetOs(TestTarget.Device_iOS, null),
                 timeout:TimeSpan.FromSeconds(30),
                 testLaunchTimeout:TimeSpan.FromSeconds(30),
                 skippedTestClasses: skippedClasses);
@@ -663,8 +672,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
-            var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
-            var ips = string.Join(",", ipAddresses);
             var skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_CLASSES={string.Join(',', skippedClasses)} ";
 
             var expectedArgs = "-argument=-connection-mode " +
@@ -686,8 +693,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 "-setenv=NUNIT_TRANSPORT=TCP " +
                 $"-argument=-app-arg:-hostport:{Port} " +
                 $"-setenv=NUNIT_HOSTPORT={Port} " +
-                $"-argument=-app-arg:-hostname:{ips} " +
-                $"-setenv=NUNIT_HOSTNAME={ips} " +
+                "-argument=-app-arg:-hostname:127.0.0.1,::1 " +
+                "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
                 "--disable-memory-limits " +
                 "--devname \"Test iPhone\" " +
                 $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +

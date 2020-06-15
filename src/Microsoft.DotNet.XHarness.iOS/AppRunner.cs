@@ -34,6 +34,7 @@ namespace Microsoft.DotNet.XHarness.iOS
         private readonly ILogs _logs;
         private readonly IFileBackedLog _mainLog;
         private readonly IHelpers _helpers;
+        private readonly IEnumerable<string> _appArguments; // Arguments that will be passed to the iOS application
 
         public AppRunner(IMLaunchProcessManager processManager,
             IHardwareDeviceLoader hardwareDeviceLoader,
@@ -47,6 +48,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             IFileBackedLog mainLog,
             ILogs logs,
             IHelpers helpers,
+            IEnumerable<string> appArguments,
             Action<string>? logCallback = null)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
@@ -60,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             _resultParser = resultParser ?? throw new ArgumentNullException(nameof(resultParser));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
-
+            _appArguments = appArguments;
             if (logCallback == null)
             {
                 _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
@@ -74,7 +76,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
         public async Task<(string DeviceName, TestExecutingResult Result, string ResultMessage)> RunApp(
             AppBundleInformation appInformation,
-            TestTarget target,
+            TestTargetOs target,
             TimeSpan timeout,
             TimeSpan testLaunchTimeout,
             string? deviceName = null,
@@ -86,8 +88,8 @@ namespace Microsoft.DotNet.XHarness.iOS
             string[]? skippedTestClasses = null,
             CancellationToken cancellationToken = default)
         {
-            var runMode = target.ToRunMode();
-            bool isSimulator = target.IsSimulator();
+            var runMode = target.Platform.ToRunMode();
+            bool isSimulator = target.Platform.IsSimulator();
 
             var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
@@ -200,7 +202,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                     var mlaunchArguments = GetDeviceArguments(
                         appInformation,
                         deviceName,
-                        target.IsWatchOSTarget(),
+                        target.Platform.IsWatchOSTarget(),
                         verbosity,
                         xmlResultJargon,
                         skippedMethods,
@@ -369,7 +371,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
         }
 
-        private static MlaunchArguments GetCommonArguments(
+        private MlaunchArguments GetCommonArguments(
             int verbosity,
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
@@ -433,6 +435,9 @@ namespace Microsoft.DotNet.XHarness.iOS
 
             args.Add(new SetAppArgumentArgument($"-hostport:{listenerPort}", true));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostPort, listenerPort));
+
+            // Arguments passed to the iOS app bundle
+            args.AddRange(_appArguments.Select(arg => new SetAppArgumentArgument(arg, true)));
 
             return args;
         }
@@ -502,8 +507,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 deviceListenerPort,
                 deviceListenerTmpFile);
 
-            var ipAddresses = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.Select(ip => ip.ToString());
-            var ips = string.Join(",", ipAddresses);
+            var ips = string.Join(",", _helpers.GetLocalIpAddresses().Select(ip => ip.ToString()));           
 
             args.Add(new SetAppArgumentArgument($"-hostname:{ips}", true));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, ips));
@@ -544,7 +548,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             return args;
         }
 
-        private async Task<(ISimulatorDevice, ISimulatorDevice?)> FindSimulators(TestTarget target)
+        private async Task<(ISimulatorDevice, ISimulatorDevice?)> FindSimulators(TestTargetOs target)
         {
             IFileBackedLog simulatorLoadingLog = _logs.Create($"simulator-list-{_helpers.Timestamp}.log", "Simulator list");
 
@@ -569,12 +573,12 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
         }
 
-        private async Task<string> FindDevice(TestTarget target)
+        private async Task<string> FindDevice(TestTargetOs target)
         {
             IHardwareDevice? companionDevice = null;
-            IHardwareDevice device = await _hardwareDeviceLoader.FindDevice(target.ToRunMode(), _mainLog, includeLocked: false, force: false);
+            IHardwareDevice device = await _hardwareDeviceLoader.FindDevice(target.Platform.ToRunMode(), _mainLog, includeLocked: false, force: false);
 
-            if (target.IsWatchOSTarget())
+            if (target.Platform.IsWatchOSTarget())
             {
                 companionDevice = await _hardwareDeviceLoader.FindCompanionDevice(_mainLog, device);
             }

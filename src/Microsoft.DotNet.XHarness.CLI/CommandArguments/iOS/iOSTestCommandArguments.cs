@@ -73,19 +73,21 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
             get => TestTargets.Select(t => t.AsString()).ToArray();
             protected set
             {
-                var testTargets = new List<TestTarget>();
+                var testTargets = new List<TestTargetOs>();
 
                 foreach (string targetName in value ?? throw new ArgumentNullException("Targets cannot be empty"))
                 {
                     try
                     {
-                        testTargets.Add(targetName.ParseAsAppRunnerTarget());
+                        testTargets.Add(targetName.ParseAsAppRunnerTargetOs());
                     }
                     catch (ArgumentOutOfRangeException)
                     {
                         throw new ArgumentException(
                             $"Failed to parse test target '{targetName}'. Available targets are:" +
-                            GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None));
+                            GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None) +
+                            Environment.NewLine + Environment.NewLine +
+                            "You can also specify desired iOS/tvOS/WatchOS version. Example: ios-simulator-64_13.4");
                     }
                 }
 
@@ -96,7 +98,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// <summary>
         /// Parsed strong-typed targets.
         /// </summary>
-        public IReadOnlyCollection<TestTarget> TestTargets { get; private set; } = Array.Empty<TestTarget>();
+        public IReadOnlyCollection<TestTargetOs> TestTargets { get; private set; } = Array.Empty<TestTargetOs>();
 
         protected override OptionSet GetTestCommandOptions() => new OptionSet
         {
@@ -142,7 +144,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
             {
                 throw new ArgumentException(
                     "No targets specified. At least one target must be provided. Available targets are:" +
-                    GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None));
+                    GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None) +
+                    Environment.NewLine + Environment.NewLine +
+                    "You can also specify desired iOS/tvOS/WatchOS version. Example: ios-simulator-64_13.4");
             }
 
             if (!File.Exists(MlaunchPath))
