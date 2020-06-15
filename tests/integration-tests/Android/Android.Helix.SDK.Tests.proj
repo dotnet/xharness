@@ -1,0 +1,41 @@
+<Project DefaultTargets="Test">
+  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/>
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <HelixType>test/product/</HelixType>
+    <IncludeDotNetCli>true</IncludeDotNetCli>
+    <DotNetCliPackageType>sdk</DotNetCliPackageType>
+    <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
+    <EnableXUnitReporter>true</EnableXUnitReporter>
+    <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
+    <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
+    <!-- Pick up the nupkg from this repo for testing purposes -->
+    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
+    <XHarnessNupkgPath>$(MSBuildThisFileDirectory)../../../artifacts/packages/$(Configuration)/Shipping/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)Android.TestApks.proj" />
+  </ItemGroup>
+
+  <!-- Currently no closed queues for Android testing; runtime team does all testing in public -->
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <IsExternal>true</IsExternal>
+    <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
+    <Creator Condition=" '$(Creator)' == '' ">anon</Creator>
+  </PropertyGroup>
+
+  <!-- Useless stuff to make Arcade SDK happy -->
+  <PropertyGroup>
+    <Language>msbuild</Language>
+  </PropertyGroup>
+
+  <!-- <Target Name="Pack"/> -->
+
+  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
+</Project>

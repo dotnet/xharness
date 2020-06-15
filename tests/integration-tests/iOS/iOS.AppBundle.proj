@@ -1,0 +1,34 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    This is a mock project that doesn't build the iOS app bundle because we just cannot do it yet with xharness.
+    Instead, this downloads a pre-prepared
+   -->
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+
+  <PropertyGroup>
+    <TestAppBundleName>System.Numerics.Vectors.Tests.app</TestAppBundleName>
+    <XHarnessAppBundleUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/macos/test-ios-app/$(TestAppBundleName).zip</XHarnessAppBundleUrl>
+  </PropertyGroup>
+
+  <Target Name="Build" Returns="@(XHarnessAppFoldersToTest)">
+    <Error Condition=" '$(BaseOutputPath)' == ''" Text="Not downloading AppBundle because BaseOutputPath property is unset" />
+    <DownloadFile SourceUrl="$(XHarnessAppBundleUrl)" DestinationFolder="$(BaseOutputPath)appbundle" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle" />
+    </DownloadFile>
+
+    <Message Text="Downloaded @(ZippedAppBundle) for XHarness Test purposes. Extracting..." Importance="High" />
+
+    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(BaseOutputPath)appbundle" />
+
+    <Message Text="Extracted to $(BaseOutputPath)appbundle" Importance="High" />
+
+    <ItemGroup>
+      <XHarnessAppFoldersToTest Include="$(BaseOutputPath)appbundle/$(TestAppBundleName)">
+        <Targets>ios-simulator-64</Targets>
+      </XHarnessAppFoldersToTest>
+    </ItemGroup>
+  </Target>
+
+</Project>
