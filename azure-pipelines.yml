@@ -200,7 +200,7 @@ stages:
 - ${{ if eq(variables._RunAsPublic, True) }}:
 
   - stage: Test_CLI_Package_In_Helix_Android
-    displayName: Run CLI End-to-End Helix scenarios - Android
+    displayName: Run CLI Integration Helix scenarios - Android
     dependsOn: Build_OSX
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
