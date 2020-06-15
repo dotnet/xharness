@@ -241,7 +241,7 @@ stages:
               HelixAccessToken: ''
 
   - stage: Test_CLI_Package_In_Helix_iOS
-    displayName: Run CLI End-to-End Helix scenarios - iOS
+    displayName: Run CLI Integration Helix scenarios - iOS
     dependsOn: Build_OSX
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
