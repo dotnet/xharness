@@ -19,7 +19,6 @@
 
     <Message Text="Downloaded @(DownloadedApkFile) for XHarness Test purposes" Importance="High" />
 
-    <!-- --> 
     <ItemGroup>
       <!-- We're not set up currently to build APK files as part of normal builds, so this downloads existing ones for now -->
       <XHarnessPackageToTest Include="@(DownloadedApkFile)">
