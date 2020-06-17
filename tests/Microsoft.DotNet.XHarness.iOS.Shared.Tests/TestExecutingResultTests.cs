@@ -46,16 +46,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         )]
         public void FlaggedIsPresentWhereItShouldBe(TestExecutingResult[] withFlag, TestExecutingResult flag)
         {
-            var withoutFlag = Enum.GetValues(typeof(TestExecutingResult))
+            System.Collections.Generic.IEnumerable<TestExecutingResult> withoutFlag = Enum.GetValues(typeof(TestExecutingResult))
                 .Cast<TestExecutingResult>()
                 .Except(withFlag);
 
-            foreach (var result in withoutFlag)
+            foreach (TestExecutingResult result in withoutFlag)
             {
                 Assert.False(result.HasFlag(flag), $"{result} should not have {flag}");
             }
 
-            foreach (var result in withFlag)
+            foreach (TestExecutingResult result in withFlag)
             {
                 Assert.True(result.HasFlag(flag), $"{result} should have {flag}");
             }

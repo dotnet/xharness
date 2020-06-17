@@ -32,13 +32,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         private static readonly Random s_guidGenerator = new Random(unchecked((int)0xdeadf00d));
         public Guid GenerateStableGuid(string seed = null)
         {
-            var bytes = new byte[16];
+            byte[] bytes = new byte[16];
             if (seed == null) s_guidGenerator.NextBytes(bytes);
             else
             {
                 using (var provider = MD5.Create())
                 {
-                    var inputBytes = Encoding.UTF8.GetBytes(seed);
+                    byte[] inputBytes = Encoding.UTF8.GetBytes(seed);
                     bytes = provider.ComputeHash(inputBytes);
                 }
             }

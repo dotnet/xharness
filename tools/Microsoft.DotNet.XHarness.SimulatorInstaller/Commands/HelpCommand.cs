@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
                 return (int)ExitCode.HELP_SHOWN;
             }
 
-            var command = args[0].ToLowerInvariant();
+            string? command = args[0].ToLowerInvariant();
             PrintCommandHelp(command);
 
             return (int)ExitCode.HELP_SHOWN;

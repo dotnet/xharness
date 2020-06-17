@@ -28,9 +28,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             }
             else
             {
-                foreach (var a in typeRegistration.Types.Keys)
+                foreach (string a in typeRegistration.Types.Keys)
                 {
-                    var t = typeRegistration.Types[a];
+                    Type t = typeRegistration.Types[a];
                     if (!string.IsNullOrEmpty(t.Namespace))
                     {
                         if (!namespaces.Contains(t.Namespace))
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             // got the lines we want to add, read the template and substitute
             using (var reader = new StreamReader(template))
             {
-                var result = await reader.ReadToEndAsync();
+                string result = await reader.ReadToEndAsync();
                 result = result.Replace(UsingReplacement, importStringBuilder.ToString());
                 result = result.Replace(KeysReplacement, keyValuesStringBuilder.ToString());
                 result = result.Replace(IsxUnitReplacement, isXunit ? "true" : "false");

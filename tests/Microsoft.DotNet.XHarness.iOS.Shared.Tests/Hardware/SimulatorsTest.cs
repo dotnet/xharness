@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
         private void CopySampleData(string tempPath)
         {
-            var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("simulators.xml", StringComparison.Ordinal)).FirstOrDefault();
+            string name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("simulators.xml", StringComparison.Ordinal)).FirstOrDefault();
             using (var outputStream = new StreamWriter(tempPath))
             using (var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name)))
             {
@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     passedArguments = args;
 
                     // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                    string tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                     tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                     CopySampleData(tempPath);
@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     passedArguments = args;
 
                     // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                    string tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                     tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                     CopySampleData(tempPath);
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                 });
 
             await _simulators.LoadDevices(_executionLog.Object);
-            var (simulator, companion) = await _simulators.FindSimulators(target, _executionLog.Object, false, false);
+            (ISimulatorDevice simulator, ISimulatorDevice companion) = await _simulators.FindSimulators(target, _executionLog.Object, false, false);
 
             Assert.NotNull(simulator);
 
@@ -175,7 +175,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     passedArguments = args;
 
                     // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                    string tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                     tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                     CopySampleData(tempPath);
@@ -204,7 +204,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     passedArguments = args;
 
                     // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                    string tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                     tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                     CopySampleData(tempPath);
@@ -213,7 +213,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
             await _simulators.LoadDevices(_executionLog.Object);
 
-            var (simulator, _) = await _simulators.FindSimulators(new TestTargetOs(TestTarget.Simulator_iOS64, SdkVersions.MaxiOSSimulator), _executionLog.Object, false, false);
+            (ISimulatorDevice simulator, ISimulatorDevice _) = await _simulators.FindSimulators(new TestTargetOs(TestTarget.Simulator_iOS64, SdkVersions.MaxiOSSimulator), _executionLog.Object, false, false);
             Assert.NotNull(simulator);
         }
 
@@ -230,7 +230,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                 .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
                 {
                     // We get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                    string tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                     tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                     CopySampleData(tempPath);
@@ -252,7 +252,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                 .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
                 {
                     // We get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                    string tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                     tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                     CopySampleData(tempPath);
@@ -284,7 +284,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                 .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
                 {
                     // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                    string tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                     tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                     CopySampleData(tempPath);
@@ -292,7 +292,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                 });
 
             await _simulators.LoadDevices(_executionLog.Object);
-            var (simulator, companion) = await _simulators.FindSimulators(TestTarget.Simulator_iOS64, _executionLog.Object, false, false);
+            (ISimulatorDevice simulator, ISimulatorDevice companion) = await _simulators.FindSimulators(TestTarget.Simulator_iOS64, _executionLog.Object, false, false);
 
             Assert.NotNull(simulator);
         }

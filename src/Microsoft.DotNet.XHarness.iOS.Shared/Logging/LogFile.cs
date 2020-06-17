@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
                 // happen after we're disposed, in which case we create a temporary stream we close after writing
                 lock (_lockObj)
                 {
-                    var fs = _writer ?? new FileStream(FullPath, FileMode.Append, FileAccess.Write, FileShare.Read);
+                    FileStream fs = _writer ?? new FileStream(FullPath, FileMode.Append, FileAccess.Write, FileShare.Read);
 
                     fs.Write(buffer, offset, count);
 
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         protected override void WriteImpl(string value)
         {
-            var bytes = Encoding.GetBytes(value);
+            byte[] bytes = Encoding.GetBytes(value);
             Write(bytes, 0, bytes.Length);
         }
 

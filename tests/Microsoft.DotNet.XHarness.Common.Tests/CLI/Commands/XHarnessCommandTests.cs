@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         [Fact]
         public void ArgumentsWithEqualSignsAreParsed()
         {
-            var exitCode = _command.Invoke(new[]
+            int exitCode = _command.Invoke(new[]
             {
                 "--number=50",
                 "--enum=Value2",
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         [Fact]
         public void ArgumentsWithSpacesAreParsed()
         {
-            var exitCode = _command.Invoke(new[]
+            int exitCode = _command.Invoke(new[]
             {
                 "--number",
                 "50",
@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         [Fact]
         public void ArgumentsAreValidated()
         {
-            var exitCode = _command.Invoke(new[]
+            int exitCode = _command.Invoke(new[]
             {
                 "-n",
                 "200",
@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         [Fact]
         public void VerbosityArgumentIsDetected()
         {
-            var exitCode = _command.Invoke(new[]
+            int exitCode = _command.Invoke(new[]
             {
                 "-n",
                 "50",
@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         [Fact]
         public void HelpArgumentIsDetected()
         {
-            var exitCode = _command.Invoke(new[]
+            int exitCode = _command.Invoke(new[]
             {
                 "--help",
             });
@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         [Fact]
         public void ExtraneousArgumentsAreRejected()
         {
-            var exitCode = _command.Invoke(new[]
+            int exitCode = _command.Invoke(new[]
             {
                 "-n",
                 "50",
@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         {
             var arguments = new SampleUnitTestArguments();
             var command = new UnitTestCommand<SampleUnitTestArguments>(arguments, true);
-            var exitCode = command.Invoke(new[]
+            int exitCode = command.Invoke(new[]
             {
                 "-n",
                 "50",
@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         [Fact]
         public void EnumsAreValidated()
         {
-            var exitCode = _command.Invoke(new[]
+            int exitCode = _command.Invoke(new[]
             {
                 "--enum",
                 "Foo",
@@ -161,7 +161,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         [Fact]
         public void ForbiddenEnumValuesAreValidated()
         {
-            var exitCode = _command.Invoke(new[]
+            int exitCode = _command.Invoke(new[]
             {
                 "--enum",
                 "ForbiddenValue",
@@ -174,7 +174,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         [Fact]
         public void PassThroughArgumentsAreParsed()
         {
-            var exitCode = _command.Invoke(new[]
+            int exitCode = _command.Invoke(new[]
             {
                 "-n",
                 "50",
@@ -203,7 +203,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
                 command
             };
 
-            var exitCode = commandSet.Run(new[]
+            int exitCode = commandSet.Run(new[]
             {
                 "unit-test",
                 "-n",
@@ -226,7 +226,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         [Fact]
         public void ExtraneousArgumentsDetectedInPassThroughMode()
         {
-            var exitCode = _command.Invoke(new[]
+            int exitCode = _command.Invoke(new[]
             {
                 "v8",
                 "--foo",

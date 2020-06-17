@@ -91,17 +91,17 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                 var dict = new Dictionary<int, List<int>>();
                 foreach (string line in stdout.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    var l = line.Trim();
-                    var space = l.IndexOf(' ');
+                    string? l = line.Trim();
+                    int space = l.IndexOf(' ');
                     if (space <= 0)
                         continue;
 
-                    var parent = l.Substring(0, space);
-                    var process = l.Substring(space + 1);
+                    string? parent = l.Substring(0, space);
+                    string? process = l.Substring(space + 1);
 
-                    if (int.TryParse(parent, out var parent_id) && int.TryParse(process, out var process_id))
+                    if (int.TryParse(parent, out int parent_id) && int.TryParse(process, out int process_id))
                     {
-                        if (!dict.TryGetValue(parent_id, out var children))
+                        if (!dict.TryGetValue(parent_id, out List<int>? children))
                             dict[parent_id] = children = new List<int>();
 
                         children.Add(process_id);
@@ -113,11 +113,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 
                 do
                 {
-                    var parent_id = queue.Dequeue();
+                    int parent_id = queue.Dequeue();
                     list.Add(parent_id);
-                    if (dict.TryGetValue(parent_id, out var children))
+                    if (dict.TryGetValue(parent_id, out List<int>? children))
                     {
-                        foreach (var child in children)
+                        foreach (int child in children)
                             queue.Enqueue(child);
                     }
                 } while (queue.Count > 0);
@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             var stderr = new ConsoleLog();
             var timeout = TimeSpan.FromSeconds(30);
 
-            var result = RunAsyncInternal(
+            ProcessExecutionResult? result = RunAsyncInternal(
                 process: process,
                 log: log,
                 stdout: stdout,
@@ -165,7 +165,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                 throw new Exception("Failed to detect Xcode path from xcode-select!");
 
             // Something like /Applications/Xcode114.app/Contents/Developers
-            var xcodeRoot = stdout.ToString().Trim();
+            string? xcodeRoot = stdout.ToString().Trim();
 
             if (string.IsNullOrEmpty(xcodeRoot))
             {

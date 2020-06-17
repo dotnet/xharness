@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 return (int)ExitCode.HELP_SHOWN;
             }
 
-            var command = args[0].ToLowerInvariant();
+            string? command = args[0].ToLowerInvariant();
 
             string? subCommand = null;
             if (args.Length >= 2)
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
         {
             if (subcommand != null)
             {
-                var command = commandSet.Where(c => c.Name == subcommand).FirstOrDefault();
+                Command? command = commandSet.Where(c => c.Name == subcommand).FirstOrDefault();
                 if (command != null)
                 {
                     command.Invoke(new string[] { "--help" });

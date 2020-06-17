@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         {
             using (var logs = new Logs(_directory))
             {
-                var file = logs.CreateFile(_fileName, _description);
+                string file = logs.CreateFile(_fileName, _description);
                 Assert.True(File.Exists(file), "exists");
                 Assert.Equal(_fileName, Path.GetFileName(file));
                 Assert.Single(logs);
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             using (var logs = new Logs(_directory))
             {
                 _fileName = null;
-                var description = "My description";
+                string description = "My description";
                 Assert.Throws<ArgumentNullException>(() => logs.CreateFile(_fileName, description));
             }
         }
@@ -81,12 +81,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         [Fact]
         public void AddFileTest()
         {
-            var fullPath = Path.Combine(_directory, _fileName);
+            string fullPath = Path.Combine(_directory, _fileName);
             File.WriteAllText(fullPath, "foo");
 
             using (var logs = new Logs(_directory))
             {
-                var fileLog = logs.AddFile(fullPath, _description);
+                Common.Logging.IFileBackedLog fileLog = logs.AddFile(fullPath, _description);
                 Assert.Equal(fullPath, fileLog.FullPath); // path && fullPath are the same
                 Assert.Equal(Path.Combine(_directory, _fileName), fileLog.FullPath);
                 Assert.Equal(_description, fileLog.Description);
@@ -96,19 +96,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         [Fact]
         public void AddFileNotInDirTest()
         {
-            var dir1 = Path.Combine(_directory, "dir1");
-            var dir2 = Path.Combine(_directory, "dir2");
+            string dir1 = Path.Combine(_directory, "dir1");
+            string dir2 = Path.Combine(_directory, "dir2");
 
             Directory.CreateDirectory(dir1);
             Directory.CreateDirectory(dir2);
 
-            var filePath = Path.Combine(dir1, "test-file.txt");
+            string filePath = Path.Combine(dir1, "test-file.txt");
             File.WriteAllText(filePath, "Hello world!");
 
             using (var logs = new Logs(dir2))
             {
-                var newPath = Path.Combine(dir2, Path.GetFileNameWithoutExtension(_fileName));
-                var fileLog = logs.AddFile(filePath, _description);
+                string newPath = Path.Combine(dir2, Path.GetFileNameWithoutExtension(_fileName));
+                Common.Logging.IFileBackedLog fileLog = logs.AddFile(filePath, _description);
                 Assert.StartsWith(newPath, fileLog.FullPath); // assert new path
                 Assert.True(File.Exists(fileLog.FullPath), "copy");
             }
@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         [Fact]
         public void AddFileDescriptionNull()
         {
-            var fullPath = Path.Combine(_directory, _fileName);
+            string fullPath = Path.Combine(_directory, _fileName);
             File.WriteAllText(fullPath, "foo");
             using (var logs = new Logs(_directory))
             {

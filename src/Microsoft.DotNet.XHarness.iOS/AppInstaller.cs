@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 args.Add(new DeviceArgument("ios,watchos"));
             }
 
-            var totalSize = Directory.GetFiles(appBundleInformation.LaunchAppPath, "*", SearchOption.AllDirectories).Select((v) => new FileInfo(v).Length).Sum();
+            long totalSize = Directory.GetFiles(appBundleInformation.LaunchAppPath, "*", SearchOption.AllDirectories).Select((v) => new FileInfo(v).Length).Sum();
             _mainLog.WriteLine($"Installing '{appBundleInformation.LaunchAppPath}' to '{deviceName}' ({totalSize / 1024.0 / 1024.0:N2} MB)");
 
             ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(args, _mainLog, TimeSpan.FromHours(1), cancellationToken: cancellationToken);

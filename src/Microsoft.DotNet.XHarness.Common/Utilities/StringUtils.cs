@@ -39,8 +39,8 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
                 return array;
             }
 
-            var rv = new string[array.Length];
-            for (var i = 0; i < array.Length; i++)
+            string[]? rv = new string[array.Length];
+            for (int i = 0; i < array.Length; i++)
             {
                 rv[i] = QuoteForProcess(array[i]);
             }
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
             var s = new StringBuilder();
 
             s.Append(s_shellQuoteChar);
-            foreach (var c in f)
+            foreach (char c in f)
             {
                 if (c == '\'' || c == '"' || c == '\\')
                 {
@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
             var s = new StringBuilder();
 
             s.Append('"');
-            foreach (var c in f)
+            foreach (char c in f)
             {
                 if (c == '"')
                 {

@@ -41,11 +41,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
         [InlineData("<!-- the end -->", true)]
         public void TestProcess(string endLine, bool isXml)
         {
-            var lines = new[] { "first line", "second line", "last line" };
+            string[] lines = new[] { "first line", "second line", "last line" };
             // set mock expectations
             _testLog.Setup(l => l.WriteLine("Tests have started executing"));
             _testLog.Setup(l => l.WriteLine("Tests have finished executing"));
-            foreach (var line in lines)
+            foreach (string line in lines)
             {
                 _testLog.Setup(l => l.WriteLine(line));
             }
@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
                 listener.StartAsync();
                 // write a number of lines and ensure that those are called in the mock
                 sourceWriter.WriteLine("[Runner executing:");
-                foreach (var line in lines)
+                foreach (string line in lines)
                 {
                     sourceWriter.WriteLine(line);
                     sourceWriter.Flush();
@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
                 listener.Cancel();
             }
             // verify that the expected lines were added
-            foreach (var line in lines)
+            foreach (string line in lines)
             {
                 _testLog.Verify(l => l.WriteLine(line), Times.Once);
             }

@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             // we have to make sure of several things, first, lets
             // remove any char after the first # which would mean
             // we have comments:
-            var pos = line.IndexOf('#');
+            int pos = line.IndexOf('#');
             if (pos > -1)
             {
                 line = line.Remove(pos);
@@ -49,14 +49,14 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             var ignoredTests = new List<string>();
             // the project generator added the required resources,
             // we extract them, parse them and add the result
-            foreach (var resourceName in asm.GetManifestResourceNames())
+            foreach (string resourceName in asm.GetManifestResourceNames())
             {
                 if (resourceName.EndsWith(".ignore", StringComparison.Ordinal))
                 {
-                    using (var stream = asm.GetManifestResourceStream(resourceName))
+                    using (Stream stream = asm.GetManifestResourceStream(resourceName))
                     using (var reader = new StreamReader(stream))
                     {
-                        var ignored = await ParseStreamAsync(reader);
+                        IEnumerable<string> ignored = await ParseStreamAsync(reader);
                         // we could have more than one file, lets add them
                         ignoredTests.AddRange(ignored);
                     }
@@ -71,11 +71,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 return Array.Empty<string>();
 
             var ignoredTests = new List<string>();
-            foreach (var f in Directory.GetFiles(contentDir, "*.ignore"))
+            foreach (string f in Directory.GetFiles(contentDir, "*.ignore"))
             {
                 using (var reader = new StreamReader(f))
                 {
-                    var ignored = await ParseStreamAsync(reader);
+                    IEnumerable<string> ignored = await ParseStreamAsync(reader);
                     ignoredTests.AddRange(ignored);
                 }
             }
@@ -98,14 +98,14 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         public static Task<IEnumerable<string>> ParseTraitsContentFileAsync(string contentDir, bool isXUnit)
         {
-            var ignoreFile = Path.Combine(contentDir, isXUnit ? "xunit-excludes.txt" : "nunit-excludes.txt");
+            string ignoreFile = Path.Combine(contentDir, isXUnit ? "xunit-excludes.txt" : "nunit-excludes.txt");
             return ParseTraitsFileAsync( ignoreFile);
         }
 
         public static IEnumerable<string> ParseTraitsContentFile(string contentDir, bool isXUnit)
         {
             var ignoredTraits = new List<string>();
-            var ignoreFile = Path.Combine(contentDir, isXUnit ? "xunit-excludes.txt" : "nunit-excludes.txt");
+            string ignoreFile = Path.Combine(contentDir, isXUnit ? "xunit-excludes.txt" : "nunit-excludes.txt");
             using (var reader = new StreamReader(ignoreFile))
             {
                 string line;
@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public static IEnumerable<string> ParseContentFiles(string contentDir)
         {
             var ignoredTests = new List<string>();
-            foreach (var f in Directory.GetFiles(contentDir, "*.ignore"))
+            foreach (string f in Directory.GetFiles(contentDir, "*.ignore"))
             {
                 using (var reader = new StreamReader(f))
                 {

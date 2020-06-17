@@ -159,9 +159,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
             }
             else if (!string.IsNullOrEmpty(WorkingDirectory))
             {
-                foreach (var a in Assemblies)
+                foreach (string? a in Assemblies)
                 {
-                    var assemblyPath = Path.Combine(WorkingDirectory, a);
+                    string? assemblyPath = Path.Combine(WorkingDirectory, a);
                     if (!File.Exists(assemblyPath))
                     {
                         throw new ArgumentException($"Could not find assembly '{assemblyPath}'");

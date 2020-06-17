@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         protected override void WriteImpl(string value)
         {
-            var v = value.Trim();
+            string v = value.Trim();
             if (v.StartsWith("Installing application bundle", StringComparison.Ordinal))
             {
                 if (!CopyingApp)
@@ -77,14 +77,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
                     WatchAppCopyStart.Start();
                 }
             }
-            else if (v.StartsWith("PercentComplete: ", StringComparison.Ordinal) && int.TryParse(v.Substring("PercentComplete: ".Length).Trim(), out var percent))
+            else if (v.StartsWith("PercentComplete: ", StringComparison.Ordinal) && int.TryParse(v.Substring("PercentComplete: ".Length).Trim(), out int percent))
             {
                 if (CopyingApp)
                     AppPercentComplete = percent;
                 else if (CopyingWatchApp)
                     WatchAppPercentComplete = percent;
             }
-            else if (v.StartsWith("NumBytes: ", StringComparison.Ordinal) && int.TryParse(v.Substring("NumBytes: ".Length).Trim(), out var num_bytes))
+            else if (v.StartsWith("NumBytes: ", StringComparison.Ordinal) && int.TryParse(v.Substring("NumBytes: ".Length).Trim(), out int num_bytes))
             {
                 if (CopyingApp)
                 {
@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
                     WatchAppCopyDuration = WatchAppCopyStart.Elapsed;
                 }
             }
-            else if (v.StartsWith("TotalBytes: ", StringComparison.Ordinal) && int.TryParse(v.Substring("TotalBytes: ".Length).Trim(), out var total_bytes))
+            else if (v.StartsWith("TotalBytes: ", StringComparison.Ordinal) && int.TryParse(v.Substring("TotalBytes: ".Length).Trim(), out int total_bytes))
             {
                 if (CopyingApp)
                     AppTotalBytes = total_bytes;

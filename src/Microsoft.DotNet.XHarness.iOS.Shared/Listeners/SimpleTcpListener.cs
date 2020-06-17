@@ -131,8 +131,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                         _client = new TcpClient("localhost", Port);
                         Log.WriteLine("Test log server listening on: {0}:{1}", Address, Port);
                         // let the device know we are ready!
-                        var stream = _client.GetStream();
-                        var ping = Encoding.UTF8.GetBytes("ping");
+                        NetworkStream stream = _client.GetStream();
+                        byte[] ping = Encoding.UTF8.GetBytes("ping");
                         stream.Write(ping, 0, ping.Length);
                         break;
 

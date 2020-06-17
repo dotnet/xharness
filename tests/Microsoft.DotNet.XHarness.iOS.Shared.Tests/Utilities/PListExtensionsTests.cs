@@ -21,10 +21,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
         /// <returns>The path where the sample plist can be found.</returns>
         private XmlDocument CreateResultSample()
         {
-            var name = GetType().Assembly.GetManifestResourceNames()
+            string name = GetType().Assembly.GetManifestResourceNames()
                 .FirstOrDefault(a => a.EndsWith("Info.plist", StringComparison.Ordinal));
-            var tempPath = Path.GetTempFileName();
-            var byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble()); // I hate BOM
+            string tempPath = Path.GetTempFileName();
+            string byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble()); // I hate BOM
             using var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name));
 
             // create the document with the plist and return it
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
         [Fact]
         public void SetMinimumOSVersion()
         {
-            var version = "MyMinVersion";
+            string version = "MyMinVersion";
             _plist.SetMinimumOSVersion(version);
             Assert.Equal(version, _plist.GetMinimumOSVersion());
         }
@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
         [Fact]
         public void SetMinimummacOSVersion()
         {
-            var version = "MyMaccMinVersion";
+            string version = "MyMaccMinVersion";
             _plist.SetMinimummacOSVersion(version);
             Assert.Equal(version, _plist.GetMinimummacOSVersion());
         }
@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
         [Fact]
         public void SetCFBundleDisplayName()
         {
-            var displayName = "MySuperApp";
+            string displayName = "MySuperApp";
             _plist.SetCFBundleDisplayName(displayName);
             Assert.Equal(displayName, _plist.GetCFBundleDisplayName());
         }
@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
         [Fact]
         public void SetCFBundleIdentifier()
         {
-            var bundleIdentifier = "my.company.super.app";
+            string bundleIdentifier = "my.company.super.app";
             _plist.SetCFBundleIdentifier(bundleIdentifier);
             Assert.Equal(bundleIdentifier, _plist.GetCFBundleIdentifier());
         }
@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
         [Fact]
         public void SetCFBundleName()
         {
-            var bundleName = "MySuper.app";
+            string bundleName = "MySuper.app";
             _plist.SetCFBundleName(bundleName);
             Assert.Equal(bundleName, _plist.GetCFBundleName());
         }

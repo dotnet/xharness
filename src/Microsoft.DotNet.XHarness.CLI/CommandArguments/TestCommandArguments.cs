@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                 { "timeout=", "Time span, in seconds, to wait for instrumentation to complete.",
                     v =>
                     {
-                        if (!int.TryParse(v, out var timeout))
+                        if (!int.TryParse(v, out int timeout))
                         {
                             throw new ArgumentException("timeout must be an integer - a number of seconds");
                         }
@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                 }
             };
 
-            foreach (var option in GetTestCommandOptions())
+            foreach (Option? option in GetTestCommandOptions())
             {
                 options.Add(option);
             }

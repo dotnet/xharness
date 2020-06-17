@@ -26,13 +26,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
         [Fact(Skip = "Test is flaky - https://github.com/dotnet/xharness/issues/52")]
         public void ProcessTest()
         {
-            var tempResult = Path.GetTempFileName();
+            string tempResult = Path.GetTempFileName();
             // create a stream to be used and write the data there
-            var lines = new string[] { "first line", "second line", "last line" };
+            string[] lines = new string[] { "first line", "second line", "last line" };
             // setup the expected data to be written
             _testLog.Setup(l => l.Write(It.IsAny<byte[]>(), 0, It.IsAny<int>())).Callback<byte[], int, int>((buffer, start, end) =>
             {
-                using (var resultStream = File.Create(tempResult))
+                using (FileStream resultStream = File.Create(tempResult))
                 {// opening closing a lot, but for the test we do not care
                     resultStream.Write(buffer, start, end);
                     resultStream.Flush();
@@ -42,16 +42,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             // and send the data.
             var listener = new SimpleTcpListener(_log.Object, _testLog.Object, true, true);
             listener.InitializeAndGetPort();
-            var connectionPort = listener.Port;
+            int connectionPort = listener.Port;
             listener.StartAsync();
             // create a tcp client which will write the logs, then verity that
             // the expected data was provided
             var client = new TcpClient();
             client.Connect("localhost", connectionPort);
-            using (var networkStream = client.GetStream())
+            using (NetworkStream networkStream = client.GetStream())
             using (var streamWriter = new StreamWriter(networkStream))
             {
-                foreach (var line in lines)
+                foreach (string line in lines)
                 {
                     streamWriter.WriteLine(line);
                     streamWriter.Flush();

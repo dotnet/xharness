@@ -115,13 +115,13 @@ Arguments:
                 }
 
                 // No class name = default Instrumentation
-                var result = runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
+                XHarness.Android.Execution.ProcessExecutionResults? result = runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
 
                 using (logger.BeginScope("Post-test copy and cleanup"))
                 {
                     if (result.ExitCode == (int)ExitCode.SUCCESS)
                     {
-                        (var resultValues, var instrExitCode) = ParseInstrumentationOutputs(logger, result.StandardOutput);
+                        (Dictionary<string, string>? resultValues, int instrExitCode) = ParseInstrumentationOutputs(logger, result.StandardOutput);
 
                         // This is where test instrumentation can communicate outwardly that test execution failed
                         instrumentationExitCode = instrExitCode;
@@ -169,7 +169,7 @@ Arguments:
                     // Optionally copy off an entire folder
                     if (!string.IsNullOrEmpty(_arguments.DeviceOutputFolder))
                     {
-                        var logs = runner.PullFiles(_arguments.DeviceOutputFolder, _arguments.OutputDirectory);
+                        List<string>? logs = runner.PullFiles(_arguments.DeviceOutputFolder, _arguments.OutputDirectory);
                         foreach (string log in logs)
                         {
                             logger.LogDebug($"Found output file: {log}");
@@ -198,12 +198,12 @@ Arguments:
 
         private string? GetDeviceToUse(ILogger logger, AdbRunner runner, string apkRequiredArchitecture)
         {
-            var allDevicesAndTheirArchitectures = runner.GetAttachedDevicesAndArchitectures();
+            Dictionary<string, string?>? allDevicesAndTheirArchitectures = runner.GetAttachedDevicesAndArchitectures();
             if (allDevicesAndTheirArchitectures.Count > 0)
             {
                 if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)))
                 {
-                    var firstAvailableCompatible = allDevicesAndTheirArchitectures.Where(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                    KeyValuePair<string, string?> firstAvailableCompatible = allDevicesAndTheirArchitectures.Where(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
                     logger.LogInformation($"Using first-found compatible device of {allDevicesAndTheirArchitectures.Count} total- serial: '{firstAvailableCompatible.Key}' - Arch: {firstAvailableCompatible.Value}");
                     return firstAvailableCompatible.Key;
                 }
@@ -230,7 +230,7 @@ Arguments:
             {
                 if (line.StartsWith(resultPrefix))
                 {
-                    var subString = line.Substring(resultPrefix.Length);
+                    string? subString = line.Substring(resultPrefix.Length);
                     string[] results = subString.Trim().Split('=');
                     if (results.Length == 2)
                     {

@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 
         private Stream GetRunLogSample()
         {
-            var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("run-log.txt", StringComparison.Ordinal)).FirstOrDefault();
+            string name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("run-log.txt", StringComparison.Ordinal)).FirstOrDefault();
             return GetType().Assembly.GetManifestResourceStream(name);
         }
 
@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             // not dealing with the launch faliure
             _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
 
-            var testResult = BuildTestResult();
+            TestReporter testResult = BuildTestResult();
             var processResult = Task.FromResult(new ProcessExecutionResult() { TimedOut = false, ExitCode = 0 });
             await testResult.CollectSimulatorResult(processResult);
             // we should have timeout, since the task completion source was never set
@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             _listener.Setup(l => l.CompletionTask).Returns(tcs.Task); // will never be set to be completed
 
             // empty test file to be returned as the runlog stream
-            var tmpFile = Path.GetTempFileName();
+            string tmpFile = Path.GetTempFileName();
             if (!string.IsNullOrEmpty(runLogData))
             {
                 using (var writer = new StreamWriter(tmpFile))
@@ -137,7 +137,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             // not dealing with the launch faliure
             _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(File.Create(tmpFile)));
 
-            var testResult = BuildTestResult();
+            TestReporter testResult = BuildTestResult();
             var processResult = Task.FromResult(new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 });
             await testResult.CollectSimulatorResult(processResult);
             // we should have timeout, since the task completion source was never set
@@ -161,7 +161,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             // ensure we do not consider it to be a launch failure
             _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
 
-            var testResult = BuildTestResult();
+            TestReporter testResult = BuildTestResult();
             await testResult.CollectSimulatorResult(processResult);
 
             // we should have timeout, since the task completion source was never set
@@ -196,7 +196,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             // not dealing with the launch faliure
             _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
 
-            var testResult = BuildTestResult();
+            TestReporter testResult = BuildTestResult();
             var processResult = Task.FromResult(new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 });
             await testResult.CollectDeviceResult(processResult);
             // we should have timeout, since the task completion source was never set
@@ -214,7 +214,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             // ensure we do not consider it to be a launch failure
             _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
 
-            var testResult = BuildTestResult();
+            TestReporter testResult = BuildTestResult();
             await testResult.CollectDeviceResult(processResult);
 
             // we should have timeout, since the task completion source was never set
@@ -231,7 +231,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         [Fact]
         public void LaunchCallbackFaultedTest()
         {
-            var testResult = BuildTestResult();
+            TestReporter testResult = BuildTestResult();
             var t = Task.FromException<bool>(new Exception("test"));
             testResult.LaunchCallback(t);
             // verify that we did report the launch proble
@@ -242,7 +242,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         [Fact]
         public void LaunchCallbackCanceledTest()
         {
-            var testResult = BuildTestResult();
+            TestReporter testResult = BuildTestResult();
             var tcs = new TaskCompletionSource<bool>();
             tcs.TrySetCanceled();
             testResult.LaunchCallback(tcs.Task);
@@ -253,7 +253,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         [Fact]
         public void LaunchCallbackSuccessTest()
         {
-            var testResult = BuildTestResult();
+            TestReporter testResult = BuildTestResult();
             var t = Task.FromResult(true);
             testResult.LaunchCallback(t);
             _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test run started"))), Times.Once);
@@ -262,8 +262,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         // copy the sample data to a given tmp file
         private string CreateSampleFile(string resourceName)
         {
-            var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith(resourceName, StringComparison.Ordinal)).FirstOrDefault();
-            var tempPath = Path.GetTempFileName();
+            string name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith(resourceName, StringComparison.Ordinal)).FirstOrDefault();
+            string tempPath = Path.GetTempFileName();
             using var outputStream = new StreamWriter(tempPath);
             using var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name));
             string line;
@@ -278,13 +278,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         [Fact]
         public async Task ParseResultFailingTestsTest()
         {
-            var sample = CreateSampleFile("NUnitV3SampleFailure.xml");
+            string sample = CreateSampleFile("NUnitV3SampleFailure.xml");
             var listenerLog = new Mock<IFileBackedLog>();
             _listener.Setup(l => l.TestLog).Returns(listenerLog.Object);
             listenerLog.Setup(l => l.FullPath).Returns(sample);
 
-            var testResult = BuildTestResult();
-            var (result, resultMessage) = await testResult.ParseResult();
+            TestReporter testResult = BuildTestResult();
+            (TestExecutingResult result, string resultMessage) = await testResult.ParseResult();
             Assert.Equal(TestExecutingResult.Failed, result);
             Assert.Equal("Tests run: 5 Passed: 3 Inconclusive: 1 Failed: 2 Ignored: 4", resultMessage);
 
@@ -296,13 +296,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         public async Task ParseResultSuccessTestsTest()
         {
             // get a file with a success result so that we can return it as part of the listener log
-            var sample = CreateSampleFile("NUnitV3SampleSuccess.xml");
+            string sample = CreateSampleFile("NUnitV3SampleSuccess.xml");
             var listenerLog = new Mock<IFileBackedLog>();
             _listener.Setup(l => l.TestLog).Returns(listenerLog.Object);
             listenerLog.Setup(l => l.FullPath).Returns(sample);
 
-            var testResult = BuildTestResult();
-            var (result, resultMessage) = await testResult.ParseResult();
+            TestReporter testResult = BuildTestResult();
+            (TestExecutingResult result, string resultMessage) = await testResult.ParseResult();
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 5 Passed: 4 Inconclusive: 0 Failed: 0 Ignored: 1", resultMessage);
 
@@ -325,32 +325,32 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             // not dealing with the launch faliure
             _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
 
-            var failurePath = Path.Combine(_logsDirectory, "my-failure.xml");
+            string failurePath = Path.Combine(_logsDirectory, "my-failure.xml");
             var failureLog = new Mock<IFileBackedLog>();
             failureLog.Setup(l => l.FullPath).Returns(failurePath);
             _logs.Setup(l => l.Create(It.IsAny<string>(), It.IsAny<string>(), null)).Returns(failureLog.Object);
 
             // create some data for the stderr
-            var stderr = Path.GetTempFileName();
-            using (var stream = File.Create(stderr))
+            string stderr = Path.GetTempFileName();
+            using (FileStream stream = File.Create(stderr))
             using (var writer = new StreamWriter(stream))
             {
                 await writer.WriteAsync("Some data to be added to stderr of the failure");
             }
             _mainLog.Setup(l => l.FullPath).Returns(stderr);
 
-            var testResult = BuildTestResult();
+            TestReporter testResult = BuildTestResult();
             var processResult = Task.FromResult(new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 });
             await testResult.CollectDeviceResult(processResult);
             // we should have timeout, since the task completion source was never set
-            var (result, failure) = await testResult.ParseResult();
+            (TestExecutingResult result, string failure) = await testResult.ParseResult();
             Assert.False(testResult.Success, "success");
 
             // verify that we state that there was a timeout
             _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test run never launched"))), Times.Once);
             // assert that the timeout failure was created.
             Assert.True(File.Exists(failurePath), "failure path");
-            var isTimeoutFailure = false;
+            bool isTimeoutFailure = false;
             using (var reader = new StreamReader(failurePath))
             {
                 string line = null;

@@ -91,8 +91,8 @@ namespace Microsoft.DotNet.XHarness.iOS
             var runMode = target.Platform.ToRunMode();
             bool isSimulator = target.Platform.IsSimulator();
 
-            var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
-            var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
+            IFileBackedLog? deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
+            (ListenerTransport deviceListenerTransport, ISimpleListener deviceListener, string deviceListenerTmpFile) = _listenerFactory.Create(
                 runMode,
                 log: _mainLog,
                 testLog: deviceListenerLog,
@@ -175,7 +175,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                         throw new NoDeviceFoundException();
                     }
 
-                    var mlaunchArguments = GetSimulatorArguments(
+                    MlaunchArguments? mlaunchArguments = GetSimulatorArguments(
                         appInformation,
                         simulator,
                         verbosity,
@@ -199,7 +199,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 }
                 else
                 {
-                    var mlaunchArguments = GetDeviceArguments(
+                    MlaunchArguments? mlaunchArguments = GetDeviceArguments(
                         appInformation,
                         deviceName,
                         target.Platform.IsWatchOSTarget(),
@@ -228,7 +228,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
 
             // Check the final status, copy all the required data
-            var (testResult, resultMessage) = await testReporter.ParseResult();
+            (TestExecutingResult testResult, string resultMessage) = await testReporter.ParseResult();
 
             return (deviceName, testResult, resultMessage);
         }
@@ -250,7 +250,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             {
                 _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
 
-                var simulatorLog = _captureLogFactory.Create(
+                ICaptureLog? simulatorLog = _captureLogFactory.Create(
                     path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
                     systemLogPath: simulator.SystemLog,
                     entireFile: true,
@@ -264,7 +264,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 {
                     _mainLog.WriteLine("System log for the '{1}' companion simulator is: {0}", companionSimulator.SystemLog, companionSimulator.Name);
 
-                    var companionLog = _captureLogFactory.Create(
+                    ICaptureLog? companionLog = _captureLogFactory.Create(
                         path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
                         systemLogPath: companionSimulator.SystemLog,
                         entireFile: true,
@@ -288,7 +288,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 _mainLog.WriteLine("Starting test run");
 
-                var result = _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+                Task<Common.Execution.ProcessExecutionResult>? result = _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
 
                 await testReporter.CollectSimulatorResult(result);
 
@@ -322,8 +322,8 @@ namespace Microsoft.DotNet.XHarness.iOS
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
-            var deviceSystemLog = _logs.Create($"device-{deviceName}-{_helpers.Timestamp}.log", "Device log");
-            var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, deviceName);
+            IFileBackedLog? deviceSystemLog = _logs.Create($"device-{deviceName}-{_helpers.Timestamp}.log", "Device log");
+            IDeviceLogCapturer? deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, deviceName);
             deviceLogCapturer.StartCapture();
 
             try
@@ -334,7 +334,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 if (_listenerFactory.UseTunnel && deviceListener is SimpleTcpListener tcpListener)
                 {
                     // create a new tunnel using the listener
-                    var tunnel = _listenerFactory.TunnelBore.Create(deviceName, _mainLog);
+                    ITcpTunnel? tunnel = _listenerFactory.TunnelBore.Create(deviceName, _mainLog);
                     tunnel.Open(deviceName, tcpListener, timeout, _mainLog);
                     // wait until we started the tunnel
                     await tunnel.Started;
@@ -343,8 +343,8 @@ namespace Microsoft.DotNet.XHarness.iOS
                 _mainLog.WriteLine("Starting test run");
 
                 // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit).
-                var aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
-                var result = _processManager.ExecuteCommandAsync(
+                IFileBackedLog? aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
+                Task<Common.Execution.ProcessExecutionResult>? result = _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     aggregatedLog,
                     timeout,
@@ -405,13 +405,13 @@ namespace Microsoft.DotNet.XHarness.iOS
                 // add the skipped test classes and methods
                 if (skippedMethods != null && skippedMethods.Length > 0)
                 {
-                    var skippedMethodsValue = string.Join(',', skippedMethods);
+                    string? skippedMethodsValue = string.Join(',', skippedMethods);
                     args.Add(new SetEnvVariableArgument(EnviromentVariables.SkippedMethods, skippedMethodsValue));
                 }
 
                 if (skippedTestClasses != null && skippedTestClasses!.Length > 0)
                 {
-                    var skippedClassesValue = string.Join(',', skippedTestClasses);
+                    string? skippedClassesValue = string.Join(',', skippedTestClasses);
                     args.Add(new SetEnvVariableArgument(EnviromentVariables.SkippedClasses, skippedClassesValue));
                 }
             }
@@ -453,7 +453,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             int deviceListenerPort,
             string deviceListenerTmpFile)
         {
-            var args = GetCommonArguments(
+            MlaunchArguments? args = GetCommonArguments(
                 verbosity,
                 xmlResultJargon,
                 skippedMethods,
@@ -498,7 +498,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             int deviceListenerPort,
             string deviceListenerTmpFile)
         {
-            var args = GetCommonArguments(
+            MlaunchArguments? args = GetCommonArguments(
                 verbosity,
                 xmlResultJargon,
                 skippedMethods,
@@ -507,7 +507,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 deviceListenerPort,
                 deviceListenerTmpFile);
 
-            var ips = string.Join(",", _helpers.GetLocalIpAddresses().Select(ip => ip.ToString()));           
+            string? ips = string.Join(",", _helpers.GetLocalIpAddresses().Select(ip => ip.ToString()));           
 
             args.Add(new SetAppArgumentArgument($"-hostname:{ips}", true));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, ips));

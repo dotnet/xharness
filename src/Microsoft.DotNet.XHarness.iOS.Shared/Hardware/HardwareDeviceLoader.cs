@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
             _loaded = true;
 
-            var tmpfile = Path.GetTempFileName();
+            string tmpfile = Path.GetTempFileName();
             try
             {
                 using (var process = new Process())
@@ -71,10 +71,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     if (listExtraData)
                         arguments.Add(new ListExtraDataArgument());
 
-                    var task = _processManager.RunAsync(process, arguments, log, timeout: TimeSpan.FromSeconds(120));
+                    Task<Common.Execution.ProcessExecutionResult> task = _processManager.RunAsync(process, arguments, log, timeout: TimeSpan.FromSeconds(120));
                     log.WriteLine("Launching {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
 
-                    var result = await task;
+                    Common.Execution.ProcessExecutionResult result = await task;
 
                     if (!result.Succeeded)
                         throw new Exception("Failed to list devices.");
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     var doc = new XmlDocument();
                     doc.LoadWithoutNetworkAccess(tmpfile);
 
-                    var devices = doc.SelectNodes("/MTouch/Device");
+                    XmlNodeList devices = doc.SelectNodes("/MTouch/Device");
 
                     log.WriteLine($"Found {devices.Count} devices");
                     log.Flush();
@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         {
             await LoadDevices(log, false, false);
 
-            var companion = ConnectedDevices.Where((v) => v.DeviceIdentifier == device.CompanionIdentifier);
+            IEnumerable<IHardwareDevice> companion = ConnectedDevices.Where((v) => v.DeviceIdentifier == device.CompanionIdentifier);
             if (companion.Count() == 0)
                 throw new Exception($"Could not find the companion device for '{device.Name}'");
 
@@ -184,8 +184,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             // have some empty nodes. We could do this with try/catch, but we want to throw the min amount
             // of exceptions. We do know that we will have issues with the parsing of the DeviceClass, check
             // the value, and if is there, get the rest, else return null
-            var usable = deviceNone.SelectSingleNode("IsUsableForDebugging")?.InnerText;
-            if (Enum.TryParse<DeviceClass>(deviceNone.SelectSingleNode("DeviceClass")?.InnerText, true, out var deviceClass))
+            string usable = deviceNone.SelectSingleNode("IsUsableForDebugging")?.InnerText;
+            if (Enum.TryParse<DeviceClass>(deviceNone.SelectSingleNode("DeviceClass")?.InnerText, true, out DeviceClass deviceClass))
             {
                 return new Device(
                     deviceIdentifier: deviceNone.SelectSingleNode("DeviceIdentifier")?.InnerText,
@@ -197,7 +197,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     productType: deviceNone.SelectSingleNode("ProductType")?.InnerText,
                     interfaceType: deviceNone.SelectSingleNode("InterfaceType")?.InnerText,
                     isUsableForDebugging: usable == null ? (bool?)null : usable == "True",
-                    isLocked: bool.TryParse(deviceNone.SelectSingleNode("IsLocked")?.InnerText, out var locked) && locked);
+                    isLocked: bool.TryParse(deviceNone.SelectSingleNode("IsLocked")?.InnerText, out bool locked) && locked);
             }
             else
             {

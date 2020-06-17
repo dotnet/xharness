@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             },
             { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
                 {
-                    var argPair = v.Split('=');
+                    string[]? argPair = v.Split('=');
 
                     if (argPair.Length != 2)
                     {

@@ -31,16 +31,16 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
         {
             Logger = logger;
 
-            var simulators = await GetAvailableSimulators();
-            var exitCode = ExitCode.SUCCESS;
+            System.Collections.Generic.IEnumerable<Simulator>? simulators = await GetAvailableSimulators();
+            ExitCode exitCode = ExitCode.SUCCESS;
 
-            var unknownSimulators = _arguments.Simulators.Where(identifier =>
+            System.Collections.Generic.IEnumerable<string>? unknownSimulators = _arguments.Simulators.Where(identifier =>
                 !simulators.Any(sim => sim.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)));
 
             if (unknownSimulators.Any())
             {
                 // This output is actually matched in some tools, so please don't change
-                var message = "Unknown simulators: " + string.Join(", ", unknownSimulators);
+                string? message = "Unknown simulators: " + string.Join(", ", unknownSimulators);
 
                 if (_arguments.Verbosity == LogLevel.Debug)
                 {
@@ -56,9 +56,9 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
             }
 
             // We output a list of simulators that were supplied and not installed
-            foreach (var simulator in simulators)
+            foreach (Simulator? simulator in simulators)
             {
-                var installedVersion = await IsInstalled(simulator.Identifier);
+                Version? installedVersion = await IsInstalled(simulator.Identifier);
 
                 if (installedVersion == null && _arguments.Simulators.Any(identifier => simulator.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
                 {

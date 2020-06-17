@@ -36,11 +36,11 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
             p.StartInfo.UseShellExecute = false;
             p.StartInfo.FileName = "/bin/echo";
 
-            var complexInput = "'";
+            string complexInput = "'";
 
             p.StartInfo.Arguments = StringUtils.FormatArguments("-n", "foo", complexInput, "bar");
             p.Start();
-            var output = p.StandardOutput.ReadToEnd();
+            string output = p.StandardOutput.ReadToEnd();
             Assert.Equal($"foo {complexInput} bar", output);
         }
     }

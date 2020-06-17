@@ -182,7 +182,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
             {
                 get
                 {
-                    var testClass = "MyClass";
+                    string? testClass = "MyClass";
                     // null/empty class, means the opposite, is like a no match
                     var filter = XUnitFilter.CreateClassFilter(className: testClass, exclude: true);
                     var testMethod = new Mock<ITestMethod>();
@@ -248,7 +248,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
             {
                 get
                 {
-                    var testDisplayName = "MyNameSpace.MyClassTest.TestThatFooEqualsBat";
+                    string? testDisplayName = "MyNameSpace.MyClassTest.TestThatFooEqualsBat";
                     // match and exclude
                     var filter = XUnitFilter.CreateSingleFilter(
                         singleTestName: testDisplayName,
@@ -315,7 +315,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
             {
                 get
                 {
-                    var testNamespace = "MyNameSpace";
+                    string? testNamespace = "MyNameSpace";
                     // null and exclude, therefore include
                     var filter = XUnitFilter.CreateNamespaceFilter(
                         namespaceName: testNamespace,
@@ -414,8 +414,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                 get
                 {
                     var currentAssembly = Assembly.GetExecutingAssembly();
-                    var assemblyName = $"{currentAssembly.GetName().Name}.dll";
-                    var assemblyPath = currentAssembly.Location;
+                    string? assemblyName = $"{currentAssembly.GetName().Name}.dll";
+                    string? assemblyPath = currentAssembly.Location;
                     var assemblyInfo = new TestAssemblyInfo(currentAssembly, assemblyPath);
                     // assembly name match, exclude
                     var filter = XUnitFilter.CreateAssemblyFilter(assemblyName: assemblyName!, exclude: true);
@@ -471,7 +471,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                 {
                     logOutut.AppendLine(s);
                 };
-                var testExcluded= filter.IsExcluded(testCase, log);
+                bool testExcluded = filter.IsExcluded(testCase, log);
                 Assert.Equal(excluded, testExcluded);
                 // validate with the log
                 Assert.StartsWith(logMessage, logOutut.ToString().Trim());
@@ -486,7 +486,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                 {
                     logOutut.AppendLine(s);
                 };
-                var testExcluded= filter.IsExcluded(info, log);
+                bool testExcluded = filter.IsExcluded(info, log);
                 Assert.Equal(excluded, testExcluded);
                 // validate with the log
                 Assert.StartsWith(logMessage, logOutut.ToString().Trim());

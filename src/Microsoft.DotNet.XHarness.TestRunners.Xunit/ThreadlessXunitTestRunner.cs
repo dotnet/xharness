@@ -23,16 +23,16 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public int Run(string assemblyFileName, bool printXml, IEnumerable<string> excludedTraits)
         {
             var filters = new XunitFilters();
-            foreach (var trait in excludedTraits ?? Array.Empty<string>())
+            foreach (string? trait in excludedTraits ?? Array.Empty<string>())
             {
                 ParseEqualSeparatedArgument(filters.ExcludedTraits, trait);
             }
 
             var configuration = new TestAssemblyConfiguration() { ShadowCopy = false, ParallelizeAssembly = false, ParallelizeTestCollections = false, MaxParallelThreads = 1, PreEnumerateTheories = false };
-            var discoveryOptions = TestFrameworkOptions.ForDiscovery(configuration);
+            ITestFrameworkDiscoveryOptions? discoveryOptions = TestFrameworkOptions.ForDiscovery(configuration);
             var discoverySink = new TestDiscoverySink();
             var diagnosticSink = new ConsoleDiagnosticMessageSink();
-            var testOptions = TestFrameworkOptions.ForExecution(configuration);
+            ITestFrameworkExecutionOptions? testOptions = TestFrameworkOptions.ForExecution(configuration);
             var testSink = new TestMessageSink();
             var controller = new Xunit2(AppDomainSupport.Denied, new NullSourceInformationProvider(), assemblyFileName, configFileName: null, shadowCopy: false, shadowCopyFolder: null, diagnosticMessageSink: diagnosticSink, verifyTestAssemblyExists: false);
 
@@ -73,20 +73,20 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 Console.WriteLine($"ENDRESULTXML");
             }
 
-            var failed = resultsSink.ExecutionSummary.Failed > 0 || resultsSink.ExecutionSummary.Errors > 0;
+            bool failed = resultsSink.ExecutionSummary.Failed > 0 || resultsSink.ExecutionSummary.Errors > 0;
             return failed ? 1 : 0;
         }
 
         private void ParseEqualSeparatedArgument(Dictionary<string, List<string>> targetDictionary, string argument)
         {
-            var parts = argument.Split('=');
+            string[]? parts = argument.Split('=');
             if (parts.Length != 2 || string.IsNullOrEmpty(parts[0]) || string.IsNullOrEmpty(parts[1]))
             {
                 throw new ArgumentException("Invalid argument value '{argument}'.", nameof(argument));
             }
 
-            var name = parts[0];
-            var value = parts[1];
+            string? name = parts[0];
+            string? value = parts[1];
             List<string> excludedTraits;
             if (targetDictionary.TryGetValue(name, out excludedTraits!))
             {
@@ -110,9 +110,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         {
             using (var messageBus = new global::Xunit.Sdk.SynchronousMessageBus(discoveryMessageSink))
             {
-                foreach (var type in AssemblyInfo.GetTypes(includePrivateTypes: false).Where(IsValidTestClass))
+                foreach (ITypeInfo? type in AssemblyInfo.GetTypes(includePrivateTypes: false).Where(IsValidTestClass))
                 {
-                    var testClass = CreateTestClass(type);
+                    ITestClass? testClass = CreateTestClass(type);
                     if (!FindTestsForType(testClass, includeSourceInformation, messageBus, discoveryOptions))
                         break;
                 }

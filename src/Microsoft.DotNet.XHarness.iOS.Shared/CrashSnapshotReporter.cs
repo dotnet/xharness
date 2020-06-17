@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             do
             {
-                var newCrashFiles = await CreateCrashReportsSnapshotAsync();
+                HashSet<string> newCrashFiles = await CreateCrashReportsSnapshotAsync();
                 newCrashFiles.ExceptWith(_initialCrashes);
 
                 if (newCrashFiles.Count == 0)
@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 if (!_isDevice)
                 {
                     crashReports = new List<IFileBackedLog>(newCrashFiles.Count);
-                    foreach (var path in newCrashFiles)
+                    foreach (string path in newCrashFiles)
                     {
                         _logs.AddFile(path, $"Crash report: {Path.GetFileName(path)}");
                     }
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         .Where(c => c != null);
                 }
 
-                foreach (var cp in crashReports)
+                foreach (IFileBackedLog cp in crashReports)
                 {
                     WrenchLog.WriteLine("AddFile: {0}", cp.FullPath);
                     _log.WriteLine("    {0}", cp.FullPath);
@@ -117,15 +117,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         private async Task<IFileBackedLog> ProcessCrash(string crashFile)
         {
-            var name = Path.GetFileName(crashFile);
-            var crashReportFile = _logs.Create(name, $"Crash report: {name}", timestamp: false);
+            string name = Path.GetFileName(crashFile);
+            IFileBackedLog crashReportFile = _logs.Create(name, $"Crash report: {name}", timestamp: false);
             var args = new MlaunchArguments(
                 new DownloadCrashReportArgument(crashFile),
                 new DownloadCrashReportToArgument(crashReportFile.FullPath));
 
             if (!string.IsNullOrEmpty(_deviceName)) args.Add(new DeviceNameArgument(_deviceName));
 
-            var result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
+            Common.Execution.ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
 
             if (result.Succeeded)
             {
@@ -147,10 +147,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 return report;
             }
 
-            var name = Path.GetFileName(report.FullPath);
-            var symbolicated = _logs.Create(Path.ChangeExtension(name, ".symbolicated.log"), $"Symbolicated crash report: {name}", timestamp: false);
+            string name = Path.GetFileName(report.FullPath);
+            IFileBackedLog symbolicated = _logs.Create(Path.ChangeExtension(name, ".symbolicated.log"), $"Symbolicated crash report: {name}", timestamp: false);
             var environment = new Dictionary<string, string> { { "DEVELOPER_DIR", Path.Combine(_processManager.XcodeRoot, "Contents", "Developer") } };
-            var result = await _processManager.ExecuteCommandAsync(_symbolicateCrashPath, new[] { report.FullPath }, symbolicated, TimeSpan.FromMinutes(1), environment);
+            Common.Execution.ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(_symbolicateCrashPath, new[] { report.FullPath }, symbolicated, TimeSpan.FromMinutes(1), environment);
             if (result.Succeeded)
             {
                 _log.WriteLine("Symbolicated {0} successfully.", report.FullPath);
@@ -169,20 +169,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             if (!_isDevice)
             {
-                var dir = Path.Combine(Environment.GetEnvironmentVariable("HOME"), "Library", "Logs", "DiagnosticReports");
+                string dir = Path.Combine(Environment.GetEnvironmentVariable("HOME"), "Library", "Logs", "DiagnosticReports");
                 if (Directory.Exists(dir))
                     crashes.UnionWith(Directory.EnumerateFiles(dir));
             }
             else
             {
-                var tempFile = _tempFileProvider();
+                string tempFile = _tempFileProvider();
                 try
                 {
                     var args = new MlaunchArguments(new ListCrashReportsArgument(tempFile));
 
                     if (!string.IsNullOrEmpty(_deviceName)) args.Add(new DeviceNameArgument(_deviceName));
 
-                    var result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
+                    Common.Execution.ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
                     if (result.Succeeded)
                         crashes.UnionWith(File.ReadAllLines(tempFile));
                 }

@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             {
                 get
                 {
-                    var data = new[] {
+                    (string interfaceType, int result)[] data = new[] {
                         (interfaceType: "usb", result: 0),
                         (interfaceType: "USB", result: 0),
                         (interfaceType: "wifi", result:  2),
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                         (interfaceType: "HOLA", result: 3),
                     };
 
-                    foreach (var (interfaceType, result) in data)
+                    foreach ((string interfaceType, int result) in data)
                     {
                         yield return new object[]
                         {
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             {
                 get
                 {
-                    var data = new[] {
+                    (DeviceClass deviceClass, DevicePlatform result)[] data = new[] {
                         (deviceClass: DeviceClass.iPhone, result: DevicePlatform.iOS),
                         (deviceClass: DeviceClass.iPod, result: DevicePlatform.iOS),
                         (deviceClass: DeviceClass.iPad, result: DevicePlatform.iOS),
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                         (deviceClass: DeviceClass.Unknown, result: DevicePlatform.Unknown),
                     };
 
-                    foreach (var (deviceClass, result) in data)
+                    foreach ((DeviceClass deviceClass, DevicePlatform result) in data)
                     {
                         yield return new object[]
                         {
@@ -148,9 +148,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                         }
                     };
 
-                    foreach (var product in data.Keys)
+                    foreach (string product in data.Keys)
                     {
-                        foreach (var (version, result) in data[product])
+                        foreach ((string version, bool result) in data[product])
                         {
                             yield return new object[]
                             {
@@ -174,7 +174,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             {
                 get
                 {
-                    var iOSCommon = new[] {
+                    (Version version, bool result)[] iOSCommon = new[] {
                             (version: new Version (1,1), result: true),
                             (version: new Version (2,1), result: true),
                             (version: new Version (3,1), result: true),
@@ -206,9 +206,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                         }
                     };
 
-                    foreach (var deviceClass in data.Keys)
+                    foreach (DeviceClass deviceClass in data.Keys)
                     {
-                        foreach (var (version, result) in data[deviceClass])
+                        foreach ((Version version, bool result) in data[deviceClass])
                         {
                             yield return new object[]
                             {

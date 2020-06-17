@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 return;
             }
 
-            var sim_services = new string[] {
+            string[] sim_services = new string[] {
                     "kTCCServiceAddressBook",
                     "kTCCServiceCalendar",
                     "kTCCServicePhotos",
@@ -100,8 +100,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     "kTCCServiceWillow"
                 };
 
-            var failure = false;
-            var tcc_edit_timeout = 30;
+            bool failure = false;
+            int tcc_edit_timeout = 30;
             var watch = new Stopwatch();
             watch.Start();
 
@@ -113,14 +113,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     await Task.Delay(TimeSpan.FromSeconds(1));
                 }
                 failure = false;
-                foreach (var bundle_identifier in bundle_identifiers)
+                foreach (string bundle_identifier in bundle_identifiers)
                 {
                     var args = new List<string>();
                     var sql = new System.Text.StringBuilder("\n");
                     args.Add(TCCDb);
-                    foreach (var bundle_id in new[] { bundle_identifier, bundle_identifier + ".watchkitapp" })
+                    foreach (string bundle_id in new[] { bundle_identifier, bundle_identifier + ".watchkitapp" })
                     {
-                        foreach (var service in sim_services)
+                        foreach (string service in sim_services)
                         {
                             switch (GetTCCFormat(simRuntime))
                             {
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                         }
                     }
                     args.Add(sql.ToString());
-                    var rv = await _processManager.ExecuteCommandAsync("sqlite3", args, log, TimeSpan.FromSeconds(5));
+                    Common.Execution.ProcessExecutionResult rv = await _processManager.ExecuteCommandAsync("sqlite3", args, log, TimeSpan.FromSeconds(5));
                     if (!rv.Succeeded)
                     {
                         failure = true;

@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments
 
         protected sealed override OptionSet GetCommandOptions()
         {
-            var options = GetAdditionalOptions();
+            OptionSet? options = GetAdditionalOptions();
 
             options.Add("xcode=", "Path to where Xcode is located, e.g. /Application/Xcode114.app. If not set, xcode-select is used to determine the location", v => XcodeRoot = RootPath(v));
 
@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments
                 throw new ArgumentException("Invalid Xcode path supplied");
             }
 
-            var plistPath = Path.Combine(XcodeRoot, "Contents", "Info.plist");
+            string? plistPath = Path.Combine(XcodeRoot, "Contents", "Info.plist");
             if (!File.Exists(plistPath))
             {
                 throw new ArgumentException($"Cannot find Xcode. The path '{plistPath}' does not exist.");

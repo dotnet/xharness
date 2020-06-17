@@ -31,16 +31,16 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
         {
             Logger = logger;
 
-            var simulators = await GetAvailableSimulators();
+            System.Collections.Generic.IEnumerable<Simulator>? simulators = await GetAvailableSimulators();
 
-            foreach (var simulator in simulators)
+            foreach (Simulator? simulator in simulators)
             {
                 var output = new StringBuilder();
                 output.AppendLine(simulator.Name);
                 output.Append($"  Version: {simulator.Version}");
 
                 string? installStatus = null;
-                var installedVersion = await IsInstalled(simulator.Identifier);
+                Version? installedVersion = await IsInstalled(simulator.Identifier);
                 if (installedVersion == null)
                 {
                     if (_arguments.ListInstalledOnly)

@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         {
             var processManager = new MacOSProcessManager();
 
-            var engineBinary = _arguments.Engine switch
+            string? engineBinary = _arguments.Engine switch
             {
                 JavaScriptEngine.V8 => "v8",
                 JavaScriptEngine.JavaScriptCore => "jsc",
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             _xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
             File.Delete(_xmlResultsFilePath);
 
-            var result = await processManager.ExecuteCommandAsync(
+            Common.Execution.ProcessExecutionResult? result = await processManager.ExecuteCommandAsync(
                 engineBinary,
                 engineArgs,
                 log: new CallbackLog(m => logger.LogInformation(m)),

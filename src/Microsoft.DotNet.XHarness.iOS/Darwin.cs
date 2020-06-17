@@ -16,12 +16,12 @@ namespace Microsoft.DotNet.XHarness.iOS
             {
                 const uint BUFFER_LENGTH = 32;
 
-                var name = stackalloc int[2];
+                int* name = stackalloc int[2];
                 name[0] = CTL_KERN;
                 name[1] = KERN_OSRELEASE;
 
-                var buf = stackalloc byte[(int)BUFFER_LENGTH];
-                var len = stackalloc uint[1];
+                byte* buf = stackalloc byte[(int)BUFFER_LENGTH];
+                uint* len = stackalloc uint[1];
                 *len = BUFFER_LENGTH;
 
                 try
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
         public static string GetVersion()
         {
-            var kernelRelease = GetKernelRelease();
+            string? kernelRelease = GetKernelRelease();
             if (!Version.TryParse(kernelRelease, out Version? version) || version.Major < 5)
             {
                 // 10.0 covers all versions prior to Darwin 5

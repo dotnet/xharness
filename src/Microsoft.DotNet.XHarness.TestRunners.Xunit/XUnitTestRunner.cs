@@ -235,7 +235,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             sb.AppendLine();
             if (args.Message.TestCase.Traits != null && args.Message.TestCase.Traits.Count > 0)
             {
-                foreach (var kvp in args.Message.TestCase.Traits)
+                foreach (KeyValuePair<string, List<string>> kvp in args.Message.TestCase.Traits)
                 {
                     string message = $"   Test trait name: {kvp.Key}";
                     OnError(message);
@@ -713,7 +713,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private static async Task WaitForEvent(WaitHandle handle, TimeSpan timeout)
         {
             var tcs = new TaskCompletionSource<object>();
-            var registration = ThreadPool.RegisterWaitForSingleObject(handle, (_, timedOut) =>
+            RegisteredWaitHandle registration = ThreadPool.RegisterWaitForSingleObject(handle, (_, timedOut) =>
             {
                 if (timedOut)
                     tcs.TrySetCanceled();
@@ -852,10 +852,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void Transform_Results(string xsltResourceName, XElement element, XmlWriter writer)
         {
             var xmlTransform = new System.Xml.Xsl.XslCompiledTransform();
-            var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith(xsltResourceName, StringComparison.Ordinal)).FirstOrDefault();
+            string name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith(xsltResourceName, StringComparison.Ordinal)).FirstOrDefault();
             if (name == null)
                 return;
-            using (var xsltStream = GetType().Assembly.GetManifestResourceStream(name))
+            using (Stream xsltStream = GetType().Assembly.GetManifestResourceStream(name))
             {
                 if (xsltStream == null)
                 {
@@ -869,7 +869,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 xslArg.AddExtensionObject("urn:hash-generator", generator);
 
                 using (var xsltReader = XmlReader.Create(xsltStream))
-                using (var xmlReader = element.CreateReader())
+                using (XmlReader xmlReader = element.CreateReader())
                 {
                     xmlTransform.Load(xsltReader);
                     xmlTransform.Transform(xmlReader, xslArg, writer);
@@ -932,7 +932,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             {
                 using (var discoverySink = new TestDiscoverySink())
                 {
-                    var configuration = GetConfiguration(assembly) ?? new TestAssemblyConfiguration();
+                    TestAssemblyConfiguration configuration = GetConfiguration(assembly) ?? new TestAssemblyConfiguration();
                     ITestFrameworkDiscoveryOptions discoveryOptions = GetFrameworkOptionsForDiscovery(configuration);
                     discoveryOptions.SetSynchronousMessageReporting(true);
                     Logger.OnDebug($"Starting test discovery in the '{assembly}' assembly");
@@ -967,7 +967,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                     executionOptions.SetMaxParallelThreads(MaxParallelThreads);
 
                     // set the wait for event cb first, then execute the tests
-                    var resultTask = WaitForEvent(resultsSink.Finished, TimeSpan.FromDays(10)).ConfigureAwait(false);
+                    System.Runtime.CompilerServices.ConfiguredTaskAwaitable resultTask = WaitForEvent(resultsSink.Finished, TimeSpan.FromDays(10)).ConfigureAwait(false);
                     frontController.RunTests(testCases, resultsSink, executionOptions);
                     await resultTask;
 
@@ -981,26 +981,26 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             if (tests.Any())
             {
                 // create a single filter per test
-                foreach (var t in tests)
+                foreach (string t in tests)
                 {
                     if (t.StartsWith("KLASS:", StringComparison.Ordinal))
                     {
-                        var klass = t.Replace("KLASS:", "");
+                        string klass = t.Replace("KLASS:", "");
                         _filters.Add(XUnitFilter.CreateClassFilter(klass, true));
                     }
                     else if (t.StartsWith("KLASS32:", StringComparison.Ordinal) && IntPtr.Size == 4)
                     {
-                        var klass = t.Replace("KLASS32:", "");
+                        string klass = t.Replace("KLASS32:", "");
                         _filters.Add(XUnitFilter.CreateClassFilter(klass, true));
                     }
                     else if (t.StartsWith("KLASS64:", StringComparison.Ordinal) && IntPtr.Size == 8)
                     {
-                        var klass = t.Replace("KLASS32:", "");
+                        string klass = t.Replace("KLASS32:", "");
                         _filters.Add(XUnitFilter.CreateClassFilter(klass, true));
                     }
                     else if (t.StartsWith("Platform32:", StringComparison.Ordinal) && IntPtr.Size == 4)
                     {
-                        var filter = t.Replace("Platform32:", "");
+                        string filter = t.Replace("Platform32:", "");
                         _filters.Add(XUnitFilter.CreateSingleFilter(filter, true));
                     }
                     else
@@ -1016,9 +1016,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             if (categories == null)
                 throw new ArgumentNullException(nameof(categories));
 
-            foreach (var c in categories)
+            foreach (string c in categories)
             {
-                var traitInfo = c.Split('=');
+                string[] traitInfo = c.Split('=');
                 if (traitInfo.Length == 2)
                 {
                     _filters.Add(XUnitFilter.CreateTraitFilter(traitInfo[0], traitInfo[1], true));

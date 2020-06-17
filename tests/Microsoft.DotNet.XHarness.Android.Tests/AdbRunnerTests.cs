@@ -94,11 +94,11 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         public void ListDevicesAndArchitectures()
         {
             var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
-            var result = runner.GetAttachedDevicesAndArchitectures();
+            Dictionary<string, string> result = runner.GetAttachedDevicesAndArchitectures();
             _processManager.Verify(pm => pm.Run(s_adbPath, "devices -l", TimeSpan.FromSeconds(30)), Times.Once);
 
             // Ensure it called, parsed the three random device names and found all three architectures
-            foreach (var fakeDeviceInfo in _fakeDeviceList.Keys)
+            foreach (Tuple<string, string> fakeDeviceInfo in _fakeDeviceList.Keys)
             {
                 _processManager.Verify(pm => pm.Run(s_adbPath, $"-s {fakeDeviceInfo.Item1} shell getprop ro.product.cpu.abi", TimeSpan.FromMinutes(5)), Times.Once);
                 Assert.Equal(fakeDeviceInfo.Item2, result[fakeDeviceInfo.Item1]);
@@ -221,7 +221,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
                     var s = new StringBuilder();
                     int transportId = 1;
                     s.AppendLine("List of devices attached");
-                    foreach (var device in _fakeDeviceList)
+                    foreach (KeyValuePair<Tuple<string, string>, int> device in _fakeDeviceList)
                     {
                         string offlineMsg = _fakeDeviceList[device.Key]++ > 4 ? "offline" : "online";
                         s.AppendLine($"{device.Key.Item1}          {offlineMsg} transportid:{transportId++}");

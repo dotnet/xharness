@@ -40,9 +40,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         [Fact]
         public void CaptureRightOrder()
         {
-            var ignoredLine = "This lines should not be captured";
-            var logLines = new[] { "first line", "second line", "thrid line" };
-            using (var stream = File.Create(_filePath))
+            string ignoredLine = "This lines should not be captured";
+            string[] logLines = new[] { "first line", "second line", "thrid line" };
+            using (FileStream stream = File.Create(_filePath))
             using (var writer = new StreamWriter(stream))
             {
                 writer.WriteLine(ignoredLine);
@@ -52,14 +52,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
                 captureLog.StartCapture();
                 using (var writer = new StreamWriter(_filePath))
                 {
-                    foreach (var line in logLines)
+                    foreach (string line in logLines)
                     {
                         writer.WriteLine(line);
                     }
                 }
                 captureLog.StopCapture();
                 // get the stream and assert we do have the correct lines
-                using (var captureStream = captureLog.GetReader())
+                using (StreamReader captureStream = captureLog.GetReader())
                 {
                     string line;
                     while ((line = captureStream.ReadLine()) != null)
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             // read the data that was added to the capture path and  ensure that we do have the name of the missing file
             using (var reader = new StreamReader(_capturePath))
             {
-                var line = reader.ReadLine();
+                string line = reader.ReadLine();
                 Assert.Contains(_filePath, line);
             }
         }

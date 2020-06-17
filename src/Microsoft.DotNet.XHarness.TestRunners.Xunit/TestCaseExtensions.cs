@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             // there is no guarantee that the dict created by xunit is case insensitive, therefore, trygetvalue might
             // not return the value we are interested in. We have to loop, which is not ideal, but will be better
             // for our use case.
-            foreach (var t in testCase.Traits.Keys)
+            foreach (string? t in testCase.Traits.Keys)
             {
                 if (trait.Equals(t, comparer))
                     return testCase.Traits.TryGetValue(t, out values);
@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
         public static string? GetNamespace(this ITestCase testCase)
         {
-            var testClassName = testCase.GetTestClass();
+            string? testClassName = testCase.GetTestClass();
             if (testClassName == null)
                 return null;
 

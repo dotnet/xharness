@@ -116,11 +116,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
         {
             // much simpler than in other writers, we just need to get the child nodes of each of the test-run and write
             // them. NUnit3 already gave us the xml we need to use
-            foreach (var testRun in result)
+            foreach (global::NUnit.Engine.ITestRun? testRun in result)
             {
-                for (var i = 0; i < testRun.Result.ChildNodes.Count; i++)
+                for (int i = 0; i < testRun.Result.ChildNodes.Count; i++)
                 {
-                    var node = testRun.Result.ChildNodes[i];
+                    XmlNode? node = testRun.Result.ChildNodes[i];
                     if (node.Name == "environment") continue;
                     node.WriteTo(_xmlWriter);
                 }

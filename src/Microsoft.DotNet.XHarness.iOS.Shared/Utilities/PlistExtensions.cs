@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             if (value == null)
                 throw new ArgumentNullException(nameof(value));
 
-            var element = plist.SelectSingleNode("//dict/key[text()='" + node + "']");
+            XmlNode element = plist.SelectSingleNode("//dict/key[text()='" + node + "']");
             if (element == null)
             {
                 plist.AddPListStringValue(node, value);
@@ -101,22 +101,22 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void AddPListStringValue(this XmlDocument plist, string node, string value)
         {
-            var keyElement = plist.CreateElement("key");
+            XmlElement keyElement = plist.CreateElement("key");
             keyElement.InnerText = node;
-            var valueElement = plist.CreateElement("string");
+            XmlElement valueElement = plist.CreateElement("string");
             valueElement.InnerText = value;
-            var root = plist.SelectSingleNode("//dict");
+            XmlNode root = plist.SelectSingleNode("//dict");
             root.AppendChild(keyElement);
             root.AppendChild(valueElement);
         }
 
         public static void AddPListKeyValuePair(this XmlDocument plist, string node, string valueType, string value)
         {
-            var keyElement = plist.CreateElement("key");
+            XmlElement keyElement = plist.CreateElement("key");
             keyElement.InnerText = node;
-            var valueElement = plist.CreateElement(valueType);
+            XmlElement valueElement = plist.CreateElement(valueType);
             valueElement.InnerXml = value;
-            var root = plist.SelectSingleNode("//dict");
+            XmlNode root = plist.SelectSingleNode("//dict");
             root.AppendChild(keyElement);
             root.AppendChild(valueElement);
         }
@@ -126,12 +126,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         private static void SetPListArrayOfIntegerValues(this XmlDocument plist, string node, params int[] values)
         {
-            var key = plist.SelectSingleNode("//dict/key[text()='" + node + "']");
+            XmlNode key = plist.SelectSingleNode("//dict/key[text()='" + node + "']");
             key.ParentNode.RemoveChild(key.NextSibling);
-            var array = plist.CreateElement("array");
-            foreach (var value in values)
+            XmlElement array = plist.CreateElement("array");
+            foreach (int value in values)
             {
-                var element = plist.CreateElement("integer");
+                XmlElement element = plist.CreateElement("integer");
                 element.InnerText = value.ToString();
                 array.AppendChild(element);
             }

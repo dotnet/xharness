@@ -84,10 +84,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     passedArguments = args;
 
                     // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListDevicesArgument).First().AsCommandLineArgument();
+                    string tempPath = args.Where(a => a is ListDevicesArgument).First().AsCommandLineArgument();
                     tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
-                    var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("devices.xml", StringComparison.Ordinal)).FirstOrDefault();
+                    string name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("devices.xml", StringComparison.Ordinal)).FirstOrDefault();
                     using (var outputStream = new StreamWriter(tempPath))
                     using (var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name)))
                     {
@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
         private void AssertArgumentValue(MlaunchArgument arg, string expected, string message = null)
         {
-            var value = arg.AsCommandLineArgument().Split(new char[] { '=' }, 2).LastOrDefault();
+            string value = arg.AsCommandLineArgument().Split(new char[] { '=' }, 2).LastOrDefault();
             Assert.Equal(expected, value);
         }
     }

@@ -58,15 +58,15 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
         {
             double duration = 0;
             long assertCount = 0;
-            foreach (var result in this)
+            foreach (ITestRun? result in this)
             {
-                var testRunNode = result.Result.FirstChild;
+                System.Xml.XmlNode? testRunNode = result.Result.FirstChild;
                 if (testRunNode.Name != "test-run") continue;
-                if (double.TryParse(testRunNode.Attributes["time"].Value, out var time))
+                if (double.TryParse(testRunNode.Attributes["time"].Value, out double time))
                 {
                     duration += time;
                 }
-                if (long.TryParse(testRunNode.Attributes["asserts"].Value, out var asserts))
+                if (long.TryParse(testRunNode.Attributes["asserts"].Value, out long asserts))
                 {
                     assertCount += asserts;
                 }

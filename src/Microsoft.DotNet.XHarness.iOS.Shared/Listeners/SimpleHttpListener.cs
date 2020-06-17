@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             var r = new Random((int)DateTime.Now.Ticks);
             while (attemptsLeft-- > 0)
             {
-                var newPort = r.Next(49152, 65535); // The suggested range for dynamic ports is 49152-65535 (IANA)
+                int newPort = r.Next(49152, 65535); // The suggested range for dynamic ports is 49152-65535 (IANA)
                 _server.Prefixes.Clear();
                 _server.Prefixes.Add("http://*:" + newPort + "/");
                 try
@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 Log.WriteLine("Test log server listening on: {0}:{1}", Address, Port);
                 do
                 {
-                    var context = _server.GetContext();
+                    HttpListenerContext context = _server.GetContext();
                     processed = Processing(context);
                 } while (!_autoExit || !processed);
             }
@@ -92,13 +92,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         private bool Processing(HttpListenerContext context)
         {
-            var finished = false;
+            bool finished = false;
 
-            var request = context.Request;
-            var response = "OK";
+            HttpListenerRequest request = context.Request;
+            string response = "OK";
 
-            var stream = request.InputStream;
-            var data = string.Empty;
+            Stream stream = request.InputStream;
+            string data = string.Empty;
             using (var reader = new StreamReader(stream))
             {
                 data = reader.ReadToEnd();
@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     break;
             }
 
-            var buf = System.Text.Encoding.UTF8.GetBytes(response);
+            byte[] buf = System.Text.Encoding.UTF8.GetBytes(response);
             context.Response.ContentLength64 = buf.Length;
             context.Response.OutputStream.Write(buf, 0, buf.Length);
             context.Response.OutputStream.Close();

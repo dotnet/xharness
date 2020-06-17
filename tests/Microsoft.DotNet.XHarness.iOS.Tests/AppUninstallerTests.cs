@@ -37,12 +37,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         public async Task UninstallFromDeviceTest()
         {
             // Act
-            var result = await _appUninstaller.UninstallApp(DeviceName, AppBundleId);
+            ProcessExecutionResult result = await _appUninstaller.UninstallApp(DeviceName, AppBundleId);
 
             // Verify
             Assert.Equal(0, result.ExitCode);
 
-            var expectedArgs = $"-v -v --uninstalldevbundleid {StringUtils.FormatArguments(AppBundleId)} --devname \"{DeviceName}\"";
+            string expectedArgs = $"-v -v --uninstalldevbundleid {StringUtils.FormatArguments(AppBundleId)} --devname \"{DeviceName}\"";
 
             _processManager.Verify(x => x.ExecuteCommandAsync(
                It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),

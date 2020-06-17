@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                 get
                 {
                     // single filter that excludes
-                    var testDisplayName = "MyNameSpace.MyClassTest.TestThatFooEqualsBat";
+                    string? testDisplayName = "MyNameSpace.MyClassTest.TestThatFooEqualsBat";
                     // match and exclude
                     var filter = XUnitFilter.CreateSingleFilter(
                         singleTestName: testDisplayName,
@@ -117,8 +117,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                 {
                     // single filter, exclude
                     var currentAssembly = Assembly.GetExecutingAssembly();
-                    var assemblyName = $"{currentAssembly.GetName().Name}.dll";
-                    var assemblyPath = currentAssembly.Location;
+                    string? assemblyName = $"{currentAssembly.GetName().Name}.dll";
+                    string? assemblyPath = currentAssembly.Location;
                     var assemblyInfo = new TestAssemblyInfo(currentAssembly, assemblyPath);
                     var filter = XUnitFilter.CreateAssemblyFilter(assemblyName: assemblyName!, exclude: true);
                     var collection = new XUnitFiltersCollection {filter};
@@ -183,7 +183,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
             [MemberData(nameof (TestCaseFilters), MemberType = typeof (FiltersTestData))]
             private void IsExcludedTestCase(XUnitFiltersCollection collection, ITestCase testCase, bool excluded)
             {
-                var wasExcluded = collection.IsExcluded(testCase);
+                bool wasExcluded = collection.IsExcluded(testCase);
                 Assert.Equal(excluded, wasExcluded);
             }
 
@@ -191,7 +191,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
             [MemberData(nameof (AssemblyFilters), MemberType = typeof (FiltersTestData))]
             private void IsExcludedAsAssembly(XUnitFiltersCollection collection, TestAssemblyInfo assemblyInfo, bool excluded)
             {
-                var wasExcluded = collection.IsExcluded(assemblyInfo);
+                bool wasExcluded = collection.IsExcluded(assemblyInfo);
                 Assert.Equal(excluded, wasExcluded);
             }
         }
@@ -201,16 +201,16 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         {
             var collection = new XUnitFiltersCollection();
 
-            var assemblies = new [] {"MyFirstAssembly.dll", "SecondAssembly.dll", "ThirdAssembly.exe",};
+            string[]? assemblies = new [] {"MyFirstAssembly.dll", "SecondAssembly.dll", "ThirdAssembly.exe",};
             collection.AddRange(assemblies.Select(a => XUnitFilter.CreateAssemblyFilter(a, true)));
 
-            var classes = new[] {"FirstClass", "SecondClass", "ThirdClass"};
+            string[]? classes = new[] {"FirstClass", "SecondClass", "ThirdClass"};
             collection.AddRange(classes.Select(c => XUnitFilter.CreateClassFilter(c, true)));
 
-            var methods = new[] {"FirstMethod", "SecondMethod"};
+            string[]? methods = new[] {"FirstMethod", "SecondMethod"};
             collection.AddRange(methods.Select(m => XUnitFilter.CreateSingleFilter(m, true)));
 
-            var namespaces = new[] {"Namespace"};
+            string[]? namespaces = new[] {"Namespace"};
             collection.AddRange(namespaces.Select(n => XUnitFilter.CreateNamespaceFilter(n, true)));
 
             Assert.Equal(assemblies.Length, collection.AssemblyFilters.Count());
@@ -220,16 +220,16 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         private void TestCaseFilters()
         {
             var collection = new XUnitFiltersCollection();
-            var assemblies = new [] {"MyFirstAssembly.dll", "SecondAssembly.dll", "ThirdAssembly.exe",};
+            string[]? assemblies = new [] {"MyFirstAssembly.dll", "SecondAssembly.dll", "ThirdAssembly.exe",};
             collection.AddRange(assemblies.Select(a => XUnitFilter.CreateAssemblyFilter(a, true)));
 
-            var classes = new[] {"FirstClass", "SecondClass", "ThirdClass"};
+            string[]? classes = new[] {"FirstClass", "SecondClass", "ThirdClass"};
             collection.AddRange(classes.Select(c => XUnitFilter.CreateClassFilter(c, true)));
 
-            var methods = new[] {"FirstMethod", "SecondMethod"};
+            string[]? methods = new[] {"FirstMethod", "SecondMethod"};
             collection.AddRange(methods.Select(m => XUnitFilter.CreateSingleFilter(m, true)));
 
-            var namespaces = new[] {"Namespace"};
+            string[]? namespaces = new[] {"Namespace"};
             collection.AddRange(namespaces.Select(n => XUnitFilter.CreateNamespaceFilter(n, true)));
 
             Assert.Equal(collection.Count - assemblies.Length, collection.TestCaseFilters.Count());

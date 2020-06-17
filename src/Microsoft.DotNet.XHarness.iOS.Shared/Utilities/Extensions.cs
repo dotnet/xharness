@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static TestTargetOs ParseAsAppRunnerTargetOs(this string targetName)
         {
-            var index = targetName.LastIndexOf('_');
+            int index = targetName.LastIndexOf('_');
             TestTarget target;
             string? osVersion = null;
             if (index != -1)
@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static string AsHtml(this string inString)
         {
-            var rv = System.Web.HttpUtility.HtmlEncode(inString);
+            string? rv = System.Web.HttpUtility.HtmlEncode(inString);
             return rv.Replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;").Replace("\n", "<br/>\n");
         }
     }

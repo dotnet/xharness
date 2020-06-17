@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         private async Task<(int pid, bool launchFailure)> GetPidFromRunLog()
         {
             (int pid, bool launchFailure) pidData = (-1, true);
-            using var reader = _runLog.GetReader(); // diposed at the end of the method, which is what we want
+            using StreamReader? reader = _runLog.GetReader(); // diposed at the end of the method, which is what we want
             if (reader.Peek() == -1)
             {
                 // empty file! we definetly had a launch error in this case
@@ -137,7 +137,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             {
                 while (!reader.EndOfStream)
                 {
-                    var line = await reader.ReadLineAsync();
+                    string? line = await reader.ReadLineAsync();
 
                     if (line == null)
                     {
@@ -146,7 +146,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
                     if (line.StartsWith("Application launched. PID = ", StringComparison.Ordinal))
                     {
-                        var pidstr = line.Substring("Application launched. PID = ".Length);
+                        string? pidstr = line.Substring("Application launched. PID = ".Length);
                         if (!int.TryParse(pidstr, out pidData.pid))
                         {
                             _mainLog.WriteLine("Could not parse pid: {0}", pidstr);
@@ -154,7 +154,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     }
                     else if (line.Contains("Xamarin.Hosting: Launched ") && line.Contains(" with pid "))
                     {
-                        var pidstr = line.Substring(line.LastIndexOf(' '));
+                        string? pidstr = line.Substring(line.LastIndexOf(' '));
                         if (!int.TryParse(pidstr, out pidData.pid))
                         {
                             _mainLog.WriteLine("Could not parse pid: {0}", pidstr);
@@ -175,16 +175,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         private async Task<int> GetPidFromMainLog()
         {
             int pid = -1;
-            using var log_reader = _mainLog.GetReader(); // dispose when we leave the method, which is what we want
+            using StreamReader? log_reader = _mainLog.GetReader(); // dispose when we leave the method, which is what we want
             string? line;
             while ((line = await log_reader.ReadLineAsync()) != null)
             {
                 const string str = "was launched with pid '";
-                var idx = line.IndexOf(str, StringComparison.Ordinal);
+                int idx = line.IndexOf(str, StringComparison.Ordinal);
                 if (idx > 0)
                 {
                     idx += str.Length;
-                    var next_idx = line.IndexOf('\'', idx);
+                    int next_idx = line.IndexOf('\'', idx);
                     if (next_idx > idx)
                     {
                         int.TryParse(line.Substring(idx, next_idx - idx), out pid);
@@ -204,10 +204,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         private void GetCrashReason(int pid, IReadableLog crashLog, out string? crashReason)
         {
             crashReason = null;
-            using var crashReader = crashLog.GetReader(); // dispose when we leave the method
-            var text = crashReader.ReadToEnd();
+            using StreamReader? crashReader = crashLog.GetReader(); // dispose when we leave the method
+            string? text = crashReader.ReadToEnd();
 
-            var reader = JsonReaderWriterFactory.CreateJsonReader(Encoding.UTF8.GetBytes(text), new XmlDictionaryReaderQuotas());
+            XmlDictionaryReader? reader = JsonReaderWriterFactory.CreateJsonReader(Encoding.UTF8.GetBytes(text), new XmlDictionaryReaderQuotas());
             var doc = new XmlDocument();
             doc.Load(reader);
             foreach (XmlNode? node in doc.SelectNodes($"/root/processes/item[pid = '" + pid + "']"))
@@ -237,8 +237,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         private Task KillAppProcess(int pid, CancellationTokenSource cancellationSource)
         {
-            var launchTimedout = cancellationSource.IsCancellationRequested;
-            var timeoutType = launchTimedout ? "Launch" : "Completion";
+            bool launchTimedout = cancellationSource.IsCancellationRequested;
+            string? timeoutType = launchTimedout ? "Launch" : "Completion";
             _mainLog.WriteLine($"{timeoutType} timed out after {_timeoutWatch.Elapsed.TotalSeconds} seconds");
             return _processManager.KillTreeAsync(pid, _mainLog, true);
         }
@@ -247,7 +247,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         {
             // wait for the execution of the process, once that is done, perform all the parsing operations and
             // leave a clean API to be used by AppRunner, hidding all the diff details
-            var result = await processExecution;
+            ProcessExecutionResult? result = await processExecution;
             if (!_waitedForExit && !result.TimedOut)
             {
                 // mlaunch couldn't wait for exit for some reason. Let's assume the app exits when the test listener completes.
@@ -305,7 +305,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             if (Success != null && !Success.Value)
             {
-                var (pid, launchFailure) = await GetPidFromRunLog();
+                (int pid, bool launchFailure) = await GetPidFromRunLog();
                 _launchFailure = launchFailure;
                 if (pid > 0)
                 {
@@ -367,18 +367,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             // that case, we cannot do a TCP connection to xharness to get the log, this is a problem since if we did not get the xml
             // from the TCP connection, we are going to fail when trying to read it and not parse it. Therefore, we are not only
             // going to check if we are in CI, but also if the listener_log is valid.
-            var path = Path.ChangeExtension(test_log_path, "xml");
+            string? path = Path.ChangeExtension(test_log_path, "xml");
             _resultParser.CleanXml(test_log_path, path);
 
-            if (ResultsUseXml && _resultParser.IsValidXml(path, out var xmlType))
+            if (ResultsUseXml && _resultParser.IsValidXml(path, out XmlResultJargon xmlType))
             {
                 try
                 {
-                    var newFilename = _resultParser.GetXmlFilePath(path, xmlType);
+                    string? newFilename = _resultParser.GetXmlFilePath(path, xmlType);
 
                     // at this point, we have the test results, but we want to be able to have attachments in vsts, so if the format is
                     // the right one (NUnitV3) add the nodes. ATM only TouchUnit uses V3.
-                    var testRunName = $"{appInfo.AppName} {appInfo.Variation}";
+                    string? testRunName = $"{appInfo.AppName} {appInfo.Variation}";
                     if (xmlType == XmlResultJargon.NUnitV3)
                     {
                         var logFiles = new List<string>();
@@ -404,7 +404,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     if (_generateHtml)
                     {
                         // write the human readable results in a tmp file, which we later use to step on the logs
-                        var tmpFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                        string? tmpFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
                         (parseResult.resultLine, parseResult.failed) = _resultParser.ParseResults(path, xmlType, tmpFile);
                         File.Copy(tmpFile, test_log_path, true);
                         File.Delete(tmpFile);
@@ -462,11 +462,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         private async Task<(bool Succeeded, bool Crashed, string ResultLine)> TestsSucceeded(AppBundleInformation appInfo, string test_log_path, bool timed_out)
         {
-            var (resultLine, failed, crashed) = await ParseResultFile(appInfo, test_log_path, timed_out);
+            (string? resultLine, bool failed, bool crashed) = await ParseResultFile(appInfo, test_log_path, timed_out);
             // read the parsed logs in a human readable way
             if (resultLine != null)
             {
-                var tests_run = resultLine.Replace("Tests run: ", "");
+                string? tests_run = resultLine.Replace("Tests run: ", "");
                 if (failed)
                 {
                     WrenchLog.WriteLine("AddSummary: <b>{0} failed: {1}</b><br/>", _runMode, tests_run);
@@ -563,7 +563,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         public async Task<(TestExecutingResult ExecutingResult, string? ResultMessage)> ParseResult()
         {
             (TestExecutingResult ExecutingResult, string? ResultMessage)result = (ExecutingResult: TestExecutingResult.Finished, ResultMessage: null);
-            var crashed = false;
+            bool crashed = false;
             if (File.Exists(_listener.TestLog.FullPath))
             {
                 WrenchLog.WriteLine("AddFile: {0}", _listener.TestLog.FullPath);
@@ -597,7 +597,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 Success = false;
             }
 
-            var crashLogWaitTime = 0;
+            int crashLogWaitTime = 0;
             if (!Success.Value)
             {
                 crashLogWaitTime = 5;
@@ -636,7 +636,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             {
                 int pid = -1;
                 string? crashReason = null;
-                foreach (var crashLog in _crashLogs)
+                foreach (IFileBackedLog? crashLog in _crashLogs)
                 {
                     try
                     {
@@ -656,7 +656,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     }
                     catch (Exception e)
                     {
-                        var message = string.Format("Failed to process crash report '{1}': {0}", e.Message, crashLog.Description);
+                        string? message = string.Format("Failed to process crash report '{1}': {0}", e.Message, crashLog.Description);
                         _mainLog.WriteLine(message);
                         _exceptionLogger?.Invoke(2, message);
                     }

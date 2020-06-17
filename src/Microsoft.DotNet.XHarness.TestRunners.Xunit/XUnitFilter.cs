@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 throw new ArgumentException("must not be null or empty", nameof(assemblyName));
 
             // ensure that the assembly name does have one of the valid extensions
-            var fileExtension = Path.GetExtension(assemblyName);
+            string? fileExtension = Path.GetExtension(assemblyName);
             if (fileExtension != ".dll" && fileExtension != ".exe")
                 throw new ArgumentException($"Assembly name must have .dll or .exe as extensions. Found extension {fileExtension}");
             return new XUnitFilter
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 return log (!Exclude);
             }
 
-            if (testCase.TryGetTrait(SelectorName!, out var values))
+            if (testCase.TryGetTrait(SelectorName!, out System.Collections.Generic.List<string>? values))
             {
                 if (values == null || values.Count == 0)
                 {
@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private bool ApplyTypeNameFilter(ITestCase testCase, Func<bool,bool>? reportFilteredTest = null)
         {
             Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
-            var testClassName = testCase.GetTestClass();
+            string? testClassName = testCase.GetTestClass();
             if (!string.IsNullOrEmpty(testClassName))
             {
                 if (string.Equals(testClassName, SelectorValue, StringComparison.InvariantCulture))
@@ -154,7 +154,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private bool ApplyNamespaceFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
         {
             Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
-            var testClassNamespace = testCase.GetNamespace();
+            string? testClassNamespace = testCase.GetNamespace();
             if (string.IsNullOrEmpty(testClassNamespace))
             {
                 // if we exclude, since we have no namespace, we include the test
@@ -215,7 +215,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             if (log == null)
                 return excluded;
 
-            var selector = FilterType == XUnitFilterType.Trait ?
+            string? selector = FilterType == XUnitFilterType.Trait ?
                 $"'{SelectorName}':'{SelectorValue}'" : $"'{SelectorValue}'";
 
             log($"[FILTER] {(excluded? excludedText : includedText)} test (filtered by {FilterType}; {selector}): {testCase.DisplayName}");
