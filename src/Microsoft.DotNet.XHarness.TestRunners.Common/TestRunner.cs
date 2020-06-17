@@ -171,16 +171,12 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         protected virtual void OnTestStarted(string testName)
         {
-            var hanlder = TestStarted;
-            if (hanlder != null)
-                hanlder(this, testName);
+            TestStarted?.Invoke(this, testName);
         }
 
         protected virtual void OnTestCompleted((string TestName, TestResult TestResult) result)
         {
-            var handler = TestCompleted;
-            if (handler != null)
-                handler(this, result);
-		}
+            TestCompleted?.Invoke(this, result);
+        }
     }
 }

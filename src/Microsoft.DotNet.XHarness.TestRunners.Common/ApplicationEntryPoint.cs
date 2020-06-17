@@ -131,16 +131,12 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         private void OnTestStarted(object sender, string testName)
         {
-            var handler = TestStarted;
-            if (handler != null)
-                handler(sender, testName);
+            TestStarted?.Invoke(sender, testName);
         }
 
         private void OnTestCompleted(object sender, (string TestName, TestResult Testresult) result)
         {
-            var handler = TestCompleted;
-            if (handler != null)
-                handler(sender, result);
+            TestCompleted?.Invoke(sender, result);
         }
 
         private async Task<List<string>> GetIgnoredCategories()
