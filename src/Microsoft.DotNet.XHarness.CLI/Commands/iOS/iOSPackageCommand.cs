@@ -11,6 +11,8 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
@@ -57,7 +59,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 process.StartInfo.FileName = "bash";
                 process.StartInfo.Arguments = "-c \"" + _arguments.DotnetPath + " --info | grep \\\"Base Path\\\" | cut -d':' -f 2 | tr -d '[:space:]'\"";
 
-                Common.Execution.ProcessExecutionResult? result = await processManager.RunAsync(process, new MemoryLog(), dotnetLog, new MemoryLog(), TimeSpan.FromSeconds(5));
+                ProcessExecutionResult? result = await processManager.RunAsync(process, new MemoryLog(), dotnetLog, new MemoryLog(), TimeSpan.FromSeconds(5));
 
                 if (result.Succeeded)
                 {
@@ -92,7 +94,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             };
 
             var logs = new Logs(_arguments.WorkingDirectory);
-            Common.Logging.IFileBackedLog? runLog = logs.Create("package-log.txt", "Package Log");
+            IFileBackedLog? runLog = logs.Create("package-log.txt", "Package Log");
             var consoleLog = new CallbackLog(s => logger.LogInformation(s))
             {
                 Timestamp = false
@@ -139,7 +141,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                 dotnetRestore.StartInfo.Arguments = StringUtils.FormatArguments(args);
 
-                Common.Execution.ProcessExecutionResult? result = await processManager.RunAsync(dotnetRestore, aggregatedLog, _nugetRestoreTimeout);
+                ProcessExecutionResult? result = await processManager.RunAsync(dotnetRestore, aggregatedLog, _nugetRestoreTimeout);
                 if (result.TimedOut)
                 {
                     aggregatedLog.WriteLine("nuget restore timedout.");
@@ -171,7 +173,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                 aggregatedLog.WriteLine($"Building {_arguments.AppPackageName} ({projectPath})");
 
-                Common.Execution.ProcessExecutionResult? result = await processManager.RunAsync(dotnetBuild, aggregatedLog, _msBuildTimeout);
+                ProcessExecutionResult? result = await processManager.RunAsync(dotnetBuild, aggregatedLog, _msBuildTimeout);
                 if (result.TimedOut)
                 {
                     aggregatedLog.WriteLine("Build timed out after {0} seconds.", _msBuildTimeout.TotalSeconds);

@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
+using Microsoft.DotNet.XHarness.Android.Execution;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
@@ -115,7 +116,7 @@ Arguments:
                 }
 
                 // No class name = default Instrumentation
-                XHarness.Android.Execution.ProcessExecutionResults? result = runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
+                ProcessExecutionResults? result = runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
 
                 using (logger.BeginScope("Post-test copy and cleanup"))
                 {

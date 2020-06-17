@@ -17,6 +17,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Xunit;
 using Xunit.Abstractions;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
+using System.Runtime.CompilerServices;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 {
@@ -971,7 +972,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                     executionOptions.SetMaxParallelThreads(MaxParallelThreads);
 
                     // set the wait for event cb first, then execute the tests
-                    System.Runtime.CompilerServices.ConfiguredTaskAwaitable resultTask = WaitForEvent(resultsSink.Finished, TimeSpan.FromDays(10)).ConfigureAwait(false);
+                    ConfiguredTaskAwaitable resultTask = WaitForEvent(resultsSink.Finished, TimeSpan.FromDays(10)).ConfigureAwait(false);
                     frontController.RunTests(testCases, resultsSink, executionOptions);
                     await resultTask;
 

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 
@@ -144,7 +145,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                         }
                     }
                     args.Add(sql.ToString());
-                    Common.Execution.ProcessExecutionResult rv = await _processManager.ExecuteCommandAsync("sqlite3", args, log, TimeSpan.FromSeconds(5));
+                    ProcessExecutionResult rv = await _processManager.ExecuteCommandAsync("sqlite3", args, log, TimeSpan.FromSeconds(5));
                     if (!rv.Succeeded)
                     {
                         failure = true;

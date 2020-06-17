@@ -16,6 +16,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.Collections;
+using Microsoft.DotNet.XHarness.Common.Execution;
 
 #nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
@@ -67,7 +68,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     new ListSimulatorsArgument(tmpfile),
                     new XmlOutputFormatArgument());
 
-                Common.Execution.ProcessExecutionResult? result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromSeconds(30));
+                ProcessExecutionResult? result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromSeconds(30));
 
                 if (!result.Succeeded)
                 {
@@ -197,7 +198,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 }
             }
 
-            Common.Execution.ProcessExecutionResult? rv = await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "create", CreateName(devicetype, runtime), devicetype, runtime }, log, TimeSpan.FromMinutes(1));
+            ProcessExecutionResult? rv = await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "create", CreateName(devicetype, runtime), devicetype, runtime }, log, TimeSpan.FromMinutes(1));
             if (!rv.Succeeded)
             {
                 string? message = $"Could not create device{Environment.NewLine}" +
@@ -252,7 +253,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 capturedLog.Append(value);
             });
 
-            Common.Execution.ProcessExecutionResult? rv = await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "pair", device.UDID, companion_device.UDID }, pairLog, TimeSpan.FromMinutes(1));
+            ProcessExecutionResult? rv = await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "pair", device.UDID, companion_device.UDID }, pairLog, TimeSpan.FromMinutes(1));
             if (!rv.Succeeded)
             {
                 if (!createDevice)

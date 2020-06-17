@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Xunit;
 
@@ -86,7 +87,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
 
             using (var logs = new Logs(_directory))
             {
-                Common.Logging.IFileBackedLog fileLog = logs.AddFile(fullPath, _description);
+                IFileBackedLog fileLog = logs.AddFile(fullPath, _description);
                 Assert.Equal(fullPath, fileLog.FullPath); // path && fullPath are the same
                 Assert.Equal(Path.Combine(_directory, _fileName), fileLog.FullPath);
                 Assert.Equal(_description, fileLog.Description);
@@ -108,7 +109,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             using (var logs = new Logs(dir2))
             {
                 string newPath = Path.Combine(dir2, Path.GetFileNameWithoutExtension(_fileName));
-                Common.Logging.IFileBackedLog fileLog = logs.AddFile(filePath, _description);
+                IFileBackedLog fileLog = logs.AddFile(filePath, _description);
                 Assert.StartsWith(newPath, fileLog.FullPath); // assert new path
                 Assert.True(File.Exists(fileLog.FullPath), "copy");
             }

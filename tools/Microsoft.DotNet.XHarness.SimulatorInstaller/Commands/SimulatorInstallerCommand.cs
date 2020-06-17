@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments;
@@ -63,7 +64,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
             var stdoutLog = new MemoryLog() { Timestamp = false };
             var stderrLog = new MemoryLog() { Timestamp = false };
 
-            Common.Execution.ProcessExecutionResult? result = await _processManager.ExecuteCommandAsync(
+            ProcessExecutionResult? result = await _processManager.ExecuteCommandAsync(
                 filename,
                 arguments,
                 new CallbackLog(m => Logger.LogDebug(m)),

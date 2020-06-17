@@ -4,6 +4,7 @@
 
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -104,7 +105,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 return log (!Exclude);
             }
 
-            if (testCase.TryGetTrait(SelectorName!, out System.Collections.Generic.List<string>? values))
+            if (testCase.TryGetTrait(SelectorName!, out List<string>? values))
             {
                 if (values == null || values.Count == 0)
                 {

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
@@ -46,7 +47,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         )]
         public void FlaggedIsPresentWhereItShouldBe(TestExecutingResult[] withFlag, TestExecutingResult flag)
         {
-            System.Collections.Generic.IEnumerable<TestExecutingResult> withoutFlag = Enum.GetValues(typeof(TestExecutingResult))
+            IEnumerable<TestExecutingResult> withoutFlag = Enum.GetValues(typeof(TestExecutingResult))
                 .Cast<TestExecutingResult>()
                 .Except(withFlag);
 

@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Collections;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
@@ -71,10 +72,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     if (listExtraData)
                         arguments.Add(new ListExtraDataArgument());
 
-                    Task<Common.Execution.ProcessExecutionResult> task = _processManager.RunAsync(process, arguments, log, timeout: TimeSpan.FromSeconds(120));
+                    Task<ProcessExecutionResult> task = _processManager.RunAsync(process, arguments, log, timeout: TimeSpan.FromSeconds(120));
                     log.WriteLine("Launching {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
 
-                    Common.Execution.ProcessExecutionResult result = await task;
+                    ProcessExecutionResult result = await task;
 
                     if (!result.Succeeded)
                         throw new Exception("Failed to list devices.");

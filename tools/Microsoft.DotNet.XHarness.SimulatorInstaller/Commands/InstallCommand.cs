@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -36,10 +37,10 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
         {
             Logger = logger;
 
-            System.Collections.Generic.IEnumerable<Simulator>? simulators = await GetAvailableSimulators();
+            IEnumerable<Simulator>? simulators = await GetAvailableSimulators();
             ExitCode exitCode = ExitCode.SUCCESS;
 
-            System.Collections.Generic.IEnumerable<string>? unknownSimulators = _arguments.Simulators.Where(identifier =>
+            IEnumerable<string>? unknownSimulators = _arguments.Simulators.Where(identifier =>
                 !simulators.Any(sim => sim.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)));
 
             if (unknownSimulators.Any())

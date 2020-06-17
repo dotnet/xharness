@@ -10,6 +10,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.DotNet.XHarness.Common;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
@@ -808,10 +809,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         {
             // VSTS does not provide a nice way to report build errors, create a fake
             // test result with a failure in the case the build did not work
-            Common.Logging.IFileBackedLog? failureLogXml = logs.Create($"vsts-nunit-{source}-{s_helpers.Timestamp}.xml", LogType.XmlLog.ToString());
+            IFileBackedLog? failureLogXml = logs.Create($"vsts-nunit-{source}-{s_helpers.Timestamp}.xml", LogType.XmlLog.ToString());
             if (jargon == XmlResultJargon.NUnitV3)
             {
-                Common.Logging.IFileBackedLog? failureXmlTmp = logs.Create($"nunit-{source}-{s_helpers.Timestamp}.tmp", "Failure Log tmp");
+                IFileBackedLog? failureXmlTmp = logs.Create($"nunit-{source}-{s_helpers.Timestamp}.tmp", "Failure Log tmp");
                 GenerateFailureXml(failureXmlTmp.FullPath, title, message, stderrReader, jargon);
                 // add the required attachments and the info of the application that failed to install
                 IEnumerable<string>? failure_logs = Directory.GetFiles(logs.Directory).Where(p => !p.Contains("nunit")); // all logs but ourself

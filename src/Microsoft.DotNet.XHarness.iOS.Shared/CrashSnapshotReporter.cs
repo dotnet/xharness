@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
@@ -125,7 +126,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             if (!string.IsNullOrEmpty(_deviceName)) args.Add(new DeviceNameArgument(_deviceName));
 
-            Common.Execution.ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
+            ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
 
             if (result.Succeeded)
             {
@@ -150,7 +151,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             string name = Path.GetFileName(report.FullPath);
             IFileBackedLog symbolicated = _logs.Create(Path.ChangeExtension(name, ".symbolicated.log"), $"Symbolicated crash report: {name}", timestamp: false);
             var environment = new Dictionary<string, string> { { "DEVELOPER_DIR", Path.Combine(_processManager.XcodeRoot, "Contents", "Developer") } };
-            Common.Execution.ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(_symbolicateCrashPath, new[] { report.FullPath }, symbolicated, TimeSpan.FromMinutes(1), environment);
+            ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(_symbolicateCrashPath, new[] { report.FullPath }, symbolicated, TimeSpan.FromMinutes(1), environment);
             if (result.Succeeded)
             {
                 _log.WriteLine("Symbolicated {0} successfully.", report.FullPath);
@@ -182,7 +183,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
                     if (!string.IsNullOrEmpty(_deviceName)) args.Add(new DeviceNameArgument(_deviceName));
 
-                    Common.Execution.ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
+                    ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
                     if (result.Succeeded)
                         crashes.UnionWith(File.ReadAllLines(tempFile));
                 }

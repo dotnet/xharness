@@ -2,17 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.Extensions.Logging;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.ComponentModel;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
@@ -64,12 +65,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             engineArgs.AddRange(PassThroughArguments);
 
-            var xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
+            string? xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
             File.Delete(xmlResultsFilePath);
 
             try
             {
-                Common.Execution.ProcessExecutionResult? result = await processManager.ExecuteCommandAsync(
+                ProcessExecutionResult? result = await processManager.ExecuteCommandAsync(
                     engineBinary,
                     engineArgs,
                     log: new CallbackLog(m => logger.LogInformation(m)),
@@ -102,7 +103,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 }
                 else
                 {
-                   logger.LogDebug(line);
+                    logger.LogDebug(line);
                 }
             }
             else

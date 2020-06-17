@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Xml;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 using NUnit.Engine;
 using NUnit.Framework.Interfaces;
@@ -60,7 +61,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             long assertCount = 0;
             foreach (ITestRun? result in this)
             {
-                System.Xml.XmlNode? testRunNode = result.Result.FirstChild;
+                XmlNode? testRunNode = result.Result.FirstChild;
                 if (testRunNode.Name != "test-run") continue;
                 if (double.TryParse(testRunNode.Attributes["time"].Value, out double time))
                 {

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.CLI;
@@ -31,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
         {
             Logger = logger;
 
-            System.Collections.Generic.IEnumerable<Simulator>? simulators = await GetAvailableSimulators();
+            IEnumerable<Simulator>? simulators = await GetAvailableSimulators();
 
             foreach (Simulator? simulator in simulators)
             {

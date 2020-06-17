@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared;
@@ -288,7 +289,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 _mainLog.WriteLine("Starting test run");
 
-                Task<Common.Execution.ProcessExecutionResult>? result = _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+                Task<ProcessExecutionResult>? result = _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
 
                 await testReporter.CollectSimulatorResult(result);
 
@@ -344,7 +345,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit).
                 IFileBackedLog? aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
-                Task<Common.Execution.ProcessExecutionResult>? result = _processManager.ExecuteCommandAsync(
+                Task<ProcessExecutionResult>? result = _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     aggregatedLog,
                     timeout,
