@@ -174,8 +174,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         {
             long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
             total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
-            XmlReaderSettings settings = new XmlReaderSettings();
-            settings.ValidationType = ValidationType.None;
+            XmlReaderSettings settings = new XmlReaderSettings
+            {
+                ValidationType = ValidationType.None
+            };
             using (var reader = XmlReader.Create(stream, settings))
             {
                 while (reader.Read())

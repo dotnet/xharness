@@ -30,8 +30,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
         /// <param name="writer">A TextWriter to which the result is written</param>
         public override void WriteResultFile(IResultSummary result, TextWriter writer)
         {
-            var xmlWriter = new XmlTextWriter(writer);
-            xmlWriter.Formatting = Formatting.Indented;
+            var xmlWriter = new XmlTextWriter(writer)
+            {
+                Formatting = Formatting.Indented
+            };
 
             try
             {
