@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     // A log that writes to standard output
     public class ConsoleLog : ReadableLog
     {
-        readonly StringBuilder captured = new StringBuilder();
+        private readonly StringBuilder captured = new StringBuilder();
 
         protected override void WriteImpl(string value)
         {

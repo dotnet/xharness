@@ -33,11 +33,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
     // the host and the device via the usb cable.
     public class TcpTunnel : ITcpTunnel
     {
-        readonly object _processExecutionLock = new object();
-        readonly IMLaunchProcessManager _processManager;
-
-        Task<ProcessExecutionResult> _tcpTunnelExecutionTask = null;
-        CancellationTokenSource _cancellationToken;
+        private readonly object _processExecutionLock = new object();
+        private readonly IMLaunchProcessManager _processManager;
+        private Task<ProcessExecutionResult> _tcpTunnelExecutionTask = null;
+        private CancellationTokenSource _cancellationToken;
 
         public TaskCompletionSource<bool> startedCompletionSource { get; private set; } = new TaskCompletionSource<bool>();
         public Task<bool> Started => startedCompletionSource.Task;

@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         // annoying when XS reloads the projects, and also causes unnecessary rebuilds).
         // Nothing really breaks when the sequence isn't identical from run to run, so
         // this is just a best minimal effort.
-        static Random guid_generator = new Random(unchecked((int)0xdeadf00d));
+        private static Random guid_generator = new Random(unchecked((int)0xdeadf00d));
         public Guid GenerateStableGuid(string seed = null)
         {
             var bytes = new byte[16];
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public string Timestamp => $"{DateTime.Now:yyyyMMdd_HHmmss}";
 
         [DllImport("/usr/lib/libc.dylib")]
-        static extern IntPtr ttyname(int filedes);
+        private static extern IntPtr ttyname(int filedes);
 
         public string GetTerminalName(int filedescriptor)
         {

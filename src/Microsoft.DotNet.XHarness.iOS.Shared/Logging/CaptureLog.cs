@@ -33,11 +33,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     // (between StartCapture and StopCapture).
     public class CaptureLog : FileBackedLog, ICaptureLog
     {
-        readonly bool entireFile;
-
-        long startPosition;
-        long endPosition;
-        bool started;
+        private readonly bool entireFile;
+        private long startPosition;
+        private long endPosition;
+        private bool started;
 
         public string CapturePath { get; }
         public override string FullPath { get; }
@@ -80,7 +79,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             Capture();
         }
 
-        void Capture()
+        private void Capture()
         {
             if (startPosition == 0 || entireFile)
                 return;

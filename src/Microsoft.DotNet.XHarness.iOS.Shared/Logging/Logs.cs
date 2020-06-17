@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             return Create(Directory, filename, name, timestamp);
         }
 
-        LogFile Create(string directory, string filename, string name, bool? timestamp = null)
+        private LogFile Create(string directory, string filename, string name, bool? timestamp = null)
         {
             System.IO.Directory.CreateDirectory(directory);
             var rv = new LogFile(name, Path.GetFullPath(Path.Combine(directory, filename)));

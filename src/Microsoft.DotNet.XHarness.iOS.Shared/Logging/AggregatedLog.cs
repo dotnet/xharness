@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         }
 
         // Log that will duplicate log output to multiple other logs.
-        class AggregatedLog : Log
+        private class AggregatedLog : Log
         {
             protected readonly List<ILog> _logs = new List<ILog>();
 
@@ -59,9 +59,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             }
         }
 
-        class ReadableAggregatedLog : AggregatedLog, IFileBackedLog
+        private class ReadableAggregatedLog : AggregatedLog, IFileBackedLog
         {
-            readonly IFileBackedLog _defaultLog;
+            private readonly IFileBackedLog _defaultLog;
 
             public ReadableAggregatedLog(IFileBackedLog defaultLog, params ILog[] logs) : base(logs)
             {

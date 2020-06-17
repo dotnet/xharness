@@ -129,14 +129,14 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// </summary>
         public MinimumLogLevel MinimumLogLevel { get; set; } = MinimumLogLevel.Info;
 
-        void OnTestStarted(object sender, string testName)
+        private void OnTestStarted(object sender, string testName)
         {
             var handler = TestStarted;
             if (handler != null)
                 handler(sender, testName);
         }
 
-        void OnTestCompleted(object sender, (string TestName, TestResult Testresult) result)
+        private void OnTestCompleted(object sender, (string TestName, TestResult Testresult) result)
         {
             var handler = TestCompleted;
             if (handler != null)

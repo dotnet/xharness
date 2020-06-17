@@ -28,10 +28,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
     public class TunnelBore : ITunnelBore
     {
-
-        readonly object _tunnelsLock = new object();
-        readonly IMLaunchProcessManager _processManager;
-        readonly ConcurrentDictionary<string, TcpTunnel> _tunnels = new ConcurrentDictionary<string, TcpTunnel>();
+        private readonly object _tunnelsLock = new object();
+        private readonly IMLaunchProcessManager _processManager;
+        private readonly ConcurrentDictionary<string, TcpTunnel> _tunnels = new ConcurrentDictionary<string, TcpTunnel>();
 
         public TunnelBore(IMLaunchProcessManager processManager)
         {

@@ -15,8 +15,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
     //   which makes it easier to re-run (copy-paste) commands that failed.
     public static class DirectoryUtilities
     {
-        static string root;
-        static int lastNumber;
+        private static string root;
+        private static int lastNumber;
 
         static DirectoryUtilities()
         {
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         }
 
         [DllImport("libc", SetLastError = true)]
-        static extern int mkdir(string path, ushort mode);
+        private static extern int mkdir(string path, ushort mode);
 
         public static string CreateTemporaryDirectory(string name = null)
         {

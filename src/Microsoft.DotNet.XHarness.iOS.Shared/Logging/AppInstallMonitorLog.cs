@@ -14,9 +14,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     // Monitor the output from 'mlaunch --installdev' and cancel the installation if there's no output for 1 minute.
     public class AppInstallMonitorLog : FileBackedLog
     {
-
-        readonly IFileBackedLog copy_to;
-        readonly CancellationTokenSource cancellationSource;
+        private readonly IFileBackedLog copy_to;
+        private readonly CancellationTokenSource cancellationSource;
 
         public override string FullPath => copy_to.FullPath;
 
@@ -61,7 +60,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             cancellationSource.Dispose();
         }
 
-        void ResetTimer()
+        private void ResetTimer()
         {
             cancellationSource.CancelAfter(TimeSpan.FromMinutes(1));
         }

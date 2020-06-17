@@ -14,8 +14,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 {
     internal class NUnitTestListener : ITestEventListener
     {
-        readonly LogWriter _logger;
-        readonly INUnitTestRunner _runner;
+        private readonly LogWriter _logger;
+        private readonly INUnitTestRunner _runner;
 
         public NUnitTestListener(INUnitTestRunner runner, LogWriter logger)
         {
@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             _logger = logger ?? throw new ArgumentNullException(nameof (logger));
         }
 
-        void TestStarted(XmlNode testEvent)
+        private void TestStarted(XmlNode testEvent)
         {
             if (testEvent == null)
                 return;
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 
         }
 
-        void TestFinished(XmlNode testEvent)
+        private void TestFinished(XmlNode testEvent)
         {
             // we need to get the status from the string. That value is stored in
             // <test-case result=''> value can be: Passed, Failed, Inconclusive or Skipped. To make things

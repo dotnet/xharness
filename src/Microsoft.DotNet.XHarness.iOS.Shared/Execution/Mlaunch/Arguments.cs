@@ -181,7 +181,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
     /// </summary>
     public sealed class SetAppArgumentArgument : MlaunchArgument
     {
-        readonly string value;
+        private readonly string value;
 
         public SetAppArgumentArgument(string value, bool isAppArg = false)
         {
@@ -199,8 +199,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
     /// </summary>
     public sealed class SetEnvVariableArgument : MlaunchArgument
     {
-        readonly string variableName;
-        readonly string variableValue;
+        private readonly string variableName;
+        private readonly string variableValue;
 
         public SetEnvVariableArgument(string variableName, object variableValue)
         {
@@ -259,7 +259,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
     /// </summary>
     public sealed class SimulatorUDIDArgument : MlaunchArgument
     {
-        readonly string udid;
+        private readonly string udid;
 
         public SimulatorUDIDArgument(string udid)
         {
@@ -274,8 +274,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
     /// </summary>
     public sealed class LaunchSimulatorExtensionArgument : MlaunchArgument
     {
-        readonly string launchAppPath;
-        readonly string bundleId;
+        private readonly string launchAppPath;
+        private readonly string bundleId;
 
         public LaunchSimulatorExtensionArgument(string launchAppPath, string bundleId)
         {
@@ -293,8 +293,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
     /// </summary>
     public sealed class LaunchDeviceExtensionArgument : MlaunchArgument
     {
-        readonly string launchAppPath;
-        readonly string bundleId;
+        private readonly string launchAppPath;
+        private readonly string bundleId;
 
         public LaunchDeviceExtensionArgument(string launchAppPath, string bundleId)
         {
@@ -324,7 +324,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
     /// </summary>
     public sealed class TcpTunnelArgument : MlaunchArgument
     {
-        readonly int port;
+        private readonly int port;
 
         public TcpTunnelArgument(int port)
         {

@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
 
             [Theory]
             [MemberData(nameof (ToXmlResultValueTests), MemberType = typeof (TestStatusExtensionsTestData))]
-            void IsExcludedAsAssembly(TestStatus status, XmlResultJargon jargon, string expectedResult)
+            private void IsExcludedAsAssembly(TestStatus status, XmlResultJargon jargon, string expectedResult)
                 => Assert.Equal(status.ToXmlResultValue(jargon), expectedResult);
         }
     }

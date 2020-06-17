@@ -17,8 +17,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
     /// </summary>
     internal static class IgnoreFileParser
     {
-
-        static string ParseLine(string line)
+        private static string ParseLine(string line)
         {
             // we have to make sure of several things, first, lets
             // remove any char after the first # which would mean

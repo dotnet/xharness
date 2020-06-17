@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             }
         }
 
-        void AssertExecutionState(TestExecutionState state)
+        private void AssertExecutionState(TestExecutionState state)
         {
             if (state == null)
                 throw new ArgumentNullException(nameof(state));

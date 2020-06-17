@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
     public class TestReporterFactory : ITestReporterFactory
     {
-        readonly IMLaunchProcessManager processManager;
+        private readonly IMLaunchProcessManager processManager;
 
         public TestReporterFactory(IMLaunchProcessManager processManager)
         {

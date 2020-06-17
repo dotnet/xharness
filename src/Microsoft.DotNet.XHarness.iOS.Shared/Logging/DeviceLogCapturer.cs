@@ -20,10 +20,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
     public class DeviceLogCapturer : IDeviceLogCapturer
     {
-        readonly IMLaunchProcessManager processManager;
-        readonly ILog mainLog;
-        readonly ILog deviceLog;
-        readonly string deviceName;
+        private readonly IMLaunchProcessManager processManager;
+        private readonly ILog mainLog;
+        private readonly ILog deviceLog;
+        private readonly string deviceName;
 
         public DeviceLogCapturer(IMLaunchProcessManager processManager, ILog mainLog, ILog deviceLog, string deviceName)
         {
@@ -33,8 +33,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             this.deviceName = deviceName ?? throw new ArgumentNullException(nameof(deviceName));
         }
 
-        Process process;
-        CountdownEvent streamEnds;
+        private Process process;
+        private CountdownEvent streamEnds;
 
         public void StartCapture()
         {

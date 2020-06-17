@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 {
     public class ErrorKnowledgeBaseTests
     {
-        readonly ErrorKnowledgeBase _errorKnowledgeBase;
+        private readonly ErrorKnowledgeBase _errorKnowledgeBase;
 
         public ErrorKnowledgeBaseTests()
         {

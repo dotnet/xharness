@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
     public class CrashSnapshotReporterFactory : ICrashSnapshotReporterFactory
     {
-        readonly IMLaunchProcessManager processManager;
+        private readonly IMLaunchProcessManager processManager;
 
         public CrashSnapshotReporterFactory(IMLaunchProcessManager processManager)
         {

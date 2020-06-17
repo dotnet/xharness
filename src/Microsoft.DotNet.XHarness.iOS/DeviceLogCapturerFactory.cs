@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
     public class DeviceLogCapturerFactory : IDeviceLogCapturerFactory
     {
-        readonly IMLaunchProcessManager processManager;
+        private readonly IMLaunchProcessManager processManager;
 
         public DeviceLogCapturerFactory(IMLaunchProcessManager processManager)
         {

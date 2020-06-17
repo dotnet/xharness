@@ -20,11 +20,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
     public class TCCDatabase : ITCCDatabase
     {
-        static readonly string iOSSimRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.iOS-";
-        static readonly string tvOSSimRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.tvOS-";
-        static readonly string watchOSRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.watchOS-";
-
-        readonly IMLaunchProcessManager processManager;
+        private static readonly string iOSSimRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.iOS-";
+        private static readonly string tvOSSimRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.tvOS-";
+        private static readonly string watchOSRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.watchOS-";
+        private readonly IMLaunchProcessManager processManager;
 
         public TCCDatabase(IMLaunchProcessManager processManager)
         {

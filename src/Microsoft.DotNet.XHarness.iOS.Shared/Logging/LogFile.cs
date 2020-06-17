@@ -10,12 +10,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
     public class LogFile : FileBackedLog
     {
-        readonly object lock_obj = new object();
+        private readonly object lock_obj = new object();
 
         public override string FullPath { get; }
 
-        FileStream writer;
-        bool disposed;
+        private FileStream writer;
+        private bool disposed;
 
         public LogFile(string description, string path, bool append = true)
             : base(description)

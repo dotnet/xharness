@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     // A log that forwards all written data to a callback
     public class CallbackLog : Log
     {
-        readonly Action<string> onWrite;
+        private readonly Action<string> onWrite;
 
         public CallbackLog(Action<string> onWrite)
             : base("Callback log")

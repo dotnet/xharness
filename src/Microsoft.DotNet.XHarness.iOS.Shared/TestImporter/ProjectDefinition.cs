@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter
             ExtraArgs = extraArgs;
         }
 
-        static (string FailureMessage, IEnumerable<string> References) GetAssemblyReferences(string assemblyPath)
+        private static (string FailureMessage, IEnumerable<string> References) GetAssemblyReferences(string assemblyPath)
         {
             if (!File.Exists(assemblyPath))
                 return ($"The file {assemblyPath} does not exist.", null);
@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter
         /// Returns the assemblies that a referenced by the given test assembly.
         /// </summary>
         /// <returns></returns>
-        (string FailureMessage, IEnumerable<string> References) GetProjectAssemblyReferences(string rootPath, Platform platform)
+        private (string FailureMessage, IEnumerable<string> References) GetProjectAssemblyReferences(string rootPath, Platform platform)
         {
             var set = new HashSet<string>();
             string failureMessage = null;

@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 log: log,
                 diagnostics: diagnostics);
 
-        static async Task KillTreeAsyncInternal(int pid, Action<int, int> kill, Func<ILog, int, IList<int>> getChildrenPS, ILog log, bool? diagnostics = true)
+        private static async Task KillTreeAsyncInternal(int pid, Action<int, int> kill, Func<ILog, int, IList<int>> getChildrenPS, ILog log, bool? diagnostics = true)
         {
             var pids = getChildrenPS(log, pid);
 
@@ -331,7 +331,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             return rv;
         }
 
-        static async Task<bool> WaitForExitAsync(Process process, TimeSpan? timeout = null)
+        private static async Task<bool> WaitForExitAsync(Process process, TimeSpan? timeout = null)
         {
             if (process.HasExited)
                 return true;

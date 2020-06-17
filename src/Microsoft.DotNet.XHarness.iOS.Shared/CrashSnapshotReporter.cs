@@ -23,15 +23,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
     public class CrashSnapshotReporter : ICrashSnapshotReporter
     {
-        readonly IMLaunchProcessManager processManager;
-        readonly ILog log;
-        readonly ILogs logs;
-        readonly bool isDevice;
-        readonly string deviceName;
-        readonly Func<string> tempFileProvider;
-        readonly string symbolicateCrashPath;
-
-        HashSet<string> initialCrashes;
+        private readonly IMLaunchProcessManager processManager;
+        private readonly ILog log;
+        private readonly ILogs logs;
+        private readonly bool isDevice;
+        private readonly string deviceName;
+        private readonly Func<string> tempFileProvider;
+        private readonly string symbolicateCrashPath;
+        private HashSet<string> initialCrashes;
 
         public CrashSnapshotReporter(IMLaunchProcessManager processManager,
             ILog log,
@@ -119,7 +118,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             } while (true);
         }
 
-        async Task<IFileBackedLog> ProcessCrash(string crashFile)
+        private async Task<IFileBackedLog> ProcessCrash(string crashFile)
         {
             var name = Path.GetFileName(crashFile);
             var crashReportFile = logs.Create(name, $"Crash report: {name}", timestamp: false);
@@ -143,7 +142,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        async Task<IFileBackedLog> GetSymbolicateCrashReportAsync(IFileBackedLog report)
+        private async Task<IFileBackedLog> GetSymbolicateCrashReportAsync(IFileBackedLog report)
         {
             if (symbolicateCrashPath == null)
             {
@@ -167,7 +166,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        async Task<HashSet<string>> CreateCrashReportsSnapshotAsync()
+        private async Task<HashSet<string>> CreateCrashReportsSnapshotAsync()
         {
             var crashes = new HashSet<string>();
 

@@ -11,9 +11,9 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
 {
     public class StringUtils
     {
-        static readonly char shellQuoteChar;
-        static readonly char[] mustQuoteCharacters = { ' ', '\'', ',', '$', '\\' };
-        static readonly char[] mustQuoteCharactersProcess = { ' ', '\\', '"', '\'' };
+        private static readonly char shellQuoteChar;
+        private static readonly char[] mustQuoteCharacters = { ' ', '\'', ',', '$', '\\' };
+        private static readonly char[] mustQuoteCharactersProcess = { ' ', '\\', '"', '\'' };
 
         static StringUtils()
         {
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
             return string.Join(" ", QuoteForProcess(arguments) ?? Array.Empty<string>());
         }
 
-        static string[]? QuoteForProcess(params string[] array)
+        private static string[]? QuoteForProcess(params string[] array)
         {
             if (array == null || array.Length == 0)
                 return array;
@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
         }
 
         // Quote input according to how System.Diagnostics.Process needs it quoted.
-        static string QuoteForProcess(string f)
+        private static string QuoteForProcess(string f)
         {
             if (string.IsNullOrEmpty(f))
                 return f ?? string.Empty;
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
             return s.ToString();
         }
 
-        static string[]? QuoteForProcess(IList<string> arguments)
+        private static string[]? QuoteForProcess(IList<string> arguments)
         {
             if (arguments == null)
                 return Array.Empty<string>();

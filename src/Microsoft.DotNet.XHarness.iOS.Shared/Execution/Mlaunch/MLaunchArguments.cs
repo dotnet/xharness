@@ -33,9 +33,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
     public abstract class SingleValueArgument : MlaunchArgument
     {
-        readonly string argumentName;
-        readonly string argumentValue;
-        readonly bool useEqualSign;
+        private readonly string argumentName;
+        private readonly string argumentValue;
+        private readonly bool useEqualSign;
 
         protected SingleValueArgument(string argumentName, string argumentValue, bool useEqualSign = true)
         {
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
     public abstract class OptionArgument : MlaunchArgument
     {
-        readonly string argumentName;
+        private readonly string argumentName;
 
         protected OptionArgument(string argumentName)
         {
@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
     public class MlaunchArguments : IEnumerable<MlaunchArgument>
     {
-        readonly List<MlaunchArgument> arguments = new List<MlaunchArgument>();
+        private readonly List<MlaunchArgument> arguments = new List<MlaunchArgument>();
 
         public MlaunchArguments(params MlaunchArgument[] args)
         {

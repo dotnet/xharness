@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
     public class AppInstallerTests : IDisposable
     {
         private static readonly string s_appPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        static readonly string s_appIdentifier = Guid.NewGuid().ToString();
+        private static readonly string s_appIdentifier = Guid.NewGuid().ToString();
         private static readonly IHardwareDevice s_mockDevice = new Device(
             buildVersion: "17A577",
             deviceClass: DeviceClass.iPhone,
@@ -31,10 +31,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             name: "Test iPhone",
             productType: "iPhone12,1",
             productVersion: "13.0");
-
-        readonly Mock<IMLaunchProcessManager> _processManager;
-        readonly Mock<ILog> _mainLog;
-        readonly AppBundleInformation _appBundleInformation;
+        private readonly Mock<IMLaunchProcessManager> _processManager;
+        private readonly Mock<ILog> _mainLog;
+        private readonly AppBundleInformation _appBundleInformation;
         private Mock<IHardwareDeviceLoader> _hardwareDeviceLoader;
 
         public AppInstallerTests()

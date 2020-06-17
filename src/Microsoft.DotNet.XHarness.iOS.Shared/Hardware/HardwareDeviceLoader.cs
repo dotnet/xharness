@@ -32,10 +32,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
     public class HardwareDeviceLoader : IHardwareDeviceLoader
     {
-        readonly IMLaunchProcessManager _processManager;
-        bool _loaded;
-
-        readonly BlockingEnumerableCollection<IHardwareDevice> connectedDevices = new BlockingEnumerableCollection<IHardwareDevice>();
+        private readonly IMLaunchProcessManager _processManager;
+        private bool _loaded;
+        private readonly BlockingEnumerableCollection<IHardwareDevice> connectedDevices = new BlockingEnumerableCollection<IHardwareDevice>();
 
         public IEnumerable<IHardwareDevice> ConnectedDevices => connectedDevices;
         public IEnumerable<IHardwareDevice> Connected64BitIOS => connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.iOS && x.Supports64Bit);

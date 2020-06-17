@@ -9,8 +9,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     public class LogWriter
     {
-        TextWriter writer;
-        IDevice device;
+        private TextWriter writer;
+        private IDevice device;
 
         public MinimumLogLevel MinimumLogLevel { get; set; } = MinimumLogLevel.Info;
 
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         }
 
         [System.Runtime.InteropServices.DllImport("/usr/lib/libobjc.dylib")]
-        static extern IntPtr objc_msgSend(IntPtr receiver, IntPtr selector);
+        private static extern IntPtr objc_msgSend(IntPtr receiver, IntPtr selector);
 
         public void InitLogging()
         {

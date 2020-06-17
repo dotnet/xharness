@@ -16,10 +16,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 {
     internal class NUnitTestRunner : TestRunner, INUnitTestRunner
     {
-        readonly FilterBuilder _testFilterBuilder;
-        readonly NUnitTestListener _testListener;
-        ResultSummary? _results;
-        bool _runAssemblyByDefault;
+        private readonly FilterBuilder _testFilterBuilder;
+        private readonly NUnitTestListener _testListener;
+        private ResultSummary? _results;
+        private bool _runAssemblyByDefault;
 
         public NUnitTestRunner(LogWriter logger) : base(logger)
         {
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             _testFilterBuilder = new FilterBuilder(new TestFilterBuilder());
         }
 
-        Dictionary<string, bool>? AssemblyFilters { get; set; }
+        private Dictionary<string, bool>? AssemblyFilters { get; set; }
 
         protected override string ResultsFileName { get; set; } = "TestResults.NUnit.xml";
 
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             LogFailureSummary();
         }
 
-        bool ShouldRunAssembly(TestAssemblyInfo assemblyInfo)
+        private bool ShouldRunAssembly(TestAssemblyInfo assemblyInfo)
         {
             if (assemblyInfo == null)
             {
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             return _runAssemblyByDefault;
         }
 
-        bool ReportFilteredAssembly(TestAssemblyInfo assemblyInfo, bool include)
+        private bool ReportFilteredAssembly(TestAssemblyInfo assemblyInfo, bool include)
         {
             if (!LogExcludedTests)
             {

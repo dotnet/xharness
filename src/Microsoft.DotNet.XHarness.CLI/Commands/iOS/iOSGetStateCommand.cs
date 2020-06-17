@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     {
         protected override string CommandUsage { get; } = "ios state [OPTIONS]";
 
-        class DeviceInfo
+        private class DeviceInfo
         {
             public string Name { get; }
             public string UDID { get; }
@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
         }
 
-        class SystemInfo
+        private class SystemInfo
         {
             public string MachineName { get; }
             public string OSName { get; }

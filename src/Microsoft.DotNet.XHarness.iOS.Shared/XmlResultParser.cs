@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return false;
         }
 
-        static (string resultLine, bool failed) ParseNUnitV3Xml(StreamReader stream, StreamWriter? writer)
+        private static (string resultLine, bool failed) ParseNUnitV3Xml(StreamReader stream, StreamWriter? writer)
         {
             long testcasecount, passed, failed, inconclusive, skipped;
             bool failedTestRun = false; // result = "Failed"
@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return (resultLine, failedTestRun);
         }
 
-        static (string resultLine, bool failed) ParseTouchUnitXml(StreamReader stream, StreamWriter? writer)
+        private static (string resultLine, bool failed) ParseTouchUnitXml(StreamReader stream, StreamWriter? writer)
         {
             long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
             total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
@@ -170,7 +170,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return (resultLine, errors != 0 || failed != 0);
         }
 
-        static (string resultLine, bool failed) ParseNUnitXml(StreamReader stream, StreamWriter? writer)
+        private static (string resultLine, bool failed) ParseNUnitXml(StreamReader stream, StreamWriter? writer)
         {
             long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
             total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
@@ -245,7 +245,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return (resultLine, errors != 0 || failed != 0);
         }
 
-        static (string resultLine, bool failed) ParsexUnitXml(StreamReader stream, StreamWriter? writer)
+        private static (string resultLine, bool failed) ParsexUnitXml(StreamReader stream, StreamWriter? writer)
         {
             long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
             total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
@@ -369,7 +369,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return parsedData;
         }
 
-        static void GenerateNUnitV2TestReport(StreamWriter writer, XmlReader reader)
+        private static void GenerateNUnitV2TestReport(StreamWriter writer, XmlReader reader)
         {
             while (reader.Read())
             {
@@ -417,7 +417,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        static void GenerateNUnitV3TestReport(StreamWriter writer, XmlReader reader)
+        private static void GenerateNUnitV3TestReport(StreamWriter writer, XmlReader reader)
         {
             List<(string name, string message)> failedTests = new List<(string name, string message)>();
             while (reader.Read())
@@ -474,7 +474,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        static void GeneratexUnitTestReport(StreamWriter writer, XmlReader reader)
+        private static void GeneratexUnitTestReport(StreamWriter writer, XmlReader reader)
         {
             var failedTests = new List<(string name, string message)>();
             // xUnit is not as nice and does not provide the final result in a top node,
@@ -585,7 +585,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             doc.Save(destination);
         }
 
-        static void WriteAttributes(XmlWriter writer, params (string name, string data)[] attrs)
+        private static void WriteAttributes(XmlWriter writer, params (string name, string data)[] attrs)
         {
             foreach (var (name, data) in attrs)
             {
@@ -593,7 +593,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        static void WriteNUnitV2TestSuiteAttributes(XmlWriter writer, string title) => WriteAttributes(writer,
+        private static void WriteNUnitV2TestSuiteAttributes(XmlWriter writer, string title) => WriteAttributes(writer,
             ("name", title),
             ("executed", "True"),
             ("result", "Failure"),
@@ -601,7 +601,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             ("time", "0"),
             ("asserts", "1"));
 
-        static void WriteNUnitV2TestCase(XmlWriter writer, string title, string message, StreamReader stderr)
+        private static void WriteNUnitV2TestCase(XmlWriter writer, string title, string message, StreamReader stderr)
         {
             writer.WriteStartElement("test-case");
             WriteAttributes(writer,
@@ -623,7 +623,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             writer.WriteEndElement(); // test-case
         }
 
-        static void GenerateNUnitV2Failure(XmlWriter writer, string title, string message, StreamReader stderr)
+        private static void GenerateNUnitV2Failure(XmlWriter writer, string title, string message, StreamReader stderr)
         {
             writer.WriteStartElement("test-results");
             WriteAttributes(writer,
@@ -655,7 +655,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             writer.WriteEndElement(); // test-results
         }
 
-        static void WriteNUnitV3TestSuiteAttributes(XmlWriter writer, string title) => WriteAttributes(writer,
+        private static void WriteNUnitV3TestSuiteAttributes(XmlWriter writer, string title) => WriteAttributes(writer,
             ("id", "1"),
             ("name", title),
             ("testcasecount", "1"),
@@ -668,7 +668,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             ("skipped", "0"),
             ("asserts", "0"));
 
-        static void WriteFailure(XmlWriter writer, string message, TextReader? stderr = null)
+        private static void WriteFailure(XmlWriter writer, string message, TextReader? stderr = null)
         {
             writer.WriteStartElement("failure");
             writer.WriteStartElement("message");
@@ -683,7 +683,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             writer.WriteEndElement(); // failure
         }
 
-        static void GenerateNUnitV3Failure(XmlWriter writer, string title, string message, TextReader stderr)
+        private static void GenerateNUnitV3Failure(XmlWriter writer, string title, string message, TextReader stderr)
         {
             var date = DateTime.Now;
             writer.WriteStartElement("test-run");
@@ -735,7 +735,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             writer.WriteEndElement(); // test-run
         }
 
-        static void GeneratexUnitFailure(XmlWriter writer, string title, string message, StreamReader stderr)
+        private static void GeneratexUnitFailure(XmlWriter writer, string title, string message, StreamReader stderr)
         {
             writer.WriteStartElement("assemblies");
             writer.WriteStartElement("assembly");
@@ -772,7 +772,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             writer.WriteEndElement(); // assemblies
         }
 
-        static void GenerateFailureXml(string destination, string title, string message, StreamReader stderrReader, XmlResultJargon jargon)
+        private static void GenerateFailureXml(string destination, string title, string message, StreamReader stderrReader, XmlResultJargon jargon)
         {
             XmlWriterSettings settings = new XmlWriterSettings { Indent = true };
             using (var stream = File.CreateText(destination))

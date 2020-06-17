@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     /// </summary>
     public class MemoryLog : ReadableLog
     {
-        readonly StringBuilder captured = new StringBuilder();
+        private readonly StringBuilder captured = new StringBuilder();
 
         protected override void WriteImpl(string value)
         {

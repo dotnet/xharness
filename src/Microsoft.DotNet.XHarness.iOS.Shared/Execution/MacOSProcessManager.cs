@@ -22,9 +22,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
     {
         #region Private variables
 
-        static readonly Lazy<string> s_autoDetectedXcodeRoot = new Lazy<string>(DetectXcodePath, LazyThreadSafetyMode.PublicationOnly);
-        readonly string? _xcodeRoot;
-        Version? _xcode_version;
+        private static readonly Lazy<string> s_autoDetectedXcodeRoot = new Lazy<string>(DetectXcodePath, LazyThreadSafetyMode.PublicationOnly);
+        private readonly string? _xcodeRoot;
+        private Version? _xcode_version;
 
         #endregion
 
@@ -141,7 +141,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 
         #region Private methods
 
-        static string DetectXcodePath()
+        private static string DetectXcodePath()
         {
             using var process = new Process();
             process.StartInfo.FileName = "xcode-select";

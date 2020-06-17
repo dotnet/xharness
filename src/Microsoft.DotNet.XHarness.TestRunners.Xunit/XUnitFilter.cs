@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             };
         }
 
-        bool ApplyTraitFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
+        private bool ApplyTraitFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
         {
             Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
 
@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             return log (!Exclude);
         }
 
-        bool ApplyTypeNameFilter(ITestCase testCase, Func<bool,bool>? reportFilteredTest = null)
+        private bool ApplyTypeNameFilter(ITestCase testCase, Func<bool,bool>? reportFilteredTest = null)
         {
             Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
             var testClassName = testCase.GetTestClass();
@@ -139,7 +139,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             return log (!Exclude);
         }
 
-        bool ApplySingleFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
+        private bool ApplySingleFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
         {
             Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
             if (string.Equals(testCase.DisplayName, SelectorValue, StringComparison.InvariantCulture))
@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             return log (!Exclude);
         }
 
-        bool ApplyNamespaceFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
+        private bool ApplyNamespaceFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
         {
             Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
             var testClassNamespace = testCase.GetNamespace();
@@ -207,7 +207,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             };
         }
 
-        bool ReportFilteredTest(ITestCase testCase, bool excluded, Action<string>? log = null)
+        private bool ReportFilteredTest(ITestCase testCase, bool excluded, Action<string>? log = null)
         {
             const string includedText = "Included";
             const string excludedText = "Excluded";
@@ -222,7 +222,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             return excluded;
         }
 
-        bool ReportFilteredAssembly(TestAssemblyInfo assemblyInfo, bool excluded, Action<string>? log = null)
+        private bool ReportFilteredAssembly(TestAssemblyInfo assemblyInfo, bool excluded, Action<string>? log = null)
         {
             if (log == null)
                 return excluded;

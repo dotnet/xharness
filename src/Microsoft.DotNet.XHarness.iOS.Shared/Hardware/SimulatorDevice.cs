@@ -15,8 +15,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
     public class SimulatorDevice : ISimulatorDevice
     {
-        readonly IMLaunchProcessManager processManager;
-        readonly ITCCDatabase tCCDatabase;
+        private readonly IMLaunchProcessManager processManager;
+        private readonly ITCCDatabase tCCDatabase;
 
         public string UDID { get; set; }
         public string Name { get; set; }
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             }
         }
 
-        async Task OpenSimulator(ILog log)
+        private async Task OpenSimulator(ILog log)
         {
             string simulator_app;
 
