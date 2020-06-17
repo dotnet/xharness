@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         private bool _launchFailure;
         private bool _isSimulatorTest;
         private bool _timedout;
-        private bool _generateHtml;
+        private readonly bool _generateHtml;
 
         public ILog CallbackLog { get; private set; }
 

@@ -9,8 +9,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     public class LogWriter
     {
-        private TextWriter writer;
-        private IDevice device;
+        private readonly TextWriter writer;
+        private readonly IDevice device;
 
         public MinimumLogLevel MinimumLogLevel { get; set; } = MinimumLogLevel.Info;
 

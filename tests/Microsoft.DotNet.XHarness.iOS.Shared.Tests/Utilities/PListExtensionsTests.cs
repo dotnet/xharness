@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
 {
     public class PListExtensionsTests
     {
-        private XmlDocument _plist;
+        private readonly XmlDocument _plist;
 
         public PListExtensionsTests() =>
             _plist = CreateResultSample();

@@ -40,10 +40,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             csproj.SelectSingleNode("/*/*/*[local-name() = 'OutputType']").InnerText = value;
         }
 
-        private static string[] eqsplitter = new string[] { "==" };
-        private static string[] orsplitter = new string[] { " Or " };
-        private static char[] pipesplitter = new char[] { '|' };
-        private static char[] trimchars = new char[] { '\'', ' ' };
+        private static readonly string[] eqsplitter = new string[] { "==" };
+        private static readonly string[] orsplitter = new string[] { " Or " };
+        private static readonly char[] pipesplitter = new char[] { '|' };
+        private static readonly char[] trimchars = new char[] { '\'', ' ' };
 
         private static void ParseConditions(this XmlNode node, out string platform, out string configuration)
         {

@@ -33,9 +33,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         internal static readonly string TestingFrameworksKey = "%TESTING FRAMEWORKS%";
 
         // resource related static vars used to copy the embedded src to the hd
-        private static string srcResourcePrefix = "Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed.Resources.src.";
-        private static string registerTemplateResourceName = "RegisterType.cs";
-        private static string[][] srcDirectories = new[] {
+        private static readonly string srcResourcePrefix = "Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed.Resources.src.";
+        private static readonly string registerTemplateResourceName = "RegisterType.cs";
+        private static readonly string[][] srcDirectories = new[] {
             new [] { "common", },
             new [] { "common", "TestRunner" },
             new [] { "common", "TestRunner", "Core" },
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         private string WatchExtensionTemplatePath => Path.Combine(OutputDirectoryPath, "templates", "watchOS", "Extension").Replace("/", "\\");
 
         private bool srcGenerated = false;
-        private object srcGeneratedLock = new object();
+        private readonly object srcGeneratedLock = new object();
 
         private Stream GetTemplateStream(string templateName)
         {

@@ -17,8 +17,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     internal class TcpTextWriter : TextWriter
     {
-        private TcpClient client;
-        private StreamWriter writer;
+        private readonly TcpClient client;
+        private readonly StreamWriter writer;
 
         private static string SelectHostName(string[] names, int port)
         {

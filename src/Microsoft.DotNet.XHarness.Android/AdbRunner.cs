@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.XHarness.Android
         private const string AdbEnvironmentVariableName = "ADB_EXE_PATH";
         private readonly string _absoluteAdbExePath;
         private readonly ILogger _log;
-        private IAdbProcessManager _processManager;
+        private readonly IAdbProcessManager _processManager;
 
 
         public AdbRunner(ILogger log, string adbExePath = "") : this(log, new AdbProcessManager(log), adbExePath) { }

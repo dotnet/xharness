@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
     //   which makes it easier to re-run (copy-paste) commands that failed.
     public static class DirectoryUtilities
     {
-        private static string root;
+        private static readonly string root;
         private static int lastNumber;
 
         static DirectoryUtilities()
