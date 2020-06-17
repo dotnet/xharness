@@ -208,21 +208,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         /// <returns>The final path to which the project file should be written.</returns>
         public string GetProjectPath(string projectName, Platform platform)
         {
-            switch (platform)
+            return platform switch
             {
-                case Platform.iOS:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}.csproj");
-                case Platform.TvOS:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}-tvos.csproj");
-                case Platform.WatchOS:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}-watchos.csproj");
-                case Platform.MacOSFull:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}-mac-full.csproj");
-                case Platform.MacOSModern:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}-mac-modern.csproj");
-                default:
-                    return null;
-            }
+                Platform.iOS => Path.Combine(OutputDirectoryPath, $"{projectName}.csproj"),
+                Platform.TvOS => Path.Combine(OutputDirectoryPath, $"{projectName}-tvos.csproj"),
+                Platform.WatchOS => Path.Combine(OutputDirectoryPath, $"{projectName}-watchos.csproj"),
+                Platform.MacOSFull => Path.Combine(OutputDirectoryPath, $"{projectName}-mac-full.csproj"),
+                Platform.MacOSModern => Path.Combine(OutputDirectoryPath, $"{projectName}-mac-modern.csproj"),
+                _ => null,
+            };
         }
 
         /// <summary>
@@ -234,13 +228,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         /// <returns>The final path to which the project file should be written.</returns>
         public string GetProjectPath(string projectName, WatchAppType appType)
         {
-            switch (appType)
+            return appType switch
             {
-                case WatchAppType.App:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}-watchos-app.csproj");
-                default:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}-watchos-extension.csproj");
-            }
+                WatchAppType.App => Path.Combine(OutputDirectoryPath, $"{projectName}-watchos-app.csproj"),
+                _ => Path.Combine(OutputDirectoryPath, $"{projectName}-watchos-extension.csproj"),
+            };
         }
 
         /// <summary>
@@ -275,13 +267,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         /// <returns></returns>
         public static string GetPListPath(string rootDir, WatchAppType appType)
         {
-            switch (appType)
+            return appType switch
             {
-                case WatchAppType.App:
-                    return Path.Combine(rootDir, "Info-watchos-app.plist");
-                default:
-                    return Path.Combine(rootDir, "Info-watchos-extension.plist");
-            }
+                WatchAppType.App => Path.Combine(rootDir, "Info-watchos-app.plist"),
+                _ => Path.Combine(rootDir, "Info-watchos-extension.plist"),
+            };
         }
 
         // this method could be async, since we could be using async IO. The problem is that it might be called

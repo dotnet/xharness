@@ -189,18 +189,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             var outputPath = GetOutputPath(csproj, platform, configuration);
             var assemblyName = GetElementValue(csproj, platform, configuration, "AssemblyName");
             var outputType = GetElementValue(csproj, platform, configuration, "OutputType");
-            string extension;
-            switch (outputType.ToLowerInvariant())
+            string extension = (outputType.ToLowerInvariant()) switch
             {
-                case "library":
-                    extension = "dll";
-                    break;
-                case "exe":
-                    extension = "exe";
-                    break;
-                default:
-                    throw new NotImplementedException(outputType);
-            }
+                "library" => "dll",
+                "exe" => "exe",
+                _ => throw new NotImplementedException(outputType),
+            };
             return outputPath + "\\" + assemblyName + "." + extension; // MSBuild-style paths.
         }
 
