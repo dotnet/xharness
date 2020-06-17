@@ -94,41 +94,20 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         public override System.Text.Encoding Encoding => Encoding.UTF8;
 
-        public override void Close()
-        {
-            writer.Close();
-        }
+        public override void Close() => writer.Close();
 
-        protected override void Dispose(bool disposing)
-        {
-            writer.Dispose();
-        }
+        protected override void Dispose(bool disposing) => writer.Dispose();
 
-        public override void Flush()
-        {
-            writer.Flush();
-        }
+        public override void Flush() => writer.Flush();
 
         // minimum to override - see http://msdn.microsoft.com/en-us/library/system.io.textwriter.aspx
-        public override void Write(char value)
-        {
-            writer.Write(value);
-        }
+        public override void Write(char value) => writer.Write(value);
 
-        public override void Write(char[] buffer)
-        {
-            writer.Write(buffer);
-        }
+        public override void Write(char[] buffer) => writer.Write(buffer);
 
-        public override void Write(char[] buffer, int index, int count)
-        {
-            writer.Write(buffer, index, count);
-        }
+        public override void Write(char[] buffer, int index, int count) => writer.Write(buffer, index, count);
 
-        public override void Write(string value)
-        {
-            writer.Write(value);
-        }
+        public override void Write(string value) => writer.Write(value);
 
         // special extra override to ensure we flush data regularly
 

@@ -53,10 +53,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 symbolicateCrashPath = null;
         }
 
-        public async Task StartCaptureAsync()
-        {
-            initialCrashes = await CreateCrashReportsSnapshotAsync();
-        }
+        public async Task StartCaptureAsync() => initialCrashes = await CreateCrashReportsSnapshotAsync();
 
         public async Task EndCaptureAsync(TimeSpan timeout)
         {

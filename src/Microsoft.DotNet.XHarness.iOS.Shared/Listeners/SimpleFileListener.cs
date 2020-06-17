@@ -37,10 +37,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             return 0;
         }
 
-        protected override void Start()
-        {
-            _processorThread.Start();
-        }
+        protected override void Start() => _processorThread.Start();
 
         private void Processing()
         {

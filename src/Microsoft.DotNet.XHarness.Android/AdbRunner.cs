@@ -429,10 +429,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
         #region Process runner helpers
 
-        public ProcessExecutionResults RunAdbCommand(string command)
-        {
-            return RunAdbCommand(command, TimeSpan.FromMinutes(5));
-        }
+        public ProcessExecutionResults RunAdbCommand(string command) => RunAdbCommand(command, TimeSpan.FromMinutes(5));
 
         public ProcessExecutionResults RunAdbCommand(string command, TimeSpan timeOut)
         {

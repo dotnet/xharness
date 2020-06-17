@@ -55,10 +55,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             return Port;
         }
 
-        protected override void Stop()
-        {
-            _server.Stop();
-        }
+        protected override void Stop() => _server.Stop();
 
         protected override void Start()
         {

@@ -20,15 +20,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
         protected static string Escape(string value) => StringUtils.FormatArguments(value);
 
-        public override bool Equals(object obj)
-        {
-            return obj is MlaunchArgument arg && arg.AsCommandLineArgument() == AsCommandLineArgument();
-        }
+        public override bool Equals(object obj) => obj is MlaunchArgument arg && arg.AsCommandLineArgument() == AsCommandLineArgument();
 
-        public override int GetHashCode()
-        {
-            return AsCommandLineArgument().GetHashCode();
-        }
+        public override int GetHashCode() => AsCommandLineArgument().GetHashCode();
     }
 
     public abstract class SingleValueArgument : MlaunchArgument
@@ -86,14 +80,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
         public override string ToString() => AsCommandLine();
 
-        public override bool Equals(object obj)
-        {
-            return obj is MlaunchArguments arg && arg.AsCommandLine() == AsCommandLine();
-        }
+        public override bool Equals(object obj) => obj is MlaunchArguments arg && arg.AsCommandLine() == AsCommandLine();
 
-        public override int GetHashCode()
-        {
-            return AsCommandLine().GetHashCode();
-        }
+        public override int GetHashCode() => AsCommandLine().GetHashCode();
     }
 }

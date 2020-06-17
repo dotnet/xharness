@@ -15,30 +15,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
     {
         private const string MSBuild_Namespace = "http://schemas.microsoft.com/developer/msbuild/2003";
 
-        public static void SetProjectTypeGuids(this XmlDocument csproj, string value)
-        {
-            SetNode(csproj, "ProjectTypeGuids", value);
-        }
+        public static void SetProjectTypeGuids(this XmlDocument csproj, string value) => SetNode(csproj, "ProjectTypeGuids", value);
 
-        public static string GetProjectGuid(this XmlDocument csproj)
-        {
-            return csproj.SelectSingleNode("/*/*/*[local-name() = 'ProjectGuid']").InnerText;
-        }
+        public static string GetProjectGuid(this XmlDocument csproj) => csproj.SelectSingleNode("/*/*/*[local-name() = 'ProjectGuid']").InnerText;
 
-        public static void SetProjectGuid(this XmlDocument csproj, string value)
-        {
-            csproj.SelectSingleNode("/*/*/*[local-name() = 'ProjectGuid']").InnerText = value;
-        }
+        public static void SetProjectGuid(this XmlDocument csproj, string value) => csproj.SelectSingleNode("/*/*/*[local-name() = 'ProjectGuid']").InnerText = value;
 
-        public static string GetOutputType(this XmlDocument csproj)
-        {
-            return csproj.SelectSingleNode("/*/*/*[local-name() = 'OutputType']").InnerText;
-        }
+        public static string GetOutputType(this XmlDocument csproj) => csproj.SelectSingleNode("/*/*/*[local-name() = 'OutputType']").InnerText;
 
-        public static void SetOutputType(this XmlDocument csproj, string value)
-        {
-            csproj.SelectSingleNode("/*/*/*[local-name() = 'OutputType']").InnerText = value;
-        }
+        public static void SetOutputType(this XmlDocument csproj, string value) => csproj.SelectSingleNode("/*/*/*[local-name() = 'OutputType']").InnerText = value;
 
         private static readonly string[] eqsplitter = new string[] { "==" };
         private static readonly string[] orsplitter = new string[] { " Or " };
@@ -161,15 +146,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             return false;
         }
 
-        public static string GetOutputPath(this XmlDocument csproj, string platform, string configuration)
-        {
-            return GetElementValue(csproj, platform, configuration, "OutputPath");
-        }
+        public static string GetOutputPath(this XmlDocument csproj, string platform, string configuration) => GetElementValue(csproj, platform, configuration, "OutputPath");
 
-        public static string GetMtouchArch(this XmlDocument csproj, string platform, string configuration)
-        { 
-            return GetElementValue(csproj, platform, configuration, "MtouchArch");
-		}
+        public static string GetMtouchArch(this XmlDocument csproj, string platform, string configuration) => GetElementValue(csproj, platform, configuration, "MtouchArch");
 
         private static string GetElementValue(this XmlDocument csproj, string platform, string configuration, string elementName)
         {
@@ -223,10 +202,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             property_group.AppendChild(intermediateOutputPath);
         }
 
-        public static void SetTargetFrameworkIdentifier(this XmlDocument csproj, string value)
-        {
-            SetTopLevelPropertyGroupValue(csproj, "TargetFrameworkIdentifier", value);
-        }
+        public static void SetTargetFrameworkIdentifier(this XmlDocument csproj, string value) => SetTopLevelPropertyGroupValue(csproj, "TargetFrameworkIdentifier", value);
 
         public static void SetTopLevelPropertyGroupValue(this XmlDocument csproj, string key, string value)
         {
@@ -256,20 +232,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
         }
 
-        public static void SetAssemblyName(this XmlDocument csproj, string value)
-        {
-            SetNode(csproj, "AssemblyName", value);
-        }
+        public static void SetAssemblyName(this XmlDocument csproj, string value) => SetNode(csproj, "AssemblyName", value);
 
-        public static string GetAssemblyName(this XmlDocument csproj)
-        {
-            return csproj.SelectSingleNode("/*/*/*[local-name() = 'AssemblyName']").InnerText;
-        }
+        public static string GetAssemblyName(this XmlDocument csproj) => csproj.SelectSingleNode("/*/*/*[local-name() = 'AssemblyName']").InnerText;
 
-        public static void SetPlatformAssembly(this XmlDocument csproj, string value)
-        {
-            SetAssemblyReference(csproj, "Xamarin.iOS", value);
-        }
+        public static void SetPlatformAssembly(this XmlDocument csproj, string value) => SetAssemblyReference(csproj, "Xamarin.iOS", value);
 
         public static void SetAssemblyReference(this XmlDocument csproj, string current, string value)
         {
@@ -304,10 +271,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 item_group.AppendChild(node);
         }
 
-        public static void FixCompileInclude(this XmlDocument csproj, string include, string newInclude)
-        {
-            csproj.SelectSingleNode($"//*[local-name() = 'Compile' and @Include = '{include}']").Attributes["Include"].Value = newInclude;
-        }
+        public static void FixCompileInclude(this XmlDocument csproj, string include, string newInclude) => csproj.SelectSingleNode($"//*[local-name() = 'Compile' and @Include = '{include}']").Attributes["Include"].Value = newInclude;
 
         public static void AddInterfaceDefinition(this XmlDocument csproj, string include)
         {
@@ -337,15 +301,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 none.Attributes["Include"].Value = value;
         }
 
-        public static void AddExtraMtouchArgs(this XmlDocument csproj, string value, string platform, string configuration)
-        {
-            AddToNode(csproj, "MtouchExtraArgs", value, platform, configuration);
-        }
+        public static void AddExtraMtouchArgs(this XmlDocument csproj, string value, string platform, string configuration) => AddToNode(csproj, "MtouchExtraArgs", value, platform, configuration);
 
-        public static void AddMonoBundlingExtraArgs(this XmlDocument csproj, string value, string platform, string configuration)
-        {
-            AddToNode(csproj, "MonoBundlingExtraArgs", value, platform, configuration);
-        }
+        public static void AddMonoBundlingExtraArgs(this XmlDocument csproj, string value, string platform, string configuration) => AddToNode(csproj, "MonoBundlingExtraArgs", value, platform, configuration);
 
         public static void AddToNode(this XmlDocument csproj, string node, string value, string platform, string configuration)
         {
@@ -378,20 +336,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
         }
 
-        public static string GetMtouchLink(this XmlDocument csproj, string platform, string configuration)
-        {
-            return GetNode(csproj, "MtouchLink", platform, configuration);
-        }
+        public static string GetMtouchLink(this XmlDocument csproj, string platform, string configuration) => GetNode(csproj, "MtouchLink", platform, configuration);
 
-        public static void SetMtouchUseLlvm(this XmlDocument csproj, bool value, string platform, string configuration)
-        {
-            SetNode(csproj, "MtouchUseLlvm", true ? "true" : "false", platform, configuration);
-        }
+        public static void SetMtouchUseLlvm(this XmlDocument csproj, bool value, string platform, string configuration) => SetNode(csproj, "MtouchUseLlvm", true ? "true" : "false", platform, configuration);
 
-        public static void SetMtouchUseBitcode(this XmlDocument csproj, bool value, string platform, string configuration)
-        {
-            SetNode(csproj, "MtouchEnableBitcode", true ? "true" : "false", platform, configuration);
-        }
+        public static void SetMtouchUseBitcode(this XmlDocument csproj, bool value, string platform, string configuration) => SetNode(csproj, "MtouchEnableBitcode", true ? "true" : "false", platform, configuration);
 
         public static IEnumerable<XmlNode> GetPropertyGroups(this XmlDocument csproj, string platform, string configuration)
         {
@@ -551,10 +500,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
         }
 
-        public static void FindAndReplace(this XmlDocument csproj, string find, string replace)
-        {
-            FindAndReplace(csproj.ChildNodes, find, replace);
-        }
+        public static void FindAndReplace(this XmlDocument csproj, string find, string replace) => FindAndReplace(csproj.ChildNodes, find, replace);
 
         private static void FindAndReplace(XmlNode node, string find, string replace)
         {
@@ -631,10 +577,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             return null;
         }
 
-        public static string GetInfoPListInclude(this XmlDocument csproj)
-        {
-            return GetInfoPListNode(csproj).Attributes["Include"].Value;
-        }
+        public static string GetInfoPListInclude(this XmlDocument csproj) => GetInfoPListNode(csproj).Attributes["Include"].Value;
 
         public static IEnumerable<string> GetProjectReferences(this XmlDocument csproj)
         {

@@ -22,10 +22,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             Description = description;
         }
 
-        public virtual void Write(byte[] buffer, int offset, int count)
-        {
-            Write(Encoding.GetString(buffer, offset, count));
-        }
+        public virtual void Write(byte[] buffer, int offset, int count) => Write(Encoding.GetString(buffer, offset, count));
 
         public void Write(string value)
         {
@@ -35,20 +32,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             WriteImpl(value);
         }
 
-        public void WriteLine(string value)
-        {
-            Write(value + "\n");
-        }
+        public void WriteLine(string value) => Write(value + "\n");
 
-        public void WriteLine(StringBuilder value)
-        {
-            Write(value.ToString() + "\n");
-        }
+        public void WriteLine(StringBuilder value) => Write(value.ToString() + "\n");
 
-        public void WriteLine(string format, params object[] args)
-        {
-            Write(string.Format(format, args) + "\n");
-        }
+        public void WriteLine(string format, params object[] args) => Write(string.Format(format, args) + "\n");
 
         protected abstract void WriteImpl(string value);
 

@@ -14,15 +14,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     public abstract partial class Log
     {
 
-        public static IFileBackedLog CreateReadableAggregatedLog (IFileBackedLog defaultLog, params ILog[] logs)
-        {
-            return new ReadableAggregatedLog(defaultLog, logs);
-        }
+        public static IFileBackedLog CreateReadableAggregatedLog(IFileBackedLog defaultLog, params ILog[] logs) => new ReadableAggregatedLog(defaultLog, logs);
 
-        public static ILog CreateAggregatedLog(params ILog[] logs)
-        {
-            return new AggregatedLog(logs);
-        }
+        public static ILog CreateAggregatedLog(params ILog[] logs) => new AggregatedLog(logs);
 
         // Log that will duplicate log output to multiple other logs.
         private class AggregatedLog : Log

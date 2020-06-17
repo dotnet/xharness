@@ -141,17 +141,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             }
         }
 
-        public override StreamReader GetReader()
-        {
-            return File.Exists(CapturePath)
+        public override StreamReader GetReader() => File.Exists(CapturePath)
                 ? new StreamReader(new FileStream(CapturePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 : null;
-        }
 
-        public override void Flush()
-        {
-            Capture();
-        }
+        public override void Flush() => Capture();
 
         protected override void WriteImpl(string value) => throw new InvalidOperationException();
 

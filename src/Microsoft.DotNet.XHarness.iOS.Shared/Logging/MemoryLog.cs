@@ -15,10 +15,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     {
         private readonly StringBuilder captured = new StringBuilder();
 
-        protected override void WriteImpl(string value)
-        {
-            captured.Append(value);
-        }
+        protected override void WriteImpl(string value) => captured.Append(value);
 
         public override StreamReader GetReader()
         {

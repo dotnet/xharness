@@ -6,9 +6,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     internal static partial class Extensions
     {
-        public static string YesNo(this bool b)
-        {
-            return b ? "yes" : "no";
-        }
+        public static string YesNo(this bool b) => b ? "yes" : "no";
     }
 }

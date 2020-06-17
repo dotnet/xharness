@@ -42,10 +42,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         }
 
         [Fact]
-        public void ConstructorNullDirTest()
-        {
-            Assert.Throws<ArgumentNullException>(() => new Logs(null));
-        }
+        public void ConstructorNullDirTest() => Assert.Throws<ArgumentNullException>(() => new Logs(null));
 
         [Fact]
         public void CreateFileTest()

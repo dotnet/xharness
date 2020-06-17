@@ -22,10 +22,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         }
 
         // Create a new log backed with a file
-        public IFileBackedLog Create(string filename, string name, bool? timestamp = null)
-        {
-            return Create(Directory, filename, name, timestamp);
-        }
+        public IFileBackedLog Create(string filename, string name, bool? timestamp = null) => Create(Directory, filename, name, timestamp);
 
         private LogFile Create(string directory, string filename, string name, bool? timestamp = null)
         {
@@ -40,10 +37,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         // Adds an existing file to this collection of logs.
         // If the file is not inside the log directory, then it's copied there.
         // 'path' must be a full path to the file.
-        public IFileBackedLog AddFile(string path)
-        {
-            return AddFile(path, Path.GetFileName(path));
-        }
+        public IFileBackedLog AddFile(string path) => AddFile(path, Path.GetFileName(path));
 
         // Adds an existing file to this collection of logs.
         // If the file is not inside the log directory, then it's copied there.

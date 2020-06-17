@@ -18,10 +18,7 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
         /// </summary>
         public string DeviceSerial { get; set; } = string.Empty;
 
-        public ProcessExecutionResults Run(string adbExePath, string arguments)
-        { 
-            return Run(adbExePath, arguments, TimeSpan.FromMinutes(5));
-        }
+        public ProcessExecutionResults Run(string adbExePath, string arguments) => Run(adbExePath, arguments, TimeSpan.FromMinutes(5));
 
         public ProcessExecutionResults Run(string adbExePath, string arguments, TimeSpan timeOut)
         {

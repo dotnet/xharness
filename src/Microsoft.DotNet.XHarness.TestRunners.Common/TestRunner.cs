@@ -117,30 +117,15 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public abstract void SkipMethod(string method, bool isExcluded);
         public abstract void SkipClass(string className, bool isExcluded);
 
-        protected void OnError(string message)
-        {
-            Logger.OnError(message);
-        }
+        protected void OnError(string message) => Logger.OnError(message);
 
-        protected void OnWarning(string message)
-        {
-            Logger.OnWarning(message);
-        }
+        protected void OnWarning(string message) => Logger.OnWarning(message);
 
-        protected void OnDebug(string message)
-        {
-            Logger.OnDebug(message);
-        }
+        protected void OnDebug(string message) => Logger.OnDebug(message);
 
-        protected void OnDiagnostic(string message)
-        {
-            Logger.OnDiagnostic(message);
-        }
+        protected void OnDiagnostic(string message) => Logger.OnDiagnostic(message);
 
-        protected void OnInfo(string message)
-        {
-            Logger.OnInfo(message);
-        }
+        protected void OnInfo(string message) => Logger.OnInfo(message);
 
         protected void OnAssemblyStart(Assembly asm)
         {

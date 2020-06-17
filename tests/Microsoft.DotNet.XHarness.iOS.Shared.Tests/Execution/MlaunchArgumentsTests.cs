@@ -76,10 +76,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Execution
 
         [Theory]
         [MemberData(nameof(CommandLineDataTestSource.CommandLineArgs), MemberType = typeof(CommandLineDataTestSource))]
-        public void AsCommandLineTest(MlaunchArgument[] args, string expected)
-        {
-            Assert.Equal(expected, new MlaunchArguments(args).AsCommandLine());
-        }
+        public void AsCommandLineTest(MlaunchArgument[] args, string expected) => Assert.Equal(expected, new MlaunchArguments(args).AsCommandLine());
 
         [Fact]
         public void MlaunchArgumentAndProcessManagerTest()

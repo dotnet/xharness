@@ -583,10 +583,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             ));
         }
 
-        private void ReportTestCases(string verb, IEnumerable<ITestCase> testCases, ITestCase ignoreTestCase, Action<string> log = null)
-        {
-            ReportTestCases(verb, testCases, log, (ITestCase tc) => ignoreTestCase == tc);
-        }
+        private void ReportTestCases(string verb, IEnumerable<ITestCase> testCases, ITestCase ignoreTestCase, Action<string> log = null) => ReportTestCases(verb, testCases, log, (ITestCase tc) => ignoreTestCase == tc);
 
         private void ReportTestCases(string verb, IEnumerable<ITestCase> testCases, Action<string> log = null, Func<ITestCase, bool> ignore = null)
         {
@@ -630,27 +627,13 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             do_log($"   Exception stack traces: {traces}", log, sb);
         }
 
-        private Action<string> EnsureLogger(Action<string> log)
-        {
-            return log ?? OnInfo;
-        }
+        private Action<string> EnsureLogger(Action<string> log) => log ?? OnInfo;
 
-        private void LogTestMethodDetails(IMethodInfo method, Action<string> log = null, StringBuilder sb = null)
-        {
-            log = EnsureLogger(log);
+        private void LogTestMethodDetails(IMethodInfo method, Action<string> log = null, StringBuilder sb = null) => log = EnsureLogger(log);//log ($"   Test method name: {method.Type.Name}.{method.Name}");
 
-            //log ($"   Test method name: {method.Type.Name}.{method.Name}");
-        }
+        private void LogTestOutput(ITestFinished test, Action<string> log = null, StringBuilder sb = null) => LogTestOutput(test.ExecutionTime, test.Output, log, sb);
 
-        private void LogTestOutput(ITestFinished test, Action<string> log = null, StringBuilder sb = null)
-        {
-            LogTestOutput(test.ExecutionTime, test.Output, log, sb);
-        }
-
-        private void LogTestOutput(ITestResultMessage test, Action<string> log = null, StringBuilder sb = null)
-        {
-            LogTestOutput(test.ExecutionTime, test.Output, log, sb);
-        }
+        private void LogTestOutput(ITestResultMessage test, Action<string> log = null, StringBuilder sb = null) => LogTestOutput(test.ExecutionTime, test.Output, log, sb);
 
         private void LogTestOutput(decimal executionTime, string output, Action<string> log = null, StringBuilder sb = null)
         {
@@ -664,10 +647,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             }
         }
 
-        private void LogTestCollectionDetails(ITestCollection collection, Action<string> log = null, StringBuilder sb = null)
-        {
-            do_log($"   Test collection: {collection.DisplayName}", log, sb);
-        }
+        private void LogTestCollectionDetails(ITestCollection collection, Action<string> log = null, StringBuilder sb = null) => do_log($"   Test collection: {collection.DisplayName}", log, sb);
 
         private void LogTestClassDetails(ITestClass klass, Action<string> log = null, StringBuilder sb = null)
         {

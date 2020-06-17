@@ -54,9 +54,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             TimeSpan timeout,
             string? additionalLogsDirectory = null,
             ExceptionLogger? exceptionLogger = null,
-            bool generateHtml = false)
-        {
-            return new TestReporter(processManager,
+            bool generateHtml = false) => new TestReporter(processManager,
                 mainLog,
                 runLog,
                 logs,
@@ -71,7 +69,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 additionalLogsDirectory,
                 exceptionLogger,
                 generateHtml);
-        }
     }
 }
 

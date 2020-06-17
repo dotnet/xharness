@@ -47,10 +47,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         public override Encoding Encoding => copy_to.Encoding;
 
-        public override void Flush()
-        {
-            copy_to.Flush();
-        }
+        public override void Flush() => copy_to.Flush();
 
         public override StreamReader GetReader() => copy_to.GetReader();
 
@@ -60,10 +57,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             cancellationSource.Dispose();
         }
 
-        private void ResetTimer()
-        {
-            cancellationSource.CancelAfter(TimeSpan.FromMinutes(1));
-        }
+        private void ResetTimer() => cancellationSource.CancelAfter(TimeSpan.FromMinutes(1));
 
         protected override void WriteImpl(string value)
         {
@@ -116,9 +110,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             copy_to.WriteLine(value);
         }
 
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            copy_to.Write(buffer, offset, count);
-        }
+        public override void Write(byte[] buffer, int offset, int count) => copy_to.Write(buffer, offset, count);
     }
 }

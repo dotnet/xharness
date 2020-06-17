@@ -15,14 +15,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         internal TestExecutionState() { }
 
-        internal void Start()
-        {
-            Started = new TimeSpan(DateTime.Now.Ticks);
-        }
+        internal void Start() => Started = new TimeSpan(DateTime.Now.Ticks);
 
-        internal void Finish()
-        {
-            Finished = new TimeSpan(DateTime.Now.Ticks);
-        }
+        internal void Finish() => Finished = new TimeSpan(DateTime.Now.Ticks);
     }
 }

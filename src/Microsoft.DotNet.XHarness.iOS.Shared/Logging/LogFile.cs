@@ -67,10 +67,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             Write(bytes, 0, bytes.Length);
         }
 
-        public override StreamReader GetReader()
-        {
-            return new StreamReader(new FileStream(FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-        }
+        public override StreamReader GetReader() => new StreamReader(new FileStream(FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
 
         public override void Dispose()
         {

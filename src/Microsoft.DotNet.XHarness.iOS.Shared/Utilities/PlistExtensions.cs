@@ -46,15 +46,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
         }
 
-        public static void SetMinimumOSVersion(this XmlDocument plist, string value)
-        {
-            plist.SetPListStringValue("MinimumOSVersion", value);
-        }
+        public static void SetMinimumOSVersion(this XmlDocument plist, string value) => plist.SetPListStringValue("MinimumOSVersion", value);
 
-        public static void SetMinimummacOSVersion(this XmlDocument plist, string value)
-        {
-            plist.SetPListStringValue("LSMinimumSystemVersion", value);
-        }
+        public static void SetMinimummacOSVersion(this XmlDocument plist, string value) => plist.SetPListStringValue("LSMinimumSystemVersion", value);
 
         public static void SetCFBundleDisplayName(this XmlDocument plist, string value) =>
             plist.SetPListStringValue("CFBundleDisplayName", value);

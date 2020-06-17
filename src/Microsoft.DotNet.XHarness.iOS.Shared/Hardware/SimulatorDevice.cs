@@ -57,10 +57,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             await processManager.ExecuteXcodeCommandAsync("simctl", new[] { "shutdown", UDID }, log, TimeSpan.FromMinutes(1));
         }
 
-        public async Task Shutdown(ILog log)
-        {
-            await processManager.ExecuteXcodeCommandAsync("simctl", new[] { "shutdown", UDID }, log, TimeSpan.FromMinutes(1));
-        }
+        public async Task Shutdown(ILog log) => await processManager.ExecuteXcodeCommandAsync("simctl", new[] { "shutdown", UDID }, log, TimeSpan.FromMinutes(1));
 
         public async Task KillEverything(ILog log)
         {

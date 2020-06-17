@@ -26,9 +26,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         {
         }
 
-        protected override void WriteImpl(string value)
-        {
-            onWrite(value);
-        }
+        protected override void WriteImpl(string value) => onWrite(value);
     }
 }

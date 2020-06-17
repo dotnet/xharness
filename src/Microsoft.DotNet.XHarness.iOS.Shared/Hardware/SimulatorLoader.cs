@@ -566,10 +566,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     return _devices.Value.Item2 != null;
                 }
 
-                public void Reset()
-                {
-                    _moved = false;
-                }
+                public void Reset() => _moved = false;
 
                 public void Dispose()
                 {

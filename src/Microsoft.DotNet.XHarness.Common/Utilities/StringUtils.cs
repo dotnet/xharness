@@ -24,15 +24,9 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
                 shellQuoteChar = '\''; // !Windows
         }
 
-        public static string FormatArguments(params string[] arguments)
-        {
-            return FormatArguments((IList<string>)arguments);
-        }
+        public static string FormatArguments(params string[] arguments) => FormatArguments((IList<string>)arguments);
 
-        public static string FormatArguments(IList<string> arguments)
-        {
-            return string.Join(" ", QuoteForProcess(arguments) ?? Array.Empty<string>());
-        }
+        public static string FormatArguments(IList<string> arguments) => string.Join(" ", QuoteForProcess(arguments) ?? Array.Empty<string>());
 
         private static string[]? QuoteForProcess(params string[] array)
         {

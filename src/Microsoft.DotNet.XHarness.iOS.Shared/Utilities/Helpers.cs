@@ -50,10 +50,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         [DllImport("/usr/lib/libc.dylib")]
         private static extern IntPtr ttyname(int filedes);
 
-        public string GetTerminalName(int filedescriptor)
-        {
-            return Marshal.PtrToStringAuto(ttyname(filedescriptor));
-        }
+        public string GetTerminalName(int filedescriptor) => Marshal.PtrToStringAuto(ttyname(filedescriptor));
 
         public IEnumerable<IPAddress> GetLocalIpAddresses() => Dns.GetHostEntry(Dns.GetHostName()).AddressList;
     }

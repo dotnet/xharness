@@ -534,10 +534,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         }
 
         [Fact]
-        private void CreateAssemblyFilterMissingExtension()
-        {
-            Assert.Throws<ArgumentException>(() => XUnitFilter.CreateAssemblyFilter("MissinExtension", true));
-        }
+        private void CreateAssemblyFilterMissingExtension() => Assert.Throws<ArgumentException>(() => XUnitFilter.CreateAssemblyFilter("MissinExtension", true));
 
         [Fact]
         private void CreateNamespaceFilterNullNameSpace()

@@ -206,18 +206,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         /// <param name="projectName">The name of the project being generated.</param>
         /// <param name="platform">The supported platform by the project.</param>
         /// <returns>The final path to which the project file should be written.</returns>
-        public string GetProjectPath(string projectName, Platform platform)
+        public string GetProjectPath(string projectName, Platform platform) => platform switch
         {
-            return platform switch
-            {
-                Platform.iOS => Path.Combine(OutputDirectoryPath, $"{projectName}.csproj"),
-                Platform.TvOS => Path.Combine(OutputDirectoryPath, $"{projectName}-tvos.csproj"),
-                Platform.WatchOS => Path.Combine(OutputDirectoryPath, $"{projectName}-watchos.csproj"),
-                Platform.MacOSFull => Path.Combine(OutputDirectoryPath, $"{projectName}-mac-full.csproj"),
-                Platform.MacOSModern => Path.Combine(OutputDirectoryPath, $"{projectName}-mac-modern.csproj"),
-                _ => null,
-            };
-        }
+            Platform.iOS => Path.Combine(OutputDirectoryPath, $"{projectName}.csproj"),
+            Platform.TvOS => Path.Combine(OutputDirectoryPath, $"{projectName}-tvos.csproj"),
+            Platform.WatchOS => Path.Combine(OutputDirectoryPath, $"{projectName}-watchos.csproj"),
+            Platform.MacOSFull => Path.Combine(OutputDirectoryPath, $"{projectName}-mac-full.csproj"),
+            Platform.MacOSModern => Path.Combine(OutputDirectoryPath, $"{projectName}-mac-modern.csproj"),
+            _ => null,
+        };
 
         /// <summary>
         /// Returns the path to be used to store the project file depending on the type of watchOS
@@ -226,14 +223,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         /// <param name="projectName">The name of the project being generated.</param>
         /// <param name="appType">The typoe of watcOS application.</param>
         /// <returns>The final path to which the project file should be written.</returns>
-        public string GetProjectPath(string projectName, WatchAppType appType)
+        public string GetProjectPath(string projectName, WatchAppType appType) => appType switch
         {
-            return appType switch
-            {
-                WatchAppType.App => Path.Combine(OutputDirectoryPath, $"{projectName}-watchos-app.csproj"),
-                _ => Path.Combine(OutputDirectoryPath, $"{projectName}-watchos-extension.csproj"),
-            };
-        }
+            WatchAppType.App => Path.Combine(OutputDirectoryPath, $"{projectName}-watchos-app.csproj"),
+            _ => Path.Combine(OutputDirectoryPath, $"{projectName}-watchos-extension.csproj"),
+        };
 
         /// <summary>
         /// Returns the path to be used to store the projects plist file depending on the platform.
@@ -265,14 +259,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         /// <param name="rootDir">The root dir to use.</param>
         /// <param name="appType">The watchOS application path whose plist we want to generate.</param>
         /// <returns></returns>
-        public static string GetPListPath(string rootDir, WatchAppType appType)
+        public static string GetPListPath(string rootDir, WatchAppType appType) => appType switch
         {
-            return appType switch
-            {
-                WatchAppType.App => Path.Combine(rootDir, "Info-watchos-app.plist"),
-                _ => Path.Combine(rootDir, "Info-watchos-extension.plist"),
-            };
-        }
+            WatchAppType.App => Path.Combine(rootDir, "Info-watchos-app.plist"),
+            _ => Path.Combine(rootDir, "Info-watchos-extension.plist"),
+        };
 
         // this method could be async, since we could be using async IO. The problem is that it might be called
         // several times. The File and the Directory classes are not smart, and there is a possibility that we
