@@ -148,7 +148,7 @@ stages:
           - bash: |
               targetDir=$(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.$(_BuildConfig)
               mkdir $targetDir
-              cp tests/integration-tests/helix-payloads/cli-integration-tests.sh $targetDir
+              cp tests/integration-tests/iOS/helix-payloads/cli-integration-tests.sh $targetDir
               cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI*.nupkg $targetDir
             displayName: Prepare the CLI IntegrationTests artifact
             workingDirectory: $(Build.SourcesDirectory)
@@ -162,7 +162,7 @@ stages:
           - bash: |
               targetDir=$(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
               mkdir $targetDir
-              cp tests/integration-tests/helix-payloads/simulatorinstaller-integration-tests.sh $targetDir
+              cp tests/integration-tests/iOS/helix-payloads/simulatorinstaller-integration-tests.sh $targetDir
               cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.SimulatorInstaller*.nupkg $targetDir
             displayName: Prepare the SimulatorInstaller IntegrationTests artifact
             workingDirectory: $(Build.SourcesDirectory)
@@ -172,6 +172,11 @@ stages:
             artifact: Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
             displayName: Publish the tool artifact
             condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
+
+          - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.1.0.0-ci.nupkg
+            artifact: Microsoft.DotNet.XHarness.CLI.$(_BuildConfig)
+            displayName: Publish XHarness CLI for Helix Testing
+            condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))            
 
           - task: PublishTestResults@2
             displayName: 'Publish Unit Test Results'
@@ -193,6 +198,89 @@ stages:
           condition: always()
 
 - ${{ if eq(variables._RunAsPublic, True) }}:
+
+  - stage: Test_CLI_Package_In_Helix_Android
+    displayName: Run CLI Integration Helix scenarios - Android
+    dependsOn: Build_OSX
+    jobs:
+    - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        workspace:
+          clean: all
+        jobs:          
+        - job: Linux
+          pool:
+            vmimage: ubuntu-latest
+          strategy:
+            matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+          preSteps:
+          - checkout: self
+            clean: true
+          displayName: Submit Helix Job
+          steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              source: current
+              artifact: Microsoft.DotNet.XHarness.CLI.Debug
+              path: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/
+          
+          - script: eng/common/build.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              --ci
+              --restore
+              --test
+              --projects $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.Helix.SDK.Tests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/HelixRun.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: Run Helix Tests
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
+
+  - stage: Test_CLI_Package_In_Helix_iOS
+    displayName: Run CLI Integration Helix scenarios - iOS
+    dependsOn: Build_OSX
+    jobs:
+    - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        workspace:
+          clean: all
+        jobs:          
+        - job: OSX
+          pool:
+            name: Hosted macOS
+          strategy:
+            matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+          preSteps:
+          - checkout: self
+            clean: true
+          displayName: Submit Helix Job
+          steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              source: current
+              artifact: Microsoft.DotNet.XHarness.CLI.Debug
+              path: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/
+          
+          - script: eng/common/build.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              --ci
+              --restore
+              --test
+              --projects $(Build.SourcesDirectory)/tests/integration-tests/iOS/iOS.Helix.SDK.Tests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/HelixRun.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: Run Helix Tests
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
+
   - stage: Test_CLI
     displayName: Run CLI Integration Tests
     dependsOn: Build_OSX
