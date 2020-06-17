@@ -33,8 +33,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         internal const string TestingFrameworksKey = "%TESTING FRAMEWORKS%";
 
         // resource related static vars used to copy the embedded src to the hd
-        private static readonly string s_srcResourcePrefix = "Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed.Resources.src.";
-        private static readonly string s_registerTemplateResourceName = "RegisterType.cs";
+        private const string SrcResourcePrefix = "Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed.Resources.src.";
+        private const string RegisterTemplateResourceName = "RegisterType.cs";
         private static readonly string[][] s_srcDirectories = new[] {
             new [] { "common", },
             new [] { "common", "TestRunner" },
@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
 
         public Stream GetProjectTemplate(WatchAppType appType) => GetTemplateStream(s_watchOSProjectTemplateMatches[appType]);
 
-        public Stream GetRegisterTypeTemplate() => GetTemplateStream(s_registerTemplateResourceName);
+        public Stream GetRegisterTypeTemplate() => GetTemplateStream(RegisterTemplateResourceName);
 
         private void BuildSrcTree(string srcOuputPath)
         {
@@ -153,35 +153,36 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         private string CalculateDestinationPath(string srcOuputPath, string resourceFullName)
         {
             // we do know that we don't care about our prefix
-            string resourceName = resourceFullName.Substring(s_srcResourcePrefix.Length);
+            string resourceName = resourceFullName.Substring(SrcResourcePrefix.Length);
             // icon sets are special, they have a dot, which is also a dot in the resources :/
-            (string iconSet, string replace) iconSetSubPath = (iconSet: "", replace: "");
+            string iconSet;
+            string replace;
             if (resourceFullName.Contains("iOSApp") || resourceFullName.Contains("tvOSApp"))
             {
                 if (resourceFullName.Contains("AppIcon.appiconset"))
                 {
-                    iconSetSubPath.iconSet = "Assets.xcassets.AppIcon.appiconset";
-                    iconSetSubPath.replace = "Assets.xcassets/AppIcon.appiconset";
+                    iconSet = "Assets.xcassets.AppIcon.appiconset";
+                    replace = "Assets.xcassets/AppIcon.appiconset";
                 }
                 else
                 {
-                    iconSetSubPath.iconSet = "Assets.xcassets";
-                    iconSetSubPath.replace = null;
+                    iconSet = "Assets.xcassets";
+                    replace = null;
                 }
             }
             else
             {
-                iconSetSubPath.iconSet = "Images.xcassets.AppIcons.appiconset";
-                iconSetSubPath.replace = "Images.xcassets/AppIcons.appiconset";
+                iconSet = "Images.xcassets.AppIcons.appiconset";
+                replace = "Images.xcassets/AppIcons.appiconset";
             }
-            int lastIndex = resourceName.LastIndexOf(iconSetSubPath.iconSet);
+            int lastIndex = resourceName.LastIndexOf(iconSet);
             if (lastIndex >= 0)
             {
                 // all files have an extension and a file name, remove them
                 string fileName = GetResourceFileName(resourceName);
                 string partialPath = resourceName.Replace("." + fileName, "");
                 partialPath = partialPath.Replace('.', Path.DirectorySeparatorChar);
-                partialPath = partialPath.Replace(iconSetSubPath.iconSet.Replace('.', Path.DirectorySeparatorChar), iconSetSubPath.replace ?? iconSetSubPath.iconSet);
+                partialPath = partialPath.Replace(iconSet.Replace('.', Path.DirectorySeparatorChar), replace ?? iconSet);
                 // substring up to the iconset path, replace . for PathSeparator, add icon set + name
                 resourceName = Path.Combine(partialPath, fileName);
             }
@@ -287,7 +288,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                 BuildSrcTree(srcOuputPath);
                 // the code is simple, we are going to look for all the resources that we know are src and will write a
                 // copy of the stream in the designated output path
-                IEnumerable<string> resources = GetType().Assembly.GetManifestResourceNames().Where(a => a.StartsWith(s_srcResourcePrefix));
+                IEnumerable<string> resources = GetType().Assembly.GetManifestResourceNames().Where(a => a.StartsWith(SrcResourcePrefix));
 
                 // we need to be smart, since the resource name != the path
                 foreach (string r in resources)
@@ -438,10 +439,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             }
             else
             {
-                foreach ((string assembly, string hintPath) assemblyInfo in info.Assemblies)
+                foreach ((string assembly, string hintPath) in info.Assemblies)
                 {
-                    if (ProjectFilter == null || !ProjectFilter.ExcludeDll(Platform.WatchOS, assemblyInfo.assembly))
-                        sb.AppendLine(GetReferenceNode(assemblyInfo.assembly, assemblyInfo.hintPath));
+                    if (ProjectFilter == null || !ProjectFilter.ExcludeDll(Platform.WatchOS, assembly))
+                        sb.AppendLine(GetReferenceNode(assembly, hintPath));
                 }
             }
 
@@ -464,14 +465,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         private async Task<GeneratedProjects> GenerateWatchOSTestProjectsAsync(IEnumerable<(string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier)> projects)
         {
             var projectPaths = new GeneratedProjects();
-            foreach ((string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier) def in projects)
+            foreach ((string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier) in projects)
             {
                 // each watch os project requires 3 different ones:
                 // 1. The app
                 // 2. The container
                 // 3. The extensions
                 // TODO: The following is very similar to what is done in the iOS generation. Must be grouped
-                var projectDefinition = new ProjectDefinition(def.Name, AssemblyLocator, AssemblyDefinitionFactory, def.Assemblies, def.ExtraArgs);
+                var projectDefinition = new ProjectDefinition(Name, AssemblyLocator, AssemblyDefinitionFactory, Assemblies, ExtraArgs);
                 if (ProjectFilter != null && ProjectFilter.ExludeProject(projectDefinition, Platform.WatchOS)) // if it is ignored, continue
                     continue;
 
@@ -531,7 +532,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                     using (var reader = new StreamReader(GetProjectTemplate(Platform.WatchOS)))
                     {
                         string template = await reader.ReadToEndAsync();
-                        string generatedRootProject = GenerateWatchProject(def.Name, template, infoPlistPath);
+                        string generatedRootProject = GenerateWatchProject(Name, template, infoPlistPath);
                         await file.WriteAsync(generatedRootProject);
                     }
                     (string FailureMessage, Dictionary<string, Type> Types) typesPerAssembly = projectDefinition.GetTypeForAssemblies(AssemblyLocator.GetAssembliesRootLocation(Platform.iOS), Platform.WatchOS);
@@ -549,7 +550,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                     failure = e.Message;
                 }
                 // we have the 3 projects we depend on, we need the root one, the one that will be used by harness
-                projectPaths.Add((projectDefinition.Name, rootProjectPath, projectDefinition.IsXUnit, projectDefinition.ExtraArgs, failure, def.TimeoutMultiplier));
+                projectPaths.Add((projectDefinition.Name, rootProjectPath, projectDefinition.IsXUnit, projectDefinition.ExtraArgs, failure, TimeoutMultiplier));
             } // foreach project
 
             return projectPaths;
@@ -581,10 +582,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             }
             else
             {
-                foreach ((string assembly, string hintPath) assemblyInfo in info.Assemblies)
+                foreach ((string assembly, string hintPath) in info.Assemblies)
                 {
-                    if (ProjectFilter == null || !ProjectFilter.ExcludeDll(Platform.iOS, assemblyInfo.assembly))
-                        sb.AppendLine(GetReferenceNode(assemblyInfo.assembly, assemblyInfo.hintPath));
+                    if (ProjectFilter == null || !ProjectFilter.ExcludeDll(Platform.iOS, assembly))
+                        sb.AppendLine(GetReferenceNode(assembly, hintPath));
                 }
             }
 
@@ -611,11 +612,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             if (!projects.Any()) // return an empty list
                 return new GeneratedProjects();
             var projectPaths = new GeneratedProjects();
-            foreach ((string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier) def in projects)
+            foreach ((string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier) in projects)
             {
-                if (def.Assemblies.Length == 0)
+                if (Assemblies.Length == 0)
                     continue;
-                var projectDefinition = new ProjectDefinition(def.Name, AssemblyLocator, AssemblyDefinitionFactory, def.Assemblies, def.ExtraArgs);
+                var projectDefinition = new ProjectDefinition(Name, AssemblyLocator, AssemblyDefinitionFactory, Assemblies, ExtraArgs);
                 if (ProjectFilter != null && ProjectFilter.ExludeProject(projectDefinition, Platform.WatchOS)) // if it is ignored, continue
                     continue;
 
@@ -662,7 +663,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                 {
                     failure = e.Message;
                 }
-                projectPaths.Add((projectDefinition.Name, projectPath, projectDefinition.IsXUnit, projectDefinition.ExtraArgs, failure, def.TimeoutMultiplier));
+                projectPaths.Add((projectDefinition.Name, projectPath, projectDefinition.IsXUnit, projectDefinition.ExtraArgs, failure, TimeoutMultiplier));
             } // foreach project
 
             return projectPaths;
@@ -682,10 +683,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             }
             else
             {
-                foreach ((string assembly, string hintPath) assemblyInfo in info.Assemblies)
+                foreach ((string assembly, string hintPath) in info.Assemblies)
                 {
-                    if (ProjectFilter == null || !ProjectFilter.ExcludeDll(platform, assemblyInfo.assembly))
-                        sb.AppendLine(GetReferenceNode(assemblyInfo.assembly, assemblyInfo.hintPath));
+                    if (ProjectFilter == null || !ProjectFilter.ExcludeDll(platform, assembly))
+                        sb.AppendLine(GetReferenceNode(assembly, hintPath));
                 }
             }
 
@@ -723,11 +724,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         private async Task<GeneratedProjects> GenerateMacTestProjectsAsync(IEnumerable<(string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier)> projects, Platform platform)
         {
             var projectPaths = new GeneratedProjects();
-            foreach ((string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier) def in projects)
+            foreach ((string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier) in projects)
             {
-                if (!def.Assemblies.Any())
+                if (!Assemblies.Any())
                     continue;
-                var projectDefinition = new ProjectDefinition(def.Name, AssemblyLocator, AssemblyDefinitionFactory, def.Assemblies, def.ExtraArgs);
+                var projectDefinition = new ProjectDefinition(Name, AssemblyLocator, AssemblyDefinitionFactory, Assemblies, ExtraArgs);
                 if (ProjectFilter != null && ProjectFilter.ExludeProject(projectDefinition, platform))
                     continue;
 
@@ -771,7 +772,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                 {
                     failure = e.Message;
                 }
-                projectPaths.Add((projectDefinition.Name, projectPath, projectDefinition.IsXUnit, projectDefinition.ExtraArgs, failure, def.TimeoutMultiplier));
+                projectPaths.Add((projectDefinition.Name, projectPath, projectDefinition.IsXUnit, projectDefinition.ExtraArgs, failure, TimeoutMultiplier));
 
             }
             return projectPaths;

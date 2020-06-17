@@ -99,14 +99,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter
             string failureMessage = null;
             foreach (ITestAssemblyDefinition definition in TestAssemblies)
             {
-                (string FailureMessage, IEnumerable<string> References) references = GetAssemblyReferences(definition.GetPath(platform));
-                if (references.FailureMessage != null)
+                (string FailureMessage, IEnumerable<string> References) = GetAssemblyReferences(definition.GetPath(platform));
+                if (FailureMessage != null)
                 {
-                    failureMessage = references.FailureMessage;
+                    failureMessage = FailureMessage;
                 }
                 else
                 {
-                    set.UnionWith(references.References);
+                    set.UnionWith(References);
                 }
             }
             return (failureMessage, set);
@@ -156,10 +156,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter
         /// <returns>The list of tuples (assembly name, path hint) for all the assemblies in the project.</returns>
         public (string FailureMessage, List<(string assembly, string hintPath)> Assemblies) GetAssemblyInclusionInformation(Platform platform)
         {
-            (string FailureMessage, IEnumerable<string> References) references = GetProjectAssemblyReferences(platform);
-            if (!string.IsNullOrEmpty(references.FailureMessage))
-                return (references.FailureMessage, null);
-            var asm = references.References.Select(
+            (string FailureMessage, IEnumerable<string> References) = GetProjectAssemblyReferences(platform);
+            if (!string.IsNullOrEmpty(FailureMessage))
+                return (FailureMessage, null);
+            var asm = References.Select(
                     a => (assembly: a,
                         hintPath: AssemblyLocator.GetHintPathForReferenceAssembly(a, platform))).Union(
                     TestAssemblies.Select(
