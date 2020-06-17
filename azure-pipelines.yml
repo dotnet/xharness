@@ -156,7 +156,7 @@ stages:
 
           - publish: $(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
             artifact: Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
-            displayName: Publish the tool artifact
+            displayName: Publish the SimulatorInstaller IntegrationTests artifact
             condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
 
           - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.1.0.0-ci.nupkg
