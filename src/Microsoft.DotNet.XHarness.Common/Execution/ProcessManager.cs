@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -135,44 +136,49 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                         diagnostics: false);
                 }
 
-                foreach (var diagnose_pid in pids)
-                {
-                    var template = Path.GetTempFileName();
-                    try
-                    {
-                        var commands = new StringBuilder();
-                        using (var dbg = new Process())
-                        {
-                            commands.AppendLine($"process attach --pid {diagnose_pid}");
-                            commands.AppendLine("thread list");
-                            commands.AppendLine("thread backtrace all");
-                            commands.AppendLine("detach");
-                            commands.AppendLine("quit");
-                            dbg.StartInfo.FileName = "/usr/bin/lldb";
-                            dbg.StartInfo.Arguments = StringUtils.FormatArguments("--source", template);
-                            File.WriteAllText(template, commands.ToString());
+                const string lldbPath = "/usr/bin/lldb";
 
-                            log.WriteLine($"Printing backtrace for pid={pid}");
-                            await RunAsyncInternal(
-                                process: dbg,
-                                log: log,
-                                stdout: log,
-                                stderr:log,
-                                kill: kill,
-                                getChildrenPS: getChildrenPS,
-                                timeout: TimeSpan.FromSeconds(30),
-                                diagnostics: false);
-                        }
-                    }
-                    finally
+                if (File.Exists(lldbPath))
+                {
+                    foreach (var diagnose_pid in pids)
                     {
+                        var template = Path.GetTempFileName();
                         try
                         {
-                            File.Delete(template);
+                            var commands = new StringBuilder();
+                            using (var dbg = new Process())
+                            {
+                                commands.AppendLine($"process attach --pid {diagnose_pid}");
+                                commands.AppendLine("thread list");
+                                commands.AppendLine("thread backtrace all");
+                                commands.AppendLine("detach");
+                                commands.AppendLine("quit");
+                                dbg.StartInfo.FileName = lldbPath;
+                                dbg.StartInfo.Arguments = StringUtils.FormatArguments("--source", template);
+                                File.WriteAllText(template, commands.ToString());
+
+                                log.WriteLine($"Printing backtrace for pid={pid}");
+                                await RunAsyncInternal(
+                                    process: dbg,
+                                    log: log,
+                                    stdout: log,
+                                    stderr: log,
+                                    kill: kill,
+                                    getChildrenPS: getChildrenPS,
+                                    timeout: TimeSpan.FromSeconds(30),
+                                    diagnostics: false);
+                            }
                         }
-                        catch
+                        finally
                         {
-                            // Don't care
+                            try
+                            {
+                                File.Delete(template);
+                            }
+                            catch
+                            {
+                                // Don't care
+                            }
                         }
                     }
                 }
