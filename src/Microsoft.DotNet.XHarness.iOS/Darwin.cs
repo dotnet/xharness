@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.iOS
         }
 
         [DllImport("libc")]
-        private unsafe static extern int sysctl(
+        private static extern unsafe int sysctl(
             int* name,
             uint namelen,
             byte* oldp,

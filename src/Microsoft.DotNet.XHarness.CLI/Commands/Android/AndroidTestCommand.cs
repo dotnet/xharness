@@ -18,10 +18,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
     internal class AndroidTestCommand : TestCommand
     {
         // nunit2 one should go away eventually
-        private readonly static string[] _xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
-        private readonly static string _testRunSummaryVariableName = "test-execution-summary";
-        private readonly static string _shortMessageVariableName = "shortMsg";
-        private readonly static string _returnCodeVariableName = "return-code";
+        private static readonly string[] _xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
+        private static readonly string _testRunSummaryVariableName = "test-execution-summary";
+        private static readonly string _shortMessageVariableName = "shortMsg";
+        private static readonly string _returnCodeVariableName = "return-code";
 
         private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
 

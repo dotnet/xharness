@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
         {
         }
 
-        protected async override Task<ExitCode> InvokeInternal(ILogger logger)
+        protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
             Logger = logger;
 

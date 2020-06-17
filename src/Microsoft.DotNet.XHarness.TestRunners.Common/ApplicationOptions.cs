@@ -10,7 +10,6 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
-
     internal enum XmlMode
     {
         Default = 0,
@@ -19,8 +18,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
     internal class ApplicationOptions
     {
-
-        static public ApplicationOptions Current = new ApplicationOptions();
+        public static ApplicationOptions Current = new ApplicationOptions();
         private readonly List<string> _singleMethodFilters = new List<string>();
         private readonly List<string> _classMethodFilters = new List<string>();
 
