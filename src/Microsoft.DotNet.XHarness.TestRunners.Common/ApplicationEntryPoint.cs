@@ -187,7 +187,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             return resultsFilePath;
         }
 
-        protected async Task<TestRunner> InternalRunAsync (LogWriter logger)
+        protected async Task<TestRunner> InternalRunAsync(LogWriter logger)
         {
             logger.MinimumLogLevel = MinimumLogLevel;
             TestRunner runner = GetTestRunner(logger);

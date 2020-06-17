@@ -65,8 +65,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         public async ValueTask DisposeAsync()
         {
             string[] devices = _tunnels.Keys.ToArray();
-            foreach (string d in devices) {
-                if (_tunnels.TryRemove(d, out TcpTunnel tunnel)) {
+            foreach (string d in devices)
+            {
+                if (_tunnels.TryRemove(d, out TcpTunnel tunnel))
+                {
                     // blocking, but we are disposing
                     await tunnel.DisposeAsync(); // alls close already
                 }

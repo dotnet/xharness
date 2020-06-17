@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
     internal class FilterBuilder
     {
         private readonly ITestFilterBuilder _testFilterBuilder;
-        private  readonly bool _runAssemblyByDefault;
+        private readonly bool _runAssemblyByDefault;
 
         public List<string> IgnoredCategories { get; } = new List<string>();
         public List<string> IgnoredClasses { get; } = new List<string>();
@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 
         public FilterBuilder(ITestFilterBuilder testFilterBuilder, bool runAssemblyByDefault = true)
         {
-            _testFilterBuilder = testFilterBuilder ?? throw new ArgumentNullException(nameof (testFilterBuilder));
+            _testFilterBuilder = testFilterBuilder ?? throw new ArgumentNullException(nameof(testFilterBuilder));
             _runAssemblyByDefault = runAssemblyByDefault;
         }
 
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             foreach (string category in filters.Keys)
             {
                 List<string>? filtersInCategory = filters[category];
-                foreach (string? filterReason  in filtersInCategory)
+                foreach (string? filterReason in filtersInCategory)
                 {
                     string? eq = _runAssemblyByDefault ? "==" : "!=";
                     comparisons.Add($"{category} {eq} {filterReason}");

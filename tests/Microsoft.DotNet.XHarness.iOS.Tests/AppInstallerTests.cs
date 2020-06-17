@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 appName: "AppName",
                 bundleIdentifier: s_appIdentifier,
                 appPath: s_appPath,
-                launchAppPath:s_appPath,
+                launchAppPath: s_appPath,
                 supports32b: true,
                 extension: null);
 

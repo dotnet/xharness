@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
         {
             if (testAssemblies == null)
             {
-                throw new ArgumentNullException(nameof (testAssemblies));
+                throw new ArgumentNullException(nameof(testAssemblies));
             }
 
             if (AssemblyFilters == null || AssemblyFilters.Count == 0)

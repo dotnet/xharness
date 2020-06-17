@@ -19,12 +19,12 @@ namespace Microsoft.DotNet.XHarness.iOS.TestImporter
         {
             if (string.IsNullOrEmpty(ignoredFilesRootPath))
                 // use the current directory as the source of the ignore files
-                _ignoredFilesRootPath = Directory.GetCurrentDirectory ();
-            else 
+                _ignoredFilesRootPath = Directory.GetCurrentDirectory();
+            else
                 _ignoredFilesRootPath = ignoredFilesRootPath;
             if (string.IsNullOrEmpty(traitFilesRootPath))
                 // same as with the ignore files, do use the current dir
-                _traitFilesRootPath = Directory.GetCurrentDirectory ();
+                _traitFilesRootPath = Directory.GetCurrentDirectory();
             else
                 _traitFilesRootPath = traitFilesRootPath;
             // validate that the dirs do exist
@@ -51,7 +51,8 @@ namespace Microsoft.DotNet.XHarness.iOS.TestImporter
             // platform the user calling the tool should have place the correct
             // trait files. If he added wrong trait files, is for the user to
             // blame
-            foreach (string? file in new[] { "nunit-excludes.txt", "xunit-excludes.txt" }) {
+            foreach (string? file in new[] { "nunit-excludes.txt", "xunit-excludes.txt" })
+            {
                 string? traitFile = Path.Combine(_traitFilesRootPath, file);
                 if (File.Exists(traitFile))
                     yield return traitFile;

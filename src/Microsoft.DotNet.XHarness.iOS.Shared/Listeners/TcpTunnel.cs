@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 });
                 // do not await since we are going to be running the process in parallel
                 _tcpTunnelExecutionTask = _processManager.ExecuteCommandAsync(tcpArgs, tunnelbackLog, timeout, cancellationToken: _cancellationToken.Token);
-                _tcpTunnelExecutionTask.ContinueWith(delegate(Task<ProcessExecutionResult> task)
+                _tcpTunnelExecutionTask.ContinueWith(delegate (Task<ProcessExecutionResult> task)
                 {
                     // if the task completes, means that we had issues with the creation of the tunnel and the process
                     // exited, if that is the case, we do not want to make the app wait, therefore, set the hole to false

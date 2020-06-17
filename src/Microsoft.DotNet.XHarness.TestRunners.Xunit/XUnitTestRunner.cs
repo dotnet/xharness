@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,10 +15,9 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Xsl;
 using Microsoft.DotNet.XHarness.Common;
+using Microsoft.DotNet.XHarness.TestRunners.Common;
 using Xunit;
 using Xunit.Abstractions;
-using Microsoft.DotNet.XHarness.TestRunners.Common;
-using System.Runtime.CompilerServices;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 {
@@ -1027,7 +1027,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 if (traitInfo.Length == 2)
                 {
                     _filters.Add(XUnitFilter.CreateTraitFilter(traitInfo[0], traitInfo[1], true));
-                } else {
+                }
+                else
+                {
                     _filters.Add(XUnitFilter.CreateTraitFilter(c, null, true));
                 }
             }

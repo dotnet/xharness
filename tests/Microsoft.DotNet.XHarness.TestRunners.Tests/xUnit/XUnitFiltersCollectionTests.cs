@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     var filter2 = XUnitFilter.CreateSingleFilter(
                         singleTestName: testDisplayName,
                         exclude: true);
-                    collection = new XUnitFiltersCollection { filter, filter2};
+                    collection = new XUnitFiltersCollection { filter, filter2 };
                     testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.DisplayName).Returns(testDisplayName);
 
@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     filter2 = XUnitFilter.CreateSingleFilter(
                         singleTestName: testDisplayName,
                         exclude: false);
-                    collection = new XUnitFiltersCollection { filter, filter2};
+                    collection = new XUnitFiltersCollection { filter, filter2 };
                     testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.DisplayName).Returns(testDisplayName);
 
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     filter2 = XUnitFilter.CreateSingleFilter(
                         singleTestName: testDisplayName,
                         exclude: false);
-                    collection = new XUnitFiltersCollection { filter, filter2};
+                    collection = new XUnitFiltersCollection { filter, filter2 };
                     testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.DisplayName).Returns(testDisplayName);
 
@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     string? assemblyPath = currentAssembly.Location;
                     var assemblyInfo = new TestAssemblyInfo(currentAssembly, assemblyPath);
                     var filter = XUnitFilter.CreateAssemblyFilter(assemblyName: assemblyName!, exclude: true);
-                    var collection = new XUnitFiltersCollection {filter};
+                    var collection = new XUnitFiltersCollection { filter };
 
                     yield return new object[]
                     {
@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
 
                     // single filter, include
                     filter = XUnitFilter.CreateAssemblyFilter(assemblyName: assemblyName!, exclude: false);
-                    collection = new XUnitFiltersCollection {filter};
+                    collection = new XUnitFiltersCollection { filter };
 
                     yield return new object[]
                     {
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     // two excluding filters
                     filter = XUnitFilter.CreateAssemblyFilter(assemblyName: assemblyName!, exclude: true);
                     var filter2 = XUnitFilter.CreateAssemblyFilter(assemblyName: assemblyName!, exclude: true);
-                    collection = new XUnitFiltersCollection {filter, filter2};
+                    collection = new XUnitFiltersCollection { filter, filter2 };
 
                     yield return new object[]
                     {
@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     // two including filters
                     filter = XUnitFilter.CreateAssemblyFilter(assemblyName: assemblyName!, exclude: false);
                     filter2 = XUnitFilter.CreateAssemblyFilter(assemblyName: assemblyName!, exclude: false);
-                    collection = new XUnitFiltersCollection {filter, filter2};
+                    collection = new XUnitFiltersCollection { filter, filter2 };
 
                     yield return new object[]
                     {
@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     // one filter includes, other excludes
                     filter = XUnitFilter.CreateAssemblyFilter(assemblyName: assemblyName!, exclude: true);
                     filter2 = XUnitFilter.CreateAssemblyFilter(assemblyName: assemblyName!, exclude: false);
-                    collection = new XUnitFiltersCollection {filter, filter2};
+                    collection = new XUnitFiltersCollection { filter, filter2 };
 
                     yield return new object[]
                     {
@@ -180,7 +180,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
             }
 
             [Theory]
-            [MemberData(nameof (TestCaseFilters), MemberType = typeof (FiltersTestData))]
+            [MemberData(nameof(TestCaseFilters), MemberType = typeof(FiltersTestData))]
             internal void IsExcludedTestCase(XUnitFiltersCollection collection, ITestCase testCase, bool excluded)
             {
                 bool wasExcluded = collection.IsExcluded(testCase);
@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
             }
 
             [Theory]
-            [MemberData(nameof (AssemblyFilters), MemberType = typeof (FiltersTestData))]
+            [MemberData(nameof(AssemblyFilters), MemberType = typeof(FiltersTestData))]
             internal void IsExcludedAsAssembly(XUnitFiltersCollection collection, TestAssemblyInfo assemblyInfo, bool excluded)
             {
                 bool wasExcluded = collection.IsExcluded(assemblyInfo);
@@ -201,16 +201,16 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         {
             var collection = new XUnitFiltersCollection();
 
-            string[]? assemblies = new [] {"MyFirstAssembly.dll", "SecondAssembly.dll", "ThirdAssembly.exe",};
+            string[]? assemblies = new[] { "MyFirstAssembly.dll", "SecondAssembly.dll", "ThirdAssembly.exe", };
             collection.AddRange(assemblies.Select(a => XUnitFilter.CreateAssemblyFilter(a, true)));
 
-            string[]? classes = new[] {"FirstClass", "SecondClass", "ThirdClass"};
+            string[]? classes = new[] { "FirstClass", "SecondClass", "ThirdClass" };
             collection.AddRange(classes.Select(c => XUnitFilter.CreateClassFilter(c, true)));
 
-            string[]? methods = new[] {"FirstMethod", "SecondMethod"};
+            string[]? methods = new[] { "FirstMethod", "SecondMethod" };
             collection.AddRange(methods.Select(m => XUnitFilter.CreateSingleFilter(m, true)));
 
-            string[]? namespaces = new[] {"Namespace"};
+            string[]? namespaces = new[] { "Namespace" };
             collection.AddRange(namespaces.Select(n => XUnitFilter.CreateNamespaceFilter(n, true)));
 
             Assert.Equal(assemblies.Length, collection.AssemblyFilters.Count());
@@ -220,16 +220,16 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         public void TestCaseFilters()
         {
             var collection = new XUnitFiltersCollection();
-            string[]? assemblies = new [] {"MyFirstAssembly.dll", "SecondAssembly.dll", "ThirdAssembly.exe",};
+            string[]? assemblies = new[] { "MyFirstAssembly.dll", "SecondAssembly.dll", "ThirdAssembly.exe", };
             collection.AddRange(assemblies.Select(a => XUnitFilter.CreateAssemblyFilter(a, true)));
 
-            string[]? classes = new[] {"FirstClass", "SecondClass", "ThirdClass"};
+            string[]? classes = new[] { "FirstClass", "SecondClass", "ThirdClass" };
             collection.AddRange(classes.Select(c => XUnitFilter.CreateClassFilter(c, true)));
 
-            string[]? methods = new[] {"FirstMethod", "SecondMethod"};
+            string[]? methods = new[] { "FirstMethod", "SecondMethod" };
             collection.AddRange(methods.Select(m => XUnitFilter.CreateSingleFilter(m, true)));
 
-            string[]? namespaces = new[] {"Namespace"};
+            string[]? namespaces = new[] { "Namespace" };
             collection.AddRange(namespaces.Select(n => XUnitFilter.CreateNamespaceFilter(n, true)));
 
             Assert.Equal(collection.Count - assemblies.Length, collection.TestCaseFilters.Count());

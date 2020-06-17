@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             TimeSpan timeout,
             string? additionalLogsDirectory = null,
             ExceptionLogger? exceptionLogger = null,
-			bool generateHtml = false);
+            bool generateHtml = false);
     }
 
     public class TestReporterFactory : ITestReporterFactory

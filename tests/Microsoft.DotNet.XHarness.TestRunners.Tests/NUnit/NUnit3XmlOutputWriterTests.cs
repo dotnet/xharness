@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
             testRun.Setup(t => t.Result).Returns(GetTestRunSample());
             // set the expectations of the mock, the important thing, we want to return a single test-run node
             _resultSummary.Setup(rs => rs.GetEnumerator())
-                .Returns(new List<ITestRun> {testRun.Object}.GetEnumerator());
+                .Returns(new List<ITestRun> { testRun.Object }.GetEnumerator());
 
             using (var writer = new StreamWriter(_tempPath))
             {
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
             var secondTestRun = new Mock<ITestRun>();
             secondTestRun.Setup(t => t.Result).Returns(GetTestRunSample());
             _resultSummary.Setup(rs => rs.GetEnumerator())
-                .Returns(new List<ITestRun> {firstTestRun.Object, secondTestRun.Object}.GetEnumerator());
+                .Returns(new List<ITestRun> { firstTestRun.Object, secondTestRun.Object }.GetEnumerator());
 
             using (var writer = new StreamWriter(_tempPath))
             {

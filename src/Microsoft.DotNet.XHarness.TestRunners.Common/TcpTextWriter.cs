@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
             _client = new TcpClient(HostName, port);
             _writer = new StreamWriter(_client.GetStream());
-       }
+        }
 
         public string HostName { get; private set; }
 

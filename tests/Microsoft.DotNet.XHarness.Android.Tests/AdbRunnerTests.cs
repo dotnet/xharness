@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
             result = runner.RunApkInstrumentation(fakeApkName, instrumentationName, fakeArgs, TimeSpan.FromSeconds(123));
             Assert.Equal(0, result.ExitCode);
 
-            result = runner.RunApkInstrumentation(fakeApkName, instrumentationName, new Dictionary<string,string>(), TimeSpan.FromSeconds(456));
+            result = runner.RunApkInstrumentation(fakeApkName, instrumentationName, new Dictionary<string, string>(), TimeSpan.FromSeconds(456));
             Assert.Equal(0, result.ExitCode);
 
             if (string.IsNullOrEmpty(instrumentationName))
@@ -229,7 +229,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
                     stdOut = s.ToString();
                     break;
                 case "shell":
-                    if ($"{allArgs[argStart + 1]} {allArgs[argStart + 2]}" .Equals("getprop ro.product.cpu.abi"))
+                    if ($"{allArgs[argStart + 1]} {allArgs[argStart + 2]}".Equals("getprop ro.product.cpu.abi"))
                     {
                         stdOut = _fakeDeviceList.Keys.Where(k => k.Item1 == s_currentDeviceSerial).Single().Item2;
                     }

@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         protected override bool IsXunit => true;
 
         protected override TestRunner GetTestRunner(LogWriter logWriter) =>
-            new XUnitTestRunner(logWriter) {MaxParallelThreads = MaxParallelThreads};
+            new XUnitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
 
         public override async Task RunAsync()
         {

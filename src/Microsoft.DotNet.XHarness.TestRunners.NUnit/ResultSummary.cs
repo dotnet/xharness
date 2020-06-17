@@ -85,10 +85,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             }
         }
 
-        public ResultSummary(string testSuite, TestRunner testRunner) : base ()
+        public ResultSummary(string testSuite, TestRunner testRunner) : base()
         {
-            Name = testSuite ?? throw  new ArgumentNullException(nameof(testSuite));
-            _runner = testRunner ?? throw new ArgumentNullException(nameof (testRunner));
+            Name = testSuite ?? throw new ArgumentNullException(nameof(testSuite));
+            _runner = testRunner ?? throw new ArgumentNullException(nameof(testRunner));
         }
 
     }

@@ -36,9 +36,9 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             => await ExecuteCommandAsync(
                 filename: filename,
                 args: args,
-                log:log,
-                stdout:log,
-                stderr:log,
+                log: log,
+                stdout: log,
+                stderr: log,
                 timeout: timeout,
                 environmentVariables: environmentVariables,
                 cancellationToken: cancellationToken);
@@ -67,9 +67,9 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             bool? diagnostics = null)
             => RunAsync(
                 process: process,
-                log:log,
-                stdout:log,
-                stderr:log,
+                log: log,
+                stdout: log,
+                stderr: log,
                 timeout: timeout,
                 environmentVariables: environmentVariables,
                 cancellationToken: cancellationToken,
@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 log: log,
                 stdout: stdout,
                 stderr: stderr,
-                kill:(pid, sig) => Kill(pid, sig), // lambdas are more efficient that method invoke
+                kill: (pid, sig) => Kill(pid, sig), // lambdas are more efficient that method invoke
                 getChildrenPS: (l, p) => GetChildrenPS(l, p), // same
                 timeout: timeout,
                 environmentVariables: environmentVariables,
@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             => KillTreeAsyncInternal(
                 pid: pid,
                 kill: (p, s) => Kill(p, s),
-                getChildrenPS: (l, i) => GetChildrenPS (l, i),
+                getChildrenPS: (l, i) => GetChildrenPS(l, i),
                 log: log,
                 diagnostics: diagnostics);
 
@@ -127,8 +127,8 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                     await RunAsyncInternal(
                         process: ps,
                         log: log,
-                        stdout:log,
-                        stderr:log,
+                        stdout: log,
+                        stderr: log,
                         kill: kill,
                         getChildrenPS: getChildrenPS,
                         timeout: TimeSpan.FromSeconds(5),
@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                                 process: dbg,
                                 log: log,
                                 stdout: log,
-                                stderr:log,
+                                stderr: log,
                                 kill: kill,
                                 getChildrenPS: getChildrenPS,
                                 timeout: TimeSpan.FromSeconds(30),
@@ -266,7 +266,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 IEnumerable<string>? allKeys = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
                 foreach (string? key in allKeys)
                 {
-                    if(key == null) continue;
+                    if (key == null) continue;
 
                     string? a = null, b = null;
                     currentEnvironment?.TryGetValue(key!, out a);

@@ -3,10 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
 {

@@ -184,7 +184,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 appPath: s_appPath,
                 launchAppPath: s_appPath,
                 supports32b: false,
-                extension:null);
+                extension: null);
 
             await Assert.ThrowsAsync<NoDeviceFoundException>(
                 async () => await appRunner.RunApp(
@@ -356,10 +356,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             var appInformation = new AppBundleInformation(
                 appName: AppName,
                 bundleIdentifier: AppBundleIdentifier,
-                appPath:s_appPath,
-                launchAppPath:s_appPath,
+                appPath: s_appPath,
+                launchAppPath: s_appPath,
                 supports32b: false,
-                extension:null);
+                extension: null);
 
             await Assert.ThrowsAsync<NoDeviceFoundException>(
                 async () => await appRunner.RunApp(
@@ -398,7 +398,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Returns(deviceSystemLog.Object);
 
             // set tunnel bore expectation
-            if (useTunnel) {
+            if (useTunnel)
+            {
                 _tunnelBore.Setup(t => t.Create("Test iPhone", It.IsAny<ILog>()));
             }
 
@@ -422,7 +423,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 appName: AppName,
                 bundleIdentifier: AppBundleIdentifier,
                 appPath: s_appPath,
-                launchAppPath:s_appPath,
+                launchAppPath: s_appPath,
                 supports32b: false,
                 extension: null);
 
@@ -482,7 +483,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             // verify that we do close the tunnel when it was used
             // we dont want to leak a process
-            if (useTunnel) {
+            if (useTunnel)
+            {
                 _tunnelBore.Verify(t => t.Close("Test iPhone"));
             }
 
@@ -540,15 +542,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 appName: AppName,
                 bundleIdentifier: AppBundleIdentifier,
                 appPath: s_appPath,
-                launchAppPath:s_appPath,
+                launchAppPath: s_appPath,
                 supports32b: false,
                 extension: null);
 
             (string deviceName, TestExecutingResult result, string resultMessage) = await appRunner.RunApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
-                timeout:TimeSpan.FromSeconds(30),
-                testLaunchTimeout:TimeSpan.FromSeconds(30),
+                timeout: TimeSpan.FromSeconds(30),
+                testLaunchTimeout: TimeSpan.FromSeconds(30),
                 skippedMethods: skippedTests);
 
             // Verify
@@ -653,15 +655,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 appName: AppName,
                 bundleIdentifier: AppBundleIdentifier,
                 appPath: s_appPath,
-                launchAppPath:s_appPath,
+                launchAppPath: s_appPath,
                 supports32b: false,
                 extension: null);
 
             (string deviceName, TestExecutingResult result, string resultMessage) = await appRunner.RunApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
-                timeout:TimeSpan.FromSeconds(30),
-                testLaunchTimeout:TimeSpan.FromSeconds(30),
+                timeout: TimeSpan.FromSeconds(30),
+                testLaunchTimeout: TimeSpan.FromSeconds(30),
                 skippedTestClasses: skippedClasses);
 
             // Verify

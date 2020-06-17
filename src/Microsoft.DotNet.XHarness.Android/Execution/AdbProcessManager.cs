@@ -79,16 +79,16 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
             // Lock the stringbuilders used as rarely this can cause concurrency issues
             // resulting in "Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'chunkLength')"
             lock (standardOut)
-            lock (standardErr)
-            {
-                return new ProcessExecutionResults()
+                lock (standardErr)
                 {
-                    ExitCode = p.ExitCode,
-                    StandardOutput = standardOut.ToString(),
-                    StandardError = standardErr.ToString(),
-                    TimedOut = timedOut
-                };
-            }
+                    return new ProcessExecutionResults()
+                    {
+                        ExitCode = p.ExitCode,
+                        StandardOutput = standardOut.ToString(),
+                        StandardError = standardErr.ToString(),
+                        TimedOut = timedOut
+                    };
+                }
         }
     }
 }

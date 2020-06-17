@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
             if (!testCase.HasTraits())
             {
-                return log (!Exclude);
+                return log(!Exclude);
             }
 
             if (testCase.TryGetTrait(SelectorName!, out List<string>? values))
@@ -113,19 +113,19 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                     // the trait name only.
                     if (string.IsNullOrEmpty(SelectorValue))
                     {
-                        return log (Exclude);
+                        return log(Exclude);
                     }
                 }
 
-                return values.Any (value => value.Equals(SelectorValue, StringComparison.InvariantCultureIgnoreCase)) ?
-                    log (Exclude) : log (!Exclude);
+                return values.Any(value => value.Equals(SelectorValue, StringComparison.InvariantCultureIgnoreCase)) ?
+                    log(Exclude) : log(!Exclude);
             }
 
             // no traits found, that means that we return the opposite of the setting of the filter
-            return log (!Exclude);
+            return log(!Exclude);
         }
 
-        private bool ApplyTypeNameFilter(ITestCase testCase, Func<bool,bool>? reportFilteredTest = null)
+        private bool ApplyTypeNameFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
         {
             Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
             string? testClassName = testCase.GetTestClass();
@@ -137,7 +137,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 }
             }
 
-            return log (!Exclude);
+            return log(!Exclude);
         }
 
         private bool ApplySingleFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
@@ -146,10 +146,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             if (string.Equals(testCase.DisplayName, SelectorValue, StringComparison.InvariantCulture))
             {
                 // if there is a match, return the exclude value
-                return log (Exclude);
+                return log(Exclude);
             }
             // if there is not match, return the opposite
-            return log (!Exclude);
+            return log(!Exclude);
         }
 
         private bool ApplyNamespaceFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
@@ -159,16 +159,16 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             if (string.IsNullOrEmpty(testClassNamespace))
             {
                 // if we exclude, since we have no namespace, we include the test
-                return log (!Exclude);
+                return log(!Exclude);
             }
 
             if (string.Equals(testClassNamespace, SelectorValue, StringComparison.InvariantCultureIgnoreCase))
             {
-                return log (Exclude);
+                return log(Exclude);
             }
 
             // same logic as with no namespace
-            return log (!Exclude);
+            return log(!Exclude);
         }
 
         public bool IsExcluded(TestAssemblyInfo assembly, Action<string>? reportFilteredAssembly = null)
@@ -186,11 +186,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             string fileName = Path.GetFileName(assembly.FullPath);
             if (string.Equals(fileName, AssemblyName, StringComparison.Ordinal))
             {
-                return log (Exclude);
+                return log(Exclude);
             }
 
             // No path of the name matched the filter, therefore return the opposite of the Exclude value
-            return log (!Exclude);
+            return log(!Exclude);
         }
 
         public bool IsExcluded(ITestCase testCase, Action<string>? log = null)
@@ -219,7 +219,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             string? selector = FilterType == XUnitFilterType.Trait ?
                 $"'{SelectorName}':'{SelectorValue}'" : $"'{SelectorValue}'";
 
-            log($"[FILTER] {(excluded? excludedText : includedText)} test (filtered by {FilterType}; {selector}): {testCase.DisplayName}");
+            log($"[FILTER] {(excluded ? excludedText : includedText)} test (filtered by {FilterType}; {selector}): {testCase.DisplayName}");
             return excluded;
         }
 
@@ -231,7 +231,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             const string includedPrefix = "Included";
             const string excludedPrefix = "Excluded";
 
-            log($"[FILTER] {(excluded? excludedPrefix : includedPrefix)} assembly: {assemblyInfo.FullPath}");
+            log($"[FILTER] {(excluded ? excludedPrefix : includedPrefix)} assembly: {assemblyInfo.FullPath}");
             return excluded;
         }
 

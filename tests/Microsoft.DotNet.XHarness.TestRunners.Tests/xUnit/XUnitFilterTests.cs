@@ -29,8 +29,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     // no traits, should not be excluded
                     var filter = XUnitFilter.CreateTraitFilter(
                         traitName: traitName,
-                        traitValue:null,
-                        exclude:true);
+                        traitValue: null,
+                        exclude: true);
                     var testCase = new Mock<ITestCase>();
                     var method = new Mock<ITestMethod>();
                     testCase.Setup(t => t.Traits).Returns(new Dictionary<string, List<string>>());
@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     filter = XUnitFilter.CreateTraitFilter(
                         traitName: traitName,
                         traitValue: null,
-                        exclude:false);
+                        exclude: false);
                     testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.Traits).Returns(new Dictionary<string, List<string>>());
                     testCase.Setup(t => t.TestMethod).Returns(method.Object);
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     filter = XUnitFilter.CreateTraitFilter(
                         traitName: traitName,
                         traitValue: null,
-                        exclude:false);
+                        exclude: false);
                     testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.Traits).Returns(new Dictionary<string, List<string>>
                     {
@@ -106,7 +106,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.Traits).Returns(new Dictionary<string, List<string>>
                     {
-                        [traitName] = new List<string> {traitValue},
+                        [traitName] = new List<string> { traitValue },
                     });
                     testCase.Setup(t => t.TestMethod).Returns(method.Object);
                     method.Setup(m => m.Method).Returns((IMethodInfo)null!);
@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.Traits).Returns(new Dictionary<string, List<string>>
                     {
-                        [traitName] = new List<string>{traitValue},
+                        [traitName] = new List<string> { traitValue },
                     });
                     testCase.Setup(t => t.TestMethod).Returns(method.Object);
                     method.Setup(m => m.Method).Returns((IMethodInfo)null!);
@@ -141,11 +141,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     filter = XUnitFilter.CreateTraitFilter(
                         traitName: traitName,
                         traitValue: traitValue,
-                        exclude:true);
+                        exclude: true);
                     testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.Traits).Returns(new Dictionary<string, List<string>>
                     {
-                        [traitName] = new List<string>{new string('$', 4)},
+                        [traitName] = new List<string> { new string('$', 4) },
                     });
                     testCase.Setup(t => t.TestMethod).Returns(method.Object);
                     method.Setup(m => m.Method).Returns((IMethodInfo)null!);
@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.Traits).Returns(new Dictionary<string, List<string>>
                     {
-                        [traitName] = new List<string>{new string('$', 4)},
+                        [traitName] = new List<string> { new string('$', 4) },
                     });
                     testCase.Setup(t => t.TestMethod).Returns(method.Object);
                     method.Setup(m => m.Method).Returns((IMethodInfo)null!);
@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                         "",
                     };
                     // not null test name no match, excluded
-                    filter = XUnitFilter.CreateClassFilter(className: testClass, exclude:true);
+                    filter = XUnitFilter.CreateClassFilter(className: testClass, exclude: true);
                     testMethod = new Mock<ITestMethod>();
                     testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.TestMethod).Returns(testMethod.Object);
@@ -213,7 +213,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     };
 
                     // not null name match, exclude
-                    filter = XUnitFilter.CreateClassFilter(className: testClass, exclude:true);
+                    filter = XUnitFilter.CreateClassFilter(className: testClass, exclude: true);
                     testMethod = new Mock<ITestMethod>();
                     testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.TestMethod).Returns(testMethod.Object);
@@ -228,7 +228,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                     };
 
                     // not null name match, include
-                    filter = XUnitFilter.CreateClassFilter(className: testClass, exclude:false);
+                    filter = XUnitFilter.CreateClassFilter(className: testClass, exclude: false);
                     testMethod = new Mock<ITestMethod>();
                     testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.TestMethod).Returns(testMethod.Object);
@@ -460,10 +460,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
             }
 
             [Theory]
-            [MemberData(nameof (TraitFilters), MemberType = typeof (FiltersTestData))]
-            [MemberData(nameof (TypeNameFilters), MemberType = typeof (FiltersTestData))]
-            [MemberData(nameof (SingleFilters), MemberType = typeof (FiltersTestData))]
-            [MemberData(nameof (NamespaceFilters), MemberType = typeof (FiltersTestData))]
+            [MemberData(nameof(TraitFilters), MemberType = typeof(FiltersTestData))]
+            [MemberData(nameof(TypeNameFilters), MemberType = typeof(FiltersTestData))]
+            [MemberData(nameof(SingleFilters), MemberType = typeof(FiltersTestData))]
+            [MemberData(nameof(NamespaceFilters), MemberType = typeof(FiltersTestData))]
             internal void ApplyFilters(XUnitFilter filter, ITestCase testCase, bool excluded, string logMessage)
             {
                 var logOutut = new StringBuilder();
@@ -478,7 +478,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
             }
 
             [Theory]
-            [MemberData(nameof (AssemblyFilters), MemberType = typeof (FiltersTestData))]
+            [MemberData(nameof(AssemblyFilters), MemberType = typeof(FiltersTestData))]
             internal void ApplyAssemblyFilter(XUnitFilter filter, TestAssemblyInfo info, bool excluded, string logMessage)
             {
                 var logOutut = new StringBuilder();

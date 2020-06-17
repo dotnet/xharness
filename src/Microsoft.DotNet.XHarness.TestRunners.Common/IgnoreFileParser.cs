@@ -2,11 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.IO;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Reflection;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             return ignoredTests;
         }
 
-        public static async Task<IEnumerable<string>> ParseTraitsFileAsync (string filePath)
+        public static async Task<IEnumerable<string>> ParseTraitsFileAsync(string filePath)
         {
             var ignoredTraits = new List<string>();
             using var reader = new StreamReader(filePath);
@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public static Task<IEnumerable<string>> ParseTraitsContentFileAsync(string contentDir, bool isXUnit)
         {
             string ignoreFile = Path.Combine(contentDir, isXUnit ? "xunit-excludes.txt" : "nunit-excludes.txt");
-            return ParseTraitsFileAsync( ignoreFile);
+            return ParseTraitsFileAsync(ignoreFile);
         }
 
         public static IEnumerable<string> ParseTraitsContentFile(string contentDir, bool isXUnit)

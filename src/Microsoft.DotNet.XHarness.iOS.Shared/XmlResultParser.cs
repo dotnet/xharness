@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         string? testCaseName = reader["fullname"];
                         writer.WriteLine(testCaseName);
                         string? time = reader.GetAttribute("time") ?? "0"; // some nodes might not have the time :/
-                                                                       // get the first node and then move in the siblings of the same type
+                                                                           // get the first node and then move in the siblings of the same type
                         reader.ReadToDescendant("test-case");
                         do
                         {
@@ -200,7 +200,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         string? testCaseName = reader["name"];
                         writer.WriteLine(testCaseName);
                         string? time = reader.GetAttribute("time") ?? "0"; // some nodes might not have the time :/
-                                                                       // get the first node and then move in the siblings of the same type
+                                                                           // get the first node and then move in the siblings of the same type
                         reader.ReadToDescendant("test-case");
                         do
                         {
@@ -273,7 +273,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         string? testCaseName = reader["name"].Replace("Test collection for ", "");
                         writer.WriteLine(testCaseName);
                         string? time = reader.GetAttribute("time") ?? "0"; // some nodes might not have the time :/
-                                                                       // get the first node and then move in the siblings of the same type
+                                                                           // get the first node and then move in the siblings of the same type
                         reader.ReadToDescendant("test");
                         do
                         {
