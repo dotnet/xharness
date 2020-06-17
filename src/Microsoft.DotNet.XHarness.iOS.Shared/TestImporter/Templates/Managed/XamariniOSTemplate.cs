@@ -655,8 +655,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                         await file.WriteAsync(registerCode);
                     }
 
-                    failure = failure ?? info.FailureMessage;
-                    failure = failure ?? typesPerAssembly.FailureMessage;
+                    failure ??= info.FailureMessage;
+                    failure ??= typesPerAssembly.FailureMessage;
                 }
                 catch (Exception e)
                 {
@@ -764,8 +764,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                     { // false is do not append
                         await file.WriteAsync(generatedProject);
                     }
-                    failure = failure ?? info.FailureMessage;
-                    failure = failure ?? typesPerAssembly.FailureMessage;
+                    failure ??= info.FailureMessage;
+                    failure ??= typesPerAssembly.FailureMessage;
                 }
                 catch (Exception e)
                 {

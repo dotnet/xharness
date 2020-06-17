@@ -684,7 +684,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             foreach (XmlNode def in otherDefines)
             {
                 if (!def.InnerText.Contains("$(DefineConstants"))
-                    def.InnerText = def.InnerText + ";$(DefineConstants)";
+                    def.InnerText += ";$(DefineConstants)";
             }
         }
 
