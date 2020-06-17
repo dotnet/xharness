@@ -186,7 +186,7 @@ stages:
 - ${{ if eq(variables._RunAsPublic, True) }}:
 
   - stage: Test_CLI_Package_In_Helix_Android
-    displayName: Run CLI Integration Helix scenarios - Android
+    displayName: 'CLI Android Integration tests (Helix SDK)'
     dependsOn: Build_OSX
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
@@ -227,7 +227,7 @@ stages:
               HelixAccessToken: ''
 
   - stage: Test_CLI_Package_In_Helix_iOS
-    displayName: Run CLI Integration Helix scenarios - iOS
+    displayName: 'CLI iOS Integration tests (Helix SDK)'
     dependsOn: Build_OSX
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
@@ -268,7 +268,7 @@ stages:
               HelixAccessToken: ''
 
   - stage: Test_SimulatorInstaller
-    displayName: Run SimulatorInstaller Integration Tests
+    displayName: SimulatorInstaller Integration Tests
     dependsOn: Build_OSX
     jobs:
     - job: integration_tests
