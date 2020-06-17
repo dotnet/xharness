@@ -8,21 +8,30 @@ using System.Text;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
-    // A log that writes to standard output
+    /// <summary>
+    /// A log that writes to standard output
+    /// </summary>
     public class ConsoleLog : ReadableLog
     {
-        readonly StringBuilder captured = new StringBuilder();
+        readonly StringBuilder _captured = new StringBuilder();
 
         protected override void WriteImpl(string value)
         {
-            captured.Append(value);
+            lock (_captured)
+            {
+                _captured.Append(value);
+            }
+
             Console.Write(value);
         }
 
         public override StreamReader GetReader()
         {
-            var str = new MemoryStream(Encoding.GetBytes(captured.ToString()));
-            return new StreamReader(str, Encoding, false);
+            lock (_captured)
+            {
+                var str = new MemoryStream(Encoding.GetBytes(_captured.ToString()));
+                return new StreamReader(str, Encoding, false);
+            }
         }
 
         public override void Flush()
