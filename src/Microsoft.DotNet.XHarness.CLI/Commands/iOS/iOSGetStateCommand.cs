@@ -17,6 +17,7 @@ using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.Extensions.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS;
+using Microsoft.DotNet.XHarness.Common.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
@@ -149,7 +150,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             try
             {
-                result = await processManager.ExecuteCommandAsync(new MlaunchArguments(new MlaunchVersionArgument()), new MemoryLog(), mlaunchLog, new MemoryLog(), TimeSpan.FromSeconds(10));
+                result = await processManager.ExecuteCommandAsync(new MlaunchArguments(new MlaunchVersionArgument()), new NullLog(), mlaunchLog, new NullLog(), TimeSpan.FromSeconds(10));
             }
             catch (Exception e)
             {

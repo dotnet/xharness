@@ -121,14 +121,14 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 log.WriteLine($"Pids to kill: {string.Join(", ", pids.Select((v) => v.ToString()).ToArray())}");
                 using (var ps = new Process())
                 {
-                    log.WriteLine("Writing process list:");
+                    log.WriteLine("Getting process list..");
                     ps.StartInfo.FileName = "ps";
                     ps.StartInfo.Arguments = "-A -o pid,ruser,ppid,pgid,%cpu=%CPU,%mem=%MEM,flags=FLAGS,lstart,rss,vsz,tty,state,time,command";
                     await RunAsyncInternal(
                         process: ps,
                         log: log,
-                        stdout:log,
-                        stderr:log,
+                        stdout: new NullLog(),
+                        stderr: new NullLog(),
                         kill: kill,
                         getChildrenPS: getChildrenPS,
                         timeout: TimeSpan.FromSeconds(5),
