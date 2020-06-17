@@ -6,6 +6,9 @@ using System.Text;
 
 namespace Microsoft.DotNet.XHarness.Common.Logging
 {
+    /// <summary>
+    /// Log that discards everything
+    /// </summary>
     public class NullLog : ILog
     {
         public string? Description { get; set; } = "NullLog";
