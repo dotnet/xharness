@@ -13,7 +13,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
 {
     public class TestStatusExtensionsTests
     {
-
         public class TestStatusExtensionsTestData
         {
             public static IEnumerable<object[]> ToXmlResultValueTests
@@ -45,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
 
             [Theory]
             [MemberData(nameof (ToXmlResultValueTests), MemberType = typeof (TestStatusExtensionsTestData))]
-            private void IsExcludedAsAssembly(TestStatus status, XmlResultJargon jargon, string expectedResult)
+            public void IsExcludedAsAssembly(TestStatus status, XmlResultJargon jargon, string expectedResult)
                 => Assert.Equal(status.ToXmlResultValue(jargon), expectedResult);
         }
     }

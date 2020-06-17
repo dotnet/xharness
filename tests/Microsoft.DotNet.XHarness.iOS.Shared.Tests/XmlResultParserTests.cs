@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         {
             string path = Path.GetTempFileName();
             File.Delete(path);
-            Assert.False(_resultParser.IsValidXml(path, out XmlResultJargon jargon), "missing file");
+            Assert.False(_resultParser.IsValidXml(path, out _), "missing file");
         }
 
         [Theory]

@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter
         /// Returns the assemblies that a referenced by the given test assembly.
         /// </summary>
         /// <returns></returns>
-        private (string FailureMessage, IEnumerable<string> References) GetProjectAssemblyReferences(string rootPath, Platform platform)
+        private (string FailureMessage, IEnumerable<string> References) GetProjectAssemblyReferences(Platform platform)
         {
             var set = new HashSet<string>();
             string failureMessage = null;
@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter
         /// <returns>The list of tuples (assembly name, path hint) for all the assemblies in the project.</returns>
         public (string FailureMessage, List<(string assembly, string hintPath)> Assemblies) GetAssemblyInclusionInformation(Platform platform)
         {
-            (string FailureMessage, IEnumerable<string> References) references = GetProjectAssemblyReferences(AssemblyLocator.GetAssembliesRootLocation(platform), platform);
+            (string FailureMessage, IEnumerable<string> References) references = GetProjectAssemblyReferences(platform);
             if (!string.IsNullOrEmpty(references.FailureMessage))
                 return (references.FailureMessage, null);
             var asm = references.References.Select(

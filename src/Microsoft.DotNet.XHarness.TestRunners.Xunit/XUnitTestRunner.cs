@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
     {
         // NUnit3 xml does not have schema, there is no much info about it, most examples just have incremental IDs.
         private int _seed = 1000;
-        public int GenerateHash(string name) => _seed++;
+        public int GenerateHash() => _seed++;
     }
 
     internal class XUnitTestRunner : TestRunner
@@ -629,7 +629,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
         private Action<string> EnsureLogger(Action<string> log) => log ?? OnInfo;
 
-        private void LogTestMethodDetails(IMethodInfo method, Action<string> log = null, StringBuilder sb = null) => log = EnsureLogger(log);//log ($"   Test method name: {method.Type.Name}.{method.Name}");
+        private void LogTestMethodDetails(IMethodInfo method, Action<string> log = null, StringBuilder sb = null)
+        {
+            // log = EnsureLogger(log);
+            // log ($"   Test method name: {method.Type.Name}.{method.Name}");
+        }
 
         private void LogTestOutput(ITestFinished test, Action<string> log = null, StringBuilder sb = null) => LogTestOutput(test.ExecutionTime, test.Output, log, sb);
 

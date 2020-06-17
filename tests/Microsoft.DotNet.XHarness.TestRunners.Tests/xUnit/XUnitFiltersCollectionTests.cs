@@ -181,7 +181,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
 
             [Theory]
             [MemberData(nameof (TestCaseFilters), MemberType = typeof (FiltersTestData))]
-            private void IsExcludedTestCase(XUnitFiltersCollection collection, ITestCase testCase, bool excluded)
+            internal void IsExcludedTestCase(XUnitFiltersCollection collection, ITestCase testCase, bool excluded)
             {
                 bool wasExcluded = collection.IsExcluded(testCase);
                 Assert.Equal(excluded, wasExcluded);
@@ -189,7 +189,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
 
             [Theory]
             [MemberData(nameof (AssemblyFilters), MemberType = typeof (FiltersTestData))]
-            private void IsExcludedAsAssembly(XUnitFiltersCollection collection, TestAssemblyInfo assemblyInfo, bool excluded)
+            internal void IsExcludedAsAssembly(XUnitFiltersCollection collection, TestAssemblyInfo assemblyInfo, bool excluded)
             {
                 bool wasExcluded = collection.IsExcluded(assemblyInfo);
                 Assert.Equal(excluded, wasExcluded);
@@ -197,7 +197,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         }
 
         [Fact]
-        private void AssemblyFilters()
+        public void AssemblyFilters()
         {
             var collection = new XUnitFiltersCollection();
 
@@ -217,7 +217,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         }
 
         [Fact]
-        private void TestCaseFilters()
+        public void TestCaseFilters()
         {
             var collection = new XUnitFiltersCollection();
             string[]? assemblies = new [] {"MyFirstAssembly.dll", "SecondAssembly.dll", "ThirdAssembly.exe",};

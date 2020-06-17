@@ -151,12 +151,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             }
         }
 
-        private void AssertExecutionState(TestExecutionState state)
-        {
-            if (state == null)
-                throw new ArgumentNullException(nameof(state));
-        }
-
         protected virtual string GetResultsFilePath()
         {
             if (string.IsNullOrEmpty(ResultsFileName))

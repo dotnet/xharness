@@ -464,7 +464,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
             [MemberData(nameof (TypeNameFilters), MemberType = typeof (FiltersTestData))]
             [MemberData(nameof (SingleFilters), MemberType = typeof (FiltersTestData))]
             [MemberData(nameof (NamespaceFilters), MemberType = typeof (FiltersTestData))]
-            private void ApplyFilters(XUnitFilter filter, ITestCase testCase, bool excluded, string logMessage)
+            internal void ApplyFilters(XUnitFilter filter, ITestCase testCase, bool excluded, string logMessage)
             {
                 var logOutut = new StringBuilder();
                 Action<string>? log = (s) =>
@@ -479,7 +479,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
 
             [Theory]
             [MemberData(nameof (AssemblyFilters), MemberType = typeof (FiltersTestData))]
-            private void ApplyAssemblyFilter(XUnitFilter filter, TestAssemblyInfo info, bool excluded, string logMessage)
+            internal void ApplyAssemblyFilter(XUnitFilter filter, TestAssemblyInfo info, bool excluded, string logMessage)
             {
                 var logOutut = new StringBuilder();
                 Action<string>? log = (s) =>
@@ -494,7 +494,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         }
 
         [Fact]
-        private void CreateSingleFilterNullTestName()
+        public void CreateSingleFilterNullTestName()
         {
             Assert.Throws<ArgumentException>(() => XUnitFilter.CreateSingleFilter(null!, true));
             Assert.Throws<ArgumentException>(() => XUnitFilter.CreateSingleFilter("", true));
@@ -504,7 +504,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         [InlineData("TestMethod", "TestAssembly", true)]
         [InlineData("TestMethod", "TestAssembly", false)]
         [InlineData("TestMethod", null, false)]
-        private void CreateSingleFilter(string methodName, string assemblyName, bool excluded)
+        public void CreateSingleFilter(string methodName, string assemblyName, bool excluded)
         {
             var filter = XUnitFilter.CreateSingleFilter(methodName, excluded, assemblyName);
             Assert.Equal(methodName, filter.SelectorValue);
@@ -514,7 +514,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         }
 
         [Fact]
-        private void CreateAssemblyFilterNullAssemblyName()
+        public void CreateAssemblyFilterNullAssemblyName()
         {
             Assert.Throws<ArgumentException>(() => XUnitFilter.CreateAssemblyFilter(null!, true));
             Assert.Throws<ArgumentException>(() => XUnitFilter.CreateAssemblyFilter("", true));
@@ -524,7 +524,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         [InlineData("MyTestAssembly.exe", true)]
         [InlineData("MySecondAssembly.dll", true)]
         [InlineData("MyTestAssembly.dll", false)]
-        private void CreateAssemblyFilter(string assemblyName, bool excluded)
+        public void CreateAssemblyFilter(string assemblyName, bool excluded)
         {
             var filter = XUnitFilter.CreateAssemblyFilter(assemblyName, excluded);
             Assert.Null(filter.SelectorName);
@@ -534,10 +534,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         }
 
         [Fact]
-        private void CreateAssemblyFilterMissingExtension() => Assert.Throws<ArgumentException>(() => XUnitFilter.CreateAssemblyFilter("MissinExtension", true));
+        public void CreateAssemblyFilterMissingExtension() => Assert.Throws<ArgumentException>(() => XUnitFilter.CreateAssemblyFilter("MissinExtension", true));
 
         [Fact]
-        private void CreateNamespaceFilterNullNameSpace()
+        public void CreateNamespaceFilterNullNameSpace()
         {
             Assert.Throws<ArgumentException>(() => XUnitFilter.CreateNamespaceFilter(null!, true));
             Assert.Throws<ArgumentException>(() => XUnitFilter.CreateNamespaceFilter("", true));
@@ -547,7 +547,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         [InlineData("MyNameSpace", "MyAssembly", true)]
         [InlineData("MyNameSpace", "MyAssembly", false)]
         [InlineData("MyNameSpace", null, false)]
-        private void CreateNamespaceFilter(string nameSpace, string assemblyName, bool excluded)
+        public void CreateNamespaceFilter(string nameSpace, string assemblyName, bool excluded)
         {
             var filter = XUnitFilter.CreateNamespaceFilter(nameSpace, excluded, assemblyName);
             Assert.Equal(nameSpace, filter.SelectorValue);
@@ -557,7 +557,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         }
 
         [Fact]
-        private void CreateClassFilterNullClassName()
+        public void CreateClassFilterNullClassName()
         {
             Assert.Throws<ArgumentException>(() => XUnitFilter.CreateClassFilter(null!, true));
             Assert.Throws<ArgumentException>(() => XUnitFilter.CreateClassFilter("", true));
@@ -567,7 +567,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         [InlineData("MyClass", "MyAssembly", true)]
         [InlineData("MyClass", "MyAssembly", false)]
         [InlineData("MyClass", null, false)]
-        private void CreateClassFilter(string className, string assemblyName, bool excluded)
+        public void CreateClassFilter(string className, string assemblyName, bool excluded)
         {
             var filter = XUnitFilter.CreateClassFilter(className, excluded, assemblyName);
             Assert.Equal(className, filter.SelectorValue);
@@ -577,7 +577,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         }
 
         [Fact]
-        private void CreateTraitFilterNullTrait()
+        public void CreateTraitFilterNullTrait()
         {
             Assert.Throws<ArgumentException>(() => XUnitFilter.CreateTraitFilter(null!, "value", true));
             Assert.Throws<ArgumentException>(() => XUnitFilter.CreateTraitFilter("", "value", true));
@@ -587,7 +587,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         [InlineData("MyTrait", "MyTraitValue", true)]
         [InlineData("MyTrait", "MyTraitValue", false)]
         [InlineData("MyTrait", null, false)]
-        private void CreateTraitFilter(string trait, string traitValue, bool excluded)
+        public void CreateTraitFilter(string trait, string traitValue, bool excluded)
         {
             var filter = XUnitFilter.CreateTraitFilter(trait, traitValue, excluded);
             Assert.Equal(trait, filter.SelectorName);
@@ -609,7 +609,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
         [InlineData(XUnitFilterType.Single)]
         [InlineData(XUnitFilterType.Trait)]
         [InlineData(XUnitFilterType.TypeName)]
-        private void ApplyWrongTypeToAssembly(XUnitFilterType type)
+        internal void ApplyWrongTypeToAssembly(XUnitFilterType type)
         {
             // build and assembly for the given type
             XUnitFilter? filter = null;

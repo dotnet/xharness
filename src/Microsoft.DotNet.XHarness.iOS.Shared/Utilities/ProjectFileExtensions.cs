@@ -240,7 +240,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void SetAssemblyReference(this XmlDocument csproj, string current, string value)
         {
-            XmlNode project = csproj.ChildNodes[1];
             XmlNode reference = csproj.SelectSingleNode("/*/*/*[local-name() = 'Reference' and @Include = '" + current + "']");
             if (reference != null)
                 reference.Attributes["Include"].Value = value;

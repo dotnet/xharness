@@ -53,7 +53,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
                 List<string>? filtersInCategory = filters[category];
                 foreach (string? filterReason  in filtersInCategory)
                 {
-                    string currentComparison = $"{category} ";
                     string? eq = _runAssemblyByDefault ? "==" : "!=";
                     comparisons.Add($"{category} {eq} {filterReason}");
                 }

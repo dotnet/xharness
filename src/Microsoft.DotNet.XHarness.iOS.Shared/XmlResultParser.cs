@@ -434,7 +434,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "test-suite" && (reader["type"] == "TestFixture" || reader["type"] == "ParameterizedFixture"))
                 {
-                    string? testCaseName = reader["fullname"];
                     reader.ReadToDescendant("test-case");
                     do
                     {
