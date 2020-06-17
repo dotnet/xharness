@@ -174,10 +174,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         {
             long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
             total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
-            XmlReaderSettings settings = new XmlReaderSettings
+            var settings = new XmlReaderSettings
             {
                 ValidationType = ValidationType.None
             };
+
             using (var reader = XmlReader.Create(stream, settings))
             {
                 while (reader.Read())
@@ -421,7 +422,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         private static void GenerateNUnitV3TestReport(StreamWriter writer, XmlReader reader)
         {
-            List<(string name, string message)> failedTests = new List<(string name, string message)>();
+            var failedTests = new List<(string name, string message)>();
             while (reader.Read())
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "test-run")
@@ -776,7 +777,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         private static void GenerateFailureXml(string destination, string title, string message, StreamReader stderrReader, XmlResultJargon jargon)
         {
-            XmlWriterSettings settings = new XmlWriterSettings { Indent = true };
+            var settings = new XmlWriterSettings { Indent = true };
             using (var stream = File.CreateText(destination))
             using (var xmlWriter = XmlWriter.Create(stream, settings))
             {

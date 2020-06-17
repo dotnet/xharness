@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         [Fact]
         public void ListDevicesAndArchitectures()
         {
-            AdbRunner runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+            var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
             var result = runner.GetAttachedDevicesAndArchitectures();
             _processManager.Verify(pm => pm.Run(s_adbPath, "devices -l", TimeSpan.FromSeconds(30)), Times.Once);
 
@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
             var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
 
             ProcessExecutionResults result;
-            Dictionary<string, string> fakeArgs = new Dictionary<string, string>()
+            var fakeArgs = new Dictionary<string, string>()
             {
                 { "arg1", "value1" },
                 { "arg2", "value2" }
@@ -183,7 +183,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         private Dictionary<Tuple<string, string>, int> InitializeFakeDeviceList()
         {
             var r = new Random();
-            Dictionary<Tuple<string, string>, int> values = new Dictionary<Tuple<string, string>, int>();
+            var values = new Dictionary<Tuple<string, string>, int>();
             values.Add(new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86_64"), 0);
             values.Add(new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86"), 0);
             values.Add(new Tuple<string, string>($"somedevice-{r.Next(9999)}", "arm64v8"), 0);
@@ -219,7 +219,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
                     exitCode = 0;
                     break;
                 case "devices":
-                    StringBuilder s = new StringBuilder();
+                    var s = new StringBuilder();
                     int transportId = 1;
                     s.AppendLine("List of devices attached");
                     foreach (var device in _fakeDeviceList)

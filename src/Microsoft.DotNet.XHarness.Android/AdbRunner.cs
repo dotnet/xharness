@@ -242,7 +242,7 @@ namespace Microsoft.DotNet.XHarness.Android
                 Directory.CreateDirectory(tempFolder);
                 Directory.CreateDirectory(localPath);
                 _log.LogInformation($"Attempting to pull contents of {devicePath} to {localPath}");
-                List<string> copiedFiles = new List<string>();
+                var copiedFiles = new List<string>();
 
                 var result = RunAdbCommand($"pull {devicePath} {tempFolder}");
 
@@ -308,7 +308,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
                 if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
                 {
-                    Exception theException = new Exception($"ERROR: {result}");
+                    var theException = new Exception($"ERROR: {result}");
                     _log.LogError(theException, "Failure pushing files");
                     throw theException;
                 }
@@ -318,7 +318,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public Dictionary<string, string?> GetAttachedDevicesAndArchitectures()
         {
-            Dictionary<string, string?> devicesAndArchitectures = new Dictionary<string, string?>();
+            var devicesAndArchitectures = new Dictionary<string, string?>();
 
             var result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
             string[] standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
@@ -408,7 +408,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             _log.LogDebug($"Raw command: '{command}'");
 
-            Stopwatch stopWatch = new Stopwatch();
+            var stopWatch = new Stopwatch();
             stopWatch.Start();
             var result = RunAdbCommand(command, timeout);
             stopWatch.Stop();

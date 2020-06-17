@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
             // Try and find an unused port
             int attemptsLeft = 50;
-            Random r = new Random((int)DateTime.Now.Ticks);
+            var r = new Random((int)DateTime.Now.Ticks);
             while (attemptsLeft-- > 0)
             {
                 var newPort = r.Next(49152, 65535); // The suggested range for dynamic ports is 49152-65535 (IANA)

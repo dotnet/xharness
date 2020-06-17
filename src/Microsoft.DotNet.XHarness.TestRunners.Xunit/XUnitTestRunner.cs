@@ -883,7 +883,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 }
                 // add the extension so that we can get the hash from the name of the test
                 // Create an XsltArgumentList.
-                XsltArgumentList xslArg = new XsltArgumentList();
+                var xslArg = new XsltArgumentList();
 
                 var generator = new XsltIdGenerator();
                 xslArg.AddExtensionObject("urn:hash-generator", generator);

@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
 
         public override string ToString()
         {
-            StringBuilder output = new StringBuilder();
+            var output = new StringBuilder();
             output.AppendLine($"Exit code: {ExitCode}");
             output.AppendLine($"Standard Output:{Environment.NewLine}{StandardOutput}");
             if (!string.IsNullOrEmpty(StandardError))

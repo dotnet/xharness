@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         {
             var list = new List<int>();
 
-            using (Process ps = new Process())
+            using (var ps = new Process())
             {
                 ps.StartInfo.FileName = "ps";
                 ps.StartInfo.Arguments = "-eo ppid,pid";
