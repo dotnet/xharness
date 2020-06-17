@@ -22,9 +22,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         public LogWriter(IDevice device, TextWriter writer)
         {
-            this._writer = writer ?? Console.Out;
-            this._device = device;
-            if (this._device != null) // we just write the header if we do have the device info
+            _writer = writer ?? Console.Out;
+            _device = device;
+            if (_device != null) // we just write the header if we do have the device info
                 InitLogging();
         }
 

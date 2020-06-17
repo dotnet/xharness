@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         public TCCDatabase(IMLaunchProcessManager processManager)
         {
-            this._processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
         public int GetTCCFormat(string simRuntime)

@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         public HardwareDeviceLoader(IMLaunchProcessManager processManager)
         {
-            this._processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
         public async Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false)

@@ -185,10 +185,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
         public SetAppArgumentArgument(string value, bool isAppArg = false)
         {
-            this._value = value ?? throw new ArgumentNullException(nameof(value));
+            _value = value ?? throw new ArgumentNullException(nameof(value));
 
             if (isAppArg)
-                this._value = "-app-arg:" + this._value;
+                _value = "-app-arg:" + _value;
         }
 
         public override string AsCommandLineArgument() => "-argument=" + _value;
@@ -204,11 +204,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
         public SetEnvVariableArgument(string variableName, object variableValue)
         {
-            this._variableName = variableName ?? throw new ArgumentNullException(nameof(variableName));
-            this._variableValue = variableValue?.ToString() ?? throw new ArgumentNullException(nameof(variableValue));
+            _variableName = variableName ?? throw new ArgumentNullException(nameof(variableName));
+            _variableValue = variableValue?.ToString() ?? throw new ArgumentNullException(nameof(variableValue));
 
             if (variableValue is bool)
-                this._variableValue = this._variableValue.ToLower();
+                _variableValue = _variableValue.ToLower();
         }
 
         public override string AsCommandLineArgument() => Escape($"-setenv={_variableName}={_variableValue}");
@@ -263,7 +263,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
         public SimulatorUDIDArgument(string udid)
         {
-            this._udid = udid ?? throw new ArgumentNullException(nameof(udid));
+            _udid = udid ?? throw new ArgumentNullException(nameof(udid));
         }
 
         public override string AsCommandLineArgument() => $"--device=:v2:udid={_udid}";
@@ -279,8 +279,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
         public LaunchSimulatorExtensionArgument(string launchAppPath, string bundleId)
         {
-            this._launchAppPath = launchAppPath ?? throw new ArgumentNullException(nameof(launchAppPath));
-            this._bundleId = bundleId ?? throw new ArgumentNullException(nameof(bundleId));
+            _launchAppPath = launchAppPath ?? throw new ArgumentNullException(nameof(launchAppPath));
+            _bundleId = bundleId ?? throw new ArgumentNullException(nameof(bundleId));
         }
 
         public override string AsCommandLineArgument() => "--launchsimbundleid " +
@@ -298,8 +298,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
         public LaunchDeviceExtensionArgument(string launchAppPath, string bundleId)
         {
-            this._launchAppPath = launchAppPath ?? throw new ArgumentNullException(nameof(launchAppPath));
-            this._bundleId = bundleId ?? throw new ArgumentNullException(nameof(bundleId));
+            _launchAppPath = launchAppPath ?? throw new ArgumentNullException(nameof(launchAppPath));
+            _bundleId = bundleId ?? throw new ArgumentNullException(nameof(bundleId));
         }
 
         public override string AsCommandLineArgument() => "--launchdevbundleid " +
@@ -330,7 +330,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
         {
             if (port <= 0)
                 throw new ArgumentOutOfRangeException(nameof(port));
-            this._port = port;
+            _port = port;
         }
 
         public override string AsCommandLineArgument() => $"--tcp-tunnel={_port}:{_port}";

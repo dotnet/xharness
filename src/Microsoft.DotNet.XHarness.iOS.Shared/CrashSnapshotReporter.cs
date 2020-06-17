@@ -39,12 +39,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             string deviceName,
             Func<string> tempFileProvider = null)
         {
-            this._processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
-            this._log = log ?? throw new ArgumentNullException(nameof(log));
-            this._logs = logs ?? throw new ArgumentNullException(nameof(logs));
-            this._isDevice = isDevice;
-            this._deviceName = deviceName;
-            this._tempFileProvider = tempFileProvider ?? Path.GetTempFileName;
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _log = log ?? throw new ArgumentNullException(nameof(log));
+            _logs = logs ?? throw new ArgumentNullException(nameof(logs));
+            _isDevice = isDevice;
+            _deviceName = deviceName;
+            _tempFileProvider = tempFileProvider ?? Path.GetTempFileName;
 
             _symbolicateCrashPath = Path.Combine(processManager.XcodeRoot, "Contents", "SharedFrameworks", "DTDeviceKitBase.framework", "Versions", "A", "Resources", "symbolicatecrash");
             if (!File.Exists(_symbolicateCrashPath))

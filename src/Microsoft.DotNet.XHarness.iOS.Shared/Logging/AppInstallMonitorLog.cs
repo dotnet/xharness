@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public AppInstallMonitorLog(IFileBackedLog copy_to)
                 : base($"Watch transfer log for {copy_to.Description}")
         {
-            this._copyTo = copy_to;
+            _copyTo = copy_to;
             _cancellationSource = new CancellationTokenSource();
             _cancellationSource.Token.Register(() =>
             {

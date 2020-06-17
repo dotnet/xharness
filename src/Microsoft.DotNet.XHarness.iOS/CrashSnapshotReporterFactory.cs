@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
         public CrashSnapshotReporterFactory(IMLaunchProcessManager processManager)
         {
-            this._processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
         public ICrashSnapshotReporter Create(ILog log, ILogs logs, bool isDevice, string deviceName) =>

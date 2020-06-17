@@ -27,10 +27,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         public DeviceLogCapturer(IMLaunchProcessManager processManager, ILog mainLog, ILog deviceLog, string deviceName)
         {
-            this._processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
-            this._mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
-            this._deviceLog = deviceLog ?? throw new ArgumentNullException(nameof(deviceLog));
-            this._deviceName = deviceName ?? throw new ArgumentNullException(nameof(deviceName));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
+            _deviceLog = deviceLog ?? throw new ArgumentNullException(nameof(deviceLog));
+            _deviceName = deviceName ?? throw new ArgumentNullException(nameof(deviceName));
         }
 
         private Process _process;

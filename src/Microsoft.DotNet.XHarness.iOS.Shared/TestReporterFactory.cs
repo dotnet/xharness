@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         public TestReporterFactory(IMLaunchProcessManager processManager)
         {
-            this._processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
         public ITestReporter Create(IFileBackedLog mainLog,

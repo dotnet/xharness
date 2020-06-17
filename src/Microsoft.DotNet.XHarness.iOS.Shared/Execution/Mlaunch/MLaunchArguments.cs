@@ -33,9 +33,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
         protected SingleValueArgument(string argumentName, string argumentValue, bool useEqualSign = true)
         {
-            this._argumentName = argumentName ?? throw new ArgumentNullException(nameof(argumentName));
-            this._argumentValue = argumentValue ?? throw new ArgumentNullException(nameof(argumentValue));
-            this._useEqualSign = useEqualSign;
+            _argumentName = argumentName ?? throw new ArgumentNullException(nameof(argumentName));
+            _argumentValue = argumentValue ?? throw new ArgumentNullException(nameof(argumentValue));
+            _useEqualSign = useEqualSign;
         }
 
         public override string AsCommandLineArgument()
@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
         protected OptionArgument(string argumentName)
         {
-            this._argumentName = argumentName ?? throw new ArgumentNullException(nameof(argumentName));
+            _argumentName = argumentName ?? throw new ArgumentNullException(nameof(argumentName));
         }
 
         public override string AsCommandLineArgument() => $"--{_argumentName}";

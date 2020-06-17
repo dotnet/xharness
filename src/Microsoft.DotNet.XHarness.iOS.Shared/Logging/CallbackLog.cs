@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public CallbackLog(Action<string> onWrite)
             : base("Callback log")
         {
-            this._onWrite = onWrite;
+            _onWrite = onWrite;
         }
 
         public override void Dispose()

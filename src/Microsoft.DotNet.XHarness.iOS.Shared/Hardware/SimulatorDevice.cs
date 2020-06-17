@@ -29,8 +29,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         public SimulatorDevice(IMLaunchProcessManager processManager, ITCCDatabase tccDatabase)
         {
-            this._processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
-            this._tCCDatabase = tccDatabase ?? throw new ArgumentNullException(nameof(tccDatabase));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _tCCDatabase = tccDatabase ?? throw new ArgumentNullException(nameof(tccDatabase));
         }
 
         public bool IsWatchSimulator => SimRuntime.StartsWith("com.apple.CoreSimulator.SimRuntime.watchOS", StringComparison.Ordinal);

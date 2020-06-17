@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         {
             FullPath = path ?? throw new ArgumentNullException(nameof(path));
             CapturePath = capture_path ?? throw new ArgumentNullException(nameof(path));
-            this._entireFile = entireFile;
+            _entireFile = entireFile;
         }
 
         public void StartCapture()
