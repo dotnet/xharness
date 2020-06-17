@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 process.StartInfo.FileName = "bash";
                 process.StartInfo.Arguments = "-c \"" + _arguments.DotnetPath + " --info | grep \\\"Base Path\\\" | cut -d':' -f 2 | tr -d '[:space:]'\"";
 
-                ProcessExecutionResult? result = await processManager.RunAsync(process, new MemoryLog(), dotnetLog, new MemoryLog(), TimeSpan.FromSeconds(5));
+                ProcessExecutionResult? result = await processManager.RunAsync(process, new NullLog(), dotnetLog, new NullLog(), TimeSpan.FromSeconds(5));
 
                 if (result.Succeeded)
                 {
@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 Timestamp = false
             };
 
-            Common.Logging.IFileBackedLog? aggregatedLog = Log.CreateReadableAggregatedLog(runLog, consoleLog);
+            IFileBackedLog? aggregatedLog = Log.CreateReadableAggregatedLog(runLog, consoleLog);
             aggregatedLog.WriteLine("Generating scaffold app with:");
             aggregatedLog.WriteLine($"\tAppname: '{_arguments.AppPackageName}'");
             aggregatedLog.WriteLine($"\tAssemblies: '{string.Join(" ", _arguments.Assemblies)}'");

@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             try
             {
-                result = await processManager.ExecuteCommandAsync(new MlaunchArguments(new MlaunchVersionArgument()), new MemoryLog(), mlaunchLog, new MemoryLog(), TimeSpan.FromSeconds(10));
+                result = await processManager.ExecuteCommandAsync(new MlaunchArguments(new MlaunchVersionArgument()), new NullLog(), mlaunchLog, new NullLog(), TimeSpan.FromSeconds(10));
             }
             catch (Exception e)
             {
