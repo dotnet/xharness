@@ -163,14 +163,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             return Path.Combine(resultsPath, ResultsFileName);
         }
 
-        protected virtual void OnTestStarted(string testName)
-        {
-            TestStarted?.Invoke(this, testName);
-        }
+        protected virtual void OnTestStarted(string testName) => TestStarted?.Invoke(this, testName);
 
-        protected virtual void OnTestCompleted((string TestName, TestResult TestResult) result)
-        {
-            TestCompleted?.Invoke(this, result);
-        }
+        protected virtual void OnTestCompleted((string TestName, TestResult TestResult) result) => TestCompleted?.Invoke(this, result);
     }
 }

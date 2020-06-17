@@ -129,15 +129,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// </summary>
         public MinimumLogLevel MinimumLogLevel { get; set; } = MinimumLogLevel.Info;
 
-        private void OnTestStarted(object sender, string testName)
-        {
-            TestStarted?.Invoke(sender, testName);
-        }
+        private void OnTestStarted(object sender, string testName) => TestStarted?.Invoke(sender, testName);
 
-        private void OnTestCompleted(object sender, (string TestName, TestResult Testresult) result)
-        {
-            TestCompleted?.Invoke(sender, result);
-        }
+        private void OnTestCompleted(object sender, (string TestName, TestResult Testresult) result) => TestCompleted?.Invoke(sender, result);
 
         private async Task<List<string>> GetIgnoredCategories()
         {
