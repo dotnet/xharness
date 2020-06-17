@@ -25,10 +25,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void SetOutputType(this XmlDocument csproj, string value) => csproj.SelectSingleNode("/*/*/*[local-name() = 'OutputType']").InnerText = value;
 
-        private static readonly string[] eqsplitter = new string[] { "==" };
-        private static readonly string[] orsplitter = new string[] { " Or " };
-        private static readonly char[] pipesplitter = new char[] { '|' };
-        private static readonly char[] trimchars = new char[] { '\'', ' ' };
+        private static readonly string[] s_eqsplitter = new string[] { "==" };
+        private static readonly string[] s_orsplitter = new string[] { " Or " };
+        private static readonly char[] s_pipesplitter = new char[] { '|' };
+        private static readonly char[] s_trimchars = new char[] { '\'', ' ' };
 
         private static void ParseConditions(this XmlNode node, out string platform, out string configuration)
         {
@@ -46,11 +46,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                     if (conditionAttribute != null)
                     {
                         var condition = conditionAttribute.Value;
-                        var eqsplit = condition.Split(eqsplitter, StringSplitOptions.None);
+                        var eqsplit = condition.Split(s_eqsplitter, StringSplitOptions.None);
                         if (eqsplit.Length == 2)
                         {
-                            var left = eqsplit[0].Trim(trimchars).Split(pipesplitter);
-                            var right = eqsplit[1].Trim(trimchars).Split(pipesplitter);
+                            var left = eqsplit[0].Trim(s_trimchars).Split(s_pipesplitter);
+                            var right = eqsplit[1].Trim(s_trimchars).Split(s_pipesplitter);
                             if (left.Length == right.Length)
                             {
                                 for (int i = 0; i < left.Length; i++)
@@ -127,18 +127,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             if (platform != null)
                 conditionValue = conditionValue.Replace("$(Platform)", platform);
 
-            var orsplits = conditionValue.Split(orsplitter, StringSplitOptions.None);
+            var orsplits = conditionValue.Split(s_orsplitter, StringSplitOptions.None);
             foreach (var orsplit in orsplits)
             {
-                var eqsplit = orsplit.Split(eqsplitter, StringSplitOptions.None);
+                var eqsplit = orsplit.Split(s_eqsplitter, StringSplitOptions.None);
                 if (eqsplit.Length != 2)
                 {
                     Console.WriteLine("Could not parse condition; {0}", conditionValue);
                     return false;
                 }
 
-                var left = eqsplit[0].Trim(trimchars);
-                var right = eqsplit[1].Trim(trimchars);
+                var left = eqsplit[0].Trim(s_trimchars);
+                var right = eqsplit[1].Trim(s_trimchars);
                 if (left == right)
                     return true;
             }

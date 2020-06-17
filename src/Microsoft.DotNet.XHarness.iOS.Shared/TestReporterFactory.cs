@@ -34,11 +34,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
     public class TestReporterFactory : ITestReporterFactory
     {
-        private readonly IMLaunchProcessManager processManager;
+        private readonly IMLaunchProcessManager _processManager;
 
         public TestReporterFactory(IMLaunchProcessManager processManager)
         {
-            this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            this._processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
         public ITestReporter Create(IFileBackedLog mainLog,
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             TimeSpan timeout,
             string? additionalLogsDirectory = null,
             ExceptionLogger? exceptionLogger = null,
-            bool generateHtml = false) => new TestReporter(processManager,
+            bool generateHtml = false) => new TestReporter(_processManager,
                 mainLog,
                 runLog,
                 logs,

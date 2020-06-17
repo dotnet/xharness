@@ -13,13 +13,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     /// </summary>
     public class MemoryLog : ReadableLog
     {
-        private readonly StringBuilder captured = new StringBuilder();
+        private readonly StringBuilder _captured = new StringBuilder();
 
-        protected override void WriteImpl(string value) => captured.Append(value);
+        protected override void WriteImpl(string value) => _captured.Append(value);
 
         public override StreamReader GetReader()
         {
-            var str = new MemoryStream(Encoding.GetBytes(captured.ToString()));
+            var str = new MemoryStream(Encoding.GetBytes(_captured.ToString()));
             return new StreamReader(str, Encoding, false);
         }
 
@@ -31,6 +31,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         {
         }
 
-        public override string ToString() => captured.ToString();
+        public override string ToString() => _captured.ToString();
     }
 }

@@ -23,95 +23,95 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
     internal class XsltIdGenerator
     {
         // NUnit3 xml does not have schema, there is no much info about it, most examples just have incremental IDs.
-        private int seed = 1000;
-        public int GenerateHash(string name) => seed++;
+        private int _seed = 1000;
+        public int GenerateHash(string name) => _seed++;
     }
 
     internal class XUnitTestRunner : TestRunner
     {
-        private readonly TestMessageSink messageSink;
+        private readonly TestMessageSink _messageSink;
 
         public int? MaxParallelThreads { get; set; }
 
-        private XElement assembliesElement;
-        private XUnitFiltersCollection filters = new XUnitFiltersCollection();
+        private XElement _assembliesElement;
+        private XUnitFiltersCollection _filters = new XUnitFiltersCollection();
 
         public AppDomainSupport AppDomainSupport { get; set; } = AppDomainSupport.Denied;
         protected override string ResultsFileName { get; set; } = "TestResults.xUnit.xml";
 
         public override bool RunAllTestsByDefault
         {
-            get => filters.RunAllTestsByDefault;
-            set => filters.RunAllTestsByDefault = value;
+            get => _filters.RunAllTestsByDefault;
+            set => _filters.RunAllTestsByDefault = value;
         }
 
         public XUnitTestRunner(LogWriter logger) : base(logger)
         {
-            messageSink = new TestMessageSink();
+            _messageSink = new TestMessageSink();
 
-            messageSink.Diagnostics.DiagnosticMessageEvent += HandleDiagnosticMessage;
-            messageSink.Diagnostics.ErrorMessageEvent += HandleDiagnosticErrorMessage;
+            _messageSink.Diagnostics.DiagnosticMessageEvent += HandleDiagnosticMessage;
+            _messageSink.Diagnostics.ErrorMessageEvent += HandleDiagnosticErrorMessage;
 
-            messageSink.Discovery.DiscoveryCompleteMessageEvent += HandleDiscoveryCompleteMessage;
-            messageSink.Discovery.TestCaseDiscoveryMessageEvent += HandleDiscoveryTestCaseMessage;
+            _messageSink.Discovery.DiscoveryCompleteMessageEvent += HandleDiscoveryCompleteMessage;
+            _messageSink.Discovery.TestCaseDiscoveryMessageEvent += HandleDiscoveryTestCaseMessage;
 
-            messageSink.Runner.TestAssemblyDiscoveryFinishedEvent += HandleTestAssemblyDiscoveryFinished;
-            messageSink.Runner.TestAssemblyDiscoveryStartingEvent += HandleTestAssemblyDiscoveryStarting;
-            messageSink.Runner.TestAssemblyExecutionFinishedEvent += HandleTestAssemblyExecutionFinished;
-            messageSink.Runner.TestAssemblyExecutionStartingEvent += HandleTestAssemblyExecutionStarting;
-            messageSink.Runner.TestExecutionSummaryEvent += HandleTestExecutionSummary;
+            _messageSink.Runner.TestAssemblyDiscoveryFinishedEvent += HandleTestAssemblyDiscoveryFinished;
+            _messageSink.Runner.TestAssemblyDiscoveryStartingEvent += HandleTestAssemblyDiscoveryStarting;
+            _messageSink.Runner.TestAssemblyExecutionFinishedEvent += HandleTestAssemblyExecutionFinished;
+            _messageSink.Runner.TestAssemblyExecutionStartingEvent += HandleTestAssemblyExecutionStarting;
+            _messageSink.Runner.TestExecutionSummaryEvent += HandleTestExecutionSummary;
 
-            messageSink.Execution.AfterTestFinishedEvent += (MessageHandlerArgs<IAfterTestFinished> args) => HandleEvent("AfterTestFinishedEvent", args, HandleAfterTestFinished);
-            messageSink.Execution.AfterTestStartingEvent += (MessageHandlerArgs<IAfterTestStarting> args) => HandleEvent("AfterTestStartingEvent", args, HandleAfterTestStarting);
-            messageSink.Execution.BeforeTestFinishedEvent += (MessageHandlerArgs<IBeforeTestFinished> args) => HandleEvent("BeforeTestFinishedEvent", args, HandleBeforeTestFinished);
-            messageSink.Execution.BeforeTestStartingEvent += (MessageHandlerArgs<IBeforeTestStarting> args) => HandleEvent("BeforeTestStartingEvent", args, HandleBeforeTestStarting);
-            messageSink.Execution.TestAssemblyCleanupFailureEvent += (MessageHandlerArgs<ITestAssemblyCleanupFailure> args) => HandleEvent("TestAssemblyCleanupFailureEvent", args, HandleTestAssemblyCleanupFailure);
-            messageSink.Execution.TestAssemblyFinishedEvent += (MessageHandlerArgs<ITestAssemblyFinished> args) => HandleEvent("TestAssemblyFinishedEvent", args, HandleTestAssemblyFinished);
-            messageSink.Execution.TestAssemblyStartingEvent += (MessageHandlerArgs<ITestAssemblyStarting> args) => HandleEvent("TestAssemblyStartingEvent", args, HandleTestAssemblyStarting);
-            messageSink.Execution.TestCaseCleanupFailureEvent += (MessageHandlerArgs<ITestCaseCleanupFailure> args) => HandleEvent("TestCaseCleanupFailureEvent", args, HandleTestCaseCleanupFailure);
-            messageSink.Execution.TestCaseFinishedEvent += (MessageHandlerArgs<ITestCaseFinished> args) => HandleEvent("TestCaseFinishedEvent", args, HandleTestCaseFinished);
-            messageSink.Execution.TestCaseStartingEvent += (MessageHandlerArgs<ITestCaseStarting> args) => HandleEvent("TestStartingEvent", args, HandleTestCaseStarting);
-            messageSink.Execution.TestClassCleanupFailureEvent += (MessageHandlerArgs<ITestClassCleanupFailure> args) => HandleEvent("TestClassCleanupFailureEvent", args, HandleTestClassCleanupFailure);
-            messageSink.Execution.TestClassConstructionFinishedEvent += (MessageHandlerArgs<ITestClassConstructionFinished> args) => HandleEvent("TestClassConstructionFinishedEvent", args, HandleTestClassConstructionFinished);
-            messageSink.Execution.TestClassConstructionStartingEvent += (MessageHandlerArgs<ITestClassConstructionStarting> args) => HandleEvent("TestClassConstructionStartingEvent", args, HandleTestClassConstructionStarting);
-            messageSink.Execution.TestClassDisposeFinishedEvent += (MessageHandlerArgs<ITestClassDisposeFinished> args) => HandleEvent("TestClassDisposeFinishedEvent", args, HandleTestClassDisposeFinished);
-            messageSink.Execution.TestClassDisposeStartingEvent += (MessageHandlerArgs<ITestClassDisposeStarting> args) => HandleEvent("TestClassDisposeStartingEvent", args, HandleTestClassDisposeStarting);
-            messageSink.Execution.TestClassFinishedEvent += (MessageHandlerArgs<ITestClassFinished> args) => HandleEvent("TestClassFinishedEvent", args, HandleTestClassFinished);
-            messageSink.Execution.TestClassStartingEvent += (MessageHandlerArgs<ITestClassStarting> args) => HandleEvent("TestClassStartingEvent", args, HandleTestClassStarting);
-            messageSink.Execution.TestCleanupFailureEvent += (MessageHandlerArgs<ITestCleanupFailure> args) => HandleEvent("TestCleanupFailureEvent", args, HandleTestCleanupFailure);
-            messageSink.Execution.TestCollectionCleanupFailureEvent += (MessageHandlerArgs<ITestCollectionCleanupFailure> args) => HandleEvent("TestCollectionCleanupFailureEvent", args, HandleTestCollectionCleanupFailure);
-            messageSink.Execution.TestCollectionFinishedEvent += (MessageHandlerArgs<ITestCollectionFinished> args) => HandleEvent("TestCollectionFinishedEvent", args, HandleTestCollectionFinished);
-            messageSink.Execution.TestCollectionStartingEvent += (MessageHandlerArgs<ITestCollectionStarting> args) => HandleEvent("TestCollectionStartingEvent", args, HandleTestCollectionStarting);
-            messageSink.Execution.TestFailedEvent += (MessageHandlerArgs<ITestFailed> args) => HandleEvent("TestFailedEvent", args, HandleTestFailed);
-            messageSink.Execution.TestFinishedEvent += (MessageHandlerArgs<ITestFinished> args) => HandleEvent("TestFinishedEvent", args, HandleTestFinished);
-            messageSink.Execution.TestMethodCleanupFailureEvent += (MessageHandlerArgs<ITestMethodCleanupFailure> args) => HandleEvent("TestMethodCleanupFailureEvent", args, HandleTestMethodCleanupFailure);
-            messageSink.Execution.TestMethodFinishedEvent += (MessageHandlerArgs<ITestMethodFinished> args) => HandleEvent("TestMethodFinishedEvent", args, HandleTestMethodFinished);
-            messageSink.Execution.TestMethodStartingEvent += (MessageHandlerArgs<ITestMethodStarting> args) => HandleEvent("TestMethodStartingEvent", args, HandleTestMethodStarting);
-            messageSink.Execution.TestOutputEvent += (MessageHandlerArgs<ITestOutput> args) => HandleEvent("TestOutputEvent", args, HandleTestOutput);
-            messageSink.Execution.TestPassedEvent += (MessageHandlerArgs<ITestPassed> args) => HandleEvent("TestPassedEvent", args, HandleTestPassed);
-            messageSink.Execution.TestSkippedEvent += (MessageHandlerArgs<ITestSkipped> args) => HandleEvent("TestSkippedEvent", args, HandleTestSkipped);
-            messageSink.Execution.TestStartingEvent += (MessageHandlerArgs<ITestStarting> args) => HandleEvent("TestStartingEvent", args, HandleTestStarting);
+            _messageSink.Execution.AfterTestFinishedEvent += (MessageHandlerArgs<IAfterTestFinished> args) => HandleEvent("AfterTestFinishedEvent", args, HandleAfterTestFinished);
+            _messageSink.Execution.AfterTestStartingEvent += (MessageHandlerArgs<IAfterTestStarting> args) => HandleEvent("AfterTestStartingEvent", args, HandleAfterTestStarting);
+            _messageSink.Execution.BeforeTestFinishedEvent += (MessageHandlerArgs<IBeforeTestFinished> args) => HandleEvent("BeforeTestFinishedEvent", args, HandleBeforeTestFinished);
+            _messageSink.Execution.BeforeTestStartingEvent += (MessageHandlerArgs<IBeforeTestStarting> args) => HandleEvent("BeforeTestStartingEvent", args, HandleBeforeTestStarting);
+            _messageSink.Execution.TestAssemblyCleanupFailureEvent += (MessageHandlerArgs<ITestAssemblyCleanupFailure> args) => HandleEvent("TestAssemblyCleanupFailureEvent", args, HandleTestAssemblyCleanupFailure);
+            _messageSink.Execution.TestAssemblyFinishedEvent += (MessageHandlerArgs<ITestAssemblyFinished> args) => HandleEvent("TestAssemblyFinishedEvent", args, HandleTestAssemblyFinished);
+            _messageSink.Execution.TestAssemblyStartingEvent += (MessageHandlerArgs<ITestAssemblyStarting> args) => HandleEvent("TestAssemblyStartingEvent", args, HandleTestAssemblyStarting);
+            _messageSink.Execution.TestCaseCleanupFailureEvent += (MessageHandlerArgs<ITestCaseCleanupFailure> args) => HandleEvent("TestCaseCleanupFailureEvent", args, HandleTestCaseCleanupFailure);
+            _messageSink.Execution.TestCaseFinishedEvent += (MessageHandlerArgs<ITestCaseFinished> args) => HandleEvent("TestCaseFinishedEvent", args, HandleTestCaseFinished);
+            _messageSink.Execution.TestCaseStartingEvent += (MessageHandlerArgs<ITestCaseStarting> args) => HandleEvent("TestStartingEvent", args, HandleTestCaseStarting);
+            _messageSink.Execution.TestClassCleanupFailureEvent += (MessageHandlerArgs<ITestClassCleanupFailure> args) => HandleEvent("TestClassCleanupFailureEvent", args, HandleTestClassCleanupFailure);
+            _messageSink.Execution.TestClassConstructionFinishedEvent += (MessageHandlerArgs<ITestClassConstructionFinished> args) => HandleEvent("TestClassConstructionFinishedEvent", args, HandleTestClassConstructionFinished);
+            _messageSink.Execution.TestClassConstructionStartingEvent += (MessageHandlerArgs<ITestClassConstructionStarting> args) => HandleEvent("TestClassConstructionStartingEvent", args, HandleTestClassConstructionStarting);
+            _messageSink.Execution.TestClassDisposeFinishedEvent += (MessageHandlerArgs<ITestClassDisposeFinished> args) => HandleEvent("TestClassDisposeFinishedEvent", args, HandleTestClassDisposeFinished);
+            _messageSink.Execution.TestClassDisposeStartingEvent += (MessageHandlerArgs<ITestClassDisposeStarting> args) => HandleEvent("TestClassDisposeStartingEvent", args, HandleTestClassDisposeStarting);
+            _messageSink.Execution.TestClassFinishedEvent += (MessageHandlerArgs<ITestClassFinished> args) => HandleEvent("TestClassFinishedEvent", args, HandleTestClassFinished);
+            _messageSink.Execution.TestClassStartingEvent += (MessageHandlerArgs<ITestClassStarting> args) => HandleEvent("TestClassStartingEvent", args, HandleTestClassStarting);
+            _messageSink.Execution.TestCleanupFailureEvent += (MessageHandlerArgs<ITestCleanupFailure> args) => HandleEvent("TestCleanupFailureEvent", args, HandleTestCleanupFailure);
+            _messageSink.Execution.TestCollectionCleanupFailureEvent += (MessageHandlerArgs<ITestCollectionCleanupFailure> args) => HandleEvent("TestCollectionCleanupFailureEvent", args, HandleTestCollectionCleanupFailure);
+            _messageSink.Execution.TestCollectionFinishedEvent += (MessageHandlerArgs<ITestCollectionFinished> args) => HandleEvent("TestCollectionFinishedEvent", args, HandleTestCollectionFinished);
+            _messageSink.Execution.TestCollectionStartingEvent += (MessageHandlerArgs<ITestCollectionStarting> args) => HandleEvent("TestCollectionStartingEvent", args, HandleTestCollectionStarting);
+            _messageSink.Execution.TestFailedEvent += (MessageHandlerArgs<ITestFailed> args) => HandleEvent("TestFailedEvent", args, HandleTestFailed);
+            _messageSink.Execution.TestFinishedEvent += (MessageHandlerArgs<ITestFinished> args) => HandleEvent("TestFinishedEvent", args, HandleTestFinished);
+            _messageSink.Execution.TestMethodCleanupFailureEvent += (MessageHandlerArgs<ITestMethodCleanupFailure> args) => HandleEvent("TestMethodCleanupFailureEvent", args, HandleTestMethodCleanupFailure);
+            _messageSink.Execution.TestMethodFinishedEvent += (MessageHandlerArgs<ITestMethodFinished> args) => HandleEvent("TestMethodFinishedEvent", args, HandleTestMethodFinished);
+            _messageSink.Execution.TestMethodStartingEvent += (MessageHandlerArgs<ITestMethodStarting> args) => HandleEvent("TestMethodStartingEvent", args, HandleTestMethodStarting);
+            _messageSink.Execution.TestOutputEvent += (MessageHandlerArgs<ITestOutput> args) => HandleEvent("TestOutputEvent", args, HandleTestOutput);
+            _messageSink.Execution.TestPassedEvent += (MessageHandlerArgs<ITestPassed> args) => HandleEvent("TestPassedEvent", args, HandleTestPassed);
+            _messageSink.Execution.TestSkippedEvent += (MessageHandlerArgs<ITestSkipped> args) => HandleEvent("TestSkippedEvent", args, HandleTestSkipped);
+            _messageSink.Execution.TestStartingEvent += (MessageHandlerArgs<ITestStarting> args) => HandleEvent("TestStartingEvent", args, HandleTestStarting);
         }
 
         public void AddFilter(XUnitFilter filter)
         {
             if (filter != null)
             {
-                filters.Add(filter);
+                _filters.Add(filter);
             }
         }
         public void SetFilters(List<XUnitFilter> newFilters)
         {
             if (newFilters == null)
             {
-                filters = null;
+                _filters = null;
                 return;
             }
 
-            if (filters == null)
-                filters = new XUnitFiltersCollection();
+            if (_filters == null)
+                _filters = new XUnitFiltersCollection();
 
-            filters.AddRange(newFilters);
+            _filters.AddRange(newFilters);
         }
 
         private void HandleEvent<T>(string name, MessageHandlerArgs<T> args, Action<MessageHandlerArgs<T>> actualHandler) where T : class, IMessageSinkMessage
@@ -737,20 +737,20 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             if (testAssemblies == null)
                 throw new ArgumentNullException(nameof(testAssemblies));
 
-            if (filters != null && filters.Count > 0)
+            if (_filters != null && _filters.Count > 0)
             {
                 do_log("Configured filters:");
-                foreach (XUnitFilter filter in filters)
+                foreach (XUnitFilter filter in _filters)
                 {
                     do_log($"  {filter}");
                 }
             }
 
-            assembliesElement = new XElement("assemblies");
+            _assembliesElement = new XElement("assemblies");
             Action<string> log = LogExcludedTests ? (s) => do_log(s) : (Action<string>)null;
             foreach (TestAssemblyInfo assemblyInfo in testAssemblies)
             {
-                if (assemblyInfo == null || assemblyInfo.Assembly == null || filters.IsExcluded(assemblyInfo, log))
+                if (assemblyInfo == null || assemblyInfo.Assembly == null || _filters.IsExcluded(assemblyInfo, log))
                     continue;
 
                 if (String.IsNullOrEmpty(assemblyInfo.FullPath))
@@ -775,7 +775,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 {
                     OnAssemblyFinish(assemblyInfo.Assembly);
                     if (assemblyElement != null)
-                        assembliesElement.Add(assemblyElement);
+                        _assembliesElement.Add(assemblyElement);
                 }
             }
 
@@ -785,10 +785,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
         public override string WriteResultsToFile(XmlResultJargon jargon)
         {
-            if (assembliesElement == null)
+            if (_assembliesElement == null)
                 return String.Empty;
             // remove all the empty nodes
-            assembliesElement.Descendants().Where(e => e.Name == "collection" && !e.Descendants().Any()).Remove();
+            _assembliesElement.Descendants().Where(e => e.Name == "collection" && !e.Descendants().Any()).Remove();
             string outputFilePath = GetResultsFilePath();
             var settings = new XmlWriterSettings { Indent = true };
             using (var xmlWriter = XmlWriter.Create(outputFilePath, settings))
@@ -797,13 +797,13 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 {
                     case XmlResultJargon.TouchUnit:
                     case XmlResultJargon.NUnitV2:
-                        Transform_Results("NUnitXml.xslt", assembliesElement, xmlWriter);
+                        Transform_Results("NUnitXml.xslt", _assembliesElement, xmlWriter);
                         break;
                     case XmlResultJargon.NUnitV3:
-                        Transform_Results("NUnit3Xml.xslt", assembliesElement, xmlWriter);
+                        Transform_Results("NUnit3Xml.xslt", _assembliesElement, xmlWriter);
                         break;
                     default: // xunit as default, includes when we got Missing
-                        assembliesElement.Save(xmlWriter);
+                        _assembliesElement.Save(xmlWriter);
                         break;
                 }
             }
@@ -812,10 +812,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         }
         public override void WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
         {
-            if (assembliesElement == null)
+            if (_assembliesElement == null)
                 return;
             // remove all the empty nodes
-            assembliesElement.Descendants().Where(e => e.Name == "collection" && !e.Descendants().Any()).Remove();
+            _assembliesElement.Descendants().Where(e => e.Name == "collection" && !e.Descendants().Any()).Remove();
             var settings = new XmlWriterSettings { Indent = true };
             using (var xmlWriter = XmlWriter.Create(writer, settings))
             {
@@ -825,7 +825,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                     case XmlResultJargon.NUnitV2:
                         try
                         {
-                            Transform_Results("NUnitXml.xslt", assembliesElement, xmlWriter);
+                            Transform_Results("NUnitXml.xslt", _assembliesElement, xmlWriter);
                         }
                         catch (Exception e)
                         {
@@ -835,7 +835,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                     case XmlResultJargon.NUnitV3:
                         try
                         {
-                            Transform_Results("NUnit3Xml.xslt", assembliesElement, xmlWriter);
+                            Transform_Results("NUnit3Xml.xslt", _assembliesElement, xmlWriter);
                         }
                         catch (Exception e)
                         {
@@ -843,7 +843,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                         }
                         break;
                     default: // xunit as default, includes when we got Missing
-                        assembliesElement.Save(xmlWriter);
+                        _assembliesElement.Save(xmlWriter);
                         break;
                 }
             }
@@ -948,18 +948,18 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
                     TotalTests += discoverySink.TestCases.Count;
                     List<ITestCase> testCases;
-                    if (filters != null && filters.Count > 0)
+                    if (_filters != null && _filters.Count > 0)
                     {
                         Action<string> log = LogExcludedTests ? (s) => do_log(s) : (Action<string>)null;
                         testCases = discoverySink.TestCases.Where(
-                            tc => !filters.IsExcluded(tc, log)).ToList();
+                            tc => !_filters.IsExcluded(tc, log)).ToList();
                         FilteredTests += discoverySink.TestCases.Count - testCases.Count;
                     }
                     else
                         testCases = discoverySink.TestCases;
 
                     var assemblyElement = new XElement("assembly");
-                    IExecutionSink resultsSink = new DelegatingExecutionSummarySink(messageSink, null, null);
+                    IExecutionSink resultsSink = new DelegatingExecutionSummarySink(_messageSink, null, null);
                     resultsSink = new DelegatingXmlCreationSink(resultsSink, assemblyElement);
                     ITestFrameworkExecutionOptions executionOptions = GetFrameworkOptionsForExecution(configuration);
                     executionOptions.SetDisableParallelization(!RunInParallel);
@@ -986,26 +986,26 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                     if (t.StartsWith("KLASS:", StringComparison.Ordinal))
                     {
                         var klass = t.Replace("KLASS:", "");
-                        filters.Add(XUnitFilter.CreateClassFilter(klass, true));
+                        _filters.Add(XUnitFilter.CreateClassFilter(klass, true));
                     }
                     else if (t.StartsWith("KLASS32:", StringComparison.Ordinal) && IntPtr.Size == 4)
                     {
                         var klass = t.Replace("KLASS32:", "");
-                        filters.Add(XUnitFilter.CreateClassFilter(klass, true));
+                        _filters.Add(XUnitFilter.CreateClassFilter(klass, true));
                     }
                     else if (t.StartsWith("KLASS64:", StringComparison.Ordinal) && IntPtr.Size == 8)
                     {
                         var klass = t.Replace("KLASS32:", "");
-                        filters.Add(XUnitFilter.CreateClassFilter(klass, true));
+                        _filters.Add(XUnitFilter.CreateClassFilter(klass, true));
                     }
                     else if (t.StartsWith("Platform32:", StringComparison.Ordinal) && IntPtr.Size == 4)
                     {
                         var filter = t.Replace("Platform32:", "");
-                        filters.Add(XUnitFilter.CreateSingleFilter(filter, true));
+                        _filters.Add(XUnitFilter.CreateSingleFilter(filter, true));
                     }
                     else
                     {
-                        filters.Add(XUnitFilter.CreateSingleFilter(t, true));
+                        _filters.Add(XUnitFilter.CreateSingleFilter(t, true));
                     }
                 }
             }
@@ -1021,17 +1021,17 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 var traitInfo = c.Split('=');
                 if (traitInfo.Length == 2)
                 {
-                    filters.Add(XUnitFilter.CreateTraitFilter(traitInfo[0], traitInfo[1], true));
+                    _filters.Add(XUnitFilter.CreateTraitFilter(traitInfo[0], traitInfo[1], true));
                 } else {
-                    filters.Add(XUnitFilter.CreateTraitFilter(c, null, true));
+                    _filters.Add(XUnitFilter.CreateTraitFilter(c, null, true));
                 }
             }
         }
 
         public override void SkipMethod(string method, bool isExcluded)
-            => filters.Add(XUnitFilter.CreateSingleFilter(singleTestName: method, exclude: isExcluded));
+            => _filters.Add(XUnitFilter.CreateSingleFilter(singleTestName: method, exclude: isExcluded));
 
         public override void SkipClass(string className, bool isExcluded)
-            => filters.Add(XUnitFilter.CreateClassFilter(className: className, exclude: isExcluded));
+            => _filters.Add(XUnitFilter.CreateClassFilter(className: className, exclude: isExcluded));
     }
 }

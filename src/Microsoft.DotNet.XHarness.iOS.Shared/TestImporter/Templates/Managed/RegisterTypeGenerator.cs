@@ -12,9 +12,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
 {
     public static class RegisterTypeGenerator
     {
-        private static readonly string UsingReplacement = "%USING%";
-        private static readonly string KeysReplacement = "%KEY VALUES%";
-        private static readonly string IsxUnitReplacement = "%IS XUNIT%";
+        private const string UsingReplacement = "%USING%";
+        private const string KeysReplacement = "%KEY VALUES%";
+        private const string IsxUnitReplacement = "%IS XUNIT%";
 
         public static async Task<string> GenerateCodeAsync((string FailureMessage, Dictionary<string, Type> Types) typeRegistration, bool isXunit,
             Stream template)

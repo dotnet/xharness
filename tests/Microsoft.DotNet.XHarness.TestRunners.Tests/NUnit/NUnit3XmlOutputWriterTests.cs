@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
 {
     public class NUnit3XmlOutputWriterTests : IDisposable
     {
-        private const string _sampleFileName = "NUnitV3Sample.xml";
+        private const string SampleFileName = "NUnitV3Sample.xml";
         private readonly Mock<IResultSummary> _resultSummary;
         private readonly string _tempPath;
 
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
             var resourcenames = GetType().Assembly.GetManifestResourceNames();
             // load the test-run node from the sample file
             var name = GetType().Assembly
-                .GetManifestResourceNames().FirstOrDefault(a => a.EndsWith(_sampleFileName, StringComparison.Ordinal));
+                .GetManifestResourceNames().FirstOrDefault(a => a.EndsWith(SampleFileName, StringComparison.Ordinal));
             var doc = new XmlDocument();
             using var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name));
             doc.Load(sampleStream);

@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
     public class XmlResultParser : IResultParser
     {
-        private static readonly IHelpers helpers = new Helpers();
+        private static readonly IHelpers s_helpers = new Helpers();
 
         // test if the file is valid xml, or at least, that can be read it.
         public bool IsValidXml(string path, out XmlResultJargon type)
@@ -809,10 +809,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         {
             // VSTS does not provide a nice way to report build errors, create a fake
             // test result with a failure in the case the build did not work
-            var failureLogXml = logs.Create($"vsts-nunit-{source}-{helpers.Timestamp}.xml", LogType.XmlLog.ToString());
+            var failureLogXml = logs.Create($"vsts-nunit-{source}-{s_helpers.Timestamp}.xml", LogType.XmlLog.ToString());
             if (jargon == XmlResultJargon.NUnitV3)
             {
-                var failureXmlTmp = logs.Create($"nunit-{source}-{helpers.Timestamp}.tmp", "Failure Log tmp");
+                var failureXmlTmp = logs.Create($"nunit-{source}-{s_helpers.Timestamp}.tmp", "Failure Log tmp");
                 GenerateFailureXml(failureXmlTmp.FullPath, title, message, stderrReader, jargon);
                 // add the required attachments and the info of the application that failed to install
                 var failure_logs = Directory.GetFiles(logs.Directory).Where(p => !p.Contains("nunit")); // all logs but ourself

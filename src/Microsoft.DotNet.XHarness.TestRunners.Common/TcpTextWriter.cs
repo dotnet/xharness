@@ -17,8 +17,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     internal class TcpTextWriter : TextWriter
     {
-        private readonly TcpClient client;
-        private readonly StreamWriter writer;
+        private readonly TcpClient _client;
+        private readonly StreamWriter _writer;
 
         private static string SelectHostName(string[] names, int port)
         {
@@ -82,8 +82,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             HostName = SelectHostName(hostName.Split(','), port);
             Port = port;
 
-            client = new TcpClient(HostName, port);
-            writer = new StreamWriter(client.GetStream());
+            _client = new TcpClient(HostName, port);
+            _writer = new StreamWriter(_client.GetStream());
        }
 
         public string HostName { get; private set; }
@@ -94,27 +94,27 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         public override System.Text.Encoding Encoding => Encoding.UTF8;
 
-        public override void Close() => writer.Close();
+        public override void Close() => _writer.Close();
 
-        protected override void Dispose(bool disposing) => writer.Dispose();
+        protected override void Dispose(bool disposing) => _writer.Dispose();
 
-        public override void Flush() => writer.Flush();
+        public override void Flush() => _writer.Flush();
 
         // minimum to override - see http://msdn.microsoft.com/en-us/library/system.io.textwriter.aspx
-        public override void Write(char value) => writer.Write(value);
+        public override void Write(char value) => _writer.Write(value);
 
-        public override void Write(char[] buffer) => writer.Write(buffer);
+        public override void Write(char[] buffer) => _writer.Write(buffer);
 
-        public override void Write(char[] buffer, int index, int count) => writer.Write(buffer, index, count);
+        public override void Write(char[] buffer, int index, int count) => _writer.Write(buffer, index, count);
 
-        public override void Write(string value) => writer.Write(value);
+        public override void Write(string value) => _writer.Write(value);
 
         // special extra override to ensure we flush data regularly
 
         public override void WriteLine()
         {
-            writer.WriteLine();
-            writer.Flush();
+            _writer.WriteLine();
+            _writer.Flush();
         }
     }
 }

@@ -17,25 +17,25 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
     public class XamariniOSTemplate : ITemplatedProject
     {
         // vars that contain the different keys used in the templates
-        internal static readonly string ProjectGuidKey = "%PROJECT GUID%";
-        internal static readonly string NameKey = "%NAME%";
-        internal static readonly string ReferencesKey = "%REFERENCES%";
-        internal static readonly string RegisterTypeKey = "%REGISTER TYPE%";
-        internal static readonly string ContentKey = "%CONTENT RESOURCES%";
-        internal static readonly string PlistKey = "%PLIST PATH%";
-        internal static readonly string WatchOSTemplatePathKey = "%TEMPLATE PATH%";
-        internal static readonly string WatchOSCsporjAppKey = "%WATCH APP PROJECT PATH%";
-        internal static readonly string WatchOSCsporjExtensionKey = "%WATCH EXTENSION PROJECT PATH%";
-        internal static readonly string TargetFrameworkVersionKey = "%TARGET FRAMEWORK VERSION%";
-        internal static readonly string TargetExtraInfoKey = "%TARGET EXTRA INFO%";
-        internal static readonly string DefineConstantsKey = "%DEFINE CONSTANTS%";
-        internal static readonly string DownloadPathKey = "%DOWNLOAD PATH%";
-        internal static readonly string TestingFrameworksKey = "%TESTING FRAMEWORKS%";
+        internal const string ProjectGuidKey = "%PROJECT GUID%";
+        internal const string NameKey = "%NAME%";
+        internal const string ReferencesKey = "%REFERENCES%";
+        internal const string RegisterTypeKey = "%REGISTER TYPE%";
+        internal const string ContentKey = "%CONTENT RESOURCES%";
+        internal const string PlistKey = "%PLIST PATH%";
+        internal const string WatchOSTemplatePathKey = "%TEMPLATE PATH%";
+        internal const string WatchOSCsporjAppKey = "%WATCH APP PROJECT PATH%";
+        internal const string WatchOSCsporjExtensionKey = "%WATCH EXTENSION PROJECT PATH%";
+        internal const string TargetFrameworkVersionKey = "%TARGET FRAMEWORK VERSION%";
+        internal const string TargetExtraInfoKey = "%TARGET EXTRA INFO%";
+        internal const string DefineConstantsKey = "%DEFINE CONSTANTS%";
+        internal const string DownloadPathKey = "%DOWNLOAD PATH%";
+        internal const string TestingFrameworksKey = "%TESTING FRAMEWORKS%";
 
         // resource related static vars used to copy the embedded src to the hd
-        private static readonly string srcResourcePrefix = "Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed.Resources.src.";
-        private static readonly string registerTemplateResourceName = "RegisterType.cs";
-        private static readonly string[][] srcDirectories = new[] {
+        private static readonly string s_srcResourcePrefix = "Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed.Resources.src.";
+        private static readonly string s_registerTemplateResourceName = "RegisterType.cs";
+        private static readonly string[][] s_srcDirectories = new[] {
             new [] { "common", },
             new [] { "common", "TestRunner" },
             new [] { "common", "TestRunner", "Core" },
@@ -62,26 +62,26 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             new [] { "watchOS", "Container", "Resources", "Images.xcassets", "AppIcons.appiconset" },
             new [] { "watchOS", "Extension" }
         };
-        private static readonly Dictionary<Platform, string> plistTemplateMatches = new Dictionary<Platform, string> {
+        private static readonly Dictionary<Platform, string> s_plistTemplateMatches = new Dictionary<Platform, string> {
             {Platform.iOS, "Managed.iOS.plist.in"},
             {Platform.TvOS, "Managed.tvOS.plist.in"},
             {Platform.WatchOS, "Managed.watchOS.plist.in"},
             {Platform.MacOSFull, "Managed.macOS.plist.in"},
             {Platform.MacOSModern, "Managed.macOS.plist.in"},
         };
-        private static readonly Dictionary<Platform, string> projectTemplateMatches = new Dictionary<Platform, string> {
+        private static readonly Dictionary<Platform, string> s_projectTemplateMatches = new Dictionary<Platform, string> {
             {Platform.iOS, "Managed.iOS.csproj.in"},
             {Platform.TvOS, "Managed.tvOS.csproj.in"},
             {Platform.WatchOS, "Managed.watchOS.csproj.in"},
             {Platform.MacOSFull, "Managed.macOS.csproj.in"},
             {Platform.MacOSModern, "Managed.macOS.csproj.in"},
         };
-        private static readonly Dictionary<WatchAppType, string> watchOSProjectTemplateMatches = new Dictionary<WatchAppType, string>
+        private static readonly Dictionary<WatchAppType, string> s_watchOSProjectTemplateMatches = new Dictionary<WatchAppType, string>
         {
             { WatchAppType.App, "Managed.watchOS.App.csproj.in"},
             { WatchAppType.Extension, "Managed.watchOS.Extension.csproj.in"}
         };
-        private static readonly Dictionary<WatchAppType, string> watchOSPlistTemplateMatches = new Dictionary<WatchAppType, string> {
+        private static readonly Dictionary<WatchAppType, string> s_watchOSPlistTemplateMatches = new Dictionary<WatchAppType, string> {
             {WatchAppType.App, "Managed.watchOS.App.plist.in"},
             {WatchAppType.Extension, "Managed.watchOS.Extension.plist.in"}
         };
@@ -103,8 +103,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
 
         private string WatchExtensionTemplatePath => Path.Combine(OutputDirectoryPath, "templates", "watchOS", "Extension").Replace("/", "\\");
 
-        private bool srcGenerated = false;
-        private readonly object srcGeneratedLock = new object();
+        private bool _srcGenerated = false;
+        private readonly object _srcGeneratedLock = new object();
 
         private Stream GetTemplateStream(string templateName)
         {
@@ -113,20 +113,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             return GetType().Assembly.GetManifestResourceStream(name);
         }
 
-        public Stream GetPlistTemplate(Platform platform) => GetTemplateStream(plistTemplateMatches[platform]);
+        public Stream GetPlistTemplate(Platform platform) => GetTemplateStream(s_plistTemplateMatches[platform]);
 
-        public Stream GetPlistTemplate(WatchAppType appType) => GetTemplateStream(watchOSPlistTemplateMatches[appType]);
+        public Stream GetPlistTemplate(WatchAppType appType) => GetTemplateStream(s_watchOSPlistTemplateMatches[appType]);
 
-        public Stream GetProjectTemplate(Platform platform) => GetTemplateStream(projectTemplateMatches[platform]);
+        public Stream GetProjectTemplate(Platform platform) => GetTemplateStream(s_projectTemplateMatches[platform]);
 
-        public Stream GetProjectTemplate(WatchAppType appType) => GetTemplateStream(watchOSProjectTemplateMatches[appType]);
+        public Stream GetProjectTemplate(WatchAppType appType) => GetTemplateStream(s_watchOSProjectTemplateMatches[appType]);
 
-        public Stream GetRegisterTypeTemplate() => GetTemplateStream(registerTemplateResourceName);
+        public Stream GetRegisterTypeTemplate() => GetTemplateStream(s_registerTemplateResourceName);
 
         private void BuildSrcTree(string srcOuputPath)
         {
             // loop over the known paths, and build them accordingly
-            foreach (var components in srcDirectories)
+            foreach (var components in s_srcDirectories)
             {
                 var completePathComponents = new[] { srcOuputPath }.Concat(components).ToArray();
                 var path = Path.Combine(completePathComponents);
@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         private string CalculateDestinationPath(string srcOuputPath, string resourceFullName)
         {
             // we do know that we don't care about our prefix
-            var resourceName = resourceFullName.Substring(srcResourcePrefix.Length);
+            var resourceName = resourceFullName.Substring(s_srcResourcePrefix.Length);
             // icon sets are special, they have a dot, which is also a dot in the resources :/
             (string iconSet, string replace) iconSetSubPath = (iconSet: "", replace: "");
             if (resourceFullName.Contains("iOSApp") || resourceFullName.Contains("tvOSApp"))
@@ -277,9 +277,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         // * Generate the src EVERY SINGLE TIME for a list of projects.
         public void GenerateSource(string srcOuputPath)
         {
-            lock (srcGeneratedLock)
+            lock (_srcGeneratedLock)
             {
-                if (srcGenerated)
+                if (_srcGenerated)
                     return;
                 // mk the expected directories
                 if (Directory.Exists(srcOuputPath))
@@ -287,7 +287,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                 BuildSrcTree(srcOuputPath);
                 // the code is simple, we are going to look for all the resources that we know are src and will write a
                 // copy of the stream in the designated output path
-                var resources = GetType().Assembly.GetManifestResourceNames().Where(a => a.StartsWith(srcResourcePrefix));
+                var resources = GetType().Assembly.GetManifestResourceNames().Where(a => a.StartsWith(s_srcResourcePrefix));
 
                 // we need to be smart, since the resource name != the path
                 foreach (var r in resources)
@@ -300,7 +300,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                         sourceReader.CopyTo(destination);
                     }
                 }
-                srcGenerated = true;
+                _srcGenerated = true;
             }
         }
 

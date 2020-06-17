@@ -15,15 +15,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
     //   which makes it easier to re-run (copy-paste) commands that failed.
     public static class DirectoryUtilities
     {
-        private static readonly string root;
-        private static int lastNumber;
+        private static readonly string s_root;
+        private static int s_lastNumber;
 
         static DirectoryUtilities()
         {
-            root = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "tmp-test-dir");
-            if (Directory.Exists(root))
-                Directory.Delete(root, true);
-            Directory.CreateDirectory(root);
+            s_root = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "tmp-test-dir");
+            if (Directory.Exists(s_root))
+                Directory.Delete(s_root, true);
+            Directory.CreateDirectory(s_root);
         }
 
         [DllImport("libc", SetLastError = true)]
@@ -44,8 +44,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 }
             }
 
-            var rv = Path.Combine(root, name);
-            for (int i = lastNumber; i < 10000 + lastNumber; i++)
+            var rv = Path.Combine(s_root, name);
+            for (int i = s_lastNumber; i < 10000 + s_lastNumber; i++)
             {
                 // There's no way to know if Directory.CreateDirectory
                 // created the directory or not (which would happen if the directory
@@ -54,10 +54,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 // threads create temporary directories at the same time.
                 if (mkdir(rv, Convert.ToUInt16("777", 8)) == 0)
                 {
-                    lastNumber = i;
+                    s_lastNumber = i;
                     return rv;
                 }
-                rv = Path.Combine(root, name + i);
+                rv = Path.Combine(s_root, name + i);
             }
 
             throw new Exception("Could not create temporary directory");

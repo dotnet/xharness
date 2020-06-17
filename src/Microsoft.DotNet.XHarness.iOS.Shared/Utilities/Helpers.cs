@@ -29,11 +29,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         // annoying when XS reloads the projects, and also causes unnecessary rebuilds).
         // Nothing really breaks when the sequence isn't identical from run to run, so
         // this is just a best minimal effort.
-        private static readonly Random guid_generator = new Random(unchecked((int)0xdeadf00d));
+        private static readonly Random s_guidGenerator = new Random(unchecked((int)0xdeadf00d));
         public Guid GenerateStableGuid(string seed = null)
         {
             var bytes = new byte[16];
-            if (seed == null) guid_generator.NextBytes(bytes);
+            if (seed == null) s_guidGenerator.NextBytes(bytes);
             else
             {
                 using (var provider = MD5.Create())

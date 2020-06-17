@@ -27,56 +27,56 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
 
     public abstract class SingleValueArgument : MlaunchArgument
     {
-        private readonly string argumentName;
-        private readonly string argumentValue;
-        private readonly bool useEqualSign;
+        private readonly string _argumentName;
+        private readonly string _argumentValue;
+        private readonly bool _useEqualSign;
 
         protected SingleValueArgument(string argumentName, string argumentValue, bool useEqualSign = true)
         {
-            this.argumentName = argumentName ?? throw new ArgumentNullException(nameof(argumentName));
-            this.argumentValue = argumentValue ?? throw new ArgumentNullException(nameof(argumentValue));
-            this.useEqualSign = useEqualSign;
+            this._argumentName = argumentName ?? throw new ArgumentNullException(nameof(argumentName));
+            this._argumentValue = argumentValue ?? throw new ArgumentNullException(nameof(argumentValue));
+            this._useEqualSign = useEqualSign;
         }
 
         public override string AsCommandLineArgument()
         {
-            if (useEqualSign)
-                return Escape($"--{argumentName}={argumentValue}");
+            if (_useEqualSign)
+                return Escape($"--{_argumentName}={_argumentValue}");
             else
-                return $"--{argumentName} {Escape(argumentValue)}";
+                return $"--{_argumentName} {Escape(_argumentValue)}";
         }
     }
 
     public abstract class OptionArgument : MlaunchArgument
     {
-        private readonly string argumentName;
+        private readonly string _argumentName;
 
         protected OptionArgument(string argumentName)
         {
-            this.argumentName = argumentName ?? throw new ArgumentNullException(nameof(argumentName));
+            this._argumentName = argumentName ?? throw new ArgumentNullException(nameof(argumentName));
         }
 
-        public override string AsCommandLineArgument() => $"--{argumentName}";
+        public override string AsCommandLineArgument() => $"--{_argumentName}";
     }
 
     public class MlaunchArguments : IEnumerable<MlaunchArgument>
     {
-        private readonly List<MlaunchArgument> arguments = new List<MlaunchArgument>();
+        private readonly List<MlaunchArgument> _arguments = new List<MlaunchArgument>();
 
         public MlaunchArguments(params MlaunchArgument[] args)
         {
-            arguments.AddRange(args);
+            _arguments.AddRange(args);
         }
 
-        public void Add(MlaunchArgument arg) => arguments.Add(arg);
+        public void Add(MlaunchArgument arg) => _arguments.Add(arg);
 
-        public void AddRange(IEnumerable<MlaunchArgument> args) => arguments.AddRange(args);
+        public void AddRange(IEnumerable<MlaunchArgument> args) => _arguments.AddRange(args);
 
-        public string AsCommandLine() => string.Join(" ", arguments.Select(a => a.AsCommandLineArgument()));
+        public string AsCommandLine() => string.Join(" ", _arguments.Select(a => a.AsCommandLineArgument()));
 
-        public IEnumerator<MlaunchArgument> GetEnumerator() => arguments.GetEnumerator();
+        public IEnumerator<MlaunchArgument> GetEnumerator() => _arguments.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator() => arguments.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _arguments.GetEnumerator();
 
         public override string ToString() => AsCommandLine();
 

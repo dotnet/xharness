@@ -11,17 +11,17 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
 {
     public class StringUtils
     {
-        private static readonly char shellQuoteChar;
-        private static readonly char[] mustQuoteCharacters = { ' ', '\'', ',', '$', '\\' };
-        private static readonly char[] mustQuoteCharactersProcess = { ' ', '\\', '"', '\'' };
+        private static readonly char s_shellQuoteChar;
+        private static readonly char[] s_mustQuoteCharacters = { ' ', '\'', ',', '$', '\\' };
+        private static readonly char[] s_mustQuoteCharactersProcess = { ' ', '\\', '"', '\'' };
 
         static StringUtils()
         {
             PlatformID pid = Environment.OSVersion.Platform;
             if ((int)pid != 128 && pid != PlatformID.Unix && pid != PlatformID.MacOSX)
-                shellQuoteChar = '"'; // Windows
+                s_shellQuoteChar = '"'; // Windows
             else
-                shellQuoteChar = '\''; // !Windows
+                s_shellQuoteChar = '\''; // !Windows
         }
 
         public static string FormatArguments(params string[] arguments) => FormatArguments((IList<string>)arguments);
@@ -44,12 +44,12 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
             if (string.IsNullOrEmpty(f))
                 return f ?? string.Empty;
 
-            if (f.IndexOfAny(mustQuoteCharacters) == -1)
+            if (f.IndexOfAny(s_mustQuoteCharacters) == -1)
                 return f;
 
             var s = new StringBuilder();
 
-            s.Append(shellQuoteChar);
+            s.Append(s_shellQuoteChar);
             foreach (var c in f)
             {
                 if (c == '\'' || c == '"' || c == '\\')
@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
 
                 s.Append(c);
             }
-            s.Append(shellQuoteChar);
+            s.Append(s_shellQuoteChar);
 
             return s.ToString();
         }
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
             if (string.IsNullOrEmpty(f))
                 return f ?? string.Empty;
 
-            if (f.IndexOfAny(mustQuoteCharactersProcess) == -1)
+            if (f.IndexOfAny(s_mustQuoteCharactersProcess) == -1)
                 return f;
 
             var s = new StringBuilder();

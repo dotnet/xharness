@@ -9,8 +9,8 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
 {
     public class AdbProcessManager : IAdbProcessManager
     {
-        private readonly ILogger log;
-        public AdbProcessManager(ILogger logger) => log = logger;
+        private readonly ILogger _log;
+        public AdbProcessManager(ILogger logger) => _log = logger;
 
         /// <summary>
         ///  Whenever there are multiple devices attached to a system, most ADB commands will fail
@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
         {
             string deviceSerialArgs = string.IsNullOrEmpty(DeviceSerial) ? string.Empty : $"-s {DeviceSerial}";
 
-            log.LogDebug($"Executing command: '{adbExePath} {deviceSerialArgs} {arguments}'");
+            _log.LogDebug($"Executing command: '{adbExePath} {deviceSerialArgs} {arguments}'");
 
             var processStartInfo = new ProcessStartInfo
             {
@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
             // (int.MaxValue ms is about 24 days).  Large values are effectively timeouts for the outer harness
             if (!p.WaitForExit((int)Math.Min(timeOut.TotalMilliseconds, int.MaxValue)))
             {
-                log.LogError("Waiting for command timed out: execution may be compromised.");
+                _log.LogError("Waiting for command timed out: execution may be compromised.");
                 timedOut = true;
             }
 
