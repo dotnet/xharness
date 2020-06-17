@@ -183,10 +183,12 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         private Dictionary<Tuple<string, string>, int> InitializeFakeDeviceList()
         {
             var r = new Random();
-            var values = new Dictionary<Tuple<string, string>, int>();
-            values.Add(new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86_64"), 0);
-            values.Add(new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86"), 0);
-            values.Add(new Tuple<string, string>($"somedevice-{r.Next(9999)}", "arm64v8"), 0);
+            var values = new Dictionary<Tuple<string, string>, int>
+            {
+                { new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86_64"), 0 },
+                { new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86"), 0 },
+                { new Tuple<string, string>($"somedevice-{r.Next(9999)}", "arm64v8"), 0 }
+            };
             return values;
         }
 

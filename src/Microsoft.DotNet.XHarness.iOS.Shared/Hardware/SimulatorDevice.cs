@@ -66,11 +66,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         {
             await processManager.ExecuteCommandAsync("launchctl", new[] { "remove", "com.apple.CoreSimulator.CoreSimulatorService" }, log, TimeSpan.FromSeconds(10));
 
-            var to_kill = new string[] { "iPhone Simulator", "iOS Simulator", "Simulator", "Simulator (Watch)", "com.apple.CoreSimulator.CoreSimulatorService", "ibtoold" };
+            var toKill = new string[] { "iPhone Simulator", "iOS Simulator", "Simulator", "Simulator (Watch)", "com.apple.CoreSimulator.CoreSimulatorService", "ibtoold" };
 
-            var args = new List<string>();
-            args.Add("-9");
-            args.AddRange(to_kill);
+            var args = new List<string>
+            {
+                "-9"
+            };
+            args.AddRange(toKill);
+
             await processManager.ExecuteCommandAsync("killall", args, log, TimeSpan.FromSeconds(10));
 
             var dirsToBeDeleted = new[] {
