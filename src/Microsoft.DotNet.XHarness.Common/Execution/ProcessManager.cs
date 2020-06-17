@@ -136,49 +136,53 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                         diagnostics: false);
                 }
 
-                const string lldbPath = "/usr/bin/lldb";
 
-                if (File.Exists(lldbPath))
+                foreach (var diagnose_pid in pids)
                 {
-                    foreach (var diagnose_pid in pids)
+                    var template = Path.GetTempFileName();
+                    try
                     {
-                        var template = Path.GetTempFileName();
+                        var commands = new StringBuilder();
+                        using (var dbg = new Process())
+                        {
+                            commands.AppendLine($"process attach --pid {diagnose_pid}");
+                            commands.AppendLine("thread list");
+                            commands.AppendLine("thread backtrace all");
+                            commands.AppendLine("detach");
+                            commands.AppendLine("quit");
+                            dbg.StartInfo.FileName = "lldb";
+                            dbg.StartInfo.Arguments = StringUtils.FormatArguments("--source", template);
+                            File.WriteAllText(template, commands.ToString());
+
+                            log.WriteLine($"Printing backtrace for pid={pid}");
+                            await RunAsyncInternal(
+                                process: dbg,
+                                log: log,
+                                stdout: log,
+                                stderr: log,
+                                kill: kill,
+                                getChildrenPS: getChildrenPS,
+                                timeout: TimeSpan.FromSeconds(30),
+                                diagnostics: false);
+                        }
+                    }
+                    catch (Win32Exception e) when (e.Message == "No such file or directory")
+                    {
+                        log.WriteLine("lldb was not found, skipping diagnosis..");
+                    }
+                    catch (Exception e)
+                    {
+                        log.WriteLine("Failed to diagnose the process using lldb:" + Environment.NewLine + e);
+                    }
+                    finally
+                    {
                         try
                         {
-                            var commands = new StringBuilder();
-                            using (var dbg = new Process())
-                            {
-                                commands.AppendLine($"process attach --pid {diagnose_pid}");
-                                commands.AppendLine("thread list");
-                                commands.AppendLine("thread backtrace all");
-                                commands.AppendLine("detach");
-                                commands.AppendLine("quit");
-                                dbg.StartInfo.FileName = lldbPath;
-                                dbg.StartInfo.Arguments = StringUtils.FormatArguments("--source", template);
-                                File.WriteAllText(template, commands.ToString());
-
-                                log.WriteLine($"Printing backtrace for pid={pid}");
-                                await RunAsyncInternal(
-                                    process: dbg,
-                                    log: log,
-                                    stdout: log,
-                                    stderr: log,
-                                    kill: kill,
-                                    getChildrenPS: getChildrenPS,
-                                    timeout: TimeSpan.FromSeconds(30),
-                                    diagnostics: false);
-                            }
+                            File.Delete(template);
                         }
-                        finally
+                        catch
                         {
-                            try
-                            {
-                                File.Delete(template);
-                            }
-                            catch
-                            {
-                                // Don't care
-                            }
+                            // Don't care
                         }
                     }
                 }
