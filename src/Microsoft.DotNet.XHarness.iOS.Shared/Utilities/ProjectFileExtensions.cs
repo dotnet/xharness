@@ -106,8 +106,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 if (expand)
                 {
                     // OutputPath needs to be expanded, otherwise Xamarin Studio isn't able to launch the project.
-                    string platform, configuration;
-                    ParseConditions(n, out platform, out configuration);
+                    ParseConditions(n, out string platform, out string configuration);
                     n.InnerText = value.Replace("$(Platform)", platform).Replace("$(Configuration)", configuration);
                 }
                 else

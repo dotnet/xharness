@@ -123,8 +123,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
                 return true;
             }
 
-            bool include;
-            if (AssemblyFilters.TryGetValue(assemblyInfo.FullPath, out include))
+            if (AssemblyFilters.TryGetValue(assemblyInfo.FullPath, out bool include))
             {
                 return ReportFilteredAssembly(assemblyInfo, include);
             }

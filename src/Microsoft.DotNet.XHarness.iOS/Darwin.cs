@@ -44,9 +44,8 @@ namespace Microsoft.DotNet.XHarness.iOS
 
         public static string GetVersion()
         {
-            Version? version;
             var kernelRelease = GetKernelRelease();
-            if (!Version.TryParse(kernelRelease, out version) || version.Major < 5)
+            if (!Version.TryParse(kernelRelease, out Version? version) || version.Major < 5)
             {
                 // 10.0 covers all versions prior to Darwin 5
                 // Similarly, if the version is not a valid version number, but we have still detected that it is Darwin, we just assume

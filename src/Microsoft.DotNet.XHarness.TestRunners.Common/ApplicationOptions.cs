@@ -26,8 +26,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         public ApplicationOptions()
         {
-            bool b;
-            if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.AutoExit), out b))
+            if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.AutoExit), out bool b))
                 TerminateAfterExecution = b;
             if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.AutoStart), out b))
                 AutoStart = b;
@@ -35,8 +34,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 EnableNetwork = b;
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.HostName)))
                 HostName = Environment.GetEnvironmentVariable(EnviromentVariables.HostName);
-            int i;
-            if (int.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.HostPort), out i))
+            if (int.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.HostPort), out int i))
                 HostPort = i;
             if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.SortByName), out b))
                 SortNames = b;
