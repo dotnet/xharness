@@ -146,20 +146,6 @@ stages:
             condition: succeeded()
 
           - bash: |
-              targetDir=$(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.$(_BuildConfig)
-              mkdir $targetDir
-              cp tests/integration-tests/iOS/helix-payloads/cli-integration-tests.sh $targetDir
-              cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI*.nupkg $targetDir
-            displayName: Prepare the CLI IntegrationTests artifact
-            workingDirectory: $(Build.SourcesDirectory)
-            condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
-
-          - publish: $(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.$(_BuildConfig)
-            artifact: Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.$(_BuildConfig)
-            displayName: Publish the tool artifact
-            condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
-
-          - bash: |
               targetDir=$(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
               mkdir $targetDir
               cp tests/integration-tests/iOS/helix-payloads/simulatorinstaller-integration-tests.sh $targetDir
@@ -176,7 +162,7 @@ stages:
           - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.1.0.0-ci.nupkg
             artifact: Microsoft.DotNet.XHarness.CLI.$(_BuildConfig)
             displayName: Publish XHarness CLI for Helix Testing
-            condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))            
+            condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
 
           - task: PublishTestResults@2
             displayName: 'Publish Unit Test Results'
@@ -207,7 +193,7 @@ stages:
       parameters:
         workspace:
           clean: all
-        jobs:          
+        jobs:
         - job: Linux
           pool:
             vmimage: ubuntu-latest
@@ -225,7 +211,7 @@ stages:
               source: current
               artifact: Microsoft.DotNet.XHarness.CLI.Debug
               path: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/
-          
+
           - script: eng/common/build.sh
               --configuration $(_BuildConfig)
               --prepareMachine
@@ -248,7 +234,7 @@ stages:
       parameters:
         workspace:
           clean: all
-        jobs:          
+        jobs:
         - job: OSX
           pool:
             name: Hosted macOS
@@ -266,7 +252,7 @@ stages:
               source: current
               artifact: Microsoft.DotNet.XHarness.CLI.Debug
               path: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/
-          
+
           - script: eng/common/build.sh
               --configuration $(_BuildConfig)
               --prepareMachine
@@ -280,39 +266,6 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
-
-  - stage: Test_CLI
-    displayName: Run CLI Integration Tests
-    dependsOn: Build_OSX
-    jobs:
-    - job: integration_tests
-      displayName: CLI iOS Integration Tests
-      pool:
-        name: Hosted macOS
-      variables:
-        _BuildConfig: debug
-      steps:
-      - download: current
-        artifact: Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.Debug
-
-      - template: /eng/common/templates/steps/send-to-helix.yml
-        parameters:
-          DisplayNamePrefix: Run Tests
-          HelixBaseUri: https://helix.dot.net/
-          HelixType: test/product/
-          IncludeDotNetCli: true
-          DotNetCliPackageType: sdk
-          DotNetCliVersion: 3.1.201
-          WaitForWorkItemCompletion: true
-          HelixTargetQueues: osx.1015.amd64.open
-          Creator: xharness
-          EnableXUnitReporter: true
-          WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.CLI.IntegrationTests.OSX.Debug
-          WorkItemCommand: sudo launchctl asuser `id -u` sh cli-integration-tests.sh $HELIX_WORKITEM_UPLOAD_ROOT $HELIX_WORKITEM_ROOT
-          WorkItemTimeout: 00:12:00
-          env:
-            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-            HelixAccessToken: ''
 
   - stage: Test_SimulatorInstaller
     displayName: Run SimulatorInstaller Integration Tests
