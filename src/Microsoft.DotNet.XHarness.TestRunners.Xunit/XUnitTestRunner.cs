@@ -493,7 +493,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
             foreach (KeyValuePair<string, ExecutionSummary> summary in args.Message.Summaries)
             {
-                OnInfo(String.Empty);
+                OnInfo(string.Empty);
                 OnInfo($" Assembly: {summary.Key}");
                 LogSummary(summary.Value, log: OnDebug);
             }
@@ -638,7 +638,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void LogTestOutput(decimal executionTime, string output, Action<string> log = null, StringBuilder sb = null)
         {
             do_log($"   Execution time: {executionTime}", log, sb);
-            if (!String.IsNullOrEmpty(output))
+            if (!string.IsNullOrEmpty(output))
             {
                 do_log(" **** Output start ****", log, sb);
                 foreach (string line in output.Split('\n'))
@@ -659,7 +659,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void LogTestDetails(ITest test, Action<string> log = null, StringBuilder sb = null)
         {
             do_log($"   Test name: {test.DisplayName}", log, sb);
-            if (String.Compare(test.DisplayName, test.TestCase.DisplayName, StringComparison.Ordinal) != 0)
+            if (string.Compare(test.DisplayName, test.TestCase.DisplayName, StringComparison.Ordinal) != 0)
                 do_log($"   Test case: {test.TestCase.DisplayName}", log, sb);
         }
 
@@ -682,7 +682,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
         private void LogSourceInformation(ISourceInformation source, Action<string> log = null, StringBuilder sb = null)
         {
-            if (source == null || String.IsNullOrEmpty(source.FileName))
+            if (source == null || string.IsNullOrEmpty(source.FileName))
                 return;
 
             string location = source.FileName;
@@ -696,7 +696,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private string GetAssemblyInfo(ITestAssembly assembly)
         {
             string name = assembly?.Assembly?.Name?.Trim();
-            if (String.IsNullOrEmpty(name))
+            if (string.IsNullOrEmpty(name))
                 return name;
             return $" [{name}]";
         }
@@ -753,7 +753,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 if (assemblyInfo == null || assemblyInfo.Assembly == null || _filters.IsExcluded(assemblyInfo, log))
                     continue;
 
-                if (String.IsNullOrEmpty(assemblyInfo.FullPath))
+                if (string.IsNullOrEmpty(assemblyInfo.FullPath))
                 {
                     OnWarning($"Assembly '{assemblyInfo.Assembly}' cannot be found on the filesystem. xUnit requires access to actual on-disk file.");
                     continue;
@@ -786,7 +786,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public override string WriteResultsToFile(XmlResultJargon jargon)
         {
             if (_assembliesElement == null)
-                return String.Empty;
+                return string.Empty;
             // remove all the empty nodes
             _assembliesElement.Descendants().Where(e => e.Name == "collection" && !e.Descendants().Any()).Remove();
             string outputFilePath = GetResultsFilePath();
@@ -883,7 +883,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 throw new ArgumentNullException(nameof(assembly));
 
             string path = assembly.Location?.Trim();
-            if (String.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(path))
                 return null;
 
             path = Path.Combine(path, ".xunit.runner.json");

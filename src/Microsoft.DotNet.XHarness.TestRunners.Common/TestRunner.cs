@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         protected virtual string GetResultsFilePath()
         {
-            if (String.IsNullOrEmpty(ResultsFileName))
+            if (string.IsNullOrEmpty(ResultsFileName))
                 throw new InvalidOperationException("Runner didn't specify a valid results file name");
 
 

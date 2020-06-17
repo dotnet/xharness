@@ -31,6 +31,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// about failure.
         /// </summary>
         /// <value><c>true</c> info exists; otherwise, <c>false</c>.</value>
-        public bool HasInfo => !String.IsNullOrEmpty(TestName?.Trim()) && !String.IsNullOrEmpty(Message);
+        public bool HasInfo => !string.IsNullOrEmpty(TestName?.Trim()) && !string.IsNullOrEmpty(Message);
     }
 }

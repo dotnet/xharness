@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 { "run-all-tests:", "Run all the tests found in the assembly. Defaults to true.", v =>
                 {
                     // if cannot parse, use default
-                    if (Boolean.TryParse(v, out var runAll))
+                    if (bool.TryParse(v, out var runAll))
                         RunAllTestsByDefault = runAll;
                 }},
                 {
