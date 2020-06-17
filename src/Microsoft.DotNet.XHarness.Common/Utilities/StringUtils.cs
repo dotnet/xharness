@@ -19,9 +19,13 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
         {
             PlatformID pid = Environment.OSVersion.Platform;
             if ((int)pid != 128 && pid != PlatformID.Unix && pid != PlatformID.MacOSX)
+            {
                 s_shellQuoteChar = '"'; // Windows
+            }
             else
+            {
                 s_shellQuoteChar = '\''; // !Windows
+            }
         }
 
         public static string FormatArguments(params string[] arguments) => FormatArguments((IList<string>)arguments);
@@ -31,21 +35,30 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
         private static string[]? QuoteForProcess(params string[] array)
         {
             if (array == null || array.Length == 0)
+            {
                 return array;
+            }
 
             var rv = new string[array.Length];
             for (var i = 0; i < array.Length; i++)
+            {
                 rv[i] = QuoteForProcess(array[i]);
+            }
+
             return rv;
         }
 
         public static string Quote(string? f)
         {
             if (string.IsNullOrEmpty(f))
+            {
                 return f ?? string.Empty;
+            }
 
             if (f.IndexOfAny(s_mustQuoteCharacters) == -1)
+            {
                 return f;
+            }
 
             var s = new StringBuilder();
 
@@ -53,7 +66,9 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
             foreach (var c in f)
             {
                 if (c == '\'' || c == '"' || c == '\\')
+                {
                     s.Append('\\');
+                }
 
                 s.Append(c);
             }
@@ -66,10 +81,14 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
         private static string QuoteForProcess(string f)
         {
             if (string.IsNullOrEmpty(f))
+            {
                 return f ?? string.Empty;
+            }
 
             if (f.IndexOfAny(s_mustQuoteCharactersProcess) == -1)
+            {
                 return f;
+            }
 
             var s = new StringBuilder();
 
@@ -95,7 +114,10 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
         private static string[]? QuoteForProcess(IList<string> arguments)
         {
             if (arguments == null)
+            {
                 return Array.Empty<string>();
+            }
+
             return QuoteForProcess(arguments.ToArray());
         }
     }
