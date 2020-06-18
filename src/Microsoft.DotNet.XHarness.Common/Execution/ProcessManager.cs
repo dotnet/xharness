@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                                 diagnostics: false);
                         }
                     }
-                    catch (Win32Exception e) when (e.Message == "No such file or directory")
+                    catch (Win32Exception e) when (e.NativeErrorCode == 2)
                     {
                         log.WriteLine("lldb was not found, skipping diagnosis..");
                     }
