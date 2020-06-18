@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Xunit;
 
@@ -42,10 +43,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         }
 
         [Fact]
-        public void ConstructorNullDirTest()
-        {
-            Assert.Throws<ArgumentNullException>(() => new Logs(null));
-        }
+        public void ConstructorNullDirTest() => Assert.Throws<ArgumentNullException>(() => new Logs(null));
 
         [Fact]
         public void CreateFileTest()

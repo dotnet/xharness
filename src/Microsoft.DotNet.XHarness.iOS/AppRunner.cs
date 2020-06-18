@@ -108,7 +108,8 @@ namespace Microsoft.DotNet.XHarness.iOS
             {
                 int attempt = 1;
                 const int maxAttempts = 3;
-                while (true) {
+                while (true)
+                {
                     try
                     {
                         (simulator, companionSimulator) = await FindSimulators(target);
@@ -279,7 +280,8 @@ namespace Microsoft.DotNet.XHarness.iOS
                 {
                     await simulator.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
 
-                    if (companionSimulator != null) {
+                    if (companionSimulator != null)
+                    {
                         await companionSimulator.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
                     }
                 }
@@ -507,7 +509,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 deviceListenerPort,
                 deviceListenerTmpFile);
 
-            var ips = string.Join(",", _helpers.GetLocalIpAddresses().Select(ip => ip.ToString()));           
+            var ips = string.Join(",", _helpers.GetLocalIpAddresses().Select(ip => ip.ToString()));
 
             args.Add(new SetAppArgumentArgument($"-hostname:{ips}", true));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, ips));

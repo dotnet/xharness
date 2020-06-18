@@ -17,17 +17,20 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     internal class TcpTextWriter : TextWriter
     {
+        private readonly TcpClient _client;
+        private readonly StreamWriter _writer;
 
-        TcpClient client;
-        StreamWriter writer;
-
-        static string SelectHostName(string[] names, int port)
+        private static string SelectHostName(string[] names, int port)
         {
             if (names.Length == 0)
+            {
                 return null;
+            }
 
             if (names.Length == 1)
+            {
                 return names[0];
+            }
 
             object lock_obj = new object();
             string result = null;
@@ -50,7 +53,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                                lock (lock_obj)
                                {
                                    if (result == null)
+                                   {
                                        result = name;
+                                   }
                                }
                                evt.Set();
                            }
@@ -60,7 +65,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                                {
                                    failures++;
                                    if (failures == names.Length)
+                                   {
                                        evt.Set();
+                                   }
                                }
                            }
                        });
@@ -76,16 +83,21 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public TcpTextWriter(string hostName, int port)
         {
             if ((port < 0) || (port > ushort.MaxValue))
+            {
                 throw new ArgumentOutOfRangeException(nameof(port), $"Port must be between 0 and {ushort.MaxValue}");
+            }
 
             if (hostName == null)
+            {
                 throw new ArgumentNullException(nameof(hostName));
+            }
+
             HostName = SelectHostName(hostName.Split(','), port);
             Port = port;
 
-            client = new TcpClient(HostName, port);
-            writer = new StreamWriter(client.GetStream());
-       }
+            _client = new TcpClient(HostName, port);
+            _writer = new StreamWriter(_client.GetStream());
+        }
 
         public string HostName { get; private set; }
 
@@ -95,48 +107,27 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         public override System.Text.Encoding Encoding => Encoding.UTF8;
 
-        public override void Close()
-        {
-            writer.Close();
-        }
+        public override void Close() => _writer.Close();
 
-        protected override void Dispose(bool disposing)
-        {
-            writer.Dispose();
-        }
+        protected override void Dispose(bool disposing) => _writer.Dispose();
 
-        public override void Flush()
-        {
-            writer.Flush();
-        }
+        public override void Flush() => _writer.Flush();
 
         // minimum to override - see http://msdn.microsoft.com/en-us/library/system.io.textwriter.aspx
-        public override void Write(char value)
-        {
-            writer.Write(value);
-        }
+        public override void Write(char value) => _writer.Write(value);
 
-        public override void Write(char[] buffer)
-        {
-            writer.Write(buffer);
-        }
+        public override void Write(char[] buffer) => _writer.Write(buffer);
 
-        public override void Write(char[] buffer, int index, int count)
-        {
-            writer.Write(buffer, index, count);
-        }
+        public override void Write(char[] buffer, int index, int count) => _writer.Write(buffer, index, count);
 
-        public override void Write(string value)
-        {
-            writer.Write(value);
-        }
+        public override void Write(string value) => _writer.Write(value);
 
         // special extra override to ensure we flush data regularly
 
         public override void WriteLine()
         {
-            writer.WriteLine();
-            writer.Flush();
+            _writer.WriteLine();
+            _writer.Flush();
         }
     }
 }

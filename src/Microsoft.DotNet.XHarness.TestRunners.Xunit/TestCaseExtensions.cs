@@ -40,7 +40,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             foreach (var t in testCase.Traits.Keys)
             {
                 if (trait.Equals(t, comparer))
+                {
                     return testCase.Traits.TryGetValue(t, out values);
+                }
             }
 
             values = null;
@@ -59,7 +61,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         {
             var testClassName = testCase.GetTestClass();
             if (testClassName == null)
+            {
                 return null;
+            }
 
             int dot = testClassName.LastIndexOf('.');
             return dot <= 0 ? null : testClassName.Substring(0, dot);

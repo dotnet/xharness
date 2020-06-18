@@ -39,10 +39,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         }
 
         [Fact]
-        public void ConstructorNullPathTest()
-        {
-            Assert.Throws<ArgumentNullException>(() => { var log = new LogFile(_description, null); });
-        }
+        public void ConstructorNullPathTest() => Assert.Throws<ArgumentNullException>(() => { var log = new LogFile(_description, null); });
 
         [Fact]
         public void ConstructorNullDescriptionTest()

@@ -13,11 +13,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
     public class InfoPlistGeneratorTests
     {
         [Fact]
-        public void GenerateCodeNullTemplateFile()
-        {
-            Assert.ThrowsAsync<ArgumentNullException>(() =>
-               InfoPlistGenerator.GenerateCodeAsync(null, "Project Name"));
-        }
+        public void GenerateCodeNullTemplateFile() => Assert.ThrowsAsync<ArgumentNullException>(() =>
+                                                       InfoPlistGenerator.GenerateCodeAsync(null, "Project Name"));
 
         [Fact]
         public void GenerateCodeNullProjectName()

@@ -20,86 +20,90 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
     public class DeviceLogCapturer : IDeviceLogCapturer
     {
-        readonly IMLaunchProcessManager processManager;
-        readonly ILog mainLog;
-        readonly ILog deviceLog;
-        readonly string deviceName;
+        private readonly IMLaunchProcessManager _processManager;
+        private readonly ILog _mainLog;
+        private readonly ILog _deviceLog;
+        private readonly string _deviceName;
 
         public DeviceLogCapturer(IMLaunchProcessManager processManager, ILog mainLog, ILog deviceLog, string deviceName)
         {
-            this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
-            this.mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
-            this.deviceLog = deviceLog ?? throw new ArgumentNullException(nameof(deviceLog));
-            this.deviceName = deviceName ?? throw new ArgumentNullException(nameof(deviceName));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
+            _deviceLog = deviceLog ?? throw new ArgumentNullException(nameof(deviceLog));
+            _deviceName = deviceName ?? throw new ArgumentNullException(nameof(deviceName));
         }
 
-        Process process;
-        CountdownEvent streamEnds;
+        private Process _process;
+        private CountdownEvent _streamEnds;
 
         public void StartCapture()
         {
-            streamEnds = new CountdownEvent(2);
+            _streamEnds = new CountdownEvent(2);
 
             var args = new List<string> {
                 "--logdev",
                 "--sdkroot",
-                processManager.XcodeRoot,
+                _processManager.XcodeRoot,
                 "--devname",
-                deviceName
+                _deviceName
             };
 
-            process = new Process();
-            process.StartInfo.FileName = processManager.MlaunchPath;
-            process.StartInfo.Arguments = StringUtils.FormatArguments(args);
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
-            process.StartInfo.RedirectStandardInput = true;
-            process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
+            _process = new Process();
+            _process.StartInfo.FileName = _processManager.MlaunchPath;
+            _process.StartInfo.Arguments = StringUtils.FormatArguments(args);
+            _process.StartInfo.UseShellExecute = false;
+            _process.StartInfo.RedirectStandardOutput = true;
+            _process.StartInfo.RedirectStandardError = true;
+            _process.StartInfo.RedirectStandardInput = true;
+            _process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
             {
                 if (e.Data == null)
                 {
-                    streamEnds.Signal();
+                    _streamEnds.Signal();
                 }
                 else
                 {
-                    lock (deviceLog)
+                    lock (_deviceLog)
                     {
-                        deviceLog.WriteLine(e.Data);
+                        _deviceLog.WriteLine(e.Data);
                     }
                 }
             };
-            process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
+            _process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
             {
                 if (e.Data == null)
                 {
-                    streamEnds.Signal();
+                    _streamEnds.Signal();
                 }
                 else
                 {
-                    lock (deviceLog)
+                    lock (_deviceLog)
                     {
-                        deviceLog.WriteLine(e.Data);
+                        _deviceLog.WriteLine(e.Data);
                     }
                 }
             };
-            deviceLog.WriteLine("{0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
-            process.Start();
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
+            _deviceLog.WriteLine("{0} {1}", _process.StartInfo.FileName, _process.StartInfo.Arguments);
+            _process.Start();
+            _process.BeginOutputReadLine();
+            _process.BeginErrorReadLine();
         }
 
         public void StopCapture()
         {
-            if (process.HasExited)
+            if (_process.HasExited)
+            {
                 return;
+            }
 
-            process.StandardInput.WriteLine();
-            if (process.WaitForExit((int)TimeSpan.FromSeconds(5).TotalMilliseconds))
+            _process.StandardInput.WriteLine();
+            if (_process.WaitForExit((int)TimeSpan.FromSeconds(5).TotalMilliseconds))
+            {
                 return;
+            }
 
-            processManager.KillTreeAsync(process, mainLog, diagnostics: false).Wait();
-            process.Dispose();
+            _processManager.KillTreeAsync(_process, _mainLog, diagnostics: false).Wait();
+            _process.Dispose();
         }
     }
 }

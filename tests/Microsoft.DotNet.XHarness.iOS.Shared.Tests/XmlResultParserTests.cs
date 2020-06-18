@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         {
             var path = Path.GetTempFileName();
             File.Delete(path);
-            Assert.False(_resultParser.IsValidXml(path, out var jargon), "missing file");
+            Assert.False(_resultParser.IsValidXml(path, out _), "missing file");
         }
 
         [Theory]
@@ -227,7 +227,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         private static void ValidatexUnitFailure(string src, string appName, string variation, string title, string message, string stderrMessage, string xmlPath, int _)
         {
             var doc = XDocument.Load(xmlPath);
-            // get the assembly and validate its attrs
+            // get the assemlby and validate its attrs
             var assemblies = doc.Descendants().Where(e => e.Name == "assembly");
             Assert.Single(assemblies);
             var assemblyNode = assemblies.FirstOrDefault();

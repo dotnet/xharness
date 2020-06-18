@@ -14,13 +14,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     // Monitor the output from 'mlaunch --installdev' and cancel the installation if there's no output for 1 minute.
     public class AppInstallMonitorLog : FileBackedLog
     {
+        private readonly IFileBackedLog _copyTo;
+        private readonly CancellationTokenSource _cancellationSource;
 
-        readonly IFileBackedLog copy_to;
-        readonly CancellationTokenSource cancellationSource;
+        public override string FullPath => _copyTo.FullPath;
 
-        public override string FullPath => copy_to.FullPath;
-
-        public CancellationToken CancellationToken => cancellationSource.Token;
+        public CancellationToken CancellationToken => _cancellationSource.Token;
 
         public bool CopyingApp;
         public bool CopyingWatchApp;
@@ -38,33 +37,27 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public AppInstallMonitorLog(IFileBackedLog copy_to)
                 : base($"Watch transfer log for {copy_to.Description}")
         {
-            this.copy_to = copy_to;
-            cancellationSource = new CancellationTokenSource();
-            cancellationSource.Token.Register(() =>
+            _copyTo = copy_to;
+            _cancellationSource = new CancellationTokenSource();
+            _cancellationSource.Token.Register(() =>
             {
                 copy_to.WriteLine("App installation cancelled: it timed out after no output for 1 minute.");
             });
         }
 
-        public override Encoding Encoding => copy_to.Encoding;
+        public override Encoding Encoding => _copyTo.Encoding;
 
-        public override void Flush()
-        {
-            copy_to.Flush();
-        }
+        public override void Flush() => _copyTo.Flush();
 
-        public override StreamReader GetReader() => copy_to.GetReader();
+        public override StreamReader GetReader() => _copyTo.GetReader();
 
         public override void Dispose()
         {
-            copy_to.Dispose();
-            cancellationSource.Dispose();
+            _copyTo.Dispose();
+            _cancellationSource.Dispose();
         }
 
-        void ResetTimer()
-        {
-            cancellationSource.CancelAfter(TimeSpan.FromMinutes(1));
-        }
+        private void ResetTimer() => _cancellationSource.CancelAfter(TimeSpan.FromMinutes(1));
 
         protected override void WriteImpl(string value)
         {
@@ -87,9 +80,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             else if (v.StartsWith("PercentComplete: ", StringComparison.Ordinal) && int.TryParse(v.Substring("PercentComplete: ".Length).Trim(), out var percent))
             {
                 if (CopyingApp)
+                {
                     AppPercentComplete = percent;
+                }
                 else if (CopyingWatchApp)
+                {
                     WatchAppPercentComplete = percent;
+                }
             }
             else if (v.StartsWith("NumBytes: ", StringComparison.Ordinal) && int.TryParse(v.Substring("NumBytes: ".Length).Trim(), out var num_bytes))
             {
@@ -107,19 +104,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             else if (v.StartsWith("TotalBytes: ", StringComparison.Ordinal) && int.TryParse(v.Substring("TotalBytes: ".Length).Trim(), out var total_bytes))
             {
                 if (CopyingApp)
+                {
                     AppTotalBytes = total_bytes;
+                }
                 else if (CopyingWatchApp)
+                {
                     WatchAppTotalBytes = total_bytes;
+                }
             }
 
             ResetTimer();
 
-            copy_to.WriteLine(value);
+            _copyTo.WriteLine(value);
         }
 
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            copy_to.Write(buffer, offset, count);
-        }
+        public override void Write(byte[] buffer, int offset, int count) => _copyTo.Write(buffer, offset, count);
     }
 }

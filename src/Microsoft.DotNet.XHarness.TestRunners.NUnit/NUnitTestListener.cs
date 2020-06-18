@@ -14,28 +14,32 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 {
     internal class NUnitTestListener : ITestEventListener
     {
-        readonly LogWriter _logger;
-        readonly INUnitTestRunner _runner;
+        private readonly LogWriter _logger;
+        private readonly INUnitTestRunner _runner;
 
         public NUnitTestListener(INUnitTestRunner runner, LogWriter logger)
         {
-            _runner = runner ?? throw new ArgumentNullException(nameof (runner));
-            _logger = logger ?? throw new ArgumentNullException(nameof (logger));
+            _runner = runner ?? throw new ArgumentNullException(nameof(runner));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        void TestStarted(XmlNode testEvent)
+        private void TestStarted(XmlNode testEvent)
         {
             if (testEvent == null)
+            {
                 return;
+            }
 
-			if (!string.IsNullOrEmpty (_runner.TestsRootDirectory))
-				Environment.CurrentDirectory = _runner.TestsRootDirectory;
+            if (!string.IsNullOrEmpty(_runner.TestsRootDirectory))
+            {
+                Environment.CurrentDirectory = _runner.TestsRootDirectory;
+            }
 
-            _logger.OnInfo (testEvent.Attributes["fullname"].Value);
+            _logger.OnInfo(testEvent.Attributes["fullname"].Value);
 
         }
 
-        void TestFinished(XmlNode testEvent)
+        private void TestFinished(XmlNode testEvent)
         {
             // we need to get the status from the string. That value is stored in
             // <test-case result=''> value can be: Passed, Failed, Inconclusive or Skipped. To make things
@@ -50,27 +54,28 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
                 _ => TestStatus.Inconclusive // Cancelled, error or invalid
             };
             var testName = testEvent.Attributes["fullname"].Value;
-            var sb = new StringBuilder ();
-            switch (status) {
-            case TestStatus.Passed:
-                sb.Append ("\t[PASS] ");
-                _runner.IncreasePassedTests();
-                break;
-            case TestStatus.Skipped:
-                sb.Append ("\t[IGNORED] ");
-                _runner.IncreaseSkippedTests();
-                break;
-            case TestStatus.Failed:
-                sb.Append ("\t[FAIL] ");
-                _runner.IncreaseFailedTests();
-                break;
-            case TestStatus.Inconclusive:
-                sb.Append ("\t[INCONCLUSIVE] ");
-                _runner.IncreaseInconclusiveTests();
-                break;
-            default:
-                sb.Append ("\t[INFO] ");
-                break;
+            var sb = new StringBuilder();
+            switch (status)
+            {
+                case TestStatus.Passed:
+                    sb.Append("\t[PASS] ");
+                    _runner.IncreasePassedTests();
+                    break;
+                case TestStatus.Skipped:
+                    sb.Append("\t[IGNORED] ");
+                    _runner.IncreaseSkippedTests();
+                    break;
+                case TestStatus.Failed:
+                    sb.Append("\t[FAIL] ");
+                    _runner.IncreaseFailedTests();
+                    break;
+                case TestStatus.Inconclusive:
+                    sb.Append("\t[INCONCLUSIVE] ");
+                    _runner.IncreaseInconclusiveTests();
+                    break;
+                default:
+                    sb.Append("\t[INFO] ");
+                    break;
             }
 
             sb.Append(testName);
@@ -102,20 +107,23 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
                         if (!string.IsNullOrEmpty(stackTrace))
                         {
                             stackTrace = stackTrace.Replace("\r\n", "\\r\\n");
-                            string[] lines = stackTrace.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                            string[] lines = stackTrace.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                             foreach (string line in lines)
+                            {
                                 sb.AppendLine($"\t\t{line}");
+                            }
                         }
                     }
                 }
 
-                _runner.Add (new TestFailureInfo {
+                _runner.Add(new TestFailureInfo
+                {
                     TestName = testName,
-                    Message = sb.ToString ()
+                    Message = sb.ToString()
                 });
             }
 
-            _logger.OnInfo (sb.ToString ());
+            _logger.OnInfo(sb.ToString());
         }
 
         public void OnTestEvent(string report)

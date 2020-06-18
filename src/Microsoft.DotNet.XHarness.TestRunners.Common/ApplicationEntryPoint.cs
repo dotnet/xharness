@@ -129,19 +129,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// </summary>
         public MinimumLogLevel MinimumLogLevel { get; set; } = MinimumLogLevel.Info;
 
-        void OnTestStarted(object sender, string testName)
-        {
-            var handler = TestStarted;
-            if (handler != null)
-                handler(sender, testName);
-        }
+        private void OnTestStarted(object sender, string testName) => TestStarted?.Invoke(sender, testName);
 
-        void OnTestCompleted(object sender, (string TestName, TestResult Testresult) result)
-        {
-            var handler = TestCompleted;
-            if (handler != null)
-                handler(sender, result);
-        }
+        private void OnTestCompleted(object sender, (string TestName, TestResult Testresult) result) => TestCompleted?.Invoke(sender, result);
 
         private async Task<List<string>> GetIgnoredCategories()
         {
@@ -180,7 +170,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         internal static string WriteResults(TestRunner runner, ApplicationOptions options, LogWriter logger, TextWriter writer)
         {
             if (options.EnableXml && writer == null)
+            {
                 throw new ArgumentNullException(nameof(writer));
+            }
 
             string resultsFilePath = null;
             if (options.EnableXml)
@@ -197,7 +189,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             return resultsFilePath;
         }
 
-        protected async Task<TestRunner> InternalRunAsync (LogWriter logger)
+        protected async Task<TestRunner> InternalRunAsync(LogWriter logger)
         {
             logger.MinimumLogLevel = MinimumLogLevel;
             var runner = GetTestRunner(logger);

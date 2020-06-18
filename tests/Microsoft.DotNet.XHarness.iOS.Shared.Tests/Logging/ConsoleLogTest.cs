@@ -27,15 +27,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         public void TestWrite()
         {
             var message = "This is a log message";
-            using (FileStream testStream = new FileStream(_testFile, FileMode.OpenOrCreate, FileAccess.Write))
-            using (StreamWriter writer = new StreamWriter(testStream))
+            using (var testStream = new FileStream(_testFile, FileMode.OpenOrCreate, FileAccess.Write))
+            using (var writer = new StreamWriter(testStream))
             {
                 Console.SetOut(writer);
                 // simply test that we do write in the file. We need to close the stream to be able to read it
                 _log.WriteLine(message);
             }
 
-            using (FileStream testStream = new FileStream(_testFile, FileMode.OpenOrCreate, FileAccess.Read))
+            using (var testStream = new FileStream(_testFile, FileMode.OpenOrCreate, FileAccess.Read))
             using (var reader = new StreamReader(testStream))
             {
                 var line = reader.ReadLine();

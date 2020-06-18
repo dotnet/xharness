@@ -24,10 +24,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             Directory.CreateDirectory(s_appPath);
         }
 
-        public void Dispose()
-        {
-            Directory.Delete(s_appPath, true);
-        }
+        public void Dispose() => Directory.Delete(s_appPath, true);
 
         [Fact]
         public void InitializeTest()

@@ -20,9 +20,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         public static async Task<string> GenerateCodeAsync(Stream template, string projectName)
         {
             if (template == null)
+            {
                 throw new ArgumentNullException(nameof(template));
+            }
+
             if (projectName == null)
+            {
                 throw new ArgumentNullException(nameof(projectName));
+            }
             // got the lines we want to add, read the template and substitute
             using (var reader = new StreamReader(template))
             {

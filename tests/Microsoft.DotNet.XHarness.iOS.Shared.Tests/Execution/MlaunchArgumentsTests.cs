@@ -5,7 +5,6 @@
 using System.Collections.Generic;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Execution
@@ -76,10 +75,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Execution
 
         [Theory]
         [MemberData(nameof(CommandLineDataTestSource.CommandLineArgs), MemberType = typeof(CommandLineDataTestSource))]
-        public void AsCommandLineTest(MlaunchArgument[] args, string expected)
-        {
-            Assert.Equal(expected, new MlaunchArguments(args).AsCommandLine());
-        }
+        public void AsCommandLineTest(MlaunchArgument[] args, string expected) => Assert.Equal(expected, new MlaunchArguments(args).AsCommandLine());
 
         [Fact]
         public void MlaunchArgumentAndProcessManagerTest()

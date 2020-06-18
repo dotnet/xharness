@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
     public abstract class iOSApplicationEntryPoint : ApplicationEntryPoint
     {
         protected override TestRunner GetTestRunner(LogWriter logWriter) =>
-            new XUnitTestRunner(logWriter) {MaxParallelThreads = MaxParallelThreads};
+            new XUnitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
 
         protected override bool IsXunit => true;
 

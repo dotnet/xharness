@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
     public class AppInstallerTests : IDisposable
     {
         private static readonly string s_appPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        static readonly string s_appIdentifier = Guid.NewGuid().ToString();
+        private static readonly string s_appIdentifier = Guid.NewGuid().ToString();
         private static readonly IHardwareDevice s_mockDevice = new Device(
             buildVersion: "17A577",
             deviceClass: DeviceClass.iPhone,
@@ -31,10 +31,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             name: "Test iPhone",
             productType: "iPhone12,1",
             productVersion: "13.0");
-
-        readonly Mock<IMLaunchProcessManager> _processManager;
-        readonly Mock<ILog> _mainLog;
-        readonly AppBundleInformation _appBundleInformation;
+        private readonly Mock<IMLaunchProcessManager> _processManager;
+        private readonly Mock<ILog> _mainLog;
+        private readonly AppBundleInformation _appBundleInformation;
         private Mock<IHardwareDeviceLoader> _hardwareDeviceLoader;
 
         public AppInstallerTests()
@@ -58,10 +57,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 extension: null);
         }
 
-        public void Dispose()
-        {
-            Directory.Delete(s_appPath, true);
-        }
+        public void Dispose() => Directory.Delete(s_appPath, true);
 
         [Fact]
         public async Task InstallToSimulatorTest()
@@ -137,7 +133,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 appName: "AppName",
                 bundleIdentifier: s_appIdentifier,
                 appPath: s_appPath,
-                launchAppPath:s_appPath,
+                launchAppPath: s_appPath,
                 supports32b: true,
                 extension: null);
 

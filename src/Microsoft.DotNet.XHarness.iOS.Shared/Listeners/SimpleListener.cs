@@ -82,10 +82,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             t.Start();
         }
 
-        public bool WaitForCompletion(TimeSpan ts)
-        {
-            return _stopped.Task.Wait(ts);
-        }
+        public bool WaitForCompletion(TimeSpan ts) => _stopped.Task.Wait(ts);
 
         public Task CompletionTask => _stopped.Task;
 
@@ -96,7 +93,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             {
                 // wait a second just in case more data arrives.
                 if (!_stopped.Task.Wait(TimeSpan.FromSeconds(1)))
+                {
                     Stop();
+                }
             }
             catch
             {
@@ -104,10 +103,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
         }
 
-        public virtual void Dispose()
-        {
-            TestLog.Dispose();
-        }
+        public virtual void Dispose() => TestLog.Dispose();
     }
 }
 

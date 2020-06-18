@@ -7,10 +7,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     public static class WrenchLog
     {
 
-        public static void WriteLine(string message, params object[] args)
-        {
-            WriteLine(string.Format(message, args));
-        }
+        public static void WriteLine(string message, params object[] args) => WriteLine(string.Format(message, args));
 
         public static void WriteLine(string message)
         {

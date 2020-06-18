@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         /// Return all the filters that are applied to assemblies.
         /// </summary>
         public IEnumerable<XUnitFilter> AssemblyFilters
-            => Enumerable.Where (this, f => f.FilterType == XUnitFilterType.Assembly);
+            => Enumerable.Where(this, f => f.FilterType == XUnitFilterType.Assembly);
 
         /// <summary>
         /// Return all the filters that are applied to test cases.
@@ -51,7 +51,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 {
                     // filter does not exclude, that means that if it include, we should include and break the
                     // loop, always include
-                    if (!doesExclude) return false;
+                    if (!doesExclude)
+                    {
+                        return false;
+                    }
                 }
             }
 

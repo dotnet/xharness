@@ -15,12 +15,18 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
         public static async Task<bool> TimeoutAfter(this Task task, TimeSpan timeout)
         {
             if (timeout.Ticks < -1)
+            {
                 return false;
+            }
 
             if (task == await Task.WhenAny(task, Task.Delay(timeout)))
+            {
                 return true;
+            }
             else
+            {
                 return false;
+            }
         }
     }
 }

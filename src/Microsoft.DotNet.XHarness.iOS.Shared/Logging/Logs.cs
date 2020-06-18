@@ -22,17 +22,17 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         }
 
         // Create a new log backed with a file
-        public IFileBackedLog Create(string filename, string name, bool? timestamp = null)
-        {
-            return Create(Directory, filename, name, timestamp);
-        }
+        public IFileBackedLog Create(string filename, string name, bool? timestamp = null) => Create(Directory, filename, name, timestamp);
 
-        LogFile Create(string directory, string filename, string name, bool? timestamp = null)
+        private LogFile Create(string directory, string filename, string name, bool? timestamp = null)
         {
             System.IO.Directory.CreateDirectory(directory);
             var rv = new LogFile(name, Path.GetFullPath(Path.Combine(directory, filename)));
             if (timestamp.HasValue)
+            {
                 rv.Timestamp = timestamp.Value;
+            }
+
             Add(rv);
             return rv;
         }
@@ -40,10 +40,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         // Adds an existing file to this collection of logs.
         // If the file is not inside the log directory, then it's copied there.
         // 'path' must be a full path to the file.
-        public IFileBackedLog AddFile(string path)
-        {
-            return AddFile(path, Path.GetFileName(path));
-        }
+        public IFileBackedLog AddFile(string path) => AddFile(path, Path.GetFileName(path));
 
         // Adds an existing file to this collection of logs.
         // If the file is not inside the log directory, then it's copied there.
@@ -51,7 +48,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public IFileBackedLog AddFile(string path, string name)
         {
             if (path == null)
+            {
                 throw new ArgumentNullException(nameof(path));
+            }
 
             if (!path.StartsWith(Directory, StringComparison.Ordinal))
             {
@@ -69,7 +68,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public string CreateFile(string path, string description)
         {
             if (path == null)
+            {
                 throw new ArgumentNullException(nameof(path));
+            }
+
             using (var rv = new LogFile(description, Path.Combine(Directory, path), false))
             {
                 Add(rv);
@@ -80,7 +82,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public void Dispose()
         {
             foreach (var log in this)
+            {
                 log.Dispose();
+            }
         }
     }
 }

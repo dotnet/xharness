@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
     internal class FilterBuilder
     {
         private readonly ITestFilterBuilder _testFilterBuilder;
-        private  readonly bool _runAssemblyByDefault;
+        private readonly bool _runAssemblyByDefault;
 
         public List<string> IgnoredCategories { get; } = new List<string>();
         public List<string> IgnoredClasses { get; } = new List<string>();
@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 
         public FilterBuilder(ITestFilterBuilder testFilterBuilder, bool runAssemblyByDefault = true)
         {
-            _testFilterBuilder = testFilterBuilder ?? throw new ArgumentNullException(nameof (testFilterBuilder));
+            _testFilterBuilder = testFilterBuilder ?? throw new ArgumentNullException(nameof(testFilterBuilder));
             _runAssemblyByDefault = runAssemblyByDefault;
         }
 
@@ -51,9 +51,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             foreach (string category in filters.Keys)
             {
                 var filtersInCategory = filters[category];
-                foreach (var filterReason  in filtersInCategory)
+                foreach (var filterReason in filtersInCategory)
                 {
-                    string currentComparison = $"{category} ";
                     var eq = _runAssemblyByDefault ? "==" : "!=";
                     comparisons.Add($"{category} {eq} {filterReason}");
                 }
@@ -65,7 +64,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
         {
             var whereClause = BuildWhereClause();
             if (!string.IsNullOrEmpty(whereClause))
+            {
                 _testFilterBuilder.SelectWhere(BuildWhereClause());
+            }
+
             return _testFilterBuilder.GetFilter();
         }
     }

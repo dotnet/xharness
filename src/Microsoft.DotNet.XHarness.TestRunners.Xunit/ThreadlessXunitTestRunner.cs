@@ -6,11 +6,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Xml;
 using System.Xml.Linq;
 
 using Xunit;
@@ -77,7 +74,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             return failed ? 1 : 0;
         }
 
-        void ParseEqualSeparatedArgument(Dictionary<string, List<string>> targetDictionary, string argument)
+        private void ParseEqualSeparatedArgument(Dictionary<string, List<string>> targetDictionary, string argument)
         {
             var parts = argument.Split('=');
             if (parts.Length != 2 || string.IsNullOrEmpty(parts[0]) || string.IsNullOrEmpty(parts[1]))
@@ -99,7 +96,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         }
     }
 
-    class ThreadlessXunitDiscoverer : global::Xunit.Sdk.XunitTestFrameworkDiscoverer
+    internal class ThreadlessXunitDiscoverer : global::Xunit.Sdk.XunitTestFrameworkDiscoverer
     {
         public ThreadlessXunitDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink)
             : base(assemblyInfo, sourceProvider, diagnosticMessageSink)
@@ -114,7 +111,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 {
                     var testClass = CreateTestClass(type);
                     if (!FindTestsForType(testClass, includeSourceInformation, messageBus, discoveryOptions))
+                    {
                         break;
+                    }
                 }
 
                 messageBus.QueueMessage(new global::Xunit.Sdk.DiscoveryCompleteMessage());
@@ -122,7 +121,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         }
     }
 
-    class ConsoleDiagnosticMessageSink : global::Xunit.Sdk.LongLivedMarshalByRefObject, IMessageSink
+    internal class ConsoleDiagnosticMessageSink : global::Xunit.Sdk.LongLivedMarshalByRefObject, IMessageSink
     {
         public bool OnMessage(IMessageSinkMessage message)
         {

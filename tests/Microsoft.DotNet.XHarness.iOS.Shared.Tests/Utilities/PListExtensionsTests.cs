@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
 {
     public class PListExtensionsTests
     {
-        private XmlDocument _plist;
+        private readonly XmlDocument _plist;
 
         public PListExtensionsTests() =>
             _plist = CreateResultSample();
@@ -48,10 +48,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
         }
 
         [Fact]
-        public void SetNullMinimumOSVersion()
-        {
-            Assert.Throws<ArgumentNullException>(() => _plist.SetMinimumOSVersion(null));
-        }
+        public void SetNullMinimumOSVersion() => Assert.Throws<ArgumentNullException>(() => _plist.SetMinimumOSVersion(null));
 
         [Fact]
         public void SetMinimummacOSVersion()
@@ -62,10 +59,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
         }
 
         [Fact]
-        public void SetNullMinimummacOSVersion()
-        {
-            Assert.Throws<ArgumentNullException>(() => _plist.SetMinimummacOSVersion(null));
-        }
+        public void SetNullMinimummacOSVersion() => Assert.Throws<ArgumentNullException>(() => _plist.SetMinimummacOSVersion(null));
 
         [Fact]
         public void SetCFBundleDisplayName()
@@ -76,10 +70,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
         }
 
         [Fact]
-        public void SetNullCFBundleDisplayName()
-        {
-            Assert.Throws<ArgumentNullException>(() => _plist.SetCFBundleDisplayName(null));
-        }
+        public void SetNullCFBundleDisplayName() => Assert.Throws<ArgumentNullException>(() => _plist.SetCFBundleDisplayName(null));
 
         [Fact]
         public void SetCFBundleIdentifier()
@@ -90,10 +81,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
         }
 
         [Fact]
-        public void SetNullCFBundleIdentifier()
-        {
-            Assert.Throws<ArgumentNullException>(() => _plist.SetCFBundleIdentifier(null));
-        }
+        public void SetNullCFBundleIdentifier() => Assert.Throws<ArgumentNullException>(() => _plist.SetCFBundleIdentifier(null));
 
         [Fact]
         public void SetCFBundleName()
@@ -104,9 +92,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
         }
 
         [Fact]
-        public void SetNullCFBundleName()
-        {
-            Assert.Throws<ArgumentNullException>(() => _plist.SetCFBundleName(null));
-        }
+        public void SetNullCFBundleName() => Assert.Throws<ArgumentNullException>(() => _plist.SetCFBundleName(null));
     }
 }

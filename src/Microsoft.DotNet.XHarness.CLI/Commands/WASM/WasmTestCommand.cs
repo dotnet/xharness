@@ -2,17 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.Extensions.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.ComponentModel;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 }
                 else
                 {
-                   logger.LogDebug(line);
+                    logger.LogDebug(line);
                 }
             }
             else

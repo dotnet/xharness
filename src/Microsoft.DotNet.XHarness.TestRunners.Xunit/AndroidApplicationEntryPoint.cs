@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         protected override bool IsXunit => true;
 
         protected override TestRunner GetTestRunner(LogWriter logWriter) =>
-            new XUnitTestRunner(logWriter) {MaxParallelThreads = MaxParallelThreads};
+            new XUnitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
 
         public override async Task RunAsync()
         {
@@ -46,7 +46,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             if (options.EnableXml)
             {
                 if (TestsResultsFinalPath == null)
+                {
                     throw new InvalidOperationException("Tests results final path cannot be null.");
+                }
 
                 using (var stream = File.Create(TestsResultsFinalPath))
                 using (var writer = new StreamWriter(stream))
@@ -61,7 +63,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
             logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests}");
             if (options.TerminateAfterExecution)
+            {
                 TerminateWithSuccess();
+            }
         }
     }
 }

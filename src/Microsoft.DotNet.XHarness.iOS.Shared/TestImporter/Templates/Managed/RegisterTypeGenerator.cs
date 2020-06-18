@@ -3,19 +3,18 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
 {
     public static class RegisterTypeGenerator
     {
-
-        static readonly string UsingReplacement = "%USING%";
-        static readonly string KeysReplacement = "%KEY VALUES%";
-        static readonly string IsxUnitReplacement = "%IS XUNIT%";
+        private const string UsingReplacement = "%USING%";
+        private const string KeysReplacement = "%KEY VALUES%";
+        private const string IsxUnitReplacement = "%IS XUNIT%";
 
         public static async Task<string> GenerateCodeAsync((string FailureMessage, Dictionary<string, Type> Types) typeRegistration, bool isXunit,
             Stream template)

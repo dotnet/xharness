@@ -14,18 +14,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     public abstract partial class Log
     {
 
-        public static IFileBackedLog CreateReadableAggregatedLog (IFileBackedLog defaultLog, params ILog[] logs)
-        {
-            return new ReadableAggregatedLog(defaultLog, logs);
-        }
+        public static IFileBackedLog CreateReadableAggregatedLog(IFileBackedLog defaultLog, params ILog[] logs) => new ReadableAggregatedLog(defaultLog, logs);
 
-        public static ILog CreateAggregatedLog(params ILog[] logs)
-        {
-            return new AggregatedLog(logs);
-        }
+        public static ILog CreateAggregatedLog(params ILog[] logs) => new AggregatedLog(logs);
 
         // Log that will duplicate log output to multiple other logs.
-        class AggregatedLog : Log
+        private class AggregatedLog : Log
         {
             protected readonly List<ILog> _logs = new List<ILog>();
 
@@ -37,31 +31,39 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             protected override void WriteImpl(string value)
             {
                 foreach (var log in _logs)
+                {
                     log.Write(value);
+                }
             }
 
             public override void Write(byte[] buffer, int offset, int count)
             {
                 foreach (var log in _logs)
+                {
                     log.Write(buffer, offset, count);
+                }
             }
 
             public override void Flush()
             {
                 foreach (var log in _logs)
+                {
                     log.Flush();
+                }
             }
 
             public override void Dispose()
             {
                 foreach (var log in _logs)
+                {
                     log.Dispose();
+                }
             }
         }
 
-        class ReadableAggregatedLog : AggregatedLog, IFileBackedLog
+        private class ReadableAggregatedLog : AggregatedLog, IFileBackedLog
         {
-            readonly IFileBackedLog _defaultLog;
+            private readonly IFileBackedLog _defaultLog;
 
             public ReadableAggregatedLog(IFileBackedLog defaultLog, params ILog[] logs) : base(logs)
             {

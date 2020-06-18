@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
+using Microsoft.DotNet.XHarness.Android.Execution;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
@@ -18,10 +19,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
     internal class AndroidTestCommand : TestCommand
     {
         // nunit2 one should go away eventually
-        private readonly static string[] _xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
-        private readonly static string _testRunSummaryVariableName = "test-execution-summary";
-        private readonly static string _shortMessageVariableName = "shortMsg";
-        private readonly static string _returnCodeVariableName = "return-code";
+        private static readonly string[] s_xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
+        private const string TestRunSummaryVariableName = "test-execution-summary";
+        private const string ShortMessageVariableName = "shortMsg";
+        private const string ReturnCodeVariableName = "return-code";
 
         private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
 
@@ -36,13 +37,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 APKs can communicate status back to XHarness using the results bundle:
 
 Required:
-{_returnCodeVariableName} - Exit code for instrumentation. Necessary because a crashing instrumentation may be indistinguishable from a passing one from exit codes.
+{ReturnCodeVariableName} - Exit code for instrumentation. Necessary because a crashing instrumentation may be indistinguishable from a passing one from exit codes.
 
 Optional:
 Test results Paths:
-{string.Join('\n', _xmlOutputVariableNames)} - If specified, this file will be copied off the device after execution (used for external reporting)
+{string.Join('\n', s_xmlOutputVariableNames)} - If specified, this file will be copied off the device after execution (used for external reporting)
 Reporting:
-{_testRunSummaryVariableName},{_shortMessageVariableName} - If specified, this will be printed to the console directly after execution (useful for printing summaries)
+{TestRunSummaryVariableName},{ShortMessageVariableName} - If specified, this will be printed to the console directly after execution (useful for printing summaries)
  
 Arguments:
 ";
@@ -115,7 +116,7 @@ Arguments:
                 }
 
                 // No class name = default Instrumentation
-                var result = runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
+                ProcessExecutionResults? result = runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
 
                 using (logger.BeginScope("Post-test copy and cleanup"))
                 {
@@ -127,7 +128,7 @@ Arguments:
                         instrumentationExitCode = instrExitCode;
 
                         // Pull XUnit result XMLs off the device
-                        foreach (string possibleResultKey in _xmlOutputVariableNames)
+                        foreach (string possibleResultKey in s_xmlOutputVariableNames)
                         {
                             if (resultValues.ContainsKey(possibleResultKey))
                             {
@@ -135,33 +136,33 @@ Arguments:
                                 runner.PullFiles(resultValues[possibleResultKey], _arguments.OutputDirectory);
                             }
                         }
-                        if (resultValues.ContainsKey(_testRunSummaryVariableName))
+                        if (resultValues.ContainsKey(TestRunSummaryVariableName))
                         {
-                            logger.LogInformation($"Test execution summary:{Environment.NewLine}{resultValues[_testRunSummaryVariableName]}");
+                            logger.LogInformation($"Test execution summary:{Environment.NewLine}{resultValues[TestRunSummaryVariableName]}");
                         }
-                        if (resultValues.ContainsKey(_shortMessageVariableName))
+                        if (resultValues.ContainsKey(ShortMessageVariableName))
                         {
-                            logger.LogInformation($"Short Message: {Environment.NewLine}{resultValues[_shortMessageVariableName]}");
+                            logger.LogInformation($"Short Message: {Environment.NewLine}{resultValues[ShortMessageVariableName]}");
                         }
 
                         // Due to the particulars of how instrumentations work, ADB will report a 0 exit code for crashed instrumentations
                         // We'll change that to a specific value and print a message explaining why.
-                        if (resultValues.ContainsKey(_returnCodeVariableName))
+                        if (resultValues.ContainsKey(ReturnCodeVariableName))
                         {
-                            if (int.TryParse(resultValues[_returnCodeVariableName], out int bundleExitCode))
+                            if (int.TryParse(resultValues[ReturnCodeVariableName], out int bundleExitCode))
                             {
                                 logger.LogInformation($"Instrumentation finished normally with exit code {bundleExitCode}");
                                 instrumentationExitCode = bundleExitCode;
                             }
                             else
                             {
-                                logger.LogError($"Un-parse-able value for '{_returnCodeVariableName}' : '{resultValues[_returnCodeVariableName]}'");
+                                logger.LogError($"Un-parse-able value for '{ReturnCodeVariableName}' : '{resultValues[ReturnCodeVariableName]}'");
                                 instrumentationExitCode = (int)ExitCode.RETURN_CODE_NOT_SET;
                             }
                         }
                         else
                         {
-                            logger.LogError($"No value for '{_returnCodeVariableName}' provided in instrumentation result.  This may indicate a crashed test (see log)");
+                            logger.LogError($"No value for '{ReturnCodeVariableName}' provided in instrumentation result.  This may indicate a crashed test (see log)");
                             instrumentationExitCode = (int)ExitCode.RETURN_CODE_NOT_SET;
                         }
                     }

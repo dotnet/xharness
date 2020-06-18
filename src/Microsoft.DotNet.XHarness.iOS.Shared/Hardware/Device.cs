@@ -175,7 +175,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
                 // https://www.theiphonewiki.com/wiki/List_of_Apple_TVs
                 if (model.StartsWith("AppleTV", StringComparison.Ordinal))
+                {
                     return Architecture.ARM64;
+                }
 
                 throw new NotImplementedException();
             }

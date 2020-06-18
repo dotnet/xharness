@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-
 namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     /// <summary>
@@ -31,6 +29,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// about failure.
         /// </summary>
         /// <value><c>true</c> info exists; otherwise, <c>false</c>.</value>
-        public bool HasInfo => !String.IsNullOrEmpty(TestName?.Trim()) && !String.IsNullOrEmpty(Message);
+        public bool HasInfo => !string.IsNullOrEmpty(TestName?.Trim()) && !string.IsNullOrEmpty(Message);
     }
 }

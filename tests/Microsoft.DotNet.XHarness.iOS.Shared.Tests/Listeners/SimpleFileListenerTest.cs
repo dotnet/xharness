@@ -34,10 +34,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
         }
 
         [Fact]
-        public void ConstructorNullPathTest()
-        {
-            Assert.Throws<ArgumentNullException>(() => new SimpleFileListener(null, _log.Object, _testLog.Object, false));
-        }
+        public void ConstructorNullPathTest() => Assert.Throws<ArgumentNullException>(() => new SimpleFileListener(null, _log.Object, _testLog.Object, false));
 
         [Theory]
         [InlineData("Tests run: ", false)]

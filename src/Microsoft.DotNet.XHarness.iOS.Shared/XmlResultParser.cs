@@ -18,21 +18,26 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
     public class XmlResultParser : IResultParser
     {
-        private static readonly IHelpers helpers = new Helpers();
+        private static readonly IHelpers s_helpers = new Helpers();
 
         // test if the file is valid xml, or at least, that can be read it.
         public bool IsValidXml(string path, out XmlResultJargon type)
         {
             type = XmlResultJargon.Missing;
             if (!File.Exists(path))
+            {
                 return false;
+            }
 
             using var stream = File.OpenText(path);
             string? line;
             while ((line = stream.ReadLine()) != null)
             { // special case when get got the tcp connection
                 if (line.Contains("ping"))
+                {
                     continue;
+                }
+
                 if (line.Contains("test-run"))
                 { // first element of the NUnitV3 test collection
                     type = XmlResultJargon.NUnitV3;
@@ -58,7 +63,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return false;
         }
 
-        static (string resultLine, bool failed) ParseNUnitV3Xml(StreamReader stream, StreamWriter? writer)
+        private static (string resultLine, bool failed) ParseNUnitV3Xml(StreamReader stream, StreamWriter? writer)
         {
             long testcasecount, passed, failed, inconclusive, skipped;
             bool failedTestRun = false; // result = "Failed"
@@ -87,7 +92,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         do
                         {
                             if (reader.Name != "test-case")
+                            {
                                 break;
+                            }
                             // read the test cases in the current node
                             var status = reader["result"];
                             switch (status)
@@ -136,7 +143,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return (resultLine, failedTestRun);
         }
 
-        static (string resultLine, bool failed) ParseTouchUnitXml(StreamReader stream, StreamWriter? writer)
+        private static (string resultLine, bool failed) ParseTouchUnitXml(StreamReader stream, StreamWriter? writer)
         {
             long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
             total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
@@ -160,7 +167,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     {
                         // move fwd to get to the CData
                         if (reader.Read())
+                        {
                             writer.Write(reader.Value);
+                        }
                     }
                 }
             }
@@ -170,12 +179,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return (resultLine, errors != 0 || failed != 0);
         }
 
-        static (string resultLine, bool failed) ParseNUnitXml(StreamReader stream, StreamWriter? writer)
+        private static (string resultLine, bool failed) ParseNUnitXml(StreamReader stream, StreamWriter? writer)
         {
             long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
             total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
-            XmlReaderSettings settings = new XmlReaderSettings();
-            settings.ValidationType = ValidationType.None;
+            var settings = new XmlReaderSettings
+            {
+                ValidationType = ValidationType.None
+            };
+
             using (var reader = XmlReader.Create(stream, settings))
             {
                 while (reader.Read())
@@ -201,7 +213,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         do
                         {
                             if (reader.Name != "test-case")
+                            {
                                 break;
+                            }
                             // read the test cases in the current node
                             var status = reader["result"];
                             switch (status)
@@ -245,7 +259,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return (resultLine, errors != 0 || failed != 0);
         }
 
-        static (string resultLine, bool failed) ParsexUnitXml(StreamReader stream, StreamWriter? writer)
+        private static (string resultLine, bool failed) ParsexUnitXml(StreamReader stream, StreamWriter? writer)
         {
             long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
             total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
@@ -274,7 +288,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         do
                         {
                             if (reader.Name != "test")
+                            {
                                 break;
+                            }
                             // read the test cases in the current node
                             var status = reader["result"];
                             switch (status)
@@ -338,11 +354,21 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 string? line;
                 while ((line = reader.ReadLine()) != null)
                 {
-                    if (line.StartsWith("ping", StringComparison.Ordinal) || line.Contains("TouchUnitTestRun") || line.Contains("NUnitOutput") || line.Contains("<!--")) continue;
-                    if (line == "") // remove white lines, some files have them
+                    if (line.StartsWith("ping", StringComparison.Ordinal) || line.Contains("TouchUnitTestRun") || line.Contains("NUnitOutput") || line.Contains("<!--"))
+                    {
                         continue;
+                    }
+
+                    if (line == "") // remove white lines, some files have them
+                    {
+                        continue;
+                    }
+
                     if (line.Contains("TouchUnitExtraData")) // always last node in TouchUnit
+                    {
                         break;
+                    }
+
                     writer.WriteLine(line);
                 }
             }
@@ -369,7 +395,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return parsedData;
         }
 
-        static void GenerateNUnitV2TestReport(StreamWriter writer, XmlReader reader)
+        private static void GenerateNUnitV2TestReport(StreamWriter writer, XmlReader reader)
         {
             while (reader.Read())
             {
@@ -380,7 +406,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     long.TryParse(reader["errors"], out var errors);
                     long.TryParse(reader["failed"], out var failed);
                     if (errors == 0 && failed == 0)                         // if we do not have any errors, return, nothing to be written here
+                    {
                         return;
+                    }
+
                     writer.WriteLine("<div style='padding-left: 15px;'>");
                     writer.WriteLine("<ul>");
 
@@ -388,7 +417,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     do
                     {
                         if (reader.Name != "test-case")
+                        {
                             break;
+                        }
                         // read the test cases in the current node
                         var status = reader["result"];
                         switch (status)
@@ -417,26 +448,29 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        static void GenerateNUnitV3TestReport(StreamWriter writer, XmlReader reader)
+        private static void GenerateNUnitV3TestReport(StreamWriter writer, XmlReader reader)
         {
-            List<(string name, string message)> failedTests = new List<(string name, string message)>();
+            var failedTests = new List<(string name, string message)>();
             while (reader.Read())
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "test-run")
                 {
                     long.TryParse(reader["failed"], out var failed);
                     if (failed == 0)
+                    {
                         break;
+                    }
                 }
 
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "test-suite" && (reader["type"] == "TestFixture" || reader["type"] == "ParameterizedFixture"))
                 {
-                    var testCaseName = reader["fullname"];
                     reader.ReadToDescendant("test-case");
                     do
                     {
                         if (reader.Name != "test-case")
+                        {
                             break;
+                        }
                         // read the test cases in the current node
                         var status = reader["result"];
                         switch (status)
@@ -474,7 +508,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        static void GeneratexUnitTestReport(StreamWriter writer, XmlReader reader)
+        private static void GeneratexUnitTestReport(StreamWriter writer, XmlReader reader)
         {
             var failedTests = new List<(string name, string message)>();
             // xUnit is not as nice and does not provide the final result in a top node,
@@ -487,7 +521,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     do
                     {
                         if (reader.Name != "test")
+                        {
                             break;
+                        }
                         // read the test cases in the current node
                         var status = reader["result"];
                         switch (status)
@@ -563,7 +599,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             var testSuitesElements = doc.Descendants().Where(e => e.Name == "test-suite" && e.Attribute("type")?.Value == "Assembly");
             if (!testSuitesElements.Any())
+            {
                 return;
+            }
 
             // add the attachments to the first test-suite, this will add the attachmnets to it, which will be added to the test-run, the pipeline
             // SHOULD NOT merge runs, else this upload will be really hard to use. Also, just to one of them, else we have duplicated logs.
@@ -585,7 +623,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             doc.Save(destination);
         }
 
-        static void WriteAttributes(XmlWriter writer, params (string name, string data)[] attrs)
+        private static void WriteAttributes(XmlWriter writer, params (string name, string data)[] attrs)
         {
             foreach (var (name, data) in attrs)
             {
@@ -593,7 +631,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        static void WriteNUnitV2TestSuiteAttributes(XmlWriter writer, string title) => WriteAttributes(writer,
+        private static void WriteNUnitV2TestSuiteAttributes(XmlWriter writer, string title) => WriteAttributes(writer,
             ("name", title),
             ("executed", "True"),
             ("result", "Failure"),
@@ -601,7 +639,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             ("time", "0"),
             ("asserts", "1"));
 
-        static void WriteNUnitV2TestCase(XmlWriter writer, string title, string message, StreamReader stderr)
+        private static void WriteNUnitV2TestCase(XmlWriter writer, string title, string message, StreamReader stderr)
         {
             writer.WriteStartElement("test-case");
             WriteAttributes(writer,
@@ -623,7 +661,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             writer.WriteEndElement(); // test-case
         }
 
-        static void GenerateNUnitV2Failure(XmlWriter writer, string title, string message, StreamReader stderr)
+        private static void GenerateNUnitV2Failure(XmlWriter writer, string title, string message, StreamReader stderr)
         {
             writer.WriteStartElement("test-results");
             WriteAttributes(writer,
@@ -655,7 +693,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             writer.WriteEndElement(); // test-results
         }
 
-        static void WriteNUnitV3TestSuiteAttributes(XmlWriter writer, string title) => WriteAttributes(writer,
+        private static void WriteNUnitV3TestSuiteAttributes(XmlWriter writer, string title) => WriteAttributes(writer,
             ("id", "1"),
             ("name", title),
             ("testcasecount", "1"),
@@ -668,7 +706,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             ("skipped", "0"),
             ("asserts", "0"));
 
-        static void WriteFailure(XmlWriter writer, string message, TextReader? stderr = null)
+        private static void WriteFailure(XmlWriter writer, string message, TextReader? stderr = null)
         {
             writer.WriteStartElement("failure");
             writer.WriteStartElement("message");
@@ -683,7 +721,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             writer.WriteEndElement(); // failure
         }
 
-        static void GenerateNUnitV3Failure(XmlWriter writer, string title, string message, TextReader stderr)
+        private static void GenerateNUnitV3Failure(XmlWriter writer, string title, string message, TextReader stderr)
         {
             var date = DateTime.Now;
             writer.WriteStartElement("test-run");
@@ -735,7 +773,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             writer.WriteEndElement(); // test-run
         }
 
-        static void GeneratexUnitFailure(XmlWriter writer, string title, string message, StreamReader stderr)
+        private static void GeneratexUnitFailure(XmlWriter writer, string title, string message, StreamReader stderr)
         {
             writer.WriteStartElement("assemblies");
             writer.WriteStartElement("assembly");
@@ -772,9 +810,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             writer.WriteEndElement(); // assemblies
         }
 
-        static void GenerateFailureXml(string destination, string title, string message, StreamReader stderrReader, XmlResultJargon jargon)
+        private static void GenerateFailureXml(string destination, string title, string message, StreamReader stderrReader, XmlResultJargon jargon)
         {
-            XmlWriterSettings settings = new XmlWriterSettings { Indent = true };
+            var settings = new XmlWriterSettings { Indent = true };
             using (var stream = File.CreateText(destination))
             using (var xmlWriter = XmlWriter.Create(stream, settings))
             {
@@ -806,10 +844,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         {
             // VSTS does not provide a nice way to report build errors, create a fake
             // test result with a failure in the case the build did not work
-            var failureLogXml = logs.Create($"vsts-nunit-{source}-{helpers.Timestamp}.xml", LogType.XmlLog.ToString());
+            var failureLogXml = logs.Create($"vsts-nunit-{source}-{s_helpers.Timestamp}.xml", LogType.XmlLog.ToString());
             if (jargon == XmlResultJargon.NUnitV3)
             {
-                var failureXmlTmp = logs.Create($"nunit-{source}-{helpers.Timestamp}.tmp", "Failure Log tmp");
+                var failureXmlTmp = logs.Create($"nunit-{source}-{s_helpers.Timestamp}.tmp", "Failure Log tmp");
                 GenerateFailureXml(failureXmlTmp.FullPath, title, message, stderrReader, jargon);
                 // add the required attachments and the info of the application that failed to install
                 var failure_logs = Directory.GetFiles(logs.Directory).Where(p => !p.Contains("nunit")); // all logs but ourself
@@ -824,7 +862,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         public static string GetVSTSFilename(string filename)
         {
             if (filename == null)
+            {
                 throw new ArgumentNullException(nameof(filename));
+            }
+
             var dirName = Path.GetDirectoryName(filename);
             return dirName == null ? $"vsts-{Path.GetFileName(filename)}" : Path.Combine(dirName, $"vsts-{Path.GetFileName(filename)}");
         }

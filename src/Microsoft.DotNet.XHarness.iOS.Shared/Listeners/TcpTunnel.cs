@@ -33,11 +33,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
     // the host and the device via the usb cable.
     public class TcpTunnel : ITcpTunnel
     {
-        readonly object _processExecutionLock = new object();
-        readonly IMLaunchProcessManager _processManager;
-
-        Task<ProcessExecutionResult> _tcpTunnelExecutionTask = null;
-        CancellationTokenSource _cancellationToken;
+        private readonly object _processExecutionLock = new object();
+        private readonly IMLaunchProcessManager _processManager;
+        private Task<ProcessExecutionResult> _tcpTunnelExecutionTask = null;
+        private CancellationTokenSource _cancellationToken;
 
         public TaskCompletionSource<bool> startedCompletionSource { get; private set; } = new TaskCompletionSource<bool>();
         public Task<bool> Started => startedCompletionSource.Task;
@@ -51,11 +50,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         public void Open(string device, ITunnelListener simpleListener, TimeSpan timeout, ILog mainLog)
         {
             if (device == null)
+            {
                 throw new ArgumentNullException(nameof(device));
+            }
+
             if (simpleListener == null)
+            {
                 throw new ArgumentNullException(nameof(simpleListener));
+            }
+
             if (mainLog == null)
+            {
                 throw new ArgumentNullException(nameof(mainLog));
+            }
 
             lock (_processExecutionLock)
             {
@@ -82,7 +89,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 });
                 // do not await since we are going to be running the process in parallel
                 _tcpTunnelExecutionTask = _processManager.ExecuteCommandAsync(tcpArgs, tunnelbackLog, timeout, cancellationToken: _cancellationToken.Token);
-                _tcpTunnelExecutionTask.ContinueWith(delegate(Task<ProcessExecutionResult> task)
+                _tcpTunnelExecutionTask.ContinueWith(delegate (Task<ProcessExecutionResult> task)
                 {
                     // if the task completes, means that we had issues with the creation of the tunnel and the process
                     // exited, if that is the case, we do not want to make the app wait, therefore, set the hole to false
@@ -95,16 +102,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         public async Task Close()
         {
             if (_cancellationToken == null)
+            {
                 throw new InvalidOperationException("Cannot close tunnel that was not opened.");
+            }
             // cancel process and wait for it to terminate, else we might want to start a second tunnel to the same device
             // which is going to give problems.
             _cancellationToken.Cancel();
             await _tcpTunnelExecutionTask;
         }
 
-        public async ValueTask DisposeAsync()
-        {
-            await Close();
-        }
+        public async ValueTask DisposeAsync() => await Close();
     }
 }

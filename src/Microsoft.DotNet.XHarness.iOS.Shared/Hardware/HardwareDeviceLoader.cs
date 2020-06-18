@@ -32,21 +32,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
     public class HardwareDeviceLoader : IHardwareDeviceLoader
     {
-        readonly IMLaunchProcessManager _processManager;
-        bool _loaded;
+        private readonly IMLaunchProcessManager _processManager;
+        private bool _loaded;
+        private readonly BlockingEnumerableCollection<IHardwareDevice> _connectedDevices = new BlockingEnumerableCollection<IHardwareDevice>();
 
-        readonly BlockingEnumerableCollection<IHardwareDevice> connectedDevices = new BlockingEnumerableCollection<IHardwareDevice>();
-
-        public IEnumerable<IHardwareDevice> ConnectedDevices => connectedDevices;
-        public IEnumerable<IHardwareDevice> Connected64BitIOS => connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.iOS && x.Supports64Bit);
-        public IEnumerable<IHardwareDevice> Connected32BitIOS => connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.iOS && x.Supports32Bit);
-        public IEnumerable<IHardwareDevice> ConnectedTV => connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.tvOS);
-        public IEnumerable<IHardwareDevice> ConnectedWatch => connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.watchOS && x.Architecture == Architecture.ARMv7k);
-        public IEnumerable<IHardwareDevice> ConnectedWatch32_64 => connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.watchOS && x.Architecture == Architecture.ARM64_32);
+        public IEnumerable<IHardwareDevice> ConnectedDevices => _connectedDevices;
+        public IEnumerable<IHardwareDevice> Connected64BitIOS => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.iOS && x.Supports64Bit);
+        public IEnumerable<IHardwareDevice> Connected32BitIOS => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.iOS && x.Supports32Bit);
+        public IEnumerable<IHardwareDevice> ConnectedTV => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.tvOS);
+        public IEnumerable<IHardwareDevice> ConnectedWatch => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.watchOS && x.Architecture == Architecture.ARMv7k);
+        public IEnumerable<IHardwareDevice> ConnectedWatch32_64 => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.watchOS && x.Architecture == Architecture.ARM64_32);
 
         public HardwareDeviceLoader(IMLaunchProcessManager processManager)
         {
-            this._processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
         public async Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false)
@@ -54,8 +53,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             if (_loaded)
             {
                 if (!forceRefresh)
+                {
                     return;
-                connectedDevices.Reset();
+                }
+
+                _connectedDevices.Reset();
             }
 
             _loaded = true;
@@ -70,7 +72,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                         new XmlOutputFormatArgument());
 
                     if (listExtraData)
+                    {
                         arguments.Add(new ListExtraDataArgument());
+                    }
 
                     var task = _processManager.RunAsync(process, arguments, log, timeout: TimeSpan.FromSeconds(120));
                     log.WriteLine("Launching {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
@@ -78,7 +82,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     var result = await task;
 
                     if (!result.Succeeded)
+                    {
                         throw new Exception("Failed to list devices.");
+                    }
 
                     var doc = new XmlDocument();
                     doc.LoadWithoutNetworkAccess(tmpfile);
@@ -92,7 +98,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     {
                         Device d = GetDevice(dev);
                         if (d == null)
+                        {
                             continue;
+                        }
+
                         if (!includeLocked && d.IsLocked)
                         {
                             log.WriteLine($"Skipping device {d.Name} ({d.DeviceIdentifier}) because it's locked.");
@@ -103,7 +112,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                             log.WriteLine($"Skipping device {d.Name} ({d.DeviceIdentifier}) because it's not usable for debugging.");
                             continue;
                         }
-                        connectedDevices.Add(d);
+                        _connectedDevices.Add(d);
                     }
                 }
             }
@@ -114,11 +123,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             }
             finally
             {
-                connectedDevices.SetCompleted();
+                _connectedDevices.SetCompleted();
 
-                if (connectedDevices.Any())
+                if (_connectedDevices.Any())
                 {
-                    log.WriteLine($"Found following devices: '{string.Join("', '", connectedDevices.Select(d => d.Name))}'");
+                    log.WriteLine($"Found following devices: '{string.Join("', '", _connectedDevices.Select(d => d.Name))}'");
                 }
 
                 log.Flush();
@@ -171,10 +180,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
             var companion = ConnectedDevices.Where((v) => v.DeviceIdentifier == device.CompanionIdentifier);
             if (companion.Count() == 0)
+            {
                 throw new Exception($"Could not find the companion device for '{device.Name}'");
+            }
 
             if (companion.Count() > 1)
+            {
                 log.WriteLine("Found {0} companion devices for {1}?!?", companion.Count(), device.Name);
+            }
 
             return companion.First();
         }

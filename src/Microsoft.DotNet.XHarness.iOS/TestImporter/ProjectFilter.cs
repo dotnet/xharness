@@ -18,20 +18,34 @@ namespace Microsoft.DotNet.XHarness.iOS.TestImporter
         public ProjectFilter(string? ignoredFilesRootPath, string? traitFilesRootPath)
         {
             if (string.IsNullOrEmpty(ignoredFilesRootPath))
+            {
                 // use the current directory as the source of the ignore files
-                _ignoredFilesRootPath = Directory.GetCurrentDirectory ();
-            else 
-                _ignoredFilesRootPath = ignoredFilesRootPath;
-            if (string.IsNullOrEmpty(traitFilesRootPath))
-                // same as with the ignore files, do use the current dir
-                _traitFilesRootPath = Directory.GetCurrentDirectory ();
+                _ignoredFilesRootPath = Directory.GetCurrentDirectory();
+            }
             else
+            {
+                _ignoredFilesRootPath = ignoredFilesRootPath;
+            }
+
+            if (string.IsNullOrEmpty(traitFilesRootPath))
+            {
+                // same as with the ignore files, do use the current dir
+                _traitFilesRootPath = Directory.GetCurrentDirectory();
+            }
+            else
+            {
                 _traitFilesRootPath = traitFilesRootPath;
+            }
             // validate that the dirs do exist
             if (!Directory.Exists(_ignoredFilesRootPath))
+            {
                 throw new ArgumentException($"Dir {_ignoredFilesRootPath} could not be found.");
+            }
+
             if (!Directory.Exists(_traitFilesRootPath))
+            {
                 throw new ArgumentException($"Dir {_traitFilesRootPath} could not be found.");
+            }
         }
 
         // never exclude dlls that are passed from the cmd
@@ -51,10 +65,13 @@ namespace Microsoft.DotNet.XHarness.iOS.TestImporter
             // platform the user calling the tool should have place the correct
             // trait files. If he added wrong trait files, is for the user to
             // blame
-            foreach (var file in new[] { "nunit-excludes.txt", "xunit-excludes.txt" }) {
+            foreach (var file in new[] { "nunit-excludes.txt", "xunit-excludes.txt" })
+            {
                 var traitFile = Path.Combine(_traitFilesRootPath, file);
                 if (File.Exists(traitFile))
+                {
                     yield return traitFile;
+                }
             }
         }
     }

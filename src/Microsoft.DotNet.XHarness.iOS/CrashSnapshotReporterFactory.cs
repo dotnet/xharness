@@ -17,14 +17,14 @@ namespace Microsoft.DotNet.XHarness.iOS
 
     public class CrashSnapshotReporterFactory : ICrashSnapshotReporterFactory
     {
-        readonly IMLaunchProcessManager processManager;
+        private readonly IMLaunchProcessManager _processManager;
 
         public CrashSnapshotReporterFactory(IMLaunchProcessManager processManager)
         {
-            this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
         public ICrashSnapshotReporter Create(ILog log, ILogs logs, bool isDevice, string deviceName) =>
-            new CrashSnapshotReporter(processManager, log, logs, isDevice, deviceName);
+            new CrashSnapshotReporter(_processManager, log, logs, isDevice, deviceName);
     }
 }

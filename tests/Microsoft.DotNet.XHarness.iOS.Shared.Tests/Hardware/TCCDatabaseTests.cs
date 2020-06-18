@@ -42,16 +42,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         [InlineData("com.apple.CoreSimulator.SimRuntime.tvOS-8-1", 2)]
         [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-5-1", 3)]
         [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-4-1", 2)]
-        public void GetTCCFormatTest(string runtime, int expected)
-        {
-            Assert.Equal(expected, _database.GetTCCFormat(runtime));
-        }
+        public void GetTCCFormatTest(string runtime, int expected) => Assert.Equal(expected, _database.GetTCCFormat(runtime));
 
         [Fact]
-        public void GetTCCFormatUnknownTest()
-        {
-            Assert.Throws<NotImplementedException>(() => _database.GetTCCFormat("unknown-sim-runtime"));
-        }
+        public void GetTCCFormatUnknownTest() => Assert.Throws<NotImplementedException>(() => _database.GetTCCFormat("unknown-sim-runtime"));
 
         [Fact]
         public async Task AgreeToPromptsAsyncNoIdentifiers()
