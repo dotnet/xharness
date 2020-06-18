@@ -29,16 +29,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             TimeSpan timeout,
             string? additionalLogsDirectory = null,
             ExceptionLogger? exceptionLogger = null,
-			bool generateHtml = false);
+            bool generateHtml = false);
     }
 
     public class TestReporterFactory : ITestReporterFactory
     {
-        readonly IMLaunchProcessManager processManager;
+        private readonly IMLaunchProcessManager _processManager;
 
         public TestReporterFactory(IMLaunchProcessManager processManager)
         {
-            this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
         public ITestReporter Create(IFileBackedLog mainLog,
@@ -54,9 +54,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             TimeSpan timeout,
             string? additionalLogsDirectory = null,
             ExceptionLogger? exceptionLogger = null,
-            bool generateHtml = false)
-        {
-            return new TestReporter(processManager,
+            bool generateHtml = false) => new TestReporter(_processManager,
                 mainLog,
                 runLog,
                 logs,
@@ -71,7 +69,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 additionalLogsDirectory,
                 exceptionLogger,
                 generateHtml);
-        }
     }
 }
 

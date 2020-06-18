@@ -5,19 +5,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Text.Json;
-
-using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.Execution;
-using Microsoft.Extensions.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
-using Microsoft.DotNet.XHarness.iOS;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
@@ -25,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     {
         protected override string CommandUsage { get; } = "ios state [OPTIONS]";
 
-        class DeviceInfo
+        private class DeviceInfo
         {
             public string Name { get; }
             public string UDID { get; }
@@ -41,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
         }
 
-        class SystemInfo
+        private class SystemInfo
         {
             public string MachineName { get; }
             public string OSName { get; }

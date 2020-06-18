@@ -24,7 +24,10 @@ namespace Microsoft.DotNet.XHarness.iOS.TestImporter
         {
             _testingFramework = testingFramework;
             if (_testingFramework == TestingFramework.Unknown)
+            {
                 throw new ArgumentOutOfRangeException(nameof(_testingFramework));
+            }
+
             AssemblyLocator = assemblyLocator ?? throw new ArgumentNullException(nameof(assemblyLocator));
         }
 

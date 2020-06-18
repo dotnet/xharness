@@ -3,19 +3,18 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.IO;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
     // A log that forwards all written data to a callback
     public class CallbackLog : Log
     {
-        readonly Action<string> onWrite;
+        private readonly Action<string> _onWrite;
 
         public CallbackLog(Action<string> onWrite)
             : base("Callback log")
         {
-            this.onWrite = onWrite;
+            _onWrite = onWrite;
         }
 
         public override void Dispose()
@@ -26,9 +25,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         {
         }
 
-        protected override void WriteImpl(string value)
-        {
-            onWrite(value);
-        }
+        protected override void WriteImpl(string value) => _onWrite(value);
     }
 }

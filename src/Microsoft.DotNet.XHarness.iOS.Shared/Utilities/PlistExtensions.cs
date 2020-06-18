@@ -46,15 +46,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
         }
 
-        public static void SetMinimumOSVersion(this XmlDocument plist, string value)
-        {
-            plist.SetPListStringValue("MinimumOSVersion", value);
-        }
+        public static void SetMinimumOSVersion(this XmlDocument plist, string value) => plist.SetPListStringValue("MinimumOSVersion", value);
 
-        public static void SetMinimummacOSVersion(this XmlDocument plist, string value)
-        {
-            plist.SetPListStringValue("LSMinimumSystemVersion", value);
-        }
+        public static void SetMinimummacOSVersion(this XmlDocument plist, string value) => plist.SetPListStringValue("LSMinimumSystemVersion", value);
 
         public static void SetCFBundleDisplayName(this XmlDocument plist, string value) =>
             plist.SetPListStringValue("CFBundleDisplayName", value);
@@ -89,10 +83,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public static void SetPListStringValue(this XmlDocument plist, string node, string value)
         {
             if (node == null)
+            {
                 throw new ArgumentNullException(nameof(node));
+            }
 
             if (value == null)
+            {
                 throw new ArgumentNullException(nameof(value));
+            }
 
             var element = plist.SelectSingleNode("//dict/key[text()='" + node + "']");
             if (element == null)

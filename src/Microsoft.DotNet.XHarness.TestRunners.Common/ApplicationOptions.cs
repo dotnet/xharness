@@ -10,7 +10,6 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
-
     internal enum XmlMode
     {
         Default = 0,
@@ -19,41 +18,74 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
     internal class ApplicationOptions
     {
-
-        static public ApplicationOptions Current = new ApplicationOptions();
-        private List<string> _singleMethodFilters = new List<string>();
-        private List<string> _classMethodFilters = new List<string>();
+        public static ApplicationOptions Current = new ApplicationOptions();
+        private readonly List<string> _singleMethodFilters = new List<string>();
+        private readonly List<string> _classMethodFilters = new List<string>();
 
         public ApplicationOptions()
         {
-            bool b;
-            if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.AutoExit), out b))
+            if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.AutoExit), out bool b))
+            {
                 TerminateAfterExecution = b;
+            }
+
             if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.AutoStart), out b))
+            {
                 AutoStart = b;
+            }
+
             if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.EnableNetwork), out b))
+            {
                 EnableNetwork = b;
+            }
+
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.HostName)))
+            {
                 HostName = Environment.GetEnvironmentVariable(EnviromentVariables.HostName);
-            int i;
-            if (int.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.HostPort), out i))
+            }
+
+            if (int.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.HostPort), out int i))
+            {
                 HostPort = i;
+            }
+
             if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.SortByName), out b))
+            {
                 SortNames = b;
+            }
+
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.Transport)))
+            {
                 Transport = Environment.GetEnvironmentVariable(EnviromentVariables.Transport);
+            }
+
             if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.EnableXmlOutput), out b))
+            {
                 EnableXml = b;
+            }
+
             var xml_mode = Environment.GetEnvironmentVariable(EnviromentVariables.XmlMode);
             if (!string.IsNullOrEmpty(xml_mode))
+            {
                 XmlMode = (XmlMode)Enum.Parse(typeof(XmlMode), xml_mode, true);
+            }
+
             var xml_version = Environment.GetEnvironmentVariable(EnviromentVariables.XmlVersion);
             if (!string.IsNullOrEmpty(xml_version))
+            {
                 XmlVersion = (XmlResultJargon)Enum.Parse(typeof(XmlResultJargon), xml_version, true);
+            }
+
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.LogFilePath)))
+            {
                 LogFile = Environment.GetEnvironmentVariable(EnviromentVariables.LogFilePath);
+            }
+
             if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.RunAllTestsByDefault), out b))
+            {
                 RunAllTestsByDefault = b;
+            }
+
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.SkippedMethods)))
             {
                 var methods = Environment.GetEnvironmentVariable(EnviromentVariables.SkippedMethods);
@@ -80,9 +112,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 { "run-all-tests:", "Run all the tests found in the assembly. Defaults to true.", v =>
                 {
                     // if cannot parse, use default
-                    if (Boolean.TryParse(v, out var runAll))
-                        RunAllTestsByDefault = runAll;
-                }},
+                    if (bool.TryParse(v, out var runAll)) { RunAllTestsByDefault = runAll; } }},
                 {
                     "method|m=", "Method to be ran in the test application. When this parameter is used only the " +
                     "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +

@@ -117,30 +117,15 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public abstract void SkipMethod(string method, bool isExcluded);
         public abstract void SkipClass(string className, bool isExcluded);
 
-        protected void OnError(string message)
-        {
-            Logger.OnError(message);
-        }
+        protected void OnError(string message) => Logger.OnError(message);
 
-        protected void OnWarning(string message)
-        {
-            Logger.OnWarning(message);
-        }
+        protected void OnWarning(string message) => Logger.OnWarning(message);
 
-        protected void OnDebug(string message)
-        {
-            Logger.OnDebug(message);
-        }
+        protected void OnDebug(string message) => Logger.OnDebug(message);
 
-        protected void OnDiagnostic(string message)
-        {
-            Logger.OnDiagnostic(message);
-        }
+        protected void OnDiagnostic(string message) => Logger.OnDiagnostic(message);
 
-        protected void OnInfo(string message)
-        {
-            Logger.OnInfo(message);
-        }
+        protected void OnInfo(string message) => Logger.OnInfo(message);
 
         protected void OnAssemblyStart(Assembly asm)
         {
@@ -153,49 +138,41 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         protected void LogFailureSummary()
         {
             if (FailureInfos == null || FailureInfos.Count == 0)
+            {
                 return;
+            }
 
             OnInfo("Failed tests:");
             for (int i = 1; i <= FailureInfos.Count; i++)
             {
                 TestFailureInfo info = FailureInfos[i - 1];
                 if (info == null || !info.HasInfo)
+                {
                     continue;
+                }
 
                 OnInfo($"{i}) {info.Message}");
             }
         }
 
-        void AssertExecutionState(TestExecutionState state)
-        {
-            if (state == null)
-                throw new ArgumentNullException(nameof(state));
-        }
-
         protected virtual string GetResultsFilePath()
         {
-            if (String.IsNullOrEmpty(ResultsFileName))
+            if (string.IsNullOrEmpty(ResultsFileName))
+            {
                 throw new InvalidOperationException("Runner didn't specify a valid results file name");
-
+            }
 
             string resultsPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             if (!Directory.Exists(resultsPath))
+            {
                 Directory.CreateDirectory(resultsPath);
+            }
+
             return Path.Combine(resultsPath, ResultsFileName);
         }
 
-        protected virtual void OnTestStarted(string testName)
-        {
-            var hanlder = TestStarted;
-            if (hanlder != null)
-                hanlder(this, testName);
-        }
+        protected virtual void OnTestStarted(string testName) => TestStarted?.Invoke(this, testName);
 
-        protected virtual void OnTestCompleted((string TestName, TestResult TestResult) result)
-        {
-            var handler = TestCompleted;
-            if (handler != null)
-                handler(this, result);
-		}
+        protected virtual void OnTestCompleted((string TestName, TestResult TestResult) result) => TestCompleted?.Invoke(this, result);
     }
 }

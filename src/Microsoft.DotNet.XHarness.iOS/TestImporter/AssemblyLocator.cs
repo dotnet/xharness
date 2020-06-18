@@ -21,12 +21,18 @@ namespace Microsoft.DotNet.XHarness.iOS.TestImporter
         public AssemblyLocator(string assembliesRootPath)
         {
             if (string.IsNullOrEmpty(assembliesRootPath))
+            {
                 _assembliesRootPath = Directory.GetCurrentDirectory();
+            }
             else
+            {
                 _assembliesRootPath = assembliesRootPath;
+            }
             // validate that we can indeed find the dir
             if (!Directory.Exists(_assembliesRootPath))
+            {
                 throw new ArgumentException($"Dir {_assembliesRootPath} could not be found.");
+            }
         }
 
         public string GetAssembliesLocation(Platform _) => _assembliesRootPath;

@@ -40,7 +40,8 @@
         /// </summary>
         public long TotalTests { get; private set; }
 
-        internal TestRunResult(TestRunner runner) {
+        internal TestRunResult(TestRunner runner)
+        {
             ExecutedTests = runner.ExecutedTests;
             FailedTests = runner.FailedTests;
             FilteredTests = runner.FilteredTests;

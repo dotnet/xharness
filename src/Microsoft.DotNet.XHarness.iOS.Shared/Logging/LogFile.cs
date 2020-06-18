@@ -4,25 +4,26 @@
 
 using System;
 using System.IO;
-using Microsoft.DotNet.XHarness.Common.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
     public class LogFile : FileBackedLog
     {
-        readonly object lock_obj = new object();
+        private readonly object _lockObj = new object();
 
         public override string FullPath { get; }
 
-        FileStream writer;
-        bool disposed;
+        private FileStream _writer;
+        private bool _disposed;
 
         public LogFile(string description, string path, bool append = true)
             : base(description)
         {
             FullPath = path ?? throw new ArgumentNullException(nameof(path));
             if (!append)
+            {
                 File.WriteAllText(path, string.Empty);
+            }
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -32,19 +33,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
                 // We don't want to open the file every time someone writes to the log, so we keep it as an instance
                 // variable until we're disposed. Due to the async nature of how we run tests, writes may still
                 // happen after we're disposed, in which case we create a temporary stream we close after writing
-                lock (lock_obj)
+                lock (_lockObj)
                 {
-                    var fs = writer ?? new FileStream(FullPath, FileMode.Append, FileAccess.Write, FileShare.Read);
+                    var fs = _writer ?? new FileStream(FullPath, FileMode.Append, FileAccess.Write, FileShare.Read);
 
                     fs.Write(buffer, offset, count);
 
-                    if (disposed)
+                    if (_disposed)
                     {
                         fs.Dispose();
                     }
                     else
                     {
-                        writer = fs;
+                        _writer = fs;
                     }
                 }
             }
@@ -57,8 +58,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         public override void Flush()
         {
-            if (!disposed)
-                writer?.Flush();
+            if (!_disposed)
+            {
+                _writer?.Flush();
+            }
         }
 
         protected override void WriteImpl(string value)
@@ -67,20 +70,17 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             Write(bytes, 0, bytes.Length);
         }
 
-        public override StreamReader GetReader()
-        {
-            return new StreamReader(new FileStream(FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-        }
+        public override StreamReader GetReader() => new StreamReader(new FileStream(FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
 
         public override void Dispose()
         {
-            lock (lock_obj)
+            lock (_lockObj)
             {
-                writer?.Dispose();
-                writer = null;
+                _writer?.Dispose();
+                _writer = null;
             }
 
-            disposed = true;
+            _disposed = true;
         }
     }
 }

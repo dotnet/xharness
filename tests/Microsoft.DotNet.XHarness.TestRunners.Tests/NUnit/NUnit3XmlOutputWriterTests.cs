@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
 {
     public class NUnit3XmlOutputWriterTests : IDisposable
     {
-        private const string _sampleFileName = "NUnitV3Sample.xml";
+        private const string SampleFileName = "NUnitV3Sample.xml";
         private readonly Mock<IResultSummary> _resultSummary;
         private readonly string _tempPath;
 
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
             var resourcenames = GetType().Assembly.GetManifestResourceNames();
             // load the test-run node from the sample file
             var name = GetType().Assembly
-                .GetManifestResourceNames().FirstOrDefault(a => a.EndsWith(_sampleFileName, StringComparison.Ordinal));
+                .GetManifestResourceNames().FirstOrDefault(a => a.EndsWith(SampleFileName, StringComparison.Ordinal));
             var doc = new XmlDocument();
             using var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name));
             doc.Load(sampleStream);
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
             testRun.Setup(t => t.Result).Returns(GetTestRunSample());
             // set the expectations of the mock, the important thing, we want to return a single test-run node
             _resultSummary.Setup(rs => rs.GetEnumerator())
-                .Returns(new List<ITestRun> {testRun.Object}.GetEnumerator());
+                .Returns(new List<ITestRun> { testRun.Object }.GetEnumerator());
 
             using (var writer = new StreamWriter(_tempPath))
             {
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
             var secondTestRun = new Mock<ITestRun>();
             secondTestRun.Setup(t => t.Result).Returns(GetTestRunSample());
             _resultSummary.Setup(rs => rs.GetEnumerator())
-                .Returns(new List<ITestRun> {firstTestRun.Object, secondTestRun.Object}.GetEnumerator());
+                .Returns(new List<ITestRun> { firstTestRun.Object, secondTestRun.Object }.GetEnumerator());
 
             using (var writer = new StreamWriter(_tempPath))
             {
@@ -91,9 +91,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
             Assert.Equal(1, enviroment.Count);
         }
 
-        public void Dispose()
-        {
-            File.Delete(_tempPath);
-        }
+        public void Dispose() => File.Delete(_tempPath);
     }
 }

@@ -19,20 +19,14 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
             : '\''; // !Windows
 
         [Fact]
-        public void NoEscapingNeeded()
-        {
-            Assert.Equal("foo", StringUtils.Quote("foo"));
-        }
+        public void NoEscapingNeeded() => Assert.Equal("foo", StringUtils.Quote("foo"));
 
         [Theory]
         [InlineData("foo bar", "foo bar")]
         [InlineData("foo \"bar\"", "foo \\\"bar\\\"")]
         [InlineData("foo bar's", "foo bar\\\'s")]
         [InlineData("foo $bar's", "foo $bar\\\'s")]
-        public void QuoteForProcessTest(string input, string expected)
-        {
-            Assert.Equal(s_shellQuoteChar + expected + s_shellQuoteChar, StringUtils.Quote(input));
-        }
+        public void QuoteForProcessTest(string input, string expected) => Assert.Equal(s_shellQuoteChar + expected + s_shellQuoteChar, StringUtils.Quote(input));
 
         [Fact(Skip = "Only works on OSX/Linux")]
         public void FormatArgumentsTest()

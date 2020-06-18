@@ -119,11 +119,5 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             Assert.Single(_devices.Connected32BitIOS);
             Assert.Empty(_devices.ConnectedTV);
         }
-
-        private void AssertArgumentValue(MlaunchArgument arg, string expected, string message = null)
-        {
-            var value = arg.AsCommandLineArgument().Split(new char[] { '=' }, 2).LastOrDefault();
-            Assert.Equal(expected, value);
-        }
     }
 }

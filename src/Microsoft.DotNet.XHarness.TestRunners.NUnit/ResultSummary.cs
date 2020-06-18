@@ -15,13 +15,12 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
     /// </summary>
     internal class ResultSummary : List<ITestRun>, IResultSummary
     {
-        private readonly string _testSuite;
         private readonly TestRunner _runner;
         private double? _duration;
         private long? _assertCount;
 
-        public string Name => _testSuite;
-        public string FullName => _testSuite;
+        public string Name { get; private set; }
+        public string FullName => Name;
 
         public long InconclusiveTests => _runner.InconclusiveTests;
         public long FailedTests => _runner.FilteredTests;
@@ -36,7 +35,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             get
             {
                 if (_assertCount.HasValue)
+                {
                     return _assertCount.Value;
+                }
                 // not super efficient
                 GetSummaryData();
                 return _assertCount!.Value;
@@ -48,7 +49,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             get
             {
                 if (_duration.HasValue)
+                {
                     return _duration.Value;
+                }
                 // not very efficient, but we should not cate too much
                 GetSummaryData();
                 return _duration!.Value;
@@ -62,7 +65,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             foreach (var result in this)
             {
                 var testRunNode = result.Result.FirstChild;
-                if (testRunNode.Name != "test-run") continue;
+                if (testRunNode.Name != "test-run")
+                {
+                    continue;
+                }
+
                 if (double.TryParse(testRunNode.Attributes["time"].Value, out var time))
                 {
                     duration += time;
@@ -85,10 +92,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             }
         }
 
-        public ResultSummary(string testSuite, TestRunner testRunner) : base ()
+        public ResultSummary(string testSuite, TestRunner testRunner) : base()
         {
-            _testSuite = testSuite ?? throw  new ArgumentNullException(nameof(testSuite));
-            _runner = testRunner ?? throw new ArgumentNullException(nameof (testRunner));
+            Name = testSuite ?? throw new ArgumentNullException(nameof(testSuite));
+            _runner = testRunner ?? throw new ArgumentNullException(nameof(testRunner));
         }
 
     }

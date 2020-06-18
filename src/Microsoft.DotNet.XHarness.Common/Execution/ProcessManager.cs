@@ -36,9 +36,9 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             => await ExecuteCommandAsync(
                 filename: filename,
                 args: args,
-                log:log,
-                stdout:log,
-                stderr:log,
+                log: log,
+                stdout: log,
+                stderr: log,
                 timeout: timeout,
                 environmentVariables: environmentVariables,
                 cancellationToken: cancellationToken);
@@ -67,9 +67,9 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             bool? diagnostics = null)
             => RunAsync(
                 process: process,
-                log:log,
-                stdout:log,
-                stderr:log,
+                log: log,
+                stdout: log,
+                stderr: log,
                 timeout: timeout,
                 environmentVariables: environmentVariables,
                 cancellationToken: cancellationToken,
@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 log: log,
                 stdout: stdout,
                 stderr: stderr,
-                kill:(pid, sig) => Kill(pid, sig), // lambdas are more efficient that method invoke
+                kill: (pid, sig) => Kill(pid, sig), // lambdas are more efficient that method invoke
                 getChildrenPS: (l, p) => GetChildrenPS(l, p), // same
                 timeout: timeout,
                 environmentVariables: environmentVariables,
@@ -108,11 +108,11 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             => KillTreeAsyncInternal(
                 pid: pid,
                 kill: (p, s) => Kill(p, s),
-                getChildrenPS: (l, i) => GetChildrenPS (l, i),
+                getChildrenPS: (l, i) => GetChildrenPS(l, i),
                 log: log,
                 diagnostics: diagnostics);
 
-        static async Task KillTreeAsyncInternal(int pid, Action<int, int> kill, Func<ILog, int, IList<int>> getChildrenPS, ILog log, bool? diagnostics = true)
+        private static async Task KillTreeAsyncInternal(int pid, Action<int, int> kill, Func<ILog, int, IList<int>> getChildrenPS, ILog log, bool? diagnostics = true)
         {
             var pids = getChildrenPS(log, pid);
 
@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                                 process: dbg,
                                 log: log,
                                 stdout: log,
-                                stderr:log,
+                                stderr: log,
                                 kill: kill,
                                 getChildrenPS: getChildrenPS,
                                 timeout: TimeSpan.FromSeconds(30),
@@ -181,11 +181,15 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             // Send SIGABRT since that produces a crash report
             // lldb may fail to attach to system processes, but crash reports will still be produced with potentially helpful stack traces.
             for (int i = 0; i < pids.Count; i++)
+            {
                 kill(pids[i], 6);
+            }
 
             // send kill -9 anyway as a last resort
             for (int i = 0; i < pids.Count; i++)
+            {
                 kill(pids[i], 9);
+            }
         }
 
         protected static async Task<ProcessExecutionResult> RunAsyncInternal(
@@ -266,13 +270,18 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 var allKeys = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
                 foreach (var key in allKeys)
                 {
-                    if(key == null) continue;
+                    if (key == null)
+                    {
+                        continue;
+                    }
 
                     string? a = null, b = null;
                     currentEnvironment?.TryGetValue(key!, out a);
                     processEnvironment?.TryGetValue(key!, out b);
                     if (a != b)
+                    {
                         sb.Append($"{key}={StringUtils.Quote(b)} ");
+                    }
                 }
             }
             sb.Append($"{StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
@@ -312,7 +321,9 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                     await KillTreeAsyncInternal(process.Id, kill, getChildrenPS, log, diagnostics ?? true);
                     rv.TimedOut = true;
                     lock (stderr)
+                    {
                         log.WriteLine($"{pid} Execution timed out after {timeout.Value.TotalSeconds} seconds and the process was killed.");
+                    }
                 }
             }
             await WaitForExitAsync(process);
@@ -331,10 +342,12 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             return rv;
         }
 
-        static async Task<bool> WaitForExitAsync(Process process, TimeSpan? timeout = null)
+        private static async Task<bool> WaitForExitAsync(Process process, TimeSpan? timeout = null)
         {
             if (process.HasExited)
+            {
                 return true;
+            }
 
             var tcs = new TaskCompletionSource<bool>();
 

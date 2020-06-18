@@ -15,8 +15,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
     public class SimulatorDevice : ISimulatorDevice
     {
-        readonly IMLaunchProcessManager processManager;
-        readonly ITCCDatabase tCCDatabase;
+        private readonly IMLaunchProcessManager _processManager;
+        private readonly ITCCDatabase _tCCDatabase;
 
         public string UDID { get; set; }
         public string Name { get; set; }
@@ -29,8 +29,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         public SimulatorDevice(IMLaunchProcessManager processManager, ITCCDatabase tccDatabase)
         {
-            this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
-            this.tCCDatabase = tccDatabase ?? throw new ArgumentNullException(nameof(tccDatabase));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _tCCDatabase = tccDatabase ?? throw new ArgumentNullException(nameof(tccDatabase));
         }
 
         public bool IsWatchSimulator => SimRuntime.StartsWith("com.apple.CoreSimulator.SimRuntime.watchOS", StringComparison.Ordinal);
@@ -49,29 +49,29 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         {
             // here we don't care if execution fails.
             // erase the simulator (make sure the device isn't running first)
-            await processManager.ExecuteXcodeCommandAsync("simctl", new[] { "shutdown", UDID }, log, TimeSpan.FromMinutes(1));
-            await processManager.ExecuteXcodeCommandAsync("simctl", new[] { "erase", UDID }, log, TimeSpan.FromMinutes(1));
+            await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "shutdown", UDID }, log, TimeSpan.FromMinutes(1));
+            await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "erase", UDID }, log, TimeSpan.FromMinutes(1));
 
             // boot & shutdown to make sure it actually works
-            await processManager.ExecuteXcodeCommandAsync("simctl", new[] { "boot", UDID }, log, TimeSpan.FromMinutes(1));
-            await processManager.ExecuteXcodeCommandAsync("simctl", new[] { "shutdown", UDID }, log, TimeSpan.FromMinutes(1));
+            await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "boot", UDID }, log, TimeSpan.FromMinutes(1));
+            await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "shutdown", UDID }, log, TimeSpan.FromMinutes(1));
         }
 
-        public async Task Shutdown(ILog log)
-        {
-            await processManager.ExecuteXcodeCommandAsync("simctl", new[] { "shutdown", UDID }, log, TimeSpan.FromMinutes(1));
-        }
+        public async Task Shutdown(ILog log) => await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "shutdown", UDID }, log, TimeSpan.FromMinutes(1));
 
         public async Task KillEverything(ILog log)
         {
-            await processManager.ExecuteCommandAsync("launchctl", new[] { "remove", "com.apple.CoreSimulator.CoreSimulatorService" }, log, TimeSpan.FromSeconds(10));
+            await _processManager.ExecuteCommandAsync("launchctl", new[] { "remove", "com.apple.CoreSimulator.CoreSimulatorService" }, log, TimeSpan.FromSeconds(10));
 
-            var to_kill = new string[] { "iPhone Simulator", "iOS Simulator", "Simulator", "Simulator (Watch)", "com.apple.CoreSimulator.CoreSimulatorService", "ibtoold" };
+            var toKill = new string[] { "iPhone Simulator", "iOS Simulator", "Simulator", "Simulator (Watch)", "com.apple.CoreSimulator.CoreSimulatorService", "ibtoold" };
 
-            var args = new List<string>();
-            args.Add("-9");
-            args.AddRange(to_kill);
-            await processManager.ExecuteCommandAsync("killall", args, log, TimeSpan.FromSeconds(10));
+            var args = new List<string>
+            {
+                "-9"
+            };
+            args.AddRange(toKill);
+
+            await _processManager.ExecuteCommandAsync("killall", args, log, TimeSpan.FromSeconds(10));
 
             var dirsToBeDeleted = new[] {
                 Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library", "Saved Application State", "com.apple.watchsimulator.savedState"),
@@ -83,7 +83,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 try
                 {
                     if (Directory.Exists(dir))
+                    {
                         Directory.Delete(dir, true);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -92,22 +94,24 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             }
         }
 
-        async Task OpenSimulator(ILog log)
+        private async Task OpenSimulator(ILog log)
         {
             string simulator_app;
 
-            if (IsWatchSimulator && processManager.XcodeVersion.Major < 9)
+            if (IsWatchSimulator && _processManager.XcodeVersion.Major < 9)
             {
-                simulator_app = Path.Combine(processManager.XcodeRoot, "Contents", "Developer", "Applications", "Simulator (Watch).app");
+                simulator_app = Path.Combine(_processManager.XcodeRoot, "Contents", "Developer", "Applications", "Simulator (Watch).app");
             }
             else
             {
-                simulator_app = Path.Combine(processManager.XcodeRoot, "Contents", "Developer", "Applications", "Simulator.app");
+                simulator_app = Path.Combine(_processManager.XcodeRoot, "Contents", "Developer", "Applications", "Simulator.app");
                 if (!Directory.Exists(simulator_app))
-                    simulator_app = Path.Combine(processManager.XcodeRoot, "Contents", "Developer", "Applications", "iOS Simulator.app");
+                {
+                    simulator_app = Path.Combine(_processManager.XcodeRoot, "Contents", "Developer", "Applications", "iOS Simulator.app");
+                }
             }
 
-            await processManager.ExecuteCommandAsync("open", new[] { "-a", simulator_app, "--args", "-CurrentDeviceUDID", UDID }, log, TimeSpan.FromSeconds(15));
+            await _processManager.ExecuteCommandAsync("open", new[] { "-a", simulator_app, "--args", "-CurrentDeviceUDID", UDID }, log, TimeSpan.FromSeconds(15));
         }
 
         public async Task PrepareSimulator(ILog log, params string[] bundle_identifiers)
@@ -137,7 +141,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
             if (File.Exists(TCC_db))
             {
-                await tCCDatabase.AgreeToPromptsAsync(SimRuntime, TCC_db, log, bundle_identifiers);
+                await _tCCDatabase.AgreeToPromptsAsync(SimRuntime, TCC_db, log, bundle_identifiers);
             }
             else
             {

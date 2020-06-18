@@ -43,9 +43,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             _appInformation = new AppBundleInformation(
                 appName: "test app",
                 bundleIdentifier: "my.id.com",
-                appPath:"/path/to/app",
+                appPath: "/path/to/app",
                 launchAppPath: "/launch/app/path",
-                supports32b:false,
+                supports32b: false,
                 extension: null)
             {
                 Variation = "Debug"

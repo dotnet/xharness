@@ -12,10 +12,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Collections;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
-using Microsoft.DotNet.XHarness.iOS.Shared.Collections;
 
 #nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
@@ -566,10 +566,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     return _devices.Value.Item2 != null;
                 }
 
-                public void Reset()
-                {
-                    _moved = false;
-                }
+                public void Reset() => _moved = false;
 
                 public void Dispose()
                 {

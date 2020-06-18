@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 {
     public class ErrorKnowledgeBaseTests
     {
-        readonly ErrorKnowledgeBase _errorKnowledgeBase;
+        private readonly ErrorKnowledgeBase _errorKnowledgeBase;
 
         public ErrorKnowledgeBaseTests()
         {
@@ -37,7 +37,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             }
 
             if (File.Exists(logPath))
+            {
                 File.Delete(logPath);
+            }
         }
 
         [Fact]
@@ -60,7 +62,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             }
 
             if (File.Exists(logPath))
+            {
                 File.Delete(logPath);
+            }
         }
 
         [Fact]
@@ -83,7 +87,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 Assert.Equal(expectedFailureMessage, failureMessage.Value.HumanMessage);
             }
             if (File.Exists(logPath))
+            {
                 File.Delete(logPath);
+            }
         }
 
         [Fact]
@@ -103,7 +109,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 Assert.Null(failureMessage);
             }
             if (File.Exists(logPath))
+            {
                 File.Delete(logPath);
+            }
         }
     }
 }

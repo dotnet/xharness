@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.IO;
 using System.Text;
 
@@ -13,16 +12,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     /// </summary>
     public class MemoryLog : ReadableLog
     {
-        readonly StringBuilder captured = new StringBuilder();
+        private readonly StringBuilder _captured = new StringBuilder();
 
-        protected override void WriteImpl(string value)
-        {
-            captured.Append(value);
-        }
+        protected override void WriteImpl(string value) => _captured.Append(value);
 
         public override StreamReader GetReader()
         {
-            var str = new MemoryStream(Encoding.GetBytes(captured.ToString()));
+            var str = new MemoryStream(Encoding.GetBytes(_captured.ToString()));
             return new StreamReader(str, Encoding, false);
         }
 
@@ -34,6 +30,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         {
         }
 
-        public override string ToString() => captured.ToString();
+        public override string ToString() => _captured.ToString();
     }
 }

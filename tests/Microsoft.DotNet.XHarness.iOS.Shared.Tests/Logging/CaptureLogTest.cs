@@ -31,13 +31,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         }
 
         [Fact]
-        public void ConstructorNullFilePath()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-            {
-                var captureLog = new CaptureLog(null, _filePath, false);
-            });
-        }
+        public void ConstructorNullFilePath() => Assert.Throws<ArgumentNullException>(() =>
+                                               {
+                                                   var captureLog = new CaptureLog(null, _filePath, false);
+                                               });
 
 
         [Fact]
@@ -91,16 +88,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         }
 
         [Fact]
-        public void CaptureWrongOrder()
-        {
-            Assert.Throws<InvalidOperationException>(() =>
-            {
-                using (var captureLog = new CaptureLog(_capturePath, _filePath, false))
-                {
-                    captureLog.StopCapture();
-                }
-            });
-        }
+        public void CaptureWrongOrder() => Assert.Throws<InvalidOperationException>(() =>
+                                         {
+                                             using (var captureLog = new CaptureLog(_capturePath, _filePath, false))
+                                             {
+                                                 captureLog.StopCapture();
+                                             }
+                                         });
 
         [Fact]
         public void CaptureWrongOrderEntirePath()

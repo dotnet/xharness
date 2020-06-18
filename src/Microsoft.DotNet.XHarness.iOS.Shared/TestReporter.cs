@@ -6,19 +6,18 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using System.Runtime.Serialization.Json;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
-
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using ExceptionLogger = System.Action<int, string>;
 
 #nullable enable
@@ -66,7 +65,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         private bool _launchFailure;
         private bool _isSimulatorTest;
         private bool _timedout;
-        private bool _generateHtml;
+        private readonly bool _generateHtml;
 
         public ILog CallbackLog { get; private set; }
 
@@ -90,7 +89,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             TimeSpan timeout,
             string? additionalLogsDirectory = null,
             ExceptionLogger? exceptionLogger = null,
-			bool generateHtml = false)
+            bool generateHtml = false)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _deviceName = device; // can be null on simulators
@@ -562,7 +561,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         public async Task<(TestExecutingResult ExecutingResult, string? ResultMessage)> ParseResult()
         {
-            (TestExecutingResult ExecutingResult, string? ResultMessage)result = (ExecutingResult: TestExecutingResult.Finished, ResultMessage: null);
+            (TestExecutingResult ExecutingResult, string? ResultMessage) result = (ExecutingResult: TestExecutingResult.Finished, ResultMessage: null);
             var crashed = false;
             if (File.Exists(_listener.TestLog.FullPath))
             {

@@ -22,9 +22,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
     {
         #region Private variables
 
-        static readonly Lazy<string> s_autoDetectedXcodeRoot = new Lazy<string>(DetectXcodePath, LazyThreadSafetyMode.PublicationOnly);
-        readonly string? _xcodeRoot;
-        Version? _xcode_version;
+        private static readonly Lazy<string> s_autoDetectedXcodeRoot = new Lazy<string>(DetectXcodePath, LazyThreadSafetyMode.PublicationOnly);
+        private readonly string? _xcodeRoot;
+        private Version? _xcode_version;
 
         #endregion
 
@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         {
             var list = new List<int>();
 
-            using (Process ps = new Process())
+            using (var ps = new Process())
             {
                 ps.StartInfo.FileName = "ps";
                 ps.StartInfo.Arguments = "-eo ppid,pid";
@@ -81,12 +81,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                 }
 
                 if (ps.ExitCode != 0)
+                {
                     return list;
+                }
 
                 stdout = stdout.Trim();
 
                 if (string.IsNullOrEmpty(stdout))
+                {
                     return list;
+                }
 
                 var dict = new Dictionary<int, List<int>>();
                 foreach (string line in stdout.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
@@ -94,7 +98,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                     var l = line.Trim();
                     var space = l.IndexOf(' ');
                     if (space <= 0)
+                    {
                         continue;
+                    }
 
                     var parent = l.Substring(0, space);
                     var process = l.Substring(space + 1);
@@ -102,7 +108,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                     if (int.TryParse(parent, out var parent_id) && int.TryParse(process, out var process_id))
                     {
                         if (!dict.TryGetValue(parent_id, out var children))
+                        {
                             dict[parent_id] = children = new List<int>();
+                        }
 
                         children.Add(process_id);
                     }
@@ -118,7 +126,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                     if (dict.TryGetValue(parent_id, out var children))
                     {
                         foreach (var child in children)
+                        {
                             queue.Enqueue(child);
+                        }
                     }
                 } while (queue.Count > 0);
             }
@@ -141,7 +151,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 
         #region Private methods
 
-        static string DetectXcodePath()
+        private static string DetectXcodePath()
         {
             using var process = new Process();
             process.StartInfo.FileName = "xcode-select";
@@ -162,7 +172,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                 timeout: timeout).GetAwaiter().GetResult();
 
             if (!result.Succeeded)
+            {
                 throw new Exception("Failed to detect Xcode path from xcode-select!");
+            }
 
             // Something like /Applications/Xcode114.app/Contents/Developers
             var xcodeRoot = stdout.ToString().Trim();

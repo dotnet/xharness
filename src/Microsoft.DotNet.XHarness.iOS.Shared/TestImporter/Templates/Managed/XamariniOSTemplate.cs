@@ -17,25 +17,25 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
     public class XamariniOSTemplate : ITemplatedProject
     {
         // vars that contain the different keys used in the templates
-        internal static readonly string ProjectGuidKey = "%PROJECT GUID%";
-        internal static readonly string NameKey = "%NAME%";
-        internal static readonly string ReferencesKey = "%REFERENCES%";
-        internal static readonly string RegisterTypeKey = "%REGISTER TYPE%";
-        internal static readonly string ContentKey = "%CONTENT RESOURCES%";
-        internal static readonly string PlistKey = "%PLIST PATH%";
-        internal static readonly string WatchOSTemplatePathKey = "%TEMPLATE PATH%";
-        internal static readonly string WatchOSCsporjAppKey = "%WATCH APP PROJECT PATH%";
-        internal static readonly string WatchOSCsporjExtensionKey = "%WATCH EXTENSION PROJECT PATH%";
-        internal static readonly string TargetFrameworkVersionKey = "%TARGET FRAMEWORK VERSION%";
-        internal static readonly string TargetExtraInfoKey = "%TARGET EXTRA INFO%";
-        internal static readonly string DefineConstantsKey = "%DEFINE CONSTANTS%";
-        internal static readonly string DownloadPathKey = "%DOWNLOAD PATH%";
-        internal static readonly string TestingFrameworksKey = "%TESTING FRAMEWORKS%";
+        internal const string ProjectGuidKey = "%PROJECT GUID%";
+        internal const string NameKey = "%NAME%";
+        internal const string ReferencesKey = "%REFERENCES%";
+        internal const string RegisterTypeKey = "%REGISTER TYPE%";
+        internal const string ContentKey = "%CONTENT RESOURCES%";
+        internal const string PlistKey = "%PLIST PATH%";
+        internal const string WatchOSTemplatePathKey = "%TEMPLATE PATH%";
+        internal const string WatchOSCsporjAppKey = "%WATCH APP PROJECT PATH%";
+        internal const string WatchOSCsporjExtensionKey = "%WATCH EXTENSION PROJECT PATH%";
+        internal const string TargetFrameworkVersionKey = "%TARGET FRAMEWORK VERSION%";
+        internal const string TargetExtraInfoKey = "%TARGET EXTRA INFO%";
+        internal const string DefineConstantsKey = "%DEFINE CONSTANTS%";
+        internal const string DownloadPathKey = "%DOWNLOAD PATH%";
+        internal const string TestingFrameworksKey = "%TESTING FRAMEWORKS%";
 
         // resource related static vars used to copy the embedded src to the hd
-        static string srcResourcePrefix = "Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed.Resources.src.";
-        static string registerTemplateResourceName = "RegisterType.cs";
-        static string[][] srcDirectories = new[] {
+        private const string SrcResourcePrefix = "Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed.Resources.src.";
+        private const string RegisterTemplateResourceName = "RegisterType.cs";
+        private static readonly string[][] s_srcDirectories = new[] {
             new [] { "common", },
             new [] { "common", "TestRunner" },
             new [] { "common", "TestRunner", "Core" },
@@ -62,34 +62,33 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             new [] { "watchOS", "Container", "Resources", "Images.xcassets", "AppIcons.appiconset" },
             new [] { "watchOS", "Extension" }
         };
-
-        static readonly Dictionary<Platform, string> plistTemplateMatches = new Dictionary<Platform, string> {
+        private static readonly Dictionary<Platform, string> s_plistTemplateMatches = new Dictionary<Platform, string> {
             {Platform.iOS, "Managed.iOS.plist.in"},
             {Platform.TvOS, "Managed.tvOS.plist.in"},
             {Platform.WatchOS, "Managed.watchOS.plist.in"},
             {Platform.MacOSFull, "Managed.macOS.plist.in"},
             {Platform.MacOSModern, "Managed.macOS.plist.in"},
         };
-        static readonly Dictionary<Platform, string> projectTemplateMatches = new Dictionary<Platform, string> {
+        private static readonly Dictionary<Platform, string> s_projectTemplateMatches = new Dictionary<Platform, string> {
             {Platform.iOS, "Managed.iOS.csproj.in"},
             {Platform.TvOS, "Managed.tvOS.csproj.in"},
             {Platform.WatchOS, "Managed.watchOS.csproj.in"},
             {Platform.MacOSFull, "Managed.macOS.csproj.in"},
             {Platform.MacOSModern, "Managed.macOS.csproj.in"},
         };
-        static readonly Dictionary<WatchAppType, string> watchOSProjectTemplateMatches = new Dictionary<WatchAppType, string>
+        private static readonly Dictionary<WatchAppType, string> s_watchOSProjectTemplateMatches = new Dictionary<WatchAppType, string>
         {
             { WatchAppType.App, "Managed.watchOS.App.csproj.in"},
             { WatchAppType.Extension, "Managed.watchOS.Extension.csproj.in"}
         };
-
-        static readonly Dictionary<WatchAppType, string> watchOSPlistTemplateMatches = new Dictionary<WatchAppType, string> {
+        private static readonly Dictionary<WatchAppType, string> s_watchOSPlistTemplateMatches = new Dictionary<WatchAppType, string> {
             {WatchAppType.App, "Managed.watchOS.App.plist.in"},
             {WatchAppType.Extension, "Managed.watchOS.Extension.plist.in"}
         };
 
         public string OutputDirectoryPath { get; set; }
-        string GeneratedCodePathRoot => Path.Combine(OutputDirectoryPath, "generated");
+
+        private string GeneratedCodePathRoot => Path.Combine(OutputDirectoryPath, "generated");
         public string IgnoreFilesRootDirectory { get; set; }
         public IAssemblyLocator AssemblyLocator { get; set; }
         public IProjectFilter ProjectFilter { get; set; }
@@ -98,34 +97,36 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         public Func<string, Guid> GuidGenerator { get; set; }
 
         // helpers that will return the destination of the different templates once writtne locally
-        string WatchContainerTemplatePath => Path.Combine(OutputDirectoryPath, "templates", "watchOS", "Container").Replace("/", "\\");
-        string WatchAppTemplatePath => Path.Combine(OutputDirectoryPath, "templates", "watchOS", "App").Replace("/", "\\");
-        string WatchExtensionTemplatePath => Path.Combine(OutputDirectoryPath, "templates", "watchOS", "Extension").Replace("/", "\\");
+        private string WatchContainerTemplatePath => Path.Combine(OutputDirectoryPath, "templates", "watchOS", "Container").Replace("/", "\\");
 
-        bool srcGenerated = false;
-        object srcGeneratedLock = new object();
+        private string WatchAppTemplatePath => Path.Combine(OutputDirectoryPath, "templates", "watchOS", "App").Replace("/", "\\");
 
-        Stream GetTemplateStream(string templateName)
+        private string WatchExtensionTemplatePath => Path.Combine(OutputDirectoryPath, "templates", "watchOS", "Extension").Replace("/", "\\");
+
+        private bool _srcGenerated = false;
+        private readonly object _srcGeneratedLock = new object();
+
+        private Stream GetTemplateStream(string templateName)
         {
             var resources = GetType().Assembly.GetManifestResourceNames();
             var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith(templateName, StringComparison.Ordinal)).FirstOrDefault();
             return GetType().Assembly.GetManifestResourceStream(name);
         }
 
-        public Stream GetPlistTemplate(Platform platform) => GetTemplateStream(plistTemplateMatches[platform]);
+        public Stream GetPlistTemplate(Platform platform) => GetTemplateStream(s_plistTemplateMatches[platform]);
 
-        public Stream GetPlistTemplate(WatchAppType appType) => GetTemplateStream(watchOSPlistTemplateMatches[appType]);
+        public Stream GetPlistTemplate(WatchAppType appType) => GetTemplateStream(s_watchOSPlistTemplateMatches[appType]);
 
-        public Stream GetProjectTemplate(Platform platform) => GetTemplateStream(projectTemplateMatches[platform]);
+        public Stream GetProjectTemplate(Platform platform) => GetTemplateStream(s_projectTemplateMatches[platform]);
 
-        public Stream GetProjectTemplate(WatchAppType appType) => GetTemplateStream(watchOSProjectTemplateMatches[appType]);
+        public Stream GetProjectTemplate(WatchAppType appType) => GetTemplateStream(s_watchOSProjectTemplateMatches[appType]);
 
-        public Stream GetRegisterTypeTemplate() => GetTemplateStream(registerTemplateResourceName);
+        public Stream GetRegisterTypeTemplate() => GetTemplateStream(RegisterTemplateResourceName);
 
-        void BuildSrcTree(string srcOuputPath)
+        private void BuildSrcTree(string srcOuputPath)
         {
             // loop over the known paths, and build them accordingly
-            foreach (var components in srcDirectories)
+            foreach (var components in s_srcDirectories)
             {
                 var completePathComponents = new[] { srcOuputPath }.Concat(components).ToArray();
                 var path = Path.Combine(completePathComponents);
@@ -133,7 +134,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             }
         }
 
-        static string GetResourceFileName(string resourceName)
+        private static string GetResourceFileName(string resourceName)
         {
             var lastIndex = resourceName.LastIndexOf('.');
             var extension = resourceName.Substring(lastIndex + 1);
@@ -141,6 +142,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             var name = tmp.Substring(tmp.LastIndexOf('.') + 1);
             return $"{name}.{extension}";
         }
+
         /// <summary>
         /// Decides what would be the final path of the src resources in the tree that will be used as the source of
         /// the scaffold
@@ -148,38 +150,39 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         /// <param name="srcOuputPath">The dir where we want to ouput the src.</param>
         /// <param name="resourceFullName">The resource full name.</param>
         /// <returns></returns>
-        string CalculateDestinationPath(string srcOuputPath, string resourceFullName)
+        private string CalculateDestinationPath(string srcOuputPath, string resourceFullName)
         {
             // we do know that we don't care about our prefix
-            var resourceName = resourceFullName.Substring(srcResourcePrefix.Length);
+            var resourceName = resourceFullName.Substring(SrcResourcePrefix.Length);
             // icon sets are special, they have a dot, which is also a dot in the resources :/
-            (string iconSet, string replace) iconSetSubPath = (iconSet: "", replace: "");
+            string iconSet;
+            string replace;
             if (resourceFullName.Contains("iOSApp") || resourceFullName.Contains("tvOSApp"))
             {
                 if (resourceFullName.Contains("AppIcon.appiconset"))
                 {
-                    iconSetSubPath.iconSet = "Assets.xcassets.AppIcon.appiconset";
-                    iconSetSubPath.replace = "Assets.xcassets/AppIcon.appiconset";
+                    iconSet = "Assets.xcassets.AppIcon.appiconset";
+                    replace = "Assets.xcassets/AppIcon.appiconset";
                 }
                 else
                 {
-                    iconSetSubPath.iconSet = "Assets.xcassets";
-                    iconSetSubPath.replace = null;
+                    iconSet = "Assets.xcassets";
+                    replace = null;
                 }
             }
             else
             {
-                iconSetSubPath.iconSet = "Images.xcassets.AppIcons.appiconset";
-                iconSetSubPath.replace = "Images.xcassets/AppIcons.appiconset";
+                iconSet = "Images.xcassets.AppIcons.appiconset";
+                replace = "Images.xcassets/AppIcons.appiconset";
             }
-            int lastIndex = resourceName.LastIndexOf(iconSetSubPath.iconSet);
+            int lastIndex = resourceName.LastIndexOf(iconSet);
             if (lastIndex >= 0)
             {
                 // all files have an extension and a file name, remove them
                 var fileName = GetResourceFileName(resourceName);
                 var partialPath = resourceName.Replace("." + fileName, "");
                 partialPath = partialPath.Replace('.', Path.DirectorySeparatorChar);
-                partialPath = partialPath.Replace(iconSetSubPath.iconSet.Replace('.', Path.DirectorySeparatorChar), iconSetSubPath.replace ?? iconSetSubPath.iconSet);
+                partialPath = partialPath.Replace(iconSet.Replace('.', Path.DirectorySeparatorChar), replace ?? iconSet);
                 // substring up to the iconset path, replace . for PathSeparator, add icon set + name
                 resourceName = Path.Combine(partialPath, fileName);
             }
@@ -188,7 +191,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                 // replace all . for the path separator, since that is how resource names are built
                 lastIndex = resourceName.LastIndexOf('.');
                 if (resourceFullName.Contains(".designer.cs"))
+                {
                     lastIndex = resourceName.LastIndexOf(".designer.cs");
+                }
+
                 if (lastIndex > 0)
                 {
                     var partialPath = resourceName.Substring(0, lastIndex).Replace('.', Path.DirectorySeparatorChar);
@@ -204,24 +210,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         /// <param name="projectName">The name of the project being generated.</param>
         /// <param name="platform">The supported platform by the project.</param>
         /// <returns>The final path to which the project file should be written.</returns>
-        public string GetProjectPath(string projectName, Platform platform)
+        public string GetProjectPath(string projectName, Platform platform) => platform switch
         {
-            switch (platform)
-            {
-                case Platform.iOS:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}.csproj");
-                case Platform.TvOS:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}-tvos.csproj");
-                case Platform.WatchOS:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}-watchos.csproj");
-                case Platform.MacOSFull:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}-mac-full.csproj");
-                case Platform.MacOSModern:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}-mac-modern.csproj");
-                default:
-                    return null;
-            }
-        }
+            Platform.iOS => Path.Combine(OutputDirectoryPath, $"{projectName}.csproj"),
+            Platform.TvOS => Path.Combine(OutputDirectoryPath, $"{projectName}-tvos.csproj"),
+            Platform.WatchOS => Path.Combine(OutputDirectoryPath, $"{projectName}-watchos.csproj"),
+            Platform.MacOSFull => Path.Combine(OutputDirectoryPath, $"{projectName}-mac-full.csproj"),
+            Platform.MacOSModern => Path.Combine(OutputDirectoryPath, $"{projectName}-mac-modern.csproj"),
+            _ => null,
+        };
 
         /// <summary>
         /// Returns the path to be used to store the project file depending on the type of watchOS
@@ -230,16 +227,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         /// <param name="projectName">The name of the project being generated.</param>
         /// <param name="appType">The typoe of watcOS application.</param>
         /// <returns>The final path to which the project file should be written.</returns>
-        public string GetProjectPath(string projectName, WatchAppType appType)
+        public string GetProjectPath(string projectName, WatchAppType appType) => appType switch
         {
-            switch (appType)
-            {
-                case WatchAppType.App:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}-watchos-app.csproj");
-                default:
-                    return Path.Combine(OutputDirectoryPath, $"{projectName}-watchos-extension.csproj");
-            }
-        }
+            WatchAppType.App => Path.Combine(OutputDirectoryPath, $"{projectName}-watchos-app.csproj"),
+            _ => Path.Combine(OutputDirectoryPath, $"{projectName}-watchos-extension.csproj"),
+        };
 
         /// <summary>
         /// Returns the path to be used to store the projects plist file depending on the platform.
@@ -271,16 +263,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         /// <param name="rootDir">The root dir to use.</param>
         /// <param name="appType">The watchOS application path whose plist we want to generate.</param>
         /// <returns></returns>
-        public static string GetPListPath(string rootDir, WatchAppType appType)
+        public static string GetPListPath(string rootDir, WatchAppType appType) => appType switch
         {
-            switch (appType)
-            {
-                case WatchAppType.App:
-                    return Path.Combine(rootDir, "Info-watchos-app.plist");
-                default:
-                    return Path.Combine(rootDir, "Info-watchos-extension.plist");
-            }
-        }
+            WatchAppType.App => Path.Combine(rootDir, "Info-watchos-app.plist"),
+            _ => Path.Combine(rootDir, "Info-watchos-extension.plist"),
+        };
 
         // this method could be async, since we could be using async IO. The problem is that it might be called
         // several times. The File and the Directory classes are not smart, and there is a possibility that we
@@ -294,17 +281,22 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         // * Generate the src EVERY SINGLE TIME for a list of projects.
         public void GenerateSource(string srcOuputPath)
         {
-            lock (srcGeneratedLock)
+            lock (_srcGeneratedLock)
             {
-                if (srcGenerated)
+                if (_srcGenerated)
+                {
                     return;
+                }
                 // mk the expected directories
                 if (Directory.Exists(srcOuputPath))
+                {
                     Directory.Delete(srcOuputPath, true); // delete, we always want to add the embedded src
+                }
+
                 BuildSrcTree(srcOuputPath);
                 // the code is simple, we are going to look for all the resources that we know are src and will write a
                 // copy of the stream in the designated output path
-                var resources = GetType().Assembly.GetManifestResourceNames().Where(a => a.StartsWith(srcResourcePrefix));
+                var resources = GetType().Assembly.GetManifestResourceNames().Where(a => a.StartsWith(SrcResourcePrefix));
 
                 // we need to be smart, since the resource name != the path
                 foreach (var r in resources)
@@ -317,11 +309,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                         sourceReader.CopyTo(destination);
                     }
                 }
-                srcGenerated = true;
+                _srcGenerated = true;
             }
         }
 
-        static void WriteReferenceFailure(StringBuilder sb, string failureMessage)
+        private static void WriteReferenceFailure(StringBuilder sb, string failureMessage)
         {
             sb.AppendLine($"<!-- Failed to load all assembly references; please 'git clean && make' the tests/ directory to re-generate the project files -->");
             sb.AppendLine($"<!-- Failure message: {failureMessage} --> ");
@@ -368,7 +360,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             return sb.ToString();
         }
 
-        string GetTestingFrameworksImports(Platform platform)
+        private string GetTestingFrameworksImports(Platform platform)
         {
             var sb = new StringBuilder();
             foreach (var assembly in new[] { "nunitlite.dll", "Xunit.NetCore.Extensions.dll", "xunit.execution.dotnet.dll" })
@@ -380,12 +372,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             return sb.ToString();
         }
 
-        string GenerateIncludeFilesNode(string projectName, (string FailureMessage, List<(string assembly, string hintPath)> Assemblies) info, Platform platform)
+        private string GenerateIncludeFilesNode(string projectName, (string FailureMessage, List<(string assembly, string hintPath)> Assemblies) info, Platform platform)
         {
             // all the data is provided by the filter, if we have no filter, return an empty string so that the project does not have any
             // includes.
             if (ProjectFilter == null)
+            {
                 return string.Empty;
+            }
+
             var contentFiles = new StringBuilder();
             foreach (var path in ProjectFilter.GetIgnoreFiles(projectName, info.Assemblies, platform))
             {
@@ -423,7 +418,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
 
         #region Watch Porjects generation
 
-        string GenerateWatchProject(string projectName, string template, string infoPlistPath)
+        private string GenerateWatchProject(string projectName, string template, string infoPlistPath)
         {
             var result = template.Replace(NameKey, projectName);
             result = result.Replace(WatchOSTemplatePathKey, WatchContainerTemplatePath);
@@ -432,7 +427,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             return result;
         }
 
-        async Task<string> GenerateWatchAppAsync(string projectName, Stream template, string infoPlistPath)
+        private async Task<string> GenerateWatchAppAsync(string projectName, Stream template, string infoPlistPath)
         {
             using (var reader = new StreamReader(template))
             {
@@ -445,7 +440,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             }
         }
 
-        async Task<string> GenerateWatchExtensionAsync(string projectName, Stream template, string infoPlistPath, string registerPath, (string FailureMessage, List<(string assembly, string hintPath)> Assemblies) info)
+        private async Task<string> GenerateWatchExtensionAsync(string projectName, Stream template, string infoPlistPath, string registerPath, (string FailureMessage, List<(string assembly, string hintPath)> Assemblies) info)
         {
             var rootAssembliesPath = AssemblyLocator.GetAssembliesRootLocation(Platform.WatchOS).Replace("/", "\\");
             var sb = new StringBuilder();
@@ -455,10 +450,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             }
             else
             {
-                foreach (var assemblyInfo in info.Assemblies)
+                foreach ((string assembly, string hintPath) in info.Assemblies)
                 {
-                    if (ProjectFilter == null || !ProjectFilter.ExcludeDll(Platform.WatchOS, assemblyInfo.assembly))
-                        sb.AppendLine(GetReferenceNode(assemblyInfo.assembly, assemblyInfo.hintPath));
+                    if (ProjectFilter == null || !ProjectFilter.ExcludeDll(Platform.WatchOS, assembly))
+                    {
+                        sb.AppendLine(GetReferenceNode(assembly, hintPath));
+                    }
                 }
             }
 
@@ -478,22 +475,27 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         }
 
         // internal implementations that generate each of the diff projects
-        async Task<GeneratedProjects> GenerateWatchOSTestProjectsAsync(IEnumerable<(string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier)> projects)
+        private async Task<GeneratedProjects> GenerateWatchOSTestProjectsAsync(IEnumerable<(string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier)> projects)
         {
             var projectPaths = new GeneratedProjects();
-            foreach (var def in projects)
+            foreach ((string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier) in projects)
             {
                 // each watch os project requires 3 different ones:
                 // 1. The app
                 // 2. The container
                 // 3. The extensions
                 // TODO: The following is very similar to what is done in the iOS generation. Must be grouped
-                var projectDefinition = new ProjectDefinition(def.Name, AssemblyLocator, AssemblyDefinitionFactory, def.Assemblies, def.ExtraArgs);
+                var projectDefinition = new ProjectDefinition(Name, AssemblyLocator, AssemblyDefinitionFactory, Assemblies, ExtraArgs);
                 if (ProjectFilter != null && ProjectFilter.ExludeProject(projectDefinition, Platform.WatchOS)) // if it is ignored, continue
+                {
                     continue;
+                }
 
                 if (!projectDefinition.Validate())
+                {
                     throw new InvalidOperationException("xUnit and NUnit assemblies cannot be mixed in a test project.");
+                }
+
                 var generatedCodeDir = Path.Combine(GeneratedCodePathRoot, projectDefinition.Name, "watch");
                 if (!Directory.Exists(generatedCodeDir))
                 {
@@ -548,7 +550,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                     using (var reader = new StreamReader(GetProjectTemplate(Platform.WatchOS)))
                     {
                         var template = await reader.ReadToEndAsync();
-                        var generatedRootProject = GenerateWatchProject(def.Name, template, infoPlistPath);
+                        var generatedRootProject = GenerateWatchProject(Name, template, infoPlistPath);
                         await file.WriteAsync(generatedRootProject);
                     }
                     var typesPerAssembly = projectDefinition.GetTypeForAssemblies(AssemblyLocator.GetAssembliesRootLocation(Platform.iOS), Platform.WatchOS);
@@ -566,7 +568,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                     failure = e.Message;
                 }
                 // we have the 3 projects we depend on, we need the root one, the one that will be used by harness
-                projectPaths.Add((projectDefinition.Name, rootProjectPath, projectDefinition.IsXUnit, projectDefinition.ExtraArgs, failure, def.TimeoutMultiplier));
+                projectPaths.Add((projectDefinition.Name, rootProjectPath, projectDefinition.IsXUnit, projectDefinition.ExtraArgs, failure, TimeoutMultiplier));
             } // foreach project
 
             return projectPaths;
@@ -586,7 +588,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         /// <param name="templatePath">A path to the template used to generate the path.</param>
         /// <param name="infoPlistPath">The path to the info plist of the project.</param>
         /// <returns></returns>
-        async Task<string> GenerateAsync(string projectName, string registerPath, (string FailureMessage, List<(string assembly, string hintPath)> Assemblies) info, Stream template, string infoPlistPath, Platform platform)
+        private async Task<string> GenerateAsync(string projectName, string registerPath, (string FailureMessage, List<(string assembly, string hintPath)> Assemblies) info, Stream template, string infoPlistPath, Platform platform)
         {
             var downloadPath = AssemblyLocator.GetAssembliesRootLocation(platform).Replace("/", "\\");
             // fix possible issues with the paths to be included in the msbuild xml
@@ -598,10 +600,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             }
             else
             {
-                foreach (var assemblyInfo in info.Assemblies)
+                foreach ((string assembly, string hintPath) in info.Assemblies)
                 {
-                    if (ProjectFilter == null || !ProjectFilter.ExcludeDll(Platform.iOS, assemblyInfo.assembly))
-                        sb.AppendLine(GetReferenceNode(assemblyInfo.assembly, assemblyInfo.hintPath));
+                    if (ProjectFilter == null || !ProjectFilter.ExcludeDll(Platform.iOS, assembly))
+                    {
+                        sb.AppendLine(GetReferenceNode(assembly, hintPath));
+                    }
                 }
             }
 
@@ -621,23 +625,36 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             }
         }
 
-        async Task<GeneratedProjects> GenerateiOSTestProjectsAsync(IEnumerable<(string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier)> projects, Platform platform)
+        private async Task<GeneratedProjects> GenerateiOSTestProjectsAsync(IEnumerable<(string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier)> projects, Platform platform)
         {
             if (platform == Platform.WatchOS)
-                throw new ArgumentException(nameof(platform));
-            if (!projects.Any()) // return an empty list
-                return new GeneratedProjects();
-            var projectPaths = new GeneratedProjects();
-            foreach (var def in projects)
             {
-                if (def.Assemblies.Length == 0)
+                throw new ArgumentException(nameof(platform));
+            }
+
+            if (!projects.Any()) // return an empty list
+            {
+                return new GeneratedProjects();
+            }
+
+            var projectPaths = new GeneratedProjects();
+            foreach ((string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier) in projects)
+            {
+                if (Assemblies.Length == 0)
+                {
                     continue;
-                var projectDefinition = new ProjectDefinition(def.Name, AssemblyLocator, AssemblyDefinitionFactory, def.Assemblies, def.ExtraArgs);
+                }
+
+                var projectDefinition = new ProjectDefinition(Name, AssemblyLocator, AssemblyDefinitionFactory, Assemblies, ExtraArgs);
                 if (ProjectFilter != null && ProjectFilter.ExludeProject(projectDefinition, Platform.WatchOS)) // if it is ignored, continue
+                {
                     continue;
+                }
 
                 if (!projectDefinition.Validate())
+                {
                     throw new InvalidOperationException("xUnit and NUnit assemblies cannot be mixed in a test project.");
+                }
                 // generate the required type registration info
                 var generatedCodeDir = Path.Combine(GeneratedCodePathRoot, projectDefinition.Name, platform == Platform.iOS ? "ios" : "tv");
                 if (!Directory.Exists(generatedCodeDir))
@@ -672,14 +689,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                         await file.WriteAsync(registerCode);
                     }
 
-                    failure = failure ?? info.FailureMessage;
-                    failure = failure ?? typesPerAssembly.FailureMessage;
+                    failure ??= info.FailureMessage;
+                    failure ??= typesPerAssembly.FailureMessage;
                 }
                 catch (Exception e)
                 {
                     failure = e.Message;
                 }
-                projectPaths.Add((projectDefinition.Name, projectPath, projectDefinition.IsXUnit, projectDefinition.ExtraArgs, failure, def.TimeoutMultiplier));
+                projectPaths.Add((projectDefinition.Name, projectPath, projectDefinition.IsXUnit, projectDefinition.ExtraArgs, failure, TimeoutMultiplier));
             } // foreach project
 
             return projectPaths;
@@ -688,7 +705,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
 
         #region Mac OS project generation
 
-        async Task<string> GenerateMacAsync(string projectName, string registerPath, (string FailureMessage, List<(string assembly, string hintPath)> Assemblies) info, Stream template, string infoPlistPath, Platform platform)
+        private async Task<string> GenerateMacAsync(string projectName, string registerPath, (string FailureMessage, List<(string assembly, string hintPath)> Assemblies) info, Stream template, string infoPlistPath, Platform platform)
         {
             var downloadPath = Path.Combine(AssemblyLocator.GetAssembliesRootLocation(platform), "mac-bcl", platform == Platform.MacOSFull ? "xammac_net_4_5" : "xammac").Replace("/", "\\");
             infoPlistPath = infoPlistPath.Replace('/', '\\');
@@ -699,10 +716,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             }
             else
             {
-                foreach (var assemblyInfo in info.Assemblies)
+                foreach ((string assembly, string hintPath) in info.Assemblies)
                 {
-                    if (ProjectFilter == null || !ProjectFilter.ExcludeDll(platform, assemblyInfo.assembly))
-                        sb.AppendLine(GetReferenceNode(assemblyInfo.assembly, assemblyInfo.hintPath));
+                    if (ProjectFilter == null || !ProjectFilter.ExcludeDll(platform, assembly))
+                    {
+                        sb.AppendLine(GetReferenceNode(assembly, hintPath));
+                    }
                 }
             }
 
@@ -737,19 +756,26 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             }
         }
 
-        async Task<GeneratedProjects> GenerateMacTestProjectsAsync(IEnumerable<(string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier)> projects, Platform platform)
+        private async Task<GeneratedProjects> GenerateMacTestProjectsAsync(IEnumerable<(string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier)> projects, Platform platform)
         {
             var projectPaths = new GeneratedProjects();
-            foreach (var def in projects)
+            foreach ((string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier) in projects)
             {
-                if (!def.Assemblies.Any())
+                if (!Assemblies.Any())
+                {
                     continue;
-                var projectDefinition = new ProjectDefinition(def.Name, AssemblyLocator, AssemblyDefinitionFactory, def.Assemblies, def.ExtraArgs);
+                }
+
+                var projectDefinition = new ProjectDefinition(Name, AssemblyLocator, AssemblyDefinitionFactory, Assemblies, ExtraArgs);
                 if (ProjectFilter != null && ProjectFilter.ExludeProject(projectDefinition, platform))
+                {
                     continue;
+                }
 
                 if (!projectDefinition.Validate())
+                {
                     throw new InvalidOperationException("xUnit and NUnit assemblies cannot be mixed in a test project.");
+                }
                 // generate the required type registration info
                 var generatedCodeDir = Path.Combine(GeneratedCodePathRoot, projectDefinition.Name, "mac");
                 Directory.CreateDirectory(generatedCodeDir);
@@ -781,14 +807,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                     { // false is do not append
                         await file.WriteAsync(generatedProject);
                     }
-                    failure = failure ?? info.FailureMessage;
-                    failure = failure ?? typesPerAssembly.FailureMessage;
+                    failure ??= info.FailureMessage;
+                    failure ??= typesPerAssembly.FailureMessage;
                 }
                 catch (Exception e)
                 {
                     failure = e.Message;
                 }
-                projectPaths.Add((projectDefinition.Name, projectPath, projectDefinition.IsXUnit, projectDefinition.ExtraArgs, failure, def.TimeoutMultiplier));
+                projectPaths.Add((projectDefinition.Name, projectPath, projectDefinition.IsXUnit, projectDefinition.ExtraArgs, failure, TimeoutMultiplier));
 
             }
             return projectPaths;

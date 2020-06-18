@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller
         private void PrintCommandHelp(string commandName)
         {
             Command command;
-            switch(commandName.ToLowerInvariant())
+            switch (commandName.ToLowerInvariant())
             {
                 case "install":
                     command = new InstallCommand();

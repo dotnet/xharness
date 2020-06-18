@@ -28,10 +28,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
     public class TunnelBore : ITunnelBore
     {
-
-        readonly object _tunnelsLock = new object();
-        readonly IMLaunchProcessManager _processManager;
-        readonly ConcurrentDictionary<string, TcpTunnel> _tunnels = new ConcurrentDictionary<string, TcpTunnel>();
+        private readonly object _tunnelsLock = new object();
+        private readonly IMLaunchProcessManager _processManager;
+        private readonly ConcurrentDictionary<string, TcpTunnel> _tunnels = new ConcurrentDictionary<string, TcpTunnel>();
 
         public TunnelBore(IMLaunchProcessManager processManager)
         {
@@ -66,8 +65,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         public async ValueTask DisposeAsync()
         {
             var devices = _tunnels.Keys.ToArray();
-            foreach (var d in devices) {
-                if (_tunnels.TryRemove(d, out var tunnel)) {
+            foreach (var d in devices)
+            {
+                if (_tunnels.TryRemove(d, out var tunnel))
+                {
                     // blocking, but we are disposing
                     await tunnel.DisposeAsync(); // alls close already
                 }

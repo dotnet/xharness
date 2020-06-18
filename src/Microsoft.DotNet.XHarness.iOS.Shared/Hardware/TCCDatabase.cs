@@ -20,15 +20,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
     public class TCCDatabase : ITCCDatabase
     {
-        static readonly string iOSSimRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.iOS-";
-        static readonly string tvOSSimRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.tvOS-";
-        static readonly string watchOSRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.watchOS-";
-
-        readonly IMLaunchProcessManager processManager;
+        private const string IOSSimRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.iOS-";
+        private const string TvOSSimRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.tvOS-";
+        private const string WatchOSRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.watchOS-";
+        private readonly IMLaunchProcessManager _processManager;
 
         public TCCDatabase(IMLaunchProcessManager processManager)
         {
-            this.processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
         public int GetTCCFormat(string simRuntime)
@@ -37,9 +36,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             // v1: < iOS 9
             // v2: >= iOS 9 && < iOS 12
             // v3: >= iOS 12
-            if (simRuntime.StartsWith(iOSSimRuntimePrefix, StringComparison.Ordinal))
+            if (simRuntime.StartsWith(IOSSimRuntimePrefix, StringComparison.Ordinal))
             {
-                var v = Version.Parse(simRuntime.Substring(iOSSimRuntimePrefix.Length).Replace('-', '.'));
+                var v = Version.Parse(simRuntime.Substring(IOSSimRuntimePrefix.Length).Replace('-', '.'));
                 if (v.Major >= 12)
                 {
                     return 3;
@@ -53,9 +52,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     return 1;
                 }
             }
-            else if (simRuntime.StartsWith(tvOSSimRuntimePrefix, StringComparison.Ordinal))
+            else if (simRuntime.StartsWith(TvOSSimRuntimePrefix, StringComparison.Ordinal))
             {
-                var v = Version.Parse(simRuntime.Substring(tvOSSimRuntimePrefix.Length).Replace('-', '.'));
+                var v = Version.Parse(simRuntime.Substring(TvOSSimRuntimePrefix.Length).Replace('-', '.'));
                 if (v.Major >= 12)
                 {
                     return 3;
@@ -65,9 +64,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     return 2;
                 }
             }
-            else if (simRuntime.StartsWith(watchOSRuntimePrefix, StringComparison.Ordinal))
+            else if (simRuntime.StartsWith(WatchOSRuntimePrefix, StringComparison.Ordinal))
             {
-                var v = Version.Parse(simRuntime.Substring(watchOSRuntimePrefix.Length).Replace('-', '.'));
+                var v = Version.Parse(simRuntime.Substring(WatchOSRuntimePrefix.Length).Replace('-', '.'));
                 if (v.Major >= 5)
                 {
                     return 3;
@@ -145,7 +144,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                         }
                     }
                     args.Add(sql.ToString());
-                    var rv = await processManager.ExecuteCommandAsync("sqlite3", args, log, TimeSpan.FromSeconds(5));
+                    var rv = await _processManager.ExecuteCommandAsync("sqlite3", args, log, TimeSpan.FromSeconds(5));
                     if (!rv.Succeeded)
                     {
                         failure = true;
@@ -164,7 +163,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             }
 
             log.WriteLine("Current TCC database contents:");
-            await processManager.ExecuteCommandAsync("sqlite3", new[] { TCCDb, ".dump" }, log, TimeSpan.FromSeconds(5));
+            await _processManager.ExecuteCommandAsync("sqlite3", new[] { TCCDb, ".dump" }, log, TimeSpan.FromSeconds(5));
         }
     }
 }

@@ -21,10 +21,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
         }
 
         [Fact]
-        public void ConstructorAllowsNullTunnelBore()
-        {
-            var f = new SimpleListenerFactory(null); // if it throws, test fails ;)
-        }
+        public void ConstructorAllowsNullTunnelBore() => new SimpleListenerFactory(null); // if it throws, test fails ;)
 
         [Fact]
         public void CreateNotWatchListener()

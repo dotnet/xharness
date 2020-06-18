@@ -30,8 +30,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
         /// <param name="writer">A TextWriter to which the result is written</param>
         public override void WriteResultFile(IResultSummary result, TextWriter writer)
         {
-            var xmlWriter = new XmlTextWriter(writer);
-            xmlWriter.Formatting = Formatting.Indented;
+            var xmlWriter = new XmlTextWriter(writer)
+            {
+                Formatting = Formatting.Indented
+            };
 
             try
             {
@@ -55,7 +57,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
         private void InitializeXmlFile(IResultSummary result)
         {
             if (_xmlWriter == null) // should never happen, would mean a programmers error
+            {
                 throw new InvalidOperationException("Null writer");
+            }
+
             _xmlWriter.WriteStartDocument(false);
 
             // In order to match the format used by NUnit 3.0, we
@@ -90,7 +95,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
         private void WriteEnvironmentElement()
         {
             if (_xmlWriter == null) // should never happen, would mean a programmers error
+            {
                 throw new InvalidOperationException("Null writer");
+            }
+
             _xmlWriter.WriteStartElement("environment");
 
             var assembly = Assembly.GetExecutingAssembly();
@@ -119,7 +127,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
                 for (var i = 0; i < testRun.Result.ChildNodes.Count; i++)
                 {
                     var node = testRun.Result.ChildNodes[i];
-                    if (node.Name == "environment") continue;
+                    if (node.Name == "environment")
+                    {
+                        continue;
+                    }
+
                     node.WriteTo(_xmlWriter);
                 }
             }
@@ -128,7 +140,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
         private void TerminateXmlFile()
         {
             if (_xmlWriter == null) // should never happen, would mean a programmer's error
+            {
                 throw new InvalidOperationException("Null writer");
+            }
+
             _xmlWriter.WriteEndElement(); // test-run
             _xmlWriter.WriteEndDocument();
             _xmlWriter.Flush();
