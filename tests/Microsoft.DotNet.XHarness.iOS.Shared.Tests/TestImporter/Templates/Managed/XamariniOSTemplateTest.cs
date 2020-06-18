@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
         public void GetProjectPathTest(string projectName, Platform platform, string expectedName)
         {
             // ignore the fact that all params are the same, we do not care
-            string path = _template.GetProjectPath(projectName, platform);
+            var path = _template.GetProjectPath(projectName, platform);
             Assert.Equal(Path.Combine(_template.OutputDirectoryPath, expectedName), path);
         }
 
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
         public void GetProjectPathWatchOSTest(string projectName, WatchAppType appType, string expectedName)
         {
             // ignore the fact that all params are the same, we do not care
-            string path = _template.GetProjectPath(projectName, appType);
+            var path = _template.GetProjectPath(projectName, appType);
             Assert.Equal(Path.Combine(_template.OutputDirectoryPath, expectedName), path);
         }
 
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
         [InlineData("/usr/other/path", Platform.MacOSModern, "Info-mac.plist")]
         public void GetPListPathTest(string rootDir, Platform platform, string expectedName)
         {
-            string path = XamariniOSTemplate.GetPListPath(rootDir, platform);
+            var path = XamariniOSTemplate.GetPListPath(rootDir, platform);
             Assert.Equal(Path.Combine(rootDir, expectedName), path);
         }
 
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
         [InlineData("/usr/local", WatchAppType.Extension, "Info-watchos-extension.plist")]
         public void GetPListPathWatchOSTest(string rootDir, WatchAppType appType, string expectedName)
         {
-            string path = XamariniOSTemplate.GetPListPath(rootDir, appType);
+            var path = XamariniOSTemplate.GetPListPath(rootDir, appType);
             Assert.Equal(Path.Combine(rootDir, expectedName), path);
         }
 
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
         [InlineData("MyAssembly.dll")]
         public void GetReferenceNodeNullHintTest(string assembly)
         {
-            string expected = $"<Reference Include=\"{assembly}\" />";
+            var expected = $"<Reference Include=\"{assembly}\" />";
             Assert.Equal(expected, XamariniOSTemplate.GetReferenceNode(assembly));
         }
 
@@ -101,12 +101,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
         [InlineData("MyAssembly.dll", "thepath")]
         public void GetReferenceNodeTest(string assembly, string hint)
         {
-            string fixedHint = hint.Replace("/", "\\");
+            var fixedHint = hint.Replace("/", "\\");
             var sb = new StringBuilder();
             sb.AppendLine($"<Reference Include=\"{assembly}\" >");
             sb.AppendLine($"<HintPath>{fixedHint}</HintPath>");
             sb.AppendLine("</Reference>");
-            string expected = sb.ToString();
+            var expected = sb.ToString();
             Assert.Equal(expected, XamariniOSTemplate.GetReferenceNode(assembly, hint));
         }
 
@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
             sb.AppendLine($"<Compile Include=\"{registerPath}\">");
             sb.AppendLine($"<Link>{Path.GetFileName(registerPath)}</Link>");
             sb.AppendLine("</Compile>");
-            string expected = sb.ToString();
+            var expected = sb.ToString();
             Assert.Equal(expected, XamariniOSTemplate.GetRegisterTypeNode(registerPath));
         }
 
@@ -128,13 +128,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
         [InlineData("/path/to/mono/my-trait-file.txt")]
         public void GetContentNodeTest(string contentFile)
         {
-            string fixedPath = contentFile.Replace("/", "\\");
+            var fixedPath = contentFile.Replace("/", "\\");
             var sb = new StringBuilder();
             sb.AppendLine($"<Content Include=\"{fixedPath}\">");
             sb.AppendLine($"<Link>{Path.GetFileName(contentFile)}</Link>");
             sb.AppendLine("<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>");
             sb.AppendLine("</Content>");
-            string expected = sb.ToString();
+            var expected = sb.ToString();
             Assert.Equal(expected, XamariniOSTemplate.GetContentNode(contentFile));
         }
     }

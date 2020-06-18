@@ -40,10 +40,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 Transport = Environment.GetEnvironmentVariable(EnviromentVariables.Transport);
             if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.EnableXmlOutput), out b))
                 EnableXml = b;
-            string xml_mode = Environment.GetEnvironmentVariable(EnviromentVariables.XmlMode);
+            var xml_mode = Environment.GetEnvironmentVariable(EnviromentVariables.XmlMode);
             if (!string.IsNullOrEmpty(xml_mode))
                 XmlMode = (XmlMode)Enum.Parse(typeof(XmlMode), xml_mode, true);
-            string xml_version = Environment.GetEnvironmentVariable(EnviromentVariables.XmlVersion);
+            var xml_version = Environment.GetEnvironmentVariable(EnviromentVariables.XmlVersion);
             if (!string.IsNullOrEmpty(xml_version))
                 XmlVersion = (XmlResultJargon)Enum.Parse(typeof(XmlResultJargon), xml_version, true);
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.LogFilePath)))
@@ -52,12 +52,12 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 RunAllTestsByDefault = b;
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.SkippedMethods)))
             {
-                string methods = Environment.GetEnvironmentVariable(EnviromentVariables.SkippedMethods);
+                var methods = Environment.GetEnvironmentVariable(EnviromentVariables.SkippedMethods);
                 _singleMethodFilters.AddRange(methods.Split(','));
             }
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.SkippedClasses)))
             {
-                string classes = Environment.GetEnvironmentVariable(EnviromentVariables.SkippedClasses);
+                var classes = Environment.GetEnvironmentVariable(EnviromentVariables.SkippedClasses);
                 _classMethodFilters.AddRange(classes.Split(','));
             }
 
@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 { "run-all-tests:", "Run all the tests found in the assembly. Defaults to true.", v =>
                 {
                     // if cannot parse, use default
-                    if (bool.TryParse(v, out bool runAll))
+                    if (bool.TryParse(v, out var runAll))
                         RunAllTestsByDefault = runAll;
                 }},
                 {

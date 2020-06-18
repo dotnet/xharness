@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         [Fact]
         public void OnWriteTest()
         {
-            string message = "This is a log message";
+            var message = "This is a log message";
             bool called = false;
             string data = null;
 

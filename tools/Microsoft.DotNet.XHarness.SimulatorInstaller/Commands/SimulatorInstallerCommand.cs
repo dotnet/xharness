@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
-using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments;
@@ -64,7 +63,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
             var stdoutLog = new MemoryLog() { Timestamp = false };
             var stderrLog = new MemoryLog() { Timestamp = false };
 
-            ProcessExecutionResult? result = await _processManager.ExecuteCommandAsync(
+            var result = await _processManager.ExecuteCommandAsync(
                 filename,
                 arguments,
                 new CallbackLog(m => Logger.LogDebug(m)),
@@ -85,7 +84,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
         {
             static string Replace(string value, Dictionary<string, string> replacements)
             {
-                foreach (KeyValuePair<string, string> kvp in replacements)
+                foreach (var kvp in replacements)
                 {
                     value = value.Replace($"$({kvp.Key})", kvp.Value);
                 }
@@ -98,7 +97,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
             var simulators = new List<Simulator>();
 
-            XmlNodeList? downloadables = doc.SelectNodes("//plist/dict/key[text()='downloadables']/following-sibling::array/dict");
+            var downloadables = doc.SelectNodes("//plist/dict/key[text()='downloadables']/following-sibling::array/dict");
             foreach (XmlNode? downloadable in downloadables)
             {
                 if (downloadable == null)
@@ -106,28 +105,28 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                     continue;
                 }
 
-                XmlNode? nameNode = downloadable.SelectSingleNode("key[text()='name']/following-sibling::string");
-                XmlNode? versionNode = downloadable.SelectSingleNode("key[text()='version']/following-sibling::string");
-                XmlNode? sourceNode = downloadable.SelectSingleNode("key[text()='source']/following-sibling::string");
-                XmlNode? identifierNode = downloadable.SelectSingleNode("key[text()='identifier']/following-sibling::string");
-                XmlNode? fileSizeNode = downloadable.SelectSingleNode("key[text()='fileSize']/following-sibling::integer|key[text()='fileSize']/following-sibling::real");
-                XmlNode? installPrefixNode = downloadable.SelectSingleNode("key[text()='userInfo']/following-sibling::dict/key[text()='InstallPrefix']/following-sibling::string");
+                var nameNode = downloadable.SelectSingleNode("key[text()='name']/following-sibling::string");
+                var versionNode = downloadable.SelectSingleNode("key[text()='version']/following-sibling::string");
+                var sourceNode = downloadable.SelectSingleNode("key[text()='source']/following-sibling::string");
+                var identifierNode = downloadable.SelectSingleNode("key[text()='identifier']/following-sibling::string");
+                var fileSizeNode = downloadable.SelectSingleNode("key[text()='fileSize']/following-sibling::integer|key[text()='fileSize']/following-sibling::real");
+                var installPrefixNode = downloadable.SelectSingleNode("key[text()='userInfo']/following-sibling::dict/key[text()='InstallPrefix']/following-sibling::string");
 
-                string? version = versionNode.InnerText;
-                string[]? versions = version.Split('.');
-                string? versionMajor = versions[0];
-                string? versionMinor = versions[1];
+                var version = versionNode.InnerText;
+                var versions = version.Split('.');
+                var versionMajor = versions[0];
+                var versionMinor = versions[1];
                 var dict = new Dictionary<string, string>() {
                     { MAJOR_VERSION_PLACEHOLDER, versionMajor },
                     { MINOR_VERSION_PLACEHOLDER, versionMinor },
                     { VERSION_PLACEHOLDER, version },
                 };
 
-                string? identifier = Replace(identifierNode.InnerText, dict);
+                var identifier = Replace(identifierNode.InnerText, dict);
 
                 dict.Add(IDENTIFIER_PLACEHOLDER, identifier);
 
-                double.TryParse(fileSizeNode?.InnerText, out double parsedFileSize);
+                double.TryParse(fileSizeNode?.InnerText, out var parsedFileSize);
 
                 simulators.Add(new Simulator(
                     name: Replace(nameNode.InnerText, dict),
@@ -143,24 +142,24 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
         protected async Task<Version?> IsInstalled(string identifier)
         {
-            (bool succeeded, string pkgInfo) = await ExecuteCommand($"pkgutil", TimeSpan.FromMinutes(1), "--pkg-info", identifier);
+            var (succeeded, pkgInfo) = await ExecuteCommand($"pkgutil", TimeSpan.FromMinutes(1), "--pkg-info", identifier);
             if (!succeeded)
             {
                 return null;
             }
 
-            string[]? lines = pkgInfo.Split('\n');
-            string? version = lines.First(v => v.StartsWith("version: ", StringComparison.Ordinal)).Substring("version: ".Length);
+            var lines = pkgInfo.Split('\n');
+            var version = lines.First(v => v.StartsWith("version: ", StringComparison.Ordinal)).Substring("version: ".Length);
             return Version.Parse(version);
         }
 
         private async Task<string?> GetSimulatorIndexXml()
         {
-            (string xcodeVersion, string xcodeUuid) = await GetXcodeInformation();
+            var (xcodeVersion, xcodeUuid) = await GetXcodeInformation();
 
-            string? url = string.Format(SimulatorIndexUrl, xcodeVersion, xcodeUuid);
+            var url = string.Format(SimulatorIndexUrl, xcodeVersion, xcodeUuid);
             var uri = new Uri(url);
-            string? tmpfile = Path.Combine(TempDirectory, Path.GetFileName(uri.LocalPath));
+            var tmpfile = Path.Combine(TempDirectory, Path.GetFileName(uri.LocalPath));
 
             if (!File.Exists(tmpfile))
             {
@@ -186,7 +185,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                 }
             }
 
-            (bool succeeded, string xmlResult) = await ExecuteCommand("plutil", TimeSpan.FromSeconds(30), "-convert", "xml1", "-o", "-", tmpfile);
+            var (succeeded, xmlResult) = await ExecuteCommand("plutil", TimeSpan.FromSeconds(30), "-convert", "xml1", "-o", "-", tmpfile);
             if (!succeeded)
             {
                 return null;
@@ -197,9 +196,9 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
         private async Task<(string XcodeVersion, string XcodeUuid)> GetXcodeInformation()
         {
-            string? plistPath = Path.Combine(SimulatorInstallerArguments.XcodeRoot, "Contents", "Info.plist");
+            var plistPath = Path.Combine(SimulatorInstallerArguments.XcodeRoot, "Contents", "Info.plist");
 
-            (bool succeeded, string xcodeVersion) = await ExecuteCommand("/usr/libexec/PlistBuddy", TimeSpan.FromSeconds(5), "-c", "Print :DTXcode", plistPath);
+            var (succeeded, xcodeVersion) = await ExecuteCommand("/usr/libexec/PlistBuddy", TimeSpan.FromSeconds(5), "-c", "Print :DTXcode", plistPath);
             if (!succeeded)
             {
                 throw new Exception("Failed to detect Xcode version!");

@@ -11,7 +11,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Collections;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
@@ -60,7 +59,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 _availableDevicePairs.Reset();
             }
 
-            string? tmpfile = Path.GetTempFileName();
+            var tmpfile = Path.GetTempFileName();
 
             try
             {
@@ -68,7 +67,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     new ListSimulatorsArgument(tmpfile),
                     new XmlOutputFormatArgument());
 
-                ProcessExecutionResult? result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromSeconds(30));
+                var result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromSeconds(30));
 
                 if (!result.Succeeded)
                 {
@@ -83,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                         $"mlaunch {(result.TimedOut ? "timed out" : "exited")} with {result.ExitCode})");
                 }
 
-                string? xmlContent = File.ReadAllText(tmpfile);
+                var xmlContent = File.ReadAllText(tmpfile);
 
                 log.WriteLine("Simulator listing returned:" + Environment.NewLine + xmlContent);
 
@@ -136,7 +135,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     });
                 }
 
-                IEnumerable<XmlNode>? sim_device_pairs = simulatorData.
+                var sim_device_pairs = simulatorData.
                     SelectNodes("/MTouch/Simulator/AvailableDevicePairs/SimDevicePair").
                     Cast<XmlNode>().
                     // There can be duplicates, so remove those.
@@ -164,8 +163,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         private string CreateName(string deviceType, string runtime)
         {
-            string? runtimeName = _supportedRuntimes?.Where(v => v.Identifier == runtime).FirstOrDefault()?.Name ?? Path.GetExtension(runtime).Substring(1);
-            string? deviceName = _supportedDeviceTypes?.Where(v => v.Identifier == deviceType).FirstOrDefault()?.Name ?? Path.GetExtension(deviceType).Substring(1);
+            var runtimeName = _supportedRuntimes?.Where(v => v.Identifier == runtime).FirstOrDefault()?.Name ?? Path.GetExtension(runtime).Substring(1);
+            var deviceName = _supportedDeviceTypes?.Where(v => v.Identifier == deviceType).FirstOrDefault()?.Name ?? Path.GetExtension(deviceType).Substring(1);
             return $"{deviceName} ({runtimeName}) - created by XHarness";
         }
 
@@ -198,10 +197,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 }
             }
 
-            ProcessExecutionResult? rv = await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "create", CreateName(devicetype, runtime), devicetype, runtime }, log, TimeSpan.FromMinutes(1));
+            var rv = await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "create", CreateName(devicetype, runtime), devicetype, runtime }, log, TimeSpan.FromMinutes(1));
             if (!rv.Succeeded)
             {
-                string? message = $"Could not create device{Environment.NewLine}" +
+                var message = $"Could not create device{Environment.NewLine}" +
                     $"runtime: {runtime}{Environment.NewLine}" +
                     $"device type: {devicetype}";
                 log.WriteLine(message);
@@ -213,7 +212,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             devices = AvailableDevices.Where((ISimulatorDevice v) => v.SimRuntime == runtime && v.SimDeviceType == devicetype);
             if (!devices.Any())
             {
-                string? message = $"Simulator not found after creating it{Environment.NewLine}" +
+                var message = $"Simulator not found after creating it{Environment.NewLine}" +
                     $"runtime: {runtime}{Environment.NewLine}" +
                     $"device type: {devicetype}";
                 log.WriteLine(message);
@@ -228,8 +227,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             if (createDevice)
             {
                 // watch device is already paired to some other phone. Create a new watch device
-                IEnumerable<ISimulatorDevice>? matchingDevices = await FindOrCreateDevicesAsync(log, runtime, devicetype, force: true);
-                IEnumerable<ISimulatorDevice>? unPairedDevices = matchingDevices.Where(v => !AvailableDevicePairs.Any(p => p.Gizmo == v.UDID));
+                var matchingDevices = await FindOrCreateDevicesAsync(log, runtime, devicetype, force: true);
+                var unPairedDevices = matchingDevices.Where(v => !AvailableDevicePairs.Any(p => p.Gizmo == v.UDID));
                 if (device != null)
                 {
                     // If we're creating a new watch device, assume that the one we were given is not usable.
@@ -253,13 +252,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 capturedLog.Append(value);
             });
 
-            ProcessExecutionResult? rv = await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "pair", device.UDID, companion_device.UDID }, pairLog, TimeSpan.FromMinutes(1));
+            var rv = await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "pair", device.UDID, companion_device.UDID }, pairLog, TimeSpan.FromMinutes(1));
             if (!rv.Succeeded)
             {
                 if (!createDevice)
                 {
-                    bool try_creating_device = false;
-                    string? captured_log = capturedLog.ToString();
+                    var try_creating_device = false;
+                    var captured_log = capturedLog.ToString();
                     try_creating_device |= captured_log.Contains("At least one of the requested devices is already paired with the maximum number of supported devices and cannot accept another pairing.");
                     try_creating_device |= captured_log.Contains("The selected devices are already paired with each other.");
                     if (try_creating_device)
@@ -279,7 +278,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         private async Task<SimDevicePair?> FindOrCreateDevicePairAsync(ILog log, IEnumerable<ISimulatorDevice> devices, IEnumerable<ISimulatorDevice> companionDevices)
         {
             // Check if we already have a device pair with the specified devices
-            IEnumerable<SimDevicePair>? pairs = AvailableDevicePairs.Where(pair =>
+            var pairs = AvailableDevicePairs.Where(pair =>
             {
                 if (!devices.Any(v => v.UDID == pair.Gizmo))
                 {
@@ -298,10 +297,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             {
                 // No device pair. Create one.
                 // First check if the watch is already paired
-                IEnumerable<ISimulatorDevice>? unPairedDevices = devices.Where(v => !AvailableDevicePairs.Any(p => p.Gizmo == v.UDID));
-                ISimulatorDevice? unpairedDevice = unPairedDevices.FirstOrDefault();
-                ISimulatorDevice? companion_device = companionDevices.First();
-                ISimulatorDevice? device = devices.First();
+                var unPairedDevices = devices.Where(v => !AvailableDevicePairs.Any(p => p.Gizmo == v.UDID));
+                var unpairedDevice = unPairedDevices.FirstOrDefault();
+                var companion_device = companionDevices.First();
+                var device = devices.First();
                 if (!await CreateDevicePair(log, unpairedDevice, companion_device, device.SimRuntime, device.SimDeviceType, unpairedDevice == null))
                 {
                     return null;
@@ -338,7 +337,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         /// <returns></returns>
         public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, bool createIfNeeded = true, bool minVersion = false)
         {
-            string? runtimePrefix = target.Platform switch
+            var runtimePrefix = target.Platform switch
             {
                 TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimRuntime.iOS-",
                 TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimRuntime.iOS-",
@@ -348,7 +347,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 _ => throw new Exception(string.Format("Invalid simulator target: {0}", target))
             };
 
-            string? runtimeVersion = target.OSVersion;
+            var runtimeVersion = target.OSVersion;
 
             if (runtimeVersion == null)
             {
@@ -388,7 +387,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 companionDeviceType = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X");
             }
 
-            IEnumerable<ISimulatorDevice>? devices = await FindOrCreateDevicesAsync(log, simulatorRuntime, simulatorDeviceType);
+            var devices = await FindOrCreateDevicesAsync(log, simulatorRuntime, simulatorDeviceType);
             IEnumerable<ISimulatorDevice>? companionDevices = null;
 
             if (companionRuntime != null && companionDeviceType != null)
@@ -419,7 +418,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                         $"device type: {companionDeviceType}");
                 }
 
-                SimDevicePair? pair = await FindOrCreateDevicePairAsync(log, devices, companionDevices);
+                var pair = await FindOrCreateDevicePairAsync(log, devices, companionDevices);
                 if (pair == null)
                 {
                     throw new Exception($"Could not find or create device pair{Environment.NewLine}" +
@@ -465,7 +464,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         public ISimulatorDevice FindCompanionDevice(ILog log, ISimulatorDevice device)
         {
-            SimDevicePair? pair = _availableDevicePairs.Where(v => v.Gizmo == device.UDID).Single();
+            var pair = _availableDevicePairs.Where(v => v.Gizmo == device.UDID).Single();
             return _availableDevices.Single(v => v.UDID == pair.Companion);
         }
 

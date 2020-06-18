@@ -39,10 +39,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         // you ran in.
         private bool IsExcludedInternal(IEnumerable<XUnitFilter> filters, Func<XUnitFilter, bool> isExcludedCb)
         {
-            bool isExcluded = !RunAllTestsByDefault;
-            foreach (XUnitFilter? filter in filters)
+            var isExcluded = !RunAllTestsByDefault;
+            foreach (var filter in filters)
             {
-                bool doesExclude = isExcludedCb(filter);
+                var doesExclude = isExcludedCb(filter);
                 if (filter.Exclude)
                 {
                     isExcluded |= doesExclude;

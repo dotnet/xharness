@@ -59,19 +59,19 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         {
             OptionSet options = Arguments.GetOptions();
 
-            using ILoggerFactory? parseFactory = CreateLoggerFactory(Arguments.Verbosity);
-            ILogger? parseLogger = parseFactory.CreateLogger(Name);
+            using var parseFactory = CreateLoggerFactory(Arguments.Verbosity);
+            var parseLogger = parseFactory.CreateLogger(Name);
 
             try
             {
-                IEnumerable<string>? regularArguments = arguments.TakeWhile(arg => arg != VerbatimArgumentPlaceholder);
+                var regularArguments = arguments.TakeWhile(arg => arg != VerbatimArgumentPlaceholder);
                 if (regularArguments.Count() < arguments.Count())
                 {
                     PassThroughArguments = arguments.Skip(regularArguments.Count() + 1);
                     arguments = regularArguments;
                 }
 
-                List<string>? extra = options.Parse(arguments);
+                var extra = options.Parse(arguments);
 
                 if (extra.Count > 0)
                 {
@@ -113,8 +113,8 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
             try
             {
-                using ILoggerFactory? factory = CreateLoggerFactory(Arguments.Verbosity);
-                ILogger? logger = factory.CreateLogger(Name);
+                using var factory = CreateLoggerFactory(Arguments.Verbosity);
+                var logger = factory.CreateLogger(Name);
 
                 return (int)InvokeInternal(logger).GetAwaiter().GetResult();
             }

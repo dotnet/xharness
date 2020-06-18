@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         {
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 1);
 
-            InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
                 async () => await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Simulator_iOS64, null)));
         }
 
@@ -88,13 +88,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             // Act
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 2);
 
-            (string deviceName, ProcessExecutionResult result) = await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Device_iOS, null));
+            var (deviceName, result) = await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Device_iOS, null));
 
             // Verify
             Assert.Equal(0, result.ExitCode);
             Assert.Equal(s_mockDevice.Name, deviceName);
 
-            string expectedArgs = $"-v -v -v --installdev {StringUtils.FormatArguments(s_appPath)} --devname \"{s_mockDevice.Name}\"";
+            var expectedArgs = $"-v -v -v --installdev {StringUtils.FormatArguments(s_appPath)} --devname \"{s_mockDevice.Name}\"";
 
             _processManager.Verify(x => x.ExecuteCommandAsync(
                It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
@@ -110,13 +110,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             // Act
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 2);
 
-            (string deviceName, ProcessExecutionResult result) = await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Device_iOS, null), deviceName: "OtherDevice");
+            var (deviceName, result) = await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Device_iOS, null), deviceName: "OtherDevice");
 
             // Verify
             Assert.Equal(0, result.ExitCode);
             Assert.Equal("OtherDevice", deviceName);
 
-            string expectedArgs = $"-v -v -v --installdev {StringUtils.FormatArguments(s_appPath)} --devname OtherDevice";
+            var expectedArgs = $"-v -v -v --installdev {StringUtils.FormatArguments(s_appPath)} --devname OtherDevice";
 
             _processManager.Verify(x => x.ExecuteCommandAsync(
                It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),

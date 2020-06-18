@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     Thread.Sleep(25);
                 }
 
-                int rv = base.Read(array, offset, count);
+                var rv = base.Read(array, offset, count);
                 _lastPosition += rv;
                 return rv;
             }

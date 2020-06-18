@@ -103,11 +103,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             if (info.Simulators.Any())
             {
-                int maxLength = info.Simulators.Select(s => s.Name.Length).Max();
+                var maxLength = info.Simulators.Select(s => s.Name.Length).Max();
 
-                foreach (DeviceInfo? sim in info.Simulators)
+                foreach (var sim in info.Simulators)
                 {
-                    string? uuid = _arguments.ShowSimulatorsUUID ? $" {sim.UDID}   " : "";
+                    var uuid = _arguments.ShowSimulatorsUUID ? $" {sim.UDID}   " : "";
                     Console.WriteLine($"  {sim.Name.PadRight(maxLength)}{uuid} {sim.OSVersion,-13} {sim.Type}");
                 }
             }
@@ -122,11 +122,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             if (info.Devices.Any())
             {
-                int maxLength = info.Devices.Select(s => s.Name.Length).Max();
+                var maxLength = info.Devices.Select(s => s.Name.Length).Max();
 
-                foreach (DeviceInfo? dev in info.Devices)
+                foreach (var dev in info.Devices)
                 {
-                    string? uuid = _arguments.ShowDevicesUUID ? $" {dev.UDID}   " : "";
+                    var uuid = _arguments.ShowDevicesUUID ? $" {dev.UDID}   " : "";
                     Console.WriteLine($"  {dev.Name.PadRight(maxLength)}{uuid} {dev.OSVersion,-13} {dev.Type}");
                 }
             }
@@ -185,7 +185,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 return ExitCode.GENERAL_FAILURE;
             }
 
-            foreach (SimulatorDevice? sim in simulatorLoader.AvailableDevices)
+            foreach (var sim in simulatorLoader.AvailableDevices)
             {
                 info.Simulators.Add(new DeviceInfo(
                     name: sim.Name,
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 return ExitCode.GENERAL_FAILURE;
             }
 
-            foreach (IHardwareDevice? dev in deviceLoader.ConnectedDevices)
+            foreach (var dev in deviceLoader.ConnectedDevices)
             {
                 info.Devices.Add(new DeviceInfo(
                     name: dev.Name,

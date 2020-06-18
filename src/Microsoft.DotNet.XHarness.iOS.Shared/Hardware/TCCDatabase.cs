@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 
@@ -91,7 +90,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 return;
             }
 
-            string[] sim_services = new string[] {
+            var sim_services = new string[] {
                     "kTCCServiceAddressBook",
                     "kTCCServiceCalendar",
                     "kTCCServicePhotos",
@@ -101,8 +100,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     "kTCCServiceWillow"
                 };
 
-            bool failure = false;
-            int tcc_edit_timeout = 30;
+            var failure = false;
+            var tcc_edit_timeout = 30;
             var watch = new Stopwatch();
             watch.Start();
 
@@ -114,14 +113,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     await Task.Delay(TimeSpan.FromSeconds(1));
                 }
                 failure = false;
-                foreach (string bundle_identifier in bundle_identifiers)
+                foreach (var bundle_identifier in bundle_identifiers)
                 {
                     var args = new List<string>();
                     var sql = new System.Text.StringBuilder("\n");
                     args.Add(TCCDb);
-                    foreach (string bundle_id in new[] { bundle_identifier, bundle_identifier + ".watchkitapp" })
+                    foreach (var bundle_id in new[] { bundle_identifier, bundle_identifier + ".watchkitapp" })
                     {
-                        foreach (string service in sim_services)
+                        foreach (var service in sim_services)
                         {
                             switch (GetTCCFormat(simRuntime))
                             {
@@ -145,7 +144,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                         }
                     }
                     args.Add(sql.ToString());
-                    ProcessExecutionResult rv = await _processManager.ExecuteCommandAsync("sqlite3", args, log, TimeSpan.FromSeconds(5));
+                    var rv = await _processManager.ExecuteCommandAsync("sqlite3", args, log, TimeSpan.FromSeconds(5));
                     if (!rv.Succeeded)
                     {
                         failure = true;

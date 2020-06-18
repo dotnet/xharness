@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Xml;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 using NUnit.Engine;
 using NUnit.Framework.Interfaces;
@@ -59,15 +58,15 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
         {
             double duration = 0;
             long assertCount = 0;
-            foreach (ITestRun? result in this)
+            foreach (var result in this)
             {
-                XmlNode? testRunNode = result.Result.FirstChild;
+                var testRunNode = result.Result.FirstChild;
                 if (testRunNode.Name != "test-run") continue;
-                if (double.TryParse(testRunNode.Attributes["time"].Value, out double time))
+                if (double.TryParse(testRunNode.Attributes["time"].Value, out var time))
                 {
                     duration += time;
                 }
-                if (long.TryParse(testRunNode.Attributes["asserts"].Value, out long asserts))
+                if (long.TryParse(testRunNode.Attributes["asserts"].Value, out var asserts))
                 {
                     assertCount += asserts;
                 }

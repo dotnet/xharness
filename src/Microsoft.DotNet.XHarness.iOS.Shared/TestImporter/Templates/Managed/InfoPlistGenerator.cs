@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             // got the lines we want to add, read the template and substitute
             using (var reader = new StreamReader(template))
             {
-                string result = await reader.ReadToEndAsync();
+                var result = await reader.ReadToEndAsync();
                 result = result.Replace(ApplicationNameReplacement, projectName);
                 result = result.Replace(IndentifierReplacement, $"com.xamarin.bcltests.{projectName}");
                 result = result.Replace(WatchAppIndentifierReplacement, $"com.xamarin.bcltests.{projectName}.container");

@@ -90,13 +90,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
                 return;
             }
 
-            long currentEndPosition = _endPosition;
+            var currentEndPosition = _endPosition;
             if (currentEndPosition == 0)
                 currentEndPosition = new FileInfo(CapturePath).Length;
 
-            int length = (int)(currentEndPosition - _startPosition);
-            long currentLength = new FileInfo(CapturePath).Length;
-            long capturedLength = 0L;
+            var length = (int)(currentEndPosition - _startPosition);
+            var currentLength = new FileInfo(CapturePath).Length;
+            var capturedLength = 0L;
 
             if (length < 0)
             {
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             // capture 1k more data than when we stopped, since the system log
             // is cached in memory and flushed once in a while (so when the app
             // requests the system log to be captured, it's usually not complete).
-            long availableLength = currentLength - _startPosition;
+            var availableLength = currentLength - _startPosition;
             if (availableLength <= capturedLength)
                 return; // We've captured before, and nothing new as added since last time.
 
@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             using (var reader = new FileStream(CapturePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var writer = new FileStream(FullPath, FileMode.Create, FileAccess.Write, FileShare.Read))
             {
-                byte[] buffer = new byte[4096];
+                var buffer = new byte[4096];
                 reader.Position = _startPosition;
                 while (availableLength > 0)
                 {

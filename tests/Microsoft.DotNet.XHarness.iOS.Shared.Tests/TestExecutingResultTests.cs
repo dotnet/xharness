@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
@@ -47,16 +46,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         )]
         public void FlaggedIsPresentWhereItShouldBe(TestExecutingResult[] withFlag, TestExecutingResult flag)
         {
-            IEnumerable<TestExecutingResult> withoutFlag = Enum.GetValues(typeof(TestExecutingResult))
+            var withoutFlag = Enum.GetValues(typeof(TestExecutingResult))
                 .Cast<TestExecutingResult>()
                 .Except(withFlag);
 
-            foreach (TestExecutingResult result in withoutFlag)
+            foreach (var result in withoutFlag)
             {
                 Assert.False(result.HasFlag(flag), $"{result} should not have {flag}");
             }
 
-            foreach (TestExecutingResult result in withFlag)
+            foreach (var result in withFlag)
             {
                 Assert.True(result.HasFlag(flag), $"{result} should have {flag}");
             }

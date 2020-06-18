@@ -39,8 +39,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         {
             get
             {
-                string v = SimRuntime.Substring("com.apple.CoreSimulator.SimRuntime.".Length);
-                int dash = v.IndexOf('-');
+                var v = SimRuntime.Substring("com.apple.CoreSimulator.SimRuntime.".Length);
+                var dash = v.IndexOf('-');
                 return v.Substring(0, dash) + " " + v.Substring(dash + 1).Replace('-', '.');
             }
         }
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         {
             await _processManager.ExecuteCommandAsync("launchctl", new[] { "remove", "com.apple.CoreSimulator.CoreSimulatorService" }, log, TimeSpan.FromSeconds(10));
 
-            string[] toKill = new string[] { "iPhone Simulator", "iOS Simulator", "Simulator", "Simulator (Watch)", "com.apple.CoreSimulator.CoreSimulatorService", "ibtoold" };
+            var toKill = new string[] { "iPhone Simulator", "iOS Simulator", "Simulator", "Simulator (Watch)", "com.apple.CoreSimulator.CoreSimulatorService", "ibtoold" };
 
             var args = new List<string>
             {
@@ -73,12 +73,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
             await _processManager.ExecuteCommandAsync("killall", args, log, TimeSpan.FromSeconds(10));
 
-            string[] dirsToBeDeleted = new[] {
+            var dirsToBeDeleted = new[] {
                 Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library", "Saved Application State", "com.apple.watchsimulator.savedState"),
                 Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library", "Saved Application State", "com.apple.iphonesimulator.savedState"),
             };
 
-            foreach (string dir in dirsToBeDeleted)
+            foreach (var dir in dirsToBeDeleted)
             {
                 try
                 {
@@ -119,13 +119,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             await Erase(log);
 
             // Edit the permissions to prevent dialog boxes in the test app
-            string TCC_db = Path.Combine(DataPath, "data", "Library", "TCC", "TCC.db");
+            var TCC_db = Path.Combine(DataPath, "data", "Library", "TCC", "TCC.db");
             if (!File.Exists(TCC_db))
             {
                 log.WriteLine("Opening simulator to create TCC.db");
                 await OpenSimulator(log);
 
-                int tcc_creation_timeout = 60;
+                var tcc_creation_timeout = 60;
                 var watch = new Stopwatch();
                 watch.Start();
                 while (!File.Exists(TCC_db) && watch.Elapsed.TotalSeconds < tcc_creation_timeout)

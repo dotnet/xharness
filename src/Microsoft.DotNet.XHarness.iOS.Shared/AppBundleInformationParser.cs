@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             if (!string.IsNullOrEmpty(extensionPointIdentifier))
                 extension = extensionPointIdentifier.ParseFromNSExtensionPointIdentifier();
 
-            string platform = target.IsSimulator() ? "iPhoneSimulator" : "iPhone";
+            var platform = target.IsSimulator() ? "iPhoneSimulator" : "iPhone";
 
             string appPath = Path.Combine(Path.GetDirectoryName(projectFilePath),
                 csproj.GetOutputPath(platform, buildConfiguration).Replace('\\', Path.DirectorySeparatorChar),
@@ -73,15 +73,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         public async Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default)
         {
-            string plistPath = Path.Join(appPackagePath, "Info.plist");
+            var plistPath = Path.Join(appPackagePath, "Info.plist");
 
             if (!File.Exists(plistPath))
             {
                 throw new Exception($"Failed to find Info.plist inside the app bundle at: '{plistPath}'");
             }
 
-            string appName = await GetPlistProperty(plistPath, PListExtensions.BundleNamePropertyName, log, cancellationToken);
-            string bundleIdentifier = await GetPlistProperty(plistPath, PListExtensions.BundleIdentifierPropertyName, log, cancellationToken);
+            var appName = await GetPlistProperty(plistPath, PListExtensions.BundleNamePropertyName, log, cancellationToken);
+            var bundleIdentifier = await GetPlistProperty(plistPath, PListExtensions.BundleIdentifierPropertyName, log, cancellationToken);
 
             string supports32 = string.Empty;
 
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         private async Task<string> GetPlistProperty(string plistPath, string propertyName, ILog log, CancellationToken cancellationToken = default)
         {
-            string[] args = new[]
+            var args = new[]
             {
                 "-c",
                 $"Print {propertyName}",
@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             };
 
             var commandOutput = new MemoryLog { Timestamp = false };
-            ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(PlistBuddyPath, args, log, commandOutput, commandOutput, TimeSpan.FromSeconds(15), cancellationToken: cancellationToken);
+            var result = await _processManager.ExecuteCommandAsync(PlistBuddyPath, args, log, commandOutput, commandOutput, TimeSpan.FromSeconds(15), cancellationToken: cancellationToken);
 
             if (!result.Succeeded)
             {

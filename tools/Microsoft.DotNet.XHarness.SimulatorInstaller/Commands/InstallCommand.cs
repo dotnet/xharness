@@ -37,10 +37,10 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
         {
             Logger = logger;
 
-            IEnumerable<Simulator>? simulators = await GetAvailableSimulators();
-            ExitCode exitCode = ExitCode.SUCCESS;
+            var simulators = await GetAvailableSimulators();
+            var exitCode = ExitCode.SUCCESS;
 
-            IEnumerable<string>? unknownSimulators = _arguments.Simulators.Where(identifier =>
+            var unknownSimulators = _arguments.Simulators.Where(identifier =>
                 !simulators.Any(sim => sim.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)));
 
             if (unknownSimulators.Any())
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                 return ExitCode.DEVICE_NOT_FOUND;
             }
 
-            foreach (Simulator? simulator in simulators)
+            foreach (var simulator in simulators)
             {
                 if (!_arguments.Simulators.Any(identifier => simulator.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
                 {
@@ -57,8 +57,8 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                     continue;
                 }
 
-                Version? installedVersion = await IsInstalled(simulator.Identifier);
-                bool shouldInstall = false;
+                var installedVersion = await IsInstalled(simulator.Identifier);
+                var shouldInstall = false;
 
                 if (installedVersion == null)
                 {
@@ -114,9 +114,9 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
         private async Task<bool> Install(Simulator simulator)
         {
-            string? filename = Path.GetFileName(simulator.Source);
-            string? downloadPath = Path.Combine(TempDirectory, filename);
-            bool download = true;
+            var filename = Path.GetFileName(simulator.Source);
+            var downloadPath = Path.Combine(TempDirectory, filename);
+            var download = true;
 
             if (!File.Exists(downloadPath))
             {
@@ -143,12 +143,12 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                 var watch = Stopwatch.StartNew();
                 wc.DownloadProgressChanged += (sender, progressArgs) =>
                 {
-                    long progress = progressArgs.BytesReceived * 100 / simulator.FileSize;
+                    var progress = progressArgs.BytesReceived * 100 / simulator.FileSize;
                     if (progress > lastProgress)
                     {
                         lastProgress = progress;
-                        double duration = watch.Elapsed.TotalSeconds;
-                        double speed = progressArgs.BytesReceived / duration;
+                        var duration = watch.Elapsed.TotalSeconds;
+                        var speed = progressArgs.BytesReceived / duration;
                         var timeLeft = TimeSpan.FromSeconds((progressArgs.TotalBytesToReceive - progressArgs.BytesReceived) / speed);
 
                         Logger.LogDebug($"Downloaded {progressArgs.BytesReceived:N0}/{simulator.FileSize:N0} bytes = " +
@@ -174,12 +174,12 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                 downloadDone.WaitOne();
             }
 
-            string? mount_point = Path.Combine(TempDirectory, filename + "-mount");
+            var mount_point = Path.Combine(TempDirectory, filename + "-mount");
             Directory.CreateDirectory(mount_point);
             try
             {
                 Logger.LogInformation($"Mounting '{downloadPath}' into '{mount_point}'...");
-                (bool succeeded, string stdout) = await ExecuteCommand("hdiutil", TimeSpan.FromMinutes(1), "attach", downloadPath, "-mountpoint", mount_point, "-quiet", "-nobrowse");
+                var (succeeded, stdout) = await ExecuteCommand("hdiutil", TimeSpan.FromMinutes(1), "attach", downloadPath, "-mountpoint", mount_point, "-quiet", "-nobrowse");
                 if (!succeeded)
                 {
                     Logger.LogError("Mount failure!" + Environment.NewLine + stdout);
@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
                 try
                 {
-                    string[]? packages = Directory.GetFiles(mount_point, "*.pkg");
+                    var packages = Directory.GetFiles(mount_point, "*.pkg");
                     if (packages.Length == 0)
                     {
                         Logger.LogError("Found no *.pkg files in the dmg.");
@@ -203,7 +203,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                     // According to the package manifest, the package's install location is /.
                     // That's obviously not where it's installed, but I have no idea how Apple does it
                     // So instead decompress the package, modify the package manifest, re-create the package, and then install it.
-                    string? expanded_path = Path.Combine(TempDirectory + "-expanded-pkg");
+                    var expanded_path = Path.Combine(TempDirectory + "-expanded-pkg");
                     if (Directory.Exists(expanded_path))
                     {
                         Directory.Delete(expanded_path, true);
@@ -219,16 +219,16 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
                     try
                     {
-                        string? packageInfoPath = Path.Combine(expanded_path, "PackageInfo");
+                        var packageInfoPath = Path.Combine(expanded_path, "PackageInfo");
                         var packageInfoDoc = new XmlDocument();
                         packageInfoDoc.Load(packageInfoPath);
                         // Add the install-location attribute to the pkg-info node
-                        XmlAttribute? attr = packageInfoDoc.CreateAttribute("install-location");
+                        var attr = packageInfoDoc.CreateAttribute("install-location");
                         attr.Value = simulator.InstallPrefix;
                         packageInfoDoc.SelectSingleNode("/pkg-info").Attributes.Append(attr);
                         packageInfoDoc.Save(packageInfoPath);
 
-                        string? fixed_path = Path.Combine(Path.GetDirectoryName(downloadPath)!, Path.GetFileNameWithoutExtension(downloadPath) + "-fixed.pkg");
+                        var fixed_path = Path.Combine(Path.GetDirectoryName(downloadPath)!, Path.GetFileNameWithoutExtension(downloadPath) + "-fixed.pkg");
                         if (File.Exists(fixed_path))
                         {
                             File.Delete(fixed_path);

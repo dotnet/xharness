@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
             if (!path.StartsWith(Directory, StringComparison.Ordinal))
             {
-                string newPath = Path.Combine(Directory, Path.GetFileNameWithoutExtension(path) + "-" + _helpers.Timestamp + Path.GetExtension(path));
+                var newPath = Path.Combine(Directory, Path.GetFileNameWithoutExtension(path) + "-" + _helpers.Timestamp + Path.GetExtension(path));
                 File.Copy(path, newPath, true);
                 path = newPath;
             }
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         public void Dispose()
         {
-            foreach (IFileBackedLog log in this)
+            foreach (var log in this)
                 log.Dispose();
         }
     }

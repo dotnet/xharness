@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         public async Task Close(string device)
         {
             // closes a tcp tunnel that was created for the given device.
-            if (_tunnels.TryRemove(device, out TcpTunnel tunnel))
+            if (_tunnels.TryRemove(device, out var tunnel))
             {
                 await tunnel.DisposeAsync(); // calls close already
             }
@@ -64,10 +64,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public async ValueTask DisposeAsync()
         {
-            string[] devices = _tunnels.Keys.ToArray();
-            foreach (string d in devices)
+            var devices = _tunnels.Keys.ToArray();
+            foreach (var d in devices)
             {
-                if (_tunnels.TryRemove(d, out TcpTunnel tunnel))
+                if (_tunnels.TryRemove(d, out var tunnel))
                 {
                     // blocking, but we are disposing
                     await tunnel.DisposeAsync(); // alls close already

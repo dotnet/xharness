@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 return false;
             }
 
-            using StreamReader? reader = log.GetReader();
+            using var reader = log.GetReader();
             while (!reader.EndOfStream)
             {
                 string line = reader.ReadLine();
@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 }
 
                 //go over errors and return true as soon as we find one that matches
-                foreach (string? error in errorMap.Keys)
+                foreach (var error in errorMap.Keys)
                 {
                     if (!line.Contains(error, StringComparison.InvariantCultureIgnoreCase))
                     {

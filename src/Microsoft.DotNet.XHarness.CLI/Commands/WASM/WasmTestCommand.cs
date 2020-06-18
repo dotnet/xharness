@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.Extensions.Logging;
@@ -38,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         {
             var processManager = new MacOSProcessManager();
 
-            string? engineBinary = _arguments.Engine switch
+            var engineBinary = _arguments.Engine switch
             {
                 JavaScriptEngine.V8 => "v8",
                 JavaScriptEngine.JavaScriptCore => "jsc",
@@ -65,12 +64,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             engineArgs.AddRange(PassThroughArguments);
 
-            string? xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
+            var xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
             File.Delete(xmlResultsFilePath);
 
             try
             {
-                ProcessExecutionResult? result = await processManager.ExecuteCommandAsync(
+                var result = await processManager.ExecuteCommandAsync(
                     engineBinary,
                     engineArgs,
                     log: new CallbackLog(m => logger.LogInformation(m)),

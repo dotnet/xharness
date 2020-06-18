@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter
             AssemblyLocator = locator ?? throw new ArgumentNullException(nameof(locator));
             AssemblyDefinitionFactory = factory ?? throw new ArgumentNullException(nameof(factory));
             ExtraArgs = extraArgs;
-            foreach (string assembly in assemblies)
+            foreach (var assembly in assemblies)
             {
                 TestAssemblies.Add(factory.Create(assembly, AssemblyLocator));
             }
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter
             AssemblyLocator = locator ?? throw new ArgumentNullException(nameof(locator));
             TestAssemblies = assemblies ?? throw new ArgumentNullException(nameof(assemblies));
             AssemblyDefinitionFactory = factory ?? throw new ArgumentNullException(nameof(factory));
-            foreach (ITestAssemblyDefinition a in TestAssemblies)
+            foreach (var a in TestAssemblies)
             {
                 a.AssemblyLocator = AssemblyLocator;
             }
@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter
             var xUnitAssemblies = new List<ITestAssemblyDefinition>();
             var nUnitAssemblies = new List<ITestAssemblyDefinition>();
 
-            foreach (ITestAssemblyDefinition assemblyDefinition in TestAssemblies)
+            foreach (var assemblyDefinition in TestAssemblies)
             {
                 if (assemblyDefinition.IsXUnit)
                     xUnitAssemblies.Add(assemblyDefinition);
@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter
         {
             var set = new HashSet<string>();
             string failureMessage = null;
-            foreach (ITestAssemblyDefinition definition in TestAssemblies)
+            foreach (var definition in TestAssemblies)
             {
                 (string FailureMessage, IEnumerable<string> References) = GetAssemblyReferences(definition.GetPath(platform));
                 if (FailureMessage != null)
@@ -118,15 +118,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter
                 throw new ArgumentNullException(nameof(monoRootPath));
             var dict = new Dictionary<string, Type>();
             // loop over the paths, grab the assembly, find a type and then add it
-            foreach (ITestAssemblyDefinition definition in TestAssemblies)
+            foreach (var definition in TestAssemblies)
             {
-                string path = definition.GetPath(platform);
+                var path = definition.GetPath(platform);
                 if (!File.Exists(path))
                     return ($"The assembly {path} does not exist. Please make sure it exists, then re-generate the project files by executing 'git clean -xfd && make' in the tests/ directory.", null);
                 var a = Assembly.LoadFile(path);
                 try
                 {
-                    IEnumerable<Type> types = a.ExportedTypes;
+                    var types = a.ExportedTypes;
                     if (!types.Any())
                     {
                         continue;
@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter
                   // we did get an exception, possible reason, the type comes from an assebly not loaded, but 
                   // nevertheless we can do something about it, get all the not null types in the exception
                   // and use one of them
-                    IEnumerable<Type> types = e.Types.Where(t => t != null).Where(t => !t.IsGenericType && (t.FullName.EndsWith("Test") || t.FullName.EndsWith("Tests")) && t.Namespace != null);
+                    var types = e.Types.Where(t => t != null).Where(t => !t.IsGenericType && (t.FullName.EndsWith("Test") || t.FullName.EndsWith("Tests")) && t.Namespace != null);
                     if (types.Any())
                     {
                         dict[Path.GetFileName(path)] = types.First();

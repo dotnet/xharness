@@ -56,14 +56,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             var cts = new CancellationTokenSource();
             cts.CancelAfter(_arguments.Timeout);
 
-            ExitCode exitCode = ExitCode.SUCCESS;
+            var exitCode = ExitCode.SUCCESS;
 
-            foreach (TestTargetOs? target in _arguments.TestTargets)
+            foreach (var target in _arguments.TestTargets)
             {
-                TunnelBore? tunnelBore = (_arguments.CommunicationChannel == CommunicationChannel.UsbTunnel && !target.Platform.IsSimulator())
+                var tunnelBore = (_arguments.CommunicationChannel == CommunicationChannel.UsbTunnel && !target.Platform.IsSimulator())
                     ? new TunnelBore(processManager)
                     : null;
-                ExitCode exitCodeForRun = await RunTest(logger, target, logs, processManager, deviceLoader, simulatorLoader,
+                var exitCodeForRun = await RunTest(logger, target, logs, processManager, deviceLoader, simulatorLoader,
                     tunnelBore, cts.Token);
 
                 if (exitCodeForRun != ExitCode.SUCCESS)
@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             ITunnelBore? tunnelBore,
             CancellationToken cancellationToken = default)
         {
-            bool isLldbEnabled = IsLldbEnabled();
+            var isLldbEnabled = IsLldbEnabled();
             if (isLldbEnabled && !_arguments.EnableLldb)
             {
                 // the file is present, but the user did not set it, warn him about it
@@ -173,9 +173,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 {
                     // use the knowledge base class to decide if the error is known, if it is, let the user know
                     // the failure reason
-                    if (_errorKnowledgeBase.IsKnownInstallIssue(mainLog, out (string HumanMessage, string? IssueLink)? errorMessage))
+                    if (_errorKnowledgeBase.IsKnownInstallIssue(mainLog, out var errorMessage))
                     {
-                        string? msg = $"Failed to install the app bundle (exit code={result.ExitCode}): {errorMessage.Value.HumanMessage}.";
+                        var msg = $"Failed to install the app bundle (exit code={result.ExitCode}): {errorMessage.Value.HumanMessage}.";
                         if (errorMessage.Value.IssueLink != null)
                         {
                             msg += $" Find more information at {errorMessage.Value.IssueLink}";
@@ -304,9 +304,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             catch (Exception e)
             {
-                if (_errorKnowledgeBase.IsKnownTestIssue(mainLog, out (string HumanMessage, string? IssueLink)? failureMessage))
+                if (_errorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
                 {
-                    string? msg = $"Application run failed:{Environment.NewLine}{failureMessage.Value.HumanMessage}.";
+                    var msg = $"Application run failed:{Environment.NewLine}{failureMessage.Value.HumanMessage}.";
                     if (failureMessage.Value.IssueLink != null)
                     {
                         msg += $" Find more information at {failureMessage.Value.IssueLink}";
@@ -330,7 +330,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from device '{deviceName}'");
 
                     var appUninstaller = new AppUninstaller(processManager, mainLog, verbosity);
-                    ProcessExecutionResult? uninstallResult = await appUninstaller.UninstallApp(deviceName, appBundleInfo.BundleIdentifier, cancellationToken);
+                    var uninstallResult = await appUninstaller.UninstallApp(deviceName, appBundleInfo.BundleIdentifier, cancellationToken);
                     if (!uninstallResult.Succeeded)
                     {
                         logger.LogError($"Failed to uninstall the app bundle with exit code: {uninstallResult.ExitCode}");

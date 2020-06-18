@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
         private static string GetCliAdbExePath()
         {
-            string? currentAssemblyDirectory = Path.GetDirectoryName(typeof(AdbRunner).Assembly.Location);
+            var currentAssemblyDirectory = Path.GetDirectoryName(typeof(AdbRunner).Assembly.Location);
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 return Path.Join(currentAssemblyDirectory, @"..\..\..\runtimes\any\native\adb\windows\adb.exe");
@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.XHarness.Android
             // Workaround: Doesn't seem to have a flush() function and sometimes it doesn't have the full log on emulators.
             Thread.Sleep(3000);
 
-            ProcessExecutionResults? result = RunAdbCommand($"logcat -d {filterSpec}", TimeSpan.FromMinutes(2));
+            var result = RunAdbCommand($"logcat -d {filterSpec}", TimeSpan.FromMinutes(2));
             if (result.ExitCode != 0)
             {
                 // Could throw here, but it would tear down a possibly otherwise acceptable execution.
@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.XHarness.Android
             // (Returns instantly if device is ready)
             // This can fail if _currentDevice is unset if there are multiple devices.
             _log.LogInformation("Waiting for device to be available (max 5 minutes)");
-            ProcessExecutionResults? result = RunAdbCommand("wait-for-device", TimeSpan.FromMinutes(5));
+            var result = RunAdbCommand("wait-for-device", TimeSpan.FromMinutes(5));
             _log.LogDebug($"{result.StandardOutput}");
             if (result.ExitCode != 0)
             {
@@ -128,7 +128,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public void StartAdbServer()
         {
-            ProcessExecutionResults? result = RunAdbCommand("start-server");
+            var result = RunAdbCommand("start-server");
             _log.LogDebug($"{result.StandardOutput}");
             if (result.ExitCode != 0)
             {
@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public void KillAdbServer()
         {
-            ProcessExecutionResults? result = RunAdbCommand("kill-server");
+            var result = RunAdbCommand("kill-server");
             if (result.ExitCode != 0)
             {
                 throw new Exception($"Error killing ADB Server.  Std out:{result.StandardOutput} Std. Err: {result.StandardError}");
@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 throw new FileNotFoundException($"Could not find {apkPath}");
             }
-            ProcessExecutionResults? result = RunAdbCommand($"install \"{apkPath}\"");
+            var result = RunAdbCommand($"install \"{apkPath}\"");
             if (result.ExitCode != 0)
             {
                 _log.LogError($"Error:{Environment.NewLine}{result}");
@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
 
             _log.LogInformation($"Attempting to remove apk '{apkName}': ");
-            ProcessExecutionResults? result = RunAdbCommand($"uninstall {apkName}");
+            var result = RunAdbCommand($"uninstall {apkName}");
             if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
             {
                 _log.LogInformation($"Successfully uninstalled {apkName}.");
@@ -197,7 +197,7 @@ namespace Microsoft.DotNet.XHarness.Android
         public int KillApk(string apkName)
         {
             _log.LogInformation($"Killing all running processes for '{apkName}': ");
-            ProcessExecutionResults? result = RunAdbCommand($"shell am kill --user all {apkName}");
+            var result = RunAdbCommand($"shell am kill --user all {apkName}");
             if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
             {
                 _log.LogError($"Error:{Environment.NewLine}{result}");
@@ -215,7 +215,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
             foreach (string permission in permissions)
             {
-                ProcessExecutionResults? result = RunAdbCommand($"shell pm grant {apkName} {permission}");
+                var result = RunAdbCommand($"shell pm grant {apkName} {permission}");
 
                 if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
                 {
@@ -244,7 +244,7 @@ namespace Microsoft.DotNet.XHarness.Android
                 _log.LogInformation($"Attempting to pull contents of {devicePath} to {localPath}");
                 var copiedFiles = new List<string>();
 
-                ProcessExecutionResults? result = RunAdbCommand($"pull {devicePath} {tempFolder}");
+                var result = RunAdbCommand($"pull {devicePath} {tempFolder}");
 
                 if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
                 {
@@ -252,12 +252,12 @@ namespace Microsoft.DotNet.XHarness.Android
                 }
                 else
                 {
-                    string[]? copiedToTemp = Directory.GetFiles(tempFolder, "*", SearchOption.AllDirectories);
-                    foreach (string? filePath in copiedToTemp)
+                    var copiedToTemp = Directory.GetFiles(tempFolder, "*", SearchOption.AllDirectories);
+                    foreach (var filePath in copiedToTemp)
                     {
 
-                        string? relativePath = Path.GetRelativePath(tempFolder, filePath);
-                        string? destinationPath = Path.Combine(localPath, relativePath);
+                        var relativePath = Path.GetRelativePath(tempFolder, filePath);
+                        var destinationPath = Path.Combine(localPath, relativePath);
                         // if the file is already there, just warn and skip it.
                         if (File.Exists(destinationPath))
                         {
@@ -304,7 +304,7 @@ namespace Microsoft.DotNet.XHarness.Android
             foreach (string filePath in filesToCopy)
             {
                 string relativeFilePath = Path.GetRelativePath(localDirectory, filePath).Replace("\\", "/");
-                ProcessExecutionResults? result = RunAdbCommand($"push \"{filePath}\" {devicePath}{relativeFilePath}");
+                var result = RunAdbCommand($"push \"{filePath}\" {devicePath}{relativeFilePath}");
 
                 if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
                 {
@@ -320,7 +320,7 @@ namespace Microsoft.DotNet.XHarness.Android
         {
             var devicesAndArchitectures = new Dictionary<string, string?>();
 
-            ProcessExecutionResults? result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
+            var result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
             string[] standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
             // Retry up to 5 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
@@ -343,11 +343,11 @@ namespace Microsoft.DotNet.XHarness.Android
                 for (int lineNumber = 1; lineNumber < standardOutputLines.Length; lineNumber++)
                 {
                     _log.LogDebug($"Evaluating output line for device serial: {standardOutputLines[lineNumber]}");
-                    string[]? lineParts = standardOutputLines[lineNumber].Split(' ');
+                    var lineParts = standardOutputLines[lineNumber].Split(' ');
                     if (!string.IsNullOrEmpty(lineParts[0]))
                     {
-                        string? deviceSerial = lineParts[0];
-                        ProcessExecutionResults? shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi");
+                        var deviceSerial = lineParts[0];
+                        var shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi");
 
                         // Assumption:  All Devices on a machine running Xharness should attempt to be be online or disconnected.
                         retriesLeft = 30; // Max 5 minutes (30 attempts * 10 second waits)
@@ -410,7 +410,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
             var stopWatch = new Stopwatch();
             stopWatch.Start();
-            ProcessExecutionResults? result = RunAdbCommand(command, timeout);
+            var result = RunAdbCommand(command, timeout);
             stopWatch.Stop();
 
             if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)

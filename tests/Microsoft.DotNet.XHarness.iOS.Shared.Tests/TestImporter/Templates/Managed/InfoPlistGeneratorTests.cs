@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
         [Fact]
         public void GenerateCodeNullProjectName()
         {
-            string tmp = Path.GetTempFileName();
+            var tmp = Path.GetTempFileName();
             File.WriteAllText(tmp, "Hello");
             using (var stream = new FileStream(tmp, FileMode.Open))
             {
@@ -33,15 +33,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.TestImporter.Templates.Mana
         public async Task GenerateCode()
         {
             const string projectName = "MyTest";
-            string fakeTemplate = $"{InfoPlistGenerator.ApplicationNameReplacement}-{InfoPlistGenerator.IndentifierReplacement}";
-            string tmpPath = Path.GetTempPath();
-            string templatePath = Path.Combine(tmpPath, Path.GetRandomFileName());
+            var fakeTemplate = $"{InfoPlistGenerator.ApplicationNameReplacement}-{InfoPlistGenerator.IndentifierReplacement}";
+            var tmpPath = Path.GetTempPath();
+            var templatePath = Path.Combine(tmpPath, Path.GetRandomFileName());
             using (var file = new StreamWriter(templatePath, false))
             {
                 await file.WriteAsync(fakeTemplate);
             }
 
-            string result = await InfoPlistGenerator.GenerateCodeAsync(File.OpenRead(templatePath), projectName);
+            var result = await InfoPlistGenerator.GenerateCodeAsync(File.OpenRead(templatePath), projectName);
             try
             {
                 Assert.DoesNotContain(InfoPlistGenerator.ApplicationNameReplacement, result);

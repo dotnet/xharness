@@ -50,10 +50,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 
             foreach (string category in filters.Keys)
             {
-                List<string>? filtersInCategory = filters[category];
-                foreach (string? filterReason in filtersInCategory)
+                var filtersInCategory = filters[category];
+                foreach (var filterReason in filtersInCategory)
                 {
-                    string? eq = _runAssemblyByDefault ? "==" : "!=";
+                    var eq = _runAssemblyByDefault ? "==" : "!=";
                     comparisons.Add($"{category} {eq} {filterReason}");
                 }
             }
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 
         public TestFilter GetFilter()
         {
-            string? whereClause = BuildWhereClause();
+            var whereClause = BuildWhereClause();
             if (!string.IsNullOrEmpty(whereClause))
                 _testFilterBuilder.SelectWhere(BuildWhereClause());
             return _testFilterBuilder.GetFilter();

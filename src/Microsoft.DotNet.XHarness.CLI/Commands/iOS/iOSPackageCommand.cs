@@ -11,7 +11,6 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
-using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
@@ -51,7 +50,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             var processManager = new MLaunchProcessManager();
 
             // Validate the presence of Xamarin.iOS
-            bool missingXamariniOS = false;
+            var missingXamariniOS = false;
             if (_arguments.TemplateType == TemplateType.Managed)
             {
                 var dotnetLog = new MemoryLog() { Timestamp = false };
@@ -59,14 +58,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 process.StartInfo.FileName = "bash";
                 process.StartInfo.Arguments = "-c \"" + _arguments.DotnetPath + " --info | grep \\\"Base Path\\\" | cut -d':' -f 2 | tr -d '[:space:]'\"";
 
-                ProcessExecutionResult? result = await processManager.RunAsync(process, new NullLog(), dotnetLog, new NullLog(), TimeSpan.FromSeconds(5));
+                var result = await processManager.RunAsync(process, new NullLog(), dotnetLog, new NullLog(), TimeSpan.FromSeconds(5));
 
                 if (result.Succeeded)
                 {
-                    string? sdkPath = dotnetLog.ToString().Trim();
+                    var sdkPath = dotnetLog.ToString().Trim();
                     if (Directory.Exists(sdkPath))
                     {
-                        string? xamarinIosPath = Path.Combine(sdkPath, "Xamarin", "iOS", "Xamarin.iOS.CSharp.targets");
+                        var xamarinIosPath = Path.Combine(sdkPath, "Xamarin", "iOS", "Xamarin.iOS.CSharp.targets");
                         if (!File.Exists(xamarinIosPath))
                         {
                             missingXamariniOS = true;
@@ -94,13 +93,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             };
 
             var logs = new Logs(_arguments.WorkingDirectory);
-            IFileBackedLog? runLog = logs.Create("package-log.txt", "Package Log");
+            var runLog = logs.Create("package-log.txt", "Package Log");
             var consoleLog = new CallbackLog(s => logger.LogInformation(s))
             {
                 Timestamp = false
             };
 
-            IFileBackedLog? aggregatedLog = Log.CreateReadableAggregatedLog(runLog, consoleLog);
+            var aggregatedLog = Log.CreateReadableAggregatedLog(runLog, consoleLog);
             aggregatedLog.WriteLine("Generating scaffold app with:");
             aggregatedLog.WriteLine($"\tAppname: '{_arguments.AppPackageName}'");
             aggregatedLog.WriteLine($"\tAssemblies: '{string.Join(" ", _arguments.Assemblies)}'");
@@ -114,10 +113,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             // TODO: we are not taking into account all the plaforms, just iOS
             var allProjects = new GeneratedProjects();
-            foreach (Platform p in _arguments.Platforms)
+            foreach (var p in _arguments.Platforms)
             {
                 // so wish that mono.options allowed use to use async :/
-                GeneratedProjects? testProjects = await template.GenerateTestProjectsAsync(projects, XHarness.iOS.Shared.TestImporter.Platform.iOS);
+                var testProjects = await template.GenerateTestProjectsAsync(projects, XHarness.iOS.Shared.TestImporter.Platform.iOS);
                 allProjects.AddRange(testProjects);
             }
 
@@ -125,7 +124,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             aggregatedLog.WriteLine("Scaffold app generated.");
 
             // First step, nuget restore whatever is needed
-            string? projectPath = Path.Combine(_arguments.OutputDirectory, _arguments.AppPackageName + ".csproj");
+            var projectPath = Path.Combine(_arguments.OutputDirectory, _arguments.AppPackageName + ".csproj");
             aggregatedLog.WriteLine($"Project path is {projectPath}");
             aggregatedLog.WriteLine($"Performing nuget restore.");
 
@@ -141,7 +140,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                 dotnetRestore.StartInfo.Arguments = StringUtils.FormatArguments(args);
 
-                ProcessExecutionResult? result = await processManager.RunAsync(dotnetRestore, aggregatedLog, _nugetRestoreTimeout);
+                var result = await processManager.RunAsync(dotnetRestore, aggregatedLog, _nugetRestoreTimeout);
                 if (result.TimedOut)
                 {
                     aggregatedLog.WriteLine("nuget restore timedout.");
@@ -155,7 +154,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 }
             }
 
-            ExitCode finalResult = ExitCode.SUCCESS;
+            var finalResult = ExitCode.SUCCESS;
 
             // perform the build of the application
             using (var dotnetBuild = new Process())
@@ -173,7 +172,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                 aggregatedLog.WriteLine($"Building {_arguments.AppPackageName} ({projectPath})");
 
-                ProcessExecutionResult? result = await processManager.RunAsync(dotnetBuild, aggregatedLog, _msBuildTimeout);
+                var result = await processManager.RunAsync(dotnetBuild, aggregatedLog, _msBuildTimeout);
                 if (result.TimedOut)
                 {
                     aggregatedLog.WriteLine("Build timed out after {0} seconds.", _msBuildTimeout.TotalSeconds);
@@ -200,7 +199,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         private string GetBuildArguments(string projectPath, string projectPlatform)
         {
-            string? binlogPath = Path.Combine(_arguments.WorkingDirectory, "appbuild.binlog");
+            var binlogPath = Path.Combine(_arguments.WorkingDirectory, "appbuild.binlog");
 
             return StringUtils.FormatArguments(new[]
             {

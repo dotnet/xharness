@@ -84,10 +84,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     passedArguments = args;
 
                     // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    string tempPath = args.Where(a => a is ListDevicesArgument).First().AsCommandLineArgument();
+                    var tempPath = args.Where(a => a is ListDevicesArgument).First().AsCommandLineArgument();
                     tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
-                    string name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("devices.xml", StringComparison.Ordinal)).FirstOrDefault();
+                    var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("devices.xml", StringComparison.Ordinal)).FirstOrDefault();
                     using (var outputStream = new StreamWriter(tempPath))
                     using (var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name)))
                     {

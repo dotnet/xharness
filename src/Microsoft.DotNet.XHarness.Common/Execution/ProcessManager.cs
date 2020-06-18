@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 
         private static async Task KillTreeAsyncInternal(int pid, Action<int, int> kill, Func<ILog, int, IList<int>> getChildrenPS, ILog log, bool? diagnostics = true)
         {
-            IList<int>? pids = getChildrenPS(log, pid);
+            var pids = getChildrenPS(log, pid);
 
             if (diagnostics == true)
             {
@@ -135,9 +135,9 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                         diagnostics: false);
                 }
 
-                foreach (int diagnose_pid in pids)
+                foreach (var diagnose_pid in pids)
                 {
-                    string? template = Path.GetTempFileName();
+                    var template = Path.GetTempFileName();
                     try
                     {
                         var commands = new StringBuilder();
@@ -213,7 +213,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 
             if (environmentVariables != null)
             {
-                foreach (KeyValuePair<string, string> kvp in environmentVariables)
+                foreach (var kvp in environmentVariables)
                 {
                     if (kvp.Value == null)
                     {
@@ -263,8 +263,8 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             {
                 var currentEnvironment = Environment.GetEnvironmentVariables().Cast<System.Collections.DictionaryEntry>().ToDictionary((v) => (string)v.Key, (v) => (string?)v.Value, StringComparer.Ordinal);
                 var processEnvironment = process.StartInfo.EnvironmentVariables.Cast<System.Collections.DictionaryEntry>().ToDictionary((v) => (string)v.Key, (v) => (string?)v.Value, StringComparer.Ordinal);
-                IEnumerable<string>? allKeys = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
-                foreach (string? key in allKeys)
+                var allKeys = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
+                foreach (var key in allKeys)
                 {
                     if (key == null) continue;
 
@@ -279,14 +279,14 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             log.WriteLine(sb);
 
             process.Start();
-            int pid = process.Id;
+            var pid = process.Id;
 
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
 
             cancellationToken?.Register(() =>
             {
-                bool hasExited = false;
+                var hasExited = false;
                 try
                 {
                     hasExited = process.HasExited;

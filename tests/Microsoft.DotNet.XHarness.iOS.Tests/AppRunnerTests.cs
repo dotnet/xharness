@@ -221,8 +221,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Setup(x => x.FindSimulators(It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_tvOS), _mainLog.Object, true, false))
                 .ReturnsAsync((simulator.Object, null));
 
-            string testResultFilePath = Path.GetTempFileName();
-            IFileBackedLog listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
+            var testResultFilePath = Path.GetTempFileName();
+            var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
             File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
 
             _logs
@@ -266,7 +266,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 supports32b: false,
                 extension: null);
 
-            (string deviceName, TestExecutingResult result, string resultMessage) = await appRunner.RunApp(
+            var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Simulator_tvOS, null),
                 TimeSpan.FromSeconds(30),
@@ -278,7 +278,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
-            string expectedArgs = "-argument=-connection-mode " +
+            var expectedArgs = "-argument=-connection-mode " +
                 "-argument=none " +
                 "-argument=-app-arg:-autostart " +
                 "-setenv=NUNIT_AUTOSTART=true " +
@@ -385,8 +385,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, "Test iPhone"))
                 .Returns(deviceLogCapturer.Object);
 
-            string testResultFilePath = Path.GetTempFileName();
-            IFileBackedLog listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
+            var testResultFilePath = Path.GetTempFileName();
+            var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
             File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
 
             _logs
@@ -427,7 +427,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 supports32b: false,
                 extension: null);
 
-            (string deviceName, TestExecutingResult result, string resultMessage) = await appRunner.RunApp(
+            var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
                 TimeSpan.FromSeconds(30),
@@ -438,7 +438,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
-            string expectedArgs = "-argument=-connection-mode " +
+            var expectedArgs = "-argument=-connection-mode " +
                 "-argument=none " +
                 "-argument=-app-arg:-autostart " +
                 "-setenv=NUNIT_AUTOSTART=true " +
@@ -511,8 +511,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, "Test iPhone"))
                 .Returns(deviceLogCapturer.Object);
 
-            string testResultFilePath = Path.GetTempFileName();
-            IFileBackedLog listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
+            var testResultFilePath = Path.GetTempFileName();
+            var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
             File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
 
             _logs
@@ -546,7 +546,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 supports32b: false,
                 extension: null);
 
-            (string deviceName, TestExecutingResult result, string resultMessage) = await appRunner.RunApp(
+            var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
                 timeout: TimeSpan.FromSeconds(30),
@@ -558,9 +558,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
-            string skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_METHODS={string.Join(',', skippedTests)} ";
+            var skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_METHODS={string.Join(',', skippedTests)} ";
 
-            string expectedArgs = "-argument=-connection-mode " +
+            var expectedArgs = "-argument=-connection-mode " +
                 "-argument=none " +
                 "-argument=-app-arg:-autostart " +
                 "-setenv=NUNIT_AUTOSTART=true " +
@@ -624,8 +624,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, "Test iPhone"))
                 .Returns(deviceLogCapturer.Object);
 
-            string testResultFilePath = Path.GetTempFileName();
-            IFileBackedLog listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
+            var testResultFilePath = Path.GetTempFileName();
+            var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
             File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
 
             _logs
@@ -659,7 +659,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 supports32b: false,
                 extension: null);
 
-            (string deviceName, TestExecutingResult result, string resultMessage) = await appRunner.RunApp(
+            var (deviceName, result, resultMessage) = await appRunner.RunApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
                 timeout: TimeSpan.FromSeconds(30),
@@ -671,9 +671,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
-            string skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_CLASSES={string.Join(',', skippedClasses)} ";
+            var skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_CLASSES={string.Join(',', skippedClasses)} ";
 
-            string expectedArgs = "-argument=-connection-mode " +
+            var expectedArgs = "-argument=-connection-mode " +
                 "-argument=none " +
                 "-argument=-app-arg:-autostart " +
                 "-setenv=NUNIT_AUTOSTART=true " +

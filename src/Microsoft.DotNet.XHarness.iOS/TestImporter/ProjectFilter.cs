@@ -51,9 +51,9 @@ namespace Microsoft.DotNet.XHarness.iOS.TestImporter
             // platform the user calling the tool should have place the correct
             // trait files. If he added wrong trait files, is for the user to
             // blame
-            foreach (string? file in new[] { "nunit-excludes.txt", "xunit-excludes.txt" })
+            foreach (var file in new[] { "nunit-excludes.txt", "xunit-excludes.txt" })
             {
-                string? traitFile = Path.Combine(_traitFilesRootPath, file);
+                var traitFile = Path.Combine(_traitFilesRootPath, file);
                 if (File.Exists(traitFile))
                     yield return traitFile;
             }

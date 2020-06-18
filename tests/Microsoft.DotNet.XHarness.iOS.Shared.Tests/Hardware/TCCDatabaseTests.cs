@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         public async Task AgreeToPropmtsAsyncSuccessTest(string runtime, int dbVersion)
         {
             string bundleIdentifier = "my-bundle-identifier";
-            string[] services = new string[] {
+            var services = new string[] {
                     "kTCCServiceAddressBook",
                     "kTCCServiceCalendar",
                     "kTCCServicePhotos",
@@ -93,26 +93,26 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                 };
             var expectedArgs = new StringBuilder("\n");
             // assert the sql used depending on the version
-            foreach (string id in new[] { bundleIdentifier, bundleIdentifier + ".watchkitapp" })
+            foreach (var id in new[] { bundleIdentifier, bundleIdentifier + ".watchkitapp" })
             {
                 switch (dbVersion)
                 {
                     case 1:
-                        foreach (string s in services)
+                        foreach (var s in services)
                         {
                             expectedArgs.AppendFormat("DELETE FROM access WHERE service = '{0}' AND client = '{1}';\n", s, id);
                             expectedArgs.AppendFormat("INSERT INTO access VALUES('{0}','{1}',0,1,0,NULL);\n", s, id);
                         }
                         break;
                     case 2:
-                        foreach (string s in services)
+                        foreach (var s in services)
                         {
                             expectedArgs.AppendFormat("DELETE FROM access WHERE service = '{0}' AND client = '{1}';\n", s, id);
                             expectedArgs.AppendFormat("INSERT INTO access VALUES('{0}','{1}',0,1,0,NULL,NULL);\n", s, id);
                         }
                         break;
                     case 3:
-                        foreach (string s in services)
+                        foreach (var s in services)
                         {
                             expectedArgs.AppendFormat("INSERT OR REPLACE INTO access VALUES('{0}','{1}',0,1,0,NULL,NULL,NULL,'UNUSED',NULL,NULL,{2});\n", s, id, DateTimeOffset.Now.ToUnixTimeSeconds());
                         }

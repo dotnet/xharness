@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             // we need to get the status from the string. That value is stored in
             // <test-case result=''> value can be: Passed, Failed, Inconclusive or Skipped. To make things
             // 'simpler' we also need to check the label, which might have the following values:  Error, Cancelled or Invalid
-            string? result = testEvent.GetAttribute("label") ?? testEvent.GetAttribute("result");
+            var result = testEvent.GetAttribute("label") ?? testEvent.GetAttribute("result");
             TestStatus status = result switch
             {
                 "Passed" => TestStatus.Passed,
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
                 "Skipped" => TestStatus.Skipped,
                 _ => TestStatus.Inconclusive // Cancelled, error or invalid
             };
-            string? testName = testEvent.Attributes["fullname"].Value;
+            var testName = testEvent.Attributes["fullname"].Value;
             var sb = new StringBuilder();
             switch (status)
             {
@@ -78,13 +78,13 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             // if we skipped or we failed, add some extra info to the logging:
             if (status == TestStatus.Failed)
             {
-                XmlNodeList? messageNodes = testEvent.SelectNodes("failure/message");
+                var messageNodes = testEvent.SelectNodes("failure/message");
                 if (messageNodes.Count == 1)
                 {
                     if (messageNodes[0].ChildNodes.Count == 1) // should not happen, but I trust no one
                     {
-                        XmlNode? cDataNode = messageNodes[0].ChildNodes[0];
-                        string? message = cDataNode?.InnerText?.Trim();
+                        var cDataNode = messageNodes[0].ChildNodes[0];
+                        var message = cDataNode?.InnerText?.Trim();
                         if (!string.IsNullOrEmpty(message))
                         {
                             message = message.Replace("\r\n", "\\r\\n");
@@ -93,13 +93,13 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
                     }
                 }
                 // get the stack trace, similar to the message node
-                XmlNodeList? stacktraceNodes = testEvent.SelectNodes("failure/stack-trace");
+                var stacktraceNodes = testEvent.SelectNodes("failure/stack-trace");
                 if (stacktraceNodes.Count == 1)
                 {
                     if (stacktraceNodes[0].ChildNodes.Count == 1) // should not happen, but I trust no one
                     {
-                        XmlNode? cDataNode = messageNodes[0].ChildNodes[0];
-                        string? stackTrace = cDataNode?.InnerText?.Trim();
+                        var cDataNode = messageNodes[0].ChildNodes[0];
+                        var stackTrace = cDataNode?.InnerText?.Trim();
                         if (!string.IsNullOrEmpty(stackTrace))
                         {
                             stackTrace = stackTrace.Replace("\r\n", "\\r\\n");
@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             var doc = new XmlDocument();
             doc.LoadXml(report);
 
-            XmlNode? testEvent = doc.FirstChild;
+            var testEvent = doc.FirstChild;
             switch (testEvent.Name)
             {
                 case "start-test":

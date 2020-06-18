@@ -190,7 +190,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         protected async Task<TestRunner> InternalRunAsync(LogWriter logger)
         {
             logger.MinimumLogLevel = MinimumLogLevel;
-            TestRunner runner = GetTestRunner(logger);
+            var runner = GetTestRunner(logger);
             runner.LogExcludedTests = LogExcludedTests;
             // connect to the runner events so that we fwd them to the client
             runner.TestStarted += OnTestStarted;
@@ -200,7 +200,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             runner.SkipCategories(await GetIgnoredCategories());
             runner.SkipTests(await IgnoreFileParser.ParseContentFilesAsync(IgnoreFilesDirectory));
 
-            IEnumerable<TestAssemblyInfo> testAssemblies = GetTestAssemblies();
+            var testAssemblies = GetTestAssemblies();
             // notify the clients we are starting
             TestsStarted?.Invoke(this, new EventArgs());
 

@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         /// </remarks>
         public OptionSet GetOptions()
         {
-            OptionSet? options = GetCommandOptions();
+            var options = GetCommandOptions();
 
             options.Add("verbosity:|v:", "Verbosity level - defaults to 'Information' if not specified. If passed without value, 'Debug' is assumed (highest)",
                 v => Verbosity = string.IsNullOrEmpty(v) ? LogLevel.Debug : ParseArgument<LogLevel>("verbosity", v));
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
                     $"Valid values are:" + GetAllowedValues(invalidValues: invalidValues));
             }
 
-            Type? type = typeof(TEnum);
+            var type = typeof(TEnum);
 
             if (!type.IsEnum)
             {
@@ -120,14 +120,14 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         /// <returns>Print-ready list of allowed values</returns>
         protected static string GetAllowedValues<TEnum>(Func<TEnum, string>? display = null, params TEnum[]? invalidValues) where TEnum : struct, IConvertible
         {
-            IEnumerable<TEnum>? values = Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
+            var values = Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
 
             if (invalidValues != null)
             {
                 values = values.Where(v => !invalidValues.Contains(v));
             }
 
-            string? separator = Environment.NewLine + "\t- ";
+            var separator = Environment.NewLine + "\t- ";
             IEnumerable<string?> allowedValued = values.Select(t => display?.Invoke(t) ?? t.ToString());
 
             return separator + string.Join(separator, allowedValued);

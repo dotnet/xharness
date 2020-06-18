@@ -50,8 +50,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                     break;
             }
             Assert.NotNull(sampleFileName);
-            string name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith(sampleFileName, StringComparison.Ordinal)).FirstOrDefault();
-            string tempPath = Path.GetTempFileName();
+            var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith(sampleFileName, StringComparison.Ordinal)).FirstOrDefault();
+            var tempPath = Path.GetTempFileName();
             using (var outputStream = new StreamWriter(tempPath))
             using (var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name)))
             {
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         [Fact]
         public void IsValidXmlMissingFileTest()
         {
-            string path = Path.GetTempFileName();
+            var path = Path.GetTempFileName();
             File.Delete(path);
             Assert.False(_resultParser.IsValidXml(path, out _), "missing file");
         }
@@ -83,8 +83,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         [InlineData(XmlResultJargon.xUnit)]
         public void IsValidXmlTest(XmlResultJargon jargon)
         {
-            string path = CreateResultSample(jargon);
-            Assert.True(_resultParser.IsValidXml(path, out XmlResultJargon resultJargon), "is valid");
+            var path = CreateResultSample(jargon);
+            Assert.True(_resultParser.IsValidXml(path, out var resultJargon), "is valid");
             Assert.Equal(jargon, resultJargon);
             File.Delete(path);
         }
@@ -96,9 +96,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         [InlineData("xunit-", XmlResultJargon.xUnit)]
         public void GetXmlFilePathTest(string prefix, XmlResultJargon jargon)
         {
-            string orignialPath = "/path/to/a/xml/result.xml";
-            string xmlPath = _resultParser.GetXmlFilePath(orignialPath, jargon);
-            string fileName = Path.GetFileName(xmlPath);
+            var orignialPath = "/path/to/a/xml/result.xml";
+            var xmlPath = _resultParser.GetXmlFilePath(orignialPath, jargon);
+            var fileName = Path.GetFileName(xmlPath);
             Assert.StartsWith(prefix, fileName);
         }
 
@@ -108,10 +108,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         [InlineData(XmlResultJargon.xUnit)]
         public void CleanXmlPingTest(XmlResultJargon jargon)
         {
-            string path = CreateResultSample(jargon, includePing: true);
-            string cleanPath = path + "_clean";
+            var path = CreateResultSample(jargon, includePing: true);
+            var cleanPath = path + "_clean";
             _resultParser.CleanXml(path, cleanPath);
-            Assert.True(_resultParser.IsValidXml(cleanPath, out XmlResultJargon resultJargon), "is valid");
+            Assert.True(_resultParser.IsValidXml(cleanPath, out var resultJargon), "is valid");
             Assert.Equal(jargon, resultJargon);
             File.Delete(path);
             File.Delete(cleanPath);
@@ -121,10 +121,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         public void CleanXmlTouchUnitTest()
         {
             // similar to CleanXmlPingTest but using TouchUnit, so we do not want to see the extra nodes
-            string path = CreateResultSample(XmlResultJargon.TouchUnit, includePing: true);
-            string cleanPath = path + "_clean";
+            var path = CreateResultSample(XmlResultJargon.TouchUnit, includePing: true);
+            var cleanPath = path + "_clean";
             _resultParser.CleanXml(path, cleanPath);
-            Assert.True(_resultParser.IsValidXml(cleanPath, out XmlResultJargon resultJargon), "is valid");
+            Assert.True(_resultParser.IsValidXml(cleanPath, out var resultJargon), "is valid");
             Assert.Equal(XmlResultJargon.NUnitV2, resultJargon);
             // load the xml, ensure we do not have the nodes we removed
             var doc = XDocument.Load(cleanPath);
@@ -138,25 +138,25 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         public void UpdateMissingDataTest() // only works with NUnitV3
         {
             string appName = "TestApp";
-            string path = CreateResultSample(XmlResultJargon.NUnitV3);
-            string cleanPath = path + "_clean";
+            var path = CreateResultSample(XmlResultJargon.NUnitV3);
+            var cleanPath = path + "_clean";
             _resultParser.CleanXml(path, cleanPath);
-            string updatedXml = path + "_updated";
-            string[] logs = new[] { "/first/path", "/second/path", "/last/path" };
+            var updatedXml = path + "_updated";
+            var logs = new[] { "/first/path", "/second/path", "/last/path" };
             _resultParser.UpdateMissingData(cleanPath, updatedXml, appName, logs);
             // assert that the required info was updated
             Assert.True(File.Exists(updatedXml), "file exists");
             var doc = XDocument.Load(updatedXml);
-            IEnumerable<XElement> testSuiteElements = doc.Descendants().Where(e => e.Name == "test-suite" && e.Attribute("type")?.Value == "Assembly");
+            var testSuiteElements = doc.Descendants().Where(e => e.Name == "test-suite" && e.Attribute("type")?.Value == "Assembly");
             // assert root node contains the attachments
-            XElement rootNode = testSuiteElements.FirstOrDefault();
+            var rootNode = testSuiteElements.FirstOrDefault();
             Assert.NotNull(rootNode);
-            IEnumerable<XElement> attachments = rootNode.Descendants().Where(e => e.Name == "attachment");
-            int failureCount = rootNode.Descendants().Where(e => e.Name == "test-case" && e.Attribute("result").Value == "Failed").Count();
+            var attachments = rootNode.Descendants().Where(e => e.Name == "attachment");
+            var failureCount = rootNode.Descendants().Where(e => e.Name == "test-case" && e.Attribute("result").Value == "Failed").Count();
             Assert.Equal(logs.Length * (failureCount + 1), attachments.Count());
 
             // assert that name and full name are present and are the app name
-            foreach (XElement node in testSuiteElements)
+            foreach (var node in testSuiteElements)
             {
                 Assert.Equal(appName, node.Attribute("name").Value);
                 Assert.Equal(appName, node.Attribute("fullname").Value);
@@ -169,8 +169,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         [Fact]
         public void GetVSTSFileNameTest()
         {
-            string path = Path.GetTempFileName();
-            string newPath = XmlResultParser.GetVSTSFilename(path);
+            var path = Path.GetTempFileName();
+            var newPath = XmlResultParser.GetVSTSFilename(path);
             Assert.StartsWith("vsts-", Path.GetFileName(newPath));
             File.Delete(path);
         }
@@ -179,15 +179,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         {
             // load the doc and ensure that all the data is correct setup
             var doc = XDocument.Load(xmlPath);
-            IEnumerable<XElement> testResultsNodes = doc.Descendants().Where(e => e.Name == "test-results");
+            var testResultsNodes = doc.Descendants().Where(e => e.Name == "test-results");
             Assert.Single(testResultsNodes);
-            XElement rootNode = testResultsNodes.FirstOrDefault();
+            var rootNode = testResultsNodes.FirstOrDefault();
             Assert.Equal(title, rootNode.Attribute("name").Value);
             Assert.Equal("1", rootNode.Attribute("total").Value);
             Assert.Equal("0", rootNode.Attribute("errors").Value);
             Assert.Equal("1", rootNode.Attribute("failures").Value);
             // ensure we do have a test result with the failure data
-            IEnumerable<XElement> testResult = doc.Descendants().Where(e => e.Name == "test-suite" && e.Attribute("type").Value == "TestFixture");
+            var testResult = doc.Descendants().Where(e => e.Name == "test-suite" && e.Attribute("type").Value == "TestFixture");
             Assert.Single(testResult);
         }
 
@@ -195,9 +195,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         {
             var doc = XDocument.Load(xmlPath);
             // get test-run and verify attrs
-            IEnumerable<XElement> testResultNodes = doc.Descendants().Where(e => e.Name == "test-run");
+            var testResultNodes = doc.Descendants().Where(e => e.Name == "test-run");
             Assert.Single(testResultNodes);
-            XElement testResultNode = testResultNodes.FirstOrDefault();
+            var testResultNode = testResultNodes.FirstOrDefault();
             Assert.Equal(title, testResultNode.Attribute("name").Value);
             Assert.Equal("1", testResultNode.Attribute("testcasecount").Value);
             Assert.Equal("Failed", testResultNode.Attribute("result").Value);
@@ -209,35 +209,35 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             Assert.NotNull(testResultNode.Attribute("run-date").Value);
             Assert.NotNull(testResultNode.Attribute("start-time").Value);
             // get the test-suite and verify the name and fullname are correct
-            XElement testSuite = testResultNode.Descendants().Where(e => e.Name == "test-suite" && e.Attribute("type").Value == "TestFixture").FirstOrDefault();
+            var testSuite = testResultNode.Descendants().Where(e => e.Name == "test-suite" && e.Attribute("type").Value == "TestFixture").FirstOrDefault();
             Assert.NotNull(testSuite);
             Assert.Equal(title, testSuite.Attribute("name").Value);
             Assert.Equal(title, testSuite.Attribute("fullname").Value);
             // verify the test case
-            XElement testCase = testSuite.Descendants().Where(e => e.Name == "test-case").FirstOrDefault();
+            var testCase = testSuite.Descendants().Where(e => e.Name == "test-case").FirstOrDefault();
             Assert.NotNull(testCase);
             Assert.Equal("Failed", testCase.Attribute("result").Value);
             // validate that we do have attachments
-            XElement attachmentsNode = testCase.Descendants().Where(e => e.Name == "attachments").FirstOrDefault();
+            var attachmentsNode = testCase.Descendants().Where(e => e.Name == "attachments").FirstOrDefault();
             Assert.NotNull(attachmentsNode);
-            IEnumerable<XElement> attachments = attachmentsNode.Descendants().Where(e => e.Name == "attachment");
+            var attachments = attachmentsNode.Descendants().Where(e => e.Name == "attachment");
             Assert.Equal(attachemntsCount, attachments.Count());
         }
 
         private static void ValidatexUnitFailure(string src, string appName, string variation, string title, string message, string stderrMessage, string xmlPath, int _)
         {
             var doc = XDocument.Load(xmlPath);
-            // get the assembly and validate its attrs
-            IEnumerable<XElement> assemblies = doc.Descendants().Where(e => e.Name == "assembly");
+            // get the assemlby and validate its attrs
+            var assemblies = doc.Descendants().Where(e => e.Name == "assembly");
             Assert.Single(assemblies);
-            XElement assemblyNode = assemblies.FirstOrDefault();
+            var assemblyNode = assemblies.FirstOrDefault();
             Assert.Equal(title, assemblyNode.Attribute("name").Value);
             Assert.Equal("1", assemblyNode.Attribute("total").Value);
             Assert.Equal("1", assemblyNode.Attribute("failed").Value);
             Assert.Equal("0", assemblyNode.Attribute("passed").Value);
-            IEnumerable<XElement> collections = assemblyNode.Descendants().Where(e => e.Name == "collection");
+            var collections = assemblyNode.Descendants().Where(e => e.Name == "collection");
             Assert.Single(collections);
-            XElement collectionNode = collections.FirstOrDefault();
+            var collectionNode = collections.FirstOrDefault();
             // assert the collection attrs
             Assert.Equal("1", collectionNode.Attribute("failed").Value);
             Assert.Equal("0", collectionNode.Attribute("passed").Value);
@@ -249,14 +249,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         [InlineData(XmlResultJargon.xUnit)]
         public void GenerateFailureTest(XmlResultJargon jargon)
         {
-            string src = "test-case";
-            string appName = "MyUnitTest";
-            string variation = "Debug";
-            string title = "Testing";
-            string message = "This is a test";
-            string stderrMessage = "Something went very wrong";
+            var src = "test-case";
+            var appName = "MyUnitTest";
+            var variation = "Debug";
+            var title = "Testing";
+            var message = "This is a test";
+            var stderrMessage = "Something went very wrong";
 
-            string stderrPath = Path.GetTempFileName();
+            var stderrPath = Path.GetTempFileName();
 
             // write the message in the stderrParh that should be read
             using (var writer = new StreamWriter(stderrPath))
@@ -269,18 +269,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             var tmpLogMock = new Mock<IFileBackedLog>();
             var xmlLogMock = new Mock<IFileBackedLog>();
 
-            string tmpPath = Path.GetTempFileName();
-            string finalPath = Path.GetTempFileName();
+            var tmpPath = Path.GetTempFileName();
+            var finalPath = Path.GetTempFileName();
 
             // create a number of fake logs to be added to the failure
-            string logsDir = Path.GetTempFileName();
+            var logsDir = Path.GetTempFileName();
             File.Delete(logsDir);
             Directory.CreateDirectory(logsDir);
-            string[] failureLogs = new[] { "first.txt", "second.txt", "last.txt" };
+            var failureLogs = new[] { "first.txt", "second.txt", "last.txt" };
 
-            foreach (string file in failureLogs)
+            foreach (var file in failureLogs)
             {
-                string path = Path.Combine(logsDir, file);
+                var path = Path.Combine(logsDir, file);
                 File.WriteAllText(path, "");
             }
 
@@ -329,9 +329,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             string expectedResultLine = "Tests run: 2376 Passed: 2301 Inconclusive: 13 Failed: 1 Ignored: 74";
             // get the sample that was added to the issue to validate that we do parse the resuls correctly and copy it to a local
             // path to be parsed
-            string name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("Issue8214.xml", StringComparison.Ordinal)).FirstOrDefault();
-            string tempPath = Path.GetTempFileName();
-            string destinationFile = Path.GetTempFileName();
+            var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("Issue8214.xml", StringComparison.Ordinal)).FirstOrDefault();
+            var tempPath = Path.GetTempFileName();
+            var destinationFile = Path.GetTempFileName();
             using (var outputStream = new StreamWriter(tempPath))
             using (var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name)))
             {
@@ -341,7 +341,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                     outputStream.WriteLine(line);
                 }
             }
-            (string resultLine, bool failed) = _resultParser.ParseResults(tempPath, XmlResultJargon.NUnitV3, destinationFile);
+            var (resultLine, failed) = _resultParser.ParseResults(tempPath, XmlResultJargon.NUnitV3, destinationFile);
             Assert.True(failed, "failed");
             Assert.Equal(expectedResultLine, resultLine);
             // verify that the destination does contain the result line
@@ -368,8 +368,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             string expectedResultLine = "Tests run: 2376 Passed: 2301 Inconclusive: 13 Failed: 1 Ignored: 74";
             // get the sample that was added to the issue to validate that we do parse the resuls correctly and copy it to a local
             // path to be parsed
-            string name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("Issue8214.xml", StringComparison.Ordinal)).FirstOrDefault();
-            string tempPath = Path.GetTempFileName();
+            var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("Issue8214.xml", StringComparison.Ordinal)).FirstOrDefault();
+            var tempPath = Path.GetTempFileName();
             using (var outputStream = new StreamWriter(tempPath))
             using (var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name)))
             {
@@ -380,7 +380,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                 }
             }
 
-            (string resultLine, bool failed) = _resultParser.ParseResults(tempPath, XmlResultJargon.NUnitV3, null);
+            var (resultLine, failed) = _resultParser.ParseResults(tempPath, XmlResultJargon.NUnitV3, null);
 
             Assert.True(failed, "failed");
             Assert.Equal(expectedResultLine, resultLine);
@@ -390,8 +390,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         public void Issue91Test() // make sure that the skipped value is correct according to the provided xml in the issue.
         {
             string expectedResultLine = "Tests run: 3 Passed: 1 Inconclusive: 0 Failed: 1 Ignored: 1";
-            string name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("Issue95.xml", StringComparison.Ordinal)).FirstOrDefault();
-            string tempPath = Path.GetTempFileName();
+            var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("Issue95.xml", StringComparison.Ordinal)).FirstOrDefault();
+            var tempPath = Path.GetTempFileName();
             using (var outputStream = new StreamWriter(tempPath))
             using (var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name)))
             {
@@ -402,7 +402,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                 }
             }
 
-            (string resultLine, bool failed) = _resultParser.ParseResults(tempPath, XmlResultJargon.NUnitV2, null);
+            var (resultLine, failed) = _resultParser.ParseResults(tempPath, XmlResultJargon.NUnitV2, null);
 
             Assert.True(failed, "failed");
             Assert.Equal(expectedResultLine, resultLine);

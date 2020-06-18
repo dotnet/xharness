@@ -42,15 +42,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             {
                 if (node.Attributes != null)
                 {
-                    XmlAttribute conditionAttribute = node.Attributes["Condition"];
+                    var conditionAttribute = node.Attributes["Condition"];
                     if (conditionAttribute != null)
                     {
-                        string condition = conditionAttribute.Value;
-                        string[] eqsplit = condition.Split(s_eqsplitter, StringSplitOptions.None);
+                        var condition = conditionAttribute.Value;
+                        var eqsplit = condition.Split(s_eqsplitter, StringSplitOptions.None);
                         if (eqsplit.Length == 2)
                         {
-                            string[] left = eqsplit[0].Trim(s_trimchars).Split(s_pipesplitter);
-                            string[] right = eqsplit[1].Trim(s_trimchars).Split(s_pipesplitter);
+                            var left = eqsplit[0].Trim(s_trimchars).Split(s_pipesplitter);
+                            var right = eqsplit[1].Trim(s_trimchars).Split(s_pipesplitter);
                             if (left.Length == right.Length)
                             {
                                 for (int i = 0; i < left.Length; i++)
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void SetOutputPath(this XmlDocument csproj, string value, bool expand = true)
         {
-            XmlNodeList nodes = csproj.SelectNodes("/*/*/*[local-name() = 'OutputPath']");
+            var nodes = csproj.SelectNodes("/*/*/*[local-name() = 'OutputPath']");
             if (nodes.Count == 0)
                 throw new Exception("Could not find node OutputPath");
             foreach (XmlNode n in nodes)
@@ -117,28 +117,28 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             if (node.Attributes == null)
                 return true;
 
-            XmlAttribute condition = node.Attributes["Condition"];
+            var condition = node.Attributes["Condition"];
             if (condition == null)
                 return true;
 
-            string conditionValue = condition.Value;
+            var conditionValue = condition.Value;
             if (configuration != null)
                 conditionValue = conditionValue.Replace("$(Configuration)", configuration);
             if (platform != null)
                 conditionValue = conditionValue.Replace("$(Platform)", platform);
 
-            string[] orsplits = conditionValue.Split(s_orsplitter, StringSplitOptions.None);
-            foreach (string orsplit in orsplits)
+            var orsplits = conditionValue.Split(s_orsplitter, StringSplitOptions.None);
+            foreach (var orsplit in orsplits)
             {
-                string[] eqsplit = orsplit.Split(s_eqsplitter, StringSplitOptions.None);
+                var eqsplit = orsplit.Split(s_eqsplitter, StringSplitOptions.None);
                 if (eqsplit.Length != 2)
                 {
                     Console.WriteLine("Could not parse condition; {0}", conditionValue);
                     return false;
                 }
 
-                string left = eqsplit[0].Trim(s_trimchars);
-                string right = eqsplit[1].Trim(s_trimchars);
+                var left = eqsplit[0].Trim(s_trimchars);
+                var right = eqsplit[1].Trim(s_trimchars);
                 if (left == right)
                     return true;
             }
@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         private static string GetElementValue(this XmlDocument csproj, string platform, string configuration, string elementName)
         {
-            XmlNodeList nodes = csproj.SelectNodes($"/*/*/*[local-name() = '{elementName}']");
+            var nodes = csproj.SelectNodes($"/*/*/*[local-name() = '{elementName}']");
             if (nodes.Count == 0)
                 throw new Exception($"Could not find node {elementName}");
             foreach (XmlNode n in nodes)
@@ -165,9 +165,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static string GetOutputAssemblyPath(this XmlDocument csproj, string platform, string configuration)
         {
-            string outputPath = GetOutputPath(csproj, platform, configuration);
-            string assemblyName = GetElementValue(csproj, platform, configuration, "AssemblyName");
-            string outputType = GetElementValue(csproj, platform, configuration, "OutputType");
+            var outputPath = GetOutputPath(csproj, platform, configuration);
+            var assemblyName = GetElementValue(csproj, platform, configuration, "AssemblyName");
+            var outputType = GetElementValue(csproj, platform, configuration, "OutputType");
             string extension = (outputType.ToLowerInvariant()) switch
             {
                 "library" => "dll",
@@ -180,8 +180,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public static void SetIntermediateOutputPath(this XmlDocument csproj, string value)
         {
             // Set any existing IntermediateOutputPath
-            XmlNodeList nodes = csproj.SelectNodes("/*/*/*[local-name() = 'IntermediateOutputPath']");
-            bool hasToplevel = false;
+            var nodes = csproj.SelectNodes("/*/*/*[local-name() = 'IntermediateOutputPath']");
+            var hasToplevel = false;
             if (nodes.Count != 0)
             {
                 foreach (XmlNode n in nodes)
@@ -195,9 +195,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 return;
 
             // Make sure there's a top-level version too.
-            XmlNode property_group = csproj.SelectSingleNode("/*/*[local-name() = 'PropertyGroup' and not(@Condition)]");
+            var property_group = csproj.SelectSingleNode("/*/*[local-name() = 'PropertyGroup' and not(@Condition)]");
 
-            XmlElement intermediateOutputPath = csproj.CreateElement("IntermediateOutputPath", MSBuild_Namespace);
+            var intermediateOutputPath = csproj.CreateElement("IntermediateOutputPath", MSBuild_Namespace);
             intermediateOutputPath.InnerText = value;
             property_group.AppendChild(intermediateOutputPath);
         }
@@ -206,15 +206,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void SetTopLevelPropertyGroupValue(this XmlDocument csproj, string key, string value)
         {
-            XmlNode firstPropertyGroups = csproj.SelectNodes("//*[local-name() = 'PropertyGroup']")[0];
-            XmlNode targetFrameworkIdentifierNode = firstPropertyGroups.SelectSingleNode(string.Format("//*[local-name() = '{0}']", key));
+            var firstPropertyGroups = csproj.SelectNodes("//*[local-name() = 'PropertyGroup']")[0];
+            var targetFrameworkIdentifierNode = firstPropertyGroups.SelectSingleNode(string.Format("//*[local-name() = '{0}']", key));
             if (targetFrameworkIdentifierNode != null)
             {
                 SetNode(csproj, key, value);
             }
             else
             {
-                XmlElement mea = csproj.CreateElement(key, MSBuild_Namespace);
+                var mea = csproj.CreateElement(key, MSBuild_Namespace);
                 mea.InnerText = value;
                 firstPropertyGroups.AppendChild(mea);
             }
@@ -240,28 +240,28 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void SetAssemblyReference(this XmlDocument csproj, string current, string value)
         {
-            XmlNode reference = csproj.SelectSingleNode("/*/*/*[local-name() = 'Reference' and @Include = '" + current + "']");
+            var reference = csproj.SelectSingleNode("/*/*/*[local-name() = 'Reference' and @Include = '" + current + "']");
             if (reference != null)
                 reference.Attributes["Include"].Value = value;
         }
 
         public static void RemoveReferences(this XmlDocument csproj, string projectName)
         {
-            XmlNode reference = csproj.SelectSingleNode("/*/*/*[local-name() = 'Reference' and @Include = '" + projectName + "']");
+            var reference = csproj.SelectSingleNode("/*/*/*[local-name() = 'Reference' and @Include = '" + projectName + "']");
             if (reference != null)
                 reference.ParentNode.RemoveChild(reference);
         }
 
         public static void AddCompileInclude(this XmlDocument csproj, string link, string include, bool prepend = false)
         {
-            XmlNode compile_node = csproj.SelectSingleNode("//*[local-name() = 'Compile']");
-            XmlNode item_group = compile_node.ParentNode;
+            var compile_node = csproj.SelectSingleNode("//*[local-name() = 'Compile']");
+            var item_group = compile_node.ParentNode;
 
-            XmlElement node = csproj.CreateElement("Compile", MSBuild_Namespace);
-            XmlAttribute include_attribute = csproj.CreateAttribute("Include");
+            var node = csproj.CreateElement("Compile", MSBuild_Namespace);
+            var include_attribute = csproj.CreateAttribute("Include");
             include_attribute.Value = include;
             node.Attributes.Append(include_attribute);
-            XmlElement linkElement = csproj.CreateElement("Link", MSBuild_Namespace);
+            var linkElement = csproj.CreateElement("Link", MSBuild_Namespace);
             linkElement.InnerText = link;
             node.AppendChild(linkElement);
             if (prepend)
@@ -274,9 +274,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void AddInterfaceDefinition(this XmlDocument csproj, string include)
         {
-            XmlNode itemGroup = csproj.CreateItemGroup();
-            XmlElement id = csproj.CreateElement("InterfaceDefinition", MSBuild_Namespace);
-            XmlAttribute attrib = csproj.CreateAttribute("Include");
+            var itemGroup = csproj.CreateItemGroup();
+            var id = csproj.CreateElement("InterfaceDefinition", MSBuild_Namespace);
+            var attrib = csproj.CreateAttribute("Include");
             attrib.Value = include;
             id.Attributes.Append(attrib);
             itemGroup.AppendChild(id);
@@ -284,7 +284,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void SetImport(this XmlDocument csproj, string value)
         {
-            XmlNodeList imports = csproj.SelectNodes("/*/*[local-name() = 'Import'][not(@Condition)]");
+            var imports = csproj.SelectNodes("/*/*[local-name() = 'Import'][not(@Condition)]");
             if (imports.Count != 1)
                 throw new Exception("More than one import");
             imports[0].Attributes["Project"].Value = value;
@@ -292,10 +292,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void SetExtraLinkerDefs(this XmlDocument csproj, string value)
         {
-            XmlNodeList mtouchExtraArgs = csproj.SelectNodes("//*[local-name() = 'MtouchExtraArgs']");
+            var mtouchExtraArgs = csproj.SelectNodes("//*[local-name() = 'MtouchExtraArgs']");
             foreach (XmlNode mea in mtouchExtraArgs)
                 mea.InnerText = mea.InnerText.Replace("extra-linker-defs.xml", value);
-            XmlNodeList nones = csproj.SelectNodes("//*[local-name() = 'None' and @Include = 'extra-linker-defs.xml']");
+            var nones = csproj.SelectNodes("//*[local-name() = 'None' and @Include = 'extra-linker-defs.xml']");
             foreach (XmlNode none in nones)
                 none.Attributes["Include"].Value = value;
         }
@@ -306,8 +306,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void AddToNode(this XmlDocument csproj, string node, string value, string platform, string configuration)
         {
-            XmlNodeList nodes = csproj.SelectNodes($"//*[local-name() = '{node}']");
-            bool found = false;
+            var nodes = csproj.SelectNodes($"//*[local-name() = '{node}']");
+            var found = false;
             foreach (XmlNode mea in nodes)
             {
                 if (!IsNodeApplicable(mea, platform, configuration))
@@ -323,13 +323,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 return;
 
             // The project might not have this node, so create one of none was found.
-            XmlNodeList propertyGroups = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]");
+            var propertyGroups = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]");
             foreach (XmlNode pg in propertyGroups)
             {
                 if (!EvaluateCondition(pg, platform, configuration))
                     continue;
 
-                XmlElement mea = csproj.CreateElement(node, MSBuild_Namespace);
+                var mea = csproj.CreateElement(node, MSBuild_Namespace);
                 mea.InnerText = value;
                 pg.AppendChild(mea);
             }
@@ -343,7 +343,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static IEnumerable<XmlNode> GetPropertyGroups(this XmlDocument csproj, string platform, string configuration)
         {
-            XmlNodeList propertyGroups = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]");
+            var propertyGroups = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]");
             foreach (XmlNode node in propertyGroups)
             {
                 if (!EvaluateCondition(node, platform, configuration))
@@ -355,8 +355,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void SetNode(this XmlDocument csproj, string node, string value, string platform, string configuration)
         {
-            IEnumerable<XmlNode> projnode = csproj.SelectElementNodes(node);
-            bool found = false;
+            var projnode = csproj.SelectElementNodes(node);
+            var found = false;
             foreach (XmlNode xmlnode in projnode)
             {
                 if (!IsNodeApplicable(xmlnode, platform, configuration))
@@ -370,13 +370,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 return;
 
             // Not all projects have a MtouchExtraArgs node, so create one of none was found.
-            XmlNodeList propertyGroups = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]");
+            var propertyGroups = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]");
             foreach (XmlNode pg in propertyGroups)
             {
                 if (!EvaluateCondition(pg, platform, configuration))
                     continue;
 
-                XmlElement mea = csproj.CreateElement(node, MSBuild_Namespace);
+                var mea = csproj.CreateElement(node, MSBuild_Namespace);
                 mea.InnerText = value;
                 pg.AppendChild(mea);
             }
@@ -384,7 +384,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         private static string GetNode(this XmlDocument csproj, string name, string platform, string configuration)
         {
-            foreach (XmlNode pg in GetPropertyGroups(csproj, platform, configuration))
+            foreach (var pg in GetPropertyGroups(csproj, platform, configuration))
             {
                 foreach (XmlNode node in pg.ChildNodes)
                     if (node.Name == name)
@@ -396,7 +396,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static string GetImport(this XmlDocument csproj)
         {
-            XmlNodeList imports = csproj.SelectNodes("/*/*[local-name() = 'Import'][not(@Condition)]");
+            var imports = csproj.SelectNodes("/*/*[local-name() = 'Import'][not(@Condition)]");
             if (imports.Count != 1)
                 throw new Exception("More than one import");
             return imports[0].Attributes["Project"].Value;
@@ -405,16 +405,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public delegate bool FixReferenceDelegate(string reference, out string fixed_reference);
         public static void FixProjectReferences(this XmlDocument csproj, string suffix, FixReferenceDelegate fixCallback = null)
         {
-            XmlNodeList nodes = csproj.SelectNodes("/*/*/*[local-name() = 'ProjectReference']");
+            var nodes = csproj.SelectNodes("/*/*/*[local-name() = 'ProjectReference']");
             if (nodes.Count == 0)
                 return;
             foreach (XmlNode n in nodes)
             {
-                string name = n["Name"].InnerText;
+                var name = n["Name"].InnerText;
                 string fixed_name = null;
                 if (fixCallback != null && !fixCallback(name, out fixed_name))
                     continue;
-                XmlAttribute include = n.Attributes["Include"];
+                var include = n.Attributes["Include"];
                 string fixed_include;
                 if (fixed_name == null)
                 {
@@ -424,13 +424,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 }
                 else
                 {
-                    string unix_path = include.Value.Replace('\\', '/');
-                    string unix_dir = System.IO.Path.GetDirectoryName(unix_path);
+                    var unix_path = include.Value.Replace('\\', '/');
+                    var unix_dir = System.IO.Path.GetDirectoryName(unix_path);
                     fixed_include = System.IO.Path.Combine(unix_dir, fixed_name + System.IO.Path.GetExtension(unix_path));
                     fixed_include = fixed_include.Replace('/', '\\');
                 }
                 n.Attributes["Include"].Value = fixed_include;
-                XmlElement nameElement = n["Name"];
+                var nameElement = n["Name"];
                 name = System.IO.Path.GetFileNameWithoutExtension(fixed_include.Replace('\\', '/'));
                 nameElement.InnerText = name;
             }
@@ -438,8 +438,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void FixTestLibrariesReferences(this XmlDocument csproj, string platform)
         {
-            XmlNodeList nodes = csproj.SelectNodes("//*[local-name() = 'ObjcBindingNativeLibrary' or local-name() = 'ObjcBindingNativeFramework']");
-            string[] test_libraries = new string[] {
+            var nodes = csproj.SelectNodes("//*[local-name() = 'ObjcBindingNativeLibrary' or local-name() = 'ObjcBindingNativeFramework']");
+            var test_libraries = new string[] {
                 "libtest.a",
                 "libtest2.a",
                 "XTest.framework",
@@ -448,20 +448,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             };
             foreach (XmlNode node in nodes)
             {
-                XmlAttribute includeAttribute = node.Attributes["Include"];
+                var includeAttribute = node.Attributes["Include"];
                 if (includeAttribute != null)
                 {
-                    foreach (string tl in test_libraries)
+                    foreach (var tl in test_libraries)
                         includeAttribute.Value = includeAttribute.Value.Replace($"test-libraries\\.libs\\ios-fat\\{tl}", $"test-libraries\\.libs\\{platform}-fat\\{tl}");
                 }
             }
             nodes = csproj.SelectNodes("//*[local-name() = 'Target' and @Name = 'BeforeBuild']");
             foreach (XmlNode node in nodes)
             {
-                XmlAttribute outputsAttribute = node.Attributes["Outputs"];
+                var outputsAttribute = node.Attributes["Outputs"];
                 if (outputsAttribute != null)
                 {
-                    foreach (string tl in test_libraries)
+                    foreach (var tl in test_libraries)
                         outputsAttribute.Value = outputsAttribute.Value.Replace($"test-libraries\\.libs\\ios-fat\\${tl}", $"test-libraries\\.libs\\{platform}-fat\\${tl}");
                 }
             }
@@ -469,7 +469,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void FixArchitectures(this XmlDocument csproj, string simulator_arch, string device_arch, string platform = null, string configuration = null)
         {
-            XmlNodeList nodes = csproj.SelectNodes("/*/*/*[local-name() = 'MtouchArch']");
+            var nodes = csproj.SelectNodes("/*/*/*[local-name() = 'MtouchArch']");
             if (nodes.Count == 0)
                 throw new Exception(string.Format("Could not find MtouchArch at all"));
             foreach (XmlNode n in nodes)
@@ -527,12 +527,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void FixInfoPListInclude(this XmlDocument csproj, string suffix, string fullPath = null, string newName = null)
         {
-            XmlNode import = GetInfoPListNode(csproj, false);
+            var import = GetInfoPListNode(csproj, false);
             if (import != null)
             {
-                string value = import.Attributes["Include"].Value;
-                string unixValue = value.Replace('\\', '/');
-                string fname = Path.GetFileName(unixValue);
+                var value = import.Attributes["Include"].Value;
+                var unixValue = value.Replace('\\', '/');
+                var fname = Path.GetFileName(unixValue);
                 if (newName == null)
                 {
                     if (string.IsNullOrEmpty(fullPath))
@@ -542,7 +542,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 }
                 import.Attributes["Include"].Value = (!Path.IsPathRooted(unixValue)) ? value.Replace(fname, newName) : newName;
 
-                XmlNode logicalName = import.SelectSingleNode("./*[local-name() = 'LogicalName']");
+                var logicalName = import.SelectSingleNode("./*[local-name() = 'LogicalName']");
                 if (logicalName == null)
                 {
                     logicalName = csproj.CreateElement("LogicalName", MSBuild_Namespace);
@@ -554,14 +554,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         private static XmlNode GetInfoPListNode(this XmlDocument csproj, bool throw_if_not_found = false)
         {
-            XmlNodeList logicalNames = csproj.SelectNodes("//*[local-name() = 'LogicalName']");
+            var logicalNames = csproj.SelectNodes("//*[local-name() = 'LogicalName']");
             foreach (XmlNode ln in logicalNames)
             {
                 if (!ln.InnerText.Contains("Info.plist"))
                     continue;
                 return ln.ParentNode;
             }
-            XmlNodeList nodes = csproj.SelectNodes("//*[local-name() = 'None' and contains(@Include ,'Info.plist')]");
+            var nodes = csproj.SelectNodes("//*[local-name() = 'None' and contains(@Include ,'Info.plist')]");
             if (nodes.Count > 0)
             {
                 return nodes[0]; // return the value, which could be Info.plist or a full path (linked).
@@ -580,14 +580,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static IEnumerable<string> GetProjectReferences(this XmlDocument csproj)
         {
-            XmlNodeList nodes = csproj.SelectNodes("//*[local-name() = 'ProjectReference']");
+            var nodes = csproj.SelectNodes("//*[local-name() = 'ProjectReference']");
             foreach (XmlNode node in nodes)
                 yield return node.Attributes["Include"].Value;
         }
 
         public static IEnumerable<string> GetExtensionProjectReferences(this XmlDocument csproj)
         {
-            XmlNodeList nodes = csproj.SelectNodes("//*[local-name() = 'ProjectReference']");
+            var nodes = csproj.SelectNodes("//*[local-name() = 'ProjectReference']");
             foreach (XmlNode node in nodes)
             {
                 if (node.SelectSingleNode("./*[local-name () = 'IsAppExtension']") != null)
@@ -597,10 +597,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static IEnumerable<string> GetNunitAndXunitTestReferences(this XmlDocument csproj)
         {
-            XmlNodeList nodes = csproj.SelectNodes("//*[local-name() = 'Reference']");
+            var nodes = csproj.SelectNodes("//*[local-name() = 'Reference']");
             foreach (XmlNode node in nodes)
             {
-                string includeValue = node.Attributes["Include"].Value;
+                var includeValue = node.Attributes["Include"].Value;
                 if (includeValue.EndsWith("_test.dll", StringComparison.Ordinal) || includeValue.EndsWith("_xunit-test.dll", StringComparison.Ordinal))
                     yield return includeValue;
             }
@@ -608,17 +608,17 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void SetProjectReferenceValue(this XmlDocument csproj, string projectInclude, string node, string value)
         {
-            XmlNode nameNode = csproj.SelectSingleNode("//*[local-name() = 'ProjectReference' and @Include = '" + projectInclude + "']/*[local-name() = '" + node + "']");
+            var nameNode = csproj.SelectSingleNode("//*[local-name() = 'ProjectReference' and @Include = '" + projectInclude + "']/*[local-name() = '" + node + "']");
             nameNode.InnerText = value;
         }
 
         public static void SetProjectReferenceInclude(this XmlDocument csproj, string projectInclude, string value)
         {
-            IEnumerable<XmlNode> elements = csproj.SelectElementNodes("ProjectReference");
+            var elements = csproj.SelectElementNodes("ProjectReference");
             elements
                   .Where((v) =>
                    {
-                       XmlAttribute attrib = v.Attributes["Include"];
+                       var attrib = v.Attributes["Include"];
                        if (attrib == null)
                            return false;
                        return attrib.Value == projectInclude;
@@ -629,15 +629,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void CreateProjectReferenceValue(this XmlDocument csproj, string existingInclude, string path, string guid, string name)
         {
-            XmlNode referenceNode = csproj.SelectSingleNode("//*[local-name() = 'Reference' and @Include = '" + existingInclude + "']");
-            XmlElement projectReferenceNode = csproj.CreateElement("ProjectReference", MSBuild_Namespace);
-            XmlAttribute includeAttribute = csproj.CreateAttribute("Include");
+            var referenceNode = csproj.SelectSingleNode("//*[local-name() = 'Reference' and @Include = '" + existingInclude + "']");
+            var projectReferenceNode = csproj.CreateElement("ProjectReference", MSBuild_Namespace);
+            var includeAttribute = csproj.CreateAttribute("Include");
             includeAttribute.Value = path.Replace('/', '\\');
             projectReferenceNode.Attributes.Append(includeAttribute);
-            XmlElement projectNode = csproj.CreateElement("Project", MSBuild_Namespace);
+            var projectNode = csproj.CreateElement("Project", MSBuild_Namespace);
             projectNode.InnerText = guid;
             projectReferenceNode.AppendChild(projectNode);
-            XmlElement nameNode = csproj.CreateElement("Name", MSBuild_Namespace);
+            var nameNode = csproj.CreateElement("Name", MSBuild_Namespace);
             nameNode.InnerText = name;
             projectReferenceNode.AppendChild(nameNode);
 
@@ -657,16 +657,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         private static XmlNode CreateItemGroup(this XmlDocument csproj)
         {
-            XmlNode lastItemGroup = csproj.SelectSingleNode("//*[local-name() = 'ItemGroup'][last()]");
-            XmlElement newItemGroup = csproj.CreateElement("ItemGroup", MSBuild_Namespace);
+            var lastItemGroup = csproj.SelectSingleNode("//*[local-name() = 'ItemGroup'][last()]");
+            var newItemGroup = csproj.CreateElement("ItemGroup", MSBuild_Namespace);
             lastItemGroup.ParentNode.InsertAfter(newItemGroup, lastItemGroup);
             return newItemGroup;
         }
 
         public static void AddAdditionalDefines(this XmlDocument csproj, string value)
         {
-            XmlNode mainPropertyGroup = csproj.SelectSingleNode("//*[local-name() = 'PropertyGroup' and not(@Condition)]");
-            XmlNode mainDefine = mainPropertyGroup.SelectSingleNode("*[local-name() = 'DefineConstants']");
+            var mainPropertyGroup = csproj.SelectSingleNode("//*[local-name() = 'PropertyGroup' and not(@Condition)]");
+            var mainDefine = mainPropertyGroup.SelectSingleNode("*[local-name() = 'DefineConstants']");
             if (mainDefine == null)
             {
                 mainDefine = csproj.CreateElement("DefineConstants", MSBuild_Namespace);
@@ -679,7 +679,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
 
             // make sure all other DefineConstants include the main one
-            XmlNodeList otherDefines = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]/*[local-name() = 'DefineConstants']");
+            var otherDefines = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]/*[local-name() = 'DefineConstants']");
             foreach (XmlNode def in otherDefines)
             {
                 if (!def.InnerText.Contains("$(DefineConstants"))
@@ -689,23 +689,23 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void RemoveDefines(this XmlDocument csproj, string defines, string platform = null, string configuration = null)
         {
-            char[] separator = new char[] { ';' };
-            string[] defs = defines.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-            XmlNodeList projnode = csproj.SelectNodes("//*[local-name() = 'PropertyGroup']/*[local-name() = 'DefineConstants']");
+            var separator = new char[] { ';' };
+            var defs = defines.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+            var projnode = csproj.SelectNodes("//*[local-name() = 'PropertyGroup']/*[local-name() = 'DefineConstants']");
             foreach (XmlNode xmlnode in projnode)
             {
                 if (string.IsNullOrEmpty(xmlnode.InnerText))
                     continue;
 
-                XmlNode parent = xmlnode.ParentNode;
+                var parent = xmlnode.ParentNode;
                 if (!IsNodeApplicable(parent, platform, configuration))
                     continue;
 
-                string[] existing = xmlnode.InnerText.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-                bool any = false;
-                foreach (string def in defs)
+                var existing = xmlnode.InnerText.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                var any = false;
+                foreach (var def in defs)
                 {
-                    for (int i = 0; i < existing.Length; i++)
+                    for (var i = 0; i < existing.Length; i++)
                     {
                         if (existing[i] == def)
                         {
@@ -722,10 +722,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void AddAdditionalDefines(this XmlDocument csproj, string value, string platform, string configuration)
         {
-            XmlNodeList projnode = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]/*[local-name() = 'DefineConstants']");
+            var projnode = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]/*[local-name() = 'DefineConstants']");
             foreach (XmlNode xmlnode in projnode)
             {
-                XmlNode parent = xmlnode.ParentNode;
+                var parent = xmlnode.ParentNode;
                 if (parent.Attributes["Condition"] == null)
                     continue;
                 if (!IsNodeApplicable(parent, platform, configuration))
@@ -750,7 +750,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 if (!IsNodeApplicable(xmlnode, platform, configuration))
                     continue;
 
-                XmlElement defines = csproj.CreateElement("DefineConstants", MSBuild_Namespace);
+                var defines = csproj.CreateElement("DefineConstants", MSBuild_Namespace);
                 defines.InnerText = "$(DefineConstants);" + value;
                 xmlnode.AppendChild(defines);
                 return;
@@ -761,7 +761,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void SetNode(this XmlDocument csproj, string node, string value)
         {
-            XmlNodeList nodes = csproj.SelectNodes("/*/*/*[local-name() = '" + node + "']");
+            var nodes = csproj.SelectNodes("/*/*/*[local-name() = '" + node + "']");
             if (nodes.Count == 0)
                 throw new Exception(string.Format("Could not find node {0}", node));
             foreach (XmlNode n in nodes)
@@ -772,7 +772,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void RemoveNode(this XmlDocument csproj, string node, bool throwOnInexistentNode = true)
         {
-            XmlNodeList nodes = csproj.SelectNodes("/*/*/*[local-name() = '" + node + "']");
+            var nodes = csproj.SelectNodes("/*/*/*[local-name() = '" + node + "']");
             if (throwOnInexistentNode && nodes.Count == 0)
                 throw new Exception(string.Format("Could not find node {0}", node));
             foreach (XmlNode n in nodes)
@@ -783,11 +783,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void CloneConfiguration(this XmlDocument csproj, string platform, string configuration, string new_configuration)
         {
-            IEnumerable<XmlNode> projnode = csproj.GetPropertyGroups(platform, configuration);
+            var projnode = csproj.GetPropertyGroups(platform, configuration);
             foreach (XmlNode xmlnode in projnode)
             {
-                XmlNode clone = xmlnode.Clone();
-                XmlAttribute condition = clone.Attributes["Condition"];
+                var clone = xmlnode.Clone();
+                var condition = clone.Attributes["Condition"];
                 condition.InnerText = condition.InnerText.Replace(configuration, new_configuration);
                 xmlnode.ParentNode.InsertAfter(clone, xmlnode);
                 return;
@@ -798,7 +798,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void DeleteConfiguration(this XmlDocument csproj, string platform, string configuration)
         {
-            IEnumerable<XmlNode> projnode = csproj.GetPropertyGroups(platform, configuration);
+            var projnode = csproj.GetPropertyGroups(platform, configuration);
             foreach (XmlNode xmlnode in projnode)
                 xmlnode.ParentNode.RemoveChild(xmlnode);
         }
@@ -820,15 +820,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void ResolveAllPaths(this XmlDocument csproj, string project_path)
         {
-            string dir = System.IO.Path.GetDirectoryName(project_path);
-            string[] nodes_with_paths = new string[]
+            var dir = System.IO.Path.GetDirectoryName(project_path);
+            var nodes_with_paths = new string[]
             {
                 "AssemblyOriginatorKeyFile",
                 "CodesignEntitlements",
                 "TestLibrariesDirectory",
                 "HintPath",
             };
-            string[][] attributes_with_paths = new string[][]
+            var attributes_with_paths = new string[][]
             {
                 new string [] { "None", "Include" },
                 new string [] { "Compile", "Include" },
@@ -859,7 +859,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 new string [] { "CustomMetalSmeltingInput", "Include" },
                 new string [] { "Metal", "Include" },
             };
-            string[] nodes_with_variables = new string[]
+            var nodes_with_variables = new string[]
             {
                 "MtouchExtraArgs",
             };
@@ -877,43 +877,43 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 return input;
             };
 
-            foreach (string key in nodes_with_paths)
+            foreach (var key in nodes_with_paths)
             {
 
-                IEnumerable<XmlNode> nodes = csproj.SelectElementNodes(key);
-                foreach (XmlNode node in nodes)
+                var nodes = csproj.SelectElementNodes(key);
+                foreach (var node in nodes)
                     node.InnerText = convert(node.InnerText);
             }
-            foreach (string key in nodes_with_variables)
+            foreach (var key in nodes_with_variables)
             {
-                IEnumerable<XmlNode> nodes = csproj.SelectElementNodes(key);
-                foreach (XmlNode node in nodes)
+                var nodes = csproj.SelectElementNodes(key);
+                foreach (var node in nodes)
                 {
                     node.InnerText = node.InnerText.Replace("${ProjectDir}", StringUtils.Quote(System.IO.Path.GetDirectoryName(project_path)));
                 }
             }
-            foreach (string[] kvp in attributes_with_paths)
+            foreach (var kvp in attributes_with_paths)
             {
-                string element = kvp[0];
-                string attrib = kvp[1];
-                IEnumerable<XmlNode> nodes = csproj.SelectElementNodes(element);
+                var element = kvp[0];
+                var attrib = kvp[1];
+                var nodes = csproj.SelectElementNodes(element);
                 foreach (XmlNode node in nodes)
                 {
-                    XmlAttribute a = node.Attributes[attrib];
+                    var a = node.Attributes[attrib];
                     if (a == null)
                         continue;
 
                     // entries after index 2 is a list of values to filter the attribute value against.
-                    bool found = kvp.Length == 2;
-                    bool skipLogicalName = kvp.Length > 2;
-                    for (int i = 2; i < kvp.Length; i++)
+                    var found = kvp.Length == 2;
+                    var skipLogicalName = kvp.Length > 2;
+                    for (var i = 2; i < kvp.Length; i++)
                         found |= a.Value == kvp[i];
                     if (!found)
                         continue;
 
                     // Fix any default LogicalName values (but don't change existing ones).
-                    XmlNode ln = node.SelectElementNodes("LogicalName")?.SingleOrDefault();
-                    IEnumerable<XmlNode> links = node.SelectElementNodes("Link");
+                    var ln = node.SelectElementNodes("LogicalName")?.SingleOrDefault();
+                    var links = node.SelectElementNodes("Link");
                     if (!skipLogicalName && ln == null && !links.Any())
                     {
                         ln = csproj.CreateElement("LogicalName", MSBuild_Namespace);

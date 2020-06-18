@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         {
             var parser = new AppBundleInformationParser(Mock.Of<IMLaunchProcessManager>());
 
-            AppBundleInformation info = parser.ParseFromProject(s_projectFilePath, TestTarget.Simulator_iOS64, "Debug");
+            var info = parser.ParseFromProject(s_projectFilePath, TestTarget.Simulator_iOS64, "Debug");
 
             Assert.Equal(AppName, info.AppName);
             Assert.Equal(s_appPath, info.AppPath);

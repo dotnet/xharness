@@ -87,13 +87,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         {
             get
             {
-                string model = ProductType;
+                var model = ProductType;
 
                 // https://www.theiphonewiki.com/wiki/Models
                 if (model.StartsWith("iPhone", StringComparison.Ordinal))
                 {
-                    string identifier = model.Substring("iPhone".Length);
-                    string[] values = identifier.Split(',');
+                    var identifier = model.Substring("iPhone".Length);
+                    var values = identifier.Split(',');
 
                     switch (values[0])
                     {
@@ -117,8 +117,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 // https://www.theiphonewiki.com/wiki/List_of_iPads
                 if (model.StartsWith("iPad", StringComparison.Ordinal))
                 {
-                    string identifier = model.Substring("iPad".Length);
-                    string[] values = identifier.Split(',');
+                    var identifier = model.Substring("iPad".Length);
+                    var values = identifier.Split(',');
 
                     switch (values[0])
                     {
@@ -137,8 +137,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 // https://www.theiphonewiki.com/wiki/List_of_iPod_touches
                 if (model.StartsWith("iPod", StringComparison.Ordinal))
                 {
-                    string identifier = model.Substring("iPod".Length);
-                    string[] values = identifier.Split(',');
+                    var identifier = model.Substring("iPod".Length);
+                    var values = identifier.Split(',');
 
                     switch (values[0])
                     {
@@ -158,8 +158,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 // https://www.theiphonewiki.com/wiki/List_of_Apple_Watches
                 if (model.StartsWith("Watch", StringComparison.Ordinal))
                 {
-                    string identifier = model.Substring("Watch".Length);
-                    string[] values = identifier.Split(',');
+                    var identifier = model.Substring("Watch".Length);
+                    var values = identifier.Split(',');
                     switch (values[0])
                     {
                         case "1": // Apple Watch (1st gen)

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
@@ -34,7 +33,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                 logger.LogInformation($"ADB State ('device' if physically attached):{Environment.NewLine}{state}");
 
                 logger.LogInformation($"List of devices:");
-                Dictionary<string, string?>? deviceAndArchList = runner.GetAttachedDevicesAndArchitectures();
+                var deviceAndArchList = runner.GetAttachedDevicesAndArchitectures();
                 foreach (string device in deviceAndArchList.Keys)
                 {
                     logger.LogInformation($"Device: '{device}' - Architecture: {deviceAndArchList[device]}");

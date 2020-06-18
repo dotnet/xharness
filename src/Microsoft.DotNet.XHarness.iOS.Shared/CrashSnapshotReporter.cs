@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
@@ -63,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             do
             {
-                HashSet<string> newCrashFiles = await CreateCrashReportsSnapshotAsync();
+                var newCrashFiles = await CreateCrashReportsSnapshotAsync();
                 newCrashFiles.ExceptWith(_initialCrashes);
 
                 if (newCrashFiles.Count == 0)
@@ -90,7 +89,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 if (!_isDevice)
                 {
                     crashReports = new List<IFileBackedLog>(newCrashFiles.Count);
-                    foreach (string path in newCrashFiles)
+                    foreach (var path in newCrashFiles)
                     {
                         _logs.AddFile(path, $"Crash report: {Path.GetFileName(path)}");
                     }
@@ -105,7 +104,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         .Where(c => c != null);
                 }
 
-                foreach (IFileBackedLog cp in crashReports)
+                foreach (var cp in crashReports)
                 {
                     WrenchLog.WriteLine("AddFile: {0}", cp.FullPath);
                     _log.WriteLine("    {0}", cp.FullPath);
@@ -118,15 +117,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         private async Task<IFileBackedLog> ProcessCrash(string crashFile)
         {
-            string name = Path.GetFileName(crashFile);
-            IFileBackedLog crashReportFile = _logs.Create(name, $"Crash report: {name}", timestamp: false);
+            var name = Path.GetFileName(crashFile);
+            var crashReportFile = _logs.Create(name, $"Crash report: {name}", timestamp: false);
             var args = new MlaunchArguments(
                 new DownloadCrashReportArgument(crashFile),
                 new DownloadCrashReportToArgument(crashReportFile.FullPath));
 
             if (!string.IsNullOrEmpty(_deviceName)) args.Add(new DeviceNameArgument(_deviceName));
 
-            ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
+            var result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
 
             if (result.Succeeded)
             {
@@ -148,10 +147,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 return report;
             }
 
-            string name = Path.GetFileName(report.FullPath);
-            IFileBackedLog symbolicated = _logs.Create(Path.ChangeExtension(name, ".symbolicated.log"), $"Symbolicated crash report: {name}", timestamp: false);
+            var name = Path.GetFileName(report.FullPath);
+            var symbolicated = _logs.Create(Path.ChangeExtension(name, ".symbolicated.log"), $"Symbolicated crash report: {name}", timestamp: false);
             var environment = new Dictionary<string, string> { { "DEVELOPER_DIR", Path.Combine(_processManager.XcodeRoot, "Contents", "Developer") } };
-            ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(_symbolicateCrashPath, new[] { report.FullPath }, symbolicated, TimeSpan.FromMinutes(1), environment);
+            var result = await _processManager.ExecuteCommandAsync(_symbolicateCrashPath, new[] { report.FullPath }, symbolicated, TimeSpan.FromMinutes(1), environment);
             if (result.Succeeded)
             {
                 _log.WriteLine("Symbolicated {0} successfully.", report.FullPath);
@@ -170,20 +169,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             if (!_isDevice)
             {
-                string dir = Path.Combine(Environment.GetEnvironmentVariable("HOME"), "Library", "Logs", "DiagnosticReports");
+                var dir = Path.Combine(Environment.GetEnvironmentVariable("HOME"), "Library", "Logs", "DiagnosticReports");
                 if (Directory.Exists(dir))
                     crashes.UnionWith(Directory.EnumerateFiles(dir));
             }
             else
             {
-                string tempFile = _tempFileProvider();
+                var tempFile = _tempFileProvider();
                 try
                 {
                     var args = new MlaunchArguments(new ListCrashReportsArgument(tempFile));
 
                     if (!string.IsNullOrEmpty(_deviceName)) args.Add(new DeviceNameArgument(_deviceName));
 
-                    ProcessExecutionResult result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
+                    var result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
                     if (result.Succeeded)
                         crashes.UnionWith(File.ReadAllLines(tempFile));
                 }

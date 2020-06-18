@@ -94,8 +94,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Execution
                 new DeviceNameArgument ("Premek's iPhone"),
             };
 
-            string oldWayOfPassingArgs = StringUtils.FormatArguments(oldArgs);
-            string newWayOfPassingArgs = newArgs.AsCommandLine();
+            var oldWayOfPassingArgs = StringUtils.FormatArguments(oldArgs);
+            var newWayOfPassingArgs = newArgs.AsCommandLine();
 
             Assert.Equal(oldWayOfPassingArgs, newWayOfPassingArgs);
         }

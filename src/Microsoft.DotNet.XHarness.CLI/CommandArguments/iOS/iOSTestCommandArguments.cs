@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
             { "launch-timeout=|lt=", "Time span, in seconds, to wait for the iOS app to start.",
                 v =>
                 {
-                    if (!int.TryParse(v, out int launchTimeout))
+                    if (!int.TryParse(v, out var launchTimeout))
                     {
                         throw new ArgumentException("launch-timeout must be an integer - a number of seconds");
                     }

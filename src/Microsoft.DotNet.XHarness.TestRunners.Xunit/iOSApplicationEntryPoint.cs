@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
         public override async Task RunAsync()
         {
-            ApplicationOptions options = ApplicationOptions.Current;
+            var options = ApplicationOptions.Current;
             TcpTextWriter writer = null;
             if (!string.IsNullOrEmpty(options.HostName))
             {
@@ -35,11 +35,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             // we generate the logs in two different ways depending if the generate xml flag was
             // provided. If it was, we will write the xml file to the tcp writer if present, else
             // we will write the normal console output using the LogWriter
-            LogWriter logger = (writer == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, writer);
+            var logger = (writer == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, writer);
             logger.MinimumLogLevel = MinimumLogLevel.Info;
 
             // if we have ignore files, ignore those tests
-            TestRunner runner = await InternalRunAsync(logger);
+            var runner = await InternalRunAsync(logger);
 
             ConfigureRunner(runner, options);
 

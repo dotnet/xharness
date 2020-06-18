@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         [Fact]
         public void TestWrite()
         {
-            string message = "This is a log message";
+            var message = "This is a log message";
             using (var testStream = new FileStream(_testFile, FileMode.OpenOrCreate, FileAccess.Write))
             using (var writer = new StreamWriter(testStream))
             {
@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             using (var testStream = new FileStream(_testFile, FileMode.OpenOrCreate, FileAccess.Read))
             using (var reader = new StreamReader(testStream))
             {
-                string line = reader.ReadLine();
+                var line = reader.ReadLine();
                 Assert.EndsWith(message, line); // consider the time stamp
             }
 

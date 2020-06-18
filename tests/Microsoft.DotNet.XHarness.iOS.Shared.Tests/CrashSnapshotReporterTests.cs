@@ -50,14 +50,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         [Fact]
         public async Task DeviceCaptureTest()
         {
-            string tempFilePath = Path.GetTempFileName();
+            var tempFilePath = Path.GetTempFileName();
 
             const string deviceName = "Sample-iPhone";
             const string crashLogPath = "/path/to/crash.log";
             const string symbolicateLogPath = "/path/to/" + deviceName + ".symbolicated.log";
 
-            IFileBackedLog crashReport = Mock.Of<IFileBackedLog>(x => x.FullPath == crashLogPath);
-            IFileBackedLog symbolicateReport = Mock.Of<IFileBackedLog>(x => x.FullPath == symbolicateLogPath);
+            var crashReport = Mock.Of<IFileBackedLog>(x => x.FullPath == crashLogPath);
+            var symbolicateReport = Mock.Of<IFileBackedLog>(x => x.FullPath == symbolicateLogPath);
 
             // Crash report is added
             _logs.Setup(x => x.Create(deviceName, "Crash report: " + deviceName, It.IsAny<bool>()))

@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             {
                 for (int i = names.Length - 1; i >= 0; i--)
                 {
-                    string name = names[i];
+                    var name = names[i];
                     ThreadPool.QueueUserWorkItem((v) =>
                        {
                            try

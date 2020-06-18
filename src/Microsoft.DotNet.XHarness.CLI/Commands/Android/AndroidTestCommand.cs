@@ -122,7 +122,7 @@ Arguments:
                 {
                     if (result.ExitCode == (int)ExitCode.SUCCESS)
                     {
-                        (Dictionary<string, string>? resultValues, int instrExitCode) = ParseInstrumentationOutputs(logger, result.StandardOutput);
+                        (var resultValues, var instrExitCode) = ParseInstrumentationOutputs(logger, result.StandardOutput);
 
                         // This is where test instrumentation can communicate outwardly that test execution failed
                         instrumentationExitCode = instrExitCode;
@@ -170,7 +170,7 @@ Arguments:
                     // Optionally copy off an entire folder
                     if (!string.IsNullOrEmpty(_arguments.DeviceOutputFolder))
                     {
-                        List<string>? logs = runner.PullFiles(_arguments.DeviceOutputFolder, _arguments.OutputDirectory);
+                        var logs = runner.PullFiles(_arguments.DeviceOutputFolder, _arguments.OutputDirectory);
                         foreach (string log in logs)
                         {
                             logger.LogDebug($"Found output file: {log}");
@@ -199,12 +199,12 @@ Arguments:
 
         private string? GetDeviceToUse(ILogger logger, AdbRunner runner, string apkRequiredArchitecture)
         {
-            Dictionary<string, string?>? allDevicesAndTheirArchitectures = runner.GetAttachedDevicesAndArchitectures();
+            var allDevicesAndTheirArchitectures = runner.GetAttachedDevicesAndArchitectures();
             if (allDevicesAndTheirArchitectures.Count > 0)
             {
                 if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)))
                 {
-                    KeyValuePair<string, string?> firstAvailableCompatible = allDevicesAndTheirArchitectures.Where(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                    var firstAvailableCompatible = allDevicesAndTheirArchitectures.Where(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
                     logger.LogInformation($"Using first-found compatible device of {allDevicesAndTheirArchitectures.Count} total- serial: '{firstAvailableCompatible.Key}' - Arch: {firstAvailableCompatible.Value}");
                     return firstAvailableCompatible.Key;
                 }
@@ -231,7 +231,7 @@ Arguments:
             {
                 if (line.StartsWith(resultPrefix))
                 {
-                    string? subString = line.Substring(resultPrefix.Length);
+                    var subString = line.Substring(resultPrefix.Length);
                     string[] results = subString.Trim().Split('=');
                     if (results.Length == 2)
                     {

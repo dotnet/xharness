@@ -33,14 +33,14 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
         public override async Task RunAsync()
         {
-            ApplicationOptions? options = ApplicationOptions.Current;
+            var options = ApplicationOptions.Current;
             // we generate the logs in two different ways depending if the generate xml flag was
             // provided. If it was, we will write the xml file to the tcp writer if present, else
             // we will write the normal console output using the LogWriter
-            LogWriter? logger = (Logger == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, Logger);
+            var logger = (Logger == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, Logger);
             logger.MinimumLogLevel = MinimumLogLevel.Info;
 
-            TestRunner? runner = await InternalRunAsync(logger);
+            var runner = await InternalRunAsync(logger);
             ConfigureRunner(runner, options);
 
             if (options.EnableXml)
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 if (TestsResultsFinalPath == null)
                     throw new InvalidOperationException("Tests results final path cannot be null.");
 
-                using (FileStream? stream = File.Create(TestsResultsFinalPath))
+                using (var stream = File.Create(TestsResultsFinalPath))
                 using (var writer = new StreamWriter(stream))
                 {
                     WriteResults(runner, options, logger, writer);
