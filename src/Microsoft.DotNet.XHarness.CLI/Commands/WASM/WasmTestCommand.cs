@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
                 return result.Succeeded ? ExitCode.SUCCESS : (result.TimedOut ? ExitCode.TIMED_OUT : ExitCode.GENERAL_FAILURE);
             }
-            catch (Win32Exception e) when (e.Message == "No such file or directory")
+            catch (Win32Exception e) when (e.NativeErrorCode == 2)
             {
                 logger.LogCritical($"The engine binary `{engineBinary}` was not found");
                 return ExitCode.APP_LAUNCH_FAILURE;

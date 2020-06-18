@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -135,6 +136,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                         diagnostics: false);
                 }
 
+
                 foreach (var diagnose_pid in pids)
                 {
                     var template = Path.GetTempFileName();
@@ -148,7 +150,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                             commands.AppendLine("thread backtrace all");
                             commands.AppendLine("detach");
                             commands.AppendLine("quit");
-                            dbg.StartInfo.FileName = "/usr/bin/lldb";
+                            dbg.StartInfo.FileName = "lldb";
                             dbg.StartInfo.Arguments = StringUtils.FormatArguments("--source", template);
                             File.WriteAllText(template, commands.ToString());
 
@@ -163,6 +165,14 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                                 timeout: TimeSpan.FromSeconds(30),
                                 diagnostics: false);
                         }
+                    }
+                    catch (Win32Exception e) when (e.NativeErrorCode == 2)
+                    {
+                        log.WriteLine("lldb was not found, skipping diagnosis..");
+                    }
+                    catch (Exception e)
+                    {
+                        log.WriteLine("Failed to diagnose the process using lldb:" + Environment.NewLine + e);
                     }
                     finally
                     {
