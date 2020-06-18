@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 {
                     try
                     {
-                        (simulator, companionSimulator) = await FindSimulators(target);
+                        (simulator, companionSimulator) = await _simulatorLoader.FindSimulators(target, _mainLog);
                         break;
                     }
                     catch (Exception e)
@@ -548,31 +548,6 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
 
             return args;
-        }
-
-        private async Task<(ISimulatorDevice, ISimulatorDevice?)> FindSimulators(TestTargetOs target)
-        {
-            IFileBackedLog simulatorLoadingLog = _logs.Create($"simulator-list-{_helpers.Timestamp}.log", "Simulator list");
-
-            try
-            {
-                await _simulatorLoader.LoadDevices(simulatorLoadingLog, false, false);
-            }
-            catch
-            {
-                _mainLog.WriteLine("Failed to load simulators!");
-                throw;
-            }
-
-            try
-            {
-                return await _simulatorLoader.FindSimulators(target, _mainLog);
-            }
-            catch (NoDeviceFoundException e)
-            {
-                _mainLog.WriteLine($"Didn't find any suitable simulator: {e.Message}");
-                throw;
-            }
         }
 
         private async Task<string> FindDevice(TestTargetOs target)
