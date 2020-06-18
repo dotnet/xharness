@@ -41,9 +41,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
         public override string AsCommandLineArgument()
         {
             if (_useEqualSign)
+            {
                 return Escape($"--{_argumentName}={_argumentValue}");
+            }
             else
+            {
                 return $"--{_argumentName} {Escape(_argumentValue)}";
+            }
         }
     }
 

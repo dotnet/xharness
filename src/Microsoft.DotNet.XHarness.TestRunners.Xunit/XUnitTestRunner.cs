@@ -109,7 +109,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             }
 
             if (_filters == null)
+            {
                 _filters = new XUnitFiltersCollection();
+            }
 
             _filters.AddRange(newFilters);
         }
@@ -130,7 +132,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestStarting(MessageHandlerArgs<ITestStarting> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDebug("Test starting");
             LogTestDetails(args.Message.Test, log: OnDebug);
@@ -140,7 +144,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestSkipped(MessageHandlerArgs<ITestSkipped> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             RaiseTestSkippedCase(args.Message, args.Message.TestCases, args.Message.TestCase);
         }
@@ -148,7 +154,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestPassed(MessageHandlerArgs<ITestPassed> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             PassedTests++;
             OnInfo($"\t[PASS] {args.Message.TestCase.DisplayName}");
@@ -165,7 +173,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestOutput(MessageHandlerArgs<ITestOutput> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnInfo(args.Message.Output);
         }
@@ -173,7 +183,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestMethodStarting(MessageHandlerArgs<ITestMethodStarting> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDebug("Test method starting");
             LogTestMethodDetails(args.Message.TestMethod.Method, log: OnDebug);
@@ -184,7 +196,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestMethodFinished(MessageHandlerArgs<ITestMethodFinished> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDebug("Test method finished");
             LogTestMethodDetails(args.Message.TestMethod.Method, log: OnDebug);
@@ -196,7 +210,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestMethodCleanupFailure(MessageHandlerArgs<ITestMethodCleanupFailure> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnError($"Test method cleanup failure{GetAssemblyInfo(args.Message.TestAssembly)}");
             LogTestMethodDetails(args.Message.TestMethod.Method, log: OnError);
@@ -208,7 +224,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestFinished(MessageHandlerArgs<ITestFinished> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
+
             ExecutedTests++;
             OnDiagnostic("Test finished");
             LogTestDetails(args.Message.Test, log: OnDiagnostic);
@@ -219,7 +238,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestFailed(MessageHandlerArgs<ITestFailed> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             FailedTests++;
             string assemblyInfo = GetAssemblyInfo(args.Message.TestAssembly);
@@ -227,7 +248,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             LogTestDetails(args.Message.Test, OnError, sb);
             sb.AppendLine();
             if (!string.IsNullOrEmpty(assemblyInfo))
+            {
                 sb.AppendLine($"   Assembly: {assemblyInfo}");
+            }
+
             LogSourceInformation(args.Message.TestCase.SourceInformation, OnError, sb);
             LogFailureInformation(args.Message, OnError, sb);
             sb.AppendLine();
@@ -268,7 +292,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestCollectionStarting(MessageHandlerArgs<ITestCollectionStarting> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnInfo($"\n{args.Message.TestCollection.DisplayName}");
             OnDebug("Test collection starting");
@@ -279,7 +305,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestCollectionFinished(MessageHandlerArgs<ITestCollectionFinished> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDebug("Test collection finished");
             LogSummary(args.Message, log: OnDebug);
@@ -290,7 +318,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestCollectionCleanupFailure(MessageHandlerArgs<ITestCollectionCleanupFailure> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnError("Error during test collection cleanup");
             LogTestCollectionDetails(args.Message.TestCollection, log: OnError);
@@ -301,7 +331,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestCleanupFailure(MessageHandlerArgs<ITestCleanupFailure> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnError($"Test cleanup failure{GetAssemblyInfo(args.Message.TestAssembly)}");
             LogTestDetails(args.Message.Test, log: OnError);
@@ -312,7 +344,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestClassStarting(MessageHandlerArgs<ITestClassStarting> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDiagnostic("Test class starting");
             LogTestClassDetails(args.Message.TestClass, log: OnDiagnostic);
@@ -321,7 +355,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestClassFinished(MessageHandlerArgs<ITestClassFinished> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDebug("Test class finished");
             OnInfo($"{args.Message.TestClass.Class.Name} {args.Message.ExecutionTime} ms");
@@ -332,7 +368,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestClassDisposeStarting(MessageHandlerArgs<ITestClassDisposeStarting> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDiagnostic("Test class dispose starting");
             LogTestDetails(args.Message.Test, log: OnDiagnostic);
@@ -342,7 +380,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestClassDisposeFinished(MessageHandlerArgs<ITestClassDisposeFinished> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDiagnostic("Test class dispose finished");
             LogTestDetails(args.Message.Test, log: OnDiagnostic);
@@ -352,7 +392,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestClassConstructionStarting(MessageHandlerArgs<ITestClassConstructionStarting> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDiagnostic("Test class construction starting");
             LogTestDetails(args.Message.Test, OnDiagnostic);
@@ -362,7 +404,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestClassConstructionFinished(MessageHandlerArgs<ITestClassConstructionFinished> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDiagnostic("Test class construction finished");
             LogTestDetails(args.Message.Test, log: OnDiagnostic);
@@ -372,7 +416,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestClassCleanupFailure(MessageHandlerArgs<ITestClassCleanupFailure> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnError($"Test class cleanup error{GetAssemblyInfo(args.Message.TestAssembly)}");
             LogTestClassDetails(args.Message.TestClass, log: OnError);
@@ -384,7 +430,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestCaseStarting(MessageHandlerArgs<ITestCaseStarting> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDiagnostic("Test case starting");
             ReportTestCase("   Starting", args.Message.TestCase, log: OnDiagnostic);
@@ -394,7 +442,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestCaseFinished(MessageHandlerArgs<ITestCaseFinished> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDebug("Test case finished executing");
             ReportTestCase("   Finished", args.Message.TestCase, log: OnDebug);
@@ -405,7 +455,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestCaseCleanupFailure(MessageHandlerArgs<ITestCaseCleanupFailure> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnError("Test case cleanup failure");
             ReportTestCase("   Failed", args.Message.TestCase, log: OnError);
@@ -416,7 +468,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestAssemblyStarting(MessageHandlerArgs<ITestAssemblyStarting> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnInfo($"[Test environment: {args.Message.TestEnvironment}]");
             OnInfo($"[Test framework: {args.Message.TestFrameworkDisplayName}]");
@@ -427,7 +481,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestAssemblyFinished(MessageHandlerArgs<ITestAssemblyFinished> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             TotalTests = args.Message.TestsRun; // HACK: We are not counting correctly all the tests
             OnDebug("Execution process for assembly finished");
@@ -439,7 +495,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestAssemblyCleanupFailure(MessageHandlerArgs<ITestAssemblyCleanupFailure> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnError("Assembly cleanup failure");
             LogAssemblyInformation(args.Message, OnError);
@@ -450,7 +508,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleBeforeTestStarting(MessageHandlerArgs<IBeforeTestStarting> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             // notify that a method is starting
             OnTestStarted(args.Message.Test.DisplayName);
@@ -460,7 +520,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleBeforeTestFinished(MessageHandlerArgs<IBeforeTestFinished> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDiagnostic($"'Before' method for test '{args.Message.Test.DisplayName}' finished");
         }
@@ -468,7 +530,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleAfterTestStarting(MessageHandlerArgs<IAfterTestStarting> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDiagnostic($"'After' method for test '{args.Message.Test.DisplayName}' starting");
         }
@@ -476,20 +540,27 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleAfterTestFinished(MessageHandlerArgs<IAfterTestFinished> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
+
             OnDiagnostic($"'After' method for test '{args.Message.Test.DisplayName}' finished");
         }
 
         private void HandleTestExecutionSummary(MessageHandlerArgs<ITestExecutionSummary> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnInfo("All tests finished");
             OnInfo($"    Elapsed time: {args.Message.ElapsedClockTime}");
 
             if (args.Message.Summaries == null || args.Message.Summaries.Count == 0)
+            {
                 return;
+            }
 
             foreach (KeyValuePair<string, ExecutionSummary> summary in args.Message.Summaries)
             {
@@ -502,7 +573,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestAssemblyExecutionStarting(MessageHandlerArgs<ITestAssemblyExecutionStarting> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnInfo($"Execution starting for assembly {args.Message.Assembly.AssemblyFilename}");
         }
@@ -510,7 +583,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestAssemblyExecutionFinished(MessageHandlerArgs<ITestAssemblyExecutionFinished> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnInfo($"Execution finished for assembly {args.Message.Assembly.AssemblyFilename}");
             LogSummary(args.Message.ExecutionSummary, log: OnDebug);
@@ -519,7 +594,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestAssemblyDiscoveryStarting(MessageHandlerArgs<ITestAssemblyDiscoveryStarting> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnInfo($"Discovery for assembly {args.Message.Assembly.AssemblyFilename} starting");
             OnInfo($"   Will use AppDomain: {args.Message.AppDomain.YesNo()}");
@@ -528,7 +605,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleTestAssemblyDiscoveryFinished(MessageHandlerArgs<ITestAssemblyDiscoveryFinished> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnInfo($"Discovery for assembly {args.Message.Assembly.AssemblyFilename} finished");
             OnInfo($"   Test cases discovered: {args.Message.TestCasesDiscovered}");
@@ -538,7 +617,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleDiagnosticMessage(MessageHandlerArgs<IDiagnosticMessage> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnDiagnostic(args.Message.Message);
         }
@@ -546,7 +627,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleDiagnosticErrorMessage(MessageHandlerArgs<IErrorMessage> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             LogFailureInformation(args.Message);
         }
@@ -554,7 +637,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleDiscoveryCompleteMessage(MessageHandlerArgs<IDiscoveryCompleteMessage> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             OnInfo("Discovery complete");
         }
@@ -562,7 +647,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void HandleDiscoveryTestCaseMessage(MessageHandlerArgs<ITestCaseDiscoveryMessage> args)
         {
             if (args == null || args.Message == null)
+            {
                 return;
+            }
 
             ITestCase singleTestCase = args.Message.TestCase;
             ReportTestCases("Discovered", args.Message.TestCases, log: OnInfo, ignore: (ITestCase tc) => tc == singleTestCase);
@@ -588,12 +675,17 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void ReportTestCases(string verb, IEnumerable<ITestCase> testCases, Action<string> log = null, Func<ITestCase, bool> ignore = null)
         {
             if (testCases == null)
+            {
                 return;
+            }
 
             foreach (ITestCase tc in testCases)
             {
                 if (ignore != null && ignore(tc))
+                {
                     continue;
+                }
+
                 ReportTestCase(verb, tc, log);
             }
         }
@@ -601,7 +693,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void ReportTestCase(string verb, ITestCase testCase, Action<string> log = null)
         {
             if (testCase == null)
+            {
                 return;
+            }
 
             EnsureLogger(log)($"{verb} test case: {testCase.DisplayName}");
         }
@@ -609,7 +703,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void LogAssemblyInformation(ITestAssemblyMessage message, Action<string> log = null, StringBuilder sb = null)
         {
             if (message == null)
+            {
                 return;
+            }
 
             do_log($"[Assembly name: {message.TestAssembly.Assembly.Name}]", log, sb);
             do_log($"[Assembly path: {message.TestAssembly.Assembly.AssemblyPath}]", OnDiagnostic, sb);
@@ -618,7 +714,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void LogFailureInformation(IFailureInformation info, Action<string> log = null, StringBuilder sb = null)
         {
             if (info == null)
+            {
                 return;
+            }
 
             string message = ExceptionUtility.CombineMessages(info);
             do_log($"   Exception messages: {message}", log, sb);
@@ -646,7 +744,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             {
                 do_log(" **** Output start ****", log, sb);
                 foreach (string line in output.Split('\n'))
+                {
                     do_log(line, log, sb);
+                }
+
                 do_log(" **** Output end ****", log, sb);
             }
         }
@@ -664,7 +765,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         {
             do_log($"   Test name: {test.DisplayName}", log, sb);
             if (string.Compare(test.DisplayName, test.TestCase.DisplayName, StringComparison.Ordinal) != 0)
+            {
                 do_log($"   Test case: {test.TestCase.DisplayName}", log, sb);
+            }
         }
 
         private void LogSummary(IFinishedMessage summary, Action<string> log = null, StringBuilder sb = null)
@@ -687,11 +790,15 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private void LogSourceInformation(ISourceInformation source, Action<string> log = null, StringBuilder sb = null)
         {
             if (source == null || string.IsNullOrEmpty(source.FileName))
+            {
                 return;
+            }
 
             string location = source.FileName;
             if (source.LineNumber != null && source.LineNumber >= 0)
+            {
                 location += $":{source.LineNumber}";
+            }
 
             do_log($"   Source: {location}", log, sb);
             sb?.AppendLine();
@@ -701,7 +808,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         {
             string name = assembly?.Assembly?.Name?.Trim();
             if (string.IsNullOrEmpty(name))
+            {
                 return name;
+            }
+
             return $" [{name}]";
         }
 
@@ -710,7 +820,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             log = EnsureLogger(log);
 
             if (sb != null)
+            {
                 sb.Append(message);
+            }
+
             log(message);
         }
 
@@ -720,15 +833,21 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             var registration = ThreadPool.RegisterWaitForSingleObject(handle, (_, timedOut) =>
             {
                 if (timedOut)
+                {
                     tcs.TrySetCanceled();
+                }
                 else
+                {
                     tcs.TrySetResult(null);
+                }
             }, tcs, timeout, true);
 
             try
             {
                 if (!tcs.Task.IsCompleted)
+                {
                     await tcs.Task.ConfigureAwait(false);
+                }
             }
             finally
             {
@@ -739,7 +858,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public override async Task Run(IEnumerable<TestAssemblyInfo> testAssemblies)
         {
             if (testAssemblies == null)
+            {
                 throw new ArgumentNullException(nameof(testAssemblies));
+            }
 
             if (_filters != null && _filters.Count > 0)
             {
@@ -755,7 +876,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             foreach (TestAssemblyInfo assemblyInfo in testAssemblies)
             {
                 if (assemblyInfo == null || assemblyInfo.Assembly == null || _filters.IsExcluded(assemblyInfo, log))
+                {
                     continue;
+                }
 
                 if (string.IsNullOrEmpty(assemblyInfo.FullPath))
                 {
@@ -779,7 +902,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 {
                     OnAssemblyFinish(assemblyInfo.Assembly);
                     if (assemblyElement != null)
+                    {
                         _assembliesElement.Add(assemblyElement);
+                    }
                 }
             }
 
@@ -790,7 +915,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public override string WriteResultsToFile(XmlResultJargon jargon)
         {
             if (_assembliesElement == null)
+            {
                 return string.Empty;
+            }
             // remove all the empty nodes
             _assembliesElement.Descendants().Where(e => e.Name == "collection" && !e.Descendants().Any()).Remove();
             string outputFilePath = GetResultsFilePath();
@@ -817,7 +944,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public override void WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
         {
             if (_assembliesElement == null)
+            {
                 return;
+            }
             // remove all the empty nodes
             _assembliesElement.Descendants().Where(e => e.Name == "collection" && !e.Descendants().Any()).Remove();
             var settings = new XmlWriterSettings { Indent = true };
@@ -858,7 +987,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             var xmlTransform = new System.Xml.Xsl.XslCompiledTransform();
             var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith(xsltResourceName, StringComparison.Ordinal)).FirstOrDefault();
             if (name == null)
+            {
                 return;
+            }
+
             using (var xsltStream = GetType().Assembly.GetManifestResourceStream(name))
             {
                 if (xsltStream == null)
@@ -884,15 +1016,21 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         protected virtual Stream GetConfigurationFileStream(Assembly assembly)
         {
             if (assembly == null)
+            {
                 throw new ArgumentNullException(nameof(assembly));
+            }
 
             string path = assembly.Location?.Trim();
             if (string.IsNullOrEmpty(path))
+            {
                 return null;
+            }
 
             path = Path.Combine(path, ".xunit.runner.json");
             if (!File.Exists(path))
+            {
                 return null;
+            }
 
             return File.OpenRead(path);
         }
@@ -900,7 +1038,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         protected virtual TestAssemblyConfiguration GetConfiguration(Assembly assembly)
         {
             if (assembly == null)
+            {
                 throw new ArgumentNullException(nameof(assembly));
+            }
 
             Stream configStream = GetConfigurationFileStream(assembly);
             if (configStream != null)
@@ -917,7 +1057,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         protected virtual ITestFrameworkDiscoveryOptions GetFrameworkOptionsForDiscovery(TestAssemblyConfiguration configuration)
         {
             if (configuration == null)
+            {
                 throw new ArgumentNullException(nameof(configuration));
+            }
 
             return TestFrameworkOptions.ForDiscovery(configuration);
         }
@@ -925,7 +1067,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         protected virtual ITestFrameworkExecutionOptions GetFrameworkOptionsForExecution(TestAssemblyConfiguration configuration)
         {
             if (configuration == null)
+            {
                 throw new ArgumentNullException(nameof(configuration));
+            }
 
             return TestFrameworkOptions.ForExecution(configuration);
         }
@@ -960,7 +1104,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                         FilteredTests += discoverySink.TestCases.Count - testCases.Count;
                     }
                     else
+                    {
                         testCases = discoverySink.TestCases;
+                    }
 
                     var assemblyElement = new XElement("assembly");
                     IExecutionSink resultsSink = new DelegatingExecutionSummarySink(_messageSink, null, null);
@@ -1018,7 +1164,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public override void SkipCategories(IEnumerable<string> categories)
         {
             if (categories == null)
+            {
                 throw new ArgumentNullException(nameof(categories));
+            }
 
             foreach (var c in categories)
             {

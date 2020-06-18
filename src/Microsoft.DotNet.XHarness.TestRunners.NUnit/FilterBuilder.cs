@@ -64,7 +64,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
         {
             var whereClause = BuildWhereClause();
             if (!string.IsNullOrEmpty(whereClause))
+            {
                 _testFilterBuilder.SelectWhere(BuildWhereClause());
+            }
+
             return _testFilterBuilder.GetFilter();
         }
     }

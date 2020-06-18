@@ -29,7 +29,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             System.IO.Directory.CreateDirectory(directory);
             var rv = new LogFile(name, Path.GetFullPath(Path.Combine(directory, filename)));
             if (timestamp.HasValue)
+            {
                 rv.Timestamp = timestamp.Value;
+            }
+
             Add(rv);
             return rv;
         }
@@ -45,7 +48,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public IFileBackedLog AddFile(string path, string name)
         {
             if (path == null)
+            {
                 throw new ArgumentNullException(nameof(path));
+            }
 
             if (!path.StartsWith(Directory, StringComparison.Ordinal))
             {
@@ -63,7 +68,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public string CreateFile(string path, string description)
         {
             if (path == null)
+            {
                 throw new ArgumentNullException(nameof(path));
+            }
+
             using (var rv = new LogFile(description, Path.Combine(Directory, path), false))
             {
                 Add(rv);
@@ -74,7 +82,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public void Dispose()
         {
             foreach (var log in this)
+            {
                 log.Dispose();
+            }
         }
     }
 }

@@ -27,7 +27,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public void Write(string value)
         {
             if (Timestamp)
+            {
                 value = DateTime.Now.ToString("HH:mm:ss.fffffff") + " " + value;
+            }
 
             WriteImpl(value);
         }

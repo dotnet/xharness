@@ -25,7 +25,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             _writer = writer ?? Console.Out;
             _device = device;
             if (_device != null) // we just write the header if we do have the device info
+            {
                 InitLogging();
+            }
         }
 
         [System.Runtime.InteropServices.DllImport("/usr/lib/libobjc.dylib")]
@@ -45,7 +47,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public void OnError(string message)
         {
             if (MinimumLogLevel < MinimumLogLevel.Error)
+            {
                 return;
+            }
+
             _writer.WriteLine(message);
             _writer.Flush();
         }
@@ -53,7 +58,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public void OnWarning(string message)
         {
             if (MinimumLogLevel < MinimumLogLevel.Warning)
+            {
                 return;
+            }
+
             _writer.WriteLine(message);
             _writer.Flush();
         }
@@ -61,7 +69,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public void OnDebug(string message)
         {
             if (MinimumLogLevel < MinimumLogLevel.Debug)
+            {
                 return;
+            }
+
             _writer.WriteLine(message);
             _writer.Flush();
         }
@@ -69,7 +80,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public void OnDiagnostic(string message)
         {
             if (MinimumLogLevel < MinimumLogLevel.Verbose)
+            {
                 return;
+            }
+
             _writer.WriteLine(message);
             _writer.Flush();
         }
@@ -77,7 +91,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public void OnInfo(string message)
         {
             if (MinimumLogLevel < MinimumLogLevel.Info)
+            {
                 return;
+            }
+
             _writer.WriteLine(message);
             _writer.Flush();
         }

@@ -188,7 +188,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
             _value = value ?? throw new ArgumentNullException(nameof(value));
 
             if (isAppArg)
+            {
                 _value = "-app-arg:" + _value;
+            }
         }
 
         public override string AsCommandLineArgument() => "-argument=" + _value;
@@ -208,7 +210,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
             _variableValue = variableValue?.ToString() ?? throw new ArgumentNullException(nameof(variableValue));
 
             if (variableValue is bool)
+            {
                 _variableValue = _variableValue.ToLower();
+            }
         }
 
         public override string AsCommandLineArgument() => Escape($"-setenv={_variableName}={_variableValue}");
@@ -329,7 +333,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
         public TcpTunnelArgument(int port)
         {
             if (port <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(port));
+            }
+
             _port = port;
         }
 

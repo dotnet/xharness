@@ -51,7 +51,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 {
                     // filter does not exclude, that means that if it include, we should include and break the
                     // loop, always include
-                    if (!doesExclude) return false;
+                    if (!doesExclude)
+                    {
+                        return false;
+                    }
                 }
             }
 

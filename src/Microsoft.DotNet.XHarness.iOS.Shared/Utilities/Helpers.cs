@@ -33,7 +33,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public Guid GenerateStableGuid(string seed = null)
         {
             var bytes = new byte[16];
-            if (seed == null) s_guidGenerator.NextBytes(bytes);
+            if (seed == null)
+            {
+                s_guidGenerator.NextBytes(bytes);
+            }
             else
             {
                 using (var provider = MD5.Create())

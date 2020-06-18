@@ -93,7 +93,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             {
                 // wait a second just in case more data arrives.
                 if (!_stopped.Task.Wait(TimeSpan.FromSeconds(1)))
+                {
                     Stop();
+                }
             }
             catch
             {

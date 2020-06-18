@@ -170,7 +170,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         internal static string WriteResults(TestRunner runner, ApplicationOptions options, LogWriter logger, TextWriter writer)
         {
             if (options.EnableXml && writer == null)
+            {
                 throw new ArgumentNullException(nameof(writer));
+            }
 
             string resultsFilePath = null;
             if (options.EnableXml)

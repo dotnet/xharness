@@ -191,7 +191,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                 // replace all . for the path separator, since that is how resource names are built
                 lastIndex = resourceName.LastIndexOf('.');
                 if (resourceFullName.Contains(".designer.cs"))
+                {
                     lastIndex = resourceName.LastIndexOf(".designer.cs");
+                }
+
                 if (lastIndex > 0)
                 {
                     var partialPath = resourceName.Substring(0, lastIndex).Replace('.', Path.DirectorySeparatorChar);
@@ -281,10 +284,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             lock (_srcGeneratedLock)
             {
                 if (_srcGenerated)
+                {
                     return;
+                }
                 // mk the expected directories
                 if (Directory.Exists(srcOuputPath))
+                {
                     Directory.Delete(srcOuputPath, true); // delete, we always want to add the embedded src
+                }
+
                 BuildSrcTree(srcOuputPath);
                 // the code is simple, we are going to look for all the resources that we know are src and will write a
                 // copy of the stream in the designated output path
@@ -369,7 +377,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             // all the data is provided by the filter, if we have no filter, return an empty string so that the project does not have any
             // includes.
             if (ProjectFilter == null)
+            {
                 return string.Empty;
+            }
+
             var contentFiles = new StringBuilder();
             foreach (var path in ProjectFilter.GetIgnoreFiles(projectName, info.Assemblies, platform))
             {
@@ -442,7 +453,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                 foreach ((string assembly, string hintPath) in info.Assemblies)
                 {
                     if (ProjectFilter == null || !ProjectFilter.ExcludeDll(Platform.WatchOS, assembly))
+                    {
                         sb.AppendLine(GetReferenceNode(assembly, hintPath));
+                    }
                 }
             }
 
@@ -474,10 +487,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                 // TODO: The following is very similar to what is done in the iOS generation. Must be grouped
                 var projectDefinition = new ProjectDefinition(Name, AssemblyLocator, AssemblyDefinitionFactory, Assemblies, ExtraArgs);
                 if (ProjectFilter != null && ProjectFilter.ExludeProject(projectDefinition, Platform.WatchOS)) // if it is ignored, continue
+                {
                     continue;
+                }
 
                 if (!projectDefinition.Validate())
+                {
                     throw new InvalidOperationException("xUnit and NUnit assemblies cannot be mixed in a test project.");
+                }
+
                 var generatedCodeDir = Path.Combine(GeneratedCodePathRoot, projectDefinition.Name, "watch");
                 if (!Directory.Exists(generatedCodeDir))
                 {
@@ -585,7 +603,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                 foreach ((string assembly, string hintPath) in info.Assemblies)
                 {
                     if (ProjectFilter == null || !ProjectFilter.ExcludeDll(Platform.iOS, assembly))
+                    {
                         sb.AppendLine(GetReferenceNode(assembly, hintPath));
+                    }
                 }
             }
 
@@ -608,20 +628,33 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
         private async Task<GeneratedProjects> GenerateiOSTestProjectsAsync(IEnumerable<(string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier)> projects, Platform platform)
         {
             if (platform == Platform.WatchOS)
+            {
                 throw new ArgumentException(nameof(platform));
+            }
+
             if (!projects.Any()) // return an empty list
+            {
                 return new GeneratedProjects();
+            }
+
             var projectPaths = new GeneratedProjects();
             foreach ((string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier) in projects)
             {
                 if (Assemblies.Length == 0)
+                {
                     continue;
+                }
+
                 var projectDefinition = new ProjectDefinition(Name, AssemblyLocator, AssemblyDefinitionFactory, Assemblies, ExtraArgs);
                 if (ProjectFilter != null && ProjectFilter.ExludeProject(projectDefinition, Platform.WatchOS)) // if it is ignored, continue
+                {
                     continue;
+                }
 
                 if (!projectDefinition.Validate())
+                {
                     throw new InvalidOperationException("xUnit and NUnit assemblies cannot be mixed in a test project.");
+                }
                 // generate the required type registration info
                 var generatedCodeDir = Path.Combine(GeneratedCodePathRoot, projectDefinition.Name, platform == Platform.iOS ? "ios" : "tv");
                 if (!Directory.Exists(generatedCodeDir))
@@ -686,7 +719,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
                 foreach ((string assembly, string hintPath) in info.Assemblies)
                 {
                     if (ProjectFilter == null || !ProjectFilter.ExcludeDll(platform, assembly))
+                    {
                         sb.AppendLine(GetReferenceNode(assembly, hintPath));
+                    }
                 }
             }
 
@@ -727,13 +762,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed
             foreach ((string Name, string[] Assemblies, string ExtraArgs, double TimeoutMultiplier) in projects)
             {
                 if (!Assemblies.Any())
+                {
                     continue;
+                }
+
                 var projectDefinition = new ProjectDefinition(Name, AssemblyLocator, AssemblyDefinitionFactory, Assemblies, ExtraArgs);
                 if (ProjectFilter != null && ProjectFilter.ExludeProject(projectDefinition, platform))
+                {
                     continue;
+                }
 
                 if (!projectDefinition.Validate())
+                {
                     throw new InvalidOperationException("xUnit and NUnit assemblies cannot be mixed in a test project.");
+                }
                 // generate the required type registration info
                 var generatedCodeDir = Path.Combine(GeneratedCodePathRoot, projectDefinition.Name, "mac");
                 Directory.CreateDirectory(generatedCodeDir);

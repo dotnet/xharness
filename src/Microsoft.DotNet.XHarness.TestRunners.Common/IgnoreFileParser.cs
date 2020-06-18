@@ -38,7 +38,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             {
                 line = ParseLine(line);
                 if (string.IsNullOrEmpty(line))
+                {
                     continue;
+                }
+
                 ignoredMethods.Add(line);
             }
             return ignoredMethods;
@@ -68,7 +71,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public static async Task<IEnumerable<string>> ParseContentFilesAsync(string contentDir)
         {
             if (string.IsNullOrEmpty(contentDir))
+            {
                 return Array.Empty<string>();
+            }
 
             var ignoredTests = new List<string>();
             foreach (var f in Directory.GetFiles(contentDir, "*.ignore"))
@@ -90,7 +95,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             while ((line = await reader.ReadLineAsync()) != null)
             {
                 if (string.IsNullOrEmpty(line))
+                {
                     continue;
+                }
+
                 ignoredTraits.Add(line);
             }
             return ignoredTraits;
@@ -112,7 +120,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 while ((line = reader.ReadLine()) != null)
                 {
                     if (string.IsNullOrEmpty(line))
+                    {
                         continue;
+                    }
+
                     ignoredTraits.Add(line);
                 }
             }
@@ -132,7 +143,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
                         line = ParseLine(line);
                         if (string.IsNullOrEmpty(line))
+                        {
                             continue;
+                        }
+
                         ignoredTests.Add(line);
                     }
                 }

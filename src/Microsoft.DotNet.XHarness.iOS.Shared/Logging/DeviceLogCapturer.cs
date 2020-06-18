@@ -92,11 +92,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public void StopCapture()
         {
             if (_process.HasExited)
+            {
                 return;
+            }
 
             _process.StandardInput.WriteLine();
             if (_process.WaitForExit((int)TimeSpan.FromSeconds(5).TotalMilliseconds))
+            {
                 return;
+            }
 
             _processManager.KillTreeAsync(_process, _mainLog, diagnostics: false).Wait();
             _process.Dispose();

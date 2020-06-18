@@ -83,7 +83,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 try
                 {
                     if (Directory.Exists(dir))
+                    {
                         Directory.Delete(dir, true);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -104,7 +106,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             {
                 simulator_app = Path.Combine(_processManager.XcodeRoot, "Contents", "Developer", "Applications", "Simulator.app");
                 if (!Directory.Exists(simulator_app))
+                {
                     simulator_app = Path.Combine(_processManager.XcodeRoot, "Contents", "Developer", "Applications", "iOS Simulator.app");
+                }
             }
 
             await _processManager.ExecuteCommandAsync("open", new[] { "-a", simulator_app, "--args", "-CurrentDeviceUDID", UDID }, log, TimeSpan.FromSeconds(15));

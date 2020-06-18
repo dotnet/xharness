@@ -111,7 +111,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 {
                     var testClass = CreateTestClass(type);
                     if (!FindTestsForType(testClass, includeSourceInformation, messageBus, discoveryOptions))
+                    {
                         break;
+                    }
                 }
 
                 messageBus.QueueMessage(new global::Xunit.Sdk.DiscoveryCompleteMessage());

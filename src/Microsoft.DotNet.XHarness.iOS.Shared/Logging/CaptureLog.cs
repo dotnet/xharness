@@ -51,17 +51,25 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public void StartCapture()
         {
             if (_entireFile)
+            {
                 return;
+            }
 
             if (File.Exists(CapturePath))
+            {
                 _startPosition = new FileInfo(CapturePath).Length;
+            }
+
             _started = true;
         }
 
         public void StopCapture()
         {
             if (!_started && !_entireFile)
+            {
                 throw new InvalidOperationException("StartCapture most be called before StopCature on when the entire file will be captured.");
+            }
+
             if (!File.Exists(CapturePath))
             {
                 File.WriteAllText(FullPath, $"Could not capture the file '{CapturePath}' because it doesn't exist.");
@@ -82,7 +90,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         private void Capture()
         {
             if (_startPosition == 0 || _entireFile)
+            {
                 return;
+            }
 
             if (!File.Exists(CapturePath))
             {
@@ -92,7 +102,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
             var currentEndPosition = _endPosition;
             if (currentEndPosition == 0)
+            {
                 currentEndPosition = new FileInfo(CapturePath).Length;
+            }
 
             var length = (int)(currentEndPosition - _startPosition);
             var currentLength = new FileInfo(CapturePath).Length;
@@ -106,14 +118,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             }
 
             if (File.Exists(FullPath))
+            {
                 capturedLength = new FileInfo(FullPath).Length;
+            }
 
             // capture 1k more data than when we stopped, since the system log
             // is cached in memory and flushed once in a while (so when the app
             // requests the system log to be captured, it's usually not complete).
             var availableLength = currentLength - _startPosition;
             if (availableLength <= capturedLength)
+            {
                 return; // We've captured before, and nothing new as added since last time.
+            }
 
             // Capture at most 1k more
             availableLength = Math.Min(availableLength, length + 1024);

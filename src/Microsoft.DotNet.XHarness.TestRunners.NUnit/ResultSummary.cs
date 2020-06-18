@@ -35,7 +35,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             get
             {
                 if (_assertCount.HasValue)
+                {
                     return _assertCount.Value;
+                }
                 // not super efficient
                 GetSummaryData();
                 return _assertCount!.Value;
@@ -47,7 +49,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             get
             {
                 if (_duration.HasValue)
+                {
                     return _duration.Value;
+                }
                 // not very efficient, but we should not cate too much
                 GetSummaryData();
                 return _duration!.Value;
@@ -61,7 +65,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
             foreach (var result in this)
             {
                 var testRunNode = result.Result.FirstChild;
-                if (testRunNode.Name != "test-run") continue;
+                if (testRunNode.Name != "test-run")
+                {
+                    continue;
+                }
+
                 if (double.TryParse(testRunNode.Attributes["time"].Value, out var time))
                 {
                     duration += time;

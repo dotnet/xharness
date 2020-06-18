@@ -22,7 +22,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             s_root = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "tmp-test-dir");
             if (Directory.Exists(s_root))
+            {
                 Directory.Delete(s_root, true);
+            }
+
             Directory.CreateDirectory(s_root);
         }
 

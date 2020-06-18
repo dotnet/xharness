@@ -26,10 +26,14 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
         private void TestStarted(XmlNode testEvent)
         {
             if (testEvent == null)
+            {
                 return;
+            }
 
             if (!string.IsNullOrEmpty(_runner.TestsRootDirectory))
+            {
                 Environment.CurrentDirectory = _runner.TestsRootDirectory;
+            }
 
             _logger.OnInfo(testEvent.Attributes["fullname"].Value);
 
@@ -105,7 +109,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
                             stackTrace = stackTrace.Replace("\r\n", "\\r\\n");
                             string[] lines = stackTrace.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                             foreach (string line in lines)
+                            {
                                 sb.AppendLine($"\t\t{line}");
+                            }
                         }
                     }
                 }

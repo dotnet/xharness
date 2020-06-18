@@ -138,14 +138,18 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         protected void LogFailureSummary()
         {
             if (FailureInfos == null || FailureInfos.Count == 0)
+            {
                 return;
+            }
 
             OnInfo("Failed tests:");
             for (int i = 1; i <= FailureInfos.Count; i++)
             {
                 TestFailureInfo info = FailureInfos[i - 1];
                 if (info == null || !info.HasInfo)
+                {
                     continue;
+                }
 
                 OnInfo($"{i}) {info.Message}");
             }
@@ -154,12 +158,16 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         protected virtual string GetResultsFilePath()
         {
             if (string.IsNullOrEmpty(ResultsFileName))
+            {
                 throw new InvalidOperationException("Runner didn't specify a valid results file name");
-
+            }
 
             string resultsPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             if (!Directory.Exists(resultsPath))
+            {
                 Directory.CreateDirectory(resultsPath);
+            }
+
             return Path.Combine(resultsPath, ResultsFileName);
         }
 

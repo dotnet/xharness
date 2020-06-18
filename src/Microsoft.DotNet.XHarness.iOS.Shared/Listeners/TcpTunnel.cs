@@ -50,11 +50,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         public void Open(string device, ITunnelListener simpleListener, TimeSpan timeout, ILog mainLog)
         {
             if (device == null)
+            {
                 throw new ArgumentNullException(nameof(device));
+            }
+
             if (simpleListener == null)
+            {
                 throw new ArgumentNullException(nameof(simpleListener));
+            }
+
             if (mainLog == null)
+            {
                 throw new ArgumentNullException(nameof(mainLog));
+            }
 
             lock (_processExecutionLock)
             {
@@ -94,7 +102,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         public async Task Close()
         {
             if (_cancellationToken == null)
+            {
                 throw new InvalidOperationException("Cannot close tunnel that was not opened.");
+            }
             // cancel process and wait for it to terminate, else we might want to start a second tunnel to the same device
             // which is going to give problems.
             _cancellationToken.Cancel();

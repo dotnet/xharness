@@ -24,7 +24,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public static XUnitFilter CreateSingleFilter(string singleTestName, bool exclude, string? assemblyName = null)
         {
             if (string.IsNullOrEmpty(singleTestName))
+            {
                 throw new ArgumentException("must not be null or empty", nameof(singleTestName));
+            }
 
             return new XUnitFilter
             {
@@ -38,12 +40,17 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public static XUnitFilter CreateAssemblyFilter(string assemblyName, bool exclude)
         {
             if (string.IsNullOrEmpty(assemblyName))
+            {
                 throw new ArgumentException("must not be null or empty", nameof(assemblyName));
+            }
 
             // ensure that the assembly name does have one of the valid extensions
             var fileExtension = Path.GetExtension(assemblyName);
             if (fileExtension != ".dll" && fileExtension != ".exe")
+            {
                 throw new ArgumentException($"Assembly name must have .dll or .exe as extensions. Found extension {fileExtension}");
+            }
+
             return new XUnitFilter
             {
                 AssemblyName = assemblyName,
@@ -55,7 +62,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public static XUnitFilter CreateNamespaceFilter(string namespaceName, bool exclude, string? assemblyName = null)
         {
             if (string.IsNullOrEmpty(namespaceName))
+            {
                 throw new ArgumentException("must not be null or empty", nameof(namespaceName));
+            }
 
             return new XUnitFilter
             {
@@ -69,7 +78,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public static XUnitFilter CreateClassFilter(string className, bool exclude, string? assemblyName = null)
         {
             if (string.IsNullOrEmpty(className))
+            {
                 throw new ArgumentException("must not be null or empty", nameof(className));
+            }
 
             return new XUnitFilter
             {
@@ -83,7 +94,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public static XUnitFilter CreateTraitFilter(string traitName, string? traitValue, bool exclude)
         {
             if (string.IsNullOrEmpty(traitName))
+            {
                 throw new ArgumentException("must not be null or empty", nameof(traitName));
+            }
 
             return new XUnitFilter
             {
@@ -173,7 +186,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public bool IsExcluded(TestAssemblyInfo assembly, Action<string>? reportFilteredAssembly = null)
         {
             if (FilterType != XUnitFilterType.Assembly)
+            {
                 throw new InvalidOperationException("Filter is not targeting assemblies.");
+            }
 
             Func<bool, bool> log = (result) => ReportFilteredAssembly(assembly, result, reportFilteredAssembly);
 
@@ -196,7 +211,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         {
             Func<bool, bool>? reportFilteredTest = null;
             if (log != null)
+            {
                 reportFilteredTest = (result) => ReportFilteredTest(testCase, result, log);
+            }
+
             return FilterType switch
             {
                 XUnitFilterType.Trait => ApplyTraitFilter(testCase, reportFilteredTest),
@@ -213,7 +231,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             const string excludedText = "Excluded";
 
             if (log == null)
+            {
                 return excluded;
+            }
 
             var selector = FilterType == XUnitFilterType.Trait ?
                 $"'{SelectorName}':'{SelectorValue}'" : $"'{SelectorValue}'";
@@ -225,7 +245,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private bool ReportFilteredAssembly(TestAssemblyInfo assemblyInfo, bool excluded, Action<string>? log = null)
         {
             if (log == null)
+            {
                 return excluded;
+            }
 
             const string includedPrefix = "Included";
             const string excludedPrefix = "Excluded";
@@ -237,7 +259,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private static void AppendDesc(StringBuilder sb, string name, string? value)
         {
             if (string.IsNullOrEmpty(value))
+            {
                 return;
+            }
 
             sb.Append($"; {name}: {value}");
         }
@@ -250,7 +274,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             sb.Append(Exclude ? "exclude" : "include");
 
             if (!string.IsNullOrEmpty(AssemblyName))
+            {
                 sb.Append($"; AssemblyName: {AssemblyName}");
+            }
 
             switch (FilterType)
             {

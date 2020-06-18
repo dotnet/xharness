@@ -80,9 +80,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             else if (v.StartsWith("PercentComplete: ", StringComparison.Ordinal) && int.TryParse(v.Substring("PercentComplete: ".Length).Trim(), out var percent))
             {
                 if (CopyingApp)
+                {
                     AppPercentComplete = percent;
+                }
                 else if (CopyingWatchApp)
+                {
                     WatchAppPercentComplete = percent;
+                }
             }
             else if (v.StartsWith("NumBytes: ", StringComparison.Ordinal) && int.TryParse(v.Substring("NumBytes: ".Length).Trim(), out var num_bytes))
             {
@@ -100,9 +104,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             else if (v.StartsWith("TotalBytes: ", StringComparison.Ordinal) && int.TryParse(v.Substring("TotalBytes: ".Length).Trim(), out var total_bytes))
             {
                 if (CopyingApp)
+                {
                     AppTotalBytes = total_bytes;
+                }
                 else if (CopyingWatchApp)
+                {
                     WatchAppTotalBytes = total_bytes;
+                }
             }
 
             ResetTimer();

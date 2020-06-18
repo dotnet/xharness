@@ -48,9 +48,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             _symbolicateCrashPath = Path.Combine(processManager.XcodeRoot, "Contents", "SharedFrameworks", "DTDeviceKitBase.framework", "Versions", "A", "Resources", "symbolicatecrash");
             if (!File.Exists(_symbolicateCrashPath))
+            {
                 _symbolicateCrashPath = Path.Combine(processManager.XcodeRoot, "Contents", "SharedFrameworks", "DVTFoundation.framework", "Versions", "A", "Resources", "symbolicatecrash");
+            }
+
             if (!File.Exists(_symbolicateCrashPath))
+            {
                 _symbolicateCrashPath = null;
+            }
         }
 
         public async Task StartCaptureAsync() => _initialCrashes = await CreateCrashReportsSnapshotAsync();
@@ -123,7 +128,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 new DownloadCrashReportArgument(crashFile),
                 new DownloadCrashReportToArgument(crashReportFile.FullPath));
 
-            if (!string.IsNullOrEmpty(_deviceName)) args.Add(new DeviceNameArgument(_deviceName));
+            if (!string.IsNullOrEmpty(_deviceName))
+            {
+                args.Add(new DeviceNameArgument(_deviceName));
+            }
 
             var result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
 
@@ -171,7 +179,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             {
                 var dir = Path.Combine(Environment.GetEnvironmentVariable("HOME"), "Library", "Logs", "DiagnosticReports");
                 if (Directory.Exists(dir))
+                {
                     crashes.UnionWith(Directory.EnumerateFiles(dir));
+                }
             }
             else
             {
@@ -180,11 +190,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 {
                     var args = new MlaunchArguments(new ListCrashReportsArgument(tempFile));
 
-                    if (!string.IsNullOrEmpty(_deviceName)) args.Add(new DeviceNameArgument(_deviceName));
+                    if (!string.IsNullOrEmpty(_deviceName))
+                    {
+                        args.Add(new DeviceNameArgument(_deviceName));
+                    }
 
                     var result = await _processManager.ExecuteCommandAsync(args, _log, TimeSpan.FromMinutes(1));
                     if (result.Succeeded)
+                    {
                         crashes.UnionWith(File.ReadAllLines(tempFile));
+                    }
                 }
                 finally
                 {

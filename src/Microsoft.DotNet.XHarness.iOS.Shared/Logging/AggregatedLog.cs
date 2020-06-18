@@ -31,25 +31,33 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             protected override void WriteImpl(string value)
             {
                 foreach (var log in _logs)
+                {
                     log.Write(value);
+                }
             }
 
             public override void Write(byte[] buffer, int offset, int count)
             {
                 foreach (var log in _logs)
+                {
                     log.Write(buffer, offset, count);
+                }
             }
 
             public override void Flush()
             {
                 foreach (var log in _logs)
+                {
                     log.Flush();
+                }
             }
 
             public override void Dispose()
             {
                 foreach (var log in _logs)
+                {
                     log.Dispose();
+                }
             }
         }
 

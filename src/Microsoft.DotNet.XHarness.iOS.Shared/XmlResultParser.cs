@@ -25,14 +25,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         {
             type = XmlResultJargon.Missing;
             if (!File.Exists(path))
+            {
                 return false;
+            }
 
             using var stream = File.OpenText(path);
             string? line;
             while ((line = stream.ReadLine()) != null)
             { // special case when get got the tcp connection
                 if (line.Contains("ping"))
+                {
                     continue;
+                }
+
                 if (line.Contains("test-run"))
                 { // first element of the NUnitV3 test collection
                     type = XmlResultJargon.NUnitV3;
@@ -87,7 +92,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         do
                         {
                             if (reader.Name != "test-case")
+                            {
                                 break;
+                            }
                             // read the test cases in the current node
                             var status = reader["result"];
                             switch (status)
@@ -160,7 +167,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     {
                         // move fwd to get to the CData
                         if (reader.Read())
+                        {
                             writer.Write(reader.Value);
+                        }
                     }
                 }
             }
@@ -204,7 +213,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         do
                         {
                             if (reader.Name != "test-case")
+                            {
                                 break;
+                            }
                             // read the test cases in the current node
                             var status = reader["result"];
                             switch (status)
@@ -277,7 +288,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                         do
                         {
                             if (reader.Name != "test")
+                            {
                                 break;
+                            }
                             // read the test cases in the current node
                             var status = reader["result"];
                             switch (status)
@@ -341,11 +354,21 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 string? line;
                 while ((line = reader.ReadLine()) != null)
                 {
-                    if (line.StartsWith("ping", StringComparison.Ordinal) || line.Contains("TouchUnitTestRun") || line.Contains("NUnitOutput") || line.Contains("<!--")) continue;
-                    if (line == "") // remove white lines, some files have them
+                    if (line.StartsWith("ping", StringComparison.Ordinal) || line.Contains("TouchUnitTestRun") || line.Contains("NUnitOutput") || line.Contains("<!--"))
+                    {
                         continue;
+                    }
+
+                    if (line == "") // remove white lines, some files have them
+                    {
+                        continue;
+                    }
+
                     if (line.Contains("TouchUnitExtraData")) // always last node in TouchUnit
+                    {
                         break;
+                    }
+
                     writer.WriteLine(line);
                 }
             }
@@ -383,7 +406,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     long.TryParse(reader["errors"], out var errors);
                     long.TryParse(reader["failed"], out var failed);
                     if (errors == 0 && failed == 0)                         // if we do not have any errors, return, nothing to be written here
+                    {
                         return;
+                    }
+
                     writer.WriteLine("<div style='padding-left: 15px;'>");
                     writer.WriteLine("<ul>");
 
@@ -391,7 +417,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     do
                     {
                         if (reader.Name != "test-case")
+                        {
                             break;
+                        }
                         // read the test cases in the current node
                         var status = reader["result"];
                         switch (status)
@@ -429,7 +457,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 {
                     long.TryParse(reader["failed"], out var failed);
                     if (failed == 0)
+                    {
                         break;
+                    }
                 }
 
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "test-suite" && (reader["type"] == "TestFixture" || reader["type"] == "ParameterizedFixture"))
@@ -438,7 +468,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     do
                     {
                         if (reader.Name != "test-case")
+                        {
                             break;
+                        }
                         // read the test cases in the current node
                         var status = reader["result"];
                         switch (status)
@@ -489,7 +521,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     do
                     {
                         if (reader.Name != "test")
+                        {
                             break;
+                        }
                         // read the test cases in the current node
                         var status = reader["result"];
                         switch (status)
@@ -565,7 +599,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             var testSuitesElements = doc.Descendants().Where(e => e.Name == "test-suite" && e.Attribute("type")?.Value == "Assembly");
             if (!testSuitesElements.Any())
+            {
                 return;
+            }
 
             // add the attachments to the first test-suite, this will add the attachmnets to it, which will be added to the test-run, the pipeline
             // SHOULD NOT merge runs, else this upload will be really hard to use. Also, just to one of them, else we have duplicated logs.
@@ -826,7 +862,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         public static string GetVSTSFilename(string filename)
         {
             if (filename == null)
+            {
                 throw new ArgumentNullException(nameof(filename));
+            }
+
             var dirName = Path.GetDirectoryName(filename);
             return dirName == null ? $"vsts-{Path.GetFileName(filename)}" : Path.Combine(dirName, $"vsts-{Path.GetFileName(filename)}");
         }

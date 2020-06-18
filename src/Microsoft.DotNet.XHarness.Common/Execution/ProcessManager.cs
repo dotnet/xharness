@@ -181,11 +181,15 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             // Send SIGABRT since that produces a crash report
             // lldb may fail to attach to system processes, but crash reports will still be produced with potentially helpful stack traces.
             for (int i = 0; i < pids.Count; i++)
+            {
                 kill(pids[i], 6);
+            }
 
             // send kill -9 anyway as a last resort
             for (int i = 0; i < pids.Count; i++)
+            {
                 kill(pids[i], 9);
+            }
         }
 
         protected static async Task<ProcessExecutionResult> RunAsyncInternal(
@@ -266,13 +270,18 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 var allKeys = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
                 foreach (var key in allKeys)
                 {
-                    if (key == null) continue;
+                    if (key == null)
+                    {
+                        continue;
+                    }
 
                     string? a = null, b = null;
                     currentEnvironment?.TryGetValue(key!, out a);
                     processEnvironment?.TryGetValue(key!, out b);
                     if (a != b)
+                    {
                         sb.Append($"{key}={StringUtils.Quote(b)} ");
+                    }
                 }
             }
             sb.Append($"{StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
@@ -312,7 +321,9 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                     await KillTreeAsyncInternal(process.Id, kill, getChildrenPS, log, diagnostics ?? true);
                     rv.TimedOut = true;
                     lock (stderr)
+                    {
                         log.WriteLine($"{pid} Execution timed out after {timeout.Value.TotalSeconds} seconds and the process was killed.");
+                    }
                 }
             }
             await WaitForExitAsync(process);
@@ -334,7 +345,9 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
         private static async Task<bool> WaitForExitAsync(Process process, TimeSpan? timeout = null)
         {
             if (process.HasExited)
+            {
                 return true;
+            }
 
             var tcs = new TaskCompletionSource<bool>();
 

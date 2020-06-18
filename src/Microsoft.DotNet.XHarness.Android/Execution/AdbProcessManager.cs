@@ -45,7 +45,9 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
                 lock (standardOut)
                 {
                     if (e.Data != null)
+                    {
                         standardOut.AppendLine(e.Data);
+                    }
                 }
             };
 
@@ -54,7 +56,9 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
                 lock (standardErr)
                 {
                     if (e.Data != null)
+                    {
                         standardErr.AppendLine(e.Data);
+                    }
                 }
             };
 

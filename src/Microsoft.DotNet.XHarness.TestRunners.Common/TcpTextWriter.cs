@@ -23,10 +23,14 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         private static string SelectHostName(string[] names, int port)
         {
             if (names.Length == 0)
+            {
                 return null;
+            }
 
             if (names.Length == 1)
+            {
                 return names[0];
+            }
 
             object lock_obj = new object();
             string result = null;
@@ -49,7 +53,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                                lock (lock_obj)
                                {
                                    if (result == null)
+                                   {
                                        result = name;
+                                   }
                                }
                                evt.Set();
                            }
@@ -59,7 +65,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                                {
                                    failures++;
                                    if (failures == names.Length)
+                                   {
                                        evt.Set();
+                                   }
                                }
                            }
                        });
@@ -75,10 +83,15 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public TcpTextWriter(string hostName, int port)
         {
             if ((port < 0) || (port > ushort.MaxValue))
+            {
                 throw new ArgumentOutOfRangeException(nameof(port), $"Port must be between 0 and {ushort.MaxValue}");
+            }
 
             if (hostName == null)
+            {
                 throw new ArgumentNullException(nameof(hostName));
+            }
+
             HostName = SelectHostName(hostName.Split(','), port);
             Port = port;
 

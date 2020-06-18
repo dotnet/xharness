@@ -53,7 +53,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             if (_loaded)
             {
                 if (!forceRefresh)
+                {
                     return;
+                }
+
                 _connectedDevices.Reset();
             }
 
@@ -69,7 +72,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                         new XmlOutputFormatArgument());
 
                     if (listExtraData)
+                    {
                         arguments.Add(new ListExtraDataArgument());
+                    }
 
                     var task = _processManager.RunAsync(process, arguments, log, timeout: TimeSpan.FromSeconds(120));
                     log.WriteLine("Launching {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
@@ -77,7 +82,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     var result = await task;
 
                     if (!result.Succeeded)
+                    {
                         throw new Exception("Failed to list devices.");
+                    }
 
                     var doc = new XmlDocument();
                     doc.LoadWithoutNetworkAccess(tmpfile);
@@ -91,7 +98,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     {
                         Device d = GetDevice(dev);
                         if (d == null)
+                        {
                             continue;
+                        }
+
                         if (!includeLocked && d.IsLocked)
                         {
                             log.WriteLine($"Skipping device {d.Name} ({d.DeviceIdentifier}) because it's locked.");
@@ -170,10 +180,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
             var companion = ConnectedDevices.Where((v) => v.DeviceIdentifier == device.CompanionIdentifier);
             if (companion.Count() == 0)
+            {
                 throw new Exception($"Could not find the companion device for '{device.Name}'");
+            }
 
             if (companion.Count() > 1)
+            {
                 log.WriteLine("Found {0} companion devices for {1}?!?", companion.Count(), device.Name);
+            }
 
             return companion.First();
         }

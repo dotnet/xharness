@@ -50,7 +50,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             Extension? extension = null;
             string extensionPointIdentifier = info_plist.GetNSExtensionPointIdentifier();
             if (!string.IsNullOrEmpty(extensionPointIdentifier))
+            {
                 extension = extensionPointIdentifier.ParseFromNSExtensionPointIdentifier();
+            }
 
             var platform = target.IsSimulator() ? "iPhoneSimulator" : "iPhone";
 
@@ -62,7 +64,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             bool supports32 = arch.Contains("ARMv7", StringComparison.InvariantCultureIgnoreCase) || arch.Contains("i386", StringComparison.InvariantCultureIgnoreCase);
 
             if (!Directory.Exists(appPath))
+            {
                 throw new DirectoryNotFoundException($"The app bundle directory `{appPath}` does not exist");
+            }
 
             string launchAppPath = target.ToRunMode() == RunMode.WatchOS
                 ? Directory.GetDirectories(Path.Combine(appPath, "Watch"), "*.app")[0]

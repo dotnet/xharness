@@ -71,21 +71,28 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                         }
 
                         if (string.IsNullOrEmpty(platform) || string.IsNullOrEmpty(configuration))
+                        {
                             throw new Exception(string.Format("Could not parse the condition: {0}", conditionAttribute.Value));
+                        }
                     }
                 }
                 node = node.ParentNode;
             }
 
             if (string.IsNullOrEmpty(platform) || string.IsNullOrEmpty(configuration))
+            {
                 throw new Exception("Could not find a condition attribute.");
+            }
         }
 
         public static void SetOutputPath(this XmlDocument csproj, string value, bool expand = true)
         {
             var nodes = csproj.SelectNodes("/*/*/*[local-name() = 'OutputPath']");
             if (nodes.Count == 0)
+            {
                 throw new Exception("Could not find node OutputPath");
+            }
+
             foreach (XmlNode n in nodes)
             {
                 if (expand)
@@ -106,7 +113,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             while (node != null)
             {
                 if (!EvaluateCondition(node, platform, configuration))
+                {
                     return false;
+                }
+
                 node = node.ParentNode;
             }
             return true;
@@ -115,17 +125,26 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         private static bool EvaluateCondition(XmlNode node, string platform, string configuration)
         {
             if (node.Attributes == null)
+            {
                 return true;
+            }
 
             var condition = node.Attributes["Condition"];
             if (condition == null)
+            {
                 return true;
+            }
 
             var conditionValue = condition.Value;
             if (configuration != null)
+            {
                 conditionValue = conditionValue.Replace("$(Configuration)", configuration);
+            }
+
             if (platform != null)
+            {
                 conditionValue = conditionValue.Replace("$(Platform)", platform);
+            }
 
             var orsplits = conditionValue.Split(s_orsplitter, StringSplitOptions.None);
             foreach (var orsplit in orsplits)
@@ -140,7 +159,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 var left = eqsplit[0].Trim(s_trimchars);
                 var right = eqsplit[1].Trim(s_trimchars);
                 if (left == right)
+                {
                     return true;
+                }
             }
 
             return false;
@@ -154,11 +175,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var nodes = csproj.SelectNodes($"/*/*/*[local-name() = '{elementName}']");
             if (nodes.Count == 0)
+            {
                 throw new Exception($"Could not find node {elementName}");
+            }
+
             foreach (XmlNode n in nodes)
             {
                 if (IsNodeApplicable(n, platform, configuration))
+                {
                     return n.InnerText.Replace("$(Platform)", platform).Replace("$(Configuration)", configuration);
+                }
             }
             throw new Exception($"Could not find {elementName}");
         }
@@ -192,7 +218,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
 
             if (hasToplevel)
+            {
                 return;
+            }
 
             // Make sure there's a top-level version too.
             var property_group = csproj.SelectSingleNode("/*/*[local-name() = 'PropertyGroup' and not(@Condition)]");
@@ -242,14 +270,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var reference = csproj.SelectSingleNode("/*/*/*[local-name() = 'Reference' and @Include = '" + current + "']");
             if (reference != null)
+            {
                 reference.Attributes["Include"].Value = value;
+            }
         }
 
         public static void RemoveReferences(this XmlDocument csproj, string projectName)
         {
             var reference = csproj.SelectSingleNode("/*/*/*[local-name() = 'Reference' and @Include = '" + projectName + "']");
             if (reference != null)
+            {
                 reference.ParentNode.RemoveChild(reference);
+            }
         }
 
         public static void AddCompileInclude(this XmlDocument csproj, string link, string include, bool prepend = false)
@@ -265,9 +297,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             linkElement.InnerText = link;
             node.AppendChild(linkElement);
             if (prepend)
+            {
                 item_group.PrependChild(node);
+            }
             else
+            {
                 item_group.AppendChild(node);
+            }
         }
 
         public static void FixCompileInclude(this XmlDocument csproj, string include, string newInclude) => csproj.SelectSingleNode($"//*[local-name() = 'Compile' and @Include = '{include}']").Attributes["Include"].Value = newInclude;
@@ -286,7 +322,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var imports = csproj.SelectNodes("/*/*[local-name() = 'Import'][not(@Condition)]");
             if (imports.Count != 1)
+            {
                 throw new Exception("More than one import");
+            }
+
             imports[0].Attributes["Project"].Value = value;
         }
 
@@ -294,10 +333,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var mtouchExtraArgs = csproj.SelectNodes("//*[local-name() = 'MtouchExtraArgs']");
             foreach (XmlNode mea in mtouchExtraArgs)
+            {
                 mea.InnerText = mea.InnerText.Replace("extra-linker-defs.xml", value);
+            }
+
             var nones = csproj.SelectNodes("//*[local-name() = 'None' and @Include = 'extra-linker-defs.xml']");
             foreach (XmlNode none in nones)
+            {
                 none.Attributes["Include"].Value = value;
+            }
         }
 
         public static void AddExtraMtouchArgs(this XmlDocument csproj, string value, string platform, string configuration) => AddToNode(csproj, "MtouchExtraArgs", value, platform, configuration);
@@ -311,23 +355,32 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             foreach (XmlNode mea in nodes)
             {
                 if (!IsNodeApplicable(mea, platform, configuration))
+                {
                     continue;
+                }
 
                 if (mea.InnerText.Length > 0 && mea.InnerText[mea.InnerText.Length - 1] != ' ')
+                {
                     mea.InnerText += " ";
+                }
+
                 mea.InnerText += value;
                 found = true;
             }
 
             if (found)
+            {
                 return;
+            }
 
             // The project might not have this node, so create one of none was found.
             var propertyGroups = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]");
             foreach (XmlNode pg in propertyGroups)
             {
                 if (!EvaluateCondition(pg, platform, configuration))
+                {
                     continue;
+                }
 
                 var mea = csproj.CreateElement(node, MSBuild_Namespace);
                 mea.InnerText = value;
@@ -347,7 +400,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             foreach (XmlNode node in propertyGroups)
             {
                 if (!EvaluateCondition(node, platform, configuration))
+                {
                     continue;
+                }
 
                 yield return node;
             }
@@ -360,21 +415,27 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             foreach (XmlNode xmlnode in projnode)
             {
                 if (!IsNodeApplicable(xmlnode, platform, configuration))
+                {
                     continue;
+                }
 
                 xmlnode.InnerText = value;
                 found = true;
             }
 
             if (found)
+            {
                 return;
+            }
 
             // Not all projects have a MtouchExtraArgs node, so create one of none was found.
             var propertyGroups = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]");
             foreach (XmlNode pg in propertyGroups)
             {
                 if (!EvaluateCondition(pg, platform, configuration))
+                {
                     continue;
+                }
 
                 var mea = csproj.CreateElement(node, MSBuild_Namespace);
                 mea.InnerText = value;
@@ -387,8 +448,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             foreach (var pg in GetPropertyGroups(csproj, platform, configuration))
             {
                 foreach (XmlNode node in pg.ChildNodes)
+                {
                     if (node.Name == name)
+                    {
                         return node.InnerText;
+                    }
+                }
             }
 
             return null;
@@ -398,7 +463,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var imports = csproj.SelectNodes("/*/*[local-name() = 'Import'][not(@Condition)]");
             if (imports.Count != 1)
+            {
                 throw new Exception("More than one import");
+            }
+
             return imports[0].Attributes["Project"].Value;
         }
 
@@ -407,13 +475,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var nodes = csproj.SelectNodes("/*/*/*[local-name() = 'ProjectReference']");
             if (nodes.Count == 0)
+            {
                 return;
+            }
+
             foreach (XmlNode n in nodes)
             {
                 var name = n["Name"].InnerText;
                 string fixed_name = null;
                 if (fixCallback != null && !fixCallback(name, out fixed_name))
+                {
                     continue;
+                }
+
                 var include = n.Attributes["Include"];
                 string fixed_include;
                 if (fixed_name == null)
@@ -452,7 +526,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 if (includeAttribute != null)
                 {
                     foreach (var tl in test_libraries)
+                    {
                         includeAttribute.Value = includeAttribute.Value.Replace($"test-libraries\\.libs\\ios-fat\\{tl}", $"test-libraries\\.libs\\{platform}-fat\\{tl}");
+                    }
                 }
             }
             nodes = csproj.SelectNodes("//*[local-name() = 'Target' and @Name = 'BeforeBuild']");
@@ -462,7 +538,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 if (outputsAttribute != null)
                 {
                     foreach (var tl in test_libraries)
+                    {
                         outputsAttribute.Value = outputsAttribute.Value.Replace($"test-libraries\\.libs\\ios-fat\\${tl}", $"test-libraries\\.libs\\{platform}-fat\\${tl}");
+                    }
                 }
             }
         }
@@ -471,11 +549,17 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var nodes = csproj.SelectNodes("/*/*/*[local-name() = 'MtouchArch']");
             if (nodes.Count == 0)
+            {
                 throw new Exception(string.Format("Could not find MtouchArch at all"));
+            }
+
             foreach (XmlNode n in nodes)
             {
                 if (platform != null && configuration != null && !IsNodeApplicable(n, platform, configuration))
+                {
                     continue;
+                }
+
                 switch (n.InnerText.ToLower())
                 {
                     case "i386":
@@ -510,19 +594,25 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             else
             {
                 if (node.NodeType == XmlNodeType.Text)
+                {
                     node.InnerText = node.InnerText.Replace(find, replace);
+                }
             }
             if (node.Attributes != null)
             {
                 foreach (XmlAttribute attrib in node.Attributes)
+                {
                     attrib.Value = attrib.Value.Replace(find, replace);
+                }
             }
         }
 
         private static void FindAndReplace(XmlNodeList nodes, string find, string replace)
         {
             foreach (XmlNode node in nodes)
+            {
                 FindAndReplace(node, find, replace);
+            }
         }
 
         public static void FixInfoPListInclude(this XmlDocument csproj, string suffix, string fullPath = null, string newName = null)
@@ -536,9 +626,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 if (newName == null)
                 {
                     if (string.IsNullOrEmpty(fullPath))
+                    {
                         newName = value.Replace(fname, $"Info{suffix}.plist");
+                    }
                     else
+                    {
                         newName = value.Replace(fname, $"{fullPath}\\Info{suffix}.plist");
+                    }
                 }
                 import.Attributes["Include"].Value = (!Path.IsPathRooted(unixValue)) ? value.Replace(fname, newName) : newName;
 
@@ -558,7 +652,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             foreach (XmlNode ln in logicalNames)
             {
                 if (!ln.InnerText.Contains("Info.plist"))
+                {
                     continue;
+                }
+
                 return ln.ParentNode;
             }
             var nodes = csproj.SelectNodes("//*[local-name() = 'None' and contains(@Include ,'Info.plist')]");
@@ -572,7 +669,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 return nodes[0]; // return the value, which could be Info.plist or a full path (linked).
             }
             if (throw_if_not_found)
+            {
                 throw new Exception($"Could not find Info.plist include.");
+            }
+
             return null;
         }
 
@@ -582,7 +682,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var nodes = csproj.SelectNodes("//*[local-name() = 'ProjectReference']");
             foreach (XmlNode node in nodes)
+            {
                 yield return node.Attributes["Include"].Value;
+            }
         }
 
         public static IEnumerable<string> GetExtensionProjectReferences(this XmlDocument csproj)
@@ -591,7 +693,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             foreach (XmlNode node in nodes)
             {
                 if (node.SelectSingleNode("./*[local-name () = 'IsAppExtension']") != null)
+                {
                     yield return node.Attributes["Include"].Value;
+                }
             }
         }
 
@@ -602,7 +706,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             {
                 var includeValue = node.Attributes["Include"].Value;
                 if (includeValue.EndsWith("_test.dll", StringComparison.Ordinal) || includeValue.EndsWith("_xunit-test.dll", StringComparison.Ordinal))
+                {
                     yield return includeValue;
+                }
             }
         }
 
@@ -620,7 +726,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                    {
                        var attrib = v.Attributes["Include"];
                        if (attrib == null)
+                       {
                            return false;
+                       }
+
                        return attrib.Value == projectInclude;
                    })
                   .Single()
@@ -683,7 +792,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             foreach (XmlNode def in otherDefines)
             {
                 if (!def.InnerText.Contains("$(DefineConstants"))
+                {
                     def.InnerText += ";$(DefineConstants)";
+                }
             }
         }
 
@@ -695,11 +806,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             foreach (XmlNode xmlnode in projnode)
             {
                 if (string.IsNullOrEmpty(xmlnode.InnerText))
+                {
                     continue;
+                }
 
                 var parent = xmlnode.ParentNode;
                 if (!IsNodeApplicable(parent, platform, configuration))
+                {
                     continue;
+                }
 
                 var existing = xmlnode.InnerText.Split(separator, StringSplitOptions.RemoveEmptyEntries);
                 var any = false;
@@ -715,7 +830,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                     }
                 }
                 if (!any)
+                {
                     continue;
+                }
+
                 xmlnode.InnerText = string.Join(separator[0].ToString(), existing.Where((v) => !string.IsNullOrEmpty(v)));
             }
         }
@@ -727,9 +845,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             {
                 var parent = xmlnode.ParentNode;
                 if (parent.Attributes["Condition"] == null)
+                {
                     continue;
+                }
+
                 if (!IsNodeApplicable(parent, platform, configuration))
+                {
                     continue;
+                }
 
                 if (string.IsNullOrEmpty(xmlnode.InnerText))
                 {
@@ -746,9 +869,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             foreach (XmlNode xmlnode in projnode)
             {
                 if (xmlnode.Attributes["Condition"] == null)
+                {
                     continue;
+                }
+
                 if (!IsNodeApplicable(xmlnode, platform, configuration))
+                {
                     continue;
+                }
 
                 var defines = csproj.CreateElement("DefineConstants", MSBuild_Namespace);
                 defines.InnerText = "$(DefineConstants);" + value;
@@ -763,7 +891,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var nodes = csproj.SelectNodes("/*/*/*[local-name() = '" + node + "']");
             if (nodes.Count == 0)
+            {
                 throw new Exception(string.Format("Could not find node {0}", node));
+            }
+
             foreach (XmlNode n in nodes)
             {
                 n.InnerText = value;
@@ -774,7 +905,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var nodes = csproj.SelectNodes("/*/*/*[local-name() = '" + node + "']");
             if (throwOnInexistentNode && nodes.Count == 0)
+            {
                 throw new Exception(string.Format("Could not find node {0}", node));
+            }
+
             foreach (XmlNode n in nodes)
             {
                 n.ParentNode.RemoveChild(n);
@@ -800,7 +934,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var projnode = csproj.GetPropertyGroups(platform, configuration);
             foreach (XmlNode xmlnode in projnode)
+            {
                 xmlnode.ParentNode.RemoveChild(xmlnode);
+            }
         }
 
         private static IEnumerable<XmlNode> SelectElementNodes(this XmlNode node, string name)
@@ -808,13 +944,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             foreach (XmlNode child in node.ChildNodes)
             {
                 if (child.NodeType == XmlNodeType.Element && child.Name == name)
+                {
                     yield return child;
+                }
 
                 if (!child.HasChildNodes)
+                {
                     continue;
+                }
 
                 foreach (XmlNode descendent in child.SelectElementNodes(name))
+                {
                     yield return descendent;
+                }
             }
         }
 
@@ -866,11 +1008,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             Func<string, string> convert = (input) =>
             {
                 if (input[0] == '/')
+                {
                     return input; // This is already a full path.
+                }
+
                 if (input.StartsWith("$(MSBuildExtensionsPath)", StringComparison.Ordinal))
+                {
                     return input; // This is already a full path.
+                }
+
                 if (input.StartsWith("$(MSBuildBinPath)", StringComparison.Ordinal))
+                {
                     return input; // This is already a full path.
+                }
+
                 input = input.Replace('\\', '/'); // make unix-style
                 input = System.IO.Path.GetFullPath(System.IO.Path.Combine(dir, input));
                 input = input.Replace('/', '\\'); // make windows-style again
@@ -882,7 +1033,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
                 var nodes = csproj.SelectElementNodes(key);
                 foreach (var node in nodes)
+                {
                     node.InnerText = convert(node.InnerText);
+                }
             }
             foreach (var key in nodes_with_variables)
             {
@@ -901,15 +1054,22 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 {
                     var a = node.Attributes[attrib];
                     if (a == null)
+                    {
                         continue;
+                    }
 
                     // entries after index 2 is a list of values to filter the attribute value against.
                     var found = kvp.Length == 2;
                     var skipLogicalName = kvp.Length > 2;
                     for (var i = 2; i < kvp.Length; i++)
+                    {
                         found |= a.Value == kvp[i];
+                    }
+
                     if (!found)
+                    {
                         continue;
+                    }
 
                     // Fix any default LogicalName values (but don't change existing ones).
                     var ln = node.SelectElementNodes("LogicalName")?.SingleOrDefault();
@@ -924,7 +1084,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                         {
                             case "BundleResource":
                                 if (logicalName.StartsWith("Resources\\", StringComparison.Ordinal))
+                                {
                                     logicalName = logicalName.Substring("Resources\\".Length);
+                                }
+
                                 break;
                             default:
                                 break;

@@ -21,7 +21,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         {
             FullPath = path ?? throw new ArgumentNullException(nameof(path));
             if (!append)
+            {
                 File.WriteAllText(path, string.Empty);
+            }
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -57,7 +59,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public override void Flush()
         {
             if (!_disposed)
+            {
                 _writer?.Flush();
+            }
         }
 
         protected override void WriteImpl(string value)
