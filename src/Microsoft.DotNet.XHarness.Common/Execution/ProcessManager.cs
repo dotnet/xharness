@@ -82,14 +82,17 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             Func<ILog, int, IList<int>> getChildrenPS,
             bool? diagnostics = true)
         {
+            log.WriteLine($"Killing process tree of {pid}...");
+
             var pids = getChildrenPS(log, pid);
+            log.WriteLine($"Pids to kill: {string.Join(", ", pids.Select((v) => v.ToString()).ToArray())}");
 
             if (diagnostics == true)
             {
-                log.WriteLine($"Pids to kill: {string.Join(", ", pids.Select((v) => v.ToString()).ToArray())}");
-
                 foreach (var pidToDiagnose in pids)
                 {
+                    log.WriteLine($"Running lldb diagnostics for pid {pidToDiagnose}");
+
                     var template = Path.GetTempFileName();
                     try
                     {
@@ -110,12 +113,12 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                             log.WriteLine($"Printing backtrace for pid={pidToDiagnose}");
                             await RunAsyncInternal(
                                 process: dbg,
-                                log: log,
+                                log: new NullLog(),
                                 stdout: log,
                                 stderr: log,
                                 kill,
                                 getChildrenPS,
-                                timeout: TimeSpan.FromSeconds(30),
+                                timeout: TimeSpan.FromSeconds(20),
                                 diagnostics: false);
                         }
                     }
@@ -303,8 +306,12 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             {
                 if (!await WaitForExitAsync(process, timeout.Value))
                 {
+                    log.WriteLine($"Process {pid} didn't exit within {timeout} and will be killed");
+
                     await KillTreeAsync(pid, log, kill, getChildrenPS, diagnostics ?? true);
+
                     result.TimedOut = true;
+
                     lock (stderr)
                     {
                         log.WriteLine($"{pid} Execution timed out after {timeout.Value.TotalSeconds} seconds and the process was killed.");
