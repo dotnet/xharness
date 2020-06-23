@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
+namespace Microsoft.DotNet.XHarness.Common.Logging
 {
     // A log that forwards all written data to a callback
     public class CallbackLog : Log

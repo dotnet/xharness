@@ -5,7 +5,7 @@
 using System;
 using System.IO;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments
