@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Logging
         public void OnWriteTest()
         {
             var message = "This is a log message";
-            var called = false;
+            bool called = false;
             string data = null;
 
             Action<string> cb = (d) =>
