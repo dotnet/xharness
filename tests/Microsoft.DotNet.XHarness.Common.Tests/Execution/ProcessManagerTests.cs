@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Execution
 {
     public class ProcessManagerTests
     {
-        [Fact]
+        [Fact(Skip = "ping is not available in AzDO so this is rather for local development")]
         public async Task ProcessShouldBeKilled()
         {
             var pm = ProcessManagerFactory.CreateProcessManager();
