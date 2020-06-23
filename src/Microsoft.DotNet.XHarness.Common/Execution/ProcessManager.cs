@@ -19,15 +19,14 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 {
     public abstract class ProcessManager : IProcessManager
     {
-
-        #region Abstract methods
+#region Abstract methods
 
         protected abstract int Kill(int pid, int sig);
         protected abstract List<int> GetChildrenPS(ILog log, int pid);
 
-        #endregion
+#endregion
 
-        #region IProcessManager implementation
+#region IProcessManager implementation
 
         public async Task<ProcessExecutionResult> ExecuteCommandAsync(string filename,
             IList<string> args,
@@ -368,6 +367,6 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             }
         }
 
-        #endregion
+#endregion
     }
 }

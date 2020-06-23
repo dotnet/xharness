@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            var processManager = new MacOSProcessManager();
+            var processManager = ProcessManagerFactory.CreateProcessManager();
 
             var engineBinary = _arguments.Engine switch
             {
