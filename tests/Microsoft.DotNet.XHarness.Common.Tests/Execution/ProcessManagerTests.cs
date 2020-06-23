@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Execution
 
             var process = new Process();
             process.StartInfo.FileName = "ping";
-            process.StartInfo.Arguments = "-t 8.8.8.8";
+            process.StartInfo.Arguments = "-t 127.0.0.1";
             var log = new MemoryLog();
 
             var result = await pm.RunAsync(process, log, TimeSpan.FromSeconds(3));
