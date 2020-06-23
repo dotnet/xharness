@@ -10,8 +10,9 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 {
     public class WindowsProcessManager : ProcessManager
     {
-        // TODO: Maybe we don't need this because we can kill the whole tree for netcoreapp3.1
-        protected override List<int> GetChildrenPS(ILog log, int pid) => new List<int>();
+        // We cannot enumerate processes well on Windows but we will use the CLI as .NET Core 3.1 and will kill the whole process tree
+        // (this library is only used under netstandard 2.1 in Xamarin where it runs on OSX only)
+        protected override List<int> GetChildrenPS(ILog log, int pid) => new List<int> { pid };
 
         protected override int Kill(int pid, int sig)
         {
