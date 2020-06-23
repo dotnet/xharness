@@ -62,8 +62,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
                 log.Flush();
             }
 
-            bool oldLineFound = false;
-            bool newLineFound = false;
+            var oldLineFound = false;
+            var newLineFound = false;
 
             using (var reader = new StreamReader(_path))
             {
@@ -101,8 +101,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
                 log.Flush();
             }
 
-            bool oldLineFound = false;
-            bool newLineFound = false;
+            var oldLineFound = false;
+            var newLineFound = false;
 
             using (var reader = new StreamReader(_path))
             {

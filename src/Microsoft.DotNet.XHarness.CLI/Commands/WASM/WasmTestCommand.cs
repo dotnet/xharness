@@ -73,8 +73,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     engineBinary,
                     engineArgs,
                     log: new CallbackLog(m => logger.LogInformation(m)),
-                    stdout: new CallbackLog(m => WasmTestLogCallback(m, xmlResultsFilePath, logger)) { Timestamp = false /* we need the plain XML string so disable timestamp */ },
-                    stderr: new CallbackLog(m => logger.LogError(m)),
+                    stdoutLog: new CallbackLog(m => WasmTestLogCallback(m, xmlResultsFilePath, logger)) { Timestamp = false /* we need the plain XML string so disable timestamp */ },
+                    stderrLog: new CallbackLog(m => logger.LogError(m)),
                     _arguments.Timeout);
 
                 return result.Succeeded ? ExitCode.SUCCESS : (result.TimedOut ? ExitCode.TIMED_OUT : ExitCode.GENERAL_FAILURE);

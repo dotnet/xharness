@@ -4,10 +4,10 @@
 
 using System;
 using System.IO;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Xunit;
 
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
+namespace Microsoft.DotNet.XHarness.Common.Tests.Logging
 {
     [CollectionDefinition("ConsoleLogTest", DisableParallelization = true)]
     public class ConsoleLogTest : IDisposable
@@ -46,6 +46,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
 
         public void Dispose()
         {
+            _log.Dispose();
             Console.SetOut(_sdoutWriter); // get back to write to the console
             File.Delete(_testFile);
         }
