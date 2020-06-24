@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                     stdout,
                     stderr,
                     (pid, signal) => kill(pid, signal),
-                    (log, pid) => GetChildrenPSInternal(log, pid),
+                    (log, pid) => GetChildProcessIdsInternal(log, pid),
                     timeout)
                 .GetAwaiter().GetResult();
 

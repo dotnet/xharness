@@ -11,9 +11,9 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 {
     public abstract class UnixProcessManager : ProcessManager
     {
-        protected override List<int> GetChildrenPS(ILog log, int pid) => GetChildrenPSInternal(log, pid);
+        protected override List<int> GetChildProcessIds(ILog log, int pid) => GetChildProcessIdsInternal(log, pid);
 
-        protected static List<int> GetChildrenPSInternal(ILog log, int pid)
+        protected static List<int> GetChildProcessIdsInternal(ILog log, int pid)
         {
             var list = new List<int>();
 

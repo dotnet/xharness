@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 #region Abstract methods
 
         protected abstract int Kill(int pid, int sig);
-        protected abstract List<int> GetChildrenPS(ILog log, int pid);
+        protected abstract List<int> GetChildProcessIds(ILog log, int pid);
 
 #endregion
 
@@ -73,18 +73,18 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 
         public Task KillTreeAsync(Process process, ILog log, bool? diagnostics = true) => KillTreeAsync(process.Id, log, diagnostics);
 
-        public Task KillTreeAsync(int pid, ILog log, bool? diagnostics = true) => KillTreeAsync(pid, log, (pid, signal) => Kill(pid, signal), (log, pid) => GetChildrenPS(log, pid), diagnostics);
+        public Task KillTreeAsync(int pid, ILog log, bool? diagnostics = true) => KillTreeAsync(pid, log, (pid, signal) => Kill(pid, signal), (log, pid) => GetChildProcessIds(log, pid), diagnostics);
 
         protected static async Task KillTreeAsync(
             int pid,
             ILog log,
             Action<int, int> kill,
-            Func<ILog, int, IList<int>> getChildrenPS,
+            Func<ILog, int, IList<int>> getChildProcessIds,
             bool? diagnostics = true)
         {
             log.WriteLine($"Killing process tree of {pid}...");
 
-            var pids = getChildrenPS(log, pid);
+            var pids = getChildProcessIds(log, pid);
             log.WriteLine($"Pids to kill: {string.Join(", ", pids.Select((v) => v.ToString()).ToArray())}");
 
             if (diagnostics == true)
@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                                 stdout: log,
                                 stderr: log,
                                 kill,
-                                getChildrenPS,
+                                getChildProcessIds,
                                 timeout: TimeSpan.FromSeconds(20),
                                 diagnostics: false);
                         }
@@ -172,7 +172,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 stdout,
                 stderr,
                 (pid, signal) => Kill(pid, signal),
-                (log, pid) => GetChildrenPS(log, pid),
+                (log, pid) => GetChildProcessIds(log, pid),
                 timeout,
                 environmentVariables,
                 cancellationToken,
@@ -184,7 +184,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             ILog stdout,
             ILog stderr,
             Action<int, int> kill,
-            Func<ILog, int, IList<int>> getChildrenPS,
+            Func<ILog, int, IList<int>> getChildProcessIds,
             TimeSpan? timeout = null,
             Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null,
@@ -308,7 +308,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 {
                     log.WriteLine($"Process {pid} didn't exit within {timeout} and will be killed");
 
-                    await KillTreeAsync(pid, log, kill, getChildrenPS, diagnostics ?? true);
+                    await KillTreeAsync(pid, log, kill, getChildProcessIds, diagnostics ?? true);
 
                     result.TimedOut = true;
 
