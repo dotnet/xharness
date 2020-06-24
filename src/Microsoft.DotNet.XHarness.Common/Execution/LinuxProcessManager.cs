@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 {
     public class LinuxProcessManager : UnixProcessManager
     {
-        [DllImport("/lib/x86_64-linux-gnu/libc.so.6")]
+        [DllImport("libc")]
         private static extern int kill(int pid, int sig);
 
         protected override int Kill(int pid, int sig) => kill(pid, sig);
