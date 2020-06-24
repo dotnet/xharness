@@ -5,15 +5,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.DotNet.XHarness.Common.Logging;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
+namespace Microsoft.DotNet.XHarness.Common.Logging
 {
-
     public abstract partial class Log
     {
-
         public static IFileBackedLog CreateReadableAggregatedLog(IFileBackedLog defaultLog, params ILog[] logs) => new ReadableAggregatedLog(defaultLog, logs);
 
         public static ILog CreateAggregatedLog(params ILog[] logs) => new AggregatedLog(logs);

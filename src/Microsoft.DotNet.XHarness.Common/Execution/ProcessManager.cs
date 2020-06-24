@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -18,15 +19,14 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 {
     public abstract class ProcessManager : IProcessManager
     {
-
-        #region Abstract methods
+#region Abstract methods
 
         protected abstract int Kill(int pid, int sig);
-        protected abstract List<int> GetChildrenPS(ILog log, int pid);
+        protected abstract List<int> GetChildProcessIds(ILog log, int pid);
 
-        #endregion
+#endregion
 
-        #region IProcessManager implementation
+#region IProcessManager implementation
 
         public async Task<ProcessExecutionResult> ExecuteCommandAsync(string filename,
             IList<string> args,
@@ -34,15 +34,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             TimeSpan timeout,
             Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null)
-            => await ExecuteCommandAsync(
-                filename: filename,
-                args: args,
-                log: log,
-                stdout: log,
-                stderr: log,
-                timeout: timeout,
-                environmentVariables: environmentVariables,
-                cancellationToken: cancellationToken);
+            => await ExecuteCommandAsync(filename, args, log, log, log, timeout, environmentVariables, cancellationToken);
 
         public async Task<ProcessExecutionResult> ExecuteCommandAsync(string filename,
             IList<string> args,
@@ -66,15 +58,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null,
             bool? diagnostics = null)
-            => RunAsync(
-                process: process,
-                log: log,
-                stdout: log,
-                stderr: log,
-                timeout: timeout,
-                environmentVariables: environmentVariables,
-                cancellationToken: cancellationToken,
-                diagnostics: diagnostics);
+            => RunAsync(process, log, log, log, timeout, environmentVariables, cancellationToken, diagnostics);
 
         public Task<ProcessExecutionResult> RunAsync(
             Process process,
@@ -85,84 +69,56 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null,
             bool? diagnostics = null)
-            => RunAsyncInternal(
-                process: process,
-                log: log,
-                stdout: stdout,
-                stderr: stderr,
-                kill: (pid, sig) => Kill(pid, sig), // lambdas are more efficient that method invoke
-                getChildrenPS: (l, p) => GetChildrenPS(l, p), // same
-                timeout: timeout,
-                environmentVariables: environmentVariables,
-                cancellationToken: cancellationToken,
-                diagnostics: diagnostics);
+            => RunAsyncInternal(process, log, stdout, stderr, timeout, environmentVariables, cancellationToken, diagnostics);
 
-        public Task KillTreeAsync(Process process, ILog log, bool? diagnostics = true)
-            => KillTreeAsyncInternal(
-                pid: process.Id,
-                kill: (p, s) => Kill(p, s),
-                getChildrenPS: (l, p) => GetChildrenPS(l, p),
-                log: log,
-                diagnostics: diagnostics);
+        public Task KillTreeAsync(Process process, ILog log, bool? diagnostics = true) => KillTreeAsync(process.Id, log, diagnostics);
 
-        public Task KillTreeAsync(int pid, ILog log, bool? diagnostics = true)
-            => KillTreeAsyncInternal(
-                pid: pid,
-                kill: (p, s) => Kill(p, s),
-                getChildrenPS: (l, i) => GetChildrenPS(l, i),
-                log: log,
-                diagnostics: diagnostics);
+        public Task KillTreeAsync(int pid, ILog log, bool? diagnostics = true) => KillTreeAsync(pid, log, (pid, signal) => Kill(pid, signal), (log, pid) => GetChildProcessIds(log, pid), diagnostics);
 
-        private static async Task KillTreeAsyncInternal(int pid, Action<int, int> kill, Func<ILog, int, IList<int>> getChildrenPS, ILog log, bool? diagnostics = true)
+        protected static async Task KillTreeAsync(
+            int pid,
+            ILog log,
+            Action<int, int> kill,
+            Func<ILog, int, IList<int>> getChildProcessIds,
+            bool? diagnostics = true)
         {
-            var pids = getChildrenPS(log, pid);
+            log.WriteLine($"Killing process tree of {pid}...");
+
+            var pids = getChildProcessIds(log, pid);
+            log.WriteLine($"Pids to kill: {string.Join(", ", pids.Select((v) => v.ToString()).ToArray())}");
 
             if (diagnostics == true)
             {
-                log.WriteLine($"Pids to kill: {string.Join(", ", pids.Select((v) => v.ToString()).ToArray())}");
-                using (var ps = new Process())
+                foreach (var pidToDiagnose in pids)
                 {
-                    log.WriteLine("Getting process list..");
-                    ps.StartInfo.FileName = "ps";
-                    ps.StartInfo.Arguments = "-A -o pid,ruser,ppid,pgid,%cpu=%CPU,%mem=%MEM,flags=FLAGS,lstart,rss,vsz,tty,state,time,command";
-                    await RunAsyncInternal(
-                        process: ps,
-                        log: log,
-                        stdout: new NullLog(),
-                        stderr: new NullLog(),
-                        kill: kill,
-                        getChildrenPS: getChildrenPS,
-                        timeout: TimeSpan.FromSeconds(5),
-                        diagnostics: false);
-                }
+                    log.WriteLine($"Running lldb diagnostics for pid {pidToDiagnose}");
 
-
-                foreach (var diagnose_pid in pids)
-                {
                     var template = Path.GetTempFileName();
                     try
                     {
                         var commands = new StringBuilder();
                         using (var dbg = new Process())
                         {
-                            commands.AppendLine($"process attach --pid {diagnose_pid}");
+                            commands.AppendLine($"process attach --pid {pidToDiagnose}");
                             commands.AppendLine("thread list");
                             commands.AppendLine("thread backtrace all");
                             commands.AppendLine("detach");
                             commands.AppendLine("quit");
+
                             dbg.StartInfo.FileName = "lldb";
                             dbg.StartInfo.Arguments = StringUtils.FormatArguments("--source", template);
+
                             File.WriteAllText(template, commands.ToString());
 
-                            log.WriteLine($"Printing backtrace for pid={pid}");
+                            log.WriteLine($"Printing backtrace for pid={pidToDiagnose}");
                             await RunAsyncInternal(
                                 process: dbg,
-                                log: log,
+                                log: new NullLog(),
                                 stdout: log,
                                 stderr: log,
-                                kill: kill,
-                                getChildrenPS: getChildrenPS,
-                                timeout: TimeSpan.FromSeconds(30),
+                                kill,
+                                getChildProcessIds,
+                                timeout: TimeSpan.FromSeconds(20),
                                 diagnostics: false);
                         }
                     }
@@ -202,21 +158,41 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             }
         }
 
+        protected Task<ProcessExecutionResult> RunAsyncInternal(
+            Process process,
+            ILog log,
+            ILog stdout,
+            ILog stderr,
+            TimeSpan? timeout = null,
+            Dictionary<string, string>? environmentVariables = null,
+            CancellationToken? cancellationToken = null,
+            bool? diagnostics = null) => RunAsyncInternal(
+                process,
+                log,
+                stdout,
+                stderr,
+                (pid, signal) => Kill(pid, signal),
+                (log, pid) => GetChildProcessIds(log, pid),
+                timeout,
+                environmentVariables,
+                cancellationToken,
+                diagnostics); 
+
         protected static async Task<ProcessExecutionResult> RunAsyncInternal(
             Process process,
             ILog log,
             ILog stdout,
             ILog stderr,
             Action<int, int> kill,
-            Func<ILog, int, IList<int>> getChildrenPS,
+            Func<ILog, int, IList<int>> getChildProcessIds,
             TimeSpan? timeout = null,
             Dictionary<string, string>? environmentVariables = null,
             CancellationToken? cancellationToken = null,
             bool? diagnostics = null)
         {
-            var stdout_completion = new TaskCompletionSource<bool>();
-            var stderr_completion = new TaskCompletionSource<bool>();
-            var rv = new ProcessExecutionResult();
+            var stdoutCompletion = new TaskCompletionSource<bool>();
+            var stderrCompletion = new TaskCompletionSource<bool>();
+            var result = new ProcessExecutionResult();
 
             process.StartInfo.RedirectStandardError = true;
             process.StartInfo.RedirectStandardOutput = true;
@@ -252,7 +228,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 }
                 else
                 {
-                    stdout_completion.TrySetResult(true);
+                    stdoutCompletion.TrySetResult(true);
                 }
             };
 
@@ -268,15 +244,15 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 }
                 else
                 {
-                    stderr_completion.TrySetResult(true);
+                    stderrCompletion.TrySetResult(true);
                 }
             };
 
             var sb = new StringBuilder();
             if (process.StartInfo.EnvironmentVariables != null)
             {
-                var currentEnvironment = Environment.GetEnvironmentVariables().Cast<System.Collections.DictionaryEntry>().ToDictionary((v) => (string)v.Key, (v) => (string?)v.Value, StringComparer.Ordinal);
-                var processEnvironment = process.StartInfo.EnvironmentVariables.Cast<System.Collections.DictionaryEntry>().ToDictionary((v) => (string)v.Key, (v) => (string?)v.Value, StringComparer.Ordinal);
+                var currentEnvironment = Environment.GetEnvironmentVariables().Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
+                var processEnvironment = process.StartInfo.EnvironmentVariables.Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
                 var allKeys = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
                 foreach (var key in allKeys)
                 {
@@ -286,16 +262,17 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                     }
 
                     string? a = null, b = null;
-                    currentEnvironment?.TryGetValue(key!, out a);
-                    processEnvironment?.TryGetValue(key!, out b);
+                    currentEnvironment?.TryGetValue(key, out a);
+                    processEnvironment?.TryGetValue(key, out b);
                     if (a != b)
                     {
                         sb.Append($"{key}={StringUtils.Quote(b)} ");
                     }
                 }
             }
+
             sb.Append($"{StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
-            log.WriteLine(sb);
+            log.WriteLine(sb.ToString());
 
             process.Start();
             var pid = process.Id;
@@ -317,9 +294,10 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                     // process didn't exit (the safe option being to not leave
                     // processes behind).
                 }
+
                 if (!hasExited)
                 {
-                    stderr.WriteLine($"Execution of {pid} was cancelled.");
+                    stderr.WriteLine($"Killing process {pid} as it was cancelled");
                     kill(pid, 9);
                 }
             });
@@ -328,28 +306,34 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             {
                 if (!await WaitForExitAsync(process, timeout.Value))
                 {
-                    await KillTreeAsyncInternal(process.Id, kill, getChildrenPS, log, diagnostics ?? true);
-                    rv.TimedOut = true;
+                    log.WriteLine($"Process {pid} didn't exit within {timeout} and will be killed");
+
+                    await KillTreeAsync(pid, log, kill, getChildProcessIds, diagnostics ?? true);
+
+                    result.TimedOut = true;
+
                     lock (stderr)
                     {
                         log.WriteLine($"{pid} Execution timed out after {timeout.Value.TotalSeconds} seconds and the process was killed.");
                     }
                 }
             }
+
             await WaitForExitAsync(process);
-            Task.WaitAll(new Task[] { stderr_completion.Task, stdout_completion.Task }, TimeSpan.FromSeconds(1));
+            Task.WaitAll(new Task[] { stderrCompletion.Task, stdoutCompletion.Task }, TimeSpan.FromSeconds(1));
 
             try
             {
-                rv.ExitCode = process.ExitCode;
-                log.WriteLine($"Process exited with {rv.ExitCode}");
+                result.ExitCode = process.ExitCode;
+                log.WriteLine($"Process exited with {result.ExitCode}");
             }
             catch (Exception e)
             {
-                rv.ExitCode = 12345678;
+                result.ExitCode = 12345678;
                 log.WriteLine($"Failed to get ExitCode: {e}");
             }
-            return rv;
+
+            return result;
         }
 
         private static async Task<bool> WaitForExitAsync(Process process, TimeSpan? timeout = null)
@@ -389,6 +373,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 return true;
             }
         }
-        #endregion
+
+#endregion
     }
 }

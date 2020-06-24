@@ -4,15 +4,12 @@
 
 using System;
 using System.Text;
-using Microsoft.DotNet.XHarness.Common.Logging;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
+namespace Microsoft.DotNet.XHarness.Common.Logging
 {
-
     public abstract partial class Log : ILog
     {
-
         public virtual Encoding Encoding => Encoding.UTF8;
         public string? Description { get; set; }
         public bool Timestamp { get; set; } = true;
@@ -36,16 +33,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         public void WriteLine(string value) => Write(value + "\n");
 
-        public void WriteLine(StringBuilder value) => Write(value.ToString() + "\n");
-
         public void WriteLine(string format, params object[] args) => Write(string.Format(format, args) + "\n");
-
-        protected abstract void WriteImpl(string value);
 
         public override string ToString() => Description ?? string.Empty;
 
         public abstract void Flush();
 
         public abstract void Dispose();
+
+        protected abstract void WriteImpl(string value);
     }
 }

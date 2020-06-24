@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            var processManager = new MacOSProcessManager();
+            var processManager = ProcessManagerFactory.CreateProcessManager();
 
             var engineBinary = _arguments.Engine switch
             {
@@ -73,8 +73,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     engineBinary,
                     engineArgs,
                     log: new CallbackLog(m => logger.LogInformation(m)),
-                    stdout: new CallbackLog(m => WasmTestLogCallback(m, xmlResultsFilePath, logger)) { Timestamp = false /* we need the plain XML string so disable timestamp */ },
-                    stderr: new CallbackLog(m => logger.LogError(m)),
+                    stdoutLog: new CallbackLog(m => WasmTestLogCallback(m, xmlResultsFilePath, logger)) { Timestamp = false /* we need the plain XML string so disable timestamp */ },
+                    stderrLog: new CallbackLog(m => logger.LogError(m)),
                     _arguments.Timeout);
 
                 return result.Succeeded ? ExitCode.SUCCESS : (result.TimedOut ? ExitCode.TIMED_OUT : ExitCode.GENERAL_FAILURE);
