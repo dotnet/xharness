@@ -70,9 +70,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .ReturnsAsync(s_mockDevice);
 
             _simulatorLoader = new Mock<ISimulatorLoader>();
-            _simulatorLoader
-                .Setup(x => x.LoadDevices(It.IsAny<ILog>(), false, false, false))
-                .Returns(Task.CompletedTask);
 
             _listener = new Mock<ISimpleListener>();
             _listener
