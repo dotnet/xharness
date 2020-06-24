@@ -330,10 +330,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         /// This is a new implementation that can .
         /// Old implementation of FindSimulators is kept intact because it is being used in Xamarin.
         /// </summary>
-        /// <param name="target"></param>
-        /// <param name="log"></param>
-        /// <param name="createIfNeeded"></param>
-        /// <returns></returns>
         public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, bool createIfNeeded = true, bool minVersion = false)
         {
             var runtimePrefix = target.Platform switch
