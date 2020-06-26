@@ -37,7 +37,5 @@
     <Language>msbuild</Language>
   </PropertyGroup>
 
-  <Target Name="Pack"/>
-
   <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
 </Project>

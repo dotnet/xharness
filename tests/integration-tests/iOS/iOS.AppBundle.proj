@@ -13,19 +13,18 @@
   </PropertyGroup>
 
   <Target Name="Build" Returns="@(XHarnessAppFoldersToTest)">
-    <Error Condition=" '$(BaseOutputPath)' == ''" Text="Not downloading AppBundle because BaseOutputPath property is unset" />
-    <DownloadFile SourceUrl="$(XHarnessAppBundleUrl)" DestinationFolder="$(BaseOutputPath)appbundle" SkipUnchangedFiles="True" Retries="5">
+    <DownloadFile SourceUrl="$(XHarnessAppBundleUrl)" DestinationFolder="$(ArtifactsTmpDir)appbundle" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle" />
     </DownloadFile>
 
     <Message Text="Downloaded @(ZippedAppBundle) for XHarness Test purposes. Extracting..." Importance="High" />
 
-    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(BaseOutputPath)appbundle" />
+    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(ArtifactsTmpDir)appbundle" />
 
-    <Message Text="Extracted to $(BaseOutputPath)appbundle" Importance="High" />
+    <Message Text="Extracted to $(ArtifactsTmpDir)appbundle" Importance="High" />
 
     <ItemGroup>
-      <XHarnessAppFoldersToTest Include="$(BaseOutputPath)appbundle/$(TestAppBundleName)">
+      <XHarnessAppFoldersToTest Include="$(ArtifactsTmpDir)appbundle/$(TestAppBundleName)">
         <Targets>ios-simulator-64</Targets>
       </XHarnessAppFoldersToTest>
     </ItemGroup>
