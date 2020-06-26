@@ -1,0 +1,51 @@
+<Project DefaultTargets="Test">
+  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/>
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <HelixType>test/product/</HelixType>
+    <IncludeDotNetCli>true</IncludeDotNetCli>
+    <IncludeXHarnessCli>true</IncludeXHarnessCli>
+    <DotNetCliPackageType>sdk</DotNetCliPackageType>
+    <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
+    <EnableXUnitReporter>false</EnableXUnitReporter>                      <!-- TODO -->
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>    <!-- TODO -->
+    <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
+    <!-- Pick up the nupkg from this repo for testing purposes -->
+    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
+    <XHarnessNupkgPath>$(MSBuildThisFileDirectory)../../../artifacts/packages/$(Configuration)/Shipping/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
+    <TestPayloadUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/wasm/System.Linq.Tests.zip</TestPayloadUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <HelixTargetQueue Include="ubuntu.2004.amd64.open"/>
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <IsExternal>true</IsExternal>
+    <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
+    <Creator Condition=" '$(Creator)' == '' ">anon</Creator>
+  </PropertyGroup>
+
+  <!-- Useless stuff to make Arcade SDK happy -->
+  <PropertyGroup>
+    <Language>msbuild</Language>
+  </PropertyGroup>
+
+  <Target Name="TestWasm" BeforeTargets="CoreTest">
+    <DownloadFile SourceUrl="$(TestPayloadUrl)" DestinationFolder="$(ArtifactsTmpDir)wasm" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="TestPayloadArchive" />
+    </DownloadFile>
+
+    <Message Text="Downloaded @(TestPayloadArchive) for XHarness Test purposes" Importance="High" />
+
+    <ItemGroup>
+      <HelixWorkItem Include="System.Linq.Tests">
+        <Command>xharness wasm test --engine=V8 --js-file="$HELIX_WORKITEM_PAYLOAD/runtime.js" -v --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" -- --enable-gc --run "$HELIX_WORKITEM_PAYLOAD/WasmTestRunner.dll" "$HELIX_WORKITEM_PAYLOAD/System.Linq.Tests.dll" -notrait category=IgnoreForCI -notrait category=OuterLoop -notrait category=failing</Command>
+        <PayloadArchive>@(TestPayloadArchive)</PayloadArchive>
+      </HelixWorkItem>
+    </ItemGroup>
+  </Target>
+
+  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
+</Project>
