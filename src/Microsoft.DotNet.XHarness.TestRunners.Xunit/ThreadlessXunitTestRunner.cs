@@ -17,14 +17,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 {
     internal class ThreadlessXunitTestRunner
     {
-        public int Run(string assemblyFileName, bool printXml, IEnumerable<string> excludedTraits)
+        public int Run(string assemblyFileName, bool printXml, XunitFilters filters)
         {
-            var filters = new XunitFilters();
-            foreach (var trait in excludedTraits ?? Array.Empty<string>())
-            {
-                ParseEqualSeparatedArgument(filters.ExcludedTraits, trait);
-            }
-
             var configuration = new TestAssemblyConfiguration() { ShadowCopy = false, ParallelizeAssembly = false, ParallelizeTestCollections = false, MaxParallelThreads = 1, PreEnumerateTheories = false };
             var discoveryOptions = TestFrameworkOptions.ForDiscovery(configuration);
             var discoverySink = new TestDiscoverySink();
@@ -72,27 +66,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
             var failed = resultsSink.ExecutionSummary.Failed > 0 || resultsSink.ExecutionSummary.Errors > 0;
             return failed ? 1 : 0;
-        }
-
-        private void ParseEqualSeparatedArgument(Dictionary<string, List<string>> targetDictionary, string argument)
-        {
-            var parts = argument.Split('=');
-            if (parts.Length != 2 || string.IsNullOrEmpty(parts[0]) || string.IsNullOrEmpty(parts[1]))
-            {
-                throw new ArgumentException("Invalid argument value '{argument}'.", nameof(argument));
-            }
-
-            var name = parts[0];
-            var value = parts[1];
-            List<string> excludedTraits;
-            if (targetDictionary.TryGetValue(name, out excludedTraits!))
-            {
-                excludedTraits.Add(value);
-            }
-            else
-            {
-                targetDictionary[name] = new List<string> { value };
-            }
         }
     }
 
