@@ -318,8 +318,17 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                     }
                 }
             }
+            else
+            {
+                await WaitForExitAsync(process);
+            }
 
-            await WaitForExitAsync(process);
+            if (process.HasExited)
+            {
+                // make sure redirected output events are finished
+                process.WaitForExit();
+            }
+
             Task.WaitAll(new Task[] { stderrCompletion.Task, stdoutCompletion.Task }, TimeSpan.FromSeconds(1));
 
             try
