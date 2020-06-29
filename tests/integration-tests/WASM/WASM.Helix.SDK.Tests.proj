@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <HelixType>test/product/</HelixType>
     <IncludeDotNetCli>true</IncludeDotNetCli>
+    <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
     <EnableXUnitReporter>true</EnableXUnitReporter>
@@ -13,15 +14,11 @@
     <!-- Pick up the nupkg from this repo for testing purposes -->
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
     <XHarnessNupkgPath>$(MSBuildThisFileDirectory)../../../artifacts/packages/$(Configuration)/Shipping/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
+    <TestPayloadUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/wasm/System.Reflection.Extensions.Tests.zip</TestPayloadUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)Android.TestApks.proj" />
-  </ItemGroup>
-
-  <!-- Currently no closed queues for Android testing; runtime team does all testing in public -->
-  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
+    <HelixTargetQueue Include="ubuntu.2004.amd64.open"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -34,6 +31,22 @@
   <PropertyGroup>
     <Language>msbuild</Language>
   </PropertyGroup>
+
+  <Target Name="TestWasm" BeforeTargets="CoreTest">
+    <DownloadFile SourceUrl="$(TestPayloadUrl)" DestinationFolder="$(ArtifactsTmpDir)wasm" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="TestPayloadArchive" />
+    </DownloadFile>
+
+    <Message Text="Downloaded @(TestPayloadArchive) for XHarness Test purposes" Importance="High" />
+
+    <ItemGroup>
+      <HelixWorkItem Include="System.Reflection.Extensions.Tests">
+        <Command>cd "$HELIX_WORKITEM_PAYLOAD/System.Reflection.Extensions.Tests" &amp;&amp; xharness wasm test --engine=V8 --js-file=runtime.js -v --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" -- --enable-gc --run WasmTestRunner.dll System.Reflection.Extensions.Tests.dll -notrait category=IgnoreForCI -notrait category=OuterLoop -notrait category=failing</Command>
+        <PayloadArchive>@(TestPayloadArchive)</PayloadArchive>
+        <Timeout>00:10:00</Timeout>
+      </HelixWorkItem>
+    </ItemGroup>
+  </Target>
 
   <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
 </Project>

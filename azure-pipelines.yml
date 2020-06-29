@@ -267,6 +267,47 @@ stages:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
 
+  - stage: Test_CLI_Package_In_Helix_WASM
+    displayName: 'CLI WASM Integration tests (Helix SDK)'
+    dependsOn: Build_OSX
+    jobs:
+    - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        workspace:
+          clean: all
+        jobs:
+        - job: OSX
+          pool:
+            name: Hosted macOS
+          strategy:
+            matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+          preSteps:
+          - checkout: self
+            clean: true
+          displayName: Submit Helix Job
+          steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              source: current
+              artifact: Microsoft.DotNet.XHarness.CLI.Debug
+              path: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/
+
+          - script: eng/common/build.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              --ci
+              --restore
+              --test
+              --projects $(Build.SourcesDirectory)/tests/integration-tests/WASM/WASM.Helix.SDK.Tests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/HelixRun.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: Run Helix Tests
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
+
   - stage: Test_SimulatorInstaller
     displayName: SimulatorInstaller Integration Tests
     dependsOn: Build_OSX
