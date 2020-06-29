@@ -61,6 +61,10 @@ There are other settings which can be controlled via **environmental variables**
 - `XHARNESS_DISABLE_COLORED_OUTPUT` - disable colored logging so that control characters are not making the logs hard to read
 - `XHARNESS_LOG_WITH_TIMESTAMPS` - enable timestamps for logging
 
+### Arcade/Helix integration
+
+In case your repository is onboarded into [Arcade](https://github.com/dotnet/arcade) you can use the [Arcade Helix SDK](https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.Helix/Sdk) to run XHarness jobs over Helix. More on how to do that is described [here](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Helix/Sdk/tools/xharness-runner/Readme.md).
+
 ## Examples
 
 To run an iOS app bundle on a 64bit iPhone Simulator:
