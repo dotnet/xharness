@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Xml.Linq;
 
 using Xunit;
@@ -52,7 +53,19 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             testSink.Execution.TestAssemblyFinishedEvent += args => { Console.WriteLine($"Finished {args.Message.TestAssembly.Assembly}{Environment.NewLine}"); };
 
             controller.RunTests(testCasesToRun, resultsSink, testOptions);
-            resultsSink.Finished.WaitOne();
+            var threadpoolPump = typeof(ThreadPool).GetMethod("PumpThreadPool", BindingFlags.NonPublic | BindingFlags.Static);
+
+            if (threadpoolPump != null)
+            {
+                while (!resultsSink.Finished.WaitOne(0))
+                {
+                    threadpoolPump.Invoke(this, null);
+                }
+            }
+            else
+            {
+                resultsSink.Finished.WaitOne();
+            }
 
             if (printXml)
             {
