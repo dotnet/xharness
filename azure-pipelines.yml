@@ -34,46 +34,31 @@ pr:
     - master
 
 stages:
-- stage: Build_Windows_NT
-  displayName: Build Windows
-  jobs:
-  - template: /eng/common/templates/jobs/jobs.yml
-    parameters:
-      enableTelemetry: true
-      enablePublishBuildArtifacts: true
-      enableMicrobuild: true
-      enablePublishUsingPipelines: true
-      enablePublishBuildAssets: true
-      helixRepo: dotnet/xharness
+- ${{ if eq(variables._RunAsInternal, False) }}:
+  - stage: Build_Windows_NT
+    displayName: Build Windows
+    jobs:
+    - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        enableTelemetry: true
+        enablePublishBuildArtifacts: true
+        enableMicrobuild: true
+        enablePublishUsingPipelines: true
+        enablePublishBuildAssets: true
+        helixRepo: dotnet/xharness
 
-      jobs:
-      - job: Windows_NT
-        pool:
-          ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCoreInternal-Pool
-            queue: BuildPool.Server.Amd64.VS2019
-          ${{ if eq(variables._RunAsPublic, True) }}:
+        jobs:
+        - job: Windows_NT
+          pool:
             name: NetCorePublic-Pool
             queue: BuildPool.Server.Amd64.VS2019.Open
-        strategy:
-          matrix:
-            Release:
-              _BuildConfig: Release
-            ${{ if eq(variables._RunAsPublic, True) }}:
+          strategy:
+            matrix:
+              Release:
+                _BuildConfig: Release
               Debug:
                 _BuildConfig: Debug
-        steps:
-        - ${{ if eq(variables._RunAsPublic, False) }}:
-          - script: eng\common\CIBuild.cmd
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              $(_InternalBuildArgs)
-              /p:Test=false
-            name: Build
-            displayName: Build
-            condition: succeeded()
-
-        - ${{ if eq(variables._RunAsPublic, True) }}:
+          steps:
           - script: eng\common\CIBuild.cmd
               -configuration $(_BuildConfig)
               -prepareMachine
@@ -92,14 +77,14 @@ stages:
               testRunTitle: XHarness unit tests - $(Agent.JobName)
             condition: succeededOrFailed()
 
-        - task: PublishBuildArtifacts@1
-          displayName: Publish Logs to VSTS
-          inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-            PublishLocation: Container
-            ArtifactName: $(Agent.Os)_$(Agent.JobName)
-          continueOnError: true
-          condition: always()
+          - task: PublishBuildArtifacts@1
+            displayName: Publish Logs to VSTS
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+              PublishLocation: Container
+              ArtifactName: $(Agent.Os)_$(Agent.JobName)
+            continueOnError: true
+            condition: always()
 
 - stage: Build_OSX
   displayName: Build OSX
@@ -345,10 +330,8 @@ stages:
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
       enableSymbolValidation: true
-      # Reenable once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
-      enableSourceLinkValidation: false
+      enableSourceLinkValidation: true
       validateDependsOn:
-      - Build_Windows_NT
       - Build_OSX
       publishDependsOn:
       - Validate
