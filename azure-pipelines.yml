@@ -101,6 +101,10 @@ stages:
           continueOnError: true
           condition: always()
 
+        - task: ComponentGovernanceComponentDetection@0
+          inputs:
+            ignoreDirectories: 'android-tools,android-tools-unzipped'
+
 - ${{ if eq(variables._RunAsPublic, True) }}:
   - stage: Build_OSX
     displayName: Build OSX
@@ -183,6 +187,10 @@ stages:
               ArtifactName: $(Agent.Os)_$(Agent.JobName)
             continueOnError: true
             condition: always()
+
+          - task: ComponentGovernanceComponentDetection@0
+            inputs:
+              ignoreDirectories: 'android-tools,android-tools-unzipped'
 
   - stage: Test_CLI_Package_In_Helix_Android
     displayName: 'CLI Android Integration tests (Helix SDK)'
