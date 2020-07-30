@@ -101,89 +101,88 @@ stages:
           continueOnError: true
           condition: always()
 
-- stage: Build_OSX
-  displayName: Build OSX
-  dependsOn:
-  jobs:
-  - template: /eng/common/templates/jobs/jobs.yml
-    parameters:
-      enableTelemetry: true
-      enablePublishBuildArtifacts: true
-      enableMicrobuild: true
-      enablePublishUsingPipelines: true
-      enablePublishBuildAssets: true
-      helixRepo: dotnet/xharness
-
-      jobs:
-      - job: OSX
-        pool:
-          name: Hosted macOS
-        strategy:
-          matrix:
-            Release:
-              _BuildConfig: Release
-            ${{ if eq(variables._RunAsPublic, True) }}:
-              Debug:
-                _BuildConfig: Debug
-        steps:
-        - ${{ if eq(variables._RunAsPublic, False) }}:
-          - script: eng/common/cibuild.sh
-              --configuration $(_BuildConfig)
-              --prepareMachine
-              $(_InternalBuildArgs)
-              /p:Test=false
-            name: Build
-            displayName: Build
-            condition: succeeded()
-
-        - ${{ if eq(variables._RunAsPublic, True) }}:
-          - script: eng/common/cibuild.sh
-              --configuration $(_BuildConfig)
-              --prepareMachine
-              $(_InternalBuildArgs)
-            name: Build
-            displayName: Build and run tests
-            condition: succeeded()
-
-          - bash: |
-              targetDir=$(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
-              mkdir $targetDir
-              cp tests/integration-tests/iOS/helix-payloads/simulatorinstaller-integration-tests.sh $targetDir
-              cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.SimulatorInstaller*.nupkg $targetDir
-            displayName: Prepare the SimulatorInstaller IntegrationTests artifact
-            workingDirectory: $(Build.SourcesDirectory)
-            condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
-
-          - publish: $(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
-            artifact: Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
-            displayName: Publish the SimulatorInstaller IntegrationTests artifact
-            condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
-
-          - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.1.0.0-ci.nupkg
-            artifact: Microsoft.DotNet.XHarness.CLI.$(_BuildConfig)
-            displayName: Publish XHarness CLI for Helix Testing
-            condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
-
-          - task: PublishTestResults@2
-            displayName: 'Publish Unit Test Results'
-            inputs:
-              testResultsFormat: xUnit
-              testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
-              mergeTestResults: true
-              searchFolder: $(system.defaultworkingdirectory)
-              testRunTitle: XHarness unit tests - $(Agent.JobName)
-            condition: succeededOrFailed()
-
-        - task: PublishBuildArtifacts@1
-          displayName: Publish Logs to VSTS
-          inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-            PublishLocation: Container
-            ArtifactName: $(Agent.Os)_$(Agent.JobName)
-          continueOnError: true
-          condition: always()
-
 - ${{ if eq(variables._RunAsPublic, True) }}:
+  - stage: Build_OSX
+    displayName: Build OSX
+    dependsOn:
+    jobs:
+    - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        enableTelemetry: true
+        enablePublishBuildArtifacts: true
+        enableMicrobuild: true
+        enablePublishUsingPipelines: true
+        enablePublishBuildAssets: true
+        helixRepo: dotnet/xharness
+
+        jobs:
+        - job: OSX
+          pool:
+            name: Hosted macOS
+          strategy:
+            matrix:
+              Release:
+                _BuildConfig: Release
+              ${{ if eq(variables._RunAsPublic, True) }}:
+                Debug:
+                  _BuildConfig: Debug
+          steps:
+          - ${{ if eq(variables._RunAsPublic, False) }}:
+            - script: eng/common/cibuild.sh
+                --configuration $(_BuildConfig)
+                --prepareMachine
+                $(_InternalBuildArgs)
+                /p:Test=false
+              name: Build
+              displayName: Build
+              condition: succeeded()
+
+          - ${{ if eq(variables._RunAsPublic, True) }}:
+            - script: eng/common/cibuild.sh
+                --configuration $(_BuildConfig)
+                --prepareMachine
+                $(_InternalBuildArgs)
+              name: Build
+              displayName: Build and run tests
+              condition: succeeded()
+
+            - bash: |
+                targetDir=$(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
+                mkdir $targetDir
+                cp tests/integration-tests/iOS/helix-payloads/simulatorinstaller-integration-tests.sh $targetDir
+                cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.SimulatorInstaller*.nupkg $targetDir
+              displayName: Prepare the SimulatorInstaller IntegrationTests artifact
+              workingDirectory: $(Build.SourcesDirectory)
+              condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
+
+            - publish: $(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
+              artifact: Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
+              displayName: Publish the SimulatorInstaller IntegrationTests artifact
+              condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
+
+            - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.1.0.0-ci.nupkg
+              artifact: Microsoft.DotNet.XHarness.CLI.$(_BuildConfig)
+              displayName: Publish XHarness CLI for Helix Testing
+              condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
+
+            - task: PublishTestResults@2
+              displayName: 'Publish Unit Test Results'
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
+                mergeTestResults: true
+                searchFolder: $(system.defaultworkingdirectory)
+                testRunTitle: XHarness unit tests - $(Agent.JobName)
+              condition: succeededOrFailed()
+
+          - task: PublishBuildArtifacts@1
+            displayName: Publish Logs to VSTS
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+              PublishLocation: Container
+              ArtifactName: $(Agent.Os)_$(Agent.JobName)
+            continueOnError: true
+            condition: always()
 
   - stage: Test_CLI_Package_In_Helix_Android
     displayName: 'CLI Android Integration tests (Helix SDK)'
@@ -349,7 +348,6 @@ stages:
       enableSourceLinkValidation: false
       validateDependsOn:
       - Build_Windows_NT
-      - Build_OSX
       publishDependsOn:
       - Validate
       # This is to enable SDL runs part of Post-Build Validation Stage
