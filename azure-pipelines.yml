@@ -92,11 +92,11 @@ stages:
               testRunTitle: XHarness unit tests - $(Agent.JobName)
             condition: succeededOrFailed()
 
-        # - ${{ if eq(variables._RunAsPublic, False) }}:
-        - task: ComponentGovernanceComponentDetection@0
-          displayName: Component Governance scan
-          inputs:
-            ignoreDirectories: '$(Build.SourcesDirectory)/.packages,$(Build.SourcesDirectory)/artifacts/obj/Microsoft.DotNet.XHarness.CLI/$(_BuildConfig)/netcoreapp3.1/android-tools-unzipped'
+        - ${{ if eq(variables._RunAsPublic, False) }}:
+          - task: ComponentGovernanceComponentDetection@0
+            displayName: Component Governance scan
+            inputs:
+              ignoreDirectories: '$(Build.SourcesDirectory)/.packages,$(Build.SourcesDirectory)/artifacts/obj/Microsoft.DotNet.XHarness.CLI/$(_BuildConfig)/netcoreapp3.1/android-tools-unzipped'
 
 - ${{ if eq(variables._RunAsPublic, True) }}:
   - stage: Build_OSX
