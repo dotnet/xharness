@@ -328,8 +328,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         }
 
         /// <summary>
-        /// This is a new implementation that can .
-        /// Old implementation of FindSimulators is kept intact because it is being used in Xamarin.
+        /// This is a new implementation that respects also target OS version and if that one is specified, looks for that specific simulator.
+        /// Old implementation of FindSimulators is kept intact because it is being used in Xamarin Mac/iOS.
         /// </summary>
         public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, bool createIfNeeded = true, bool minVersion = false)
         {
