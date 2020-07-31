@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     new ListSimulatorsArgument(tmpfile),
                     new XmlOutputFormatArgument());
 
-                var result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromSeconds(30));
+                var result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromMinutes(1));
 
                 if (!result.Succeeded)
                 {
@@ -147,10 +147,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                         companion: sim.SelectSingleNode("Companion").InnerText,
                         gizmo: sim.SelectSingleNode("Gizmo").InnerText));
                 }
+
+                _loaded = true;
             }
             finally
             {
-                _loaded = true;
                 _supportedRuntimes.SetCompleted();
                 _supportedDeviceTypes.SetCompleted();
                 _availableDevices.SetCompleted();
