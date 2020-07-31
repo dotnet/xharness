@@ -303,6 +303,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         [Fact]
         public async Task FindSimulatorsWithFailingMlaunchTest()
         {
+            // Moq.SetupSequence doesn't allow custom callbacks so we need to count ourselves
             var calls = 0;
 
             _processManager
@@ -326,8 +327,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
             await Assert.ThrowsAsync<Exception>(async () => await _simulatorLoader.LoadDevices(_executionLog.Object));
             Assert.Empty(_simulatorLoader.AvailableDevices);
+            Assert.Equal(1, calls);
             await _simulatorLoader.LoadDevices(_executionLog.Object);
+            Assert.Equal(2, calls);
             Assert.NotEmpty(_simulatorLoader.AvailableDevices);
+            await _simulatorLoader.LoadDevices(_executionLog.Object);
+            Assert.Equal(2, calls);
+            await _simulatorLoader.LoadDevices(_executionLog.Object);
+            Assert.Equal(2, calls);
         }
     }
 }
