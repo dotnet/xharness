@@ -17,17 +17,17 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 {
-    public class SimulatorsTest
+    public class SimulatorLoaderTests
     {
         private readonly Mock<ILog> _executionLog;
         private readonly Mock<IMLaunchProcessManager> _processManager;
-        private readonly SimulatorLoader _simulators;
+        private readonly SimulatorLoader _simulatorLoader;
 
-        public SimulatorsTest()
+        public SimulatorLoaderTests()
         {
             _executionLog = new Mock<ILog>();
             _processManager = new Mock<IMLaunchProcessManager>();
-            _simulators = new SimulatorLoader(_processManager.Object);
+            _simulatorLoader = new SimulatorLoader(_processManager.Object);
         }
 
         [Fact]
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
             await Assert.ThrowsAsync<Exception>(async () =>
             {
-                await _simulators.LoadDevices(_executionLog.Object);
+                await _simulatorLoader.LoadDevices(_executionLog.Object);
             });
 
             // validate the execution of mlaunch
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
                 });
 
-            await _simulators.LoadDevices(_executionLog.Object);
+            await _simulatorLoader.LoadDevices(_executionLog.Object);
 
             MlaunchArgument listSimArg = passedArguments.Where(a => a is ListSimulatorsArgument).FirstOrDefault();
             Assert.NotNull(listSimArg);
@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             MlaunchArgument outputFormatArg = passedArguments.Where(a => a is XmlOutputFormatArgument).FirstOrDefault();
             Assert.NotNull(outputFormatArg);
 
-            Assert.Equal(75, _simulators.AvailableDevices.Count());
+            Assert.Equal(75, _simulatorLoader.AvailableDevices.Count());
         }
 
         [Theory]
@@ -143,8 +143,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
                 });
 
-            await _simulators.LoadDevices(_executionLog.Object);
-            var (simulator, companion) = await _simulators.FindSimulators(target, _executionLog.Object, false, false);
+            await _simulatorLoader.LoadDevices(_executionLog.Object);
+            var (simulator, companion) = await _simulatorLoader.FindSimulators(target, _executionLog.Object, false, false);
 
             Assert.NotNull(simulator);
 
@@ -182,9 +182,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
                 });
 
-            await _simulators.LoadDevices(_executionLog.Object);
+            await _simulatorLoader.LoadDevices(_executionLog.Object);
 
-            await Assert.ThrowsAsync<NoDeviceFoundException>(async () => await _simulators.FindSimulators(new TestTargetOs(TestTarget.Simulator_iOS64, "12.8"), _executionLog.Object, false, false));
+            await Assert.ThrowsAsync<NoDeviceFoundException>(async () => await _simulatorLoader.FindSimulators(new TestTargetOs(TestTarget.Simulator_iOS64, "12.8"), _executionLog.Object, false, false));
         }
 
         [Fact]
@@ -211,9 +211,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
                 });
 
-            await _simulators.LoadDevices(_executionLog.Object);
+            await _simulatorLoader.LoadDevices(_executionLog.Object);
 
-            var (simulator, _) = await _simulators.FindSimulators(new TestTargetOs(TestTarget.Simulator_iOS64, SdkVersions.MaxiOSSimulator), _executionLog.Object, false, false);
+            var (simulator, _) = await _simulatorLoader.FindSimulators(new TestTargetOs(TestTarget.Simulator_iOS64, SdkVersions.MaxiOSSimulator), _executionLog.Object, false, false);
             Assert.NotNull(simulator);
         }
 
@@ -237,7 +237,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
                 });
 
-            var devices = _simulators.SelectDevices(testTarget, _executionLog.Object, false).ToList();
+            var devices = _simulatorLoader.SelectDevices(testTarget, _executionLog.Object, false).ToList();
 
             Assert.Single(devices);
         }
@@ -259,7 +259,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
                 });
 
-            var devices = _simulators.SelectDevices(TestTarget.Simulator_watchOS, _executionLog.Object, false).ToList();
+            var devices = _simulatorLoader.SelectDevices(TestTarget.Simulator_watchOS, _executionLog.Object, false).ToList();
 
             Assert.Equal(2, devices.Count);
             Assert.True(devices.First().IsWatchSimulator);
@@ -291,27 +291,50 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = mlaunchExitCode, TimedOut = mlaunchTimedout });
                 });
 
-            await _simulators.LoadDevices(_executionLog.Object);
-            var (simulator, companion) = await _simulators.FindSimulators(TestTarget.Simulator_iOS64, _executionLog.Object, false, false);
+            await _simulatorLoader.LoadDevices(_executionLog.Object);
+            var (simulator, companion) = await _simulatorLoader.FindSimulators(TestTarget.Simulator_iOS64, _executionLog.Object, false, false);
 
             Assert.NotNull(simulator);
         }
 
-        // This tests issues with mlaunch https://github.com/dotnet/xharness/issues/196
-        // Mlaunch sometimes times out/returns non-zero exit code and doesn't output simulator list XML
+        // This tests issues with mlaunch https://github.com/dotnet/xharness/issues/196 and https://github.com/dotnet/xharness/issues/283
+        // Mlaunch sometimes times out/returns non-zero exit code and doesn't output simulator list XML (#196),
+        // retry then should succeed (#283, #288).
         [Fact]
         public async Task FindSimulatorsWithFailingMlaunchTest()
         {
-            _processManager
-                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1)))
-                .ReturnsAsync(new ProcessExecutionResult() { ExitCode = 0 });
+            // Moq.SetupSequence doesn't allow custom callbacks so we need to count ourselves
+            var calls = 0;
 
-            // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
             _processManager
-                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
-                .ReturnsAsync(new ProcessExecutionResult { ExitCode = 137, TimedOut = true });
+                .Setup(p => p.ExecuteCommandAsync(It.Is<MlaunchArguments>(args => args.Any(a => a is ListSimulatorsArgument)), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                {
+                    calls++;
 
-            await Assert.ThrowsAsync<Exception>(async () => await _simulators.LoadDevices(_executionLog.Object));
+                    if (calls == 1)
+                    {
+                        return Task.FromResult(new ProcessExecutionResult { ExitCode = 137, TimedOut = true });
+                    }
+
+                    // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                    tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
+
+                    CopySampleData(tempPath);
+                    return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
+                });
+
+            await Assert.ThrowsAsync<Exception>(async () => await _simulatorLoader.LoadDevices(_executionLog.Object));
+            Assert.Empty(_simulatorLoader.AvailableDevices);
+            Assert.Equal(1, calls);
+            await _simulatorLoader.LoadDevices(_executionLog.Object);
+            Assert.Equal(2, calls);
+            Assert.NotEmpty(_simulatorLoader.AvailableDevices);
+            await _simulatorLoader.LoadDevices(_executionLog.Object);
+            Assert.Equal(2, calls);
+            await _simulatorLoader.LoadDevices(_executionLog.Object);
+            Assert.Equal(2, calls);
         }
     }
 }
