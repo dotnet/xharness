@@ -54,12 +54,14 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
             controller.RunTests(testCasesToRun, resultsSink, testOptions);
             var threadpoolPump = typeof(ThreadPool).GetMethod("PumpThreadPool", BindingFlags.NonPublic | BindingFlags.Static);
+            var timerPump = Type.GetType("System.Threading.TimerQueue")?.GetMethod("PumpTimerQueue", BindingFlags.NonPublic | BindingFlags.Static);
 
-            if (threadpoolPump != null)
+            if (threadpoolPump != null && timerPump != null)
             {
                 while (!resultsSink.Finished.WaitOne(0))
                 {
                     threadpoolPump.Invoke(this, null);
+                    timerPump.Invoke(this, null);
                 }
             }
             else
