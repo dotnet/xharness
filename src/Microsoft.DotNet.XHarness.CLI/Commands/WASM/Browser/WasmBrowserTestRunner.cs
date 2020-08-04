@@ -48,8 +48,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         public async Task<ExitCode> RunTestsWithWebDriver(IWebDriver driver)
         {
-            CancellationTokenSource webServerCts = new CancellationTokenSource();
-
             var packagePath = GetPackagePath ();
             var htmlFilePath = Path.Combine(packagePath, _arguments.HTMLFile);
             if (!File.Exists(htmlFilePath))
@@ -58,12 +56,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 return ExitCode.GENERAL_FAILURE;
             }
 
-            string webServerAddr = await StartWebServer(packagePath, webServerCts.Token);
-            var testUrl = BuildUrl(webServerAddr);
-
+            var webServerCts = new CancellationTokenSource();
             var pumpLogMessageCts = new CancellationTokenSource();
             try
             {
+                string webServerAddr = await StartWebServer(packagePath, webServerCts.Token);
+                var testUrl = BuildUrl(webServerAddr);
+
                 pumpLogMessageCts.CancelAfter(_arguments.Timeout);
 
                 _logger.LogTrace($"Opening in browser: {testUrl}");
@@ -111,7 +110,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 {
                     webServerCts.Cancel();
                 }
-                driver.Quit();
             }
         }
 

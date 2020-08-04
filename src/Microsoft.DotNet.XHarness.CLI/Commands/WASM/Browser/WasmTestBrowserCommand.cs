@@ -47,7 +47,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                                 logProcessor.Invoke,
                                 logger);
 
-            return await runner.RunTestsWithWebDriver(GetChromeDriver());
+            using var driver = GetChromeDriver();
+            return await runner.RunTestsWithWebDriver(driver);
         }
 
         private IWebDriver GetChromeDriver()
