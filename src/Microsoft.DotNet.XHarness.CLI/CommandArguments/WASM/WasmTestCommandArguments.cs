@@ -24,8 +24,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         /// <summary>
         /// SpiderMonkey
         /// </summary>
-        SpiderMonkey,
-        Chrome
+        SpiderMonkey
     }
 
     internal class WasmTestCommandArguments : TestCommandArguments

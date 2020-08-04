@@ -22,13 +22,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 
     internal class WasmTestBrowserCommandArguments : TestCommandArguments
     {
-        private Browser? _browser;
-
-        public Browser Browser
-        {
-            get => _browser ?? throw new ArgumentException("Browser not specified");
-            set => _browser = value;
-        }
+        public Browser Browser { get; set; } = Browser.Chrome;
 
         public List<string> BrowserArgs { get; set; } = new List<string>();
         public string HTMLFile { get; set; } = "index.html";
