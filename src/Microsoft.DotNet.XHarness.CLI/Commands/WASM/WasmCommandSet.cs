@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         public WasmCommandSet() : base("wasm")
         {
             Add(new WasmTestCommand());
+            Add(new WasmTestBrowserCommand());
         }
     }
 }

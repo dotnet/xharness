@@ -18,12 +18,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
     internal class WasmTestCommand : TestCommand
     {
-        private const string CommandHelp = "Executes tests on WASM using a selected JavaScript engine or a browser";
+        private const string CommandHelp = "Executes tests on WASM using a selected JavaScript engine";
 
         private readonly WasmTestCommandArguments _arguments = new WasmTestCommandArguments();
-
-        private StreamWriter? _xmlResultsFileWriter = null;
-        private bool _hasWasmStdoutPrefix = false;
 
         protected override TestCommandArguments TestArguments => _arguments;
         protected override string CommandUsage { get; } = "wasm test [OPTIONS] -- [ENGINE OPTIONS]";
@@ -35,25 +32,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            var xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
-            File.Delete(xmlResultsFilePath);
+            var processManager = ProcessManagerFactory.CreateProcessManager();
 
-            if (_arguments.Engine == JavaScriptEngine.Chrome)
-            {
-                var runner = new WasmBrowserTestRunner (
-                                    _arguments,
-                                    PassThroughArguments,
-                                    line => WasmTestLogCallback(line, xmlResultsFilePath, logger),
-                                    logger);
-
-                return await runner.RunWithChrome();
-            }
-
-            return await RunWithJSEngine(logger, line => WasmTestLogCallback(line, xmlResultsFilePath, logger));
-        }
-
-        async Task<ExitCode> RunWithJSEngine (ILogger logger, Action<string> processLog)
-        {
             var engineBinary = _arguments.Engine switch
             {
                 JavaScriptEngine.V8 => "v8",
@@ -81,14 +61,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             engineArgs.AddRange(PassThroughArguments);
 
+            var xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
+            File.Delete(xmlResultsFilePath);
+
             try
             {
-                var processManager = ProcessManagerFactory.CreateProcessManager();
+                var logProcessor = new WasmTestMessagesProcessor (xmlResultsFilePath, logger);
                 var result = await processManager.ExecuteCommandAsync(
                     engineBinary,
                     engineArgs,
                     log: new CallbackLog(m => logger.LogInformation(m)),
-                    stdoutLog: new CallbackLog(m => processLog(m)) { Timestamp = false /* we need the plain XML string so disable timestamp */ },
+                    stdoutLog: new CallbackLog(logProcessor.Invoke) { Timestamp = false /* we need the plain XML string so disable timestamp */ },
                     stderrLog: new CallbackLog(m => logger.LogError(m)),
                     _arguments.Timeout);
 
@@ -98,38 +81,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             {
                 logger.LogCritical($"The engine binary `{engineBinary}` was not found");
                 return ExitCode.APP_LAUNCH_FAILURE;
-            }
-        }
-
-        private void WasmTestLogCallback(string line, string xmlResultsFilePath, ILogger logger)
-        {
-            if (_xmlResultsFileWriter == null)
-            {
-                if (line.Contains("STARTRESULTXML"))
-                {
-                    _xmlResultsFileWriter = File.CreateText(xmlResultsFilePath);
-                    _hasWasmStdoutPrefix = line.StartsWith("WASM: ");
-                    return;
-                }
-                else if (line.Contains("Tests run:"))
-                {
-                    logger.LogInformation(line);
-                }
-                else
-                {
-                    logger.LogDebug(line);
-                }
-            }
-            else
-            {
-                if (line.Contains("ENDRESULTXML"))
-                {
-                    _xmlResultsFileWriter.Flush();
-                    _xmlResultsFileWriter.Dispose();
-                    _xmlResultsFileWriter = null;
-                    return;
-                }
-                _xmlResultsFileWriter.Write(_hasWasmStdoutPrefix ? line.Substring(6) : line);
             }
         }
     }
