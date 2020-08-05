@@ -10,7 +10,7 @@ using Mono.Options;
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {
     /// <summary>
-    /// Specifies a name of a JavaScript engine used to run WASM application.
+    /// Specifies the name of a Browser used to run the WASM application
     /// </summary>
     internal enum Browser
     {
@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public string HTMLFile { get; set; } = "index.html";
 
         protected override OptionSet GetTestCommandOptions() => new OptionSet{
-            { "browser=|e=", "Specifies the browser to be used",
+            { "browser=|b=", "Specifies the browser to be used",
                 v => Browser = ParseArgument<Browser>("browser", v)
             },
             { "browser-arg=", "Argument to pass to the browser. Can be used more than once.",
@@ -42,6 +42,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public override void Validate()
         {
             base.Validate();
+
+            if (!Directory.Exists(AppPackagePath))
+            {
+                throw new ArgumentException($"Failed to find the app bundle at {AppPackagePath}");
+            }
+
             if (Path.IsPathRooted (HTMLFile))
             {
                 throw new ArgumentException("--html-file argument must be a relative path");

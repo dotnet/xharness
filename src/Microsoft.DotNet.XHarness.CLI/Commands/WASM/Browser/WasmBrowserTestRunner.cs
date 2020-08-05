@@ -19,10 +19,10 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
 
 using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
-using OpenQA.Selenium.Support.UI;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
@@ -48,8 +48,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         public async Task<ExitCode> RunTestsWithWebDriver(IWebDriver driver)
         {
-            var packagePath = GetPackagePath ();
-            var htmlFilePath = Path.Combine(packagePath, _arguments.HTMLFile);
+            var htmlFilePath = Path.Combine(_arguments.AppPackagePath, _arguments.HTMLFile);
             if (!File.Exists(htmlFilePath))
             {
                 _logger.LogError($"Could not find html file {htmlFilePath}");
@@ -60,7 +59,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var pumpLogMessageCts = new CancellationTokenSource();
             try
             {
-                string webServerAddr = await StartWebServer(packagePath, webServerCts.Token);
+                string webServerAddr = await StartWebServer(_arguments.AppPackagePath, webServerCts.Token);
                 var testUrl = BuildUrl(webServerAddr);
 
                 pumpLogMessageCts.CancelAfter(_arguments.Timeout);
@@ -186,18 +185,5 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     .Addresses
                     .First();
         }
-
-        private string GetPackagePath ()
-        {
-            try
-            {
-                return _arguments.AppPackagePath;
-            }
-            catch (ArgumentException)
-            {
-                return Directory.GetCurrentDirectory();
-            }
-        }
-
     }
 }
