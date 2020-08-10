@@ -22,9 +22,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         private readonly WasmTestCommandArguments _arguments = new WasmTestCommandArguments();
 
-        private StreamWriter? _xmlResultsFileWriter = null;
-        private bool _hasWasmStdoutPrefix = false;
-
         protected override TestCommandArguments TestArguments => _arguments;
         protected override string CommandUsage { get; } = "wasm test [OPTIONS] -- [ENGINE OPTIONS]";
         protected override string CommandDescription { get; } = CommandHelp;
@@ -69,11 +66,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             try
             {
+                var logProcessor = new WasmTestMessagesProcessor (xmlResultsFilePath, logger);
                 var result = await processManager.ExecuteCommandAsync(
                     engineBinary,
                     engineArgs,
                     log: new CallbackLog(m => logger.LogInformation(m)),
-                    stdoutLog: new CallbackLog(m => WasmTestLogCallback(m, xmlResultsFilePath, logger)) { Timestamp = false /* we need the plain XML string so disable timestamp */ },
+                    stdoutLog: new CallbackLog(logProcessor.Invoke) { Timestamp = false /* we need the plain XML string so disable timestamp */ },
                     stderrLog: new CallbackLog(m => logger.LogError(m)),
                     _arguments.Timeout);
 
@@ -83,38 +81,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             {
                 logger.LogCritical($"The engine binary `{engineBinary}` was not found");
                 return ExitCode.APP_LAUNCH_FAILURE;
-            }
-        }
-
-        private void WasmTestLogCallback(string line, string xmlResultsFilePath, ILogger logger)
-        {
-            if (_xmlResultsFileWriter == null)
-            {
-                if (line.Contains("STARTRESULTXML"))
-                {
-                    _xmlResultsFileWriter = File.CreateText(xmlResultsFilePath);
-                    _hasWasmStdoutPrefix = line.StartsWith("WASM: ");
-                    return;
-                }
-                else if (line.Contains("Tests run:"))
-                {
-                    logger.LogInformation(line);
-                }
-                else
-                {
-                    logger.LogDebug(line);
-                }
-            }
-            else
-            {
-                if (line.Contains("ENDRESULTXML"))
-                {
-                    _xmlResultsFileWriter.Flush();
-                    _xmlResultsFileWriter.Dispose();
-                    _xmlResultsFileWriter = null;
-                    return;
-                }
-                _xmlResultsFileWriter.Write(_hasWasmStdoutPrefix ? line.Substring(6) : line);
             }
         }
     }
