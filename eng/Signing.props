@@ -11,20 +11,8 @@
     <FileSignInfo Include="mscorlib.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="System.Core.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="System.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="WebDriver.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Newtonsoft.Json.dll" CertificateName="3PartySHA2" />
   </ItemGroup>
-
-  <ItemGroup>
-    <!-- For Selenium.WebDriver -->
-    <ItemsToSign Remove="@(ItemsToSign->WithMetadataValue('Filename', 'WebDriver'))" />
-    <ItemsToSign Remove="@(ItemsToSign->WithMetadataValue('Filename', 'Newtonsoft.Json'))" />
-  </ItemGroup>
-
-  <PropertyGroup>
-    <!--
-      Signing of shipping artifacts (layout, msi, bundle) are handled separately.
-      It is therefore expected that above removal can yield an empty set.
-    -->
-    <AllowEmptySignList>true</AllowEmptySignList>
-  </PropertyGroup>
 
 </Project>
