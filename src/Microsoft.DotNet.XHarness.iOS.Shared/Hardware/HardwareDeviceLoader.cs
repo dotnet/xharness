@@ -120,6 +120,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             {
                 log.WriteLine($"Failed to parse device list: {e}");
                 log.Flush();
+                throw;
             }
             finally
             {
