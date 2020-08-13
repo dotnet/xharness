@@ -60,8 +60,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 _connectedDevices.Reset();
             }
 
-            _loaded = true;
-
             var tmpfile = Path.GetTempFileName();
             try
             {
@@ -115,6 +113,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                         _connectedDevices.Add(d);
                     }
                 }
+
+                _loaded = true;
             }
             catch (Exception e)
             {
