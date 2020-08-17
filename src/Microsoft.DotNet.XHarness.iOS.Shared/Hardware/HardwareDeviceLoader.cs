@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -35,6 +36,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         private readonly IMLaunchProcessManager _processManager;
         private bool _loaded;
         private readonly BlockingEnumerableCollection<IHardwareDevice> _connectedDevices = new BlockingEnumerableCollection<IHardwareDevice>();
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
         public IEnumerable<IHardwareDevice> ConnectedDevices => _connectedDevices;
         public IEnumerable<IHardwareDevice> Connected64BitIOS => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.iOS && x.Supports64Bit);
@@ -50,17 +52,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         public async Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false)
         {
+            await _semaphore.WaitAsync();
+
             if (_loaded)
             {
                 if (!forceRefresh)
                 {
+                    _semaphore.Release();
                     return;
                 }
 
                 _connectedDevices.Reset();
             }
-
-            _loaded = true;
 
             var tmpfile = Path.GetTempFileName();
             try
@@ -115,11 +118,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                         _connectedDevices.Add(d);
                     }
                 }
+
+                _loaded = true;
             }
             catch (Exception e)
             {
                 log.WriteLine($"Failed to parse device list: {e}");
                 log.Flush();
+                throw;
             }
             finally
             {
@@ -131,8 +137,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 }
 
                 log.Flush();
-
                 File.Delete(tmpfile);
+                _semaphore.Release();
             }
         }
 

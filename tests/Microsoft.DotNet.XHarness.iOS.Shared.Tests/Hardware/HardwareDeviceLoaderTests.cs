@@ -18,13 +18,13 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 {
-    public class DevicesTest
+    public class HardwareDeviceLoaderTests
     {
         private readonly HardwareDeviceLoader _devices;
         private readonly Mock<IMLaunchProcessManager> _processManager;
         private readonly Mock<ILog> _executionLog;
 
-        public DevicesTest()
+        public HardwareDeviceLoaderTests()
         {
             _processManager = new Mock<IMLaunchProcessManager>();
             _devices = new HardwareDeviceLoader(_processManager.Object);
@@ -118,6 +118,57 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             Assert.Equal(2, _devices.Connected64BitIOS.Count());
             Assert.Single(_devices.Connected32BitIOS);
             Assert.Empty(_devices.ConnectedTV);
+        }
+
+        [Fact]
+        public async Task FindAndCacheDevicesWithFailingMlaunchTest()
+        {
+            string processPath = null;
+            MlaunchArguments passedArguments = null;
+
+            // Moq.SetupSequence doesn't allow custom callbacks so we need to count ourselves
+            var calls = 0;
+
+            // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
+            _processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
+                .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, CancellationToken?, bool?>((p, args, log, t, env, token, d) => {
+                    calls++;
+
+                    if (calls == 1)
+                    {
+                        // Mlaunch can sometimes time out and we are testing that a subsequent Load will trigger it again
+                        return Task.FromResult(new ProcessExecutionResult { ExitCode = 137, TimedOut = true });
+                    }
+
+                    processPath = p.StartInfo.FileName;
+                    passedArguments = args;
+
+                    // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                    var tempPath = args.Where(a => a is ListDevicesArgument).First().AsCommandLineArgument();
+                    tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
+
+                    var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("devices.xml", StringComparison.Ordinal)).FirstOrDefault();
+                    using (var outputStream = new StreamWriter(tempPath))
+                    using (var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name)))
+                    {
+                        string line;
+                        while ((line = sampleStream.ReadLine()) != null)
+                            outputStream.WriteLine(line);
+                    }
+                    return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
+                });
+
+            await Assert.ThrowsAsync<Exception>(async () => await _devices.LoadDevices(_executionLog.Object));
+
+            Assert.Empty(_devices.ConnectedDevices);
+            Assert.Equal(1, calls);
+            await _devices.LoadDevices(_executionLog.Object);
+            Assert.Equal(2, calls);
+            Assert.NotEmpty(_devices.ConnectedDevices);
+            await _devices.LoadDevices(_executionLog.Object);
+            Assert.Equal(2, calls);
+            await _devices.LoadDevices(_executionLog.Object);
+            Assert.Equal(2, calls);
         }
     }
 }
