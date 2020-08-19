@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     new ListSimulatorsArgument(tmpfile),
                     new XmlOutputFormatArgument());
 
-                var result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromMinutes(1));
+                var result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromMinutes(6));
 
                 if (!result.Succeeded)
                 {
