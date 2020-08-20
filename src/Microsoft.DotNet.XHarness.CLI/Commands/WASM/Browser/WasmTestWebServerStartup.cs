@@ -31,7 +31,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(s_hostingEnvironment.ContentRootPath),
-                ContentTypeProvider = provider
+                ContentTypeProvider = provider,
+                ServeUnknownFileTypes = true
             });
         }
     }
