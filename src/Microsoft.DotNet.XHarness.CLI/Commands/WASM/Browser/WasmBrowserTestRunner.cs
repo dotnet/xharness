@@ -37,6 +37,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         // Eg. `foo` becomes `http://localhost:8000/xyz.js 0:12 "foo"
         static readonly Regex s_consoleLogRegex = new Regex(@"^\s*[a-z]*://[^\s]+\s+\d+:\d+\s+""(.*)""\s*$", RegexOptions.Compiled);
 
+        private bool _endResultXmlStringSeen = false;
+
         public WasmBrowserTestRunner(WasmTestBrowserCommandArguments arguments, IEnumerable<string> passThroughArguments,
                                             Action<string> processLogMessage, ILogger logger)
         {
@@ -81,12 +83,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     throw logPumpingTask.Exception!;
                 }
 
-                // WebDriverWait could return before we could get all
-                // the messages, so pump any remaining ones
-                PumpLogMessages(driver);
-
                 if (task == testsDoneTask && testsDoneTask.IsCompletedSuccessfully)
                 {
+                    // WebDriverWait could return before we could get all
+                    // the messages, so pump any remaining ones.
+                    // This can also be a bit delayed, if the console is very
+                    // frequently being written to, in the browser
+                    int count = 0;
+                    do
+                    {
+                        await Task.Delay(500);
+                        PumpLogMessages(driver);
+                    } while (count < 5 && !_endResultXmlStringSeen);
+
                     var elem = testsDoneTask.Result;
                     if (int.TryParse(elem.Text, out var code))
                     {
@@ -95,6 +104,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
                     return ExitCode.RETURN_CODE_NOT_SET;
                 }
+
+                if (task.IsFaulted)
+                {
+                    _logger.LogDebug(task.Exception!, "Waiting for tests failed");
+                    throw task.Exception!;
+                }
+
+                // WebDriverWait could return before we could get all
+                // the messages, so pump any remaining ones.
+                await Task.Delay(1000);
+                PumpLogMessages(driver);
 
                 return ExitCode.TIMED_OUT;
             }
@@ -148,6 +168,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 msg += Environment.NewLine;
 
                 _processLogMessage(msg);
+
+                // the test runner writes this as the last line,
+                // after the tests have run, and the xml results file
+                // has been written to the console
+                if (msg.Contains("ENDRESULTXML"))
+                {
+                    _endResultXmlStringSeen = true;
+                }
             }
         }
 
