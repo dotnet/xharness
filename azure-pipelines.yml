@@ -2,24 +2,6 @@ variables:
   - template: eng/common-variables.yml
   - name: Build.Repository.Clean
     value: true
-  - name: _HelixType
-    value: build/product
-  - name: _HelixSource
-    value: pr/dotnet/xharness/$(Build.SourceBranch)
-  - name: _HelixTestType
-    value: test/product/
-  - name: _XUnitProject
-    value: $(Build.SourcesDirectory)/tests/XHarness.Tests/XHarness.Tests.csproj
-  - name: _XUnitTargetFramework
-    value: netcoreapp3.1
-  - name: _XUnitRunnerVersion
-    value: 2.4.1
-  - name: _DotNetCliPackageType
-    value: sdk
-  - name: _DotNetCliVersion
-    value: 3.1.101
-  - name: _HelixAccessToken
-    value: ''
 
 # CI and PR triggers
 trigger:
@@ -206,7 +188,7 @@ stages:
               --restore
               --test
               --projects $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.Helix.SDK.Tests.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/HelixRun.binlog
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Android.Helix.SDK.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: Run Helix Tests
             env:
@@ -247,7 +229,7 @@ stages:
               --restore
               --test
               --projects $(Build.SourcesDirectory)/tests/integration-tests/iOS/iOS.Helix.SDK.Tests.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/HelixRun.binlog
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/iOS.Helix.SDK.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: Run Helix Tests
             env:
@@ -288,7 +270,7 @@ stages:
               --restore
               --test
               --projects $(Build.SourcesDirectory)/tests/integration-tests/WASM/WASM.Helix.SDK.Tests.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/HelixRun.binlog
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/WASM.Helix.SDK.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: Run Helix Tests
             env:

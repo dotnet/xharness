@@ -2,6 +2,9 @@
   <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/>
 
   <PropertyGroup>
+    <!-- These two settings work around changes from newer MSBuild requiring additional properties set (otherwise gets a weird error about targeting desktop 4.0) --> 
+    <TargetFrameworkVersion>5.0</TargetFrameworkVersion>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <HelixType>test/product/</HelixType>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
