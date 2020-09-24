@@ -4,6 +4,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Net.WebSockets;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -17,6 +19,7 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
@@ -37,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         // Eg. `foo` becomes `http://localhost:8000/xyz.js 0:12 "foo"
         static readonly Regex s_consoleLogRegex = new Regex(@"^\s*[a-z]*://[^\s]+\s+\d+:\d+\s+""(.*)""\s*$", RegexOptions.Compiled);
 
-        private bool _endResultXmlStringSeen = false;
+        private TaskCompletionSource<bool> wasmExitReceivedTcs = new TaskCompletionSource<bool>();
 
         public WasmBrowserTestRunner(WasmTestBrowserCommandArguments arguments, IEnumerable<string> passThroughArguments,
                                             Action<string> processLogMessage, ILogger logger)
@@ -48,7 +51,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             this._passThroughArguments = passThroughArguments;
         }
 
-        public async Task<ExitCode> RunTestsWithWebDriver(IWebDriver driver)
+        public async Task<ExitCode> RunTestsWithWebDriver(DriverService driverService, IWebDriver driver)
         {
             var htmlFilePath = Path.Combine(_arguments.AppPackagePath, _arguments.HTMLFile);
             if (!File.Exists(htmlFilePath))
@@ -57,47 +60,59 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 return ExitCode.GENERAL_FAILURE;
             }
 
-            var webServerCts = new CancellationTokenSource();
-            var pumpLogMessageCts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource();
             try
             {
-                string webServerAddr = await StartWebServer(_arguments.AppPackagePath, webServerCts.Token);
-                var testUrl = BuildUrl(webServerAddr);
+                var consolePumpTcs = new TaskCompletionSource<bool>();
+                string webServerAddr = await StartWebServer(
+                    _arguments.AppPackagePath,
+                    socket => RunConsoleMessagesPump(socket, consolePumpTcs, cts.Token),
+                    cts.Token);
 
-                pumpLogMessageCts.CancelAfter(_arguments.Timeout);
+                string testUrl = BuildUrl(webServerAddr);
+
+                var seleniumLogMessageTask = Task.Run(() => RunSeleniumLogMessagePump(driver, cts.Token), cts.Token);
+                cts.CancelAfter(_arguments.Timeout);
 
                 _logger.LogTrace($"Opening in browser: {testUrl}");
                 driver.Navigate().GoToUrl(testUrl);
 
-                var testsDoneTask = Task.Run (() =>
-                    new WebDriverWait (driver, _arguments.Timeout)
-                        .Until (e => e.FindElement(By.Id("tests_done")))
-                );
-
-                var logPumpingTask = RunLogMessagesPump(driver, pumpLogMessageCts.Token);
-                var task = await Task.WhenAny(logPumpingTask, testsDoneTask)
-                                .ConfigureAwait(false);
-
-                if (task == logPumpingTask && logPumpingTask.IsFaulted)
+                var tasks = new Task[]
                 {
-                    throw logPumpingTask.Exception!;
+                    wasmExitReceivedTcs.Task,
+                    consolePumpTcs.Task,
+                    seleniumLogMessageTask,
+                    Task.Delay(_arguments.Timeout)
+                };
+
+                var task = await Task.WhenAny(tasks).ConfigureAwait(false);
+                if (task == tasks[^1] || cts.IsCancellationRequested)
+                {
+                    if (driverService.IsRunning)
+                    {
+                        // Selenium isn't able to kill chrome in this case :/
+                        int pid = driverService.ProcessId;
+                        var p = Process.GetProcessById(pid);
+                        if (p != null)
+                        {
+                            _logger.LogDebug($"Tests timed out. Killing chrome pid {pid}");
+                            p.Kill(true);
+                        }
+                    }
+
+                    // timed out
+                    if (!cts.IsCancellationRequested)
+                        cts.Cancel();
+                    return ExitCode.TIMED_OUT;
                 }
 
-                if (task == testsDoneTask && testsDoneTask.IsCompletedSuccessfully)
+                if (task == wasmExitReceivedTcs.Task && wasmExitReceivedTcs.Task.IsCompletedSuccessfully)
                 {
-                    // WebDriverWait could return before we could get all
-                    // the messages, so pump any remaining ones.
-                    // This can also be a bit delayed, if the console is very
-                    // frequently being written to, in the browser
-                    int count = 0;
-                    do
-                    {
-                        await Task.Delay(500);
-                        PumpLogMessages(driver);
-                    } while (count < 5 && !_endResultXmlStringSeen);
+                    _logger.LogTrace($"Looking for `tests_done` element, to get the exit code");
+                    var testsDoneElement = new WebDriverWait(driver, TimeSpan.FromSeconds(30))
+                                                .Until (e => e.FindElement(By.Id("tests_done")));
 
-                    var elem = testsDoneTask.Result;
-                    if (int.TryParse(elem.Text, out var code))
+                    if (int.TryParse(testsDoneElement.Text, out var code))
                     {
                         return (ExitCode) Enum.ToObject(typeof(ExitCode), code);
                     }
@@ -107,75 +122,115 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
                 if (task.IsFaulted)
                 {
-                    _logger.LogDebug(task.Exception!, "Waiting for tests failed");
+                    _logger.LogDebug($"task faulted {task.Exception}");
                     throw task.Exception!;
                 }
-
-                // WebDriverWait could return before we could get all
-                // the messages, so pump any remaining ones.
-                await Task.Delay(1000);
-                PumpLogMessages(driver);
 
                 return ExitCode.TIMED_OUT;
             }
             finally
             {
-                if (!pumpLogMessageCts.IsCancellationRequested)
+                if (!cts.IsCancellationRequested)
                 {
-                    pumpLogMessageCts.Cancel();
-                }
-
-                if (!webServerCts.IsCancellationRequested)
-                {
-                    webServerCts.Cancel();
+                    cts.Cancel();
                 }
             }
         }
 
-        private async Task RunLogMessagesPump(IWebDriver driver, CancellationToken token)
+        private async Task RunConsoleMessagesPump(WebSocket socket, TaskCompletionSource<bool> tcs, CancellationToken token)
+        {
+            byte[] buff = new byte[4000];
+            var mem = new MemoryStream();
+            try {
+                while (!token.IsCancellationRequested)
+                {
+                    if (socket.State != WebSocketState.Open)
+                    {
+                        _logger.LogError($"DevToolsProxy: Socket is no longer open.");
+                        tcs.SetResult(false);
+                        return;
+                    }
+
+                    WebSocketReceiveResult result = await socket.ReceiveAsync(new ArraySegment<byte>(buff), token).ConfigureAwait(false);
+                    if (result.MessageType == WebSocketMessageType.Close)
+                    {
+                        tcs.SetResult(false);
+                        return;
+                    }
+
+                    mem.Write(buff, 0, result.Count);
+
+                    if (result.EndOfMessage)
+                    {
+                        var line = Encoding.UTF8.GetString(mem.GetBuffer(), 0, (int)mem.Length);
+                        line += Environment.NewLine;
+
+                        _processLogMessage(line);
+
+                        // the test runner writes this as the last line,
+                        // after the tests have run, and the xml results file
+                        // has been written to the console
+                        if (line.StartsWith("WASM EXIT"))
+                        {
+                            wasmExitReceivedTcs.SetResult(true);
+                        }
+                    }
+
+                    mem.SetLength(0);
+                    mem.Seek(0, SeekOrigin.Begin);
+                }
+
+                // the result is not used
+                tcs.SetResult(false);
+            }
+            catch (OperationCanceledException oce)
+            {
+                if (!token.IsCancellationRequested)
+                    _logger.LogDebug($"RunConsoleMessagesPump cancelled: {oce}");
+                tcs.SetResult(false);
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+                throw;
+            }
+        }
+
+        // This listens for any `console.log` messages.
+        // Since we pipe messages from managed code, and console.* to the websocket,
+        // this wouldn't normally get much. But listening on this to catch any messages
+        // that we miss piping to the websocket.
+        private void RunSeleniumLogMessagePump(IWebDriver driver, CancellationToken token)
         {
             try
             {
+                ILogs logs = driver.Manage().Logs;
                 while (!token.IsCancellationRequested)
                 {
-                    PumpLogMessages(driver);
-                    if (driver.CurrentWindowHandle == null) {
-                        // Accessing this property will throw, if the browser has crashed
+                    foreach (var logType in logs.AvailableLogTypes)
+                    {
+                        foreach (var logEntry in logs.GetLog(logType))
+                        {
+                            if (logEntry.Level == SeleniumLogLevel.Severe)
+                            {
+                                // throw on driver errors, or other errors that show up
+                                // in the console log
+                                throw new ArgumentException(logEntry.Message);
+                            }
+
+                            var match = s_consoleLogRegex.Match(Regex.Unescape(logEntry.Message));
+                            string msg = match.Success ? match.Groups[1].Value : logEntry.Message;
+                            _logger.LogDebug ($"{logType}: {msg}");
+                        }
                     }
-
-                    await Task.Delay(100, token).ConfigureAwait(false);
                 }
             }
-            catch (TaskCanceledException)
+            catch (WebDriverException wde) when (wde.Message.Contains("timed out after"))
+            { }
+            catch (Exception ex)
             {
-                // Ignore
-            }
-        }
-
-        private void PumpLogMessages(IWebDriver driver)
-        {
-            foreach (var logEntry in driver.Manage().Logs.GetLog(LogType.Browser))
-            {
-                if (logEntry.Level == SeleniumLogLevel.Severe)
-                {
-                    // throw on driver errors, or other errors that show up
-                    // in the console log
-                    throw new ArgumentException(logEntry.Message);
-                }
-
-                var match = s_consoleLogRegex.Match(Regex.Unescape(logEntry.Message));
-                string msg = match.Success ? match.Groups[1].Value : logEntry.Message;
-                msg += Environment.NewLine;
-
-                _processLogMessage(msg);
-
-                // the test runner writes this as the last line,
-                // after the tests have run, and the xml results file
-                // has been written to the console
-                if (msg.Contains("ENDRESULTXML"))
-                {
-                    _endResultXmlStringSeen = true;
-                }
+                _logger.LogDebug($"Failed trying to read log messages via selenium: {ex}");
+                throw;
             }
         }
 
@@ -195,14 +250,24 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             return uriBuilder.ToString();
         }
 
-        private static async Task<string> StartWebServer(string contentRoot, CancellationToken token)
+        private static async Task<string> StartWebServer(string contentRoot, Func<WebSocket, Task> onConsoleConnected, CancellationToken token)
         {
             var host = new WebHostBuilder()
                 .UseKestrel()
                 .UseContentRoot(contentRoot)
                 .UseStartup<WasmTestWebServerStartup>()
-                .ConfigureLogging(logging => {
+                .ConfigureLogging(logging =>
+                {
                     logging.AddConsole().AddFilter(null, LogLevel.Warning);
+                })
+                .ConfigureServices((ctx, services) =>
+                {
+                    services.AddRouting();
+                    services.Configure<WasmTestWebServerOptions>(ctx.Configuration);
+                    services.Configure<WasmTestWebServerOptions>(options =>
+                    {
+                        options.OnConsoleConnected = onConsoleConnected;
+                    });
                 })
                 .UseUrls("http://127.0.0.1:0")
                 .Build();
