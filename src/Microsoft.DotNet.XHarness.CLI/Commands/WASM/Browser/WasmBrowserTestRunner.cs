@@ -213,9 +213,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                         {
                             if (logEntry.Level == SeleniumLogLevel.Severe)
                             {
-                                // throw on driver errors, or other errors that show up
-                                // in the console log
-                                throw new ArgumentException(logEntry.Message);
+                                _logger.LogError($"[out of order message from the {logType}]: {logEntry.Message}");
+                                continue;
                             }
 
                             var match = s_consoleLogRegex.Match(Regex.Unescape(logEntry.Message));
