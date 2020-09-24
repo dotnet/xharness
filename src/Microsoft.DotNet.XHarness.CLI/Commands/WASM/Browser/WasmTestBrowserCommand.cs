@@ -80,8 +80,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             // timing out when getLog() is waiting, and doesn't receive anything
             // for 60s.
             //
-            // Since, we almost all the output gets written via the websocket,
-            // the actual getLog() might not see anything for long durations!
+            // Since, we almost all the output gets written via the websocket now,
+            // getLog() might not see anything for long durations!
             //
             // So -> use a larger timeout!
             return (driverService, new ChromeDriver(driverService, options, _arguments.Timeout));
