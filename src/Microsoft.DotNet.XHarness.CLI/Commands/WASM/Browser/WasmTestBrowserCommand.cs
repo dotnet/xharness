@@ -47,21 +47,44 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                                 logProcessor.Invoke,
                                 logger);
 
-            using var driver = GetChromeDriver();
-            return await runner.RunTestsWithWebDriver(driver);
+            var (driverService, driver) = GetChromeDriver();
+            try
+            {
+                return await runner.RunTestsWithWebDriver(driverService, driver);
+            }
+            finally
+            {
+                driverService.Dispose();
+                driver.Dispose();
+            }
         }
 
-        private IWebDriver GetChromeDriver()
+        private (DriverService, IWebDriver) GetChromeDriver()
         {
             var options = new ChromeOptions();
             options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
+
+            // Enable this for more debugging info
+            // options.SetLoggingPreference(LogType.Driver, SeleniumLogLevel.All);
+
             options.AddArguments(new List<string>(_arguments.BrowserArgs)
             {
                 "--incognito",
                 "--headless"
             });
 
-            return new ChromeDriver(options);
+            var driverService = ChromeDriverService.CreateDefaultService();
+
+            // We want to explicitly specify a timeout here. This is for for the
+            // driver commands, like getLog. The default is 60s, which ends up
+            // timing out when getLog() is waiting, and doesn't receive anything
+            // for 60s.
+            //
+            // Since, we almost all the output gets written via the websocket now,
+            // getLog() might not see anything for long durations!
+            //
+            // So -> use a larger timeout!
+            return (driverService, new ChromeDriver(driverService, options, _arguments.Timeout));
         }
     }
 }

@@ -4,8 +4,15 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
+using System;
+using System.Threading.Tasks;
+using System.Net.WebSockets;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
@@ -18,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             this.s_hostingEnvironment = hostingEnvironment;
         }
 
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, IOptionsMonitor<WasmTestWebServerOptions> optionsAccessor)
         {
             var provider = new FileExtensionContentTypeProvider();
             provider.Mappings[".wasm"] = "application/wasm";
@@ -34,6 +41,33 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 ContentTypeProvider = provider,
                 ServeUnknownFileTypes = true
             });
+
+            var options = optionsAccessor.CurrentValue;
+            if (options.OnConsoleConnected == null)
+            {
+                throw new ArgumentException("Bug: OnConsoleConnected callback not set");
+            }
+
+            app.UseWebSockets();
+            app.UseRouter(router =>
+            {
+                router.MapGet("/console", async context =>
+                {
+                    if (!context.WebSockets.IsWebSocketRequest)
+                    {
+                        context.Response.StatusCode = 400;
+                        return;
+                    }
+
+                    var socket = await context.WebSockets.AcceptWebSocketAsync();
+                    await options.OnConsoleConnected(socket);
+                });
+            });
         }
+    }
+
+    public class WasmTestWebServerOptions
+    {
+        public Func<WebSocket, Task>? OnConsoleConnected { get; set; }
     }
 }
