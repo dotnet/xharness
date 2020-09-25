@@ -4,7 +4,7 @@ This repo contains the code to build the **XHarness dotnet tool**.
 
 ## What is XHarness
 
-XHarness is primarily a command line tool that enables running xUnit like tests on Android, Apple iOS, desktop Browsers (WatchOS and tvOS are also supported).
+XHarness is primarily a command line tool that enables running xUnit like tests on Android, Apple iOS / tvOS / WatchOS and desktop Browsers.
 It can locate devices/emulators, install a given application, run it and collect results uninstalling it after.
 It handles application crashes by collecting crash dumps and supports different types of connection modes (Network, USB cable).
 It can output test results in various different formats from text to xUnit/NUnit XML.
