@@ -17,7 +17,7 @@ The tool requires **.NET Core 3.1.201** or later to be run. It is packaged as a 
 
 - The iOS scenarios require you to run the tool on MacOS with full Xcode installation
 - Android scenarios are supported on Linux, macOS and Windows systems
-- Browsers scenarious are supported on Linux systems
+- Browsers scenarios are supported on Linux systems
 
 To install the tool run:
 
