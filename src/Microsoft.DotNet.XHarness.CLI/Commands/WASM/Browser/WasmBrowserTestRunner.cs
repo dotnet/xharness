@@ -213,9 +213,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                         {
                             if (logEntry.Level == SeleniumLogLevel.Severe)
                             {
-                                // throw on driver errors, or other errors that show up
-                                // in the console log
-                                throw new ArgumentException(logEntry.Message);
+                                // These are errors from the browser, some of which might be
+                                // thrown as part of tests. So, we can't differentiate when
+                                // it is an error that we can ignore, vs one that should stop
+                                // the execution completely.
+                                //
+                                // Note: these could be received out-of-order as compared to
+                                // console messages via the websocket.
+                                //
+                                // (see commit message for more info)
+                                _logger.LogError($"[out of order message from the {logType}]: {logEntry.Message}");
+                                continue;
                             }
 
                             var match = s_consoleLogRegex.Match(Regex.Unescape(logEntry.Message));
