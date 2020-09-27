@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     _xmlResultsFileWriter = null;
                     return;
                 }
-                _xmlResultsFileWriter.Write(_hasWasmStdoutPrefix ? line.Substring(6) : line);
+                _xmlResultsFileWriter.WriteLine(_hasWasmStdoutPrefix ? line.Substring(6) : line);
             }
         }
     }
