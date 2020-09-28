@@ -45,9 +45,13 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             var resultsXmlAssembly = new XElement("assembly");
             var resultsSink = new DelegatingXmlCreationSink(summarySink, resultsXmlAssembly);
 
+            if (Environment.GetEnvironmentVariable("XHARNESS_LOG_TEST_START") != null)
+            {
+                testSink.Execution.TestStartingEvent += args => { Console.WriteLine($"[STRT] {args.Message.Test.DisplayName}"); };
+            }
             testSink.Execution.TestPassedEvent += args => { Console.WriteLine($"[PASS] {args.Message.Test.DisplayName}"); };
             testSink.Execution.TestSkippedEvent += args => { Console.WriteLine($"[SKIP] {args.Message.Test.DisplayName}"); };
-            testSink.Execution.TestFailedEvent += args => { Console.WriteLine($"[FAIL] {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}"); };
+            testSink.Execution.TestFailedEvent += args => { LogWithEscapedNewLine($"[FAIL] {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}"); };
 
             testSink.Execution.TestAssemblyStartingEvent += args => { Console.WriteLine($"Running tests for {args.Message.TestAssembly.Assembly}"); };
             testSink.Execution.TestAssemblyFinishedEvent += args => { Console.WriteLine($"Finished {args.Message.TestAssembly.Assembly}{Environment.NewLine}"); };
@@ -81,6 +85,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
             var failed = resultsSink.ExecutionSummary.Failed > 0 || resultsSink.ExecutionSummary.Errors > 0;
             return failed ? 1 : 0;
+        }
+
+        private void LogWithEscapedNewLine(string message)
+        {
+            Console.WriteLine(message.Replace(Environment.NewLine, "[xharnessnewline]"));
         }
     }
 

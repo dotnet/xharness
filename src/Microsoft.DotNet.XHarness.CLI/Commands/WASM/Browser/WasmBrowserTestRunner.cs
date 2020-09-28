@@ -163,6 +163,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     if (result.EndOfMessage)
                     {
                         var line = Encoding.UTF8.GetString(mem.GetBuffer(), 0, (int)mem.Length);
+                        line += Environment.NewLine;
+
                         _processLogMessage(line);
 
                         // the test runner writes this as the last line,

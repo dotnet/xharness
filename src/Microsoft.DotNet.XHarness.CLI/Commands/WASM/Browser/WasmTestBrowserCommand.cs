@@ -40,7 +40,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
             File.Delete(xmlResultsFilePath);
 
-            var logProcessor = new WasmTestMessagesProcessor (xmlResultsFilePath, logger);
+            var stdoutFilePath = Path.Combine(_arguments.OutputDirectory, "wasm-console.log");
+            File.Delete(stdoutFilePath);
+
+            var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath, stdoutFilePath, logger);
             var runner = new WasmBrowserTestRunner(
                                 _arguments,
                                 PassThroughArguments,
