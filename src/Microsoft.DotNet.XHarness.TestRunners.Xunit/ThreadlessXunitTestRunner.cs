@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             discoveryOptions.SetSynchronousMessageReporting(true);
             testOptions.SetSynchronousMessageReporting(true);
 
-            Console.WriteLine($"Discovering tests for {assemblyFileName}");
+            Console.WriteLine($"Discovering: {assemblyFileName} (method display = {discoveryOptions.GetMethodDisplayOrDefault()}, method display options = {discoveryOptions.GetMethodDisplayOptionsOrDefault()})");
             var assembly = Assembly.LoadFrom(assemblyFileName);
             var assemblyInfo = new global::Xunit.Sdk.ReflectionAssemblyInfo(assembly);
             var discoverer = new ThreadlessXunitDiscoverer(assemblyInfo, new NullSourceInformationProvider(), discoverySink);
@@ -39,9 +39,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             discoverer.FindWithoutThreads(includeSourceInformation: false, discoverySink, discoveryOptions);
             discoverySink.Finished.WaitOne();
             var testCasesToRun = discoverySink.TestCases.Where(filters.Filter).ToList();
-            Console.WriteLine($"Discovery finished.");
+            Console.WriteLine($"Discovered:  {assemblyFileName} (found {testCasesToRun.Count} of {discoverySink.TestCases.Count} test cases)");
 
-            var summarySink = new DelegatingExecutionSummarySink(testSink, () => false, (completed, summary) => { Console.WriteLine($"Tests run: {summary.Total}, Errors: 0, Failures: {summary.Failed}, Skipped: {summary.Skipped}. Time: {TimeSpan.FromSeconds((double)summary.Time).TotalSeconds}s"); });
+            var summarySink = new DelegatingExecutionSummarySink(testSink, () => false, (completed, summary) => { Console.WriteLine($"{Environment.NewLine}=== TEST EXECUTION SUMMARY ==={Environment.NewLine}Total: {summary.Total}, Errors: 0, Failed: {summary.Failed}, Skipped: {summary.Skipped}, Time: {TimeSpan.FromSeconds((double)summary.Time).TotalSeconds}s{Environment.NewLine}"); });
             var resultsXmlAssembly = new XElement("assembly");
             var resultsSink = new DelegatingXmlCreationSink(summarySink, resultsXmlAssembly);
 
@@ -51,10 +51,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             }
             testSink.Execution.TestPassedEvent += args => { Console.WriteLine($"[PASS] {args.Message.Test.DisplayName}"); };
             testSink.Execution.TestSkippedEvent += args => { Console.WriteLine($"[SKIP] {args.Message.Test.DisplayName}"); };
-            testSink.Execution.TestFailedEvent += args => { LogWithEscapedNewLine($"[FAIL] {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}"); };
+            testSink.Execution.TestFailedEvent += args => { Console.WriteLine($"[FAIL] {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}"); };
 
-            testSink.Execution.TestAssemblyStartingEvent += args => { Console.WriteLine($"Running tests for {args.Message.TestAssembly.Assembly}"); };
-            testSink.Execution.TestAssemblyFinishedEvent += args => { Console.WriteLine($"Finished {args.Message.TestAssembly.Assembly}{Environment.NewLine}"); };
+            testSink.Execution.TestAssemblyStartingEvent += args => { Console.WriteLine($"Starting:    {assemblyFileName}"); };
+            testSink.Execution.TestAssemblyFinishedEvent += args => { Console.WriteLine($"Finished:    {assemblyFileName}"); };
 
             controller.RunTests(testCasesToRun, resultsSink, testOptions);
             var threadpoolPump = typeof(ThreadPool).GetMethod("PumpThreadPool", BindingFlags.NonPublic | BindingFlags.Static);
@@ -85,11 +85,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
             var failed = resultsSink.ExecutionSummary.Failed > 0 || resultsSink.ExecutionSummary.Errors > 0;
             return failed ? 1 : 0;
-        }
-
-        private void LogWithEscapedNewLine(string message)
-        {
-            Console.WriteLine(message.Replace(Environment.NewLine, "[xharnessnewline]"));
         }
     }
 

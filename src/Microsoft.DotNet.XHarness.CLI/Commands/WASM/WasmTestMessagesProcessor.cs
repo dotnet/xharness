@@ -39,7 +39,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 }
                 else if (line.StartsWith("[FAIL]"))
                 {
-                    line = line.Replace("[xharnessnewline]", Environment.NewLine);
                     _logger.LogError(line);
                 }
                 else

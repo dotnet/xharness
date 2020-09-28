@@ -130,11 +130,17 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         private ILoggerFactory CreateLoggerFactory(LogLevel verbosity) => LoggerFactory.Create(builder =>
         {
             builder
-            .AddConsole(options =>
+            .AddSimpleConsole(options =>
             {
+                options.SingleLine = true;
+
                 if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
                 {
-                    options.DisableColors = true;
+                    options.ColorBehavior = Extensions.Logging.Console.LoggerColorBehavior.Disabled;
+                }
+                else
+                {
+                    options.ColorBehavior = Extensions.Logging.Console.LoggerColorBehavior.Enabled;
                 }
 
                 if (Environment.GetEnvironmentVariable("XHARNESS_LOG_WITH_TIMESTAMPS")?.ToLower().Equals("true") ?? false)
