@@ -61,6 +61,7 @@ There are other settings which can be controlled via **environmental variables**
 
 - `XHARNESS_DISABLE_COLORED_OUTPUT` - disable colored logging so that control characters are not making the logs hard to read
 - `XHARNESS_LOG_WITH_TIMESTAMPS` - enable timestamps for logging
+- `XHARNESS_LOG_TEST_START` - log test start messages, useful to diagnose when tests are hanging. Currently only works for WebAssembly.
 
 ### Arcade/Helix integration
 
