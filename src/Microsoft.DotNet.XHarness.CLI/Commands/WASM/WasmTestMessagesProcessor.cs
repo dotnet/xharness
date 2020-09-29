@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.IO;
 using Microsoft.Extensions.Logging;
 
@@ -10,14 +11,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
     public class WasmTestMessagesProcessor
     {
         private StreamWriter? _xmlResultsFileWriter;
+        private readonly StreamWriter _stdoutFileWriter;
         private readonly string _xmlResultsFilePath;
-        private bool _hasWasmStdoutPrefix = false;
 
         private readonly ILogger _logger;
 
-        public WasmTestMessagesProcessor(string xmlResultsFilePath, ILogger logger)
+        public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger)
         {
             this._xmlResultsFilePath = xmlResultsFilePath;
+            this._stdoutFileWriter = File.CreateText(stdoutFilePath);
+            this._stdoutFileWriter.AutoFlush = true;
             this._logger = logger;
         }
 
@@ -28,17 +31,22 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 if (line.Contains("STARTRESULTXML"))
                 {
                     _xmlResultsFileWriter = File.CreateText(_xmlResultsFilePath);
-                    _hasWasmStdoutPrefix = line.StartsWith("WASM: ");
                     return;
                 }
-                else if (line.Contains("Tests run:"))
-                {
-                    _logger.LogInformation(line);
-                }
-                else
+                else if (line.StartsWith("[PASS]") || line.StartsWith("[SKIP]"))
                 {
                     _logger.LogDebug(line);
                 }
+                else if (line.StartsWith("[FAIL]"))
+                {
+                    _logger.LogError(line);
+                }
+                else
+                {
+                    _logger.LogInformation(line);
+                }
+
+                _stdoutFileWriter.Write(line);
             }
             else
             {
@@ -49,7 +57,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     _xmlResultsFileWriter = null;
                     return;
                 }
-                _xmlResultsFileWriter.WriteLine(_hasWasmStdoutPrefix ? line.Substring(6) : line);
+                _xmlResultsFileWriter.Write(line);
             }
         }
     }

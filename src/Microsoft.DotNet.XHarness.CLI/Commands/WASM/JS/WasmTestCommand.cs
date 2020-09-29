@@ -64,9 +64,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
             File.Delete(xmlResultsFilePath);
 
+            var stdoutFilePath = Path.Combine(_arguments.OutputDirectory, "wasm-console.log");
+            File.Delete(stdoutFilePath);
+
             try
             {
-                var logProcessor = new WasmTestMessagesProcessor (xmlResultsFilePath, logger);
+                var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath, stdoutFilePath, logger);
                 var result = await processManager.ExecuteCommandAsync(
                     engineBinary,
                     engineArgs,
