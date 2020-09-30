@@ -4,6 +4,7 @@
   <!-- We include mlaunch and adb binaries we didn't build and which do not need sympkgs -->
   <PropertyGroup>
     <AutoGenerateSymbolPackages>false</AutoGenerateSymbolPackages>
+    <PublishingVersion>3</PublishingVersion>
   </PropertyGroup>
 
 </Project>
