@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
         public ListCommand() : base(CommandName, CommandHelp)
         {
+            UseSingleLineLogging = false;
         }
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
