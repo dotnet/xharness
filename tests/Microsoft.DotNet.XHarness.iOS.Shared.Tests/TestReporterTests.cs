@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         {
             // set the listener to return a task that we are not going to complete
             var cancellationTokenSource = new CancellationTokenSource();
-            var tcs = new TaskCompletionSource<object>();
+            var tcs = new TaskCompletionSource<bool>();
             _listener.Setup(l => l.CompletionTask).Returns(tcs.Task); // will never be set to be completed
 
             // ensure that we do provide the required runlog information so that we know if it was a launch failure or not, we are
@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 
             // set the listener to return a task that we are not going to complete
             var cancellationTokenSource = new CancellationTokenSource();
-            var tcs = new TaskCompletionSource<object>();
+            var tcs = new TaskCompletionSource<bool>();
             _listener.Setup(l => l.CompletionTask).Returns(tcs.Task); // will never be set to be completed
 
             // empty test file to be returned as the runlog stream
@@ -189,7 +189,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         public async Task CollectDeviceResultTimeoutTest()
         {
             // set the listener to return a task that we are not going to complete
-            var tcs = new TaskCompletionSource<object>();
+            var tcs = new TaskCompletionSource<bool>();
             _listener.Setup(l => l.CompletionTask).Returns(tcs.Task); // will never be set to be completed
 
             // ensure that we do provide the required runlog information so that we know if it was a launch failure or not, we are
@@ -314,7 +314,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         public async Task ParseResultTimeoutTestsTest()
         {
             // more complicated test, we need to fake a process timeout, then ensure that the result is the expected one
-            var tcs = new TaskCompletionSource<object>();
+            var tcs = new TaskCompletionSource<bool>();
             _listener.Setup(l => l.CompletionTask).Returns(tcs.Task); // will never be set to be completed
 
             var listenerLog = new Mock<IFileBackedLog>();
