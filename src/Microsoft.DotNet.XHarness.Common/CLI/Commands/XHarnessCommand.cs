@@ -50,6 +50,8 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         /// </summary>
         protected IEnumerable<string> ExtraArguments { get; private set; } = Enumerable.Empty<string>();
 
+        protected bool UseSingleLineLogging { get; set; } = true;
+
         protected XHarnessCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, help)
         {
             _allowsExtraArgs = allowsExtraArgs;
@@ -132,7 +134,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
             builder
             .AddSimpleConsole(options =>
             {
-                options.SingleLine = true;
+                options.SingleLine = UseSingleLineLogging;
 
                 if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
                 {
