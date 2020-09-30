@@ -12,8 +12,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
     public interface ISimpleListener : IDisposable
     {
-        Task CompletionTask { get; }
-        Task ConnectedTask { get; }
+        Task<bool> CompletionTask { get; }
+        Task<bool> ConnectedTask { get; }
         IFileBackedLog TestLog { get; }
 
         void Cancel();
@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         protected abstract void Start();
         protected abstract void Stop();
 
-        public Task ConnectedTask => _connected.Task;
+        public Task<bool> ConnectedTask => _connected.Task;
         public abstract int InitializeAndGetPort();
 
         protected SimpleListener(ILog log, IFileBackedLog testLog)
@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public bool WaitForCompletion(TimeSpan ts) => _stopped.Task.Wait(ts);
 
-        public Task CompletionTask => _stopped.Task;
+        public Task<bool> CompletionTask => _stopped.Task;
 
         public void Cancel()
         {

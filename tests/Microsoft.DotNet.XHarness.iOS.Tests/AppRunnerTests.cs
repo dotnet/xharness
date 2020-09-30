@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             _listener = new Mock<ISimpleListener>();
             _listener
                 .SetupGet(x => x.ConnectedTask)
-                .Returns(Task.CompletedTask);
+                .Returns(Task.FromResult(true));
 
             _snapshotReporter = new Mock<ICrashSnapshotReporter>();
 
