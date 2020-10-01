@@ -3,11 +3,15 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging.Console;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
@@ -49,8 +53,6 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         /// Extra arguments parsed to the command (if the command allows it).
         /// </summary>
         protected IEnumerable<string> ExtraArguments { get; private set; } = Enumerable.Empty<string>();
-
-        protected bool UseSingleLineLogging { get; set; } = true;
 
         protected XHarnessCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, help)
         {
@@ -131,26 +133,193 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
         private ILoggerFactory CreateLoggerFactory(LogLevel verbosity) => LoggerFactory.Create(builder =>
         {
+            var disableColors = IsEnvVarTrue("XHARNESS_DISABLE_COLORED_OUTPUT");
+            var timestampFormat = IsEnvVarTrue("XHARNESS_LOG_WITH_TIMESTAMPS") ? "[HH:mm:ss] " : null;
+
+            var formatter = new XHarnessConsoleFormatter(disableColors, timestampFormat);
+
             builder
-            .AddSimpleConsole(options =>
-            {
-                options.SingleLine = UseSingleLineLogging;
-
-                if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
-                {
-                    options.ColorBehavior = Extensions.Logging.Console.LoggerColorBehavior.Disabled;
-                }
-                else
-                {
-                    options.ColorBehavior = Extensions.Logging.Console.LoggerColorBehavior.Enabled;
-                }
-
-                if (Environment.GetEnvironmentVariable("XHARNESS_LOG_WITH_TIMESTAMPS")?.ToLower().Equals("true") ?? false)
-                {
-                    options.TimestampFormat = "[HH:mm:ss] ";
-                }
-            })
+            .AddProvider(new XHarnessLoggerProvider(formatter))
             .SetMinimumLevel(verbosity);
         });
+
+        private static bool IsEnvVarTrue(string varName) =>
+            Environment.GetEnvironmentVariable(varName)?.ToLower().Equals("true") ?? false;
     }
+
+    public class XHarnessLoggerProvider : ILoggerProvider
+    {
+        private readonly ConsoleFormatter _formatter;
+        private readonly ConcurrentDictionary<string, XHarnessConsoleLogger> _loggers = new ConcurrentDictionary<string, XHarnessConsoleLogger>();
+
+        public XHarnessLoggerProvider(ConsoleFormatter formatter)
+        {
+            _formatter = formatter;
+        }
+
+        public void Dispose() { }
+
+        public ILogger CreateLogger(string categoryName) =>
+            _loggers.GetOrAdd(categoryName, loggerName => new XHarnessConsoleLogger(categoryName, _formatter));
+
+        public class XHarnessConsoleLogger : ILogger
+        {
+            private readonly string _categoryName;
+            private readonly ConsoleFormatter _formatter;
+
+            [ThreadStatic]
+            private static StringWriter? s_stringWriter;
+
+            public XHarnessConsoleLogger(string categoryName, ConsoleFormatter formatter)
+            {
+                _categoryName = categoryName;
+                _formatter = formatter;
+            }
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+            {
+                if (!IsEnabled(logLevel))
+                {
+                    return;
+                }
+
+                s_stringWriter ??= new StringWriter();
+
+                LogEntry<TState> logEntry = new LogEntry<TState>(logLevel, _categoryName, eventId, state, exception, formatter);
+                _formatter.Write(in logEntry, null!, s_stringWriter);
+
+                var sb = s_stringWriter.GetStringBuilder();
+                if (sb.Length == 0)
+                {
+                    return;
+                }
+
+                Console.WriteLine(sb);
+            }
+
+            public IDisposable BeginScope<TState>(TState state) => null!;
+
+            public bool IsEnabled(LogLevel logLevel) => true;
+        }
+    }
+
+    /*public class XHarnessLoggerProvider : ILoggerProvider, ISupportExternalScope
+    {
+        private readonly ConsoleLoggerOptions _options;
+        private readonly ConcurrentDictionary<string, ConsoleLogger> _loggers;
+        private readonly ConsoleLoggerProcessor _messageQueue;
+
+        private IExternalScopeProvider _scopeProvider = NullExternalScopeProvider.Instance;
+
+        /// <summary>
+        /// Creates an instance of <see cref="XHarnessLoggerProvider"/>.
+        /// </summary>
+        /// <param name="options">The options to create <see cref="ConsoleLogger"/> instances with.</param>
+        public XHarnessLoggerProvider(ConsoleLoggerOptions options)
+            : this(options, Enumerable.Empty<ConsoleFormatter>()) { }
+
+        /// <summary>
+        /// Creates an instance of <see cref="XHarnessLoggerProvider"/>.
+        /// </summary>
+        /// <param name="options">The options to create <see cref="ConsoleLogger"/> instances with.</param>
+        /// <param name="formatters">Log formatters added for <see cref="ConsoleLogger"/> insteaces.</param>
+        public XHarnessLoggerProvider(ConsoleLoggerOptions options, IEnumerable<ConsoleFormatter> formatters)
+        {
+            _options = options;
+            _loggers = new ConcurrentDictionary<string, ConsoleLogger>();
+
+            ReloadLoggerOptions(options.CurrentValue);
+
+            _messageQueue = new ConsoleLoggerProcessor();
+            if (DoesConsoleSupportAnsi())
+            {
+                _messageQueue.Console = new AnsiLogConsole();
+                _messageQueue.ErrorConsole = new AnsiLogConsole(stdErr: true);
+            }
+            else
+            {
+                _messageQueue.Console = new AnsiParsingLogConsole();
+                _messageQueue.ErrorConsole = new AnsiParsingLogConsole(stdErr: true);
+            }
+
+            if (options.FormatterName == null || !_formatters.TryGetValue(options.FormatterName, out ConsoleFormatter logFormatter))
+            {
+#pragma warning disable CS0618
+                logFormatter = options.Format switch
+                {
+                    ConsoleLoggerFormat.Systemd => _formatters[ConsoleFormatterNames.Systemd],
+                    _ => _formatters[ConsoleFormatterNames.Simple],
+                };
+                if (options.FormatterName == null)
+                {
+                    UpdateFormatterOptions(logFormatter, options);
+                }
+#pragma warning restore CS0618
+            }
+        }
+
+        private static bool DoesConsoleSupportAnsi()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return true;
+            }
+            // for Windows, check the console mode
+            var stdOutHandle = Interop.Kernel32.GetStdHandle(Interop.Kernel32.STD_OUTPUT_HANDLE);
+            if (!Interop.Kernel32.GetConsoleMode(stdOutHandle, out int consoleMode))
+            {
+                return false;
+            }
+
+            return (consoleMode & Interop.Kernel32.ENABLE_VIRTUAL_TERMINAL_PROCESSING) == Interop.Kernel32.ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        }
+
+        // warning:  ReloadLoggerOptions can be called before the ctor completed,... before registering all of the state used in this method need to be initialized
+        private void ReloadLoggerOptions(ConsoleLoggerOptions options)
+        {
+        }
+
+        /// <inheritdoc />
+        public ILogger CreateLogger(string name)
+        {
+            if (_options.CurrentValue.FormatterName == null || !_formatters.TryGetValue(_options.CurrentValue.FormatterName, out ConsoleFormatter logFormatter))
+            {
+#pragma warning disable CS0618
+                logFormatter = _options.CurrentValue.Format switch
+                {
+                    ConsoleLoggerFormat.Systemd => _formatters[ConsoleFormatterNames.Systemd],
+                    _ => _formatters[ConsoleFormatterNames.Simple],
+                };
+                if (_options.CurrentValue.FormatterName == null)
+                {
+                    UpdateFormatterOptions(logFormatter, _options.CurrentValue);
+                }
+#pragma warning disable CS0618
+            }
+
+            return _loggers.GetOrAdd(name, loggerName => new ConsoleLogger(name, _messageQueue)
+            {
+                Options = _options.CurrentValue,
+                ScopeProvider = _scopeProvider,
+                Formatter = logFormatter,
+            });
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            _messageQueue.Dispose();
+        }
+
+        /// <inheritdoc />
+        public void SetScopeProvider(IExternalScopeProvider scopeProvider)
+        {
+            _scopeProvider = scopeProvider;
+
+            foreach (KeyValuePair<string, ConsoleLogger> logger in _loggers)
+            {
+                logger.Value.ScopeProvider = _scopeProvider;
+            }
+        }
+    }*/
 }
