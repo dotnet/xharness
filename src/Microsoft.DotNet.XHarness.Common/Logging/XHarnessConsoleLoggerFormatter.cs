@@ -6,11 +6,12 @@ using System.IO;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
 
 namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 {
     /// <summary>
-    /// Copied over from SimpleConsoleFormatter
+    /// Copied over from SimpleConsoleLoggerFormatter
     /// </summary>
     internal class XHarnessConsoleLoggerFormatter : ConsoleFormatter
     {
@@ -18,21 +19,25 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         private const string DefaultForegroundColor = "\x1B[39m\x1B[22m"; // reset to default foreground color
         private const string DefaultBackgroundColor = "\x1B[49m"; // reset to the background color
 
-        private readonly bool _disableColors;
-        private readonly string? _timestampFormat;
-        private readonly string _messagePadding;
-        private readonly string _newLineWithMessagePadding;
+        public const string FormatterName = "xharness";
 
-        public static LoggerColorBehavior ColorBehavior;
-        public static string TimestampFormat = "";
+        private readonly IDisposable _optionsReloadToken;
+        private SimpleConsoleFormatterOptions _options;
+        private string _messagePadding;
+        private string _newLineWithMessagePadding;
 
-        public XHarnessConsoleLoggerFormatter()
-            : base("xharness")
+        public XHarnessConsoleLoggerFormatter(IOptionsMonitor<SimpleConsoleFormatterOptions> options)
+            : base(FormatterName)
         {
-            _disableColors = ColorBehavior == LoggerColorBehavior.Disabled;
-            _timestampFormat = TimestampFormat;
-            _messagePadding = new string(' ', GetLogLevelString(LogLevel.Information).Length + LoglevelPadding.Length + (_timestampFormat?.Length ?? 0));
+            ReloadLoggerOptions(options.CurrentValue);
+            _optionsReloadToken = options.OnChange(ReloadLoggerOptions);
+        }
+
+        private void ReloadLoggerOptions(SimpleConsoleFormatterOptions options)
+        {
+            _messagePadding = new string(' ', GetLogLevelString(LogLevel.Information).Length + LoglevelPadding.Length + (options.TimestampFormat?.Length ?? 0));
             _newLineWithMessagePadding = Environment.NewLine + _messagePadding;
+            _options = options;
         }
 
         public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider scopeProvider, TextWriter textWriter)
@@ -47,9 +52,9 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
             var logLevelColors = GetLogLevelConsoleColors(logLevel);
             string logLevelString = GetLogLevelString(logLevel);
 
-            if (_timestampFormat != null)
+            if (_options.TimestampFormat != null)
             {
-                string timestamp = DateTimeOffset.Now.ToString(_timestampFormat);
+                string timestamp = DateTimeOffset.Now.ToString(_options.TimestampFormat);
                 textWriter.Write(timestamp);
             }
 
@@ -67,6 +72,11 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
                 // exception message
                 WriteMessage(textWriter, logEntry.Exception.ToString());
             }
+        }
+
+        public void Dispose()
+        {
+            _optionsReloadToken?.Dispose();
         }
 
         private void WriteMessage(TextWriter textWriter, string message, bool includePadding = true)
@@ -97,7 +107,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
         private (ConsoleColor? Foreground, ConsoleColor? Background) GetLogLevelConsoleColors(LogLevel logLevel)
         {
-            if (_disableColors)
+            if (_options.ColorBehavior == LoggerColorBehavior.Disabled)
             {
                 return (null, null);
             }
