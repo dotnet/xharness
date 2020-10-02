@@ -34,23 +34,16 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
         public const string FormatterName = "xharness";
 
-        private readonly IDisposable _optionsReloadToken;
-        private SimpleConsoleFormatterOptions _options;
-        private string _messagePadding;
-        private string _newLineWithMessagePadding;
+        private readonly SimpleConsoleFormatterOptions _options;
+        private readonly string _messagePadding;
+        private readonly string _newLineWithMessagePadding;
 
         public XHarnessConsoleLoggerFormatter(IOptionsMonitor<SimpleConsoleFormatterOptions> options)
             : base(FormatterName)
         {
-            ReloadLoggerOptions(options.CurrentValue);
-            _optionsReloadToken = options.OnChange(ReloadLoggerOptions);
-        }
-
-        private void ReloadLoggerOptions(SimpleConsoleFormatterOptions options)
-        {
-            _messagePadding = new string(' ', GetLogLevelString(LogLevel.Information).Length + LoglevelPadding.Length + (options.TimestampFormat?.Length ?? 0));
+            _options = options.CurrentValue;
+            _messagePadding = new string(' ', GetLogLevelString(LogLevel.Information).Length + LoglevelPadding.Length + (_options.TimestampFormat?.Length ?? 0));
             _newLineWithMessagePadding = Environment.NewLine + _messagePadding;
-            _options = options;
         }
 
         public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider scopeProvider, TextWriter textWriter)
@@ -85,11 +78,6 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
                 // exception message
                 WriteMessage(textWriter, logEntry.Exception.ToString());
             }
-        }
-
-        public void Dispose()
-        {
-            _optionsReloadToken?.Dispose();
         }
 
         private void WriteMessage(TextWriter textWriter, string message, bool includePadding = true)
