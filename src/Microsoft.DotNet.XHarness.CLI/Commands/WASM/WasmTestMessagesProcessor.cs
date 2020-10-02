@@ -35,15 +35,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 }
                 else if (line.StartsWith("[PASS]") || line.StartsWith("[SKIP]"))
                 {
-                    _logger.LogDebug(line);
+                    _logger.LogDebug(line.TrimEnd());
                 }
                 else if (line.StartsWith("[FAIL]"))
                 {
-                    _logger.LogError(line);
+                    _logger.LogError(line.TrimEnd());
                 }
                 else
                 {
-                    _logger.LogInformation(line);
+                    _logger.LogInformation(line.TrimEnd());
                 }
 
                 _stdoutFileWriter.Write(line);
