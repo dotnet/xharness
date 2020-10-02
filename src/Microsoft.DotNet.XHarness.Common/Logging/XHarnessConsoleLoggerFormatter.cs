@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
         private void WriteMessage(TextWriter textWriter, string message, bool includePadding = true)
         {
-            if (string.IsNullOrEmpty(message))
+            if (message == null)
             {
                 return;
             }
