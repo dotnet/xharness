@@ -1,119 +1,87 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the.NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
-using System.Text;
+using System.IO;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
 
-namespace Microsoft.DotNet.XHarness.Common.Logging
+namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 {
-    internal class XHarnessConsoleLogger : ILogger
+    /// <summary>
+    /// Copied over from SimpleConsoleFormatter
+    /// </summary>
+    internal class XHarnessConsoleLoggerFormatter : ConsoleFormatter
     {
-        private const string LogLevelSeparator = ": ";
+        private const string LoglevelPadding = ": ";
         private const string DefaultForegroundColor = "\x1B[39m\x1B[22m"; // reset to default foreground color
         private const string DefaultBackgroundColor = "\x1B[49m"; // reset to the background color
 
-        private readonly XHarnessConsoleLoggerOptions _options;
+        private readonly bool _disableColors;
+        private readonly string? _timestampFormat;
         private readonly string _messagePadding;
         private readonly string _newLineWithMessagePadding;
 
-        public XHarnessConsoleLogger(XHarnessConsoleLoggerOptions options)
+        public static LoggerColorBehavior ColorBehavior;
+        public static string TimestampFormat = "";
+
+        public XHarnessConsoleLoggerFormatter()
+            : base("xharness")
         {
-            _messagePadding = new string(' ', GetLogLevelString(LogLevel.Information).Length + LogLevelSeparator.Length + (options.TimestampFormat?.Length ?? 0));
+            _disableColors = ColorBehavior == LoggerColorBehavior.Disabled;
+            _timestampFormat = TimestampFormat;
+            _messagePadding = new string(' ', GetLogLevelString(LogLevel.Information).Length + LoglevelPadding.Length + (_timestampFormat?.Length ?? 0));
             _newLineWithMessagePadding = Environment.NewLine + _messagePadding;
-            _options = options;
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider scopeProvider, TextWriter textWriter)
         {
-            if (!IsEnabled(logLevel))
+            string message = logEntry.Formatter(logEntry.State, logEntry.Exception);
+            if (logEntry.Exception == null && message == null)
             {
                 return;
             }
 
-            string message = formatter(state, exception);
-            if (exception == null && message == null)
-            {
-                return;
-            }
-
-            var colors = GetLogLevelConsoleColors(logLevel);
+            LogLevel logLevel = logEntry.LogLevel;
+            var logLevelColors = GetLogLevelConsoleColors(logLevel);
             string logLevelString = GetLogLevelString(logLevel);
 
-            var logMessage = new StringBuilder();
-
-            if (_options.TimestampFormat != null)
+            if (_timestampFormat != null)
             {
-                string timestamp = DateTimeOffset.Now.ToString(_options.TimestampFormat);
-                logMessage.Append(timestamp);
+                string timestamp = DateTimeOffset.Now.ToString(_timestampFormat);
+                textWriter.Write(timestamp);
             }
 
-            // Log level
-            AppendColoredMessage(logMessage, logLevelString, colors.Background, colors.Foreground);
+            WriteColoredMessage(textWriter, logLevelString, logLevelColors.Background, logLevelColors.Foreground);
 
-            // The colon after log level ": "
-            logMessage.Append(LogLevelSeparator);
+            textWriter.Write(LoglevelPadding);
 
-            // Rest of the message
-            AppendPaddedMessage(logMessage, message, false /* first padding  */);
+            WriteMessage(textWriter, message, false);
 
-            // Log an exception
             // Example:
             // System.InvalidOperationException
             //    at Namespace.Class.Function() in File:line X
-            if (exception != null)
+            if (logEntry.Exception != null)
             {
-                AppendPaddedMessage(logMessage, exception.ToString());
+                // exception message
+                WriteMessage(textWriter, logEntry.Exception.ToString());
             }
-
-            Console.WriteLine(logMessage);
         }
 
-        public IDisposable BeginScope<TState>(TState state) => null!;
-
-        public bool IsEnabled(LogLevel logLevel) => true;
-
-        private void AppendPaddedMessage(StringBuilder logMessage, string message, bool padFirstLine = true)
+        private void WriteMessage(TextWriter textWriter, string message, bool includePadding = true)
         {
             if (string.IsNullOrEmpty(message))
             {
                 return;
             }
 
-            if (padFirstLine)
+            if (includePadding)
             {
-                logMessage.Append(_messagePadding);
+                textWriter.Write(_messagePadding);
             }
 
-            logMessage.Append(message.Replace(Environment.NewLine, _newLineWithMessagePadding));
-        }
-
-        private static void AppendColoredMessage(StringBuilder logMessage, string message, ConsoleColor? background, ConsoleColor? foreground)
-        {
-            // Order: backgroundcolor, foregroundcolor, Message, reset foregroundcolor, reset backgroundcolor
-            if (background.HasValue)
-            {
-                logMessage.Append(GetBackgroundColorEscapeCode(background.Value));
-            }
-
-            if (foreground.HasValue)
-            {
-                logMessage.Append(GetForegroundColorEscapeCode(foreground.Value));
-            }
-
-            logMessage.Append(message);
-
-            if (foreground.HasValue)
-            {
-                logMessage.Append(DefaultForegroundColor); // reset to default foreground color
-            }
-
-            if (background.HasValue)
-            {
-                logMessage.Append(DefaultBackgroundColor); // reset to the background color
-            }
+            textWriter.WriteLine(message.Replace(Environment.NewLine, _newLineWithMessagePadding));
         }
 
         private static string GetLogLevelString(LogLevel logLevel) => logLevel switch
@@ -129,7 +97,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
 
         private (ConsoleColor? Foreground, ConsoleColor? Background) GetLogLevelConsoleColors(LogLevel logLevel)
         {
-            if (_options.ColorBehavior == LoggerColorBehavior.Disabled)
+            if (_disableColors)
             {
                 return (null, null);
             }
@@ -146,6 +114,32 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
                 LogLevel.Critical => (ConsoleColor.White, ConsoleColor.DarkRed),
                 _ => (null, null)
             };
+        }
+
+        private static void WriteColoredMessage(TextWriter textWriter, string message, ConsoleColor? background, ConsoleColor? foreground)
+        {
+            // Order: backgroundcolor, foregroundcolor, Message, reset foregroundcolor, reset backgroundcolor
+            if (background.HasValue)
+            {
+                textWriter.Write(GetBackgroundColorEscapeCode(background.Value));
+            }
+
+            if (foreground.HasValue)
+            {
+                textWriter.Write(GetForegroundColorEscapeCode(foreground.Value));
+            }
+
+            textWriter.Write(message);
+
+            if (foreground.HasValue)
+            {
+                textWriter.Write(DefaultForegroundColor); // reset to default foreground color
+            }
+
+            if (background.HasValue)
+            {
+                textWriter.Write(DefaultBackgroundColor); // reset to the background color
+            }
         }
 
         private static string GetForegroundColorEscapeCode(ConsoleColor color) => color switch
