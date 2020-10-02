@@ -18,9 +18,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
     public class WasmTestWebServerStartup
     {
-        private readonly IHostingEnvironment s_hostingEnvironment;
+        private readonly IWebHostEnvironment s_hostingEnvironment;
 
-        public WasmTestWebServerStartup(IHostingEnvironment hostingEnvironment)
+        public WasmTestWebServerStartup(IWebHostEnvironment hostingEnvironment)
         {
             this.s_hostingEnvironment = hostingEnvironment;
         }
