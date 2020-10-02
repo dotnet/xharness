@@ -11,7 +11,20 @@ using Microsoft.Extensions.Options;
 namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 {
     /// <summary>
-    /// Copied over from SimpleConsoleLoggerFormatter
+    /// Copied over from SimpleConsoleFormatter. Leaves out the logger name and new line, turning
+    /// info: test[0]
+    ///     Log message
+    ///     Second line of the message
+    ///
+    /// into
+    ///
+    /// info: Log message
+    ///       Second line of the message
+    ///
+    /// Only using SimpleConsoleFormatterOptions.SingleLine didn't help because multi-line messages
+    /// were put together on a single line so things like stack traces of exceptions were unreadable.
+    ///
+    /// See https://github.com/dotnet/runtime/blob/master/src/libraries/Microsoft.Extensions.Logging.Console/src/SimpleConsoleFormatter.cs
     /// </summary>
     internal class XHarnessConsoleLoggerFormatter : ConsoleFormatter
     {
