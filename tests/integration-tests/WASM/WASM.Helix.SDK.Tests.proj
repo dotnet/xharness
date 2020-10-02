@@ -2,10 +2,10 @@
   <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/>
 
   <PropertyGroup>
-    <!-- These two settings work around changes from newer MSBuild requiring additional properties set (otherwise gets a weird error about targeting desktop 4.0) --> 
-    <TargetFrameworkVersion>5.0</TargetFrameworkVersion>
-    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <!-- Workaround changes from newer MSBuild requiring additional properties, see https://github.com/dotnet/arcade/pull/5996 -->
+    <TargetFrameworkVersion>3.1</TargetFrameworkVersion>
+    <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
     <HelixType>test/product/</HelixType>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
