@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
@@ -49,8 +50,6 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         /// Extra arguments parsed to the command (if the command allows it).
         /// </summary>
         protected IEnumerable<string> ExtraArguments { get; private set; } = Enumerable.Empty<string>();
-
-        protected bool UseSingleLineLogging { get; set; } = true;
 
         protected XHarnessCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, help)
         {
@@ -132,25 +131,15 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         private ILoggerFactory CreateLoggerFactory(LogLevel verbosity) => LoggerFactory.Create(builder =>
         {
             builder
-            .AddSimpleConsole(options =>
-            {
-                options.SingleLine = UseSingleLineLogging;
-
-                if (Environment.GetEnvironmentVariable("XHARNESS_DISABLE_COLORED_OUTPUT")?.ToLower().Equals("true") ?? false)
-                {
-                    options.ColorBehavior = Extensions.Logging.Console.LoggerColorBehavior.Disabled;
-                }
-                else
-                {
-                    options.ColorBehavior = Extensions.Logging.Console.LoggerColorBehavior.Enabled;
-                }
-
-                if (Environment.GetEnvironmentVariable("XHARNESS_LOG_WITH_TIMESTAMPS")?.ToLower().Equals("true") ?? false)
-                {
-                    options.TimestampFormat = "[HH:mm:ss] ";
-                }
-            })
-            .SetMinimumLevel(verbosity);
+                .AddConsoleFormatter<XHarnessConsoleLoggerFormatter, SimpleConsoleFormatterOptions>(options => {
+                    options.ColorBehavior = IsEnvVarTrue("XHARNESS_DISABLE_COLORED_OUTPUT") ? LoggerColorBehavior.Disabled : LoggerColorBehavior.Default;
+                    options.TimestampFormat = IsEnvVarTrue("XHARNESS_LOG_WITH_TIMESTAMPS") ? "[HH:mm:ss] " : null!;
+                })
+                .AddConsole(options => options.FormatterName = XHarnessConsoleLoggerFormatter.FormatterName)
+                .SetMinimumLevel(verbosity);
         });
+
+        private static bool IsEnvVarTrue(string varName) =>
+            Environment.GetEnvironmentVariable(varName)?.ToLower().Equals("true") ?? false;
     }
 }
