@@ -1,10 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <TargetFrameworks>netstandard2.1;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.1</TargetFrameworks>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+  
+  <!-- Disable the nullable warnings when compiling for .NET Standard 2.0 -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <NoWarn>$(NoWarn);8600;8601;8602;8603;8604</NoWarn>
   </PropertyGroup>
 
+  <!-- Remove files that are only included inside of the packaged iOS app and are not to be compiled as part of this project -->
   <ItemGroup>
     <None Remove="TestImporter\Templates\Managed\Resources\Managed.iOS.csproj.in" />
     <None Remove="TestImporter\Templates\Managed\Resources\Managed.iOS.plist.in" />
