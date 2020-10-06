@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var runner = new WasmBrowserTestRunner(
                                 _arguments,
                                 PassThroughArguments,
-                                logProcessor.Invoke,
+                                logProcessor,
                                 logger);
 
             var (driverService, driver) = GetChromeDriver();

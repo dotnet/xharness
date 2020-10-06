@@ -32,23 +32,21 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
     internal class WasmBrowserTestRunner
     {
         private readonly WasmTestBrowserCommandArguments _arguments;
-        private readonly Action<string> _processLogMessage;
         private readonly ILogger _logger;
         private readonly IEnumerable<string> _passThroughArguments;
+        private readonly WasmTestMessagesProcessor _messagesProcessor;
 
         // Messages from selenium prepend the url, and location where the message originated
         // Eg. `foo` becomes `http://localhost:8000/xyz.js 0:12 "foo"
         static readonly Regex s_consoleLogRegex = new Regex(@"^\s*[a-z]*://[^\s]+\s+\d+:\d+\s+""(.*)""\s*$", RegexOptions.Compiled);
 
-        private TaskCompletionSource<bool> wasmExitReceivedTcs = new TaskCompletionSource<bool>();
-
         public WasmBrowserTestRunner(WasmTestBrowserCommandArguments arguments, IEnumerable<string> passThroughArguments,
-                                            Action<string> processLogMessage, ILogger logger)
+                                            WasmTestMessagesProcessor messagesProcessor, ILogger logger)
         {
             this._arguments = arguments;
-            this._processLogMessage = processLogMessage;
             this._logger = logger;
             this._passThroughArguments = passThroughArguments;
+            this._messagesProcessor = messagesProcessor;
         }
 
         public async Task<ExitCode> RunTestsWithWebDriver(DriverService driverService, IWebDriver driver)
@@ -77,6 +75,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 _logger.LogTrace($"Opening in browser: {testUrl}");
                 driver.Navigate().GoToUrl(testUrl);
 
+                TaskCompletionSource<bool> wasmExitReceivedTcs = _messagesProcessor.WasmExitReceivedTcs;
                 var tasks = new Task[]
                 {
                     wasmExitReceivedTcs.Task,
@@ -165,15 +164,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                         var line = Encoding.UTF8.GetString(mem.GetBuffer(), 0, (int)mem.Length);
                         line += Environment.NewLine;
 
-                        _processLogMessage(line);
-
-                        // the test runner writes this as the last line,
-                        // after the tests have run, and the xml results file
-                        // has been written to the console
-                        if (line.StartsWith("WASM EXIT"))
-                        {
-                            wasmExitReceivedTcs.SetResult(true);
-                        }
+                        _messagesProcessor.Invoke(line);
                     }
 
                     mem.SetLength(0);
@@ -228,7 +219,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
                             var match = s_consoleLogRegex.Match(Regex.Unescape(logEntry.Message));
                             string msg = match.Success ? match.Groups[1].Value : logEntry.Message;
-                            _logger.LogDebug ($"{logType}: {msg}");
+                            _messagesProcessor.Invoke(msg);
                         }
                     }
                 }
