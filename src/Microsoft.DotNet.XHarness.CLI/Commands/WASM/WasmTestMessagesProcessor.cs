@@ -4,6 +4,8 @@
 
 using System;
 using System.IO;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
@@ -16,6 +18,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         private readonly ILogger _logger;
 
+        public TaskCompletionSource<bool> WasmExitReceivedTcs { get; } = new TaskCompletionSource<bool>();
+
         public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger)
         {
             this._xmlResultsFilePath = xmlResultsFilePath;
@@ -24,8 +28,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             this._logger = logger;
         }
 
-        public void Invoke(string line)
+        public void Invoke(string message)
         {
+            WasmLogMessage? logMessage = null;
+            string line;
+            try
+            {
+                logMessage = JsonSerializer.Deserialize<WasmLogMessage>(message);
+                line = logMessage?.payload ?? message.TrimEnd();
+            }
+            catch (JsonException)
+            {
+                line = message.TrimEnd();
+            }
+
             if (_xmlResultsFileWriter == null)
             {
                 if (line.Contains("STARTRESULTXML"))
@@ -35,18 +51,27 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 }
                 else if (line.StartsWith("[PASS]") || line.StartsWith("[SKIP]"))
                 {
-                    _logger.LogDebug(line.TrimEnd());
+                    _logger.LogDebug(line);
                 }
                 else if (line.StartsWith("[FAIL]"))
                 {
-                    _logger.LogError(line.TrimEnd());
+                    _logger.LogError(line);
                 }
                 else
                 {
-                    _logger.LogInformation(line.TrimEnd());
+                    switch (logMessage?.method?.ToLowerInvariant())
+                    {
+                        case "console.debug": _logger.LogDebug(line); break;
+                        case "console.error": _logger.LogError(line); break;
+                        case "console.warn": _logger.LogWarning(line); break;
+                        case "console.trace": _logger.LogTrace(line); break;
+
+                        case "console.log":
+                        default: _logger.LogInformation(line); break;
+                    }
                 }
 
-                _stdoutFileWriter.Write(line);
+                _stdoutFileWriter.WriteLine(line);
             }
             else
             {
@@ -57,7 +82,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     _xmlResultsFileWriter = null;
                     return;
                 }
-                _xmlResultsFileWriter.Write(line);
+                _xmlResultsFileWriter.WriteLine(line);
+            }
+
+            // the test runner writes this as the last line,
+            // after the tests have run, and the xml results file
+            // has been written to the console
+            if (line.StartsWith("WASM EXIT"))
+            {
+                WasmExitReceivedTcs.SetResult(true);
             }
         }
     }
