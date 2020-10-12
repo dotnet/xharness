@@ -180,9 +180,9 @@ Arguments:
                     runner.UninstallApk(apkPackageName);
                 }
 
-                if (instrumentationExitCode != (int)ExitCode.SUCCESS)
+                if (instrumentationExitCode != _arguments.ExpectedExitCode)
                 {
-                    logger.LogError($"Non-success instrumentation exit code: {instrumentationExitCode}");
+                    logger.LogError($"Non-success instrumentation exit code: {instrumentationExitCode}, expected: {_arguments.ExpectedExitCode}");
                 }
                 else
                 {
