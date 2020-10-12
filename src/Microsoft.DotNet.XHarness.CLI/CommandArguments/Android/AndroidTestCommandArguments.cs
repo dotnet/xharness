@@ -40,6 +40,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         public Dictionary<string, string> InstrumentationArguments { get; } = new Dictionary<string, string>();
 
+        /// <summary>
+        /// Exit code returned by the instrumentation for a successful run. Defaults to 0.
+        /// </summary>
+        public int ExpectedExitCode { get; set; } = (int)Microsoft.DotNet.XHarness.Common.CLI.ExitCode.SUCCESS;
+
         protected override OptionSet GetTestCommandOptions() => new OptionSet
         {
             { "device-arch=", "If specified, only run on a device with the listed architecture (x86, x86-64, or arm64-v8a).  Otherwise infer from supplied APK",
@@ -50,6 +55,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             },
             { "instrumentation:|i:", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.",
                 v => InstrumentationName = v
+            },
+            { "expected-exit-code:", "If specified, sets the expected exit code for a successful instrumentation run.",
+                v => ExpectedExitCode = Convert.ToInt32(v)
             },
             { "package-name=|p=", "Package name contained within the supplied APK",
                 v => PackageName = v
