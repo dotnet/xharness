@@ -60,7 +60,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 appName + (extension != null ? ".appex" : ".app"));
 
             string arch = csproj.GetMtouchArch(platform, buildConfiguration);
-            bool supports32 = arch.Contains("ARMv7", StringComparison.InvariantCultureIgnoreCase) || arch.Contains("i386", StringComparison.InvariantCultureIgnoreCase);
+
+            bool supports32 = Contains(arch, "ARMv7") || Contains(arch, "i386");
 
             if (!Directory.Exists(appPath))
             {
@@ -76,7 +77,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         public async Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default)
         {
-            var plistPath = Path.Join(appPackagePath, "Info.plist");
+            var plistPath = Path.Combine(appPackagePath, "Info.plist");
 
             if (!File.Exists(plistPath))
             {
@@ -102,7 +103,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 ? Directory.GetDirectories(Path.Combine(appPackagePath, "Watch"), "*.app")[0]
                 : appPackagePath;
 
-            return new AppBundleInformation(appName, appPackagePath, bundleIdentifier, launchAppPath, supports32.Contains(Armv7, StringComparison.InvariantCultureIgnoreCase), extension: null);
+            return new AppBundleInformation(appName, appPackagePath, bundleIdentifier, launchAppPath, Contains(supports32, Armv7), extension: null);
         }
 
         private async Task<string> GetPlistProperty(string plistPath, string propertyName, ILog log, CancellationToken cancellationToken = default)
@@ -123,6 +124,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
 
             return commandOutput.ToString().Trim();
+        }
+
+        // This method was added because .NET Standard 2.0 doesn't have case ignorant Contains() for String.
+        private static bool Contains(string haystack, string needle)
+        {
+            return haystack.IndexOf(needle, StringComparison.InvariantCultureIgnoreCase) > -1;
         }
     }
 }
