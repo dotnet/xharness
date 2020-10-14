@@ -9,6 +9,7 @@ namespace Microsoft.DotNet.XHarness.Common
         NUnitV2,
         NUnitV3,
         xUnit,
+        Trx,
         Missing,
     }
 }

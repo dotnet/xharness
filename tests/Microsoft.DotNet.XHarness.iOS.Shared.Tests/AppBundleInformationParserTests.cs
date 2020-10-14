@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
 using Moq;
 using Xunit;
@@ -27,11 +28,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         public void Dispose() => Directory.Delete(s_appPath, true);
 
         [Fact]
-        public void InitializeTest()
+        public async Task InitializeTest()
         {
             var parser = new AppBundleInformationParser(Mock.Of<IMLaunchProcessManager>());
 
-            var info = parser.ParseFromProject(s_projectFilePath, TestTarget.Simulator_iOS64, "Debug");
+            var info = await parser.ParseFromProject(s_projectFilePath, TestTarget.Simulator_iOS64, "Debug");
 
             Assert.Equal(AppName, info.AppName);
             Assert.Equal(s_appPath, info.AppPath);

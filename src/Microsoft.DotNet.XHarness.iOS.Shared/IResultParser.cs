@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         /// Generates an XML result that will consider to be an error by the CI. Allows to catch errors in cases in which we are not talking about a test
         /// failure per se but the situation in which the app could not be built, timeout or crashed.
         /// </summary>
-        void GenerateFailure(ILogs logs, string source, string appName, string variation, string title, string message, StreamReader stderrReader, XmlResultJargon jargon);
+        void GenerateFailure(ILogs logs, string source, string appName, string variation, string title, string message, TextReader stderrReader, XmlResultJargon jargon);
 
         /// <summary>
         /// Updates given xml result to contain a list of attachments. This is useful for CI to be able to add logs as part of the attachments of a failing test.
@@ -36,6 +36,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         /// Ensures that the given path contains a valid xml result and set the type of xml jargon found in the file.
         /// </summary>
         bool IsValidXml(string path, out XmlResultJargon type);
+
+        /// <summary>
+        /// Ensures that the given path contains a valid xml result and set the type of xml jargon found in the file.
+        /// </summary>
+        bool IsValidXml(TextReader stream, out XmlResultJargon type);
 
         /// <summary>
         /// Takes an XML file and removes any extra data that makes the test result not to be a pure xml result for the given jargon.
@@ -65,6 +70,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         /// <summary>
         /// Generates a human readable test report.
         /// </summary>
-        void GenerateTestReport(StreamWriter writer, string resultsPath, XmlResultJargon xmlType);
+        void GenerateTestReport(TextWriter writer, string resultsPath, XmlResultJargon xmlType);
     }
 }

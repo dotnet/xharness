@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
     public interface IAppBundleInformationParser
     {
-        AppBundleInformation ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration);
+        Task<AppBundleInformation> ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration);
 
         Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default);
     }
@@ -29,10 +30,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         public AppBundleInformationParser(IProcessManager processManager)
         {
-            _processManager = processManager ?? throw new System.ArgumentNullException(nameof(processManager));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
-        public AppBundleInformation ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration)
+        public async Task<AppBundleInformation> ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration)
         {
             var csproj = new XmlDocument();
             csproj.LoadWithoutNetworkAccess(projectFilePath);
@@ -55,8 +56,23 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             var platform = target.IsSimulator() ? "iPhoneSimulator" : "iPhone";
 
-            string appPath = Path.Combine(Path.GetDirectoryName(projectFilePath),
-                csproj.GetOutputPath(platform, buildConfiguration).Replace('\\', Path.DirectorySeparatorChar),
+            string appBundlePath;
+            if (csproj.IsDotNetProject())
+            {
+                var properties = new Dictionary<string, string> {
+                    { "Configuration", buildConfiguration },
+                    { "Platform", platform },
+                };
+                appBundlePath = await csproj.GetPropertyByMSBuildEvaluationAsync(log, _processManager, projectFilePath, "OutputPath", "_GenerateAppBundleName;_GenerateAppExBundleName", properties);
+            }
+            else
+            {
+                appBundlePath = csproj.GetOutputPath(platform, buildConfiguration).Replace('\\', Path.DirectorySeparatorChar);
+            }
+
+            var appPath = Path.Combine(
+                Path.GetDirectoryName(projectFilePath),
+                appBundlePath,
                 appName + (extension != null ? ".appex" : ".app"));
 
             string arch = csproj.GetMtouchArch(platform, buildConfiguration);

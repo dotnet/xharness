@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         private readonly Mock<ILog> _executionLog;
         private readonly string _simRuntime;
         private readonly string _dataPath;
+        private readonly string _udid;
 
         public TCCDatabaseTests()
         {
@@ -31,6 +32,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             _executionLog = new Mock<ILog>();
             _simRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-12-1";
             _dataPath = "/path/to/my/data";
+            _udid = "D9DCBED1EC414ECE9A2353364C2AC454";
         }
 
         [Theory]
@@ -52,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         {
             // we should write in the log that we did not managed to agree to it
             _executionLog.Setup(l => l.WriteLine(It.IsAny<string>()));
-            await _database.AgreeToPromptsAsync(_simRuntime, _dataPath, _executionLog.Object);
+            await _database.AgreeToPromptsAsync(_simRuntime, _dataPath, _udid, _executionLog.Object);
             _executionLog.Verify(l => l.WriteLine("No bundle identifiers given when requested permission editing."));
         }
 
@@ -68,7 +70,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 1, TimedOut = true });
                 });
             // try to accept and fail because we always timeout
-            await _database.AgreeToPromptsAsync(_simRuntime, _dataPath, _executionLog.Object, "my-bundle-id", "your-bundle-id");
+            await _database.AgreeToPromptsAsync(_simRuntime, _dataPath, _udid, _executionLog.Object, "my-bundle-id", "your-bundle-id");
 
             // verify that we did write in the logs and that we did call sqlite3
             Assert.Equal("sqlite3", processName);
@@ -129,7 +131,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
                 });
 
-            await _database.AgreeToPromptsAsync(runtime, _dataPath, _executionLog.Object, bundleIdentifier);
+            await _database.AgreeToPromptsAsync(runtime, _dataPath, _udid, _executionLog.Object, bundleIdentifier);
 
             Assert.Equal("sqlite3", processName);
             // assert that the sql is present
