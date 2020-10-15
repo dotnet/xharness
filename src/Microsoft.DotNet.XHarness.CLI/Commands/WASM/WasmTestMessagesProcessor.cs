@@ -32,12 +32,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         {
             WasmLogMessage? logMessage = null;
             string line;
-            try
+
+            if (message.StartsWith("{"))
             {
-                logMessage = JsonSerializer.Deserialize<WasmLogMessage>(message);
-                line = logMessage?.payload ?? message.TrimEnd();
+                try
+                {
+                    logMessage = JsonSerializer.Deserialize<WasmLogMessage>(message);
+                    line = logMessage?.payload ?? message.TrimEnd();
+                }
+                catch (JsonException)
+                {
+                    line = message.TrimEnd();
+                }
             }
-            catch (JsonException)
+            else
             {
                 line = message.TrimEnd();
             }
