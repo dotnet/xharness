@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
 {
     public class NUnitV3ResultParser : IXmlResultParser
     {
-        public (string resultLine, bool failed) ParseXml(TextReader source, TextWriter writer)
+        public (string resultLine, bool failed) ParseXml(TextReader source, TextWriter? humanReadableOutput)
         {
             long testcasecount, passed, failed, inconclusive, skipped;
             var failedTestRun = false; // result = "Failed"
@@ -37,18 +37,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
                         long.TryParse(reader["skipped"], out skipped);
                         failedTestRun = failed != 0;
                     }
-                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "test-suite")
+
+                    if (humanReadableOutput != null && reader.NodeType == XmlNodeType.Element && reader.Name == "test-suite")
                     {
-                        ParseNUnitV3XmlTestSuite(writer, reader, false);
+                        ParseNUnitV3XmlTestSuite(reader, humanReadableOutput, false);
                     }
                 }
             }
+
             var resultLine = $"Tests run: {testcasecount} Passed: {passed} Inconclusive: {inconclusive} Failed: {failed} Ignored: {skipped + inconclusive}";
-            writer.WriteLine(resultLine);
+            humanReadableOutput?.WriteLine(resultLine);
             return (resultLine, failedTestRun);
         }
 
-        private static void ParseNUnitV3XmlTestCase(TextWriter writer, XmlReader reader)
+        private static void ParseNUnitV3XmlTestCase(XmlReader reader, TextWriter humanReadableOutput)
         {
             if (reader.NodeType != XmlNodeType.Element)
             {
@@ -65,47 +67,47 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
             switch (status)
             {
                 case "Passed":
-                    writer.Write("\t[PASS] ");
+                    humanReadableOutput.Write("\t[PASS] ");
                     break;
                 case "Skipped":
-                    writer.Write("\t[IGNORED] ");
+                    humanReadableOutput.Write("\t[IGNORED] ");
                     break;
                 case "Error":
                 case "Failed":
-                    writer.Write("\t[FAIL] ");
+                    humanReadableOutput.Write("\t[FAIL] ");
                     break;
                 case "Inconclusive":
-                    writer.Write("\t[INCONCLUSIVE] ");
+                    humanReadableOutput.Write("\t[INCONCLUSIVE] ");
                     break;
                 default:
-                    writer.Write("\t[INFO] ");
+                    humanReadableOutput.Write("\t[INFO] ");
                     break;
             }
             var name = reader["name"];
-            writer.Write(name);
+            humanReadableOutput.Write(name);
             if (status == "Failed")
             { //  we need to print the message
                 reader.ReadToDescendant("failure");
                 reader.ReadToDescendant("message");
-                writer.Write($" : {reader.ReadElementContentAsString()}");
+                humanReadableOutput.Write($" : {reader.ReadElementContentAsString()}");
                 if (reader.Name != "stack-trace")
                 {
                     reader.ReadToNextSibling("stack-trace");
                 }
 
-                writer.Write($" : {reader.ReadElementContentAsString()}");
+                humanReadableOutput.Write($" : {reader.ReadElementContentAsString()}");
             }
             if (status == "Skipped")
             { // nice to have the skip reason
                 reader.ReadToDescendant("reason");
                 reader.ReadToDescendant("message");
-                writer.Write($" : {reader.ReadElementContentAsString()}");
+                humanReadableOutput.Write($" : {reader.ReadElementContentAsString()}");
             }
             // add a new line
-            writer.WriteLine();
+            humanReadableOutput.WriteLine();
         }
 
-        private static void ParseNUnitV3XmlTestSuite(TextWriter writer, XmlReader reader, bool nested)
+        private static void ParseNUnitV3XmlTestSuite(XmlReader reader, TextWriter humanReadableOutput, bool nested)
         {
             if (reader.NodeType != XmlNodeType.Element)
             {
@@ -124,14 +126,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
 
             if (isFixture)
             {
-                writer.WriteLine(testCaseName);
+                humanReadableOutput.WriteLine(testCaseName);
             }
 
             if (reader.IsEmptyElement)
             {
                 if (isFixture)
                 {
-                    writer.WriteLine($"{testCaseName} {time} ms");
+                    humanReadableOutput.WriteLine($"{testCaseName} {time} ms");
                 }
 
                 return;
@@ -144,11 +146,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
                     case XmlNodeType.Element:
                         if (reader.Name == "test-case")
                         {
-                            ParseNUnitV3XmlTestCase(writer, reader);
+                            ParseNUnitV3XmlTestCase(reader, humanReadableOutput);
                         }
                         else if (reader.Name == "test-suite")
                         {
-                            ParseNUnitV3XmlTestSuite(writer, reader, nested || isFixture);
+                            ParseNUnitV3XmlTestSuite(reader, humanReadableOutput, nested || isFixture);
                         }
                         break;
                     case XmlNodeType.EndElement:
@@ -156,7 +158,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
                         {
                             if (isFixture)
                             {
-                                writer.WriteLine($"{testCaseName} {time} ms");
+                                humanReadableOutput.WriteLine($"{testCaseName} {time} ms");
                             }
 
                             return;

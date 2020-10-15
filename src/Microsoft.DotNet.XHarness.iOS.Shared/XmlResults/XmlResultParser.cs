@@ -135,15 +135,21 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
                 writer = new StreamWriter(humanReadableReportDestination, true);
             }
 
+            var result = ParseResults(source, xmlType, writer);
+            writer?.Dispose();
+            return result;
+        }
+
+        public (string resultLine, bool failed) ParseResults(string source, XmlResultJargon xmlType, StreamWriter? humanReadableReportDestination = null)
+        {
             var reader = new StreamReader(source);
-            (string, bool) parsedData = ("", true);
+            var parsedData = ("", true);
 
             if (_xmlFormatters.TryGetValue(xmlType, out var xmlFormatter))
             {
-                parsedData = xmlFormatter.Parser.ParseXml(reader, writer);
+                parsedData = xmlFormatter.Parser.ParseXml(reader, humanReadableReportDestination);
             }
 
-            writer?.Dispose();
             return parsedData;
         }
 

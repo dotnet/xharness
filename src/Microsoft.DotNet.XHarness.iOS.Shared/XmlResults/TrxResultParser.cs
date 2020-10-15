@@ -37,39 +37,43 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
             public string? Message;
         }
 
-        public (string resultLine, bool failed) ParseXml(TextReader stream, TextWriter writer)
+        public (string resultLine, bool failed) ParseXml(TextReader stream, TextWriter? humanReadableOutput)
         {
             using var reader = XmlReader.Create(stream);
             var tests = ParseTrxXml(reader);
-
-            foreach (var groupedByClass in tests.GroupBy(v => v.ClassName).OrderBy(v => v.Key))
-            {
-                var className = groupedByClass.Key;
-                var totalDuration = TimeSpan.FromTicks(groupedByClass.Select(v => v.Duration?.Ticks ?? 0).Sum());
-                writer.WriteLine(className);
-                foreach (var test in groupedByClass)
-                {
-                    writer.Write('\t');
-                    switch (test.Outcome)
-                    {
-                        case "Passed":
-                            writer.Write("[PASS]");
-                            break;
-                        default:
-                            writer.Write($"[UNKNOWN ({test.Outcome})]");
-                            break;
-                    }
-                    writer.Write(' ');
-                    writer.Write(test.TestName);
-                    writer.Write(": ");
-                    writer.Write(test.Duration?.ToString());
-                    writer.WriteLine();
-
-                }
-                writer.WriteLine($"{className} {totalDuration}");
-            }
             var resultLine = $"Tests run: {tests.Total} Passed: {tests.Passed} Inconclusive: {tests.Inconclusive} Failed: {tests.Failed + tests.Error} Ignored: {tests.NotRunnable}";
-            writer.WriteLine(resultLine);
+
+            if (humanReadableOutput != null)
+            {
+                foreach (var groupedByClass in tests.GroupBy(v => v.ClassName).OrderBy(v => v.Key))
+                {
+                    var className = groupedByClass.Key;
+                    var totalDuration = TimeSpan.FromTicks(groupedByClass.Select(v => v.Duration?.Ticks ?? 0).Sum());
+                    humanReadableOutput.WriteLine(className);
+                    foreach (var test in groupedByClass)
+                    {
+                        humanReadableOutput.Write('\t');
+                        switch (test.Outcome)
+                        {
+                            case "Passed":
+                                humanReadableOutput.Write("[PASS]");
+                                break;
+                            default:
+                                humanReadableOutput.Write($"[UNKNOWN ({test.Outcome})]");
+                                break;
+                        }
+                        humanReadableOutput.Write(' ');
+                        humanReadableOutput.Write(test.TestName);
+                        humanReadableOutput.Write(": ");
+                        humanReadableOutput.Write(test.Duration?.ToString());
+                        humanReadableOutput.WriteLine();
+                    }
+
+                    humanReadableOutput.WriteLine($"{className} {totalDuration}");
+                }
+
+                humanReadableOutput.WriteLine(resultLine);
+            }
 
             return (resultLine, !(tests.Error == 0 && tests.Aborted == 0 && tests.Timeout == 0 && tests.Failed == 0));
         }

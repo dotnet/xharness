@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
 {
     public class TouchUnitResultParser : IXmlResultParser
     {
-        public (string resultLine, bool failed) ParseXml(TextReader stream, TextWriter? writer)
+        public (string resultLine, bool failed) ParseXml(TextReader stream, TextWriter? humanReadableOutput)
         {
             long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
             total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
@@ -30,19 +30,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
                         long.TryParse(reader["skipped"], out skipped);
                         long.TryParse(reader["invalid"], out invalid);
                     }
-                    if (writer != null && reader.NodeType == XmlNodeType.Element && reader.Name == "TouchUnitExtraData")
+                    if (humanReadableOutput != null && reader.NodeType == XmlNodeType.Element && reader.Name == "TouchUnitExtraData")
                     {
                         // move fwd to get to the CData
                         if (reader.Read())
                         {
-                            writer.Write(reader.Value);
+                            humanReadableOutput.Write(reader.Value);
                         }
                     }
                 }
             }
             var passed = total - errors - failed - notRun - inconclusive - ignored - skipped - invalid;
             var resultLine = $"Tests run: {total} Passed: {passed} Inconclusive: {inconclusive} Failed: {failed + errors} Ignored: {ignored + skipped + invalid}";
-            writer?.WriteLine(resultLine);
+            humanReadableOutput?.WriteLine(resultLine);
             return (resultLine, errors != 0 || failed != 0);
         }
     }

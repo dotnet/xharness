@@ -5019,10 +5019,10 @@ AVCaptureWhiteBalanceGainsTest : 1 ms
 
 AVDepthDataTests
     [IGNORED] AVDepthDataTests.AvailableDepthDataTypesTest : This test only runs on device.
-          at TestRuntime.AssertDevice () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:144 
-          at MonoTouchFixtures.AVFoundation.AVDepthDataTests.AvailableDepthDataTypesTest () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/AVFoundation/AVDepthDataTests.cs:30 
+          at TestRuntime.AssertDevice () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:144
+          at MonoTouchFixtures.AVFoundation.AVDepthDataTests.AvailableDepthDataTypesTest () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/AVFoundation/AVDepthDataTests.cs:30
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 AVDepthDataTests : 10 ms
 
 AVFoundationEnumTest
@@ -5143,9 +5143,9 @@ SoundBankTest : 13 ms
 SystemSoundTest
     [PASS] SystemSoundTest.DisposeTest
     [IGNORED] SystemSoundTest.FromFile : PlaySystemSound doesn't work in the simulator
-          at MonoTouchFixtures.AudioToolbox.SystemSoundTest.FromFile () [0x00022] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/AudioToolbox/SystemSoundTest.cs:45 
+          at MonoTouchFixtures.AudioToolbox.SystemSoundTest.FromFile () [0x00022] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/AudioToolbox/SystemSoundTest.cs:45
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [PASS] SystemSoundTest.Properties
     [PASS] SystemSoundTest.TestCallbackPlayAlert
     [PASS] SystemSoundTest.TestCallbackPlaySystem
@@ -5176,19 +5176,19 @@ ExtAudioFileTest : 2 ms
 
 BGTaskSchedulerTest
     [IGNORED] BGTaskSchedulerTest.SubmitTaskRequestTest : This test only runs on device.
-          at TestRuntime.AssertDevice () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:144 
-          at MonoTouchFixtures.BackgroundTasks.BGTaskSchedulerTest.SubmitTaskRequestTest () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/BackgroundTasks/BGTaskSchedulerTest.cs:53 
+          at TestRuntime.AssertDevice () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:144
+          at MonoTouchFixtures.BackgroundTasks.BGTaskSchedulerTest.SubmitTaskRequestTest () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/BackgroundTasks/BGTaskSchedulerTest.cs:53
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 BGTaskSchedulerTest : 0 ms
 
 CategoryTest
     [PASS] CategoryTest.Instance
     [IGNORED] CategoryTest.NavigationControllerOverride : This test is disabled on TVOS.
-          at TestRuntime.IgnoreOnTVOS () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:694 
-          at MonoTouchFixtures.CategoryTest.NavigationControllerOverride () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/ObjCRuntime/CategoryTest.cs:123 
+          at TestRuntime.IgnoreOnTVOS () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:694
+          at MonoTouchFixtures.CategoryTest.NavigationControllerOverride () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/ObjCRuntime/CategoryTest.cs:123
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [PASS] CategoryTest.Static
 CategoryTest : 3 ms
 
@@ -5345,9 +5345,9 @@ TransactionTest : 1 ms
 CBCentralManagerTest
     [PASS] CBCentralManagerTest.Constructors
     [INCONCLUSIVE] CBCentralManagerTest.ScanForPeripherals : Bluetooth is off and therefore the test cannot be ran. State == Unsupported.
-          at MonoTouchFixtures.CoreBluetooth.CBCentralManagerTest.ScanForPeripherals () [0x00055] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreBluetooth/CentralManagerTest.cs:125 
+          at MonoTouchFixtures.CoreBluetooth.CBCentralManagerTest.ScanForPeripherals () [0x00055] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreBluetooth/CentralManagerTest.cs:125
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 CBCentralManagerTest : 5 ms
 
 CBPeerTest
@@ -5625,20 +5625,20 @@ ProxyTest
     [PASS] ProxyTest.Fields
     [PASS] ProxyTest.TestPACParsingAsync
     [IGNORED] ProxyTest.TestPACParsingAsyncNoProxy : CI bots might have proxies setup and will mean that the test will fail when trying to assert they are empty.
-          at TestRuntime.IgnoreInCI (System.String message) [0x0001e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:114 
-          at MonoTouchFixtures.CoreFoundation.ProxyTest.TestPACParsingAsyncNoProxy () [0x00007] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreFoundation/ProxyTest.cs:200 
+          at TestRuntime.IgnoreInCI (System.String message) [0x0001e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:114
+          at MonoTouchFixtures.CoreFoundation.ProxyTest.TestPACParsingAsyncNoProxy () [0x00007] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreFoundation/ProxyTest.cs:200
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [PASS] ProxyTest.TestPACParsingScript
     [PASS] ProxyTest.TestPACParsingScriptError
     [PASS] ProxyTest.TestPACParsingScriptNoProxy
     [PASS] ProxyTest.TestPACParsingUrl
     [PASS] ProxyTest.TestPACParsingUrlAsync
     [IGNORED] ProxyTest.TestPACParsingUrlAsyncNoProxy : CI bots might have proxies setup and will mean that the test will fail when trying to assert they are empty.
-          at TestRuntime.IgnoreInCI (System.String message) [0x0001e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:114 
-          at MonoTouchFixtures.CoreFoundation.ProxyTest.TestPACParsingUrlAsyncNoProxy () [0x00007] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreFoundation/ProxyTest.cs:297 
+          at TestRuntime.IgnoreInCI (System.String message) [0x0001e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:114
+          at MonoTouchFixtures.CoreFoundation.ProxyTest.TestPACParsingUrlAsyncNoProxy () [0x00007] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreFoundation/ProxyTest.cs:297
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [PASS] ProxyTest.TestPacParsingUrlNoProxy
 ProxyTest : 264 ms
 
@@ -5764,9 +5764,9 @@ PDFContentStreamTest : 5 ms
 
 PDFContextTest
     [IGNORED] PDFContextTest.Constructors : Crash (at least on simulator) with iOS 11.3 beta 1
-          at MonoTouchFixtures.CoreGraphics.PDFContextTest.Constructors () [0x0000e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreGraphics/PDFContextTest.cs:84 
+          at MonoTouchFixtures.CoreGraphics.PDFContextTest.Constructors () [0x0000e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreGraphics/PDFContextTest.cs:84
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [PASS] PDFContextTest.Context_Tag
     [PASS] PDFContextTest.Context_Tag_Strong
     [PASS] PDFContextTest.Context_Url
@@ -5782,9 +5782,9 @@ PDFDocumentTest : 28 ms
 
 PDFInfoTest
     [IGNORED] PDFInfoTest.ToDictionary : Crash (at least on devices) with iOS 11.3 beta 1
-          at MonoTouchFixtures.CoreGraphics.PDFInfoTest.ToDictionary () [0x0000e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreGraphics/PDFInfoTest.cs:67 
+          at MonoTouchFixtures.CoreGraphics.PDFInfoTest.ToDictionary () [0x0000e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreGraphics/PDFInfoTest.cs:67
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [PASS] PDFInfoTest.ToDictionaryWithPermissions
 PDFInfoTest : 2 ms
 
@@ -6063,15 +6063,15 @@ CVImageBufferTests : 3 ms
 
 CVMetalTextureCacheTests
     [IGNORED] CVMetalTextureCacheTests.CVMetalTextureCacheCtorTest : This test only runs on device.
-          at TestRuntime.AssertDevice () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:144 
-          at MonoTouchFixtures.CoreVideo.CVMetalTextureCacheTests.CVMetalTextureCacheCtorTest () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreVideo/CVMetalTextureCacheTests.cs:29 
+          at TestRuntime.AssertDevice () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:144
+          at MonoTouchFixtures.CoreVideo.CVMetalTextureCacheTests.CVMetalTextureCacheCtorTest () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreVideo/CVMetalTextureCacheTests.cs:29
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [IGNORED] CVMetalTextureCacheTests.FromDeviceTest : This test only runs on device.
-          at TestRuntime.AssertDevice () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:144 
-          at MonoTouchFixtures.CoreVideo.CVMetalTextureCacheTests.FromDeviceTest () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreVideo/CVMetalTextureCacheTests.cs:43 
+          at TestRuntime.AssertDevice () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:144
+          at MonoTouchFixtures.CoreVideo.CVMetalTextureCacheTests.FromDeviceTest () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/CoreVideo/CVMetalTextureCacheTests.cs:43
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 CVMetalTextureCacheTests : 2 ms
 
 CoreVideoEnumTest
@@ -6422,9 +6422,9 @@ NSDictionary2Test
     [PASS] NSDictionary2Test.IndexerTest
     [PASS] NSDictionary2Test.InvalidType
     [IGNORED] NSDictionary2Test.KeyValue_Autorelease : RetainCount unusable for testing
-          at MonoTouchFixtures.Foundation.NSDictionary2Test.KeyValue_Autorelease () [0x00035] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/NSDictionary2Test.cs:103 
+          at MonoTouchFixtures.Foundation.NSDictionary2Test.KeyValue_Autorelease () [0x00035] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/NSDictionary2Test.cs:103
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [PASS] NSDictionary2Test.KeysForObjectTest
     [PASS] NSDictionary2Test.KeysTest
     [PASS] NSDictionary2Test.MutableCopy
@@ -6433,9 +6433,9 @@ NSDictionary2Test
     [PASS] NSDictionary2Test.TryGetValueTest
     [PASS] NSDictionary2Test.ValuesTest
     [IGNORED] NSDictionary2Test.XForY_Autorelease : RetainCount unusable for testing
-          at MonoTouchFixtures.Foundation.NSDictionary2Test.XForY_Autorelease () [0x00035] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/NSDictionary2Test.cs:136 
+          at MonoTouchFixtures.Foundation.NSDictionary2Test.XForY_Autorelease () [0x00035] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/NSDictionary2Test.cs:136
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 NSDictionary2Test : 16 ms
 
 NSDictionaryTest
@@ -6447,14 +6447,14 @@ NSDictionaryTest
     [PASS] NSDictionaryTest.InbalancedCtor2
     [PASS] NSDictionaryTest.IndexerTest
     [IGNORED] NSDictionaryTest.KeyValue_Autorelease : RetainCount unusable for testing
-          at MonoTouchFixtures.Foundation.NSDictionaryTest.KeyValue_Autorelease () [0x00035] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/NSDictionaryTest.cs:93 
+          at MonoTouchFixtures.Foundation.NSDictionaryTest.KeyValue_Autorelease () [0x00035] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/NSDictionaryTest.cs:93
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [PASS] NSDictionaryTest.MutableCopy
     [IGNORED] NSDictionaryTest.XForY_Autorelease : RetainCount unusable for testing
-          at MonoTouchFixtures.Foundation.NSDictionaryTest.XForY_Autorelease () [0x00035] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/NSDictionaryTest.cs:126 
+          at MonoTouchFixtures.Foundation.NSDictionaryTest.XForY_Autorelease () [0x00035] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/NSDictionaryTest.cs:126
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 NSDictionaryTest : 5 ms
 
 NSExpressionTest
@@ -6486,9 +6486,9 @@ NSFileManagerTest
     [IGNORED] NSFileManagerTest.DocumentDirectory : DocumentsDirectory and MyDocuments point to different locations on mac
     [PASS] NSFileManagerTest.GetSkipBackupAttribute
     [PASS] NSFileManagerTest.GetUrlForUbiquityContainer : not iCloud enabled
-          at MonoTouchFixtures.Foundation.NSFileManagerTest.GetUrlForUbiquityContainer () [0x00051] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/FileManagerTest.cs:51 
+          at MonoTouchFixtures.Foundation.NSFileManagerTest.GetUrlForUbiquityContainer () [0x00051] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/FileManagerTest.cs:51
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [PASS] NSFileManagerTest.LibraryDirectory
 NSFileManagerTest : 6 ms
 
@@ -6544,9 +6544,9 @@ NSMutableDictionary2Test
     [PASS] NSMutableDictionary2Test.IndexerTest
     [PASS] NSMutableDictionary2Test.InvalidType
     [IGNORED] NSMutableDictionary2Test.KeyValue_Autorelease : RetainCount unusable for testing
-          at MonoTouchFixtures.Foundation.NSMutableDictionary2Test.KeyValue_Autorelease () [0x00035] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/NSMutableDictionary2Test.cs:78 
+          at MonoTouchFixtures.Foundation.NSMutableDictionary2Test.KeyValue_Autorelease () [0x00035] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/NSMutableDictionary2Test.cs:78
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [PASS] NSMutableDictionary2Test.KeysForObjectTest
     [PASS] NSMutableDictionary2Test.KeysTest
     [PASS] NSMutableDictionary2Test.MutableCopy
@@ -6556,9 +6556,9 @@ NSMutableDictionary2Test
     [PASS] NSMutableDictionary2Test.TryGetValueTest
     [PASS] NSMutableDictionary2Test.ValuesTest
     [IGNORED] NSMutableDictionary2Test.XForY_Autorelease : RetainCount unusable for testing
-          at MonoTouchFixtures.Foundation.NSMutableDictionary2Test.XForY_Autorelease () [0x00035] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/NSMutableDictionary2Test.cs:111 
+          at MonoTouchFixtures.Foundation.NSMutableDictionary2Test.XForY_Autorelease () [0x00035] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Foundation/NSMutableDictionary2Test.cs:111
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 NSMutableDictionary2Test : 20 ms
 
 NSMutableOrderedSet1Test
@@ -7095,28 +7095,28 @@ ClearValueTest : 1 ms
 
 DeviceTest
     [INCONCLUSIVE] DeviceTest.System : Metal is not supported
-          at MonoTouchFixtures.Metal.DeviceTest.System () [0x00018] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Metal/DeviceTest.cs:27 
+          at MonoTouchFixtures.Metal.DeviceTest.System () [0x00018] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Metal/DeviceTest.cs:27
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 DeviceTest : 3 ms
 
 HeapDescriptorTest
     [IGNORED] HeapDescriptorTest.GetSetCpuCacheModeTest : Type is missing on the simulator
-          at MonoTouchFixtures.Metal.HeapDescriptorTest.SetUp () [0x00016] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Metal/HeapDescriptorTest.cs:28 
+          at MonoTouchFixtures.Metal.HeapDescriptorTest.SetUp () [0x00016] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Metal/HeapDescriptorTest.cs:28
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [IGNORED] HeapDescriptorTest.GetSetSizeTest : Type is missing on the simulator
-          at MonoTouchFixtures.Metal.HeapDescriptorTest.SetUp () [0x00016] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Metal/HeapDescriptorTest.cs:28 
+          at MonoTouchFixtures.Metal.HeapDescriptorTest.SetUp () [0x00016] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Metal/HeapDescriptorTest.cs:28
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [IGNORED] HeapDescriptorTest.GetSetStorageModeTest : Type is missing on the simulator
-          at MonoTouchFixtures.Metal.HeapDescriptorTest.SetUp () [0x00016] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Metal/HeapDescriptorTest.cs:28 
+          at MonoTouchFixtures.Metal.HeapDescriptorTest.SetUp () [0x00016] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Metal/HeapDescriptorTest.cs:28
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [IGNORED] HeapDescriptorTest.Properties : Type is missing on the simulator
-          at MonoTouchFixtures.Metal.HeapDescriptorTest.SetUp () [0x00016] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Metal/HeapDescriptorTest.cs:28 
+          at MonoTouchFixtures.Metal.HeapDescriptorTest.SetUp () [0x00016] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Metal/HeapDescriptorTest.cs:28
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 HeapDescriptorTest : 2 ms
 
 MTLArgumentDescriptorTest
@@ -7177,10 +7177,10 @@ MTLPointerTypeTests : 1 ms
 
 MTLSharedEventListenerTest
     [IGNORED] MTLSharedEventListenerTest.GetSetCommandTypesTest : This test only runs on device.
-          at TestRuntime.AssertDevice () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:144 
-          at MonoTouchFixtures.Metal.MTLSharedEventListenerTest.SetUp () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Metal/MTLSharedEventListenerTest.cs:25 
+          at TestRuntime.AssertDevice () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:144
+          at MonoTouchFixtures.Metal.MTLSharedEventListenerTest.SetUp () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Metal/MTLSharedEventListenerTest.cs:25
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 MTLSharedEventListenerTest : 1 ms
 
 MTLStageInRegionIndirectArgumentsTest
@@ -7387,20 +7387,20 @@ NWEstablishmentReportTest
     [PASS] NWEstablishmentReportTest.TestEnumerateResolutions
     [PASS] NWEstablishmentReportTest.TestPreviousAttemptCount
     [IGNORED] NWEstablishmentReportTest.TestProxyConfigured : CI bots might have proxies setup and will mean that the test will fail.
-          at TestRuntime.IgnoreInCI (System.String message) [0x0001e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:114 
-          at MonoTouchFixtures.Network.NWEstablishmentReportTest.TestProxyConfigured () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Network/NWEstablishmentReportTest.cs:94 
+          at TestRuntime.IgnoreInCI (System.String message) [0x0001e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:114
+          at MonoTouchFixtures.Network.NWEstablishmentReportTest.TestProxyConfigured () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Network/NWEstablishmentReportTest.cs:94
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [IGNORED] NWEstablishmentReportTest.TestProxyEnpoint : CI bots might have proxies setup and will mean that the test will fail.
-          at TestRuntime.IgnoreInCI (System.String message) [0x0001e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:114 
-          at MonoTouchFixtures.Network.NWEstablishmentReportTest.TestProxyEnpoint () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Network/NWEstablishmentReportTest.cs:124 
+          at TestRuntime.IgnoreInCI (System.String message) [0x0001e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:114
+          at MonoTouchFixtures.Network.NWEstablishmentReportTest.TestProxyEnpoint () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Network/NWEstablishmentReportTest.cs:124
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [IGNORED] NWEstablishmentReportTest.TestUsedProxy : CI bots might have proxies setup and will mean that the test will fail.
-          at TestRuntime.IgnoreInCI (System.String message) [0x0001e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:114 
-          at MonoTouchFixtures.Network.NWEstablishmentReportTest.TestUsedProxy () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Network/NWEstablishmentReportTest.cs:87 
+          at TestRuntime.IgnoreInCI (System.String message) [0x0001e] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:114
+          at MonoTouchFixtures.Network.NWEstablishmentReportTest.TestUsedProxy () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Network/NWEstablishmentReportTest.cs:87
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 NWEstablishmentReportTest : 6 ms
 
 NWFramerMessageTest
@@ -7432,9 +7432,9 @@ NWParametersTest
     [PASS] NWParametersTest.FastOpenEnabledPropertyTest
     [PASS] NWParametersTest.IncludePeerToPeerPropertyTest
     [IGNORED] NWParametersTest.LocalEndpointPropertyTest : nw_parameters_copy_local_endpoint always return null. Rdar filled 44095278.
-          at MonoTouchFixtures.Network.NWParametersTest.LocalEndpointPropertyTest () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Network/NWParametersTest.cs:354 
+          at MonoTouchFixtures.Network.NWParametersTest.LocalEndpointPropertyTest () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Network/NWParametersTest.cs:354
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [PASS] NWParametersTest.LocalOnlyPropertyTest
     [PASS] NWParametersTest.MultiPathServicePropertyTest
     [PASS] NWParametersTest.PreferNoProxyPropertyTest
@@ -7454,9 +7454,9 @@ NWPathTest
     [PASS] NWPathTest.HasDnsPropertyTest
     [PASS] NWPathTest.HasIPV4PropertyTest
     [IGNORED] NWPathTest.HasIPV6PropertyTest : We cannot test the use of IPV6 since it is different per machine configuraton and makes the test flaky.
-          at MonoTouchFixtures.Network.NWPathTest.HasIPV6PropertyTest () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Network/NWPathTest.cs:131 
+          at MonoTouchFixtures.Network.NWPathTest.HasIPV6PropertyTest () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/Network/NWPathTest.cs:131
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [PASS] NWPathTest.IsExpensivePropertyTest
     [PASS] NWPathTest.IterateInterfacesTest
     [PASS] NWPathTest.StatusPropertyTest
@@ -7939,10 +7939,10 @@ ActionTest : 1 ms
 
 GeometrySourceTest
     [IGNORED] GeometrySourceTest.FromMetalBuffer : This test only runs on device.
-          at TestRuntime.AssertDevice () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:144 
-          at MonoTouchFixtures.SceneKit.GeometrySourceTest.FromMetalBuffer () [0x0001b] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/SceneKit/GeometrySourceTest.cs:47 
+          at TestRuntime.AssertDevice () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:144
+          at MonoTouchFixtures.SceneKit.GeometrySourceTest.FromMetalBuffer () [0x0001b] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/SceneKit/GeometrySourceTest.cs:47
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 GeometrySourceTest : 1 ms
 
 NodeTest
@@ -8209,13 +8209,13 @@ PhysicsWorldTest : 1 ms
 
 SK3DNodeTest
     [IGNORED] SK3DNodeTest.ProjectPoint : This doesn't seem to work properly in the iOS 9+ or macOS 10.11+
-          at MonoTouchFixtures.SpriteKit.SK3DNodeTest.ProjectPoint () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/SpriteKit/SK3DNodeTest.cs:49 
+          at MonoTouchFixtures.SpriteKit.SK3DNodeTest.ProjectPoint () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/SpriteKit/SK3DNodeTest.cs:49
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [IGNORED] SK3DNodeTest.UnprojectPoint : This doesn't seem to work properly in the iOS 9
-          at MonoTouchFixtures.SpriteKit.SK3DNodeTest.UnprojectPoint () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/SpriteKit/SK3DNodeTest.cs:77 
+          at MonoTouchFixtures.SpriteKit.SK3DNodeTest.UnprojectPoint () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/SpriteKit/SK3DNodeTest.cs:77
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 SK3DNodeTest : 1 ms
 
 SKShapeNodeTest
@@ -8267,9 +8267,9 @@ ReceiptRefreshRequestTest : 0 ms
 
 Symbols
     [IGNORED] Symbols.FunctionNames : This is a device-only test.
-          at MonoTouchFixtures.Symbols.FunctionNames () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/mono/Symbols.cs:26 
+          at MonoTouchFixtures.Symbols.FunctionNames () [0x0000d] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/mono/Symbols.cs:26
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 Symbols : 0 ms
 
 NativeTypes
@@ -8507,14 +8507,14 @@ PopoverControllerTest
     [PASS] PopoverControllerTest.Defaults
     [PASS] PopoverControllerTest.PopoverBackgroundViewType
     [INCONCLUSIVE] PopoverControllerTest.PresentFromBarButtonItem_BadButton : Requires iPad
-          at MonoTouchFixtures.UIKit.PopoverControllerTest.PresentFromBarButtonItem_BadButton () [0x00016] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/UIKit/PopoverControllerTest.cs:60 
+          at MonoTouchFixtures.UIKit.PopoverControllerTest.PresentFromBarButtonItem_BadButton () [0x00016] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/UIKit/PopoverControllerTest.cs:60
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [PASS] PopoverControllerTest.PresentFromRect
     [INCONCLUSIVE] PopoverControllerTest.PresentFromRect_BadView : Requires iPad
-          at MonoTouchFixtures.UIKit.PopoverControllerTest.PresentFromRect_BadView () [0x00016] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/UIKit/PopoverControllerTest.cs:96 
+          at MonoTouchFixtures.UIKit.PopoverControllerTest.PresentFromRect_BadView () [0x00016] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/UIKit/PopoverControllerTest.cs:96
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 PopoverControllerTest : 1 ms
 
 ProgressViewTest
@@ -8542,10 +8542,10 @@ SegmentedControlTest : 12 ms
 SplitViewControllerTest
     [PASS] SplitViewControllerTest.Defaults
     [IGNORED] SplitViewControllerTest.PresentsWithGesture : This test is disabled on TVOS.
-          at TestRuntime.IgnoreOnTVOS () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:694 
-          at MonoTouchFixtures.UIKit.SplitViewControllerTest.PresentsWithGesture () [0x00015] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/UIKit/SplitViewControllerTest.cs:53 
+          at TestRuntime.IgnoreOnTVOS () [0x00001] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/common/TestRuntime.cs:694
+          at MonoTouchFixtures.UIKit.SplitViewControllerTest.PresentsWithGesture () [0x00015] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/monotouch-test/UIKit/SplitViewControllerTest.cs:53
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 SplitViewControllerTest : 1 ms
 
 StringAttributesTest
@@ -8791,21 +8791,21 @@ RegistrarBindingTest
 
 LinkedAway
     [IGNORED] RegistrarBindingTest.LinkedAway(True,True) : This test is only applicable if optimized & linking all assemblies.
-          at Xamarin.BindingTests.RegistrarBindingTest.LinkedAway (System.Boolean required, System.Boolean instance) [0x00017] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/bindings-test/RegistrarBindingTest.cs:257 
+          at Xamarin.BindingTests.RegistrarBindingTest.LinkedAway (System.Boolean required, System.Boolean instance) [0x00017] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/bindings-test/RegistrarBindingTest.cs:257
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [IGNORED] RegistrarBindingTest.LinkedAway(True,False) : This test is only applicable if optimized & linking all assemblies.
-          at Xamarin.BindingTests.RegistrarBindingTest.LinkedAway (System.Boolean required, System.Boolean instance) [0x00017] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/bindings-test/RegistrarBindingTest.cs:257 
+          at Xamarin.BindingTests.RegistrarBindingTest.LinkedAway (System.Boolean required, System.Boolean instance) [0x00017] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/bindings-test/RegistrarBindingTest.cs:257
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [IGNORED] RegistrarBindingTest.LinkedAway(False,True) : This test is only applicable if optimized & linking all assemblies.
-          at Xamarin.BindingTests.RegistrarBindingTest.LinkedAway (System.Boolean required, System.Boolean instance) [0x00017] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/bindings-test/RegistrarBindingTest.cs:257 
+          at Xamarin.BindingTests.RegistrarBindingTest.LinkedAway (System.Boolean required, System.Boolean instance) [0x00017] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/bindings-test/RegistrarBindingTest.cs:257
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
     [IGNORED] RegistrarBindingTest.LinkedAway(False,False) : This test is only applicable if optimized & linking all assemblies.
-          at Xamarin.BindingTests.RegistrarBindingTest.LinkedAway (System.Boolean required, System.Boolean instance) [0x00017] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/bindings-test/RegistrarBindingTest.cs:257 
+          at Xamarin.BindingTests.RegistrarBindingTest.LinkedAway (System.Boolean required, System.Boolean instance) [0x00017] in /Users/builder/jenkins/workspace/xamarin-macios/xamarin-macios/tests/bindings-test/RegistrarBindingTest.cs:257
           at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
-          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395 
+          at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/src/Xamarin.iOS/mcs/class/corlib/System.Reflection/RuntimeMethodInfo.cs:395
 LinkedAway : 2 ms
 
 ProtocolWithBlockProperties

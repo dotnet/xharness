@@ -4,10 +4,11 @@
 
 using System.IO;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
 {
     public interface IXmlResultParser
     {
-        (string resultLine, bool failed) ParseXml(TextReader stream, TextWriter writer);
+        (string resultLine, bool failed) ParseXml(TextReader stream, TextWriter? humanReadableOutput);
     }
 }

@@ -7,6 +7,7 @@ using System.IO;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
     /// <summary>
@@ -65,7 +66,17 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         /// <param name="xmlType">Jargon of the source file</param>
         /// <param name="humanReadableReportDestination">If provided, will contain human readable result</param>
         /// <returns>A result line with the summary of what was parsed and an over all result</returns>
-        (string resultLine, bool failed) ParseResults(string source, XmlResultJargon xmlType, string humanReadableReportDestination = null);
+        (string resultLine, bool failed) ParseResults(string source, XmlResultJargon xmlType, string? humanReadableReportDestination = null);
+
+        /// <summary>
+        /// Parses the xml of the given jargon and returns a result line with the summary of what was parsed.
+        /// If destination is provided, creates a human readable report.
+        /// </summary>
+        /// <param name="source">File that will be read</param>
+        /// <param name="xmlType">Jargon of the source file</param>
+        /// <param name="humanReadableReportDestination">If provided, will contain human readable result</param>
+        /// <returns>A result line with the summary of what was parsed and an over all result</returns>
+        (string resultLine, bool failed) ParseResults(string source, XmlResultJargon xmlType, StreamWriter? textWriter = null);
 
         /// <summary>
         /// Generates a human readable test report.

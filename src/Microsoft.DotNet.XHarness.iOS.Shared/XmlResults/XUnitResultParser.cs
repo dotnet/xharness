@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
 {
     public class XUnitResultParser : IXmlResultParser
     {
-        public (string resultLine, bool failed) ParseXml(TextReader stream, TextWriter? writer)
+        public (string resultLine, bool failed) ParseXml(TextReader stream, TextWriter? humanReadableOutput)
         {
             long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
             total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
@@ -29,10 +29,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
                         long.TryParse(reader["skipped"], out var assemblySkipped);
                         skipped += assemblySkipped;
                     }
-                    if (writer != null && reader.NodeType == XmlNodeType.Element && reader.Name == "collection")
+
+                    if (humanReadableOutput != null && reader.NodeType == XmlNodeType.Element && reader.Name == "collection")
                     {
                         var testCaseName = reader["name"].Replace("Test collection for ", "");
-                        writer.WriteLine(testCaseName);
+                        humanReadableOutput.WriteLine(testCaseName);
                         var time = reader.GetAttribute("time") ?? "0"; // some nodes might not have the time :/
                                                                        // get the first node and then move in the siblings of the same type
                         reader.ReadToDescendant("test");
@@ -47,36 +48,36 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
                             switch (status)
                             {
                                 case "Pass":
-                                    writer.Write("\t[PASS] ");
+                                    humanReadableOutput.Write("\t[PASS] ");
                                     break;
                                 case "Skip":
-                                    writer.Write("\t[IGNORED] ");
+                                    humanReadableOutput.Write("\t[IGNORED] ");
                                     break;
                                 case "Fail":
-                                    writer.Write("\t[FAIL] ");
+                                    humanReadableOutput.Write("\t[FAIL] ");
                                     break;
                                 default:
-                                    writer.Write("\t[FAIL] ");
+                                    humanReadableOutput.Write("\t[FAIL] ");
                                     break;
                             }
-                            writer.Write(reader["name"]);
+                            humanReadableOutput.Write(reader["name"]);
                             if (status == "Fail")
                             { //  we need to print the message
                                 reader.ReadToDescendant("message");
-                                writer.Write($" : {reader.ReadElementContentAsString()}");
+                                humanReadableOutput.Write($" : {reader.ReadElementContentAsString()}");
                                 reader.ReadToNextSibling("stack-trace");
-                                writer.Write($" : {reader.ReadElementContentAsString()}");
+                                humanReadableOutput.Write($" : {reader.ReadElementContentAsString()}");
                             }
                             // add a new line
-                            writer.WriteLine();
+                            humanReadableOutput.WriteLine();
                         } while (reader.ReadToNextSibling("test"));
-                        writer.WriteLine($"{testCaseName} {time} ms");
+                        humanReadableOutput.WriteLine($"{testCaseName} {time} ms");
                     }
                 }
             }
             var passed = total - errors - failed - notRun - inconclusive - ignored - skipped - invalid;
             var resultLine = $"Tests run: {total} Passed: {passed} Inconclusive: {inconclusive} Failed: {failed + errors} Ignored: {ignored + skipped + invalid}";
-            writer?.WriteLine(resultLine);
+            humanReadableOutput?.WriteLine(resultLine);
 
             return (resultLine, errors != 0 || failed != 0);
         }
