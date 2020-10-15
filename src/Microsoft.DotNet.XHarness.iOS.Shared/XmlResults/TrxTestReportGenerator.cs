@@ -29,11 +29,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
                 foreach (var test in failedTests)
                 {
                     writer.WriteLine("<li>");
-                    writer.Write($"{test.ClassName.AsHtml()}.{test.TestName.AsHtml()}");
+                    writer.Write($"{test.ClassName?.AsHtml()}.{test.TestName?.AsHtml()}");
                     if (!string.IsNullOrEmpty(test.Message))
                     {
                         writer.Write(": ");
-                        writer.Write(test.Message.AsHtml());
+                        writer.Write(test.Message?.AsHtml());
                     }
                     writer.WriteLine("<br />");
                     writer.WriteLine("</li>");

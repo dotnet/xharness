@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             string info_plist_path = csproj.GetInfoPListInclude();
 
             var info_plist = new XmlDocument();
-            string plistPath = Path.Combine(Path.GetDirectoryName(projectFilePath), info_plist_path.Replace('\\', Path.DirectorySeparatorChar));
+            string plistPath = Path.Combine(Path.GetDirectoryName(projectFilePath)!, info_plist_path.Replace('\\', Path.DirectorySeparatorChar));
             info_plist.LoadWithoutNetworkAccess(plistPath);
 
             string bundleIdentifier = info_plist.GetCFBundleIdentifier();
@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             else
             {
                 appPath = Path.Combine(
-                    Path.GetDirectoryName(projectFilePath),
+                    Path.GetDirectoryName(projectFilePath)!,
                     csproj.GetOutputPath(platform, buildConfiguration).Replace('\\', Path.DirectorySeparatorChar),
                     appName + (extension != null ? ".appex" : ".app"));
             }

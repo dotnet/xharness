@@ -4,13 +4,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.DotNet.XHarness.Common.Execution;
-using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
@@ -277,7 +273,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void SetAssemblyReference(this XmlDocument csproj, string current, string value)
         {
-            var project = csproj.ChildNodes[1];
             var reference = csproj.SelectSingleNode("/*/*/*[local-name() = 'Reference' and @Include = '" + current + "']");
             if (reference != null)
             {
@@ -708,7 +703,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             return null;
         }
 
-        public static string? GetInfoPListInclude(this XmlDocument csproj) => GetInfoPListNode(csproj).Attributes["Include"]?.Value;
+        public static string GetInfoPListInclude(this XmlDocument csproj) => GetInfoPListNode(csproj).Attributes["Include"]?.Value;
 
         public static IEnumerable<string> GetProjectReferences(this XmlDocument csproj)
         {
@@ -864,7 +859,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             {
                 if (!def.InnerText.Contains("$(DefineConstants"))
                 {
-                    def.InnerText = def.InnerText + ";$(DefineConstants)";
+                    def.InnerText += ";$(DefineConstants)";
                 }
             }
         }

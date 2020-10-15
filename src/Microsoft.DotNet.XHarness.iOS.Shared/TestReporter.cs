@@ -370,7 +370,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             var path = Path.ChangeExtension(test_log_path, "xml");
             if (path == test_log_path)
             {
-                path = Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path) + "-clean.xml");
+                path = Path.Combine(Path.GetDirectoryName(path)!, Path.GetFileNameWithoutExtension(path) + "-clean.xml");
             }
 
             _resultParser.CleanXml(test_log_path, path);
@@ -414,7 +414,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     }
                     else
                     {
-                        (parseResult.resultLine, parseResult.failed) = _resultParser.ParseResults(path, xmlType, (StreamWriter)null);
+                        (parseResult.resultLine, parseResult.failed) = _resultParser.ParseResults(path, xmlType, (StreamWriter?)null);
                     }
 
                     // we do not longer need the tmp file
