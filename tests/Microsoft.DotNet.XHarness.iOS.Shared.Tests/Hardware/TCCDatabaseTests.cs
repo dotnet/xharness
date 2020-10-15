@@ -44,6 +44,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         [InlineData("com.apple.CoreSimulator.SimRuntime.tvOS-8-1", 2)]
         [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-5-1", 3)]
         [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-4-1", 2)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-14-0", 4)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.tvOS-14-0", 4)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-7-0", 4)]
         public void GetTCCFormatTest(string runtime, int expected) => Assert.Equal(expected, _database.GetTCCFormat(runtime));
 
         [Fact]
@@ -85,6 +88,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         {
             string bundleIdentifier = "my-bundle-identifier";
             var services = new string[] {
+                    "kTCCServiceAll",
                     "kTCCServiceAddressBook",
                     "kTCCServiceCalendar",
                     "kTCCServicePhotos",
@@ -135,8 +139,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
             Assert.Equal("sqlite3", processName);
             // assert that the sql is present
-            Assert.True(args.Contains(_dataPath));
-            Assert.True(args.Contains(expectedArgs.ToString()));
+            Assert.Contains(_dataPath, args);
+            Assert.Contains(expectedArgs.ToString(), args);
         }
     }
 }

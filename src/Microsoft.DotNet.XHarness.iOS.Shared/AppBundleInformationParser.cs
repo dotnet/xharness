@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +11,7 @@ using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
     public interface IAppBundleInformationParser
@@ -21,16 +21,23 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default);
     }
 
+    public interface IAppBundleLocator
+    {
+        Task<string> LocateAppBundle(XmlDocument projectFile, string projectFilePath);
+    }
+
     public class AppBundleInformationParser : IAppBundleInformationParser
     {
         private const string PlistBuddyPath = "/usr/libexec/PlistBuddy";
         private const string Armv7 = "armv7";
 
         private readonly IProcessManager _processManager;
+        private readonly IAppBundleLocator? _appBundleLocator;
 
-        public AppBundleInformationParser(IProcessManager processManager)
+        public AppBundleInformationParser(IProcessManager processManager, IAppBundleLocator? appBundleLocator = null)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _appBundleLocator = appBundleLocator;
         }
 
         public async Task<AppBundleInformation> ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration)
@@ -56,24 +63,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             var platform = target.IsSimulator() ? "iPhoneSimulator" : "iPhone";
 
-            string appBundlePath;
-            if (csproj.IsDotNetProject())
+            string appPath;
+
+            if (_appBundleLocator != null)
             {
-                var properties = new Dictionary<string, string> {
-                    { "Configuration", buildConfiguration },
-                    { "Platform", platform },
-                };
-                appBundlePath = await csproj.GetPropertyByMSBuildEvaluationAsync(log, _processManager, projectFilePath, "OutputPath", "_GenerateAppBundleName;_GenerateAppExBundleName", properties);
+                appPath = await _appBundleLocator.LocateAppBundle(csproj, projectFilePath);
             }
             else
             {
-                appBundlePath = csproj.GetOutputPath(platform, buildConfiguration).Replace('\\', Path.DirectorySeparatorChar);
+                appPath = Path.Combine(
+                    Path.GetDirectoryName(projectFilePath),
+                    csproj.GetOutputPath(platform, buildConfiguration).Replace('\\', Path.DirectorySeparatorChar),
+                    appName + (extension != null ? ".appex" : ".app"));
             }
-
-            var appPath = Path.Combine(
-                Path.GetDirectoryName(projectFilePath),
-                appBundlePath,
-                appName + (extension != null ? ".appex" : ".app"));
 
             string arch = csproj.GetMtouchArch(platform, buildConfiguration);
 

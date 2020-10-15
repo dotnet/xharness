@@ -414,7 +414,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     }
                     else
                     {
-                        (parseResult.resultLine, parseResult.failed) = _resultParser.ParseResults(path, xmlType);
+                        (parseResult.resultLine, parseResult.failed) = _resultParser.ParseResults(path, xmlType, (StreamWriter)null);
                     }
 
                     // we do not longer need the tmp file
