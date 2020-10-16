@@ -4,7 +4,7 @@
 
 using System;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS
@@ -16,9 +16,9 @@ namespace Microsoft.DotNet.XHarness.iOS
 
     public class DeviceLogCapturerFactory : IDeviceLogCapturerFactory
     {
-        private readonly IMLaunchProcessManager _processManager;
+        private readonly IMlaunchProcessManager _processManager;
 
-        public DeviceLogCapturerFactory(IMLaunchProcessManager processManager)
+        public DeviceLogCapturerFactory(IMlaunchProcessManager processManager)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }

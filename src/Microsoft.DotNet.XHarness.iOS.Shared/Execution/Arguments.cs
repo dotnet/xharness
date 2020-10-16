@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
+namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 {
 
     /// <summary>

@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
+namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 {
     // mlaunch is really important and has a lot of arguments that are known but
     // used to be passed as strings. This class allows to add arguments without

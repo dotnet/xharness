@@ -16,7 +16,7 @@
     <Compile Include="..\Microsoft.DotNet.XHarness.Common\XmlResultJargon.cs">
       <Link>XmlResultJargon.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Execution\Mlaunch\EnviromentVariables.cs">
+    <Compile Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Execution\EnviromentVariables.cs">
       <Link>EnviromentVariables.cs</Link>
     </Compile>
   </ItemGroup>

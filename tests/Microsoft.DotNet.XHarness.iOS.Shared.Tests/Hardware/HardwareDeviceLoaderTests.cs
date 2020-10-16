@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Moq;
 using Xunit;
@@ -21,12 +21,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
     public class HardwareDeviceLoaderTests
     {
         private readonly HardwareDeviceLoader _devices;
-        private readonly Mock<IMLaunchProcessManager> _processManager;
+        private readonly Mock<IMlaunchProcessManager> _processManager;
         private readonly Mock<ILog> _executionLog;
 
         public HardwareDeviceLoaderTests()
         {
-            _processManager = new Mock<IMLaunchProcessManager>();
+            _processManager = new Mock<IMlaunchProcessManager>();
             _devices = new HardwareDeviceLoader(_processManager.Object);
             _executionLog = new Mock<ILog>();
         }

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Collections;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
     public class HardwareDeviceLoader : IHardwareDeviceLoader
     {
-        private readonly IMLaunchProcessManager _processManager;
+        private readonly IMlaunchProcessManager _processManager;
         private bool _loaded;
         private readonly BlockingEnumerableCollection<IHardwareDevice> _connectedDevices = new BlockingEnumerableCollection<IHardwareDevice>();
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         public IEnumerable<IHardwareDevice> ConnectedWatch => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.watchOS && x.Architecture == Architecture.ARMv7k);
         public IEnumerable<IHardwareDevice> ConnectedWatch32_64 => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.watchOS && x.Architecture == Architecture.ARM64_32);
 
-        public HardwareDeviceLoader(IMLaunchProcessManager processManager)
+        public HardwareDeviceLoader(IMlaunchProcessManager processManager)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }

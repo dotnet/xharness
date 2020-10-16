@@ -7,7 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Moq;
 using Xunit;
 
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         [Fact]
         public async Task ParseFromProjectTest()
         {
-            var parser = new AppBundleInformationParser(Mock.Of<IMLaunchProcessManager>());
+            var parser = new AppBundleInformationParser(Mock.Of<IMlaunchProcessManager>());
 
             var info = await parser.ParseFromProject(s_projectFilePath, TestTarget.Simulator_iOS64, "Debug");
 
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                 .Setup(x => x.LocateAppBundle(It.IsAny<XmlDocument>(), s_projectFilePath))
                 .ReturnsAsync(s_appPath2);
 
-            var parser = new AppBundleInformationParser(Mock.Of<IMLaunchProcessManager>(), locator.Object);
+            var parser = new AppBundleInformationParser(Mock.Of<IMlaunchProcessManager>(), locator.Object);
 
             var info = await parser.ParseFromProject(s_projectFilePath, TestTarget.Simulator_iOS64, "Debug");
 

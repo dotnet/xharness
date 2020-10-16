@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Moq;
 using Xunit;
 
@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         private const string DeviceName = "Test iPad";
         private const string AppBundleId = "some.bundle.name.app";
 
-        private readonly Mock<IMLaunchProcessManager> _processManager;
+        private readonly Mock<IMlaunchProcessManager> _processManager;
         private readonly Mock<ILog> _mainLog;
         private readonly AppUninstaller _appUninstaller;
 
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         {
             _mainLog = new Mock<ILog>();
 
-            _processManager = new Mock<IMLaunchProcessManager>();
+            _processManager = new Mock<IMlaunchProcessManager>();
             _processManager.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult() { ExitCode = 0 }));
 
             _appUninstaller = new AppUninstaller(_processManager.Object, _mainLog.Object, 1);

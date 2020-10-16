@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
     public class TcpTunnel : ITcpTunnel
     {
         private readonly object _processExecutionLock = new object();
-        private readonly IMLaunchProcessManager _processManager;
+        private readonly IMlaunchProcessManager _processManager;
         private Task<ProcessExecutionResult> _tcpTunnelExecutionTask = null;
         private CancellationTokenSource _cancellationToken;
 
@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         public Task<bool> Started => startedCompletionSource.Task;
         public int Port { get; private set; }
 
-        public TcpTunnel(IMLaunchProcessManager processManager)
+        public TcpTunnel(IMlaunchProcessManager processManager)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }

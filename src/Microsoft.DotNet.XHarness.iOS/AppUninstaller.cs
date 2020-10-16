@@ -7,17 +7,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
 namespace Microsoft.DotNet.XHarness.iOS
 {
     public class AppUninstaller
     {
-        private readonly IMLaunchProcessManager _processManager;
+        private readonly IMlaunchProcessManager _processManager;
         private readonly ILog _mainLog;
         private readonly int _verbosity;
 
-        public AppUninstaller(IMLaunchProcessManager processManager, ILog mainLog, int verbosity)
+        public AppUninstaller(IMlaunchProcessManager processManager, ILog mainLog, int verbosity)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));

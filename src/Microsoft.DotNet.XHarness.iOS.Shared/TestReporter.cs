@@ -15,7 +15,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         private readonly AppBundleInformation _appInfo;
         private readonly RunMode _runMode;
         private readonly XmlResultJargon _xmlJargon;
-        private readonly IMLaunchProcessManager _processManager;
+        private readonly IMlaunchProcessManager _processManager;
         private readonly string? _deviceName;
         private readonly TimeSpan _timeout;
         private readonly Stopwatch _timeoutWatch;
@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         public bool ResultsUseXml => _xmlJargon != XmlResultJargon.Missing;
 
-        public TestReporter(IMLaunchProcessManager processManager,
+        public TestReporter(IMlaunchProcessManager processManager,
             IFileBackedLog mainLog,
             IReadableLog runLog,
             ILogs logs,

@@ -10,16 +10,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
+namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 {
-    public class MLaunchProcessManager : MacOSProcessManager, IMLaunchProcessManager
+    public class MlaunchProcessManager : MacOSProcessManager, IMlaunchProcessManager
     {
-        #region IMLaunchProcessManager implementation
+        #region IMlaunchProcessManager implementation
         public string MlaunchPath { get; }
 
-        public MLaunchProcessManager(string? xcodeRoot = null, string mlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch") : base(xcodeRoot)
+        public MlaunchProcessManager(string? xcodeRoot = null, string mlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch") : base(xcodeRoot)
         {
             MlaunchPath = mlaunchPath;
         }

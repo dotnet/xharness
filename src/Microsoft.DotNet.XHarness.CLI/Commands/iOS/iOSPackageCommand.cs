@@ -13,7 +13,7 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates;
 using Microsoft.DotNet.XHarness.iOS.Shared.TestImporter.Templates.Managed;
@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            var processManager = new MLaunchProcessManager();
+            var processManager = new MlaunchProcessManager();
 
             // Validate the presence of Xamarin.iOS
             var missingXamariniOS = false;
