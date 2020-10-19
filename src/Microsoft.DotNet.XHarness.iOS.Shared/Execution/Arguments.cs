@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
+namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 {
 
     /// <summary>
@@ -207,11 +207,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
         public SetEnvVariableArgument(string variableName, object variableValue)
         {
             _variableName = variableName ?? throw new ArgumentNullException(nameof(variableName));
-            _variableValue = variableValue?.ToString() ?? throw new ArgumentNullException(nameof(variableValue));
 
-            if (variableValue is bool)
+            if (variableValue is bool b)
             {
-                _variableValue = _variableValue.ToLower();
+                _variableValue = b.ToString().ToLowerInvariant();
+            }
+            else
+            {
+                _variableValue = variableValue?.ToString() ?? throw new ArgumentNullException(nameof(variableValue));
             }
         }
 

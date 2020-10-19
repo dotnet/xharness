@@ -4,15 +4,24 @@
 
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Xml;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 {
     public static class PListExtensions
     {
+        private static readonly ConditionalWeakTable<XmlDocument, string> s_filenames = new ConditionalWeakTable<XmlDocument, string>();
+
         public const string BundleIdentifierPropertyName = "CFBundleIdentifier";
         public const string BundleNamePropertyName = "CFBundleName";
         public const string RequiredDeviceCapabilities = "UIRequiredDeviceCapabilities";
+
+        public static string GetFilename(this XmlDocument doc)
+        {
+            s_filenames.TryGetValue(doc, out var rv);
+            return rv;
+        }
 
         public static void LoadWithoutNetworkAccess(this XmlDocument doc, string filename)
         {
@@ -28,6 +37,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                     doc.Load(reader);
                 }
             }
+            s_filenames.Add(doc, filename);
         }
 
         public static void LoadXmlWithoutNetworkAccess(this XmlDocument doc, string xml)

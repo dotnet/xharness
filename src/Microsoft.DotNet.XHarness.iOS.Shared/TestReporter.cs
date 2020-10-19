@@ -15,9 +15,10 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 using ExceptionLogger = System.Action<int, string>;
 
 #nullable enable
@@ -43,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         private readonly AppBundleInformation _appInfo;
         private readonly RunMode _runMode;
         private readonly XmlResultJargon _xmlJargon;
-        private readonly IMLaunchProcessManager _processManager;
+        private readonly IMlaunchProcessManager _processManager;
         private readonly string? _deviceName;
         private readonly TimeSpan _timeout;
         private readonly Stopwatch _timeoutWatch;
@@ -75,7 +76,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         public bool ResultsUseXml => _xmlJargon != XmlResultJargon.Missing;
 
-        public TestReporter(IMLaunchProcessManager processManager,
+        public TestReporter(IMlaunchProcessManager processManager,
             IFileBackedLog mainLog,
             IReadableLog runLog,
             ILogs logs,
@@ -367,6 +368,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             // from the TCP connection, we are going to fail when trying to read it and not parse it. Therefore, we are not only
             // going to check if we are in CI, but also if the listener_log is valid.
             var path = Path.ChangeExtension(test_log_path, "xml");
+            if (path == test_log_path)
+            {
+                path = Path.Combine(Path.GetDirectoryName(path)!, Path.GetFileNameWithoutExtension(path) + "-clean.xml");
+            }
+
             _resultParser.CleanXml(test_log_path, path);
 
             if (ResultsUseXml && _resultParser.IsValidXml(path, out var xmlType))
@@ -403,14 +409,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     if (_generateHtml)
                     {
                         // write the human readable results in a tmp file, which we later use to step on the logs
-                        var tmpFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-                        (parseResult.resultLine, parseResult.failed) = _resultParser.ParseResults(path, xmlType, tmpFile);
-                        File.Copy(tmpFile, test_log_path, true);
-                        File.Delete(tmpFile);
+                        var humanReadableLog = _logs.CreateFile(Path.GetFileNameWithoutExtension(test_log_path) + ".log", LogType.NUnitResult.ToString());
+                        (parseResult.resultLine, parseResult.failed) = _resultParser.ParseResults(path, xmlType, humanReadableLog);
                     }
                     else
                     {
-                        (parseResult.resultLine, parseResult.failed) = _resultParser.ParseResults(path, xmlType);
+                        (parseResult.resultLine, parseResult.failed) = _resultParser.ParseResults(path, xmlType, (StreamWriter?)null);
                     }
 
                     // we do not longer need the tmp file

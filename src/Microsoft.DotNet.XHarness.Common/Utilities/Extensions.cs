@@ -28,5 +28,23 @@ namespace Microsoft.DotNet.XHarness.Common.Utilities
                 return false;
             }
         }
+
+        // Returns false if timed out
+        public static async Task<bool> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout)
+        {
+            if (timeout.Ticks < -1)
+            {
+                return false;
+            }
+
+            if (task == await Task.WhenAny(task, Task.Delay(timeout)))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }

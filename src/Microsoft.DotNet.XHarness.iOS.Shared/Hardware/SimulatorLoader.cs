@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Collections;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 #nullable enable
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         private readonly BlockingEnumerableCollection<SimDevicePair> _availableDevicePairs = new BlockingEnumerableCollection<SimDevicePair>();
 
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
-        private readonly IMLaunchProcessManager _processManager;
+        private readonly IMlaunchProcessManager _processManager;
         private bool _loaded;
 
         public IEnumerable<SimRuntime> SupportedRuntimes => _supportedRuntimes;
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         public IEnumerable<SimulatorDevice> AvailableDevices => _availableDevices;
         public IEnumerable<SimDevicePair> AvailableDevicePairs => _availableDevicePairs;
 
-        public SimulatorLoader(IMLaunchProcessManager processManager)
+        public SimulatorLoader(IMlaunchProcessManager processManager)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }

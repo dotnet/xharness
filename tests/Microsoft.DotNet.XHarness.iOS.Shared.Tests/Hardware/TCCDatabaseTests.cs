@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Moq;
 using Xunit;
@@ -18,19 +18,21 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 {
     public class TCCDatabaseTests
     {
-        private readonly Mock<IMLaunchProcessManager> _processManager;
+        private readonly Mock<IMlaunchProcessManager> _processManager;
         private readonly TCCDatabase _database;
         private readonly Mock<ILog> _executionLog;
         private readonly string _simRuntime;
         private readonly string _dataPath;
+        private readonly string _udid;
 
         public TCCDatabaseTests()
         {
-            _processManager = new Mock<IMLaunchProcessManager>();
+            _processManager = new Mock<IMlaunchProcessManager>();
             _database = new TCCDatabase(_processManager.Object);
             _executionLog = new Mock<ILog>();
             _simRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-12-1";
             _dataPath = "/path/to/my/data";
+            _udid = "D9DCBED1EC414ECE9A2353364C2AC454";
         }
 
         [Theory]
@@ -42,6 +44,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         [InlineData("com.apple.CoreSimulator.SimRuntime.tvOS-8-1", 2)]
         [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-5-1", 3)]
         [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-4-1", 2)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-14-0", 4)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.tvOS-14-0", 4)]
+        [InlineData("com.apple.CoreSimulator.SimRuntime.watchOS-7-0", 4)]
         public void GetTCCFormatTest(string runtime, int expected) => Assert.Equal(expected, _database.GetTCCFormat(runtime));
 
         [Fact]
@@ -52,7 +57,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         {
             // we should write in the log that we did not managed to agree to it
             _executionLog.Setup(l => l.WriteLine(It.IsAny<string>()));
-            await _database.AgreeToPromptsAsync(_simRuntime, _dataPath, _executionLog.Object);
+            await _database.AgreeToPromptsAsync(_simRuntime, _dataPath, _udid, _executionLog.Object);
             _executionLog.Verify(l => l.WriteLine("No bundle identifiers given when requested permission editing."));
         }
 
@@ -68,7 +73,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 1, TimedOut = true });
                 });
             // try to accept and fail because we always timeout
-            await _database.AgreeToPromptsAsync(_simRuntime, _dataPath, _executionLog.Object, "my-bundle-id", "your-bundle-id");
+            await _database.AgreeToPromptsAsync(_simRuntime, _dataPath, _udid, _executionLog.Object, "my-bundle-id", "your-bundle-id");
 
             // verify that we did write in the logs and that we did call sqlite3
             Assert.Equal("sqlite3", processName);
@@ -83,6 +88,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         {
             string bundleIdentifier = "my-bundle-identifier";
             var services = new string[] {
+                    "kTCCServiceAll",
                     "kTCCServiceAddressBook",
                     "kTCCServiceCalendar",
                     "kTCCServicePhotos",
@@ -129,12 +135,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
                 });
 
-            await _database.AgreeToPromptsAsync(runtime, _dataPath, _executionLog.Object, bundleIdentifier);
+            await _database.AgreeToPromptsAsync(runtime, _dataPath, _udid, _executionLog.Object, bundleIdentifier);
 
             Assert.Equal("sqlite3", processName);
             // assert that the sql is present
-            Assert.True(args.Contains(_dataPath));
-            Assert.True(args.Contains(expectedArgs.ToString()));
+            Assert.Contains(_dataPath, args);
+            Assert.Contains(expectedArgs.ToString(), args);
         }
     }
 }

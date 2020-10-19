@@ -2,9 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 {
-
     public enum Architecture
     {
         ARMv6,
@@ -31,5 +32,17 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         string Name { get; }
         string UDID { get; }
         string OSVersion { get; }
+    }
+
+    public static class DevicePlatformExtensions
+    {
+        public static string AsString(this DevicePlatform value) => value switch
+        {
+            DevicePlatform.iOS => "iOS",
+            DevicePlatform.tvOS => "tvOS",
+            DevicePlatform.watchOS => "watchOS",
+            DevicePlatform.macOS => "macOS",
+            _ => throw new Exception($"Unknown platform: {value}"),
+        };
     }
 }

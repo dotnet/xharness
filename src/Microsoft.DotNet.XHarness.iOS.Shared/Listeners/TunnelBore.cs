@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
@@ -29,10 +29,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
     public class TunnelBore : ITunnelBore
     {
         private readonly object _tunnelsLock = new object();
-        private readonly IMLaunchProcessManager _processManager;
+        private readonly IMlaunchProcessManager _processManager;
         private readonly ConcurrentDictionary<string, TcpTunnel> _tunnels = new ConcurrentDictionary<string, TcpTunnel>();
 
-        public TunnelBore(IMLaunchProcessManager processManager)
+        public TunnelBore(IMlaunchProcessManager processManager)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }

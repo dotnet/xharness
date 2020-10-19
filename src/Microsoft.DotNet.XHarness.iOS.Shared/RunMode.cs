@@ -12,5 +12,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         iOS,
         TvOS,
         WatchOS,
+        MacOS,
     }
 }

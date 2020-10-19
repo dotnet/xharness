@@ -12,11 +12,12 @@ using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 using Moq;
 using Xunit;
 
@@ -41,7 +42,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             productType: "iPhone12,1",
             productVersion: "13.0");
 
-        private readonly Mock<IMLaunchProcessManager> _processManager;
+        private readonly Mock<IMlaunchProcessManager> _processManager;
         private readonly Mock<ILogs> _logs;
         private readonly Mock<IFileBackedLog> _mainLog;
         private readonly Mock<ISimulatorLoader> _simulatorLoader;
@@ -61,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         {
             _mainLog = new Mock<IFileBackedLog>();
 
-            _processManager = new Mock<IMLaunchProcessManager>();
+            _processManager = new Mock<IMlaunchProcessManager>();
             _processManager.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult() { ExitCode = 0 }));
 
             _hardwareDeviceLoader = new Mock<IHardwareDeviceLoader>();

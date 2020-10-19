@@ -10,9 +10,10 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 using Moq;
 using Xunit;
 
@@ -21,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
     public class TestReporterTests : IDisposable
     {
         private readonly Mock<ICrashSnapshotReporter> _crashReporter;
-        private readonly Mock<IMLaunchProcessManager> _processManager;
+        private readonly Mock<IMlaunchProcessManager> _processManager;
         private readonly IResultParser _parser;
         private readonly Mock<IReadableLog> _runLog;
         private readonly Mock<IFileBackedLog> _mainLog;
@@ -34,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         public TestReporterTests()
         {
             _crashReporter = new Mock<ICrashSnapshotReporter>();
-            _processManager = new Mock<IMLaunchProcessManager>();
+            _processManager = new Mock<IMlaunchProcessManager>();
             _parser = new XmlResultParser();
             _runLog = new Mock<IReadableLog>();
             _mainLog = new Mock<IFileBackedLog>();

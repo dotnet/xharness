@@ -8,14 +8,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 {
 
     public class SimulatorDevice : ISimulatorDevice
     {
-        private readonly IMLaunchProcessManager _processManager;
+        private readonly IMlaunchProcessManager _processManager;
         private readonly ITCCDatabase _tCCDatabase;
 
         public string UDID { get; set; }
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         public string SystemLog => Path.Combine(LogPath, "system.log");
 
 
-        public SimulatorDevice(IMLaunchProcessManager processManager, ITCCDatabase tccDatabase)
+        public SimulatorDevice(IMlaunchProcessManager processManager, ITCCDatabase tccDatabase)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _tCCDatabase = tccDatabase ?? throw new ArgumentNullException(nameof(tccDatabase));
@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             await _processManager.ExecuteCommandAsync("open", new[] { "-a", simulator_app, "--args", "-CurrentDeviceUDID", UDID }, log, TimeSpan.FromSeconds(15));
         }
 
-        public async Task PrepareSimulator(ILog log, params string[] bundle_identifiers)
+        public async Task<bool> PrepareSimulator(ILog log, params string[] bundleIdentifiers)
         {
             // Kill all existing processes
             await KillEverything(log);
@@ -123,25 +123,26 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             await Erase(log);
 
             // Edit the permissions to prevent dialog boxes in the test app
-            var TCC_db = Path.Combine(DataPath, "data", "Library", "TCC", "TCC.db");
-            if (!File.Exists(TCC_db))
+            var tccDB = Path.Combine(DataPath, "data", "Library", "TCC", "TCC.db");
+            if (!File.Exists(tccDB))
             {
                 log.WriteLine("Opening simulator to create TCC.db");
                 await OpenSimulator(log);
 
-                var tcc_creation_timeout = 60;
+                var tccCreationTimeout = 60;
                 var watch = new Stopwatch();
                 watch.Start();
-                while (!File.Exists(TCC_db) && watch.Elapsed.TotalSeconds < tcc_creation_timeout)
+                while (!File.Exists(tccDB) && watch.Elapsed.TotalSeconds < tccCreationTimeout)
                 {
-                    log.WriteLine("Waiting for simulator to create TCC.db... {0}", (int)(tcc_creation_timeout - watch.Elapsed.TotalSeconds));
+                    log.WriteLine("Waiting for simulator to create TCC.db... {0}", (int)(tccCreationTimeout - watch.Elapsed.TotalSeconds));
                     await Task.Delay(TimeSpan.FromSeconds(0.250));
                 }
             }
 
-            if (File.Exists(TCC_db))
+            var result = true;
+            if (File.Exists(tccDB))
             {
-                await _tCCDatabase.AgreeToPromptsAsync(SimRuntime, TCC_db, log, bundle_identifiers);
+                result &= await _tCCDatabase.AgreeToPromptsAsync(SimRuntime, tccDB, UDID, log, bundleIdentifiers);
             }
             else
             {
@@ -153,6 +154,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
             // Make 100% sure we're shutdown
             await Shutdown(log);
+
+            return result;
         }
 
     }

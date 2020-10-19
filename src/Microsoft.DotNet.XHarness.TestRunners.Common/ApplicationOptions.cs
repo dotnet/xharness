@@ -5,7 +5,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.DotNet.XHarness.Common;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Common

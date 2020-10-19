@@ -4,7 +4,7 @@
 
 using System.Collections.Generic;
 using Microsoft.DotNet.XHarness.Common.Utilities;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Execution

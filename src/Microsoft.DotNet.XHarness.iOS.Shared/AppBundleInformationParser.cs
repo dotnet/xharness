@@ -11,13 +11,19 @@ using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
     public interface IAppBundleInformationParser
     {
-        AppBundleInformation ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration);
+        Task<AppBundleInformation> ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration);
 
         Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default);
+    }
+
+    public interface IAppBundleLocator
+    {
+        Task<string> LocateAppBundle(XmlDocument projectFile, string projectFilePath);
     }
 
     public class AppBundleInformationParser : IAppBundleInformationParser
@@ -26,13 +32,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         private const string Armv7 = "armv7";
 
         private readonly IProcessManager _processManager;
+        private readonly IAppBundleLocator? _appBundleLocator;
 
-        public AppBundleInformationParser(IProcessManager processManager)
+        public AppBundleInformationParser(IProcessManager processManager, IAppBundleLocator? appBundleLocator = null)
         {
-            _processManager = processManager ?? throw new System.ArgumentNullException(nameof(processManager));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _appBundleLocator = appBundleLocator;
         }
 
-        public AppBundleInformation ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration)
+        public async Task<AppBundleInformation> ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration)
         {
             var csproj = new XmlDocument();
             csproj.LoadWithoutNetworkAccess(projectFilePath);
@@ -41,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             string info_plist_path = csproj.GetInfoPListInclude();
 
             var info_plist = new XmlDocument();
-            string plistPath = Path.Combine(Path.GetDirectoryName(projectFilePath), info_plist_path.Replace('\\', Path.DirectorySeparatorChar));
+            string plistPath = Path.Combine(Path.GetDirectoryName(projectFilePath)!, info_plist_path.Replace('\\', Path.DirectorySeparatorChar));
             info_plist.LoadWithoutNetworkAccess(plistPath);
 
             string bundleIdentifier = info_plist.GetCFBundleIdentifier();
@@ -55,9 +63,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             var platform = target.IsSimulator() ? "iPhoneSimulator" : "iPhone";
 
-            string appPath = Path.Combine(Path.GetDirectoryName(projectFilePath),
-                csproj.GetOutputPath(platform, buildConfiguration).Replace('\\', Path.DirectorySeparatorChar),
-                appName + (extension != null ? ".appex" : ".app"));
+            string appPath;
+
+            if (_appBundleLocator != null)
+            {
+                appPath = await _appBundleLocator.LocateAppBundle(csproj, projectFilePath);
+            }
+            else
+            {
+                appPath = Path.Combine(
+                    Path.GetDirectoryName(projectFilePath)!,
+                    csproj.GetOutputPath(platform, buildConfiguration).Replace('\\', Path.DirectorySeparatorChar),
+                    appName + (extension != null ? ".appex" : ".app"));
+            }
 
             string arch = csproj.GetMtouchArch(platform, buildConfiguration);
 

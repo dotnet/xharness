@@ -9,11 +9,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch
+namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 {
-    public interface IMLaunchProcessManager : IMacOSProcessManager, IProcessManager
+    public interface IMlaunchProcessManager : IMacOSProcessManager, IProcessManager
     {
         string MlaunchPath { get; }
 

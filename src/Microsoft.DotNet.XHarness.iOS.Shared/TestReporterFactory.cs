@@ -5,7 +5,7 @@
 using System;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution.Mlaunch;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
@@ -34,9 +34,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
     public class TestReporterFactory : ITestReporterFactory
     {
-        private readonly IMLaunchProcessManager _processManager;
+        private readonly IMlaunchProcessManager _processManager;
 
-        public TestReporterFactory(IMLaunchProcessManager processManager)
+        public TestReporterFactory(IMlaunchProcessManager processManager)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
