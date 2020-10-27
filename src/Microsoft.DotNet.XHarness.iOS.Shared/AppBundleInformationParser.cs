@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
     public interface IAppBundleLocator
     {
-        Task<string> LocateAppBundle(XmlDocument projectFile, string projectFilePath);
+        Task<string> LocateAppBundle(XmlDocument projectFile, string projectFilePath, TestTarget target, string buildConfiguration);
     }
 
     public class AppBundleInformationParser : IAppBundleInformationParser
@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             if (_appBundleLocator != null)
             {
-                appPath = await _appBundleLocator.LocateAppBundle(csproj, projectFilePath);
+                appPath = await _appBundleLocator.LocateAppBundle(csproj, projectFilePath, target, buildConfiguration);
             }
             else
             {
