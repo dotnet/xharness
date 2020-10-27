@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         {
             var locator = new Mock<IAppBundleLocator>();
             locator
-                .Setup(x => x.LocateAppBundle(It.IsAny<XmlDocument>(), s_projectFilePath))
+                .Setup(x => x.LocateAppBundle(It.IsAny<XmlDocument>(), s_projectFilePath, TestTarget.Simulator_iOS64, "Debug"))
                 .ReturnsAsync(s_appPath2);
 
             var parser = new AppBundleInformationParser(Mock.Of<IMlaunchProcessManager>(), locator.Object);
