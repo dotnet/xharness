@@ -67,27 +67,34 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();
 
-            // Sleeping 1 second allows the process time to send messages to the above delegates
-            // if the process exits very quickly
-            Thread.Sleep(1000);
-
             bool timedOut = false;
+            int exitCode;
 
             // (int.MaxValue ms is about 24 days).  Large values are effectively timeouts for the outer harness
             if (!p.WaitForExit((int)Math.Min(timeOut.TotalMilliseconds, int.MaxValue)))
             {
                 _log.LogError("Waiting for command timed out: execution may be compromised.");
                 timedOut = true;
+                exitCode = (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT;
+
+                // try to terminate the process
+                try { p.Kill (); } catch { }
+            }
+            else
+            {
+                // we exited normally, call WaitForExit() again to ensure redirected standard output is processed
+                p.WaitForExit();
+                exitCode = p.ExitCode;
             }
 
-            // Lock the stringbuilders used as rarely this can cause concurrency issues
-            // resulting in "Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'chunkLength')"
+            p.Close();
+
             lock (standardOut)
                 lock (standardErr)
                 {
                     return new ProcessExecutionResults()
                     {
-                        ExitCode = p.ExitCode,
+                        ExitCode = exitCode,
                         StandardOutput = standardOut.ToString(),
                         StandardError = standardErr.ToString(),
                         TimedOut = timedOut
