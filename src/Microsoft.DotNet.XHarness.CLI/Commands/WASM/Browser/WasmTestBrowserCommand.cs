@@ -73,7 +73,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             options.AddArguments(new List<string>(_arguments.BrowserArgs)
             {
                 "--incognito",
-                "--headless"
+                "--headless",
+                "--no-sandbox"
             });
 
             var driverService = ChromeDriverService.CreateDefaultService();
