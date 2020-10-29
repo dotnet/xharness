@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                                 logProcessor,
                                 logger);
 
-            var (driverService, driver) = GetChromeDriver();
+            var (driverService, driver) = GetChromeDriver(logger);
             try
             {
                 return await runner.RunTestsWithWebDriver(driverService, driver);
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
         }
 
-        private (DriverService, IWebDriver) GetChromeDriver()
+        private (DriverService, IWebDriver) GetChromeDriver(ILogger logger)
         {
             var options = new ChromeOptions();
             options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
@@ -73,7 +73,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             options.AddArguments(new List<string>(_arguments.BrowserArgs)
             {
                 "--incognito",
-                "--headless"
+                "--headless",
+                "--no-sandbox"
             });
 
             var driverService = ChromeDriverService.CreateDefaultService();
@@ -87,7 +88,29 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             // getLog() might not see anything for long durations!
             //
             // So -> use a larger timeout!
-            return (driverService, new ChromeDriver(driverService, options, _arguments.Timeout));
+
+            int max_retries = 3;
+            int retry_num = 0;
+            while(true)
+            {
+                try
+                {
+                    return (driverService, new ChromeDriver(driverService, options, _arguments.Timeout));
+                }
+                catch (WebDriverException wde) when (wde.Message.Contains("exited abnormally") && retry_num < max_retries - 1)
+                {
+                    // chrome can sometimes crash on startup when launching from chromedriver.
+                    // As a *workaround*, let's retry that a few times
+                    // Error seen:
+                    //     [12:41:07] crit: OpenQA.Selenium.WebDriverException: unknown error: Chrome failed to start: exited abnormally.
+                    //    (chrome not reachable)
+
+                    // Log on max-1 tries, and rethrow on the last one
+                    logger.LogWarning($"Failed to start chrome, attempt #{retry_num}: {wde}");
+                }
+
+                retry_num++;
+            }
         }
     }
 }
