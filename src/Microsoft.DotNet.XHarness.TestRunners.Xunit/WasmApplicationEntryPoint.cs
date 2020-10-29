@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
@@ -19,7 +20,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         protected virtual IEnumerable<string> IncludedMethods { get; set; } = Array.Empty<string>();
         protected virtual IEnumerable<string> IncludedNamespaces { get; set; } = Array.Empty<string>();
 
-        public int Run()
+        public async Task<int> Run()
         {
             var testRunner = new ThreadlessXunitTestRunner();
             var filters = new XunitFilters();
@@ -30,7 +31,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             foreach (var cl in IncludedClasses) filters.IncludedClasses.Add(cl);
             foreach (var me in IncludedMethods) filters.IncludedMethods.Add(me);
 
-            var result = testRunner.Run(TestAssembly, printXml: true, filters);
+            var result = await testRunner.Run(TestAssembly, printXml: true, filters);
 
             return result;
         }
