@@ -68,16 +68,30 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
 
             // Enable this for more debugging info
-            // options.SetLoggingPreference(LogType.Driver, SeleniumLogLevel.All);
+            options.SetLoggingPreference(LogType.Driver, SeleniumLogLevel.All);
 
             options.AddArguments(new List<string>(_arguments.BrowserArgs)
             {
                 "--incognito",
                 "--headless",
-                "--no-sandbox"
+
+                // added based on https://github.com/puppeteer/puppeteer/blob/main/src/node/Launcher.ts#L159-L181
+                "--enable-features=NetworkService,NetworkServiceInProcess",
+                "--disable-background-timer-throttling",
+                "--disable-backgrounding-occluded-windows",
+                "--disable-breakpad",
+                "--disable-component-extensions-with-background-pages",
+                "--disable-dev-shm-usage",
+                "--disable-extensions",
+                "--disable-features=TranslateUI",
+                "--disable-ipc-flooding-protection",
+                "--disable-renderer-backgrounding",
+                "--force-color-profile=srgb",
+                "--metrics-recording-only"
             });
 
             var driverService = ChromeDriverService.CreateDefaultService();
+            driverService.EnableVerboseLogging = true;
 
             // We want to explicitly specify a timeout here. This is for for the
             // driver commands, like getLog. The default is 60s, which ends up
