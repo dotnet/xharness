@@ -111,6 +111,23 @@ namespace Microsoft.DotNet.XHarness.Android
             }
         }
 
+        public void DumpBugReport(string outputFilePath)
+        {
+            // give some time for bug report to be available
+            Thread.Sleep(3000);
+
+            var result = RunAdbCommand($"bugreport {outputFilePath}", TimeSpan.FromMinutes(5));
+            if (result.ExitCode != 0)
+            {
+                // Could throw here, but it would tear down a possibly otherwise acceptable execution.
+                _log.LogError($"Error getting ADB bugreport:{Environment.NewLine}{result}");
+            }
+            else
+            {
+                _log.LogInformation($"Wrote ADB bugreport to {outputFilePath}");
+            }
+        }
+
         public void WaitForDevice()
         {
             // This command waits for ANY kind of device to be available (emulator or real)

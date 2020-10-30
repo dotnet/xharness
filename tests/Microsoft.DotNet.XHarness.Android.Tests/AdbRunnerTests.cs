@@ -79,6 +79,17 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         }
 
         [Fact]
+        public void DumpBugReport()
+        {
+            var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+            string pathToDumpBugReport = Path.Join(s_scratchAndOutputPath, $"{Path.GetRandomFileName()}.zip");
+            runner.DumpBugReport(pathToDumpBugReport);
+            _processManager.Verify(pm => pm.Run(s_adbPath, $"bugreport {pathToDumpBugReport}", TimeSpan.FromMinutes(5)), Times.Once);
+
+            Assert.Equal("Sample BugReport Output", File.ReadAllText(pathToDumpBugReport));
+        }
+
+        [Fact]
         public void WaitForDevice()
         {
             var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
@@ -241,6 +252,10 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
                     {
                         stdOut = "Sample LogCat Output";
                     }
+                    break;
+                case "bugreport":
+                    var outputPath = allArgs[argStart + 1];
+                    File.WriteAllText(outputPath, "Sample BugReport Output");
                     break;
                 case "install":
                 case "uninstall":
