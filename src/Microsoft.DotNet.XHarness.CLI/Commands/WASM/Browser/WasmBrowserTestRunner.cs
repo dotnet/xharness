@@ -164,7 +164,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                         var line = Encoding.UTF8.GetString(mem.GetBuffer(), 0, (int)mem.Length);
                         line += Environment.NewLine;
 
-                        _messagesProcessor.Invoke(line);
+                        try
+                        {
+                            _messagesProcessor.Invoke(line);
+                        }
+                        catch (Exception ex) when (_messagesProcessor.WasmExitReceivedTcs.Task.IsCompletedSuccessfully)
+                        {
+                            _logger.LogWarning($"Test has return a result already, but message processor threw {ex} while logging message: {line}");
+                        }
                     }
 
                     mem.SetLength(0);
