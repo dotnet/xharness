@@ -79,7 +79,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     }
                 }
 
-                _stdoutFileWriter.WriteLine(line);
+                if (_stdoutFileWriter.BaseStream.CanWrite)
+                    _stdoutFileWriter.WriteLine(line);
             }
             else
             {
@@ -90,7 +91,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     _xmlResultsFileWriter = null;
                     return;
                 }
-                _xmlResultsFileWriter.WriteLine(line);
+
+                if (_xmlResultsFileWriter?.BaseStream.CanWrite == true)
+                    _xmlResultsFileWriter.WriteLine(line);
             }
 
             // the test runner writes this as the last line,
