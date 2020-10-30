@@ -39,20 +39,20 @@ To run the tool, use the `dotnet xharness` command. The tool always expects the 
 Example:
 
 ```bash
-dotnet xharness android state
+xharness android state
 ```
 
 To list all the possible commands, use the `help` command:
 
 ```bash
-dotnet xharness help
+xharness help
 ```
 
 To get help for a specific command or sub-command, run:
 
 ```bash
-dotnet xharness help ios
-dotnet xharness help ios package
+xharness help ios
+xharness help ios package
 ```
 
 ### Other settings
@@ -72,7 +72,7 @@ In case your repository is onboarded into [Arcade](https://github.com/dotnet/arc
 To run an iOS app bundle on a 64bit iPhone Simulator:
 
 ```bash
-dotnet xharness ios test \
+xharness ios test \
     --app=/path/to/an.app \
     --output-directory=out \
     --targets=ios-simulator-64
@@ -81,7 +81,7 @@ dotnet xharness ios test \
 or the same can be achieved via the shorthand versions of the same options:
 
 ```bash
-dotnet xharness ios test -a=/path/to/an.app -o=out -t=ios-simulator-64
+xharness ios test -a=/path/to/an.app -o=out -t=ios-simulator-64
 ```
 
 The `out` dir will then contain log files such as these:
