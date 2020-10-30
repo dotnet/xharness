@@ -30,6 +30,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         public void Invoke(string message)
         {
+            try
+            {
+                InvokeInternal(message);
+            }
+            catch (Exception ex) when (WasmExitReceivedTcs.Task.IsCompletedSuccessfully)
+            {
+                _logger.LogWarning($"Test has returned a result already, but the message processor threw {ex.GetType()},"
+                                    + $" while logging the message: {message}{Environment.NewLine}{ex}");
+            }
+        }
+
+        private void InvokeInternal(string message)
+        {
             WasmLogMessage? logMessage = null;
             string line;
 
