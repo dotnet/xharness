@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         private static readonly string s_outputPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(AppBundleInformationParser)).Location);
         private static readonly string s_sampleProjectPath = Path.Combine(s_outputPath, "Samples", "TestProject");
         private static readonly string s_appPath = Path.Combine(s_sampleProjectPath, "bin", AppName + ".app");
-        private static readonly string s_appPath2 = Path.Combine(s_sampleProjectPath, "bin", AppName + "2.app");
+        private static readonly string s_appPath2 = Path.Combine(s_sampleProjectPath, "bin2", AppName + ".app");
         private static readonly string s_projectFilePath = Path.Combine(s_sampleProjectPath, "SystemXunit.csproj");
 
         public AppBundleInformationParserTests()
@@ -53,7 +53,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             var locator = new Mock<IAppBundleLocator>();
             locator
                 .Setup(x => x.LocateAppBundle(It.IsAny<XmlDocument>(), s_projectFilePath, TestTarget.Simulator_iOS64, "Debug"))
-                .ReturnsAsync(s_appPath2);
+                .ReturnsAsync("bin2")
+                .Verifiable();
 
             var parser = new AppBundleInformationParser(Mock.Of<IMlaunchProcessManager>(), locator.Object);
 
@@ -63,6 +64,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             Assert.Equal(s_appPath2, info.AppPath);
             Assert.Equal(s_appPath2, info.LaunchAppPath);
             Assert.Equal(AppName, info.BundleIdentifier);
+
+            locator.VerifyAll();
         }
     }
 }
