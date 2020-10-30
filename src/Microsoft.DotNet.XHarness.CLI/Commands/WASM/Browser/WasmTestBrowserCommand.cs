@@ -67,9 +67,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var options = new ChromeOptions();
             options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
 
-            // Enable this for more debugging info
-            options.SetLoggingPreference(LogType.Driver, SeleniumLogLevel.All);
-
             options.AddArguments(new List<string>(_arguments.BrowserArgs)
             {
                 "--incognito",
@@ -92,6 +89,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             var driverService = ChromeDriverService.CreateDefaultService();
             driverService.EnableVerboseLogging = true;
+            driverService.LogPath = Path.Combine(_arguments.OutputDirectory, "driver.log");
 
             // We want to explicitly specify a timeout here. This is for for the
             // driver commands, like getLog. The default is 60s, which ends up
