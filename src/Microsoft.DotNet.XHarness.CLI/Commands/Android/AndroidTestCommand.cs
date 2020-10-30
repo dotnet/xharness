@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
         private const string TestRunSummaryVariableName = "test-execution-summary";
         private const string ShortMessageVariableName = "shortMsg";
         private const string ReturnCodeVariableName = "return-code";
+        private const string ProcessCrashedShortMessage = "Process crashed";
 
         private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
 
@@ -117,6 +118,7 @@ Arguments:
 
                 // No class name = default Instrumentation
                 ProcessExecutionResults? result = runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
+                bool processCrashed = false;
 
                 using (logger.BeginScope("Post-test copy and cleanup"))
                 {
@@ -143,6 +145,7 @@ Arguments:
                         if (resultValues.ContainsKey(ShortMessageVariableName))
                         {
                             logger.LogInformation($"Short Message: {Environment.NewLine}{resultValues[ShortMessageVariableName]}");
+                            processCrashed = resultValues[ShortMessageVariableName].Contains(ProcessCrashedShortMessage);
                         }
 
                         // Due to the particulars of how instrumentations work, ADB will report a 0 exit code for crashed instrumentations
@@ -176,7 +179,14 @@ Arguments:
                             logger.LogDebug($"Found output file: {log}");
                         }
                     }
+
                     runner.DumpAdbLog(Path.Combine(_arguments.OutputDirectory, $"adb-logcat-{_arguments.PackageName}.log"));
+
+                    if (processCrashed)
+                    {
+                        runner.DumpBugReport(Path.Combine(_arguments.OutputDirectory, $"adb-bugreport-{_arguments.PackageName}.zip"));
+                    }
+
                     runner.UninstallApk(apkPackageName);
                 }
 
