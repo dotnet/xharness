@@ -170,7 +170,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                         }
                         catch (Exception ex) when (_messagesProcessor.WasmExitReceivedTcs.Task.IsCompletedSuccessfully)
                         {
-                            _logger.LogWarning($"Test has return a result already, but message processor threw {ex} while logging message: {line}");
+                            _logger.LogWarning($"Test has returned a result already, but message processor threw {ex} while logging message: {line}");
                         }
                     }
 
