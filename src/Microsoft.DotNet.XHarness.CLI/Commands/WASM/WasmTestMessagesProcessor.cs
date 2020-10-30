@@ -30,6 +30,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         public void Invoke(string message)
         {
+            try
+            {
+                InvokeInternal(message);
+            }
+            catch (Exception ex) when (WasmExitReceivedTcs.Task.IsCompletedSuccessfully)
+            {
+                _logger.LogWarning($"Test has returned a result already, but the message processor threw {ex.GetType()},"
+                                    + $" while logging the message: {message}{Environment.NewLine}{ex}");
+            }
+        }
+
+        private void InvokeInternal(string message)
+        {
             WasmLogMessage? logMessage = null;
             string line;
 
@@ -79,7 +92,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     }
                 }
 
-                _stdoutFileWriter.WriteLine(line);
+                if (_stdoutFileWriter.BaseStream.CanWrite)
+                    _stdoutFileWriter.WriteLine(line);
             }
             else
             {
@@ -90,7 +104,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     _xmlResultsFileWriter = null;
                     return;
                 }
-                _xmlResultsFileWriter.WriteLine(line);
+
+                if (_xmlResultsFileWriter?.BaseStream.CanWrite == true)
+                    _xmlResultsFileWriter.WriteLine(line);
             }
 
             // the test runner writes this as the last line,
