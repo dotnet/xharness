@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
     public interface IAppBundleLocator
     {
-        Task<string> LocateAppBundle(XmlDocument projectFile, string projectFilePath, TestTarget target, string buildConfiguration);
+        Task<string?> LocateAppBundle(XmlDocument projectFile, string projectFilePath, TestTarget target, string buildConfiguration);
     }
 
     public class AppBundleInformationParser : IAppBundleInformationParser
@@ -45,17 +45,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             var csproj = new XmlDocument();
             csproj.LoadWithoutNetworkAccess(projectFilePath);
 
+            string projectDirectory = Path.GetDirectoryName(projectFilePath) ?? throw new DirectoryNotFoundException($"Cannot find directory of project '{projectFilePath}'");
+
             string appName = csproj.GetAssemblyName();
-            string info_plist_path = csproj.GetInfoPListInclude();
+            string infoPlistPath = csproj.GetInfoPListInclude() ?? throw new InvalidOperationException("Couldn't locate PList include tag");
 
-            var info_plist = new XmlDocument();
-            string plistPath = Path.Combine(Path.GetDirectoryName(projectFilePath)!, info_plist_path.Replace('\\', Path.DirectorySeparatorChar));
-            info_plist.LoadWithoutNetworkAccess(plistPath);
+            var infoPlist = new XmlDocument();
+            string plistPath = Path.Combine(projectDirectory, infoPlistPath.Replace('\\', Path.DirectorySeparatorChar));
+            infoPlist.LoadWithoutNetworkAccess(plistPath);
 
-            string bundleIdentifier = info_plist.GetCFBundleIdentifier();
+            string bundleIdentifier = infoPlist.GetCFBundleIdentifier();
 
             Extension? extension = null;
-            string extensionPointIdentifier = info_plist.GetNSExtensionPointIdentifier();
+            string extensionPointIdentifier = infoPlist.GetNSExtensionPointIdentifier();
             if (!string.IsNullOrEmpty(extensionPointIdentifier))
             {
                 extension = extensionPointIdentifier.ParseFromNSExtensionPointIdentifier();
@@ -63,23 +65,22 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             var platform = target.IsSimulator() ? "iPhoneSimulator" : "iPhone";
 
-            string appPath;
-
+            string? appPath = null;
             if (_appBundleLocator != null)
             {
                 appPath = await _appBundleLocator.LocateAppBundle(csproj, projectFilePath, target, buildConfiguration);
             }
-            else
-            {
-                appPath = Path.Combine(
-                    Path.GetDirectoryName(projectFilePath)!,
-                    csproj.GetOutputPath(platform, buildConfiguration).Replace('\\', Path.DirectorySeparatorChar),
-                    appName + (extension != null ? ".appex" : ".app"));
-            }
 
-            string arch = csproj.GetMtouchArch(platform, buildConfiguration);
+            appPath ??= csproj.GetOutputPath(platform, buildConfiguration)?.Replace('\\', Path.DirectorySeparatorChar);
 
-            bool supports32 = Contains(arch, "ARMv7") || Contains(arch, "i386");
+            appPath = Path.Combine(
+                projectDirectory,
+                appPath ?? string.Empty,
+                appName + (extension != null ? ".appex" : ".app"));
+
+            string? arch = csproj.GetMtouchArch(platform, buildConfiguration);
+
+            bool supports32 = arch != null && (Contains(arch, "ARMv7") || Contains(arch, "i386"));
 
             if (!Directory.Exists(appPath))
             {

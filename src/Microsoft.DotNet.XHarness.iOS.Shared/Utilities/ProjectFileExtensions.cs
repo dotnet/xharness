@@ -4,11 +4,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 {
     public static class ProjectFileExtensions
@@ -88,13 +90,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public static void SetOutputPath(this XmlDocument csproj, string value, bool expand = true)
         {
             var nodes = csproj.SelectNodes("/*/*/*[local-name() = 'OutputPath']");
-            if (nodes.Count == 0)
+            if (nodes == null || nodes.Count == 0)
             {
                 throw new Exception("Could not find node OutputPath");
             }
 
-            foreach (XmlNode n in nodes)
+            foreach (XmlNode? n in nodes)
             {
+                if (n == null)
+                {
+                    continue;
+                }
+
                 if (expand)
                 {
                     // OutputPath needs to be expanded, otherwise Xamarin Studio isn't able to launch the project.
@@ -108,7 +115,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
         }
 
-        private static bool IsNodeApplicable(XmlNode node, string platform, string configuration)
+        private static bool IsNodeApplicable(XmlNode node, string? platform, string? configuration)
         {
             while (node != null)
             {
@@ -122,9 +129,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             return true;
         }
 
-        private static bool EvaluateCondition(XmlNode node, string platform, string configuration)
+        private static bool EvaluateCondition([NotNullWhen(true)] XmlNode? node, string? platform, string? configuration)
         {
-            if (node.Attributes == null)
+            if (node?.Attributes == null)
             {
                 return true;
             }
@@ -167,11 +174,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             return false;
         }
 
-        public static string GetOutputPath(this XmlDocument csproj, string platform, string configuration) => GetElementValue(csproj, platform, configuration, "OutputPath");
+        public static string? GetOutputPath(this XmlDocument csproj, string platform, string configuration) => GetElementValue(csproj, platform, configuration, "OutputPath");
 
-        public static string GetMtouchArch(this XmlDocument csproj, string platform, string configuration) => GetElementValue(csproj, platform, configuration, "MtouchArch");
+        public static string? GetMtouchArch(this XmlDocument csproj, string platform, string configuration) => GetElementValue(csproj, platform, configuration, "MtouchArch");
 
-        private static string GetElementValue(this XmlDocument csproj, string platform, string configuration, string elementName, bool throwIfNotFound = true)
+        private static string? GetElementValue(this XmlDocument csproj, string platform, string configuration, string elementName, bool throwIfNotFound = true)
         {
             var nodes = csproj.SelectNodes($"/*/*/*[local-name() = '{elementName}']");
             if (nodes.Count == 0)
@@ -183,8 +190,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
                 return null;
             }
-            foreach (XmlNode n in nodes)
+            foreach (XmlNode? n in nodes)
             {
+                if (n == null)
+                {
+                    continue;
+                }
+
                 if (IsNodeApplicable(n, platform, configuration))
                 {
                     return n.InnerText.Replace("$(Platform)", platform).Replace("$(Configuration)", configuration);
@@ -197,7 +209,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var outputPath = GetOutputPath(csproj, platform, configuration);
             var assemblyName = GetElementValue(csproj, platform, configuration, "AssemblyName");
-            var outputType = GetElementValue(csproj, platform, configuration, "OutputType");
+            string outputType = GetElementValue(csproj, platform, configuration, "OutputType") ?? throw new Exception("Failed to find the OutputType property");
             string extension = (outputType.ToLowerInvariant()) switch
             {
                 "library" => "dll",
@@ -207,7 +219,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             return outputPath + "\\" + assemblyName + "." + extension; // MSBuild-style paths.
         }
 
-        public static string GetIsBindingProject(this XmlDocument csproj) => GetElementValue(csproj, string.Empty, string.Empty, "IsBindingProject", throwIfNotFound: false);
+        public static string? GetIsBindingProject(this XmlDocument csproj) => GetElementValue(csproj, string.Empty, string.Empty, "IsBindingProject", throwIfNotFound: false);
 
         public static void SetIntermediateOutputPath(this XmlDocument csproj, string value)
         {
@@ -216,8 +228,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             var hasToplevel = false;
             if (nodes.Count != 0)
             {
-                foreach (XmlNode n in nodes)
+                foreach (XmlNode? n in nodes)
                 {
+                    if (n == null)
+                    {
+                        continue;
+                    }
+
                     n.InnerText = value;
                     hasToplevel |= n.Attributes["Condition"] == null;
                 }
@@ -354,14 +371,24 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public static void SetExtraLinkerDefs(this XmlDocument csproj, string value)
         {
             var mtouchExtraArgs = csproj.SelectNodes("//*[local-name() = 'MtouchExtraArgs']");
-            foreach (XmlNode mea in mtouchExtraArgs)
+            foreach (XmlNode? mea in mtouchExtraArgs)
             {
+                if (mea == null)
+                {
+                    continue;
+                }
+
                 mea.InnerText = mea.InnerText.Replace("extra-linker-defs.xml", value);
             }
 
             var nones = csproj.SelectNodes("//*[local-name() = 'None' and @Include = 'extra-linker-defs.xml']");
-            foreach (XmlNode none in nones)
+            foreach (XmlNode? none in nones)
             {
+                if (none == null)
+                {
+                    continue;
+                }
+
                 none.Attributes["Include"].Value = value;
             }
         }
@@ -373,9 +400,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public static void AddToNode(this XmlDocument csproj, string node, string value, string platform, string configuration)
         {
             var nodes = csproj.SelectNodes($"//*[local-name() = '{node}']");
-            foreach (XmlNode mea in nodes)
+            foreach (XmlNode? mea in nodes)
             {
-                if (!IsNodeApplicable(mea, platform, configuration))
+                if (mea == null || !IsNodeApplicable(mea, platform, configuration))
                 {
                     continue;
                 }
@@ -402,7 +429,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             propertyGroup.AppendChild(newNode);
         }
 
-        public static string GetMtouchLink(this XmlDocument csproj, string platform, string configuration) => GetNode(csproj, "MtouchLink", platform, configuration);
+        public static string? GetMtouchLink(this XmlDocument csproj, string platform, string configuration) => GetNode(csproj, "MtouchLink", platform, configuration);
 
         public static void SetMtouchUseLlvm(this XmlDocument csproj, bool value, string platform, string configuration) => SetNode(csproj, "MtouchUseLlvm", true ? "true" : "false", platform, configuration);
 
@@ -411,8 +438,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public static IEnumerable<XmlNode> GetPropertyGroups(this XmlDocument csproj, string platform, string configuration)
         {
             var propertyGroups = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]");
-            foreach (XmlNode node in propertyGroups)
+            foreach (XmlNode? node in propertyGroups)
             {
+                if (node == null)
+                {
+                    continue;
+                }
+
                 if (!EvaluateCondition(node, platform, configuration))
                 {
                     continue;
@@ -444,7 +476,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
             // Not all projects have a MtouchExtraArgs node, so create one of none was found.
             var propertyGroups = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]");
-            foreach (XmlNode pg in propertyGroups)
+            foreach (XmlNode? pg in propertyGroups)
             {
                 if (!EvaluateCondition(pg, platform, configuration))
                 {
@@ -457,13 +489,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
         }
 
-        private static string GetNode(this XmlDocument csproj, string name, string platform, string configuration)
+        private static string? GetNode(this XmlDocument csproj, string name, string platform, string configuration)
         {
             foreach (var pg in GetPropertyGroups(csproj, platform, configuration))
             {
-                foreach (XmlNode node in pg.ChildNodes)
+                foreach (XmlNode? node in pg.ChildNodes)
                 {
-                    if (node.Name == name)
+                    if (node?.Name == name)
                     {
                         return node.InnerText;
                     }
@@ -477,8 +509,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var imports = csproj.SelectNodes("/*/*[local-name() = 'Import'][not(@Condition)]");
             var rv = new List<string>();
-            foreach (XmlNode import in imports)
+            foreach (XmlNode? import in imports)
             {
+                if (import == null)
+                {
+                    continue;
+                }
+
                 rv.Add(import.Attributes["Project"].Value);
             }
 
@@ -487,15 +524,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static string GetImport(this XmlDocument csproj) => GetImports(csproj).FirstOrDefault((v) => v.Replace('/', '\\').Contains("$(MSBuildExtensionsPath)\\Xamarin"));
 
-        public delegate bool FixReferenceDelegate(string include, string subdir, string suffix, out string fixed_include);
+        public delegate bool FixReferenceDelegate(string include, string? subdir, string suffix, out string fixed_include);
 
         public static void FixProjectReferences(this XmlDocument csproj, string suffix, FixReferenceDelegate fixCallback) => FixProjectReferences(csproj, null, suffix, fixCallback);
 
-        public static void FixProjectReferences(this XmlDocument csproj, string subdir, string suffix, FixReferenceDelegate fixCallback)
+        public static void FixProjectReferences(this XmlDocument csproj, string? subdir, string suffix, FixReferenceDelegate fixCallback)
         {
             var nodes = csproj.SelectNodes("/*/*/*[local-name() = 'ProjectReference']");
-            foreach (XmlNode n in nodes)
+            foreach (XmlNode? n in nodes)
             {
+                if (n == null)
+                {
+                    continue;
+                }
+
                 var nameNode = n["Name"];
                 var includeAttribute = n.Attributes["Include"];
                 var include = includeAttribute.Value;
@@ -527,8 +569,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 "XStaticArTest.framework",
                 "XStaticObjectTest.framework"
             };
-            foreach (XmlNode node in nodes)
+
+            foreach (XmlNode? node in nodes)
             {
+                if (node == null)
+                {
+                    continue;
+                }
+
                 var includeAttribute = node.Attributes["Include"];
                 if (includeAttribute != null)
                 {
@@ -538,9 +586,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                     }
                 }
             }
+
             nodes = csproj.SelectNodes("//*[local-name() = 'Target' and @Name = 'BeforeBuild']");
-            foreach (XmlNode node in nodes)
+
+            foreach (XmlNode? node in nodes)
             {
+                if (node == null)
+                {
+                    continue;
+                }
+
                 var outputsAttribute = node.Attributes["Outputs"];
                 if (outputsAttribute != null)
                 {
@@ -552,7 +607,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
         }
 
-        public static void FixArchitectures(this XmlDocument csproj, string simulator_arch, string device_arch, string platform = null, string configuration = null)
+        public static void FixArchitectures(this XmlDocument csproj, string simulator_arch, string device_arch, string? platform = null, string? configuration = null)
         {
             var nodes = csproj.SelectNodes("/*/*/*[local-name() = 'MtouchArch']");
             if (nodes.Count == 0)
@@ -560,9 +615,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 throw new Exception(string.Format("Could not find MtouchArch at all"));
             }
 
-            foreach (XmlNode n in nodes)
+            foreach (XmlNode? n in nodes)
             {
-                if (platform != null && configuration != null && !IsNodeApplicable(n, platform, configuration))
+                if (n == null || platform != null && configuration != null && !IsNodeApplicable(n, platform, configuration))
                 {
                     continue;
                 }
@@ -607,8 +662,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
             if (node.Attributes != null)
             {
-                foreach (XmlAttribute attrib in node.Attributes)
+                foreach (XmlAttribute? attrib in node.Attributes)
                 {
+                    if (attrib == null)
+                    {
+                        continue;
+                    }
+
                     attrib.Value = attrib.Value.Replace(find, replace);
                 }
             }
@@ -616,13 +676,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         private static void FindAndReplace(XmlNodeList nodes, string find, string replace)
         {
-            foreach (XmlNode node in nodes)
+            foreach (XmlNode? node in nodes)
             {
+                if (node == null)
+                {
+                    continue;
+                }
+
                 FindAndReplace(node, find, replace);
             }
         }
 
-        public static void FixInfoPListInclude(this XmlDocument csproj, string suffix, string fullPath = null, string newName = null)
+        public static void FixInfoPListInclude(this XmlDocument csproj, string suffix, string? fullPath = null, string? newName = null)
         {
             var import = GetInfoPListNode(csproj, false);
             if (import != null)
@@ -661,7 +726,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
         }
 
-        public static string GetNamespace(this XmlDocument csproj) => IsDotNetProject(csproj) ? null : MSBuild_Namespace;
+        public static string? GetNamespace(this XmlDocument csproj) => IsDotNetProject(csproj) ? null : MSBuild_Namespace;
 
         public static bool IsDotNetProject(this XmlDocument csproj)
         {
@@ -681,7 +746,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             return string.Equals(node.InnerText, "true", StringComparison.OrdinalIgnoreCase);
         }
 
-        public static XmlNode GetInfoPListNode(this XmlDocument csproj, bool throw_if_not_found = false)
+        public static XmlNode? GetInfoPListNode(this XmlDocument csproj, bool throw_if_not_found = false)
         {
             var noLogicalName = csproj.SelectSingleNode("//*[(local-name() = 'None' or local-name() = 'BundleResource' or local-name() = 'Content') and @Include = 'Info.plist']");
             if (noLogicalName != null)
@@ -703,13 +768,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             return null;
         }
 
-        public static string GetInfoPListInclude(this XmlDocument csproj) => GetInfoPListNode(csproj).Attributes["Include"]?.Value;
+        public static string? GetInfoPListInclude(this XmlDocument csproj) => GetInfoPListNode(csproj)?.Attributes["Include"]?.Value;
 
         public static IEnumerable<string> GetProjectReferences(this XmlDocument csproj)
         {
             var nodes = csproj.SelectNodes("//*[local-name() = 'ProjectReference']");
-            foreach (XmlNode node in nodes)
+            foreach (XmlNode? node in nodes)
             {
+                if (node == null)
+                {
+                    continue;
+                }
+
                 yield return node.Attributes["Include"].Value;
             }
         }
@@ -717,9 +787,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public static IEnumerable<string> GetExtensionProjectReferences(this XmlDocument csproj)
         {
             var nodes = csproj.SelectNodes("//*[local-name() = 'ProjectReference']");
-            foreach (XmlNode node in nodes)
+            foreach (XmlNode? node in nodes)
             {
-                if (node.SelectSingleNode("./*[local-name () = 'IsAppExtension']") != null)
+                if (node?.SelectSingleNode("./*[local-name () = 'IsAppExtension']") != null)
                 {
                     yield return node.Attributes["Include"].Value;
                 }
@@ -729,8 +799,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public static IEnumerable<string> GetNunitAndXunitTestReferences(this XmlDocument csproj)
         {
             var nodes = csproj.SelectNodes("//*[local-name() = 'Reference']");
-            foreach (XmlNode node in nodes)
+            foreach (XmlNode? node in nodes)
             {
+                if (node == null)
+                {
+                    continue;
+                }
+
                 var includeValue = node.Attributes["Include"].Value;
                 if (includeValue.EndsWith("_test.dll", StringComparison.Ordinal) || includeValue.EndsWith("_xunit-test.dll", StringComparison.Ordinal))
                 {
@@ -773,7 +848,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             nameNode.InnerText = value;
         }
 
-        public static string GetAssetTargetFallback(this XmlDocument csproj) => csproj.SelectSingleNode("//*[local-name() = 'AssetTargetFallback']")?.InnerText;
+        public static string? GetAssetTargetFallback(this XmlDocument csproj) => csproj.SelectSingleNode("//*[local-name() = 'AssetTargetFallback']")?.InnerText;
 
         public static void SetAssetTargetFallback(this XmlDocument csproj, string value)
         {
@@ -855,8 +930,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
             // make sure all other DefineConstants include the main one
             var otherDefines = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]/*[local-name() = 'DefineConstants']");
-            foreach (XmlNode def in otherDefines)
+            foreach (XmlNode? def in otherDefines)
             {
+                if (def == null)
+                {
+                    continue;
+                }
+
                 if (!def.InnerText.Contains("$(DefineConstants"))
                 {
                     def.InnerText += ";$(DefineConstants)";
@@ -864,14 +944,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
         }
 
-        public static void RemoveDefines(this XmlDocument csproj, string defines, string platform = null, string configuration = null)
+        public static void RemoveDefines(this XmlDocument csproj, string defines, string? platform = null, string? configuration = null)
         {
             var separator = new char[] { ';' };
             var defs = defines.Split(separator, StringSplitOptions.RemoveEmptyEntries);
             var projnode = csproj.SelectNodes("//*[local-name() = 'PropertyGroup']/*[local-name() = 'DefineConstants']");
-            foreach (XmlNode xmlnode in projnode)
+            foreach (XmlNode? xmlnode in projnode)
             {
-                if (string.IsNullOrEmpty(xmlnode.InnerText))
+                if (string.IsNullOrEmpty(xmlnode?.InnerText))
                 {
                     continue;
                 }
@@ -882,7 +962,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                     continue;
                 }
 
-                var existing = xmlnode.InnerText.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                string?[] existing = xmlnode.InnerText.Split(separator, StringSplitOptions.RemoveEmptyEntries);
                 var any = false;
                 foreach (var def in defs)
                 {
@@ -907,10 +987,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public static void AddAdditionalDefines(this XmlDocument csproj, string value, string platform, string configuration)
         {
             var projnode = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]/*[local-name() = 'DefineConstants']");
-            foreach (XmlNode xmlnode in projnode)
+            foreach (XmlNode? xmlnode in projnode)
             {
+                if (xmlnode == null)
+                {
+                    continue;
+                }
+
                 var parent = xmlnode.ParentNode;
-                if (parent.Attributes["Condition"] == null)
+                if (parent?.Attributes["Condition"] == null)
                 {
                     continue;
                 }
@@ -932,9 +1017,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
 
             projnode = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]");
-            foreach (XmlNode xmlnode in projnode)
+            foreach (XmlNode? xmlnode in projnode)
             {
-                if (xmlnode.Attributes["Condition"] == null)
+                if (xmlnode?.Attributes["Condition"] == null)
                 {
                     continue;
                 }
@@ -1007,8 +1092,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 throw new Exception(string.Format("Could not find node {0}", node));
             }
 
-            foreach (XmlNode n in nodes)
+            foreach (XmlNode? n in nodes)
             {
+                if (n == null)
+                {
+                    continue;
+                }
+
                 n.InnerText = value;
             }
         }
@@ -1021,9 +1111,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 throw new Exception(string.Format("Could not find node {0}", node));
             }
 
-            foreach (XmlNode n in nodes)
+            foreach (XmlNode? n in nodes)
             {
-                n.ParentNode.RemoveChild(n);
+                n?.ParentNode.RemoveChild(n);
             }
         }
 
@@ -1053,8 +1143,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         private static IEnumerable<XmlNode> SelectElementNodes(this XmlNode node, string name)
         {
-            foreach (XmlNode child in node.ChildNodes)
+            foreach (XmlNode? child in node.ChildNodes)
             {
+                if (child == null)
+                {
+                    continue;
+                }
+
                 if (child.NodeType == XmlNodeType.Element && child.Name == name)
                 {
                     yield return child;
@@ -1072,9 +1167,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
         }
 
-        public static void ResolveAllPaths(this XmlDocument csproj, string project_path, string rootDirectory = null)
+        public static void ResolveAllPaths(this XmlDocument csproj, string project_path, string? rootDirectory = null)
         {
-            var dir = System.IO.Path.GetDirectoryName(project_path);
+            var dir = Path.GetDirectoryName(project_path)!;
             var nodes_with_paths = new string[]
             {
                 "AssemblyOriginatorKeyFile",
@@ -1118,7 +1213,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             {
                 "MtouchExtraArgs",
             };
-            Func<string, string> convert = null;
+            Func<string, string>? convert = null;
             convert = (input) =>
             {
                 if (input.IndexOf(';') >= 0)
@@ -1126,7 +1221,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                     var split = input.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
                     for (var i = 0; i < split.Length; i++)
                     {
-                        split[i] = convert(split[i]);
+                        split[i] = convert!.Invoke(split[i]);
                     }
 
                     return string.Join(";", split);
@@ -1150,7 +1245,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                     return input;
                 }
 
-                input = System.IO.Path.GetFullPath(System.IO.Path.Combine(dir, input));
+                input = Path.GetFullPath(Path.Combine(dir, input));
                 input = input.Replace('/', '\\'); // make windows-style again
                 return input;
             };
