@@ -9,8 +9,6 @@ It can locate devices/emulators, install a given application, run it and collect
 It handles application crashes by collecting crash dumps and supports different types of connection modes (Network, USB cable).
 It can output test results in various different formats from text to xUnit/NUnit XML.
 
-The tool can also package given .NET test DLLs (xUnit, NUnit v2/3) into an app bundle that can be deployed to device or emulator.
-
 ## Running the tool
 
 The tool requires **.NET Core 3.1.201** or later to be run. It is packaged as a `dotnet tool` command and can be installed using the [dotnet tool CLI](https://docs.microsoft.com/en-us/dotnet/core/tools/).
@@ -31,9 +29,8 @@ dotnet tool install Microsoft.DotNet.XHarness.CLI \
 You can get the specific version from [the dotnet-eng feed](https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&view=versions&package=Microsoft.DotNet.XHarness.CLI&protocolType=NuGet) where it is published.
 So far we are in preview so omitting the version will fail to locate a stable version of the tool and has to be supplied.
 
-To run the tool, use the `dotnet xharness` command. The tool always expects the platform (`android`/`ios`) as the first argument and has few basic modes:
+To run the tool, use the `dotnet xharness` command. The tool always expects the platform (`android`/`ios`) as the first argument and has following commands available:
 - `test` - run given application on a device/emulator
-- `package` - bundle .NET test DLLs into an application (available on iOS only)
 - `state` - print information about the machine and connected devices
 
 Example:
@@ -52,7 +49,7 @@ To get help for a specific command or sub-command, run:
 
 ```bash
 xharness help ios
-xharness help ios package
+xharness help ios test
 ```
 
 ### Other settings

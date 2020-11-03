@@ -13,9 +13,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     {
         public iOSCommandSet() : base("ios")
         {
-            // add the different commands to be used on iOS
-            Add(new iOSPackageCommand());
-
             // commond verbs shared with android. We should think a smart way to do this
             Add(new iOSTestCommand());
 
