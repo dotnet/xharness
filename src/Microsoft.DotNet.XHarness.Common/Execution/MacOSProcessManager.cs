@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                     {
                         throw new Exception(
                             $"Failed to find Xcode! Version.plist missing at {plistPath}. " +
-                            "Please make sure xcode-select is set up or the path to Xcode is suplied as argument.");
+                            "Please make sure xcode-select is set up, or the path to Xcode is supplied as an argument.");
                     }
                 }
                 return _xcode_version;
