@@ -40,8 +40,19 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 if (_xcode_version == null)
                 {
                     var doc = new XmlDocument();
-                    doc.Load(Path.Combine(XcodeRoot, "Contents", "version.plist"));
-                    _xcode_version = Version.Parse(doc.SelectSingleNode("//key[text() = 'CFBundleShortVersionString']/following-sibling::string").InnerText);
+                    var plistPath = Path.Combine(XcodeRoot, "Contents", "version.plist");
+
+                    try
+                    {
+                        doc.Load(plistPath);
+                        _xcode_version = Version.Parse(doc.SelectSingleNode("//key[text() = 'CFBundleShortVersionString']/following-sibling::string").InnerText);
+                    }
+                    catch (IOException)
+                    {
+                        throw new Exception(
+                            $"Failed to find Xcode! Version.plist missing at {plistPath}. " +
+                            "Please make sure xcode-select is set up, or the path to Xcode is supplied as an argument.");
+                    }
                 }
                 return _xcode_version;
             }
