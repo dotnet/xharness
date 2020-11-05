@@ -16,6 +16,8 @@
     <None Remove="Samples\devices.xml" />
     <None Remove="Samples\Info.plist" />
     <None Remove="Samples\Issue8214.xml" />
+    <None Remove="Samples\MtouchArchMissingEverywhere.xml" />
+    <None Remove="Samples\MtouchArchMissingInConfiguration.xml" />
     <None Remove="Samples\NUnitV2Sample.xml" />
     <None Remove="Samples\NUnitV2SampleFailure.xml" />
     <None Remove="Samples\NUnitV3Sample.xml" />
@@ -33,6 +35,8 @@
     <EmbeddedResource Include="Samples\devices.xml" />
     <EmbeddedResource Include="Samples\Info.plist" />
     <EmbeddedResource Include="Samples\Issue8214.xml" />
+    <EmbeddedResource Include="Samples\MtouchArchMissingEverywhere.xml" />
+    <EmbeddedResource Include="Samples\MtouchArchMissingInConfiguration.xml" />
     <EmbeddedResource Include="Samples\NUnitV2Sample.xml" />
     <EmbeddedResource Include="Samples\NUnitV2SampleFailure.xml" />
     <EmbeddedResource Include="Samples\NUnitV3Sample.xml" />

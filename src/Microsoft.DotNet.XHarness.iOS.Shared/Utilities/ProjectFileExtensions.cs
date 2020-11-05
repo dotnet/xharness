@@ -174,22 +174,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             return false;
         }
 
-        public static string? GetOutputPath(this XmlDocument csproj, string platform, string configuration) => GetElementValue(csproj, platform, configuration, "OutputPath");
+        public static string? GetOutputPath(this XmlDocument csproj, string platform, string configuration) => GetElementValue(csproj, platform, configuration, "OutputPath", throwIfNotFound: false);
 
-        public static string? GetMtouchArch(this XmlDocument csproj, string platform, string configuration) => GetElementValue(csproj, platform, configuration, "MtouchArch");
+        public static string? GetMtouchArch(this XmlDocument csproj, string platform, string configuration) => GetElementValue(csproj, platform, configuration, "MtouchArch", throwIfNotFound: false);
 
         private static string? GetElementValue(this XmlDocument csproj, string platform, string configuration, string elementName, bool throwIfNotFound = true)
         {
             var nodes = csproj.SelectNodes($"/*/*/*[local-name() = '{elementName}']");
-            if (nodes.Count == 0)
-            {
-                if (throwIfNotFound)
-                {
-                    throw new Exception($"Could not find node {elementName}");
-                }
-
-                return null;
-            }
             foreach (XmlNode? n in nodes)
             {
                 if (n == null)
@@ -202,7 +193,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                     return n.InnerText.Replace("$(Platform)", platform).Replace("$(Configuration)", configuration);
                 }
             }
-            throw new Exception($"Could not find {elementName}");
+
+            if (throwIfNotFound)
+            {
+                throw new Exception($"Could not find {elementName}");
+            }
+
+            return null;
         }
 
         public static string GetOutputAssemblyPath(this XmlDocument csproj, string platform, string configuration)
