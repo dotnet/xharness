@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 
 using Xunit;
@@ -18,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 {
     internal class ThreadlessXunitTestRunner
     {
-        public int Run(string assemblyFileName, bool printXml, XunitFilters filters)
+        public async Task<int> Run(string assemblyFileName, bool printXml, XunitFilters filters)
         {
             var configuration = new TestAssemblyConfiguration() { ShadowCopy = false, ParallelizeAssembly = false, ParallelizeTestCollections = false, MaxParallelThreads = 1, PreEnumerateTheories = false };
             var discoveryOptions = TestFrameworkOptions.ForDiscovery(configuration);
@@ -57,20 +58,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             testSink.Execution.TestAssemblyFinishedEvent += args => { Console.WriteLine($"Finished:    {assemblyFileName}"); };
 
             controller.RunTests(testCasesToRun, resultsSink, testOptions);
-            var threadpoolPump = typeof(ThreadPool).GetMethod("PumpThreadPool", BindingFlags.NonPublic | BindingFlags.Static);
-            var timerPump = Type.GetType("System.Threading.TimerQueue")?.GetMethod("PumpTimerQueue", BindingFlags.NonPublic | BindingFlags.Static);
 
-            if (threadpoolPump != null && timerPump != null)
+            while (!resultsSink.Finished.WaitOne(0))
             {
-                while (!resultsSink.Finished.WaitOne(0))
-                {
-                    threadpoolPump.Invoke(this, null);
-                    timerPump.Invoke(this, null);
-                }
-            }
-            else
-            {
-                resultsSink.Finished.WaitOne();
+                await Task.Delay(1);
             }
 
             if (printXml)
