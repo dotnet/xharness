@@ -38,26 +38,19 @@ namespace Microsoft.DotNet.XHarness.Common.CLI
 
         #region General failures
 
-        TIMED_OUT = 1000,
-        GENERAL_FAILURE = 1001,
+        TIMED_OUT = 70,
+        GENERAL_FAILURE = 71,
 
         #endregion
 
         #region Running the test package
 
-        PACKAGE_INSTALLATION_FAILURE = 1102,
-        FAILED_TO_GET_BUNDLE_INFO = 1103,
-        APP_CRASH = 1104,
-        DEVICE_NOT_FOUND = 1105,
-        RETURN_CODE_NOT_SET = 1106,
-        APP_LAUNCH_FAILURE = 1107,
-
-        #endregion
-
-        #region Packaging the bundle
-
-        PACKAGE_BUNDLING_FAILURE_NUGET_RESTORE = 1201,
-        PACKAGE_BUNDLING_FAILURE_BUILD = 1202,
+        PACKAGE_INSTALLATION_FAILURE = 78,
+        FAILED_TO_GET_BUNDLE_INFO = 79,
+        APP_CRASH = 80,
+        DEVICE_NOT_FOUND = 81,
+        RETURN_CODE_NOT_SET = 82,
+        APP_LAUNCH_FAILURE = 83,
 
         #endregion
     }
