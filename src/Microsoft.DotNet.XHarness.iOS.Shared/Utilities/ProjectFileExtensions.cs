@@ -686,7 +686,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public static void FixInfoPListInclude(this XmlDocument csproj, string suffix, string? fullPath = null, string? newName = null)
         {
-            var import = GetInfoPListNode(csproj, false);
+            var import = GetInfoPListNode(csproj);
             if (import != null)
             {
                 var attrib = import.Attributes["Include"];
@@ -743,7 +743,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             return string.Equals(node.InnerText, "true", StringComparison.OrdinalIgnoreCase);
         }
 
-        public static XmlNode? GetInfoPListNode(this XmlDocument csproj, bool throw_if_not_found = false)
+        public static XmlNode? GetInfoPListNode(this XmlDocument csproj)
         {
             var noLogicalName = csproj.SelectSingleNode("//*[(local-name() = 'None' or local-name() = 'BundleResource' or local-name() = 'Content') and @Include = 'Info.plist']");
             if (noLogicalName != null)
@@ -757,9 +757,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
                 return logicalName.ParentNode;
             }
 
-            if (throw_if_not_found)
+            var linkName = csproj.SelectSingleNode("//*[(local-name() = 'None' or local-name() = 'Content' or local-name() = 'BundleResource')]/*[local-name()='Link' and text() = 'Info.plist']");
+            if (linkName != null)
             {
-                throw new Exception($"Could not find Info.plist include.");
+                return linkName.ParentNode;
             }
 
             return null;
