@@ -42,9 +42,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
 			Assert.Null(ProjectFileExtensions.GetInfoPListNode(GetMSBuildProject("<ItemGroup><Whatever Include=\"Info.plist\"><LogicalName>Info.plist</LogicalName></Whatever></ItemGroup>")));
 
 			// With Link
-			Assert.Null(ProjectFileExtensions.GetInfoPListNode(GetMSBuildProject("<ItemGroup><None Include=\"doc\"><Link>Info.plist</Link></None></ItemGroup>")));
-			Assert.Null(ProjectFileExtensions.GetInfoPListNode(GetMSBuildProject("<ItemGroup><BundleResource Include=\"doc\"><Link>Info.plist</Link></BundleResource></ItemGroup>")));
-			Assert.Null(ProjectFileExtensions.GetInfoPListNode(GetMSBuildProject("<ItemGroup><Content Include=\"doc\"><Link>Info.plist</Link></Content></ItemGroup>")));
+			Assert.NotNull(ProjectFileExtensions.GetInfoPListNode(GetMSBuildProject("<ItemGroup><None Include=\"doc\"><Link>Info.plist</Link></None></ItemGroup>")));
+			Assert.NotNull(ProjectFileExtensions.GetInfoPListNode(GetMSBuildProject("<ItemGroup><BundleResource Include=\"doc\"><Link>Info.plist</Link></BundleResource></ItemGroup>")));
+			Assert.NotNull(ProjectFileExtensions.GetInfoPListNode(GetMSBuildProject("<ItemGroup><Content Include=\"doc\"><Link>Info.plist</Link></Content></ItemGroup>")));
 			Assert.Null(ProjectFileExtensions.GetInfoPListNode(GetMSBuildProject("<ItemGroup><Whatever Include=\"Info.plist\"><Link>Info.plist</Link></Whatever></ItemGroup>")));
         }
 
