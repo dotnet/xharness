@@ -174,6 +174,18 @@ namespace Microsoft.DotNet.XHarness.Android
                 throw new FileNotFoundException($"Could not find {apkPath}");
             }
             var result = RunAdbCommand($"install \"{apkPath}\"");
+
+            // If this keeps happening, we should look into exercising Helix infra retry logic when on Helix
+            // since users should be able assume tests themselves can't break the ADB server.
+            if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE)
+            {
+                _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, and retry the install");
+
+                KillAdbServer();
+                StartAdbServer();
+                result = RunAdbCommand($"install \"{apkPath}\"");
+            }
+
             if (result.ExitCode != 0)
             {
                 _log.LogError($"Error:{Environment.NewLine}{result}");
@@ -194,6 +206,17 @@ namespace Microsoft.DotNet.XHarness.Android
 
             _log.LogInformation($"Attempting to remove apk '{apkName}': ");
             var result = RunAdbCommand($"uninstall {apkName}");
+
+            // See note above in install()
+            if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE)
+            {
+                _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, and retry the uninstallation");
+
+                KillAdbServer();
+                StartAdbServer();
+                result = RunAdbCommand($"uninstall {apkName}");
+            }
+
             if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
             {
                 _log.LogInformation($"Successfully uninstalled {apkName}.");
