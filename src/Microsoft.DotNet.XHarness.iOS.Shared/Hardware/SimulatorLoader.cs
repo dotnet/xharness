@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
                 var xmlContent = File.ReadAllText(tmpfile);
 
-                log.WriteLine("Simulator listing returned:" + Environment.NewLine + xmlContent);
+                log.WriteLine($"Simulator listing finished ({Math.Ceiling(((double)Encoding.UTF8.GetByteCount(xmlContent)) / 1024)} kB)");
 
                 var simulatorData = new XmlDocument();
                 simulatorData.LoadWithoutNetworkAccess(tmpfile);
