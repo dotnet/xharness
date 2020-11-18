@@ -4,7 +4,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,7 +19,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
-using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
@@ -204,97 +202,27 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 processManager,
                 deviceLoader,
                 simulatorLoader,
-                new SimpleListenerFactory(tunnelBore),
                 new CrashSnapshotReporterFactory(processManager),
                 new CaptureLogFactory(),
                 new DeviceLogCapturerFactory(processManager),
-                new TestReporterFactory(processManager),
-                new XmlResultParser(),
                 mainLog,
                 logs,
                 new Helpers(),
-                logCallback: logCallback,
-                appArguments: PassThroughArguments);
+                PassThroughArguments,
+                logCallback);
 
             try
             {
-                string resultMessage;
-                TestExecutingResult testResult;
-                (deviceName, testResult, resultMessage) = await appRunner.RunApp(appBundleInfo,
+                int exitCode;
+                (deviceName, exitCode) = await appRunner.RunApp(appBundleInfo,
                     target,
                     _arguments.Timeout,
-                    _arguments.LaunchTimeout,
                     deviceName,
                     verbosity: verbosity,
-                    xmlResultJargon: _arguments.XmlResultJargon,
-                    cancellationToken: cancellationToken,
-                    skippedMethods: _arguments.SingleMethodFilters?.ToArray(),
-                    skippedTestClasses: _arguments.ClassMethodFilters?.ToArray());
+                    cancellationToken: cancellationToken);
 
-                switch (testResult)
-                {
-                    case TestExecutingResult.Succeeded:
-                        logger.LogInformation($"Application finished the test run successfully");
-                        logger.LogInformation(resultMessage);
-
-                        return ExitCode.SUCCESS;
-
-                    case TestExecutingResult.Failed:
-                        logger.LogInformation($"Application finished the test run successfully with some failed tests");
-                        logger.LogInformation(resultMessage);
-
-                        return ExitCode.TESTS_FAILED;
-
-                    case TestExecutingResult.LaunchFailure:
-
-                        if (resultMessage != null)
-                        {
-                            logger.LogError($"Failed to launch the application:{Environment.NewLine}" +
-                                $"{resultMessage}{Environment.NewLine}{Environment.NewLine}" +
-                                $"Check logs for more information.");
-                        }
-                        else
-                        {
-                            logger.LogError($"Failed to launch the application. Check logs for more information");
-                        }
-
-                        return ExitCode.APP_LAUNCH_FAILURE;
-
-                    case TestExecutingResult.Crashed:
-
-                        if (resultMessage != null)
-                        {
-                            logger.LogError($"Application run crashed:{Environment.NewLine}" +
-                                $"{resultMessage}{Environment.NewLine}{Environment.NewLine}" +
-                                $"Check logs for more information.");
-                        }
-                        else
-                        {
-                            logger.LogError($"Application run crashed. Check logs for more information");
-                        }
-
-                        return ExitCode.APP_CRASH;
-
-                    case TestExecutingResult.TimedOut:
-                        logger.LogWarning($"Application run timed out");
-
-                        return ExitCode.TIMED_OUT;
-
-                    default:
-
-                        if (resultMessage != null)
-                        {
-                            logger.LogError($"Application run ended in an unexpected way: '{testResult}'{Environment.NewLine}" +
-                                $"{resultMessage}{Environment.NewLine}{Environment.NewLine}" +
-                                $"Check logs for more information.");
-                        }
-                        else
-                        {
-                            logger.LogError($"Application run ended in an unexpected way: '{testResult}'. Check logs for more information");
-                        }
-
-                        return ExitCode.GENERAL_FAILURE;
-                }
+                // TODO
+                return ExitCode.SUCCESS;
             }
             catch (NoDeviceFoundException)
             {
