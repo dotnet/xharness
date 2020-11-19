@@ -462,6 +462,32 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             return _availableDevices.Single(v => v.UDID == pair.Companion);
         }
 
+        public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, int retryCount, bool createIfNeeded = true, bool minVersion = false)
+        {
+            int attempt = 1;
+            const int maxAttempts = 3;
+            while (true)
+            {
+                try
+                {
+                    return await FindSimulators(target, log);
+                }
+                catch (Exception e)
+                {
+                    log.WriteLine($"Failed to find/create simulator (attempt {attempt}/{maxAttempts}):" + Environment.NewLine + e);
+
+                    if (attempt == maxAttempts)
+                    {
+                        throw new NoDeviceFoundException("Failed to find/create suitable simulator");
+                    }
+                }
+                finally
+                {
+                    attempt++;
+                }
+            }
+        }
+
         public IEnumerable<ISimulatorDevice?> SelectDevices(TestTarget target, ILog log, bool minVersion) => new SimulatorEnumerable(this, target, minVersion, log);
 
         private class SimulatorXmlNodeComparer : IEqualityComparer<XmlNode>

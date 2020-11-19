@@ -110,30 +110,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             // Find devices
             if (isSimulator)
             {
-                int attempt = 1;
-                const int maxAttempts = 3;
-                while (true)
-                {
-                    try
-                    {
-                        (simulator, companionSimulator) = await _simulatorLoader.FindSimulators(target, _mainLog);
-                        break;
-                    }
-                    catch (Exception e)
-                    {
-                        _mainLog.WriteLine($"Failed to find/create simulator (attempt {attempt}/{maxAttempts}):" + Environment.NewLine + e);
-
-                        if (attempt == maxAttempts)
-                        {
-                            throw new NoDeviceFoundException("Failed to find/create suitable simulator");
-                        }
-                    }
-                    finally
-                    {
-                        attempt++;
-                    }
-                }
-
+                (simulator, companionSimulator) = await _simulatorLoader.FindSimulators(target, _mainLog, 3);
                 deviceName = companionSimulator?.Name ?? simulator.Name;
             }
             else

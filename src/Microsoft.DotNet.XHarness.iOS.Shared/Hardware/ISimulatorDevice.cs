@@ -91,6 +91,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         IEnumerable<SimDevicePair> AvailableDevicePairs { get; }
         Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTarget target, ILog log, bool createIfNeeded = true, bool minVersion = false);
         Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, bool createIfNeeded = true, bool minVersion = false);
+        Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, int retryCount, bool createIfNeeded = true, bool minVersion = false);
         ISimulatorDevice FindCompanionDevice(ILog log, ISimulatorDevice device);
         IEnumerable<ISimulatorDevice?> SelectDevices(TestTarget target, ILog log, bool min_version);
     }
