@@ -23,7 +23,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Tests
 {
-    public class AppRunnerTests : IDisposable
+    public class AppTesterTests : IDisposable
     {
         private const string AppName = "com.xamarin.bcltests.SystemXunit";
         private const string AppBundleIdentifier = AppName + ".ID";
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
         private Mock<IHardwareDeviceLoader> _hardwareDeviceLoader;
 
-        public AppRunnerTests()
+        public AppTesterTests()
         {
             _mainLog = new Mock<IFileBackedLog>();
 
@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             _listenerFactory.Setup(f => f.UseTunnel).Returns(useTcpTunnel);
             // Act
-            var appRunner = new AppRunner(_processManager.Object,
+            var appTester = new AppTester(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
                 _listenerFactory.Object,
@@ -185,7 +185,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 extension: null);
 
             await Assert.ThrowsAsync<NoDeviceFoundException>(
-                async () => await appRunner.RunApp(
+                async () => await appTester.TestApp(
                     appInformation,
                     new TestTargetOs(TestTarget.Simulator_tvOS, null),
                     TimeSpan.FromSeconds(30),
@@ -242,7 +242,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             _listenerFactory.Setup(f => f.UseTunnel).Returns(useTunnel);
 
             // Act
-            var appRunner = new AppRunner(_processManager.Object,
+            var appTester = new AppTester(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
                 _listenerFactory.Object,
@@ -264,7 +264,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 supports32b: false,
                 extension: null);
 
-            var (deviceName, result, resultMessage) = await appRunner.RunApp(
+            var (deviceName, result, resultMessage) = await appTester.TestApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Simulator_tvOS, null),
                 TimeSpan.FromSeconds(30),
@@ -337,7 +337,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             _listenerFactory.Setup(f => f.UseTunnel).Returns(false);
 
             // Act
-            var appRunner = new AppRunner(_processManager.Object,
+            var appTester = new AppTester(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
                 _listenerFactory.Object,
@@ -360,7 +360,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 extension: null);
 
             await Assert.ThrowsAsync<NoDeviceFoundException>(
-                async () => await appRunner.RunApp(
+                async () => await appTester.TestApp(
                     appInformation,
                     new TestTargetOs(TestTarget.Device_iOS, null),
                     TimeSpan.FromSeconds(30),
@@ -403,7 +403,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             _listenerFactory.Setup(f => f.UseTunnel).Returns((useTunnel));
             // Act
-            var appRunner = new AppRunner(_processManager.Object,
+            var appTester = new AppTester(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
                 _listenerFactory.Object,
@@ -425,7 +425,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 supports32b: false,
                 extension: null);
 
-            var (deviceName, result, resultMessage) = await appRunner.RunApp(
+            var (deviceName, result, resultMessage) = await appTester.TestApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
                 TimeSpan.FromSeconds(30),
@@ -522,7 +522,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Returns(deviceSystemLog.Object);
 
             // Act
-            var appRunner = new AppRunner(_processManager.Object,
+            var appTester = new AppTester(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
                 _listenerFactory.Object,
@@ -544,7 +544,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 supports32b: false,
                 extension: null);
 
-            var (deviceName, result, resultMessage) = await appRunner.RunApp(
+            var (deviceName, result, resultMessage) = await appTester.TestApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
                 timeout: TimeSpan.FromSeconds(30),
@@ -635,7 +635,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Returns(deviceSystemLog.Object);
 
             // Act
-            var appRunner = new AppRunner(_processManager.Object,
+            var appTester = new AppTester(_processManager.Object,
                 _hardwareDeviceLoader.Object,
                 _simulatorLoader.Object,
                 _listenerFactory.Object,
@@ -657,7 +657,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 supports32b: false,
                 extension: null);
 
-            var (deviceName, result, resultMessage) = await appRunner.RunApp(
+            var (deviceName, result, resultMessage) = await appTester.TestApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
                 timeout: TimeSpan.FromSeconds(30),
