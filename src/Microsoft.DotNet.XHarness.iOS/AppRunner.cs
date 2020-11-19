@@ -28,17 +28,20 @@ namespace Microsoft.DotNet.XHarness.iOS
         private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
         private readonly ICaptureLogFactory _captureLogFactory;
         private readonly IDeviceLogCapturerFactory _deviceLogCapturerFactory;
+        private readonly IExitCodeDetector _exitCodeDetector;
         private readonly ILogs _logs;
         private readonly IFileBackedLog _mainLog;
         private readonly IHelpers _helpers;
         private readonly IEnumerable<string> _appArguments; // Arguments that will be passed to the iOS application
 
-        public AppRunner(IMlaunchProcessManager processManager,
+        public AppRunner(
+            IMlaunchProcessManager processManager,
             IHardwareDeviceLoader hardwareDeviceLoader,
             ISimulatorLoader simulatorLoader,
             ICrashSnapshotReporterFactory snapshotReporterFactory,
             ICaptureLogFactory captureLogFactory,
             IDeviceLogCapturerFactory deviceLogCapturerFactory,
+            IExitCodeDetector exitCodeDetector,
             IFileBackedLog mainLog,
             ILogs logs,
             IHelpers helpers,
@@ -51,6 +54,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             _snapshotReporterFactory = snapshotReporterFactory ?? throw new ArgumentNullException(nameof(snapshotReporterFactory));
             _captureLogFactory = captureLogFactory ?? throw new ArgumentNullException(nameof(captureLogFactory));
             _deviceLogCapturerFactory = deviceLogCapturerFactory ?? throw new ArgumentNullException(nameof(deviceLogCapturerFactory));
+            _exitCodeDetector = exitCodeDetector ?? throw new ArgumentNullException(nameof(exitCodeDetector));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
             _appArguments = appArguments;
@@ -66,7 +70,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
         }
 
-        public async Task<(string DeviceName, int exitCode)> RunApp(
+        public async Task<(string DeviceName, int? exitCode)> RunApp(
             AppBundleInformation appInformation,
             TestTargetOs target,
             TimeSpan timeout,
@@ -130,10 +134,13 @@ namespace Microsoft.DotNet.XHarness.iOS
                     cancellationToken);
             }
 
-            // TODO: Remove
-            _mainLog.WriteLine("Run ended");
+            var systemLog = _logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
+            if (systemLog == null)
+            {
+                return (deviceName, null);
+            }
 
-            return (deviceName, 0);
+            return (deviceName, _exitCodeDetector.DetectExitCode(appInformation, systemLog));
         }
 
         private async Task RunSimulatorApp(

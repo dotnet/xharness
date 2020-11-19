@@ -52,13 +52,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 new CrashSnapshotReporterFactory(ProcessManager),
                 new CaptureLogFactory(),
                 new DeviceLogCapturerFactory(ProcessManager),
+                new ExitCodeDetector(),
                 mainLog,
                 logs,
                 new Helpers(),
                 PassThroughArguments,
                 logCallback);
 
-            int exitCode;
+            int? exitCode = null;
             (deviceName, exitCode) = await appRunner.RunApp(
                 appBundleInfo,
                 target,
@@ -67,10 +68,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 verbosity: GetMlaunchVerbosity(_arguments.Verbosity),
                 cancellationToken: cancellationToken);
 
-            // TODO
-            logger.LogInformation("Application has finished with exit code: " + exitCode);
-
-            return (ExitCode)exitCode;
+            if (exitCode.HasValue)
+            {
+                logger.LogInformation("Application has finished with exit code: " + exitCode);
+                return (ExitCode)exitCode.Value;
+            }
+            else
+            {
+                logger.LogError("Application has finished but no system log found. Failed to determine the exit code!");
+                return ExitCode.RETURN_CODE_NOT_SET;
+            }
         }
     }
 }

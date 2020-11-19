@@ -27,10 +27,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     {
         protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
 
+        protected readonly ErrorKnowledgeBase ErrorKnowledgeBase = new ErrorKnowledgeBase();
         protected override XHarnessCommandArguments Arguments => iOSRunArguments;
         protected abstract iOSRunCommandArguments iOSRunArguments { get; }
-
-        private readonly ErrorKnowledgeBase _errorKnowledgeBase = new ErrorKnowledgeBase();
 
         private MlaunchProcessManager? _processManager = null;
         private HardwareDeviceLoader? _deviceLoader = null;
@@ -202,7 +201,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             catch (Exception e)
             {
-                if (_errorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
+                if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
                 {
                     var msg = $"Application run failed:{Environment.NewLine}{failureMessage.Value.HumanMessage}.";
                     if (failureMessage.Value.IssueLink != null)
@@ -272,7 +271,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             {
                 // use the knowledge base class to decide if the error is known, if it is, let the user know
                 // the failure reason
-                if (_errorKnowledgeBase.IsKnownInstallIssue(mainLog, out var errorMessage))
+                if (ErrorKnowledgeBase.IsKnownInstallIssue(mainLog, out var errorMessage))
                 {
                     var msg = $"Failed to install the app bundle (exit code={result.ExitCode}): {errorMessage.Value.HumanMessage}.";
                     if (errorMessage.Value.IssueLink != null)
