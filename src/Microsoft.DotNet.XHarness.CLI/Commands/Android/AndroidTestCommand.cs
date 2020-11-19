@@ -12,11 +12,12 @@ using Microsoft.DotNet.XHarness.Android.Execution;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidTestCommand : TestCommand
+    internal class AndroidTestCommand : XHarnessCommand
     {
         // nunit2 one should go away eventually
         private static readonly string[] s_xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
@@ -49,7 +50,7 @@ Reporting:
 Arguments:
 ";
 
-        public AndroidTestCommand() : base(CommandHelp)
+        public AndroidTestCommand() : base("test", true, CommandHelp)
         {
         }
 

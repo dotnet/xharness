@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS;
@@ -28,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     /// <summary>
     /// Command which executes a given, already-packaged iOS application, waits on it and returns status based on the outcome.
     /// </summary>
-    internal class iOSTestCommand : TestCommand
+    internal class iOSTestCommand : XHarnessCommand
     {
         private const string CommandHelp = "Runs a given iOS/tvOS/watchOS test application bundle containing TestRunner in a target device/simulator";
 
@@ -42,7 +43,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
         protected override string CommandDescription { get; } = CommandHelp;
         protected override XHarnessCommandArguments Arguments => _arguments;
 
-        public iOSTestCommand() : base(CommandHelp)
+        public iOSTestCommand() : base("test", true, CommandHelp)
         {
         }
 

@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 var tunnelBore = (_arguments.CommunicationChannel == CommunicationChannel.UsbTunnel && !target.Platform.IsSimulator())
                     ? new TunnelBore(processManager)
                     : null;
-                var exitCodeForRun = await RunTest(logger, target, logs, processManager, deviceLoader, simulatorLoader,
+                var exitCodeForRun = await RunApp(logger, target, logs, processManager, deviceLoader, simulatorLoader,
                     tunnelBore, cts.Token);
 
                 if (exitCodeForRun != ExitCode.SUCCESS)
@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             logger.LogInformation(sb.ToString());
         }
 
-        private async Task<ExitCode> RunTest(
+        private async Task<ExitCode> RunApp(
             ILogger logger,
             TestTargetOs target,
             Logs logs,
@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 }
             }
 
-            logger.LogInformation($"Starting test for {target.AsString()}{ (_arguments.DeviceName != null ? " targeting " + _arguments.DeviceName : null) }..");
+            logger.LogInformation($"Starting run for {target.AsString()}{ (_arguments.DeviceName != null ? " targeting " + _arguments.DeviceName : null) }..");
 
             string mainLogFile = Path.Join(_arguments.OutputDirectory, $"run-{target.AsString()}{(_arguments.DeviceName != null ? "-" + _arguments.DeviceName : null)}.log");
 
@@ -215,15 +215,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             try
             {
                 int exitCode;
-                (deviceName, exitCode) = await appRunner.RunApp(appBundleInfo,
+                (deviceName, exitCode) = await appRunner.RunApp(
+                    appBundleInfo,
                     target,
                     _arguments.Timeout,
                     deviceName,
                     verbosity: verbosity,
                     cancellationToken: cancellationToken);
 
-                // TODO
-                return ExitCode.SUCCESS;
+                logger.LogInformation("Application has finished with exit code: " + exitCode);
+
+                return (ExitCode)exitCode;
             }
             catch (NoDeviceFoundException)
             {
