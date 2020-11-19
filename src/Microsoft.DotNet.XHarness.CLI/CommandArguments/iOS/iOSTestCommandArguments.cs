@@ -37,6 +37,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// </summary>
         public XmlResultJargon XmlResultJargon { get; set; } = XmlResultJargon.xUnit; // default by mono
 
+        /// <summary>
+        /// The way the simulator/device talks back to XHarness.
+        /// </summary>
+        public CommunicationChannel CommunicationChannel { get; set; } = CommunicationChannel.UsbTunnel;
+
         protected override OptionSet GetCommandOptions()
         {
             var options = base.GetCommandOptions();
@@ -63,6 +68,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                 {
                     "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.",
                     v => XmlResultJargon = ParseArgument("xml-jargon", v, invalidValues: XmlResultJargon.Missing)
+                },
+                {
+                    "communication-channel=", $"The communication channel to use to communicate with the default. Can be {CommunicationChannel.Network} and {CommunicationChannel.UsbTunnel}. Default is {CommunicationChannel.UsbTunnel}",
+                    v => CommunicationChannel = ParseArgument<CommunicationChannel>("communication-channel", v)
                 },
                 {
                     "enable-lldb", "Allow to debug the launched application using lldb.",

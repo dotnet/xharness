@@ -48,11 +48,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         public string? DeviceName { get; set; }
 
         /// <summary>
-        /// The way the simulator/device talks back to XHarness.
-        /// </summary>
-        public CommunicationChannel CommunicationChannel { get; set; } = CommunicationChannel.UsbTunnel;
-
-        /// <summary>
         /// Enable the lldb debugger to be used with the launched application.
         /// </summary>
         public bool EnableLldb { get; set; }
@@ -106,10 +101,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                 {
                     "device-name=", "Name of a specific device, if you wish to target one",
                     v => DeviceName = v
-                },
-                {
-                    "communication-channel=", $"The communication channel to use to communicate with the default. Can be {CommunicationChannel.Network} and {CommunicationChannel.UsbTunnel}. Default is {CommunicationChannel.UsbTunnel}",
-                    v => CommunicationChannel = ParseArgument<CommunicationChannel>("communication-channel", v)
                 },
                 {
                     "enable-lldb", "Allow to debug the launched application using lldb.",
