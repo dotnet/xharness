@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         private async Task<ExitCode> RunApp(ILogger logger, TestTargetOs target, Logs logs, CancellationToken cancellationToken = default)
         {
-            logger.LogInformation($"Preparing run for {target.AsString()}{ (iOSRunArguments.DeviceName != null ? " targeting " + iOSRunArguments.DeviceName : null) }..");
+            logger.LogInformation($"Preparing run for {target.AsString()}{ (iOSRunArguments.DeviceName != null ? " targeting " + iOSRunArguments.DeviceName : null) }");
 
             bool lldbFileCreated = false;
             var isLldbEnabled = IsLldbEnabled();
@@ -181,7 +181,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             try
             {
-                logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? $"device '{deviceName}'" : target.AsString()) + "..");
+                logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? $"device '{deviceName}'" : target.AsString()));
 
                 // Run app internal
                 exitCode = await RunAppInternal(
