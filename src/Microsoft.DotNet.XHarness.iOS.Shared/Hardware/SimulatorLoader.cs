@@ -81,9 +81,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                         $"mlaunch {(result.TimedOut ? "timed out" : "exited")} with {result.ExitCode})");
                 }
 
-                var xmlContent = File.ReadAllText(tmpfile);
-
-                log.WriteLine("Simulator listing returned:" + Environment.NewLine + xmlContent);
+                log.WriteLine($"Simulator listing finished ({Math.Ceiling(((double)fileInfo.Length) / 1024)} kB)");
 
                 var simulatorData = new XmlDocument();
                 simulatorData.LoadWithoutNetworkAccess(tmpfile);

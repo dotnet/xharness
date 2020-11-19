@@ -3,11 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
@@ -34,56 +31,51 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         }
 
         private Process _process;
-        private CountdownEvent _streamEnds;
 
         public void StartCapture()
         {
-            _streamEnds = new CountdownEvent(2);
-
-            var args = new List<string> {
-                "--logdev",
-                "--sdkroot",
-                _processManager.XcodeRoot,
-                "--devname",
-                _deviceName
+            var args = new MlaunchArguments
+            {
+                new SdkRootArgument(_processManager.XcodeRoot),
+                new LogDevArgument(),
+                new DeviceNameArgument(_deviceName),
             };
 
             _process = new Process();
             _process.StartInfo.FileName = _processManager.MlaunchPath;
-            _process.StartInfo.Arguments = StringUtils.FormatArguments(args);
+            _process.StartInfo.Arguments = args.AsCommandLine();
             _process.StartInfo.UseShellExecute = false;
             _process.StartInfo.RedirectStandardOutput = true;
             _process.StartInfo.RedirectStandardError = true;
             _process.StartInfo.RedirectStandardInput = true;
             _process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
             {
-                if (e.Data == null)
+                if (e.Data != null)
                 {
-                    _streamEnds.Signal();
+                    return;
                 }
-                else
+
+                lock (_deviceLog)
                 {
-                    lock (_deviceLog)
-                    {
-                        _deviceLog.WriteLine(e.Data);
-                    }
+                    _deviceLog.WriteLine(e.Data);
                 }
             };
+
             _process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
             {
                 if (e.Data == null)
                 {
-                    _streamEnds.Signal();
+                    return;
                 }
-                else
+
+                lock (_deviceLog)
                 {
-                    lock (_deviceLog)
-                    {
-                        _deviceLog.WriteLine(e.Data);
-                    }
+                    _deviceLog.WriteLine(e.Data);
                 }
             };
+
             _deviceLog.WriteLine("{0} {1}", _process.StartInfo.FileName, _process.StartInfo.Arguments);
+
             _process.Start();
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
