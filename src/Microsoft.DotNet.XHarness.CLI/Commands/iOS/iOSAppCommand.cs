@@ -181,6 +181,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             try
             {
+                logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? $"device '{deviceName}'" : target.AsString()) + "..");
+
                 // Run app internal
                 exitCode = await RunAppInternal(
                     appBundleInfo,

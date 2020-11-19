@@ -10,7 +10,6 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.Extensions.Logging;
@@ -43,8 +42,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            logger.LogInformation($"Starting running application '{appBundleInfo.AppName}' on " + (deviceName != null ? $"device '{deviceName}'" : target.AsString()));
-
             // only add the extra callback if we do know that the feature was indeed enabled
             Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(logger, l) : (Action<string>?)null;
 

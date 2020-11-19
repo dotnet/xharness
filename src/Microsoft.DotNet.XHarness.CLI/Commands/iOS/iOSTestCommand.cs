@@ -11,7 +11,6 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -46,8 +45,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            logger.LogInformation($"Starting testing application '{appBundleInfo.AppName}' on " + (deviceName != null ? $"device '{deviceName}'" : target.AsString()));
-
             var tunnelBore = (_arguments.CommunicationChannel == CommunicationChannel.UsbTunnel && !target.Platform.IsSimulator())
                 ? new TunnelBore(ProcessManager)
                 : null;
@@ -123,13 +120,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     }
                     else
                     {
-                        logger.LogError($"Application run crashed. Check logs for more information");
+                        logger.LogError($"Application test run crashed. Check logs for more information");
                     }
 
                     return ExitCode.APP_CRASH;
 
                 case TestExecutingResult.TimedOut:
-                    logger.LogWarning($"Application run timed out");
+                    logger.LogWarning($"Application test run timed out");
 
                     return ExitCode.TIMED_OUT;
 
@@ -137,13 +134,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                     if (resultMessage != null)
                     {
-                        logger.LogError($"Application run ended in an unexpected way: '{testResult}'{Environment.NewLine}" +
+                        logger.LogError($"Application test run ended in an unexpected way: '{testResult}'{Environment.NewLine}" +
                             $"{resultMessage}{Environment.NewLine}{Environment.NewLine}" +
                             $"Check logs for more information.");
                     }
                     else
                     {
-                        logger.LogError($"Application run ended in an unexpected way: '{testResult}'. Check logs for more information");
+                        logger.LogError($"Application test run ended in an unexpected way: '{testResult}'. Check logs for more information");
                     }
 
                     return ExitCode.GENERAL_FAILURE;
