@@ -9,9 +9,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.Android.Execution;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
         private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
 
-        protected override TestCommandArguments TestArguments => _arguments;
+        protected override XHarnessCommandArguments Arguments => _arguments;
 
         protected override string CommandUsage { get; } = "android test [OPTIONS]";
 
