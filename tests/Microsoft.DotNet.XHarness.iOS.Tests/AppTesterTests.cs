@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Setup(x => x.Create(
                    Path.Combine(_logs.Object.Directory, "tvos.log"),
                    "/path/to/simulator.log",
-                   true,
+                   false,
                    It.IsAny<string>()))
                 .Returns(captureLog.Object);
 
@@ -235,7 +235,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Setup(x => x.Create(
                    Path.Combine(_logs.Object.Directory, simulator.Object.Name + ".log"),
                    simulator.Object.SystemLog,
-                   true,
+                   false,
                    It.IsAny<string>()))
                 .Returns(captureLog.Object);
 

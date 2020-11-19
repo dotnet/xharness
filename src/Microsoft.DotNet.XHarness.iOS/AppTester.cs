@@ -258,7 +258,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 var simulatorLog = _captureLogFactory.Create(
                     path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
                     systemLogPath: simulator.SystemLog,
-                    entireFile: true,
+                    entireFile: false,
                     LogType.SystemLog.ToString());
 
                 simulatorLog.StartCapture();
@@ -272,7 +272,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                     var companionLog = _captureLogFactory.Create(
                         path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
                         systemLogPath: companionSimulator.SystemLog,
-                        entireFile: true,
+                        entireFile: false,
                         LogType.CompanionSystemLog.ToString());
 
                     companionLog.StartCapture();
