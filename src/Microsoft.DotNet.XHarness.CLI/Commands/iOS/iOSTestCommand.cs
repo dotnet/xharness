@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     /// </summary>
     internal class iOSTestCommand : TestCommand
     {
-        private const string CommandHelp = "Runs a given iOS/tvOS/watchOS application bundle in a target device/simulator";
+        private const string CommandHelp = "Runs a given iOS/tvOS/watchOS test application bundle containing TestRunner in a target device/simulator";
 
         private static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
 
