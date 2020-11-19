@@ -74,9 +74,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                     v => CommunicationChannel = ParseArgument<CommunicationChannel>("communication-channel", v)
                 },
                 {
-                    "enable-lldb", "Allow to debug the launched application using lldb.",
-                    v => EnableLldb = v != null },
-                {
                     "method|m=", "Method to be ran in the test application. When this parameter is used only the " +
                     "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
                     "ignored. Can be used more than once.",
