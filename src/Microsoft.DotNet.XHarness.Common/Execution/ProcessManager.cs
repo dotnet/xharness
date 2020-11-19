@@ -334,7 +334,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             try
             {
                 result.ExitCode = process.ExitCode;
-                log.WriteLine($"Process exited with {result.ExitCode}");
+                log.WriteLine($"Process {Path.GetFileName(process.StartInfo.FileName)} exited with {result.ExitCode}");
             }
             catch (Exception e)
             {
