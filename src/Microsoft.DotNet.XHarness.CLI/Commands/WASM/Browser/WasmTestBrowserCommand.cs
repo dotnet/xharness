@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using OpenQA.Selenium.Chrome;
 using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 using OpenQA.Selenium;
+using System.Linq;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
@@ -101,6 +102,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             //
             // So -> use a larger timeout!
 
+            string[] err_snippets = new []
+            {
+                "exited abnormally",
+                "Cannot start the driver service"
+            };
+
             int max_retries = 3;
             int retry_num = 0;
             while(true)
@@ -109,11 +116,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 {
                     return (driverService, new ChromeDriver(driverService, options, _arguments.Timeout));
                 }
-                catch (WebDriverException wde) when (wde.Message.Contains("exited abnormally") && retry_num < max_retries - 1)
+                catch (WebDriverException wde) when (err_snippets.Any(s => wde.Message.Contains(s)) && retry_num < max_retries - 1)
                 {
                     // chrome can sometimes crash on startup when launching from chromedriver.
                     // As a *workaround*, let's retry that a few times
-                    // Error seen:
+                    // Example error seen:
                     //     [12:41:07] crit: OpenQA.Selenium.WebDriverException: unknown error: Chrome failed to start: exited abnormally.
                     //    (chrome not reachable)
 
