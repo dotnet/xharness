@@ -106,7 +106,7 @@ These files are:
 ## Test Runners
 
 The repository also contains several TestRunners which are libraries that can be bundled inside of the application and execute the tests.
-The TestRunner detects and exeuctes unit tests inside of the application. It also connects to XHarness over TCP connection from within the running app bundle and reports test run results/state.
+The TestRunner detects and executes unit tests inside of the application. It also connects to XHarness over TCP connection from within the running app bundle and reports test run results/state.
 
 Currently we support Xunit and NUnit test assemblies but the `Microsoft.DotNet.XHarness.Tests.Runners` supports implementation of custom runner too.
 

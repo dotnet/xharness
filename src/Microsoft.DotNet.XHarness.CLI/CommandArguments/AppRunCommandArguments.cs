@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                 v => OutputDirectory = RootPath(v)
             },
             {
-                "targets=|t=", "Comma-delineated list of targets to test for",
+                "targets=|t=", "Comma-delimited list of targets to test for",
                 v => Targets = v.Split(',')
             },
             {

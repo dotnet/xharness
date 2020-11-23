@@ -13,7 +13,7 @@ using Mono.Options;
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 {
     /// <summary>
-    /// Specifies the channel that is used to comminicate with the device.
+    /// Specifies the channel that is used to communicate with the device.
     /// </summary>
     internal enum CommunicationChannel
     {
