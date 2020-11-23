@@ -137,7 +137,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             string simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
 
             _simulatorLoader
-                .Setup(x => x.FindSimulators(It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_tvOS), _mainLog.Object, true, false))
+                .Setup(x => x.FindSimulators(It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_tvOS), _mainLog.Object, It.IsAny<int>(), true, false))
                 .ThrowsAsync(new NoDeviceFoundException("Failed to find simulator"));
 
             var listenerLogFile = new Mock<IFileBackedLog>();
@@ -216,7 +216,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             simulator.SetupGet(x => x.SystemLog).Returns(Path.Combine(simulatorLogPath, "system.log"));
 
             _simulatorLoader
-                .Setup(x => x.FindSimulators(It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_tvOS), _mainLog.Object, true, false))
+                .Setup(x => x.FindSimulators(It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_tvOS), _mainLog.Object, It.IsAny<int>(), true, false))
                 .ReturnsAsync((simulator.Object, null));
 
             var testResultFilePath = Path.GetTempFileName();
@@ -392,7 +392,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Returns(listenerLogFile);
 
             _logs
-                .Setup(x => x.Create("device-Test iPhone-mocked_timestamp.log", "Device log", It.IsAny<bool?>()))
+                .Setup(x => x.Create("device-Test iPhone-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
                 .Returns(deviceSystemLog.Object);
 
             // set tunnel bore expectation
@@ -518,7 +518,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Returns(listenerLogFile);
 
             _logs
-                .Setup(x => x.Create("device-Test iPhone-mocked_timestamp.log", "Device log", It.IsAny<bool?>()))
+                .Setup(x => x.Create("device-Test iPhone-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
                 .Returns(deviceSystemLog.Object);
 
             // Act
@@ -631,7 +631,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Returns(listenerLogFile);
 
             _logs
-                .Setup(x => x.Create("device-Test iPhone-mocked_timestamp.log", "Device log", It.IsAny<bool?>()))
+                .Setup(x => x.Create("device-Test iPhone-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
                 .Returns(deviceSystemLog.Object);
 
             // Act
