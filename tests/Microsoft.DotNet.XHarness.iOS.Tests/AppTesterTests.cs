@@ -27,6 +27,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
     {
         private const string AppName = "com.xamarin.bcltests.SystemXunit";
         private const string AppBundleIdentifier = AppName + ".ID";
+        private const string SimulatorDeviceName = "Test iPhone simulator";
+        private const string DeviceName = "Test iPhone";
         private const int Port = 1020;
 
         private static readonly string s_outputPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -38,9 +40,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             deviceIdentifier: "8A450AA31EA94191AD6B02455F377CC1",
             interfaceType: "Usb",
             isUsableForDebugging: true,
-            name: "Test iPhone",
+            name: DeviceName,
             productType: "iPhone12,1",
             productVersion: "13.0");
+
+        private readonly string _simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
+        private readonly Mock<ISimulatorDevice> _mockSimulator;
 
         private readonly Mock<IMlaunchProcessManager> _processManager;
         private readonly Mock<ILogs> _logs;
@@ -71,6 +76,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .ReturnsAsync(s_mockDevice);
 
             _simulatorLoader = new Mock<ISimulatorLoader>();
+
+            _mockSimulator = new Mock<ISimulatorDevice>();
+            _mockSimulator.SetupGet(x => x.Name).Returns(SimulatorDeviceName);
+            _mockSimulator.SetupGet(x => x.UDID).Returns("58F21118E4D34FD69EAB7860BB9B38A0");
+            _mockSimulator.SetupGet(x => x.LogPath).Returns(_simulatorLogPath);
+            _mockSimulator.SetupGet(x => x.SystemLog).Returns(Path.Combine(_simulatorLogPath, "system.log"));
 
             _listener = new Mock<ISimpleListener>();
             _listener
@@ -155,7 +166,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             captureLogFactory
                 .Setup(x => x.Create(
                    Path.Combine(_logs.Object.Directory, "tvos.log"),
-                   "/path/to/simulator.log",
+                   "/path/to/_mockSimulator.log",
                    false,
                    It.IsAny<string>()))
                 .Returns(captureLog.Object);
@@ -207,17 +218,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         [InlineData(true)]
         public async Task TestOnSimulatorSuccessfullyTest(bool useTunnel)
         {
-            string simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
-
-            var simulator = new Mock<ISimulatorDevice>();
-            simulator.SetupGet(x => x.Name).Returns("Test iPhone simulator");
-            simulator.SetupGet(x => x.UDID).Returns("58F21118E4D34FD69EAB7860BB9B38A0");
-            simulator.SetupGet(x => x.LogPath).Returns(simulatorLogPath);
-            simulator.SetupGet(x => x.SystemLog).Returns(Path.Combine(simulatorLogPath, "system.log"));
-
             _simulatorLoader
                 .Setup(x => x.FindSimulators(It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_tvOS), _mainLog.Object, It.IsAny<int>(), true, false))
-                .ReturnsAsync((simulator.Object, null));
+                .ReturnsAsync((_mockSimulator.Object, null));
 
             var testResultFilePath = Path.GetTempFileName();
             var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
@@ -228,13 +231,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Returns(listenerLogFile);
 
             var captureLog = new Mock<ICaptureLog>();
-            captureLog.SetupGet(x => x.FullPath).Returns(simulatorLogPath);
+            captureLog.SetupGet(x => x.FullPath).Returns(_simulatorLogPath);
 
             var captureLogFactory = new Mock<ICaptureLogFactory>();
             captureLogFactory
                 .Setup(x => x.Create(
-                   Path.Combine(_logs.Object.Directory, simulator.Object.Name + ".log"),
-                   simulator.Object.SystemLog,
+                   Path.Combine(_logs.Object.Directory, _mockSimulator.Object.Name + ".log"),
+                   _mockSimulator.Object.SystemLog,
                    false,
                    It.IsAny<string>()))
                 .Returns(captureLog.Object);
@@ -272,34 +275,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 ensureCleanSimulatorState: true);
 
             // Verify
-            Assert.Equal("Test iPhone simulator", deviceName);
+            Assert.Equal(SimulatorDeviceName, deviceName);
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
-            var expectedArgs = "-argument=-connection-mode " +
-                "-argument=none " +
-                "-argument=-app-arg:-autostart " +
-                "-setenv=NUNIT_AUTOSTART=true " +
-                "-argument=-app-arg:-autoexit " +
-                "-setenv=NUNIT_AUTOEXIT=true " +
-                "-argument=-app-arg:-enablenetwork " +
-                "-setenv=NUNIT_ENABLE_NETWORK=true " +
-                "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
-                "-v " +
-                "-v " +
-                "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
-                "-setenv=NUNIT_ENABLE_XML_MODE=wrapped " +
-                "-setenv=NUNIT_XML_VERSION=xUnit " +
-                "-argument=-app-arg:-transport:Tcp " +
-                "-setenv=NUNIT_TRANSPORT=TCP " +
-                $"-argument=-app-arg:-hostport:{Port} " +
-                $"-setenv=NUNIT_HOSTPORT={Port} " +
-                "-argument=-app-arg:--appArg1=value1 " +
-                "-argument=-app-arg:--appArg2 " +
-                "-argument=-app-arg:-hostname:127.0.0.1 " +
-                "-setenv=NUNIT_HOSTNAME=127.0.0.1 " +
-                $"--device=:v2:udid={simulator.Object.UDID} " +
-                $"--launchsim {StringUtils.FormatArguments(s_appPath)}";
+            var expectedArgs = GetExpectedSimulatorMlaunchArgs();
 
             _processManager
                 .Verify(
@@ -322,8 +302,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             captureLog.Verify(x => x.StopCapture(), Times.AtLeastOnce);
 
             // When ensureCleanSimulatorState == true
-            simulator.Verify(x => x.PrepareSimulator(_mainLog.Object, AppBundleIdentifier));
-            simulator.Verify(x => x.KillEverything(_mainLog.Object));
+            _mockSimulator.Verify(x => x.PrepareSimulator(_mainLog.Object, AppBundleIdentifier));
+            _mockSimulator.Verify(x => x.KillEverything(_mainLog.Object));
         }
 
         [Fact]
@@ -380,7 +360,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
             deviceLogCapturerFactory
-                .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, "Test iPhone"))
+                .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, DeviceName))
                 .Returns(deviceLogCapturer.Object);
 
             var testResultFilePath = Path.GetTempFileName();
@@ -392,13 +372,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Returns(listenerLogFile);
 
             _logs
-                .Setup(x => x.Create("device-Test iPhone-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
+                .Setup(x => x.Create($"device-{DeviceName}-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
                 .Returns(deviceSystemLog.Object);
 
             // set tunnel bore expectation
             if (useTunnel)
             {
-                _tunnelBore.Setup(t => t.Create("Test iPhone", It.IsAny<ILog>()));
+                _tunnelBore.Setup(t => t.Create(DeviceName, It.IsAny<ILog>()));
             }
 
             _listenerFactory.Setup(f => f.UseTunnel).Returns((useTunnel));
@@ -432,37 +412,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 TimeSpan.FromSeconds(30));
 
             // Verify
-            Assert.Equal("Test iPhone", deviceName);
+            Assert.Equal(DeviceName, deviceName);
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
-            var expectedArgs = "-argument=-connection-mode " +
-                "-argument=none " +
-                "-argument=-app-arg:-autostart " +
-                "-setenv=NUNIT_AUTOSTART=true " +
-                "-argument=-app-arg:-autoexit " +
-                "-setenv=NUNIT_AUTOEXIT=true " +
-                "-argument=-app-arg:-enablenetwork " +
-                "-setenv=NUNIT_ENABLE_NETWORK=true " +
-                "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
-                "-v " +
-                "-v " +
-                "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
-                "-setenv=NUNIT_ENABLE_XML_MODE=wrapped " +
-                "-setenv=NUNIT_XML_VERSION=xUnit " +
-                "-argument=-app-arg:-transport:Tcp " +
-                "-setenv=NUNIT_TRANSPORT=TCP " +
-                $"-argument=-app-arg:-hostport:{Port} " +
-                $"-setenv=NUNIT_HOSTPORT={Port} " +
-                "-argument=-app-arg:--appArg1=value1 " +
-                "-argument=-app-arg:--appArg2 " +
-                "-argument=-app-arg:-hostname:127.0.0.1,::1 " +
-                "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
-                "--disable-memory-limits " +
-                "--devname \"Test iPhone\" " +
-                (useTunnel ? "-setenv=USE_TCP_TUNNEL=true " : null) +
-                $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
-                "--wait-for-exit";
+            var expectedArgs = GetExpectedDeviceMlaunchArgs(
+                useTunnel: useTunnel,
+                extraArgs: "-argument=-app-arg:--appArg1=value1 -argument=-app-arg:--appArg2 ");
 
             _processManager
                 .Verify(
@@ -483,7 +439,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             // we dont want to leak a process
             if (useTunnel)
             {
-                _tunnelBore.Verify(t => t.Close("Test iPhone"));
+                _tunnelBore.Verify(t => t.Close(DeviceName));
             }
 
             _hardwareDeviceLoader.VerifyAll();
@@ -506,7 +462,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
             deviceLogCapturerFactory
-                .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, "Test iPhone"))
+                .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, DeviceName))
                 .Returns(deviceLogCapturer.Object);
 
             var testResultFilePath = Path.GetTempFileName();
@@ -518,7 +474,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Returns(listenerLogFile);
 
             _logs
-                .Setup(x => x.Create("device-Test iPhone-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
+                .Setup(x => x.Create($"device-{DeviceName}-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
                 .Returns(deviceSystemLog.Object);
 
             // Act
@@ -552,37 +508,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 skippedMethods: skippedTests);
 
             // Verify
-            Assert.Equal("Test iPhone", deviceName);
+            Assert.Equal(DeviceName, deviceName);
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
             var skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_METHODS={string.Join(',', skippedTests)} ";
 
-            var expectedArgs = "-argument=-connection-mode " +
-                "-argument=none " +
-                "-argument=-app-arg:-autostart " +
-                "-setenv=NUNIT_AUTOSTART=true " +
-                "-argument=-app-arg:-autoexit " +
-                "-setenv=NUNIT_AUTOEXIT=true " +
-                "-argument=-app-arg:-enablenetwork " +
-                "-setenv=NUNIT_ENABLE_NETWORK=true " +
-                "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
-                skippedTestsArg +
-                "-v " +
-                "-v " +
-                "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
-                "-setenv=NUNIT_ENABLE_XML_MODE=wrapped " +
-                "-setenv=NUNIT_XML_VERSION=xUnit " +
-                "-argument=-app-arg:-transport:Tcp " +
-                "-setenv=NUNIT_TRANSPORT=TCP " +
-                $"-argument=-app-arg:-hostport:{Port} " +
-                $"-setenv=NUNIT_HOSTPORT={Port} " +
-                "-argument=-app-arg:-hostname:127.0.0.1,::1 " +
-                "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
-                "--disable-memory-limits " +
-                "--devname \"Test iPhone\" " +
-                $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
-                "--wait-for-exit";
+            var expectedArgs = GetExpectedDeviceMlaunchArgs(skippedTestsArg);
 
             _processManager
                 .Verify(
@@ -619,7 +551,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
             deviceLogCapturerFactory
-                .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, "Test iPhone"))
+                .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, DeviceName))
                 .Returns(deviceLogCapturer.Object);
 
             var testResultFilePath = Path.GetTempFileName();
@@ -631,7 +563,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 .Returns(listenerLogFile);
 
             _logs
-                .Setup(x => x.Create("device-Test iPhone-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
+                .Setup(x => x.Create($"device-{DeviceName}-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
                 .Returns(deviceSystemLog.Object);
 
             // Act
@@ -665,37 +597,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 skippedTestClasses: skippedClasses);
 
             // Verify
-            Assert.Equal("Test iPhone", deviceName);
+            Assert.Equal(DeviceName, deviceName);
             Assert.Equal(TestExecutingResult.Succeeded, result);
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
             var skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_CLASSES={string.Join(',', skippedClasses)} ";
 
-            var expectedArgs = "-argument=-connection-mode " +
-                "-argument=none " +
-                "-argument=-app-arg:-autostart " +
-                "-setenv=NUNIT_AUTOSTART=true " +
-                "-argument=-app-arg:-autoexit " +
-                "-setenv=NUNIT_AUTOEXIT=true " +
-                "-argument=-app-arg:-enablenetwork " +
-                "-setenv=NUNIT_ENABLE_NETWORK=true " +
-                "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
-                skippedTestsArg +
-                "-v " +
-                "-v " +
-                "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
-                "-setenv=NUNIT_ENABLE_XML_MODE=wrapped " +
-                "-setenv=NUNIT_XML_VERSION=xUnit " +
-                "-argument=-app-arg:-transport:Tcp " +
-                "-setenv=NUNIT_TRANSPORT=TCP " +
-                $"-argument=-app-arg:-hostport:{Port} " +
-                $"-setenv=NUNIT_HOSTPORT={Port} " +
-                "-argument=-app-arg:-hostname:127.0.0.1,::1 " +
-                "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
-                "--disable-memory-limits " +
-                "--devname \"Test iPhone\" " +
-                $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
-                "--wait-for-exit";
+            var expectedArgs = GetExpectedDeviceMlaunchArgs(skippedTestsArg);
 
             _processManager
                 .Verify(
@@ -719,5 +627,60 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
         }
+
+        private static string GetExpectedDeviceMlaunchArgs(string skippedTests = null, bool useTunnel = false, string extraArgs = null) =>
+            "-argument=-connection-mode " +
+            "-argument=none " +
+            "-argument=-app-arg:-autostart " +
+            "-setenv=NUNIT_AUTOSTART=true " +
+            "-argument=-app-arg:-autoexit " +
+            "-setenv=NUNIT_AUTOEXIT=true " +
+            "-argument=-app-arg:-enablenetwork " +
+            "-setenv=NUNIT_ENABLE_NETWORK=true " +
+            "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
+            skippedTests +
+            "-v " +
+            "-v " +
+            "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
+            "-setenv=NUNIT_ENABLE_XML_MODE=wrapped " +
+            "-setenv=NUNIT_XML_VERSION=xUnit " +
+            "-argument=-app-arg:-transport:Tcp " +
+            "-setenv=NUNIT_TRANSPORT=TCP " +
+            $"-argument=-app-arg:-hostport:{Port} " +
+            $"-setenv=NUNIT_HOSTPORT={Port} " +
+            extraArgs +
+            "-argument=-app-arg:-hostname:127.0.0.1,::1 " +
+            "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
+            "--disable-memory-limits " +
+            $"--devname \"{DeviceName}\" " +
+            (useTunnel ? "-setenv=USE_TCP_TUNNEL=true " : null) +
+            $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
+            "--wait-for-exit";
+
+        private string GetExpectedSimulatorMlaunchArgs() =>
+            "-argument=-connection-mode " +
+            "-argument=none " +
+            "-argument=-app-arg:-autostart " +
+            "-setenv=NUNIT_AUTOSTART=true " +
+            "-argument=-app-arg:-autoexit " +
+            "-setenv=NUNIT_AUTOEXIT=true " +
+            "-argument=-app-arg:-enablenetwork " +
+            "-setenv=NUNIT_ENABLE_NETWORK=true " +
+            "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
+            "-v " +
+            "-v " +
+            "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
+            "-setenv=NUNIT_ENABLE_XML_MODE=wrapped " +
+            "-setenv=NUNIT_XML_VERSION=xUnit " +
+            "-argument=-app-arg:-transport:Tcp " +
+            "-setenv=NUNIT_TRANSPORT=TCP " +
+            $"-argument=-app-arg:-hostport:{Port} " +
+            $"-setenv=NUNIT_HOSTPORT={Port} " +
+            "-argument=-app-arg:--appArg1=value1 " +
+            "-argument=-app-arg:--appArg2 " +
+            "-argument=-app-arg:-hostname:127.0.0.1 " +
+            "-setenv=NUNIT_HOSTNAME=127.0.0.1 " +
+            $"--device=:v2:udid={_mockSimulator.Object.UDID} " +
+            $"--launchsim {StringUtils.FormatArguments(s_appPath)}";
     }
 }

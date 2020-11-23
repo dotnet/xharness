@@ -204,7 +204,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal(SimulatorDeviceName, deviceName);
             Assert.Equal(200, exitCode);
 
-            var expectedArgs = GetExpectedSimulatorMlaunchArgs(_mockSimulator.Object.UDID);
+            var expectedArgs = GetExpectedSimulatorMlaunchArgs();
 
             _processManager
                 .Verify(
@@ -279,7 +279,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal(SimulatorDeviceName, deviceName);
             Assert.Equal(0, exitCode);
 
-            var expectedArgs = GetExpectedSimulatorMlaunchArgs(_mockSimulator.Object.UDID);
+            var expectedArgs = GetExpectedSimulatorMlaunchArgs();
 
             _processManager
                 .Verify(
@@ -383,7 +383,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal(DeviceName, deviceName);
             Assert.Equal(0, exitCode);
 
-            var expectedArgs = GetExpectedDeviceMlaunchArgs(DeviceName);
+            var expectedArgs = GetExpectedDeviceMlaunchArgs();
 
             _processManager
                 .Verify(
@@ -452,7 +452,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             Assert.Equal(DeviceName, deviceName);
             Assert.Null(exitCode);
 
-            var expectedArgs = GetExpectedDeviceMlaunchArgs(DeviceName);
+            var expectedArgs = GetExpectedDeviceMlaunchArgs();
 
             _processManager
                 .Verify(
@@ -481,7 +481,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 supports32b: false,
                 extension: null);
 
-        private static string GetExpectedDeviceMlaunchArgs(string deviceName) =>
+        private static string GetExpectedDeviceMlaunchArgs() =>
             "-argument=-connection-mode " +
             "-argument=none " +
             "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
@@ -490,11 +490,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             "-argument=-app-arg:--appArg1=value1 " +
             "-argument=-app-arg:--appArg2 " +
             "--disable-memory-limits " +
-            $"--devname \"{deviceName}\" " +
+            $"--devname \"{DeviceName}\" " +
             $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
             "--wait-for-exit";
 
-        private static string GetExpectedSimulatorMlaunchArgs(string simulatorUdid) =>
+        private string GetExpectedSimulatorMlaunchArgs() =>
             "-argument=-connection-mode " +
             "-argument=none " +
             "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
@@ -502,7 +502,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             "-v " +
             "-argument=-app-arg:--appArg1=value1 " +
             "-argument=-app-arg:--appArg2 " +
-            $"--device=:v2:udid={simulatorUdid} " +
+            $"--device=:v2:udid={_mockSimulator.Object.UDID} " +
             $"--launchsim {StringUtils.FormatArguments(s_appPath)}";
 
         private void SetupLogList(IEnumerable<IFileBackedLog> logs)
