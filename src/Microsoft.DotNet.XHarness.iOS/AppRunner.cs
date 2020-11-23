@@ -122,12 +122,10 @@ namespace Microsoft.DotNet.XHarness.iOS
                     cancellationToken);
             }
 
-            _mainLog.WriteLine("Device run ended. Detecting exit code..");
-
             var systemLog = _logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
             if (systemLog == null)
             {
-                _mainLog.WriteLine("Failed to detect exit code (no system log found)");
+                _mainLog.WriteLine("App run ended but failed to detect exit code (no system log found)");
                 return (deviceName, null);
             }
 
