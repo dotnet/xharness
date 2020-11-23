@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     /// </summary>
     internal class iOSRunCommand : iOSAppCommand
     {
-        private const string CommandHelp = "Runs a given iOS/tvOS/watchOS application bundle in a target device/simulator";
+        private const string CommandHelp = "Runs a given iOS/tvOS/watchOS application bundle in a target device/simulator and tries to detect exit code (might not work reliably across iOS versions).";
 
         private readonly iOSRunCommandArguments _arguments = new iOSRunCommandArguments();
 
