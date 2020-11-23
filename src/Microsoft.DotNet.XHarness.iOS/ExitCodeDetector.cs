@@ -11,12 +11,12 @@ namespace Microsoft.DotNet.XHarness.iOS
 {
     public interface IExitCodeDetector
     {
-        int DetectExitCode(AppBundleInformation appBundleInfo, IFileBackedLog systemLog);
+        int DetectExitCode(AppBundleInformation appBundleInfo, IReadableLog systemLog);
     }
 
     public class ExitCodeDetector : IExitCodeDetector
     {
-        public int DetectExitCode(AppBundleInformation appBundleInfo, IFileBackedLog systemLog)
+        public int DetectExitCode(AppBundleInformation appBundleInfo, IReadableLog systemLog)
         {
             using var reader = systemLog.GetReader();
             while (!reader.EndOfStream)
