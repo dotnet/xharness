@@ -20,17 +20,15 @@ namespace Microsoft.DotNet.XHarness.iOS
     /// <summary>
     /// Class that will run an app bundle and return the exit code.
     /// </summary>
-    public class AppRunner
+    public class AppRunner : AppRunnerBase
     {
         private readonly IMlaunchProcessManager _processManager;
-        private readonly IHardwareDeviceLoader _hardwareDeviceLoader;
         private readonly ISimulatorLoader _simulatorLoader;
         private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
         private readonly ICaptureLogFactory _captureLogFactory;
         private readonly IDeviceLogCapturerFactory _deviceLogCapturerFactory;
         private readonly IExitCodeDetector _exitCodeDetector;
         private readonly ILogs _logs;
-        private readonly IFileBackedLog _mainLog;
         private readonly IHelpers _helpers;
         private readonly IEnumerable<string> _appArguments; // Arguments that will be passed to the iOS application
 
@@ -47,9 +45,9 @@ namespace Microsoft.DotNet.XHarness.iOS
             IHelpers helpers,
             IEnumerable<string> appArguments,
             Action<string>? logCallback = null)
+            : base(hardwareDeviceLoader, mainLog, logCallback)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
-            _hardwareDeviceLoader = hardwareDeviceLoader ?? throw new ArgumentNullException(nameof(hardwareDeviceLoader));
             _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
             _snapshotReporterFactory = snapshotReporterFactory ?? throw new ArgumentNullException(nameof(snapshotReporterFactory));
             _captureLogFactory = captureLogFactory ?? throw new ArgumentNullException(nameof(captureLogFactory));
@@ -58,16 +56,6 @@ namespace Microsoft.DotNet.XHarness.iOS
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
             _appArguments = appArguments;
-
-            if (logCallback == null)
-            {
-                _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
-            }
-            else
-            {
-                // create using the main as the default log
-                _mainLog = Log.CreateReadableAggregatedLog(mainLog, new CallbackLog(logCallback));
-            }
         }
 
         public async Task<(string DeviceName, int? exitCode)> RunApp(
@@ -134,13 +122,19 @@ namespace Microsoft.DotNet.XHarness.iOS
                     cancellationToken);
             }
 
+            _mainLog.WriteLine("Device run ended. Detecting exit code..");
+
             var systemLog = _logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
             if (systemLog == null)
             {
+                _mainLog.WriteLine("Failed to detect exit code (no system log found)");
                 return (deviceName, null);
             }
 
-            return (deviceName, _exitCodeDetector.DetectExitCode(appInformation, systemLog));
+            var exitCode = _exitCodeDetector.DetectExitCode(appInformation, systemLog);
+            _mainLog.WriteLine($"App run ended with {exitCode}");
+
+            return (deviceName, exitCode);
         }
 
         private async Task RunSimulatorApp(
@@ -348,19 +342,6 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
 
             return args;
-        }
-
-        private async Task<string> FindDevice(TestTargetOs target)
-        {
-            IHardwareDevice? companionDevice = null;
-            IHardwareDevice device = await _hardwareDeviceLoader.FindDevice(target.Platform.ToRunMode(), _mainLog, includeLocked: false, force: false);
-
-            if (target.Platform.IsWatchOSTarget())
-            {
-                companionDevice = await _hardwareDeviceLoader.FindCompanionDevice(_mainLog, device);
-            }
-
-            return companionDevice?.Name ?? device.Name;
         }
     }
 }

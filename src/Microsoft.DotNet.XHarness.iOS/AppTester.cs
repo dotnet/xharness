@@ -24,10 +24,9 @@ namespace Microsoft.DotNet.XHarness.iOS
     /// Class that will run an app bundle that contains the TestRunner on a target device.
     /// It will collect test results ran in the app and return results.
     /// </summary>
-    public class AppTester
+    public class AppTester : AppRunnerBase
     {
         private readonly IMlaunchProcessManager _processManager;
-        private readonly IHardwareDeviceLoader _hardwareDeviceLoader;
         private readonly ISimulatorLoader _simulatorLoader;
         private readonly ISimpleListenerFactory _listenerFactory;
         private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
@@ -36,7 +35,6 @@ namespace Microsoft.DotNet.XHarness.iOS
         private readonly ITestReporterFactory _testReporterFactory;
         private readonly IResultParser _resultParser;
         private readonly ILogs _logs;
-        private readonly IFileBackedLog _mainLog;
         private readonly IHelpers _helpers;
         private readonly IEnumerable<string> _appArguments; // Arguments that will be passed to the iOS application
 
@@ -54,9 +52,9 @@ namespace Microsoft.DotNet.XHarness.iOS
             IHelpers helpers,
             IEnumerable<string> appArguments,
             Action<string>? logCallback = null)
+            : base(hardwareDeviceLoader, mainLog, logCallback)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
-            _hardwareDeviceLoader = hardwareDeviceLoader ?? throw new ArgumentNullException(nameof(hardwareDeviceLoader));
             _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
             _listenerFactory = simpleListenerFactory ?? throw new ArgumentNullException(nameof(simpleListenerFactory));
             _snapshotReporterFactory = snapshotReporterFactory ?? throw new ArgumentNullException(nameof(snapshotReporterFactory));
@@ -67,15 +65,6 @@ namespace Microsoft.DotNet.XHarness.iOS
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
             _appArguments = appArguments;
-            if (logCallback == null)
-            {
-                _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
-            }
-            else
-            {
-                // create using the main as the default log
-                _mainLog = Log.CreateReadableAggregatedLog(mainLog, new CallbackLog(logCallback));
-            }
         }
 
         public async Task<(string DeviceName, TestExecutingResult Result, string ResultMessage)> TestApp(
@@ -529,19 +518,6 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
 
             return args;
-        }
-
-        private async Task<string> FindDevice(TestTargetOs target)
-        {
-            IHardwareDevice? companionDevice = null;
-            IHardwareDevice device = await _hardwareDeviceLoader.FindDevice(target.Platform.ToRunMode(), _mainLog, includeLocked: false, force: false);
-
-            if (target.Platform.IsWatchOSTarget())
-            {
-                companionDevice = await _hardwareDeviceLoader.FindCompanionDevice(_mainLog, device);
-            }
-
-            return companionDevice?.Name ?? device.Name;
         }
     }
 }
