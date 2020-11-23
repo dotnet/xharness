@@ -50,7 +50,7 @@ Reporting:
 Arguments:
 ";
 
-        public AndroidTestCommand() : base("test", true, CommandHelp)
+        public AndroidTestCommand() : base("test", false, CommandHelp)
         {
         }
 

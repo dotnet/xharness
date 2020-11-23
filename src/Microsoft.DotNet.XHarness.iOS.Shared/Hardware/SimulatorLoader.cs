@@ -465,7 +465,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, int retryCount, bool createIfNeeded = true, bool minVersion = false)
         {
             int attempt = 1;
-            const int maxAttempts = 3;
             while (true)
             {
                 try
@@ -474,9 +473,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 }
                 catch (Exception e)
                 {
-                    log.WriteLine($"Failed to find/create simulator (attempt {attempt}/{maxAttempts}):" + Environment.NewLine + e);
+                    log.WriteLine($"Failed to find/create simulator (attempt {attempt}/{retryCount}):" + Environment.NewLine + e);
 
-                    if (attempt == maxAttempts)
+                    if (attempt == retryCount)
                     {
                         throw new NoDeviceFoundException("Failed to find/create suitable simulator");
                     }
