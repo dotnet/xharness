@@ -63,12 +63,14 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                 {
                     if (int.TryParse(v, out var timeout))
                     {
-                        Timeout = TimeSpan.FromSeconds(timeout);                        
+                        Timeout = TimeSpan.FromSeconds(timeout);
+                        return;
                     }
 
                     if (TimeSpan.TryParse(v, out var timespan))
                     {
                         Timeout = timespan;
+                        return;
                     }
 
                     throw new ArgumentException("timeout must be an integer - a number of seconds, or a timespan (00:30:00)");
