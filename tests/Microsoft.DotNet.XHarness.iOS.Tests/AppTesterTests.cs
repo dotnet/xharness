@@ -131,7 +131,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task RunOnSimulatorWithNoAvailableSimulatorTest(bool useTcpTunnel)
+        public async Task TestOnSimulatorWithNoAvailableSimulatorTest(bool useTcpTunnel)
         {
             // Mock finding simulators
             string simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task RunOnSimulatorSuccessfullyTest(bool useTunnel)
+        public async Task TestOnSimulatorSuccessfullyTest(bool useTunnel)
         {
             string simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
 
@@ -327,7 +327,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         }
 
         [Fact]
-        public async Task RunOnDeviceWithNoAvailableSimulatorTest()
+        public async Task TestOnDeviceWithNoAvailableSimulatorTest()
         {
             _hardwareDeviceLoader = new Mock<IHardwareDeviceLoader>();
             _hardwareDeviceLoader
@@ -371,7 +371,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task RunOnDeviceSuccessfullyTest(bool useTunnel)
+        public async Task TestOnDeviceSuccessfullyTest(bool useTunnel)
         {
             var deviceSystemLog = new Mock<IFileBackedLog>();
             deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
@@ -497,7 +497,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         [Theory]
         [InlineData("MyClass.MyMethod")]
         [InlineData("MyClass.MyMethod", "MyClass.MySecondMethod")]
-        public async Task RunOnDeviceWithSkippedTestsTest(params string[] skippedTests)
+        public async Task TestOnDeviceWithSkippedTestsTest(params string[] skippedTests)
         {
             var deviceSystemLog = new Mock<IFileBackedLog>();
             deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
@@ -610,7 +610,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         [Theory]
         [InlineData("MyClass")]
         [InlineData("MyClass", "MySecondClass")]
-        public async Task RunOnDeviceWithSkippedClassesTestTest(params string[] skippedClasses)
+        public async Task TestOnDeviceWithSkippedClassesTestTest(params string[] skippedClasses)
         {
             var deviceSystemLog = new Mock<IFileBackedLog>();
             deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
