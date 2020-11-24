@@ -464,6 +464,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, int retryCount, bool createIfNeeded = true, bool minVersion = false)
         {
+            if (retryCount < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(retryCount));
+            }
+
             int attempt = 1;
             while (true)
             {

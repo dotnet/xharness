@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
         protected override string CommandUsage { get; } = "ios run [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 
-        public iOSRunCommand() : base("run", true, CommandHelp)
+        public iOSRunCommand() : base("run", false, CommandHelp)
         {
         }
 
