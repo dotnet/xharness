@@ -3,8 +3,5 @@
   <PropertyGroup>
     <VersionPrefix>1.0.0</VersionPrefix>
     <PreReleaseVersionLabel>prerelease</PreReleaseVersionLabel>
-
-    <!-- Workaround for https://github.com/dotnet/core-eng/issues/11458 -->
-    <MicrosoftDotNetSignCheckVersion>5.0.0-beta.20569.10</MicrosoftDotNetSignCheckVersion>
   </PropertyGroup>
 </Project>
