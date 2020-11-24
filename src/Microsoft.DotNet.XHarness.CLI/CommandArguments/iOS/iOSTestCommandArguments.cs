@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -13,40 +12,20 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 {
-    /// <summary>
-    /// Specifies the channel that is used to comminicate with the device.
-    /// </summary>
-    internal enum CommunicationChannel
+    internal class iOSTestCommandArguments : iOSRunCommandArguments
     {
-        /// <summary>
-        /// Connect to the device using the LAN or WAN.
-        /// </summary>
-        Network,
-        /// <summary>
-        /// Connect to the device using a tcp-tunnel
-        /// </summary>
-        UsbTunnel,
-    }
-
-    internal class iOSTestCommandArguments : TestCommandArguments
-    {
-        /// <summary>
-        /// Path to where Xcode is located.
-        /// </summary>
-        public string? XcodeRoot { get; set; }
+        private readonly List<string> _singleMethodFilters = new List<string>();
+        private readonly List<string> _classMethodFilters = new List<string>();
 
         /// <summary>
-        /// Path to the mlaunch binary.
-        /// Default comes from the NuGet.
+        /// Methods to be included in the test run while all others are ignored.
         /// </summary>
-        public string MlaunchPath { get; set; } = Path.Join(
-            Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(iOSTestCommandArguments))?.Location),
-            "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
+        public IEnumerable<string> SingleMethodFilters => _singleMethodFilters;
 
         /// <summary>
-        /// Name of a specific device we want to target.
+        /// Tests classes to be included in the run while all others are ignored.
         /// </summary>
-        public string? DeviceName { get; set; }
+        public IEnumerable<string> ClassMethodFilters => _classMethodFilters;
 
         /// <summary>
         /// How long we wait before app starts and first test should start running.
@@ -63,73 +42,60 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// </summary>
         public CommunicationChannel CommunicationChannel { get; set; } = CommunicationChannel.UsbTunnel;
 
-        /// <summary>
-        /// Enable the lldb debugger to be used with the launched application.
-        /// </summary>
-        public bool EnableLldb { get; set; }
-
-        public override IReadOnlyCollection<string> Targets
+        protected override OptionSet GetCommandOptions()
         {
-            get => TestTargets.Select(t => t.AsString()).ToArray();
-            protected set
+            var options = base.GetCommandOptions();
+
+            var testOptions = new OptionSet
             {
-                var testTargets = new List<TestTargetOs>();
-
-                foreach (string targetName in value ?? throw new ArgumentNullException("Targets cannot be empty"))
                 {
-                    try
+                    "launch-timeout=|lt=", "TimeSpan or number of seconds to wait for the iOS app to start",
+                    v =>
                     {
-                        testTargets.Add(targetName.ParseAsAppRunnerTargetOs());
-                    }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        throw new ArgumentException(
-                            $"Failed to parse test target '{targetName}'. Available targets are:" +
-                            GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None) +
-                            Environment.NewLine + Environment.NewLine +
-                            "You can also specify desired iOS/tvOS/WatchOS version. Example: ios-simulator-64_13.4");
-                    }
-                }
+                        if (int.TryParse(v, out var timeout))
+                        {
+                            LaunchTimeout = TimeSpan.FromSeconds(timeout);
+                            return;
+                        }
 
-                TestTargets = testTargets;
+                        if (TimeSpan.TryParse(v, out var timespan))
+                        {
+                            LaunchTimeout = timespan;
+                            return;
+                        }
+
+                        throw new ArgumentException("launch-timeout must be an integer - a number of seconds, or a timespan (00:30:00)");
+                    }
+                },
+                {
+                    "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.",
+                    v => XmlResultJargon = ParseArgument("xml-jargon", v, invalidValues: XmlResultJargon.Missing)
+                },
+                {
+                    "communication-channel=", $"The communication channel to use to communicate with the default. Can be {CommunicationChannel.Network} and {CommunicationChannel.UsbTunnel}. Default is {CommunicationChannel.UsbTunnel}",
+                    v => CommunicationChannel = ParseArgument<CommunicationChannel>("communication-channel", v)
+                },
+                {
+                    "method|m=", "Method to be ran in the test application. When this parameter is used only the " +
+                    "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
+                    "ignored. Can be used more than once.",
+                    v => _singleMethodFilters.Add(v)
+                },
+                {
+                    "class|c=", "Test class to be ran in the test application. When this parameter is used only the " +
+                    "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
+                    "ignored. Can be used more than once.",
+                    v => _classMethodFilters.Add(v)
+                },
+            };
+
+            foreach (var option in testOptions)
+            {
+                options.Add(option);
             }
+
+            return options;
         }
-
-        /// <summary>
-        /// Parsed strong-typed targets.
-        /// </summary>
-        public IReadOnlyCollection<TestTargetOs> TestTargets { get; private set; } = Array.Empty<TestTargetOs>();
-
-        protected override OptionSet GetTestCommandOptions() => new OptionSet
-        {
-            { "xcode=", "Path where Xcode is installed",
-                v => XcodeRoot = RootPath(v)
-            },
-            { "mlaunch=", "Path to the mlaunch binary",
-                v => MlaunchPath = RootPath(v)
-            },
-            { "device-name=", "Name of a specific device, if you wish to target one",
-                v => DeviceName = v
-            },
-            { "communication-channel=", $"The communication channel to use to communicate with the default. Can be {CommunicationChannel.Network} and {CommunicationChannel.UsbTunnel}. Default is {CommunicationChannel.UsbTunnel}",
-                v => CommunicationChannel = ParseArgument<CommunicationChannel>("communication-channel", v)
-            },
-            { "launch-timeout=|lt=", "Time span, in seconds, to wait for the iOS app to start.",
-                v =>
-                {
-                    if (!int.TryParse(v, out var launchTimeout))
-                    {
-                        throw new ArgumentException("launch-timeout must be an integer - a number of seconds");
-                    }
-
-                    LaunchTimeout = TimeSpan.FromSeconds(launchTimeout);
-                }
-            },
-            { "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.",
-                v => XmlResultJargon = ParseArgument("xml-jargon", v, invalidValues: XmlResultJargon.Missing)
-            },
-            { "enable-lldb", "Allow to debug the launched application using lldb.", v => EnableLldb = v != null },
-        };
 
         public override void Validate()
         {
@@ -140,7 +106,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
                 throw new ArgumentException($"Failed to find the app bundle at {AppPackagePath}");
             }
 
-            if (TestTargets.Count == 0)
+            if (RunTargets.Count == 0)
             {
                 throw new ArgumentException(
                     "No targets specified. At least one target must be provided. Available targets are:" +

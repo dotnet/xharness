@@ -7,26 +7,27 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
-    internal class WasmTestCommand : TestCommand
+    internal class WasmTestCommand : XHarnessCommand
     {
         private const string CommandHelp = "Executes tests on WASM using a selected JavaScript engine";
 
         private readonly WasmTestCommandArguments _arguments = new WasmTestCommandArguments();
 
-        protected override TestCommandArguments TestArguments => _arguments;
+        protected override XHarnessCommandArguments Arguments => _arguments;
         protected override string CommandUsage { get; } = "wasm test [OPTIONS] -- [ENGINE OPTIONS]";
         protected override string CommandDescription { get; } = CommandHelp;
 
-        public WasmTestCommand() : base(CommandHelp, true)
+        public WasmTestCommand() : base("test", true, CommandHelp)
         {
         }
 

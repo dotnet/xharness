@@ -27,11 +27,17 @@ dotnet tool install Microsoft.DotNet.XHarness.CLI \
 ```
 
 You can get the specific version from [the dotnet-eng feed](https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&view=versions&package=Microsoft.DotNet.XHarness.CLI&protocolType=NuGet) where it is published.
-So far we are in preview so omitting the version will fail to locate a stable version of the tool and has to be supplied.
+So far we are in preview so omitting the version will fail to locate a stable version of the tool and it has to be supplied.
 
 To run the tool, use the `dotnet xharness` command. The tool always expects the platform (`android`/`ios`) as the first argument and has following commands available:
-- `test` - run given application on a device/emulator
+- `test` - run and test given application containing a TestRunner **\*** on a target device/emulator
 - `state` - print information about the machine and connected devices
+- `run` (iOS only) - run given application without a TestRunner **\*** on a target device/emulator
+
+> Applications run via the `ios test` command require a TestRunner inside of the iOS app bundle to work properly.
+The `ios run` command, on the other hand, doesn't expect the TestRunner and only runs the application and tries to detect the exit code. Detection of exit code might not work across different iOS versions reliably.
+>
+> **\*** See the [Test Runners section](#test-runners).
 
 Example:
 
@@ -99,7 +105,9 @@ These files are:
 
 ## Test Runners
 
-The repository also contains several TestRunners that are bundled inside of the application and execute the tests.
+The repository also contains several TestRunners which are libraries that can be bundled inside of the application and execute the tests.
+The TestRunner detects and executes unit tests inside of the application. It also connects to XHarness over TCP connection from within the running app bundle and reports test run results/state.
+
 Currently we support Xunit and NUnit test assemblies but the `Microsoft.DotNet.XHarness.Tests.Runners` supports implementation of custom runner too.
 
 ## Contribution
