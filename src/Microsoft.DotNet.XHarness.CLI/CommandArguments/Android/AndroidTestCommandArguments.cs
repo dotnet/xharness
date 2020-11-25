@@ -57,7 +57,15 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
                 v => InstrumentationName = v
             },
             { "expected-exit-code:", "If specified, sets the expected exit code for a successful instrumentation run.",
-                v => ExpectedExitCode = Convert.ToInt32(v)
+                v => {
+                    if (int.TryParse(v, out var number))
+                    {
+                        ExpectedExitCode = number;
+                        return;
+                    }
+
+                    throw new ArgumentException("expected-exit-code must be an integer");
+                }
             },
             { "package-name=|p=", "Package name contained within the supplied APK",
                 v => PackageName = v

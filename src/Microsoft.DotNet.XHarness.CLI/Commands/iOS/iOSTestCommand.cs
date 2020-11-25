@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         protected override string CommandUsage { get; } = "ios test [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
-        protected override iOSRunCommandArguments iOSRunArguments => _arguments;
+        protected override iOSAppRunArguments iOSRunArguments => _arguments;
 
         public iOSTestCommand() : base("test", false, CommandHelp)
         {
