@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 string line = reader.ReadLine();
 
                 // This will be improved when we find out it differes for new iOS versions
-                if (line.Contains("UIKitApplication:net.dot." + appBundleInfo.AppName) && line.Contains("Service exited with abnormal code"))
+                if (line.Contains("UIKitApplication:") && line.Contains(appBundleInfo.AppName) && line.Contains("Service exited with abnormal code"))
                 {
                     var regex = new Regex(" (\\-?[0-9]+)$");
                     var match = regex.Match(line);
