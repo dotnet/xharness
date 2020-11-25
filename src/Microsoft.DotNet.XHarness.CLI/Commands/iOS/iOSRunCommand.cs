@@ -70,8 +70,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             if (exitCode.HasValue)
             {
-                logger.LogInformation("Application has finished with exit code: " + exitCode);
-                return (ExitCode)exitCode.Value;
+                if (_arguments.ExpectedExitCode != exitCode)
+                {
+                    logger.LogError($"Application has finished with exit code {exitCode} but {_arguments.ExpectedExitCode} was expected");
+                    return ExitCode.GENERAL_FAILURE;
+                }
+
+                logger.LogInformation("Application has finished with exit code: " + exitCode + (_arguments.ExpectedExitCode != 0 ? " (as expected)" : null));
+                return ExitCode.SUCCESS;
             }
             else
             {

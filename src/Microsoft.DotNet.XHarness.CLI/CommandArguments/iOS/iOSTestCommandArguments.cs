@@ -12,7 +12,22 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
 {
-    internal class iOSTestCommandArguments : iOSRunCommandArguments
+    /// <summary>
+    /// Specifies the channel that is used to communicate with the device.
+    /// </summary>
+    internal enum CommunicationChannel
+    {
+        /// <summary>
+        /// Connect to the device using the LAN or WAN.
+        /// </summary>
+        Network,
+        /// <summary>
+        /// Connect to the device using a tcp-tunnel
+        /// </summary>
+        UsbTunnel,
+    }
+
+    internal class iOSTestCommandArguments : iOSAppRunArguments
     {
         private readonly List<string> _singleMethodFilters = new List<string>();
         private readonly List<string> _classMethodFilters = new List<string>();
