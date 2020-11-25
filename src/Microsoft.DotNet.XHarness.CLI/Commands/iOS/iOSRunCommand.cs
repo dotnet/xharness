@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         private readonly iOSRunCommandArguments _arguments = new iOSRunCommandArguments();
 
-        protected override iOSRunCommandArguments iOSRunArguments => _arguments;
+        protected override iOSAppRunArguments iOSRunArguments => _arguments;
         protected override string CommandUsage { get; } = "ios run [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 

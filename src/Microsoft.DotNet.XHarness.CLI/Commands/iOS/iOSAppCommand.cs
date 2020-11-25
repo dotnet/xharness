@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         protected readonly ErrorKnowledgeBase ErrorKnowledgeBase = new ErrorKnowledgeBase();
         protected override XHarnessCommandArguments Arguments => iOSRunArguments;
-        protected abstract iOSRunCommandArguments iOSRunArguments { get; }
+        protected abstract iOSAppRunArguments iOSRunArguments { get; }
 
         private MlaunchProcessManager? _processManager = null;
         private HardwareDeviceLoader? _deviceLoader = null;
