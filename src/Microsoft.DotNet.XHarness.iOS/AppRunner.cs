@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName);
 
-            _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target} '{deviceName}' ***");
+            _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{deviceName}' ***");
 
             if (isSimulator)
             {

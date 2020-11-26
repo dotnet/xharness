@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 .ContinueWith(testReporter.LaunchCallback)
                 .DoNotAwait();
 
-            _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target} '{deviceName}' ***");
+            _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{deviceName}' ***");
 
             try
             {
