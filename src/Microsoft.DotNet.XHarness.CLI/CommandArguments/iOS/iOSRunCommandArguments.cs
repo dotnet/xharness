@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
             var runOptions = new OptionSet
             {
                 {
-                    "expected-exit-code:", "If specified, sets the expected exit code of the app that is being run.",
+                    "expected-exit-code=", "If specified, sets the expected exit code of the app that is being run.",
                     v =>
                     {
                         if (int.TryParse(v, out var number))

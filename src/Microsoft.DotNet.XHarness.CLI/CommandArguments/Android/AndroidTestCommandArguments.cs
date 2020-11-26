@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// <summary>
         /// Exit code returned by the instrumentation for a successful run. Defaults to 0.
         /// </summary>
-        public int ExpectedExitCode { get; set; } = (int)Microsoft.DotNet.XHarness.Common.CLI.ExitCode.SUCCESS;
+        public int ExpectedExitCode { get; set; } = (int)Common.CLI.ExitCode.SUCCESS;
 
         protected override OptionSet GetTestCommandOptions() => new OptionSet
         {
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             { "instrumentation:|i:", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.",
                 v => InstrumentationName = v
             },
-            { "expected-exit-code:", "If specified, sets the expected exit code for a successful instrumentation run.",
+            { "expected-exit-code=", "If specified, sets the expected exit code for a successful instrumentation run.",
                 v => {
                     if (int.TryParse(v, out var number))
                     {
