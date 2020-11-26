@@ -29,7 +29,7 @@ dotnet tool install Microsoft.DotNet.XHarness.CLI \
 You can get the specific version from [the dotnet-eng feed](https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&view=versions&package=Microsoft.DotNet.XHarness.CLI&protocolType=NuGet) where it is published.
 So far we are in preview so omitting the version will fail to locate a stable version of the tool and it has to be supplied.
 
-To run the tool, use the `dotnet xharness` command. The tool always expects the platform (`android`/`ios`) as the first argument and has following commands available:
+To run the tool, use the `xharness` command. The tool always expects the platform (`android`/`ios`) as the first argument and has following commands available:
 - `test` - run and test given application containing a TestRunner **\*** on a target device/emulator
 - `state` - print information about the machine and connected devices
 - `run` (iOS only) - run given application without a TestRunner **\*** on a target device/emulator
