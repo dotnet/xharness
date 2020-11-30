@@ -88,9 +88,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 "--metrics-recording-only"
             });
 
-            var driverService = ChromeDriverService.CreateDefaultService();
-            driverService.EnableVerboseLogging = true;
-            driverService.LogPath = Path.Combine(_arguments.OutputDirectory, "driver.log");
+            logger.LogInformation($"Starting chromedriver with args: {string.Join(' ', options.Arguments)}");
 
             // We want to explicitly specify a timeout here. This is for for the
             // driver commands, like getLog. The default is 60s, which ends up
@@ -108,12 +106,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 "Cannot start the driver service"
             };
 
+            var driverLogPath = Path.Combine(_arguments.OutputDirectory, "driver.log");
             int max_retries = 3;
             int retry_num = 0;
             while(true)
             {
                 try
                 {
+                    File.Delete(driverLogPath);
+
+                    var driverService = ChromeDriverService.CreateDefaultService();
+                    driverService.EnableAppendLog = false;
+                    driverService.EnableVerboseLogging = true;
+                    driverService.LogPath = driverLogPath;
+
                     return (driverService, new ChromeDriver(driverService, options, _arguments.Timeout));
                 }
                 catch (WebDriverException wde) when (err_snippets.Any(s => wde.Message.Contains(s)) && retry_num < max_retries - 1)
@@ -126,6 +132,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
                     // Log on max-1 tries, and rethrow on the last one
                     logger.LogWarning($"Failed to start chrome, attempt #{retry_num}: {wde}");
+                }
+
+                if (File.Exists(driverLogPath))
+                {
+                    logger.LogInformation($"===== driver.log Start #{retry_num} =====");
+                    logger.LogInformation(File.ReadAllText(driverLogPath));
+                    logger.LogInformation($"===== driver.log End #{retry_num} =====");
                 }
 
                 retry_num++;
