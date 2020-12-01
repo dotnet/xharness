@@ -106,16 +106,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 "Cannot start the driver service"
             };
 
-            var driverLogPath = Path.Combine(_arguments.OutputDirectory, "driver.log");
             int max_retries = 3;
             int retry_num = 0;
             while(true)
             {
+                ChromeDriverService? driverService = null;
                 try
                 {
+                    var driverLogPath = Path.Combine(_arguments.OutputDirectory, $"chromedriver-{retry_num}.log");
                     File.Delete(driverLogPath);
 
-                    var driverService = ChromeDriverService.CreateDefaultService();
+                    driverService = ChromeDriverService.CreateDefaultService();
                     driverService.EnableAppendLog = false;
                     driverService.EnableVerboseLogging = true;
                     driverService.LogPath = driverLogPath;
@@ -132,13 +133,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
                     // Log on max-1 tries, and rethrow on the last one
                     logger.LogWarning($"Failed to start chrome, attempt #{retry_num}: {wde}");
-                }
 
-                if (File.Exists(driverLogPath))
+                    driverService?.Dispose();
+                }
+                catch
                 {
-                    logger.LogInformation($"===== driver.log Start #{retry_num} =====");
-                    logger.LogInformation(File.ReadAllText(driverLogPath));
-                    logger.LogInformation($"===== driver.log End #{retry_num} =====");
+                    driverService?.Dispose();
+                    throw;
                 }
 
                 retry_num++;
