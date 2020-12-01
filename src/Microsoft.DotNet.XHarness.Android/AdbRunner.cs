@@ -18,6 +18,8 @@ namespace Microsoft.DotNet.XHarness.Android
         #region Constructor and state variables
 
         private const string AdbEnvironmentVariableName = "ADB_EXE_PATH";
+        private const string AdbDeviceFullInstallFailureMessage = "INSTALL_FAILED_INSUFFICIENT_STORAGE";
+        private const string AdbShellPropertyForBootCompletion = "sys.boot_completed";
         private readonly string _absoluteAdbExePath;
         private readonly ILogger _log;
         private readonly IAdbProcessManager _processManager;
@@ -90,6 +92,8 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public string GetAdbState() => RunAdbCommand("get-state").StandardOutput;
 
+        public string RebootAndroidDevice() => RunAdbCommand("reboot").StandardOutput;
+
         public void ClearAdbLog() => RunAdbCommand("logcat -c");
 
         public void DumpAdbLog(string outputFilePath, string filterSpec = "")
@@ -141,6 +145,18 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 throw new Exception($"Error waiting for Android device/emulator.  Std out:{result.StandardOutput} Std. Err: {result.StandardError}.  Do you need to set the current device?");
             }
+
+            // Once wait-for-device returns, we'll give it up to 30s for 'adb shell getprop sys.boot_completed' to be '1' (as opposed to empty) to make package managers happy
+            var bootCompleted = RunAdbCommand($"shell getprop {AdbShellPropertyForBootCompletion}");
+
+            int triesLeft = 3;
+            while (!bootCompleted.StandardOutput.Trim().StartsWith("1") && triesLeft > 1)
+            {
+                bootCompleted = RunAdbCommand($"shell getprop {AdbShellPropertyForBootCompletion}");
+                _log.LogDebug($"{AdbShellPropertyForBootCompletion} = '{bootCompleted.StandardOutput.Trim()}'");
+                Thread.Sleep((int)TimeSpan.FromSeconds(10).TotalMilliseconds);
+                triesLeft--;
+            }
         }
 
         public void StartAdbServer()
@@ -164,6 +180,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public int InstallApk(string apkPath)
         {
+            bool needToRetry = false;
             _log.LogInformation($"Attempting to install {apkPath}: ");
             if (string.IsNullOrEmpty(apkPath))
             {
@@ -173,16 +190,29 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 throw new FileNotFoundException($"Could not find {apkPath}");
             }
+
             var result = RunAdbCommand($"install \"{apkPath}\"");
 
             // If this keeps happening, we should look into exercising Helix infra retry logic when on Helix
             // since users should be able assume tests themselves can't break the ADB server.
             if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE)
             {
-                _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, and retry the install");
-
+                _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install");
                 KillAdbServer();
                 StartAdbServer();
+                needToRetry = true; 
+            }
+
+            if (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbDeviceFullInstallFailureMessage))
+            {
+                _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{Environment.NewLine}Output:{result}");
+                RebootAndroidDevice();
+                WaitForDevice();
+                needToRetry = true;
+            }
+
+            if (needToRetry)
+            {
                 result = RunAdbCommand($"install \"{apkPath}\"");
             }
 
