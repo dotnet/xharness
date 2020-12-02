@@ -106,6 +106,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 "Cannot start the driver service"
             };
 
+            foreach (var file in Directory.EnumerateFiles(_arguments.OutputDirectory, "chromedriver-*.log"))
+                File.Delete(file);
+
             int max_retries = 3;
             int retry_num = 0;
             while(true)
@@ -113,13 +116,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 ChromeDriverService? driverService = null;
                 try
                 {
-                    var driverLogPath = Path.Combine(_arguments.OutputDirectory, $"chromedriver-{retry_num}.log");
-                    File.Delete(driverLogPath);
-
                     driverService = ChromeDriverService.CreateDefaultService();
                     driverService.EnableAppendLog = false;
                     driverService.EnableVerboseLogging = true;
-                    driverService.LogPath = driverLogPath;
+                    driverService.LogPath = Path.Combine(_arguments.OutputDirectory, $"chromedriver-{retry_num}.log");
 
                     return (driverService, new ChromeDriver(driverService, options, _arguments.Timeout));
                 }
