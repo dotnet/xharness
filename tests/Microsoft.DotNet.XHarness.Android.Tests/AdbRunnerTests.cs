@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         private static readonly string s_scratchAndOutputPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         private static readonly string s_adbPath = Path.Combine(s_scratchAndOutputPath, "adb");
         private static string s_currentDeviceSerial = "";
+        private static int s_bootCompleteCheckTimes = 0;
         private readonly Mock<ILogger> _mainLog;
         private readonly Mock<IAdbProcessManager> _processManager;
         private readonly Dictionary<Tuple<string, string>, int> _fakeDeviceList;
@@ -92,13 +93,17 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         [Fact]
         public void WaitForDevice()
         {
+            s_bootCompleteCheckTimes = 0; // Force simulating device is offline
             var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
             string fakeDeviceName = $"emulator-{new Random().Next(9999)}";
             runner.SetActiveDevice(fakeDeviceName);
             runner.WaitForDevice();
+
+            s_bootCompleteCheckTimes = 0; // Force simulating device is offline
             runner.SetActiveDevice(null);
             runner.WaitForDevice();
-            _processManager.Verify(pm => pm.Run(s_adbPath, $"wait-for-device", TimeSpan.FromMinutes(5)), Times.Exactly(2));
+            _processManager.Verify(pm => pm.Run(s_adbPath, "wait-for-device", TimeSpan.FromMinutes(5)), Times.Exactly(2));
+            _processManager.Verify(pm => pm.Run(s_adbPath, "shell getprop sys.boot_completed", TimeSpan.FromMinutes(5)), Times.Exactly(4));
         }
 
         [Fact]
@@ -149,6 +154,14 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
             Assert.Equal(0, exitCode);
         }
 
+        [Fact]
+        public void RebootAndroidDevice()
+        {
+            var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+            string result = runner.RebootAndroidDevice();
+            _processManager.Verify(pm => pm.Run(s_adbPath, "reboot", TimeSpan.FromMinutes(5)), Times.Once);
+        }
+
         [Theory]
         [InlineData(null)]
         [InlineData("")]
@@ -187,7 +200,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
 
         #region Helper Functions
         // Generates a list of fake devices, one per supported architecture so we can test AdbRunner's parsing of the output.
-        // As with most of these tests, if adb.exe changes (we are locked into specific version) 
+        // As with most of these tests, if adb.exe changes, this will break (we are locked into specific version) 
         private Dictionary<Tuple<string, string>, int> InitializeFakeDeviceList()
         {
             var r = new Random();
@@ -244,6 +257,20 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
                     {
                         stdOut = _fakeDeviceList.Keys.Where(k => k.Item1 == s_currentDeviceSerial).Single().Item2;
                     }
+                    if ($"{allArgs[argStart + 1]} {allArgs[argStart + 2]}".Equals("getprop sys.boot_completed"))
+                    {
+                        // Newline is strange, but this is actually what it looks like
+                        if (s_bootCompleteCheckTimes > 0)
+                        {
+                            // Tell it we've booted.
+                            stdOut = "1{Environment.NewLine}";
+                        }
+                        else
+                        {
+                            stdOut = $"{Environment.NewLine}";
+                        }
+                        s_bootCompleteCheckTimes++;
+                    }
                     exitCode = 0;
                     break;
                 case "logcat":
@@ -258,6 +285,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
                     File.WriteAllText(outputPath, "Sample BugReport Output");
                     break;
                 case "install":
+                case "reboot":
                 case "uninstall":
                 case "wait-for-device":
                     // No output needed, but pretend to wait a little

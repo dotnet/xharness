@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
             output.AppendLine($"Standard Output:{Environment.NewLine}{StandardOutput}");
             if (!string.IsNullOrEmpty(StandardError))
             {
-                output.AppendLine($"Standard Error:{Environment.NewLine}{StandardOutput}");
+                output.AppendLine($"Standard Error:{Environment.NewLine}{StandardError}");
             }
             return output.ToString();
         }
