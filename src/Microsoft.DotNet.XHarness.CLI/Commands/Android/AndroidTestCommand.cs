@@ -269,8 +269,6 @@ Arguments:
                 logger.LogError($"No devices found with architecture '{apkRequiredArchitecture}'.");
                 return null;
             }
-
-            return null;
         }
 
         private (Dictionary<string, string> values, int exitCode) ParseInstrumentationOutputs(ILogger logger, string stdOut)
