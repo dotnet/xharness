@@ -98,7 +98,7 @@ Arguments:
                     // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
                     var deviceToUse = GetDeviceToUse(logger, runner, apkRequiredArchitecture);
 
-                    if (deviceToUse== null)
+                    if (deviceToUse == null)
                     {
                         return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
                     }
@@ -240,30 +240,36 @@ Arguments:
 
         private string? GetDeviceToUse(ILogger logger, AdbRunner runner, string apkRequiredArchitecture)
         {
+            Dictionary<string, string?> allDevicesAndTheirArchitectures = new Dictionary<string, string?>();
             try
             {
-                var allDevicesAndTheirArchitectures = runner.GetAttachedDevicesAndArchitectures();
-                if (allDevicesAndTheirArchitectures.Count > 0)
-                {
-                    if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        var firstAvailableCompatible = allDevicesAndTheirArchitectures.Where(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-                        logger.LogInformation($"Using first-found compatible device of {allDevicesAndTheirArchitectures.Count} total- serial: '{firstAvailableCompatible.Key}' - Arch: {firstAvailableCompatible.Value}");
-                        return firstAvailableCompatible.Key;
-                    }
-                    else
-                    {
-                        // In this case, the enumeration worked but nothing matched the APK; fail out.
-                        logger.LogError($"No devices found with architecture '{apkRequiredArchitecture}'.");
-                        return null;
-                    }
-                }
-                logger.LogError("No attached device detected");
+                allDevicesAndTheirArchitectures = runner.GetAttachedDevicesAndArchitectures();
             }
             catch (Exception toLog)
             {
-                logger.LogError(toLog, "Exception thrown while trying to find compatible device with architecture [architecture]", apkRequiredArchitecture);
+                logger.LogError(toLog, "Exception thrown while trying to find compatible device with architecture {architecture}", apkRequiredArchitecture);
             }
+
+            if (allDevicesAndTheirArchitectures.Count == 0)
+            {
+                logger.LogError("No attached device detected");
+                return null;
+            }
+
+            if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)))
+            {
+                // Key-value tuples here are of the form <device serial number, device architecture>
+                KeyValuePair<string, string?> firstAvailableCompatible = allDevicesAndTheirArchitectures.FirstOrDefault(kvp => apkRequiredArchitecture.Equals(kvp.Value, StringComparison.OrdinalIgnoreCase));
+                logger.LogInformation($"Using first-found compatible device of {allDevicesAndTheirArchitectures.Count} total- serial: '{firstAvailableCompatible.Key}' - Arch: {firstAvailableCompatible.Value}");
+                return firstAvailableCompatible.Key;
+            }
+            else
+            {
+                // In this case, the enumeration worked, we found one or more devices, but nothing matched the APK's architecture; fail out.
+                logger.LogError($"No devices found with architecture '{apkRequiredArchitecture}'.");
+                return null;
+            }
+
             return null;
         }
 
