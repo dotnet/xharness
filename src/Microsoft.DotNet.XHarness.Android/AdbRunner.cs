@@ -9,6 +9,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.DotNet.XHarness.Android.Execution;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Android
@@ -19,6 +20,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
         private const string AdbEnvironmentVariableName = "ADB_EXE_PATH";
         private const string AdbDeviceFullInstallFailureMessage = "INSTALL_FAILED_INSUFFICIENT_STORAGE";
+        private const string AdbInstallBrokenPipeError = "Failure calling service package: Broken pipe";
         private const string AdbShellPropertyForBootCompletion = "sys.boot_completed";
         private readonly string _absoluteAdbExePath;
         private readonly ILogger _log;
@@ -132,7 +134,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
         }
 
-        public void WaitForDevice()
+        public void WaitForDevice(int timeToWaitForBootCompletionSeconds = 300)
         {
             // This command waits for ANY kind of device to be available (emulator or real)
             // Needed because emulators start up asynchronously and take a while.
@@ -146,16 +148,27 @@ namespace Microsoft.DotNet.XHarness.Android
                 throw new Exception($"Error waiting for Android device/emulator.  Std out:{result.StandardOutput} Std. Err: {result.StandardError}.  Do you need to set the current device?");
             }
 
-            // Once wait-for-device returns, we'll give it up to 30s for 'adb shell getprop sys.boot_completed' to be '1' (as opposed to empty) to make package managers happy
+            // Some users will be installing the emulator and immediately calling xharness, they need to be able to expect the device is ready to load APKs.
+            // Once wait-for-device returns, we'll give it up to timeToWaitForBootCompletionSeconds seconds (default 5 min) for 'adb shell getprop sys.boot_completed'
+            // to be '1' (as opposed to empty) to make subsequent automation happy.
+            var began = DateTimeOffset.UtcNow;
+            var waitingUntil = began.AddSeconds(timeToWaitForBootCompletionSeconds);
             var bootCompleted = RunAdbCommand($"shell getprop {AdbShellPropertyForBootCompletion}");
 
-            int triesLeft = 3;
-            while (!bootCompleted.StandardOutput.Trim().StartsWith("1") && triesLeft > 1)
+            while (!bootCompleted.StandardOutput.Trim().StartsWith("1") && DateTimeOffset.UtcNow < waitingUntil)
             {
                 bootCompleted = RunAdbCommand($"shell getprop {AdbShellPropertyForBootCompletion}");
                 _log.LogDebug($"{AdbShellPropertyForBootCompletion} = '{bootCompleted.StandardOutput.Trim()}'");
                 Thread.Sleep((int)TimeSpan.FromSeconds(10).TotalMilliseconds);
-                triesLeft--;
+            }
+
+            if (bootCompleted.StandardOutput.Trim().StartsWith("1"))
+            {
+                _log.LogDebug($"Waited {DateTimeOffset.UtcNow.Subtract(began).TotalSeconds} seconds for device for {AdbShellPropertyForBootCompletion} to be 1.");
+            }
+            else
+            {
+                _log.LogWarning($"Did not detect boot completion variable on device; variable used ('{AdbShellPropertyForBootCompletion}') may be incorrect or device may be in a bad state");
             }
         }
 
@@ -180,7 +193,6 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public int InstallApk(string apkPath)
         {
-            bool needToRetry = false;
             _log.LogInformation($"Attempting to install {apkPath}: ");
             if (string.IsNullOrEmpty(apkPath))
             {
@@ -193,26 +205,23 @@ namespace Microsoft.DotNet.XHarness.Android
 
             var result = RunAdbCommand($"install \"{apkPath}\"");
 
-            // If this keeps happening, we should look into exercising Helix infra retry logic when on Helix
-            // since users should be able assume tests themselves can't break the ADB server.
-            if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE)
+            // Two possible retry scenarios, theoretically both can happen on the same run:
+
+            // 1. Pipe between ADB server and emulator device is broken; restarting the ADB server helps
+            if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE || result.StandardError.Contains(AdbInstallBrokenPipeError))
             {
                 _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install");
                 KillAdbServer();
                 StartAdbServer();
-                needToRetry = true; 
+                result = RunAdbCommand($"install \"{apkPath}\"");
             }
 
+            // 2. Installation cache on device is messed up; restarting the device reliably seems to unblock this (unless the device is actually full, if so this will error the same)
             if (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbDeviceFullInstallFailureMessage))
             {
                 _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{Environment.NewLine}Output:{result}");
                 RebootAndroidDevice();
                 WaitForDevice();
-                needToRetry = true;
-            }
-
-            if (needToRetry)
-            {
                 result = RunAdbCommand($"install \"{apkPath}\"");
             }
 
@@ -224,6 +233,7 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 _log.LogInformation($"Successfully installed {apkPath}.");
             }
+
             return result.ExitCode;
         }
 
@@ -318,7 +328,8 @@ namespace Microsoft.DotNet.XHarness.Android
 
                 if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
                 {
-                    _log.LogError(message: $"ERROR: {result}");
+                    throw new Exception($"Failed pulling files: {result}");
+
                 }
                 else
                 {
@@ -442,8 +453,9 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             else
             {
-                // May consider abandoning the run here instead of just printing errors.
+                // Abandon the run here, don't just guess.
                 _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}. Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, and unlocked.");
+                throw new Exception("One or more attached Android devices are offline");
             }
             return devicesAndArchitectures;
         }

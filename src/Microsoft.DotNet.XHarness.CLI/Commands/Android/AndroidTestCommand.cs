@@ -13,6 +13,7 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
@@ -95,7 +96,14 @@ Arguments:
 
                     // enumerate the devices attached and their architectures
                     // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
-                    runner.SetActiveDevice(GetDeviceToUse(logger, runner, apkRequiredArchitecture));
+                    var deviceToUse = GetDeviceToUse(logger, runner, apkRequiredArchitecture);
+
+                    if (deviceToUse == null)
+                    {
+                        return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
+                    }
+
+                    runner.SetActiveDevice(deviceToUse);
 
                     // Wait til at least device(s) are ready
                     runner.WaitForDevice();
@@ -120,6 +128,7 @@ Arguments:
                 // No class name = default Instrumentation
                 ProcessExecutionResults? result = runner.RunApkInstrumentation(apkPackageName, _arguments.InstrumentationName, _arguments.InstrumentationArguments, _arguments.Timeout);
                 bool processCrashed = false;
+                bool failurePullingFiles = false;
 
                 using (logger.BeginScope("Post-test copy and cleanup"))
                 {
@@ -136,7 +145,15 @@ Arguments:
                             if (resultValues.ContainsKey(possibleResultKey))
                             {
                                 logger.LogInformation($"Found XML result file: '{resultValues[possibleResultKey]}'(key: {possibleResultKey})");
-                                runner.PullFiles(resultValues[possibleResultKey], _arguments.OutputDirectory);
+                                try
+                                {
+                                    runner.PullFiles(resultValues[possibleResultKey], _arguments.OutputDirectory);
+                                }
+                                catch (Exception toLog)
+                                {
+                                    logger.LogError(toLog, "Hit error (typically permissions) trying to pull {filePathOnDevice}", resultValues[possibleResultKey]);
+                                    failurePullingFiles = true;
+                                }
                             }
                         }
                         if (resultValues.ContainsKey(TestRunSummaryVariableName))
@@ -174,10 +191,18 @@ Arguments:
                     // Optionally copy off an entire folder
                     if (!string.IsNullOrEmpty(_arguments.DeviceOutputFolder))
                     {
-                        var logs = runner.PullFiles(_arguments.DeviceOutputFolder, _arguments.OutputDirectory);
-                        foreach (string log in logs)
+                        try
                         {
-                            logger.LogDebug($"Found output file: {log}");
+                            var logs = runner.PullFiles(_arguments.DeviceOutputFolder, _arguments.OutputDirectory);
+                            foreach (string log in logs)
+                            {
+                                logger.LogDebug($"Found output file: {log}");
+                            }
+                        }
+                        catch (Exception toLog)
+                        {
+                            logger.LogError(toLog, "Hit error (typically permissions) trying to pull {filePathOnDevice}", _arguments.DeviceOutputFolder);
+                            failurePullingFiles = true;
                         }
                     }
 
@@ -195,6 +220,11 @@ Arguments:
                 {
                     logger.LogError($"Non-success instrumentation exit code: {instrumentationExitCode}, expected: {_arguments.ExpectedExitCode}");
                 }
+                else if (failurePullingFiles)
+                {
+                    logger.LogError($"Received expected instrumentation exit code ({instrumentationExitCode}), but we hit errors pulling files from the device (see log for details.)");
+                    return Task.FromResult(ExitCode.DEVICE_FILE_COPY_FAILURE);
+                }
                 else
                 {
                     return Task.FromResult(ExitCode.SUCCESS);
@@ -210,23 +240,35 @@ Arguments:
 
         private string? GetDeviceToUse(ILogger logger, AdbRunner runner, string apkRequiredArchitecture)
         {
-            var allDevicesAndTheirArchitectures = runner.GetAttachedDevicesAndArchitectures();
-            if (allDevicesAndTheirArchitectures.Count > 0)
+            Dictionary<string, string?> allDevicesAndTheirArchitectures = new Dictionary<string, string?>();
+            try
             {
-                if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)))
-                {
-                    var firstAvailableCompatible = allDevicesAndTheirArchitectures.Where(kvp => kvp.Value != null && kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-                    logger.LogInformation($"Using first-found compatible device of {allDevicesAndTheirArchitectures.Count} total- serial: '{firstAvailableCompatible.Key}' - Arch: {firstAvailableCompatible.Value}");
-                    return firstAvailableCompatible.Key;
-                }
-                else
-                {
-                    logger.LogWarning($"No devices found with architecture '{apkRequiredArchitecture}'.  Just returning first available device; installation will likely fail, but we'll try anyways.");
-                    return allDevicesAndTheirArchitectures.Keys.First();
-                }
+                allDevicesAndTheirArchitectures = runner.GetAttachedDevicesAndArchitectures();
             }
-            logger.LogError("No attached device detected");
-            return null;
+            catch (Exception toLog)
+            {
+                logger.LogError(toLog, "Exception thrown while trying to find compatible device with architecture {architecture}", apkRequiredArchitecture);
+            }
+
+            if (allDevicesAndTheirArchitectures.Count == 0)
+            {
+                logger.LogError("No attached device detected");
+                return null;
+            }
+
+            if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)))
+            {
+                // Key-value tuples here are of the form <device serial number, device architecture>
+                KeyValuePair<string, string?> firstAvailableCompatible = allDevicesAndTheirArchitectures.FirstOrDefault(kvp => apkRequiredArchitecture.Equals(kvp.Value, StringComparison.OrdinalIgnoreCase));
+                logger.LogInformation($"Using first-found compatible device of {allDevicesAndTheirArchitectures.Count} total- serial: '{firstAvailableCompatible.Key}' - Arch: {firstAvailableCompatible.Value}");
+                return firstAvailableCompatible.Key;
+            }
+            else
+            {
+                // In this case, the enumeration worked, we found one or more devices, but nothing matched the APK's architecture; fail out.
+                logger.LogError($"No devices found with architecture '{apkRequiredArchitecture}'.");
+                return null;
+            }
         }
 
         private (Dictionary<string, string> values, int exitCode) ParseInstrumentationOutputs(ILogger logger, string stdOut)

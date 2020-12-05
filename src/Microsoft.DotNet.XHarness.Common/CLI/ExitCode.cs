@@ -51,6 +51,8 @@ namespace Microsoft.DotNet.XHarness.Common.CLI
         DEVICE_NOT_FOUND = 81,
         RETURN_CODE_NOT_SET = 82,
         APP_LAUNCH_FAILURE = 83,
+        DEVICE_FILE_COPY_FAILURE = 84,
+        ADB_DEVICE_ENUMERATION_FAILURE = 85,
 
         #endregion
     }
