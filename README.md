@@ -17,16 +17,16 @@ The tool requires **.NET Core 3.1.201** or later to be run. It is packaged as a 
 - Android scenarios are supported on Linux, macOS and Windows systems
 - Browsers scenarios are supported on Linux systems
 
-To install the tool run:
+To install the latest version of the tool run:
 
 ```bash
 dotnet tool install Microsoft.DotNet.XHarness.CLI \
     --global \
     --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json \
-    --version 1.0.0-prerelease.20229.6
+    --version "1.0.0-prerelease*"
 ```
 
-You can get the specific version from [the dotnet-eng feed](https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&view=versions&package=Microsoft.DotNet.XHarness.CLI&protocolType=NuGet) where it is published.
+You can get a specific version from [the dotnet-eng feed](https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&view=versions&package=Microsoft.DotNet.XHarness.CLI&protocolType=NuGet) where it is published.
 So far we are in preview so omitting the version will fail to locate a stable version of the tool and it has to be supplied.
 
 To run the tool, use the `xharness` command. The tool always expects the platform (`android`/`ios`) as the first argument and has following commands available:
