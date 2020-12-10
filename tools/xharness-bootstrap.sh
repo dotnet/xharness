@@ -47,4 +47,5 @@ printf "Installing XHarness.CLI to \033[0;36m./xharness\033[0m.."
 ./.dotnet/dotnet tool install --tool-path xharness --version "$xharness_version" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json Microsoft.DotNet.XHarness.CLI || true
 echo "XHarness.CLI installed"
 
-printf "Run XHarness using:\n\033[0;36m./xharness/xharness ios test --app=[path to iOS .app bundle] --output-directory=o --targets=ios-simulator-64\033[0m\n\n"
+echo 'Run XHarness using:'
+printf "\033[0;36m./xharness/xharness help\033[0m\n\n"
