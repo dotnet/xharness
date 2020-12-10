@@ -37,13 +37,13 @@ curl -L https://dot.net/v1/dotnet-install.sh -o "$dotnet_install"
 chmod u+x "$dotnet_install"
 dotnet_dir="$here/.dotnet"
 
-printf "Installing dotnet to \033[0;33m%s\033[0m..\n" "$dotnet_dir"
+printf "Installing .NET 3.1 SDK locally to \033[0;33m%s\033[0m..\n" "$dotnet_dir"
 $dotnet_install --install-dir "$dotnet_dir" --channel "3.1"
 echo 'dotnet installed'
 
 export DOTNET_ROOT="$here/.dotnet"
 
-printf "Installing XHarness.CLI.."
+printf "Installing XHarness.CLI locally to \033[0;33m%s\033[0m..\n" "$here"
 ./.dotnet/dotnet tool install --tool-path . --version "$xharness_version" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json Microsoft.DotNet.XHarness.CLI || true
 echo "XHarness.CLI installed"
 
