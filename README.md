@@ -14,7 +14,7 @@ It can output test results in various different formats from text to xUnit/NUnit
 The tool requires **.NET Core 3.1.201** or later to be run. It is packaged as a `dotnet tool` command and can be installed using the [dotnet tool CLI](https://docs.microsoft.com/en-us/dotnet/core/tools/).
 
 - The iOS scenarios require you to run the tool on MacOS with full Xcode installation
-- Android scenarios are supported on Linux, macOS and Windows systems with Android emulators
+- Android scenarios are supported on Linux, macOS and Windows systems
 - Browsers scenarios are supported on Linux systems
 
 ## Try the tool out quickly
