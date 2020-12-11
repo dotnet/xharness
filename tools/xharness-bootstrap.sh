@@ -1,9 +1,7 @@
 #!/bin/bash
 
-### This script is a quick way to install and test XHarness on any machine (intended for MacOS)
-### It installs the .NET Core 3.1 SDK and the XHarness tool
-### It then downloads a sample app and writes out a command to run this app
-### Everything is installed locally in the current folder and can be removed when you're done
+### This script is a quick way to install and test XHarness on any POSIX machine.
+### It installs the .NET Core 3.1 SDK and the XHarness tool, everything in a local folder.
 ###
 ### Use the following command to run this script from anywhere:
 ### curl -L https://aka.ms/xharness-bootstrap | bash /dev/stdin
