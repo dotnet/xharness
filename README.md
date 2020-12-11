@@ -9,13 +9,24 @@ It can locate devices/emulators, install a given application, run it and collect
 It handles application crashes by collecting crash dumps and supports different types of connection modes (Network, USB cable).
 It can output test results in various different formats from text to xUnit/NUnit XML.
 
-## Running the tool
+## System requirements
 
 The tool requires **.NET Core 3.1.201** or later to be run. It is packaged as a `dotnet tool` command and can be installed using the [dotnet tool CLI](https://docs.microsoft.com/en-us/dotnet/core/tools/).
 
 - The iOS scenarios require you to run the tool on MacOS with full Xcode installation
 - Android scenarios are supported on Linux, macOS and Windows systems
 - Browsers scenarios are supported on Linux systems
+
+## Try the tool out quickly
+
+If you want to test the tool quickly (MacOS and Linux only), following script will install the required .NET SDK and the XHarness tool locally in the current folder:
+```
+curl -L https://aka.ms/xharness-bootstrap | bash /dev/stdin
+```
+
+You can delete the folder after you're done, nothing is installed in your system.
+
+## Installation and usage
 
 To install the latest version of the tool run:
 
