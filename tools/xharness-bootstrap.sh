@@ -4,7 +4,7 @@
 ### It installs the .NET Core 3.1 SDK and the XHarness tool, everything in a local folder.
 ###
 ### Use the following command to run this script from anywhere:
-### curl -L https://aka.ms/xharness-bootstrap | bash /dev/stdin
+### curl -L https://aka.ms/xharness-bootstrap | bash -
 
 set -e
 
@@ -45,5 +45,7 @@ printf "Installing XHarness.CLI locally to \033[0;33m%s\033[0m..\n" "$here"
 ./.dotnet/dotnet tool install --tool-path . --version "$xharness_version" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json Microsoft.DotNet.XHarness.CLI || true
 echo "XHarness.CLI installed"
 
-echo 'Run XHarness using:'
-printf "\033[0;33mxharness help\033[0m\n\n"
+echo 'Run following command:'
+printf "\033[0;33mexport DOTNET_ROOT=\"%s\"\033[0m\n\n" "$here/.dotnet"
+echo 'Then run XHarness using:'
+printf "\033[0;33m./xharness help\033[0m\n\n"

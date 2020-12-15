@@ -21,7 +21,7 @@ The tool requires **.NET Core 3.1.201** or later to be run. It is packaged as a 
 
 If you want to test the tool quickly (MacOS and Linux only), following script will install the required .NET SDK and the XHarness tool locally in the current folder:
 ```
-curl -L https://aka.ms/xharness-bootstrap | bash /dev/stdin
+curl -L https://aka.ms/xharness-bootstrap | bash -
 ```
 
 You can delete the folder after you're done, nothing is installed in your system.
