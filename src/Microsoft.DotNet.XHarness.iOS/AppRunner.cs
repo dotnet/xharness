@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
@@ -90,6 +91,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
             _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{deviceName}' ***");
 
+            int exitCode;
             if (isSimulator)
             {
                 if (simulator == null)
@@ -109,28 +111,28 @@ namespace Microsoft.DotNet.XHarness.iOS
                     ensureCleanSimulatorState,
                     timeout,
                     cancellationToken);
+
+                var systemLog = _logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
+                if (systemLog == null)
+                {
+                    _mainLog.WriteLine("App run ended but failed to detect exit code (no system log found)");
+                    return (deviceName, null);
+                }
+
+                exitCode = _exitCodeDetector.DetectExitCode(appInformation, systemLog);
+                _mainLog.WriteLine($"App run ended with {exitCode}");
             }
             else
             {
                 var mlaunchArguments = GetDeviceArguments(appInformation, deviceName, target.Platform.IsWatchOSTarget(), verbosity);
 
-                await RunDeviceApp(
+                exitCode = (int)await RunDeviceApp(
                     mlaunchArguments,
                     crashReporter,
                     deviceName,
                     timeout,
                     cancellationToken);
             }
-
-            var systemLog = _logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
-            if (systemLog == null)
-            {
-                _mainLog.WriteLine("App run ended but failed to detect exit code (no system log found)");
-                return (deviceName, null);
-            }
-
-            var exitCode = _exitCodeDetector.DetectExitCode(appInformation, systemLog);
-            _mainLog.WriteLine($"App run ended with {exitCode}");
 
             return (deviceName, exitCode);
         }
@@ -213,7 +215,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
         }
 
-        private async Task RunDeviceApp(
+        private async Task<ExitCode> RunDeviceApp(
             MlaunchArguments mlaunchArguments,
             ICrashSnapshotReporter crashReporter,
             string deviceName,
@@ -230,22 +232,24 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 _mainLog.WriteLine("Starting test run");
 
-                await _processManager.ExecuteCommandAsync(
+                var result = await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     _mainLog,
                     timeout,
                     cancellationToken: cancellationToken);
+
+                // Upload the system log
+                if (File.Exists(deviceSystemLog.FullPath))
+                {
+                    _mainLog.WriteLine("A capture of the device log is: {0}", deviceSystemLog.FullPath);
+                }
+
+                return result.Succeeded ? ExitCode.SUCCESS : ExitCode.GENERAL_FAILURE;
             }
             finally
             {
                 deviceLogCapturer.StopCapture();
                 deviceSystemLog.Dispose();
-            }
-
-            // Upload the system log
-            if (File.Exists(deviceSystemLog.FullPath))
-            {
-                _mainLog.WriteLine("A capture of the device log is: {0}", deviceSystemLog.FullPath);
             }
         }
 
