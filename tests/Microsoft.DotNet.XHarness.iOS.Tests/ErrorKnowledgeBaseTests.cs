@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         {
             var logPath = Path.GetTempFileName();
             var expectedFailureMessage =
-                "IncorrectArchitecture: Failed to find matching device arch for the application.";
+                "IncorrectArchitecture: Failed to find matching device arch for the application";
             using (var log = new LogFile("test", logPath))
             {
                 // write some data in it
@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             var logPath = Path.GetTempFileName();
             using (var log = new LogFile("test", logPath))
             {
-                // initial lines are not intereting
+                // initial lines are not interesting
                 log.WriteLine("InstallingEmbeddedProfile: 65%");
                 log.WriteLine("PercentComplete: 30");
                 log.WriteLine("Status: InstallingEmbeddedProfile");
@@ -93,12 +93,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         }
 
         [Fact]
-        public void UsbIssuesMissintTest()
+        public void UsbIssuesMissingTest()
         {
             var logPath = Path.GetTempPath();
             using (var log = new LogFile("test", logPath))
             {
-                // initial lines are not intereting
+                // initial lines are not interesting
                 log.WriteLine("InstallingEmbeddedProfile: 65%");
                 log.WriteLine("PercentComplete: 30");
                 log.WriteLine("Status: InstallingEmbeddedProfile");
@@ -108,6 +108,36 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 Assert.False(_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage));
                 Assert.Null(failureMessage);
             }
+            if (File.Exists(logPath))
+            {
+                File.Delete(logPath);
+            }
+        }
+
+        [Fact]
+        public void DeviceLockedTest()
+        {
+            var expectedFailureMessage = "Cannot launch the application because the device is locked. Please unlock the device and try again";
+            var logPath = Path.GetTempFileName();
+            using (var log = new LogFile("test", logPath))
+            {
+                log.WriteLine("05:55:56.7712200 05:55:56.7712030 Xamarin.Hosting: Mounting developer image on 'iPremek'");
+                log.WriteLine("05:55:56.7716040 05:55:56.7715960 Xamarin.Hosting: Mounted developer image on 'iPremek'");
+                log.WriteLine("05:55:56.8494160 05:55:56.8494020 error MT1031: Could not launch the app 'net.dot.HelloiOS' on the device 'iPremek' because the device is locked. Please unlock the device and try again.");
+                log.WriteLine("05:55:56.8537390 05:55:56.8537300   at Xamarin.Launcher.DevController+<>c__DisplayClass14_0.<LaunchBundleOnDevice>b__0 () [0x0059d] in /Users/rolf/work/maccore/xcode12/maccore/tools/mlaunch/Xamarin.Hosting/Xamarin.Launcher/controller-device.cs:372");
+                log.WriteLine("05:55:56.8537720 05:55:56.8537700   at Xamarin.Launcher.DevController.LaunchDeviceBundleAsync (System.String app_path, Xamarin.Hosting.DeviceLaunchConfig config) [0x00111] in /Users/rolf/work/maccore/xcode12/maccore/tools/mlaunch/Xamarin.Hosting/Xamarin.Launcher/controller-device.cs:176");
+                log.WriteLine("05:55:56.8537800 05:55:56.8537790   at Xamarin.Utils.NSRunLoopExtensions.RunUntilTaskCompletion[T] (Foundation.NSRunLoop this, System.Threading.Tasks.Task`1[TResult] task) [0x00082] in /Users/rolf/work/maccore/xcode12/maccore/tools/mlaunch/Xamarin.Hosting/Xamarin.Utils/Extensions.cs:35");
+                log.WriteLine("05:55:56.8537870 05:55:56.8537860   at Xamarin.Launcher.Driver.Main2 (System.String[] args) [0x00b43] in /Users/rolf/work/maccore/xcode12/maccore/tools/mlaunch/Xamarin.Hosting/Xamarin.Launcher/Main.cs:458");
+                log.WriteLine("05:55:56.8538290 05:55:56.8538250   at Xamarin.Launcher.Driver.Main (System.String[] args) [0x0006d] in /Users/rolf/work/maccore/xcode12/maccore/tools/mlaunch/Xamarin.Hosting/Xamarin.Launcher/Main.cs:150");
+                log.WriteLine("05:55:56.8618920 05:55:56.8618780 Process mlaunch exited with 1");
+                log.WriteLine("05:56:01.8765370 05:56:01.8765240 Killing process tree of 2797...");
+                log.WriteLine("05:56:01.8938830 05:56:01.8938670 Pids to kill: 2797");
+                log.Flush();
+
+                Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage));
+                Assert.Equal(expectedFailureMessage, failureMessage.Value.HumanMessage);
+            }
+
             if (File.Exists(logPath))
             {
                 File.Delete(logPath);
