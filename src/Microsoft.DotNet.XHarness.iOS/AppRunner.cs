@@ -230,22 +230,21 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 _mainLog.WriteLine("Starting test run");
 
-                await _processManager.ExecuteCommandAsync(
+                var result = await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     _mainLog,
                     timeout,
                     cancellationToken: cancellationToken);
+
+                if (!result.Succeeded)
+                {
+                    throw new Exception("Failed to run the application!");
+                }
             }
             finally
             {
                 deviceLogCapturer.StopCapture();
                 deviceSystemLog.Dispose();
-            }
-
-            // Upload the system log
-            if (File.Exists(deviceSystemLog.FullPath))
-            {
-                _mainLog.WriteLine("A capture of the device log is: {0}", deviceSystemLog.FullPath);
             }
         }
 

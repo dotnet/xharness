@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -159,24 +160,49 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
             }
 
+            ExitCode exitCode = ExitCode.SUCCESS;
+
             if (!target.Platform.IsSimulator())
             {
-                var result = await InstallApp(
-                    appBundleInfo,
-                    deviceName,
-                    logger,
-                    target,
-                    logs,
-                    mainLog,
-                    cancellationToken);
+                Exception? installException = null;
 
-                if (result != ExitCode.SUCCESS)
+                try
                 {
-                    return result;
+                    (deviceName, exitCode) = await InstallApp(appBundleInfo, deviceName, logger, target, mainLog, cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    installException = e;
+                }
+
+                if (exitCode != ExitCode.SUCCESS || installException != null)
+                {
+                    var message = new StringBuilder().AppendLine("Application installation failed:");
+
+                    if (ErrorKnowledgeBase.IsKnownInstallIssue(mainLog, out var failureMessage))
+                    {
+                        message.Append(failureMessage.Value.HumanMessage);
+                        if (failureMessage.Value.IssueLink != null)
+                        {
+                            message.AppendLine($" Find more information at {failureMessage.Value.IssueLink}");
+                        }
+                    }
+                    else if (installException != null)
+                    {
+                        message.AppendLine(installException.ToString());
+                    }
+
+                    logger.LogError(message.ToString());
+
+                    return exitCode;
+                }
+
+                if (string.IsNullOrEmpty(deviceName))
+                {
+                    logger.LogError("Failed to get the name of the device where application was installed!");
+                    return ExitCode.PACKAGE_INSTALLATION_FAILURE;
                 }
             }
-
-            ExitCode exitCode;
 
             try
             {
@@ -201,22 +227,24 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             catch (Exception e)
             {
+                var message = new StringBuilder().AppendLine("Application run failed:");
+
                 if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
                 {
-                    var msg = $"Application run failed:{Environment.NewLine}{failureMessage.Value.HumanMessage}.";
+                    message.Append(failureMessage.Value.HumanMessage);
                     if (failureMessage.Value.IssueLink != null)
                     {
-                        msg += $" Find more information at {failureMessage.Value.IssueLink}";
+                        message.AppendLine($" Find more information at {failureMessage.Value.IssueLink}");
                     }
-
-                    logger.LogError(msg);
                 }
                 else
                 {
-                    logger.LogError($"Application run failed:{Environment.NewLine}{e}");
+                    message.AppendLine(e.ToString());
                 }
 
-                return ExitCode.APP_CRASH;
+                logger.LogError(message.ToString());
+
+                exitCode = ExitCode.APP_LAUNCH_FAILURE;
             }
             finally
             {
@@ -236,12 +264,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             return exitCode;
         }
 
-        private async Task<ExitCode> InstallApp(
+        private async Task<(string?, ExitCode)> InstallApp(
             AppBundleInformation appBundleInfo,
             string? deviceName,
             ILogger logger,
             TestTargetOs target,
-            Logs logs,
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
@@ -259,12 +286,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             {
                 logger.LogError($"Failed to find suitable device for target {target.AsString()}" + Environment.NewLine +
                     "Please make sure the device is connected and unlocked.");
-                return ExitCode.DEVICE_NOT_FOUND;
+                return (null, ExitCode.DEVICE_NOT_FOUND);
             }
             catch (Exception e)
             {
                 logger.LogError($"Failed to install the app bundle:{Environment.NewLine}{e}");
-                return ExitCode.PACKAGE_INSTALLATION_FAILURE;
+                return (null, ExitCode.PACKAGE_INSTALLATION_FAILURE);
             }
 
             if (!result.Succeeded)
@@ -286,15 +313,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     logger.LogError($"Failed to install the app bundle (exit code={result.ExitCode})");
                 }
 
-                return ExitCode.PACKAGE_INSTALLATION_FAILURE;
+                return (deviceName, ExitCode.PACKAGE_INSTALLATION_FAILURE);
             }
 
             logger.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on device '{deviceName}'");
 
-            return ExitCode.SUCCESS;
+            return (deviceName, ExitCode.SUCCESS);
         }
 
-        private async Task UninstallApp(AppBundleInformation appBundleInfo, string deviceName, ILogger logger, IFileBackedLog mainLog, CancellationToken cancellationToken)
+        private async Task UninstallApp(
+            AppBundleInformation appBundleInfo,
+            string deviceName,
+            ILogger logger,
+            IFileBackedLog mainLog,
+            CancellationToken cancellationToken)
         {
             logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from device '{deviceName}'");
 
