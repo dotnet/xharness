@@ -16,10 +16,8 @@ namespace Microsoft.DotNet.XHarness.iOS
         private static readonly Dictionary<string, (string HumanMessage, string? IssueLink)> s_testErrorMaps = new Dictionary<string, (string HumanMessage, string? IssueLink)>
         {
             ["Failed to communicate with the device"] = // Known issue but not a failure.
-                ("Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device", null),
+                (HumanMessage: "Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device", IssueLink: (string?)null)
 
-            ["the device is locked"] =
-                ("Cannot launch the application because the device is locked. Please unlock the device and try again", null),
         };
 
         private static readonly Dictionary<string, (string HumanMessage, string? IssueLink)> s_buildErrorMaps = new Dictionary<string, (string HumanMessage, string? IssueLink)>();
@@ -27,7 +25,8 @@ namespace Microsoft.DotNet.XHarness.iOS
         private static readonly Dictionary<string, (string HumanMessage, string? IssueLink)> s_installErrorMaps = new Dictionary<string, (string HumanMessage, string? IssueLink)>
         {
             ["IncorrectArchitecture"] =
-                ("IncorrectArchitecture: Failed to find matching device arch for the application", null), // known failure, but not an issue
+                (HumanMessage: "IncorrectArchitecture: Failed to find matching device arch for the application.", IssueLink: (string?)null) // known failure, but not an issue
+
         };
 
         public bool IsKnownBuildIssue(IFileBackedLog buildLog,
