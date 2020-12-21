@@ -122,7 +122,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 ? Directory.GetDirectories(Path.Combine(appPackagePath, "Watch"), "*.app")[0]
                 : appPackagePath;
 
-            return new AppBundleInformation(appName, appPackagePath, bundleIdentifier, launchAppPath, Contains(supports32, Armv7), extension: null);
+            return new AppBundleInformation(
+                appName: appName,
+                bundleIdentifier: bundleIdentifier,
+                appPath: appPackagePath,
+                launchAppPath: launchAppPath,
+                supports32b: Contains(supports32, Armv7),
+                extension: null);
         }
 
         private async Task<string> GetPlistProperty(string plistPath, string propertyName, ILog log, CancellationToken cancellationToken = default)
