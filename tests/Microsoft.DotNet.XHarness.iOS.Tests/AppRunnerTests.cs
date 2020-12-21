@@ -404,7 +404,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         }
 
         [Fact]
-        public async Task RunOnDeviceWithMissingSystemLogTest()
+        public async Task RunOnSimulatorWithMissingSystemLogTest()
         {
             var testLog = new Mock<IFileBackedLog>();
             testLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
@@ -445,7 +445,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var (deviceName, exitCode) = await appRunner.RunApp(
                 appInformation,
-                new TestTargetOs(TestTarget.Device_iOS, null),
+                new TestTargetOs(TestTarget.Simulator_iOS64, null),
                 TimeSpan.FromSeconds(30));
 
             // Verify

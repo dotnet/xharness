@@ -201,20 +201,22 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
             catch (Exception e)
             {
-                if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
+                var message = new StringBuilder().AppendLine("Application run failed:");
+
+                if (ErrorKnowledgeBase.IsKnownIssue(mainLog, out var failureMessage))
                 {
-                    var msg = $"Application run failed:{Environment.NewLine}{failureMessage.Value.HumanMessage}.";
+                    message.Append(failureMessage.Value.HumanMessage);
                     if (failureMessage.Value.IssueLink != null)
                     {
-                        msg += $" Find more information at {failureMessage.Value.IssueLink}";
+                        message.AppendLine($" Find more information at {failureMessage.Value.IssueLink}");
                     }
-
-                    logger.LogError(msg);
                 }
                 else
                 {
-                    logger.LogError($"Application run failed:{Environment.NewLine}{e}");
+                    message.AppendLine(e.ToString());
                 }
+
+                logger.LogError(message.ToString());
 
                 return ExitCode.APP_CRASH;
             }
