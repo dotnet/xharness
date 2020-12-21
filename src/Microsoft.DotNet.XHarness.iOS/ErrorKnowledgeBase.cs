@@ -18,6 +18,9 @@ namespace Microsoft.DotNet.XHarness.iOS
             ["Failed to communicate with the device"] = // Known issue but not a failure.
                 ("Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device", null),
 
+            ["MT1031"] =
+                ("Cannot launch the application because the device is locked. Please unlock the device and try again", null),
+
             ["the device is locked"] =
                 ("Cannot launch the application because the device is locked. Please unlock the device and try again", null),
         };

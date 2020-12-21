@@ -1,25 +1,34 @@
+using System;
 using System.IO;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.iOS.Tests
 {
-    public class ErrorKnowledgeBaseTests
+    public class ErrorKnowledgeBaseTests : IDisposable
     {
         private readonly ErrorKnowledgeBase _errorKnowledgeBase;
+        private readonly string _logPath = Path.GetTempFileName();
 
         public ErrorKnowledgeBaseTests()
         {
             _errorKnowledgeBase = new ErrorKnowledgeBase();
         }
 
+        public void Dispose()
+        {
+            if (File.Exists(_logPath))
+            {
+                File.Delete(_logPath);
+            }
+        }
+
         [Fact]
         public void WrongArchPresentTest()
         {
-            var logPath = Path.GetTempFileName();
             var expectedFailureMessage =
                 "IncorrectArchitecture: Failed to find matching device arch for the application";
-            using (var log = new LogFile("test", logPath))
+            using (var log = new LogFile("test", _logPath))
             {
                 // write some data in it
                 log.WriteLine("InstallingEmbeddedProfile: 65%");
@@ -35,18 +44,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 Assert.True(_errorKnowledgeBase.IsKnownInstallIssue(log, out var failureMessage));
                 Assert.Equal(expectedFailureMessage, failureMessage.Value.HumanMessage);
             }
-
-            if (File.Exists(logPath))
-            {
-                File.Delete(logPath);
-            }
         }
 
         [Fact]
         public void WrongArchNotPresentTest()
         {
-            var logPath = Path.GetTempFileName();
-            using (var log = new LogFile("test", logPath))
+            using (var log = new LogFile("test", _logPath))
             {
                 // write some data in it
                 log.WriteLine("InstallingEmbeddedProfile: 65%");
@@ -60,11 +63,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 Assert.False(_errorKnowledgeBase.IsKnownInstallIssue(log, out var failureMessage));
                 Assert.Null(failureMessage);
             }
-
-            if (File.Exists(logPath))
-            {
-                File.Delete(logPath);
-            }
         }
 
         [Fact]
@@ -72,8 +70,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         {
             var expectedFailureMessage =
                 "Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device";
-            var logPath = Path.GetTempFileName();
-            using (var log = new LogFile("test", logPath))
+            using (var log = new LogFile("test", _logPath))
             {
                 // initial lines are not interesting
                 log.WriteLine("InstallingEmbeddedProfile: 65%");
@@ -83,20 +80,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 log.WriteLine("PercentComplete: 40");
                 log.WriteLine("Xamarin.Hosting.MobileDeviceException: Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device (error: 0xe8000065 kAMDMuxConnectError)");
                 log.Flush();
+
                 Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage));
                 Assert.Equal(expectedFailureMessage, failureMessage.Value.HumanMessage);
-            }
-            if (File.Exists(logPath))
-            {
-                File.Delete(logPath);
             }
         }
 
         [Fact]
         public void UsbIssuesMissingTest()
         {
-            var logPath = Path.GetTempPath();
-            using (var log = new LogFile("test", logPath))
+            using (var log = new LogFile("test", _logPath))
             {
                 // initial lines are not interesting
                 log.WriteLine("InstallingEmbeddedProfile: 65%");
@@ -105,12 +98,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 log.WriteLine("VerifyingApplication: 70%");
                 log.WriteLine("PercentComplete: 40");
                 log.Flush();
+
                 Assert.False(_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage));
                 Assert.Null(failureMessage);
-            }
-            if (File.Exists(logPath))
-            {
-                File.Delete(logPath);
             }
         }
 
@@ -118,8 +108,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         public void DeviceLockedTest()
         {
             var expectedFailureMessage = "Cannot launch the application because the device is locked. Please unlock the device and try again";
-            var logPath = Path.GetTempFileName();
-            using (var log = new LogFile("test", logPath))
+            using (var log = new LogFile("test", _logPath))
             {
                 log.WriteLine("05:55:56.7712200 05:55:56.7712030 Xamarin.Hosting: Mounting developer image on 'iPremek'");
                 log.WriteLine("05:55:56.7716040 05:55:56.7715960 Xamarin.Hosting: Mounted developer image on 'iPremek'");
@@ -136,11 +125,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
                 Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage));
                 Assert.Equal(expectedFailureMessage, failureMessage.Value.HumanMessage);
-            }
-
-            if (File.Exists(logPath))
-            {
-                File.Delete(logPath);
             }
         }
     }
