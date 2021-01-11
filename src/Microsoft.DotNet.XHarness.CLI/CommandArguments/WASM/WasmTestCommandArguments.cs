@@ -41,6 +41,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 
         public string JSFile { get; set; } = "runtime.js";
 
+        public int ExpectedExitCode { get; set; } = (int)Common.CLI.ExitCode.SUCCESS;
+
         protected override OptionSet GetTestCommandOptions() => new OptionSet{
             { "engine=|e=", "Specifies the JavaScript engine to be used",
                 v => Engine = ParseArgument<JavaScriptEngine>("engine", v)
@@ -50,6 +52,17 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             },
             { "js-file=", "Main JavaScript file to be run on the JavaScript engine. Default is runtime.js",
                 v => JSFile = v
+            },
+            { "expected-exit-code=", "If specified, sets the expected exit code for a successful instrumentation run.",
+                v => {
+                    if (int.TryParse(v, out var number))
+                    {
+                        ExpectedExitCode = number;
+                        return;
+                    }
+
+                    throw new ArgumentException("expected-exit-code must be an integer");
+                }
             },
         };
 

@@ -78,8 +78,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     stdoutLog: new CallbackLog(logProcessor.Invoke) { Timestamp = false /* we need the plain XML string so disable timestamp */ },
                     stderrLog: new CallbackLog(m => logger.LogError(m)),
                     _arguments.Timeout);
-
-                return result.Succeeded ? ExitCode.SUCCESS : (result.TimedOut ? ExitCode.TIMED_OUT : ExitCode.GENERAL_FAILURE);
+                if (result.ExitCode != _arguments.ExpectedExitCode)
+                {
+                    logger.LogError($"Application has finished with exit code {result.ExitCode} but {_arguments.ExpectedExitCode} was expected");
+                        return ExitCode.GENERAL_FAILURE;
+                    
+                }
+                else
+                {
+                    logger.LogInformation("Application has finished with exit code: " + result.ExitCode);
+                    return ExitCode.SUCCESS;
+                }
             }
             catch (Win32Exception e) when (e.NativeErrorCode == 2)
             {
