@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
@@ -17,7 +18,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         /// <summary>
         /// Chrome
         /// </summary>
-        Chrome
+        Chrome,
+
+        /// <summary>
+        /// Safari
+        /// </summary>
+        Safari
     }
 
     internal class WasmTestBrowserCommandArguments : TestCommandArguments
@@ -42,6 +48,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public override void Validate()
         {
             base.Validate();
+
+            if (Browser == Browser.Safari && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                throw new ArgumentException("Safari is only supported on OSX");
+            }
 
             if (!Directory.Exists(AppPackagePath))
             {

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
 
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Safari;
 using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 using OpenQA.Selenium;
 using System.Linq;
@@ -51,7 +53,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                                 logProcessor,
                                 logger);
 
-            var (driverService, driver) = GetChromeDriver(logger);
+            (DriverService driverService, IWebDriver driver) = _arguments.Browser switch
+            {
+                Browser.Chrome => GetChromeDriver(logger),
+                Browser.Safari => GetSafariDriver(logger),
+
+                // shouldn't reach here
+                _              => throw new ArgumentException($"Unknown browser : {_arguments.Browser}")
+            };
+
             try
             {
                 return await runner.RunTestsWithWebDriver(driverService, driver);
@@ -61,6 +71,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 driverService.Dispose();
                 driver.Dispose();
             }
+        }
+
+        private (DriverService, IWebDriver) GetSafariDriver(ILogger logger)
+        {
+            var options = new SafariOptions();
+            options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
+
+            logger.LogInformation("Starting Safari");
+
+            var driverService = SafariDriverService.CreateDefaultService();
+            return (driverService, new SafariDriver(driverService, options, _arguments.Timeout));
         }
 
         private (DriverService, IWebDriver) GetChromeDriver(ILogger logger)
