@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                     }
                     else
                     {
-                        Console.WriteLine($"Command 'ios' could be run on OSX only.");
+                        Console.WriteLine($"Command '{command}' could be run on OSX only.");
                     }
                     
                     break;
