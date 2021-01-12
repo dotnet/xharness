@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.Commands.iOS;
@@ -23,7 +24,6 @@ namespace Microsoft.DotNet.XHarness.CLI
             var commands = new CommandSet("xharness")
             {
                 // Add per-platform CommandSets - If adding  a new supported set, that goes here.
-                new iOSCommandSet(),
                 new AndroidCommandSet(),
                 new WasmCommandSet(),
 
@@ -31,6 +31,12 @@ namespace Microsoft.DotNet.XHarness.CLI
                 new XHarnessHelpCommand(),
                 new XHarnessVersionCommand(),
             };
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                commands.Add(new iOSCommandSet());
+            }
+            
 
             // Mono.Options wouldn't allow "--" and CommandSet parser will temporarily rename it
             int result = commands.Run(args.Select(a => a == "--" ? XHarnessCommand.VerbatimArgumentPlaceholder : a));

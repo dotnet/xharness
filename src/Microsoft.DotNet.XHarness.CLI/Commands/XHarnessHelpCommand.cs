@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.Commands.iOS;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
@@ -39,7 +40,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                     PrintCommandHelp(new AndroidCommandSet(), subCommand);
                     break;
                 case "ios":
-                    PrintCommandHelp(new iOSCommandSet(), subCommand);
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    {
+                        PrintCommandHelp(new iOSCommandSet(), subCommand);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Command '{command}' could be run on OSX only.");
+                    }
+                    
                     break;
                 case "wasm":
                     PrintCommandHelp(new WasmCommandSet(), subCommand);
