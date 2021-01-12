@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                         var p = Process.GetProcessById(pid);
                         if (p != null)
                         {
-                            _logger.LogDebug($"Tests timed out. Killing chrome pid {pid}");
+                            _logger.LogDebug($"Tests timed out. Killing driver service pid {pid}");
                             p.Kill(true);
                         }
                     }
