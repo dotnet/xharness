@@ -42,30 +42,22 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
         {
             var ignoredLine = "This lines should not be captured";
             var logLines = new[] { "first line", "second line", "thrid line" };
-            using (var stream = File.Create(_filePath))
-            using (var writer = new StreamWriter(stream))
+            File.WriteAllLines(_filePath, new[] { ignoredLine });
+
+            using var captureLog = new CaptureLog(_capturePath, _filePath, false);
+
+            captureLog.StartCapture();
+            File.WriteAllLines(_filePath, logLines);
+            captureLog.StopCapture();
+
+            // get the stream and assert we do have the correct lines
+            using var captureStream = captureLog.GetReader();
+            string logLine;
+            while ((logLine = captureStream.ReadLine()) != null)
             {
-                writer.WriteLine(ignoredLine);
-            }
-            using (var captureLog = new CaptureLog(_capturePath, _filePath, false))
-            {
-                captureLog.StartCapture();
-                using (var writer = new StreamWriter(_filePath))
+                if (!string.IsNullOrEmpty(logLine))
                 {
-                    foreach (var line in logLines)
-                    {
-                        writer.WriteLine(line);
-                    }
-                }
-                captureLog.StopCapture();
-                // get the stream and assert we do have the correct lines
-                using (var captureStream = captureLog.GetReader())
-                {
-                    string line;
-                    while ((line = captureStream.ReadLine()) != null)
-                    {
-                        Assert.Contains(line, logLines);
-                    }
+                    Assert.Contains(logLine, logLines);
                 }
             }
         }
