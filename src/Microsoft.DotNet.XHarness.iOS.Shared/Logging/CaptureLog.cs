@@ -8,7 +8,6 @@ using Microsoft.DotNet.XHarness.Common.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
-
     public interface ICaptureLogFactory
     {
         ICaptureLog Create(string path, string systemLogPath, bool entireFile, string description = null);
@@ -41,10 +40,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public string CapturePath { get; }
         public override string FullPath { get; }
 
-        public CaptureLog(string path, string capture_path, bool entireFile = false)
+        public CaptureLog(string destinationPath, string capturedPath, bool entireFile = false)
         {
-            FullPath = path ?? throw new ArgumentNullException(nameof(path));
-            CapturePath = capture_path ?? throw new ArgumentNullException(nameof(path));
+            FullPath = destinationPath ?? throw new ArgumentNullException(nameof(destinationPath));
+            CapturePath = capturedPath ?? throw new ArgumentNullException(nameof(destinationPath));
             _entireFile = entireFile;
         }
 
@@ -157,9 +156,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             }
         }
 
-        public override StreamReader GetReader() => File.Exists(CapturePath)
-                ? new StreamReader(new FileStream(CapturePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                : null;
+        public override StreamReader GetReader()
+        {
+            if (!File.Exists(CapturePath))
+            {
+                return null;
+            }
+
+            var stream = new FileStream(CapturePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
+            // Find the spot where we started capturing
+            stream.Seek(_startPosition, SeekOrigin.Begin);
+
+            return new StreamReader(stream);
+        }
 
         public override void Flush() => Capture();
 

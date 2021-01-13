@@ -77,8 +77,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         {
             lock (_lockObj)
             {
-                _writer?.Dispose();
-                _writer = null;
+                if (!_disposed)
+                {
+                    _writer?.Flush();
+                    _writer?.Dispose();
+                    _writer = null;
+                }
             }
 
             _disposed = true;
