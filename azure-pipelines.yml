@@ -9,11 +9,13 @@ trigger:
   branches:
     include:
     - master
+    - main
 
 pr:
   branches:
     include:
     - master
+    - main
 
 stages:
 - stage: Build_Windows_NT
