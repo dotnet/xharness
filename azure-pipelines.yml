@@ -8,13 +8,11 @@ trigger:
   batch: true
   branches:
     include:
-    - master
     - main
 
 pr:
   branches:
     include:
-    - master
     - main
 
 stages:
