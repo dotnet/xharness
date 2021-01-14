@@ -114,6 +114,13 @@ These files are:
 - Test results in human readable format
 - Test results in XML format (default is xUnit but can be changed via options)
 
+Example for Android apk:
+
+```bash
+xharness android test --output-directory=out --package-name="net.dot.System.Numerics.Vectors.Tests" --app="/path/to/test.apk"
+```
+Output directory will have a file with dump from logcat and a file with tests results.
+
 ## Test Runners
 
 The repository also contains several TestRunners which are libraries that can be bundled inside of the application and execute the tests.
