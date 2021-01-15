@@ -23,7 +23,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         /// <summary>
         /// Safari
         /// </summary>
-        Safari
+        Safari,
+
+        /// <summary>
+        /// Firefox
+        /// </summary>
+        Firefox
     }
 
     internal class WasmTestBrowserCommandArguments : TestCommandArguments

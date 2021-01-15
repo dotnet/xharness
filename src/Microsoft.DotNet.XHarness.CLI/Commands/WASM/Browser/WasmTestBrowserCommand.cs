@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Safari;
+using OpenQA.Selenium.Firefox;
 using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 using OpenQA.Selenium;
 using System.Linq;
@@ -57,6 +58,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             {
                 Browser.Chrome => GetChromeDriver(logger),
                 Browser.Safari => GetSafariDriver(logger),
+                Browser.Firefox => GetFirefoxDriver(logger),
 
                 // shouldn't reach here
                 _              => throw new ArgumentException($"Unknown browser : {_arguments.Browser}")
@@ -68,6 +70,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
             finally
             {
+                driver.Quit();  // Firefox driver hangs if Quit is not issued.
                 driverService.Dispose();
                 driver.Dispose();
             }
@@ -82,6 +85,23 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             var driverService = SafariDriverService.CreateDefaultService();
             return (driverService, new SafariDriver(driverService, options, _arguments.Timeout));
+        }
+
+        private (DriverService, IWebDriver) GetFirefoxDriver(ILogger logger)
+        {
+            var options = new FirefoxOptions();
+            options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
+
+            options.AddArguments(new List<string>(_arguments.BrowserArgs)
+            {
+                "--incognito",
+                "--headless",
+            });
+
+            logger.LogInformation($"Starting Firefox with args: {string.Join(' ', options.ToCapabilities())}");
+
+            var driverService = FirefoxDriverService.CreateDefaultService();
+            return (driverService, new FirefoxDriver(driverService, options, _arguments.Timeout));
         }
 
         private (DriverService, IWebDriver) GetChromeDriver(ILogger logger)
