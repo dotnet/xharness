@@ -51,7 +51,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
         private readonly Mock<ISimulatorLoader> _simulatorLoader;
         private readonly Mock<ICrashSnapshotReporter> _snapshotReporter;
         private readonly Mock<IHelpers> _helpers;
-        private readonly Mock<IExitCodeDetector> _exitCodeDetector;
 
         private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
 
@@ -78,8 +77,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             var factory2 = new Mock<ICrashSnapshotReporterFactory>();
             factory2.SetReturnsDefault(_snapshotReporter.Object);
             _snapshotReporterFactory = factory2.Object;
-
-            _exitCodeDetector = new Mock<IExitCodeDetector>();
 
             _mockSimulator = new Mock<ISimulatorDevice>();
             _mockSimulator.SetupGet(x => x.Name).Returns(SimulatorDeviceName);
@@ -134,7 +131,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _snapshotReporterFactory,
                 captureLogFactory.Object,
                 Mock.Of<IDeviceLogCapturerFactory>(),
-                _exitCodeDetector.Object,
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
@@ -151,81 +147,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             // Verify
             _mainLog.Verify(x => x.WriteLine("App run ended with 0"), Times.Never);
             _simulatorLoader.VerifyAll();
-        }
-
-        [Fact]
-        public async Task RunOnSimulatorWithNonZeroExitCodeTest()
-        {
-            _simulatorLoader
-                .Setup(x => x.FindSimulators(It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_tvOS), _mainLog.Object, It.IsAny<int>(), true, false))
-                .ReturnsAsync((_mockSimulator.Object, null));
-
-            var captureLog = new Mock<ICaptureLog>();
-            captureLog.SetupGet(x => x.FullPath).Returns(_simulatorLogPath);
-            captureLog.SetupGet(x => x.Description).Returns(LogType.SystemLog.ToString());
-
-            var captureLogFactory = new Mock<ICaptureLogFactory>();
-            captureLogFactory
-                .Setup(x => x.Create(
-                   Path.Combine(_logs.Object.Directory, _mockSimulator.Object.Name + ".log"),
-                   _mockSimulator.Object.SystemLog,
-                   false,
-                   LogType.SystemLog.ToString()))
-                .Returns(captureLog.Object);
-
-            SetupLogList(new[] { captureLog.Object });
-
-            var appInformation = GetMockedAppBundleInfo();
-
-            _exitCodeDetector
-                .Setup(x => x.DetectExitCode(appInformation, It.IsAny<IReadableLog>()))
-                .Returns(200);
-
-            // Act
-            var appRunner = new AppRunner(_processManager.Object,
-                _hardwareDeviceLoader.Object,
-                _simulatorLoader.Object,
-                _snapshotReporterFactory,
-                captureLogFactory.Object,
-                Mock.Of<IDeviceLogCapturerFactory>(),
-                _exitCodeDetector.Object,
-                _mainLog.Object,
-                _logs.Object,
-                _helpers.Object,
-                new[] { "--appArg1=value1", "--appArg2" });
-
-            var (deviceName, exitCode) = await appRunner.RunApp(
-                appInformation,
-                new TestTargetOs(TestTarget.Simulator_tvOS, null),
-                TimeSpan.FromSeconds(30),
-                ensureCleanSimulatorState: true);
-
-            // Verify
-            Assert.Equal(SimulatorDeviceName, deviceName);
-            Assert.Equal(200, exitCode);
-
-            var expectedArgs = GetExpectedSimulatorMlaunchArgs();
-
-            _processManager
-                .Verify(
-                    x => x.ExecuteCommandAsync(
-                       It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
-                       _mainLog.Object,
-                       It.IsAny<TimeSpan>(),
-                       null,
-                       It.IsAny<CancellationToken>()),
-                    Times.Once);
-
-            _simulatorLoader.VerifyAll();
-
-            captureLog.Verify(x => x.StartCapture(), Times.AtLeastOnce);
-            captureLog.Verify(x => x.StopCapture(), Times.AtLeastOnce);
-
-            // When ensureCleanSimulatorState == true
-            _mockSimulator.Verify(x => x.PrepareSimulator(_mainLog.Object, AppBundleIdentifier));
-            _mockSimulator.Verify(x => x.KillEverything(_mainLog.Object));
-
-            _exitCodeDetector.VerifyAll();
         }
 
         [Fact]
@@ -252,10 +173,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var appInformation = GetMockedAppBundleInfo();
 
-            _exitCodeDetector
-                .Setup(x => x.DetectExitCode(appInformation, It.IsAny<IReadableLog>()))
-                .Returns(0);
-
             // Act
             var appRunner = new AppRunner(_processManager.Object,
                 _hardwareDeviceLoader.Object,
@@ -263,13 +180,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _snapshotReporterFactory,
                 captureLogFactory.Object,
                 Mock.Of<IDeviceLogCapturerFactory>(),
-                _exitCodeDetector.Object,
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
                 new[] { "--appArg1=value1", "--appArg2" });
 
-            var (deviceName, exitCode) = await appRunner.RunApp(
+            var (deviceName, result) = await appRunner.RunApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Simulator_tvOS, null),
                 TimeSpan.FromSeconds(30),
@@ -277,7 +193,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             // Verify
             Assert.Equal(SimulatorDeviceName, deviceName);
-            Assert.Equal(0, exitCode);
+            Assert.True(result.Succeeded);
 
             var expectedArgs = GetExpectedSimulatorMlaunchArgs();
 
@@ -299,8 +215,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             // When ensureCleanSimulatorState == true
             _mockSimulator.Verify(x => x.PrepareSimulator(_mainLog.Object, AppBundleIdentifier));
             _mockSimulator.Verify(x => x.KillEverything(_mainLog.Object));
-
-            _exitCodeDetector.VerifyAll();
         }
 
         [Fact]
@@ -318,7 +232,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _snapshotReporterFactory,
                 Mock.Of<ICaptureLogFactory>(),
                 Mock.Of<IDeviceLogCapturerFactory>(),
-                _exitCodeDetector.Object,
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
@@ -357,10 +270,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
 
             var appInformation = GetMockedAppBundleInfo();
 
-            _exitCodeDetector
-                .Setup(x => x.DetectExitCode(appInformation, It.IsAny<IReadableLog>()))
-                .Returns(0);
-
             // Act
             var appRunner = new AppRunner(_processManager.Object,
                 _hardwareDeviceLoader.Object,
@@ -368,20 +277,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
                 _snapshotReporterFactory,
                 Mock.Of<ICaptureLogFactory>(),
                 deviceLogCapturerFactory.Object,
-                _exitCodeDetector.Object,
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
                 new[] { "--appArg1=value1", "--appArg2" });
 
-            var (deviceName, exitCode) = await appRunner.RunApp(
+            var (deviceName, result) = await appRunner.RunApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
                 TimeSpan.FromSeconds(30));
 
             // Verify
             Assert.Equal(DeviceName, deviceName);
-            Assert.Equal(0, exitCode);
+            Assert.True(result.Succeeded);
 
             var expectedArgs = GetExpectedDeviceMlaunchArgs();
 
@@ -401,72 +309,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Tests
             _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
 
             deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
-        }
-
-        [Fact]
-        public async Task RunOnSimulatorWithMissingSystemLogTest()
-        {
-            _simulatorLoader
-                .Setup(x => x.FindSimulators(It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_tvOS), _mainLog.Object, It.IsAny<int>(), true, false))
-                .ReturnsAsync((_mockSimulator.Object, null));
-
-            var captureLog = new Mock<ICaptureLog>();
-            captureLog.SetupGet(x => x.FullPath).Returns(_simulatorLogPath);
-            captureLog.SetupGet(x => x.Description).Returns(LogType.TestLog.ToString());
-
-            var captureLogFactory = new Mock<ICaptureLogFactory>();
-            captureLogFactory
-                .Setup(x => x.Create(
-                   Path.Combine(_logs.Object.Directory, _mockSimulator.Object.Name + ".log"),
-                   _mockSimulator.Object.SystemLog,
-                   false,
-                   It.IsAny<string>()))
-                .Returns(captureLog.Object);
-
-            SetupLogList(new[] { captureLog.Object });
-
-            var appInformation = GetMockedAppBundleInfo();
-
-            // Act
-            var appRunner = new AppRunner(_processManager.Object,
-                _hardwareDeviceLoader.Object,
-                _simulatorLoader.Object,
-                _snapshotReporterFactory,
-                captureLogFactory.Object,
-                Mock.Of<IDeviceLogCapturerFactory>(),
-                _exitCodeDetector.Object,
-                _mainLog.Object,
-                _logs.Object,
-                _helpers.Object,
-                new[] { "--appArg1=value1", "--appArg2" });
-
-            var (deviceName, exitCode) = await appRunner.RunApp(
-                appInformation,
-                new TestTargetOs(TestTarget.Simulator_tvOS, null),
-                TimeSpan.FromSeconds(30));
-
-            // Verify
-            Assert.Equal(SimulatorDeviceName, deviceName);
-            Assert.Null(exitCode);
-
-            var expectedArgs = GetExpectedSimulatorMlaunchArgs();
-
-            _processManager
-                .Verify(
-                    x => x.ExecuteCommandAsync(
-                       It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
-                       _mainLog.Object,
-                       It.IsAny<TimeSpan>(),
-                       null,
-                       It.IsAny<CancellationToken>()),
-                    Times.Once);
-
-            _simulatorLoader.VerifyAll();
-
-            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
-            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
-
-            captureLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
         }
 
         private static AppBundleInformation GetMockedAppBundleInfo() =>
