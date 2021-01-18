@@ -8,6 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Common.CLI;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
@@ -90,6 +92,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
             _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{deviceName}' ***");
 
+            ProcessExecutionResult result;
             if (isSimulator)
             {
                 if (simulator == null)
@@ -100,7 +103,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 var mlaunchArguments = GetSimulatorArguments(appInformation, simulator, verbosity);
 
-                await RunSimulatorApp(
+                result = await RunSimulatorApp(
                     mlaunchArguments,
                     appInformation,
                     crashReporter,
@@ -114,12 +117,24 @@ namespace Microsoft.DotNet.XHarness.iOS
             {
                 var mlaunchArguments = GetDeviceArguments(appInformation, deviceName, target.Platform.IsWatchOSTarget(), verbosity);
 
-                await RunDeviceApp(
+                result = await RunDeviceApp(
                     mlaunchArguments,
                     crashReporter,
                     deviceName,
                     timeout,
                     cancellationToken);
+            }
+
+            if (!result.Succeeded)
+            {
+                if (result.TimedOut)
+                {
+                    _mainLog.WriteLine($"App run has timed out");
+                    return (deviceName, (int)ExitCode.TIMED_OUT);
+                }
+
+                _mainLog.WriteLine($"App run has failed. mlaunch exited with {result.ExitCode}");
+                return (deviceName, (int)ExitCode.APP_LAUNCH_FAILURE);
             }
 
             var systemLog = _logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
@@ -135,7 +150,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             return (deviceName, exitCode);
         }
 
-        private async Task RunSimulatorApp(
+        private async Task<ProcessExecutionResult> RunSimulatorApp(
             MlaunchArguments mlaunchArguments,
             AppBundleInformation appInformation,
             ICrashSnapshotReporter crashReporter,
@@ -190,7 +205,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 _mainLog.WriteLine("Starting test run");
 
-                await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+                var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
 
                 // cleanup after us
                 if (ensureCleanSimulatorState)
@@ -202,6 +217,8 @@ namespace Microsoft.DotNet.XHarness.iOS
                         await companionSimulator.KillEverything(_mainLog);
                     }
                 }
+
+                return result;
             }
             finally
             {
@@ -213,7 +230,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             }
         }
 
-        private async Task RunDeviceApp(
+        private async Task<ProcessExecutionResult> RunDeviceApp(
             MlaunchArguments mlaunchArguments,
             ICrashSnapshotReporter crashReporter,
             string deviceName,
@@ -230,16 +247,11 @@ namespace Microsoft.DotNet.XHarness.iOS
 
                 _mainLog.WriteLine("Starting test run");
 
-                var result = await _processManager.ExecuteCommandAsync(
+                return await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     _mainLog,
                     timeout,
                     cancellationToken: cancellationToken);
-
-                if (!result.Succeeded)
-                {
-                    throw new Exception("Failed to run the application!");
-                }
             }
             finally
             {
