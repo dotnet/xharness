@@ -3,10 +3,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
 using Microsoft.DotNet.XHarness.Common.CLI;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS;
 using Microsoft.DotNet.XHarness.iOS.Shared;
@@ -52,15 +54,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 new CrashSnapshotReporterFactory(ProcessManager),
                 new CaptureLogFactory(),
                 new DeviceLogCapturerFactory(ProcessManager),
-                new ExitCodeDetector(),
                 mainLog,
                 logs,
                 new Helpers(),
                 PassThroughArguments,
                 logCallback);
 
-            int? exitCode = null;
-            (deviceName, exitCode) = await appRunner.RunApp(
+            ProcessExecutionResult result;
+            (deviceName, result) = await appRunner.RunApp(
                 appBundleInfo,
                 target,
                 _arguments.Timeout,
@@ -68,22 +69,37 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 verbosity: GetMlaunchVerbosity(_arguments.Verbosity),
                 cancellationToken: cancellationToken);
 
-            if (exitCode.HasValue)
+            if (!result.Succeeded)
             {
-                if (_arguments.ExpectedExitCode != exitCode)
+                if (result.TimedOut)
                 {
-                    logger.LogError($"Application has finished with exit code {exitCode} but {_arguments.ExpectedExitCode} was expected");
-                    return ExitCode.GENERAL_FAILURE;
+                    logger.LogError($"App run has timed out");
+                    return ExitCode.TIMED_OUT;
                 }
 
-                logger.LogInformation("Application has finished with exit code: " + exitCode + (_arguments.ExpectedExitCode != 0 ? " (as expected)" : null));
-                return ExitCode.SUCCESS;
+                logger.LogError($"App run has failed. mlaunch exited with {result.ExitCode}");
+                return ExitCode.APP_LAUNCH_FAILURE;
             }
-            else
+
+            var systemLog = logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
+            if (systemLog == null)
             {
                 logger.LogError("Application has finished but no system log found. Failed to determine the exit code!");
                 return ExitCode.RETURN_CODE_NOT_SET;
             }
+
+            var exitCode = new ExitCodeDetector().DetectExitCode(appBundleInfo, systemLog);
+            logger.LogInformation($"App run ended with {exitCode}");
+
+            if (_arguments.ExpectedExitCode != exitCode)
+            {
+                logger.LogError($"Application has finished with exit code {exitCode} but {_arguments.ExpectedExitCode} was expected");
+                return ExitCode.GENERAL_FAILURE;
+            }
+
+            logger.LogInformation("Application has finished with exit code: " + exitCode +
+                (_arguments.ExpectedExitCode != 0 ? " (as expected)" : null));
+            return ExitCode.SUCCESS;
         }
     }
 }
