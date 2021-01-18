@@ -21,22 +21,17 @@ namespace Microsoft.DotNet.XHarness.CLI
             Console.WriteLine($"XHarness command issued: {string.Join(' ', args)}");
 
             // Root command: will use the platform specific commands to perform the appropriate action.
-            var commands = new CommandSet("xharness")
-            {
-                // Add per-platform CommandSets - If adding  a new supported set, that goes here.
-                new AndroidCommandSet(),
-                new WasmCommandSet(),
-
-                // add shared commands, for example, help and so on. --version, --help, --verbosity and so on
-                new XHarnessHelpCommand(),
-                new XHarnessVersionCommand(),
-            };
+            var commands = new CommandSet("xharness");
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 commands.Add(new iOSCommandSet());
             }
-            
+
+            commands.Add(new AndroidCommandSet());
+            commands.Add(new WasmCommandSet());
+            commands.Add(new XHarnessHelpCommand());
+            commands.Add(new XHarnessVersionCommand());            
 
             // Mono.Options wouldn't allow "--" and CommandSet parser will temporarily rename it
             int result = commands.Run(args.Select(a => a == "--" ? XHarnessCommand.VerbatimArgumentPlaceholder : a));
