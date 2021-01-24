@@ -115,28 +115,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                         logger);
 
         private (DriverService, IWebDriver) GetEdgeDriver(ILogger logger)
-        {
-            string driverName = "msedgedriver";
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                driverName = "msedgedriver.exe";
+            => GetChromiumDriver<EdgeOptions, EdgeDriver, EdgeDriverService>(
+                        "edgedriver",
+                        options =>
+                        {
+                            options.UseChromium = true;
+                            return EdgeDriverService.CreateDefaultServiceFromOptions(options);
+                        }, logger);
 
-            string? driverPath = Environment.GetEnvironmentVariable("PATH")
-                                    ?.Split(':')
-                                    ?.Where(p => File.Exists(Path.Combine(p, driverName)))
-                                    ?.FirstOrDefault();
-
-            if (driverPath == null)
-                throw new FileNotFoundException($"Could not find {driverName} in $PATH");
-
-            return GetChromiumDriver<EdgeOptions, EdgeDriver, EdgeDriverService>(
-                        driverName,
-                        options => EdgeDriverService.CreateDefaultServiceFromOptions(driverPath, driverName, options),
-                        logger);
-        }
-
-        private (DriverService, IWebDriver) GetChromiumDriver<TDriverOptions, TDriver, TDriverService>(string driverName, Func<TDriverOptions, TDriverService> getDriverService, ILogger logger)
-            where TDriverOptions: ChromiumOptions
+        private (DriverService, IWebDriver) GetChromiumDriver<TDriverOptions, TDriver, TDriverService>(
+            string driverName, Func<TDriverOptions, TDriverService> getDriverService, ILogger logger)
             where TDriver: ChromiumDriver
+            where TDriverOptions: ChromiumOptions
             where TDriverService: ChromiumDriverService
         {
             var options = Activator.CreateInstance<TDriverOptions>();
