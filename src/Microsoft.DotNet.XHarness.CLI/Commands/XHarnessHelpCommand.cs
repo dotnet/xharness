@@ -34,12 +34,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 subCommand = args[1];
             }
 
+            // TODO (#400): We can remove this after some time when users get used to the new commands
+            if (command == "ios")
+            {
+                Program.DisplayRenameWarning();
+                command = "apple";
+            }
+
             switch (command)
             {
                 case "android":
                     PrintCommandHelp(new AndroidCommandSet(), subCommand);
                     break;
-                case "ios":
+                case "apple":
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                     {
                         PrintCommandHelp(new AppleCommandSet(), subCommand);
