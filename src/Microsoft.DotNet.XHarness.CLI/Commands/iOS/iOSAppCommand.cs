@@ -162,37 +162,44 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             ExitCode exitCode = ExitCode.SUCCESS;
 
+            // Install app on the device
             if (!target.Platform.IsSimulator())
             {
-                Exception? installException = null;
-
                 try
                 {
                     (deviceName, exitCode) = await InstallApp(appBundleInfo, deviceName, logger, target, mainLog, cancellationToken);
                 }
                 catch (Exception e)
                 {
-                    installException = e;
+                    var message = new StringBuilder()
+                        .AppendLine("Application installation failed:")
+                        .AppendLine(e.ToString());
+
+                    logger.LogError(message.ToString());
+                    return ExitCode.PACKAGE_INSTALLATION_FAILURE;
                 }
 
-                if (exitCode != ExitCode.SUCCESS || installException != null)
+                if (exitCode != ExitCode.SUCCESS)
                 {
-                    var message = new StringBuilder().AppendLine("Application installation failed:");
+                    var message = new StringBuilder().Append("Application installation failed");
 
                     if (ErrorKnowledgeBase.IsKnownInstallIssue(mainLog, out var failureMessage))
                     {
+                        message.AppendLine(":");
                         message.Append(failureMessage.Value.HumanMessage);
                         if (failureMessage.Value.IssueLink != null)
                         {
                             message.AppendLine($" Find more information at {failureMessage.Value.IssueLink}");
                         }
                     }
-                    else if (installException != null)
-                    {
-                        message.AppendLine(installException.ToString());
-                    }
 
                     logger.LogError(message.ToString());
+
+                    if (!string.IsNullOrEmpty(deviceName))
+                    {
+                        logger.LogInformation($"Cleaning up the failed installation from {deviceName}...");
+                        await UninstallApp(appBundleInfo, deviceName, logger, mainLog, new CancellationToken());
+                    }
 
                     return exitCode;
                 }
@@ -204,11 +211,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 }
             }
 
+            // Run / test app
             try
             {
                 logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? $"device '{deviceName}'" : target.AsString()));
 
-                // Run app internal
                 exitCode = await RunAppInternal(
                     appBundleInfo,
                     deviceName,
@@ -252,7 +259,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
                 if (!target.Platform.IsSimulator() && deviceName != null)
                 {
-                    await UninstallApp(appBundleInfo, deviceName, logger, mainLog, cancellationToken);
+                    await UninstallApp(appBundleInfo, deviceName, logger, mainLog, new CancellationToken());
                 }
 
                 if (lldbFileCreated)
