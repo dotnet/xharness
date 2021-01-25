@@ -20,6 +20,9 @@ using OpenQA.Selenium.Firefox;
 using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 using OpenQA.Selenium;
 using System.Linq;
+using OpenQA.Selenium.Edge;
+using System.Runtime.InteropServices;
+using OpenQA.Selenium.Chromium;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
@@ -59,6 +62,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 Browser.Chrome => GetChromeDriver(logger),
                 Browser.Safari => GetSafariDriver(logger),
                 Browser.Firefox => GetFirefoxDriver(logger),
+                Browser.Edge => GetEdgeDriver(logger),
 
                 // shouldn't reach here
                 _              => throw new ArgumentException($"Unknown browser : {_arguments.Browser}")
@@ -105,8 +109,27 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         }
 
         private (DriverService, IWebDriver) GetChromeDriver(ILogger logger)
+            => GetChromiumDriver<ChromeOptions, ChromeDriver, ChromeDriverService>(
+                        "chromedriver",
+                        options => ChromeDriverService.CreateDefaultService(),
+                        logger);
+
+        private (DriverService, IWebDriver) GetEdgeDriver(ILogger logger)
+            => GetChromiumDriver<EdgeOptions, EdgeDriver, EdgeDriverService>(
+                        "edgedriver",
+                        options =>
+                        {
+                            options.UseChromium = true;
+                            return EdgeDriverService.CreateDefaultServiceFromOptions(options);
+                        }, logger);
+
+        private (DriverService, IWebDriver) GetChromiumDriver<TDriverOptions, TDriver, TDriverService>(
+            string driverName, Func<TDriverOptions, TDriverService> getDriverService, ILogger logger)
+            where TDriver: ChromiumDriver
+            where TDriverOptions: ChromiumOptions
+            where TDriverService: ChromiumDriverService
         {
-            var options = new ChromeOptions();
+            var options = Activator.CreateInstance<TDriverOptions>();
             options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
 
             options.AddArguments(new List<string>(_arguments.BrowserArgs)
@@ -129,7 +152,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 "--metrics-recording-only"
             });
 
-            logger.LogInformation($"Starting chromedriver with args: {string.Join(' ', options.Arguments)}");
+            logger.LogInformation($"Starting {driverName} with args: {string.Join(' ', options.Arguments)}");
 
             // We want to explicitly specify a timeout here. This is for for the
             // driver commands, like getLog. The default is 60s, which ends up
@@ -147,22 +170,26 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 "Cannot start the driver service"
             };
 
-            foreach (var file in Directory.EnumerateFiles(_arguments.OutputDirectory, "chromedriver-*.log"))
+            foreach (var file in Directory.EnumerateFiles(_arguments.OutputDirectory, $"{driverName}-*.log"))
                 File.Delete(file);
 
             int max_retries = 3;
             int retry_num = 0;
             while(true)
             {
-                ChromeDriverService? driverService = null;
+                TDriverService? driverService = null;
                 try
                 {
-                    driverService = ChromeDriverService.CreateDefaultService();
+                    driverService = getDriverService(options);
+
                     driverService.EnableAppendLog = false;
                     driverService.EnableVerboseLogging = true;
-                    driverService.LogPath = Path.Combine(_arguments.OutputDirectory, $"chromedriver-{retry_num}.log");
+                    driverService.LogPath = Path.Combine(_arguments.OutputDirectory, $"{driverName}-{retry_num}.log");
 
-                    return (driverService, new ChromeDriver(driverService, options, _arguments.Timeout));
+                    if (!(Activator.CreateInstance(typeof(TDriver), driverService, options, _arguments.Timeout) is TDriver driver))
+                        throw new ArgumentException($"Failed to create instance of {typeof(TDriver)}");
+
+                    return (driverService, driver);
                 }
                 catch (WebDriverException wde) when (err_snippets.Any(s => wde.Message.Contains(s)) && retry_num < max_retries - 1)
                 {
@@ -173,7 +200,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     //    (chrome not reachable)
 
                     // Log on max-1 tries, and rethrow on the last one
-                    logger.LogWarning($"Failed to start chrome, attempt #{retry_num}: {wde}");
+                    logger.LogWarning($"Failed to start the browser, attempt #{retry_num}: {wde}");
 
                     driverService?.Dispose();
                 }
