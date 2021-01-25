@@ -7,7 +7,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Moq;
 using Xunit;
 
-namespace Microsoft.DotNet.XHarness.iOS.Tests
+namespace Microsoft.DotNet.XHarness.Apple.Tests
 {
     public class ExitCodeDetectorTests : IDisposable
     {

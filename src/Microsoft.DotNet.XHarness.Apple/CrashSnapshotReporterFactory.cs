@@ -8,7 +8,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
-namespace Microsoft.DotNet.XHarness.iOS
+namespace Microsoft.DotNet.XHarness.Apple
 {
     public interface ICrashSnapshotReporterFactory
     {

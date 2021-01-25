@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                commands.Add(new iOSCommandSet());
+                commands.Add(new AppleCommandSet());
             }
 
             commands.Add(new AndroidCommandSet());

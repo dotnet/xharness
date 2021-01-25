@@ -5,6 +5,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
@@ -12,7 +13,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Moq;
 using Xunit;
 
-namespace Microsoft.DotNet.XHarness.iOS.Tests
+namespace Microsoft.DotNet.XHarness.Apple.Tests
 {
     public class AppUninstallerTests
     {

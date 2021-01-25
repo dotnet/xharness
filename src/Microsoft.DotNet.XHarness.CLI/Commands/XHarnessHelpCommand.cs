@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 case "ios":
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                     {
-                        PrintCommandHelp(new iOSCommandSet(), subCommand);
+                        PrintCommandHelp(new AppleCommandSet(), subCommand);
                     }
                     else
                     {
