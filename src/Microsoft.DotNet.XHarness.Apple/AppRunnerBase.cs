@@ -8,7 +8,7 @@ using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 
-namespace Microsoft.DotNet.XHarness.iOS
+namespace Microsoft.DotNet.XHarness.Apple
 {
     public abstract class AppRunnerBase
     {

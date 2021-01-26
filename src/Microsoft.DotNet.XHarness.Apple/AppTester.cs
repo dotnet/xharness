@@ -18,7 +18,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
-namespace Microsoft.DotNet.XHarness.iOS
+namespace Microsoft.DotNet.XHarness.Apple
 {
     /// <summary>
     /// Class that will run an app bundle that contains the TestRunner on a target device.
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             CancellationToken cancellationToken = default)
         {
             var runMode = target.Platform.ToRunMode();
-            bool isSimulator = target.Platform.IsSimulator();
+            var isSimulator = target.Platform.IsSimulator();
 
             var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 deviceName ??= await FindDevice(target) ?? throw new NoDeviceFoundException();
             }
 
-            int deviceListenerPort = deviceListener.InitializeAndGetPort();
+            var deviceListenerPort = deviceListener.InitializeAndGetPort();
             deviceListener.StartAsync();
 
             var crashLogs = new Logs(_logs.Directory);
@@ -388,7 +388,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 }
             }
 
-            for (int i = -1; i < verbosity; i++)
+            for (var i = -1; i < verbosity; i++)
             {
                 args.Add(new VerbosityArgument());
             }

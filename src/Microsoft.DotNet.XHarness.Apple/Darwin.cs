@@ -4,7 +4,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.XHarness.iOS
+namespace Microsoft.DotNet.XHarness.Apple
 {
     public static class Darwin
     {

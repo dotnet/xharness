@@ -4,7 +4,8 @@ set -ex
 
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-export DOTNET_ROOT=$(dirname $(which dotnet))
+DOTNET_ROOT=$(dirname "$(which dotnet)")
+export DOTNET_ROOT
 dotnet tool install --no-cache --tool-path "$here/tools" --version "1.0.0-ci" --add-source "$here" Microsoft.DotNet.XHarness.SimulatorInstaller
 
 sim_installer="$here/tools/simulator-installer"
@@ -35,10 +36,10 @@ result=0
 # Test 3 random URLs
 for (( i=0; i<3; i++ )); do
     random_line=${list[$RANDOM % ${#list[@]}]}
-    url=`echo $random_line | tr -s ' ' | cut -d ' ' -f 3`
+    url=$(echo "$random_line" | tr -s ' ' | cut -d ' ' -f 3)
     echo "Testing accessibility of $url..."
 
-    status_code=`curl --silent --head -o /dev/null --write-out %{http_code} "$url"`
+    status_code=$(curl --silent --head -o /dev/null --write-out %{http_code} "$url")
 
     echo "Result: $status_code"
 
@@ -66,7 +67,7 @@ if [ "$length" != "0" ]; then
 
     for i in "${installed_simulators[@]}"
     do
-        pkg_name=`echo $i | tr -s ' ' | cut -d ' ' -f 3`
+        pkg_name=$(echo $i | tr -s ' ' | cut -d ' ' -f 3)
         echo "  $pkg_name"
         simulator_args="--simulator=$pkg_name $simulator_args"
     done
@@ -85,8 +86,5 @@ if [ "$length" != "0" ]; then
 else
     echo "No additional simulators found (probably only those coming with Xcode)"
 fi
-
-cd $here
-rm -rf $here/tools
 
 exit $result

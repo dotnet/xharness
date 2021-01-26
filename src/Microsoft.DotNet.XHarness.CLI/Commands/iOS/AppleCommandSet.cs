@@ -9,14 +9,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     // Main iOS command set that contains the plaform specific commands. This allows the command line to
     // support different options in different platforms.
     // Whenever the behavior does match, the goal is to have the same arguments for both platforms
-    public class iOSCommandSet : CommandSet
+    public class AppleCommandSet : CommandSet
     {
-        public iOSCommandSet() : base("ios")
+        public AppleCommandSet() : base("apple")
         {
             // commond verbs shared with android. We should think a smart way to do this
-            Add(new iOSTestCommand());
-            Add(new iOSRunCommand());
-            Add(new iOSGetStateCommand());
+            Add(new AppleTestCommand());
+            Add(new AppleRunCommand());
+            Add(new AppleGetStateCommand());
         }
     }
 }

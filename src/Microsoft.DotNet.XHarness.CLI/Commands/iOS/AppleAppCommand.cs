@@ -3,18 +3,17 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
@@ -24,7 +23,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 {
-    internal abstract class iOSAppCommand : XHarnessCommand
+    internal abstract class AppleAppCommand : XHarnessCommand
     {
         protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
 
@@ -51,7 +50,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             get => _simulatorLoader ?? throw new NullReferenceException("SimulatorLoader wasn't initialized properly");
         }
 
-        protected iOSAppCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, allowsExtraArgs, help)
+        protected AppleAppCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, allowsExtraArgs, help)
         {
         }
 

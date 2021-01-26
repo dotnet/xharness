@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -22,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     /// <summary>
     /// Command which executes a given, already-packaged iOS application, waits on it and returns status based on the outcome.
     /// </summary>
-    internal class iOSTestCommand : iOSAppCommand
+    internal class AppleTestCommand : AppleAppCommand
     {
         private const string CommandHelp = "Runs a given iOS/tvOS/watchOS test application bundle containing TestRunner in a target device/simulator";
 
@@ -32,7 +33,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
         protected override string CommandDescription { get; } = CommandHelp;
         protected override iOSAppRunArguments iOSRunArguments => _arguments;
 
-        public iOSTestCommand() : base("test", false, CommandHelp)
+        public AppleTestCommand() : base("test", false, CommandHelp)
         {
         }
 

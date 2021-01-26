@@ -13,7 +13,7 @@ It can output test results in various different formats from text to xUnit/NUnit
 
 The tool requires **.NET Core 3.1.201** or later to be run. It is packaged as a `dotnet tool` command and can be installed using the [dotnet tool CLI](https://docs.microsoft.com/en-us/dotnet/core/tools/).
 
-- The iOS scenarios require you to run the tool on MacOS with full Xcode installation
+- The Apple scenarios require you to run the tool on MacOS with full Xcode installation
 - Android scenarios are supported on Linux, macOS and Windows systems
 - Browsers scenarios are supported on Linux systems
 
@@ -40,13 +40,13 @@ dotnet tool install Microsoft.DotNet.XHarness.CLI \
 You can get a specific version from [the dotnet-eng feed](https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&view=versions&package=Microsoft.DotNet.XHarness.CLI&protocolType=NuGet) where it is published.
 So far we are in preview so omitting the version will fail to locate a stable version of the tool and it has to be supplied.
 
-To run the tool, use the `xharness` command. The tool always expects the platform (`android`/`ios`) as the first argument and has following commands available:
+To run the tool, use the `xharness` command. The tool always expects the platform (`android`/`apple`/`browser`) as the first argument and has following commands available:
 - `test` - run and test given application containing a TestRunner **\*** on a target device/emulator
 - `state` - print information about the machine and connected devices
-- `run` (iOS only) - run given application without a TestRunner **\*** on a target device/emulator
+- `run` (Apple only) - run given application without a TestRunner **\*** on a target device/emulator
 
-> Applications run via the `ios test` command require a TestRunner inside of the iOS app bundle to work properly.
-The `ios run` command, on the other hand, doesn't expect the TestRunner and only runs the application and tries to detect the exit code. Detection of exit code might not work across different iOS versions reliably.
+> Applications run via the `apple test` command require a TestRunner inside of the iOS/tvOS app bundle to work properly.
+The `apple run` command, on the other hand, doesn't expect the TestRunner and only runs the application and tries to detect the exit code. Detection of exit code might not work across different iOS versions reliably.
 >
 > **\*** See the [Test Runners section](#test-runners).
 
@@ -65,8 +65,8 @@ xharness help
 To get help for a specific command or sub-command, run:
 
 ```bash
-xharness help ios
-xharness help ios test
+xharness help apple
+xharness help apple test
 ```
 
 ### Other settings
@@ -83,10 +83,10 @@ In case your repository is onboarded into [Arcade](https://github.com/dotnet/arc
 
 ## Examples
 
-To run an iOS app bundle on a 64bit iPhone Simulator:
+To run an iOS/tvOS app bundle on a 64bit iPhone Simulator:
 
 ```bash
-xharness ios test \
+xharness apple test \
     --app=/path/to/an.app \
     --output-directory=out \
     --targets=ios-simulator-64
@@ -95,7 +95,7 @@ xharness ios test \
 or the same can be achieved via the shorthand versions of the same options:
 
 ```bash
-xharness ios test -a=/path/to/an.app -o=out -t=ios-simulator-64
+xharness apple test -a=/path/to/an.app -o=out -t=ios-simulator-64
 ```
 
 The `out` dir will then contain log files such as these:

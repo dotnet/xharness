@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 
-namespace Microsoft.DotNet.XHarness.iOS
+namespace Microsoft.DotNet.XHarness.Apple
 {
     public interface IExitCodeDetector
     {
@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             using var reader = systemLog.GetReader();
             while (!reader.EndOfStream)
             {
-                string line = reader.ReadLine();
+                var line = reader.ReadLine();
 
                 // This will be improved when we find out it differes for new iOS versions
                 if (line.Contains("UIKitApplication:") && line.Contains(appBundleInfo.AppName) && line.Contains("Service exited with abnormal code"))

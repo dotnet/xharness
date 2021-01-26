@@ -38,8 +38,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.XHarness.Android\Microsoft.DotNet.XHarness.Android.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.XHarness.Apple\Microsoft.DotNet.XHarness.Apple.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj" />
-    <ProjectReference Include="..\Microsoft.DotNet.XHarness.iOS\Microsoft.DotNet.XHarness.iOS.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -48,11 +48,11 @@
 
   <Target Name="DownloadAndroidSdks" BeforeTargets="Build">
     <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="True" />
-    <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)"   DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)"   SkipUnchangedFiles="True" />
-    <DownloadFile SourceUrl="$(MacOsAndroidSdkUrl)"   DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(MacOsAndroidSdkFileName)"   SkipUnchangedFiles="True" />
+    <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />
+    <DownloadFile SourceUrl="$(MacOsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(MacOsAndroidSdkFileName)" SkipUnchangedFiles="True" />
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
-    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(LinuxAndroidSdkFileName)"   DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/linux"   OverwriteReadOnlyFiles="true" />
-    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(MacOsAndroidSdkFileName)"   DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/macos"   OverwriteReadOnlyFiles="true" />
+    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(LinuxAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/linux" OverwriteReadOnlyFiles="true" />
+    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(MacOsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/macos" OverwriteReadOnlyFiles="true" />
     <ItemGroup>
       <WindowsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
       <LinuxAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />
