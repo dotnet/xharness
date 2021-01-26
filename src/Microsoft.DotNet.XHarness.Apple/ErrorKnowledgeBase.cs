@@ -9,7 +9,7 @@ using System.IO;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 
-namespace Microsoft.DotNet.XHarness.iOS
+namespace Microsoft.DotNet.XHarness.Apple
 {
     public class ErrorKnowledgeBase : IErrorKnowledgeBase
     {
@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             using var reader = log.GetReader();
             while (!reader.EndOfStream)
             {
-                string line = reader.ReadLine();
+                var line = reader.ReadLine();
                 if (line == null)
                 {
                     continue;

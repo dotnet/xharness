@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
@@ -17,7 +16,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
-namespace Microsoft.DotNet.XHarness.iOS
+namespace Microsoft.DotNet.XHarness.Apple
 {
     /// <summary>
     /// Class that will run an app bundle and return the exit code.
@@ -67,7 +66,7 @@ namespace Microsoft.DotNet.XHarness.iOS
             int verbosity = 1,
             CancellationToken cancellationToken = default)
         {
-            bool isSimulator = target.Platform.IsSimulator();
+            var isSimulator = target.Platform.IsSimulator();
 
             ISimulatorDevice? simulator = null;
             ISimulatorDevice? companionSimulator = null;
@@ -248,7 +247,7 @@ namespace Microsoft.DotNet.XHarness.iOS
                 new SetEnvVariableArgument(EnviromentVariables.DisableSystemPermissionTests, 1),
             };
 
-            for (int i = -1; i < verbosity; i++)
+            for (var i = -1; i < verbosity; i++)
             {
                 args.Add(new VerbosityArgument());
             }

@@ -20,12 +20,19 @@ namespace Microsoft.DotNet.XHarness.CLI
         {
             Console.WriteLine($"XHarness command issued: {string.Join(' ', args)}");
 
+            // TODO (#400): We can remove this after some time when users get used to the new commands
+            if (args.Length > 1 && args[0] == "ios")
+            {
+                DisplayRenameWarning();
+                args[0] = "apple";
+            }
+
             // Root command: will use the platform specific commands to perform the appropriate action.
             var commands = new CommandSet("xharness");
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                commands.Add(new iOSCommandSet());
+                commands.Add(new AppleCommandSet());
             }
 
             commands.Add(new AndroidCommandSet());
@@ -37,6 +44,15 @@ namespace Microsoft.DotNet.XHarness.CLI
             int result = commands.Run(args.Select(a => a == "--" ? XHarnessCommand.VerbatimArgumentPlaceholder : a));
             Console.WriteLine($"XHarness exit code: {result}");
             return result;
+        }
+
+        // TODO (#400): We can remove this after some time when users get used to the new commands
+        public static void DisplayRenameWarning()
+        {
+            var color = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Warning: The 'ios' command has been renamed to 'apple' and will soon be deprecated!");
+            Console.ForegroundColor = color;
         }
     }
 }

@@ -13,7 +13,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 
-namespace Microsoft.DotNet.XHarness.iOS
+namespace Microsoft.DotNet.XHarness.Apple
 {
     public class AppInstaller
     {
@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.XHarness.iOS
 
             var args = new MlaunchArguments();
 
-            for (int i = -1; i < _verbosity; i++)
+            for (var i = -1; i < _verbosity; i++)
             {
                 args.Add(new VerbosityArgument());
             }

@@ -18,9 +18,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.iOS.Shared", "src\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj", "{A91316D8-4D48-4959-932F-5A0C3E1F7779}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.iOS", "src\Microsoft.DotNet.XHarness.iOS\Microsoft.DotNet.XHarness.iOS.csproj", "{A6DFDFD0-6E4F-41A8-A7AB-F4E43A4353B4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.Apple", "src\Microsoft.DotNet.XHarness.Apple\Microsoft.DotNet.XHarness.Apple.csproj", "{A6DFDFD0-6E4F-41A8-A7AB-F4E43A4353B4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.iOS.Tests", "tests\Microsoft.DotNet.XHarness.iOS.Tests\Microsoft.DotNet.XHarness.iOS.Tests.csproj", "{10A26931-A5C8-4256-B8AC-0984CAAAB93D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.Apple.Tests", "tests\Microsoft.DotNet.XHarness.Apple.Tests\Microsoft.DotNet.XHarness.Apple.Tests.csproj", "{10A26931-A5C8-4256-B8AC-0984CAAAB93D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.iOS.Shared.Tests", "tests\Microsoft.DotNet.XHarness.iOS.Shared.Tests\Microsoft.DotNet.XHarness.iOS.Shared.Tests.csproj", "{3406110E-65B2-4786-B723-C05B0FF66131}"
 EndProject
@@ -30,17 +30,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{D7D3EC29
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.SimulatorInstaller", "tools\Microsoft.DotNet.XHarness.SimulatorInstaller\Microsoft.DotNet.XHarness.SimulatorInstaller.csproj", "{2C1B5C97-7E17-45D4-8337-B4CBD6125CD7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Common", "src\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj", "{E6E90648-E24D-4681-B082-776DF3F4B8F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.Common", "src\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj", "{E6E90648-E24D-4681-B082-776DF3F4B8F6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Common.Tests", "tests\Microsoft.DotNet.XHarness.Common.Tests\Microsoft.DotNet.XHarness.Common.Tests.csproj", "{EB718364-434C-43F7-AE12-74F272B86C45}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.Common.Tests", "tests\Microsoft.DotNet.XHarness.Common.Tests\Microsoft.DotNet.XHarness.Common.Tests.csproj", "{EB718364-434C-43F7-AE12-74F272B86C45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.TestRunners.Xunit", "src\Microsoft.DotNet.XHarness.TestRunners.Xunit\Microsoft.DotNet.XHarness.TestRunners.Xunit.csproj", "{0F780F3E-8D05-428E-9C78-FEDDDA7DD3D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.TestRunners.Xunit", "src\Microsoft.DotNet.XHarness.TestRunners.Xunit\Microsoft.DotNet.XHarness.TestRunners.Xunit.csproj", "{0F780F3E-8D05-428E-9C78-FEDDDA7DD3D1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.TestRunners.Common", "src\Microsoft.DotNet.XHarness.TestRunners.Common\Microsoft.DotNet.XHarness.TestRunners.Common.csproj", "{37D41633-1E59-43EE-AFF9-8DA9AB25BD1D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.TestRunners.Common", "src\Microsoft.DotNet.XHarness.TestRunners.Common\Microsoft.DotNet.XHarness.TestRunners.Common.csproj", "{37D41633-1E59-43EE-AFF9-8DA9AB25BD1D}"
 EndProject
-Project("{C1CB4AA8-A96C-4C06-BD39-4D8D09A15D86}") = "Microsoft.DotNet.XHarness.Android.Tests", "tests\Microsoft.DotNet.XHarness.Android.Tests\Microsoft.DotNet.XHarness.Android.Tests.csproj", "{C1CB4AA8-A96C-4C06-BD39-4D8D09A15D86}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.Android.Tests", "tests\Microsoft.DotNet.XHarness.Android.Tests\Microsoft.DotNet.XHarness.Android.Tests.csproj", "{C1CB4AA8-A96C-4C06-BD39-4D8D09A15D86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.TestRunners.NUnit", "src\Microsoft.DotNet.XHarness.TestRunners.NUnit\Microsoft.DotNet.XHarness.TestRunners.NUnit.csproj", "{D51E7536-E698-42F4-939A-F259D543D1E1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.TestRunners.NUnit", "src\Microsoft.DotNet.XHarness.TestRunners.NUnit\Microsoft.DotNet.XHarness.TestRunners.NUnit.csproj", "{D51E7536-E698-42F4-939A-F259D543D1E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -96,14 +96,14 @@ Global
 		{37D41633-1E59-43EE-AFF9-8DA9AB25BD1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37D41633-1E59-43EE-AFF9-8DA9AB25BD1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37D41633-1E59-43EE-AFF9-8DA9AB25BD1D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D51E7536-E698-42F4-939A-F259D543D1E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D51E7536-E698-42F4-939A-F259D543D1E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D51E7536-E698-42F4-939A-F259D543D1E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D51E7536-E698-42F4-939A-F259D543D1E1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C1CB4AA8-A96C-4C06-BD39-4D8D09A15D86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C1CB4AA8-A96C-4C06-BD39-4D8D09A15D86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1CB4AA8-A96C-4C06-BD39-4D8D09A15D86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1CB4AA8-A96C-4C06-BD39-4D8D09A15D86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D51E7536-E698-42F4-939A-F259D543D1E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D51E7536-E698-42F4-939A-F259D543D1E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D51E7536-E698-42F4-939A-F259D543D1E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D51E7536-E698-42F4-939A-F259D543D1E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -121,8 +121,8 @@ Global
 		{EB718364-434C-43F7-AE12-74F272B86C45} = {1018BF4C-BD8F-49D7-9797-758E68B9FC9D}
 		{0F780F3E-8D05-428E-9C78-FEDDDA7DD3D1} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
 		{37D41633-1E59-43EE-AFF9-8DA9AB25BD1D} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
-		{D51E7536-E698-42F4-939A-F259D543D1E1} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
 		{C1CB4AA8-A96C-4C06-BD39-4D8D09A15D86} = {1018BF4C-BD8F-49D7-9797-758E68B9FC9D}
+		{D51E7536-E698-42F4-939A-F259D543D1E1} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {56D5F4DA-F710-4026-8F49-4A903BCAA9B5}

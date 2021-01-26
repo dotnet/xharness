@@ -3,7 +3,7 @@ using System.IO;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Xunit;
 
-namespace Microsoft.DotNet.XHarness.iOS.Tests
+namespace Microsoft.DotNet.XHarness.Apple.Tests
 {
     public class ErrorKnowledgeBaseTests : IDisposable
     {

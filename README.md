@@ -13,7 +13,7 @@ It can output test results in various different formats from text to xUnit/NUnit
 
 The tool requires **.NET Core 3.1.201** or later to be run. It is packaged as a `dotnet tool` command and can be installed using the [dotnet tool CLI](https://docs.microsoft.com/en-us/dotnet/core/tools/).
 
-- The iOS scenarios require you to run the tool on MacOS with full Xcode installation
+- The Apple scenarios require you to run the tool on MacOS with full Xcode installation
 - Android scenarios are supported on Linux, macOS and Windows systems
 - Browsers scenarios are supported on Linux systems
 
@@ -42,8 +42,8 @@ So far we are in preview so omitting the version will fail to locate a stable ve
 
 To run the tool, use the `xharness` command. The tool always expects the platform (`android`/`ios`) as the first argument. To get up-to-date set of commands run `help`.
 
-> Applications run via the `ios test` command require a TestRunner inside of the iOS app bundle to work properly.
-The `ios run` command, on the other hand, doesn't expect the TestRunner and only runs the application and tries to detect the exit code. Detection of exit code might not work across different iOS versions reliably.
+> Applications run via the `apple test` command require a TestRunner inside of the iOS/tvOS app bundle to work properly.
+The `apple run` command, on the other hand, doesn't expect the TestRunner and only runs the application and tries to detect the exit code. Detection of exit code might not work across different iOS versions reliably.
 >
 > **\*** See the [Test Runners section](#test-runners).
 
@@ -62,8 +62,8 @@ xharness help
 To get help for a specific command or sub-command, run:
 
 ```bash
-xharness help ios
-xharness help ios test
+xharness help apple
+xharness help apple test
 ```
 
 ### Other settings
@@ -80,10 +80,10 @@ In case your repository is onboarded into [Arcade](https://github.com/dotnet/arc
 
 ## Examples
 
-To run an iOS app bundle on a 64bit iPhone Simulator:
+To run an iOS/tvOS app bundle on a 64bit iPhone Simulator:
 
 ```bash
-xharness ios test \
+xharness apple test \
     --app=/path/to/an.app \
     --output-directory=out \
     --targets=ios-simulator-64
@@ -92,7 +92,7 @@ xharness ios test \
 or the same can be achieved via the shorthand versions of the same options:
 
 ```bash
-xharness ios test -a=/path/to/an.app -o=out -t=ios-simulator-64
+xharness apple test -a=/path/to/an.app -o=out -t=ios-simulator-64
 ```
 
 The `out` dir will then contain log files such as these:
