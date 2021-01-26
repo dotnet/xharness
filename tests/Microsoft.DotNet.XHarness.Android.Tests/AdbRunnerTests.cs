@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
             // Ensure it called, parsed the three random device names and found all three architectures
             foreach (var fakeDeviceInfo in _fakeDeviceList.Keys)
             {
-                _processManager.Verify(pm => pm.Run(s_adbPath, $"-s {fakeDeviceInfo.Item1} shell getprop ro.product.cpu.abi", TimeSpan.FromMinutes(5)), Times.Once);
+                _processManager.Verify(pm => pm.Run(s_adbPath, $"-s {fakeDeviceInfo.Item1} shell getprop ro.product.cpu.abi", TimeSpan.FromSeconds(30)), Times.Once);
                 Assert.Equal(fakeDeviceInfo.Item2, result[fakeDeviceInfo.Item1]);
 
             }
