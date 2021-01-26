@@ -476,6 +476,7 @@ namespace Microsoft.DotNet.XHarness.Android
             catch (Exception toLog)
             {
                 logger.LogError(toLog, "Exception thrown while trying to find compatible device with {propertyName} {apkRequiredProperty}");
+                return null;
             }
 
             if (allDevicesAndTheirProperties.Count == 0)

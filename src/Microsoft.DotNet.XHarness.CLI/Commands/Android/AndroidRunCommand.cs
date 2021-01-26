@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
         protected override string CommandDescription { get; } = @$"
 {CommandHelp}
 
-APKs can communicate status back to XHarness using the results bundle:
+APKs can communicate status back to XHarness using the parameters:
 
 Required:
 {ReturnCodeVariableName} - Exit code for instrumentation. Necessary because a crashing instrumentation may be indistinguishable from a passing one from exit codes.
