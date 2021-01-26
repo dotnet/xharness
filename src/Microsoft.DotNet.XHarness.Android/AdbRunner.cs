@@ -428,7 +428,7 @@ namespace Microsoft.DotNet.XHarness.Android
                     if (!string.IsNullOrEmpty(lineParts[0]))
                     {
                         var deviceSerial = lineParts[0];
-                        var shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi");
+                        var shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi", TimeSpan.FromSeconds(30));
 
                         // Assumption:  All Devices on a machine running Xharness should attempt to be be online or disconnected.
                         retriesLeft = 30; // Max 5 minutes (30 attempts * 10 second waits)
@@ -436,7 +436,7 @@ namespace Microsoft.DotNet.XHarness.Android
                         {
                             _log.LogWarning($"Device '{deviceSerial}' is offline; retrying up to one minute.");
                             Thread.Sleep(10000);
-                            shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi");
+                            shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi", TimeSpan.FromSeconds(30));
                         }
 
                         if (shellArchitecture.ExitCode == (int)AdbExitCodes.SUCCESS)

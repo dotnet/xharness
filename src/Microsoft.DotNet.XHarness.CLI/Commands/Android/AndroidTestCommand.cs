@@ -256,7 +256,7 @@ Arguments:
                 return null;
             }
 
-            if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase)))
+            if (allDevicesAndTheirArchitectures.Any(kvp => kvp.Value?.Equals(apkRequiredArchitecture, StringComparison.OrdinalIgnoreCase) == true))
             {
                 // Key-value tuples here are of the form <device serial number, device architecture>
                 KeyValuePair<string, string?> firstAvailableCompatible = allDevicesAndTheirArchitectures.FirstOrDefault(kvp => apkRequiredArchitecture.Equals(kvp.Value, StringComparison.OrdinalIgnoreCase));
