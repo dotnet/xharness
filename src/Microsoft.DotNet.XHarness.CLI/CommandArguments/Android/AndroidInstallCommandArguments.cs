@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         protected override OptionSet GetTestCommandOptions() => new OptionSet
         {
-            { "device-arch=", "If specified, only run on a device with the listed architecture (x86, x86_64, or arm64_v8a).  Otherwise infer from supplied APK",
+            { "device-arch=", "If specified, forces running on a device with given architecture (x86, x86_64, or arm64_v8a). Otherwise inferred from supplied APK",
                 v => DeviceArchitecture = v
             },
             { "package-name=|p=", "Package name contained within the supplied APK",
