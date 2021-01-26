@@ -116,8 +116,10 @@ These files are:
 
 Example for Android apk:
 
+You should provide path to adb before running via ADB_EXE_PATH.
+
 ```bash
-xharness android test --output-directory=out --package-name="net.dot.System.Numerics.Vectors.Tests" --app="/path/to/test.apk"
+xharness android test --output-directory=out --package-name=net.dot.System.Numerics.Vectors.Tests --app=/path/to/test.apk
 ```
 Output directory will have a file with dump from logcat and a file with tests results.
 

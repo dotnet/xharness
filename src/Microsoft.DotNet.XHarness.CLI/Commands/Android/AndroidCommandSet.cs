@@ -17,6 +17,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
         {
             // Common verbs shared with Android
             Add(new AndroidTestCommand());
+            Add(new AndroidInstallCommand());
+            Add(new AndroidRunCommand());
+            Add(new AndroidUninstallCommand());
             Add(new AndroidGetStateCommand());
         }
     }

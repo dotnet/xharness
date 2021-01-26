@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
                 logger.LogInformation($"ADB State ('device' if physically attached):{Environment.NewLine}{state}");
 
                 logger.LogInformation($"List of devices:");
-                var deviceAndArchList = runner.GetAttachedDevicesAndArchitectures();
+                var deviceAndArchList = runner.GetAttachedDevicesWithProperties("architecture");
                 foreach (string device in deviceAndArchList.Keys)
                 {
                     logger.LogInformation($"Device: '{device}' - Architecture: {deviceAndArchList[device]}");

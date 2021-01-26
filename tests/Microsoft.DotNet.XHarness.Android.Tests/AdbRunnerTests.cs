@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         public void ListDevicesAndArchitectures()
         {
             var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
-            var result = runner.GetAttachedDevicesAndArchitectures();
+            var result = runner.GetAttachedDevicesWithProperties("architecture");
             _processManager.Verify(pm => pm.Run(s_adbPath, "devices -l", TimeSpan.FromSeconds(30)), Times.Once);
 
             // Ensure it called, parsed the three random device names and found all three architectures
