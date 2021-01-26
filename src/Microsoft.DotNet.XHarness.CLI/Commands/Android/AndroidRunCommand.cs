@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
         protected override string CommandUsage { get; } = "android run [OPTIONS]";
 
-        private const string CommandHelp = "Run tests on already installed .apk on an Android device";
+        private const string CommandHelp = "Run tests using an already installed .apk on an Android device";
         protected override string CommandDescription { get; } = @$"
 {CommandHelp}
 

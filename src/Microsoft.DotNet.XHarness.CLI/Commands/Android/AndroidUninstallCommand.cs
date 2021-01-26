@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
         protected override string CommandUsage { get; } = "android uninstall [OPTIONS]";
 
-        private const string CommandHelp = "Uninstall .apk on an Android device";
+        private const string CommandHelp = "Uninstall an .apk from an Android device";
         protected override string CommandDescription { get; } = @$"
 {CommandHelp}
  

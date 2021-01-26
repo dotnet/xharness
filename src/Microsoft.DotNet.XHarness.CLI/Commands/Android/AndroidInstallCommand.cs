@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
         protected override string CommandUsage { get; } = "android install [OPTIONS]";
 
-        private const string CommandHelp = "Install .apk on an Android device without running it";
+        private const string CommandHelp = "Install an .apk on an Android device without running it";
         protected override string CommandDescription { get; } = @$"
 {CommandHelp}
  
@@ -86,7 +86,7 @@ Arguments:
 
                     runner.SetActiveDevice(deviceToUse);
 
-                    // Wait til at least device(s) are ready
+                    // Wait till at least device(s) are ready
                     runner.WaitForDevice();
 
                     // Empty log as we'll be uploading the full logcat for this execution
