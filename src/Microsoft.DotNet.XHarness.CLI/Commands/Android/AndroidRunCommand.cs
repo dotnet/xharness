@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 
-        protected override string CommandUsage { get; } = "android run [OPTIONS]";
+        protected override string CommandUsage { get; } = "android run --output-directory=... --package-name=... [OPTIONS]";
 
         private const string CommandHelp = "Run tests using an already installed .apk on an Android device";
         protected override string CommandDescription { get; } = @$"
@@ -35,12 +35,6 @@ APKs can communicate status back to XHarness using the parameters:
 
 Required:
 {ReturnCodeVariableName} - Exit code for instrumentation. Necessary because a crashing instrumentation may be indistinguishable from a passing one from exit codes.
-
-Optional:
-Test results Paths:
-{string.Join('\n', s_xmlOutputVariableNames)} - If specified, this file will be copied off the device after execution (used for external reporting)
-Reporting:
-{TestRunSummaryVariableName},{ShortMessageVariableName} - If specified, this will be printed to the console directly after execution (useful for printing summaries)
  
 Arguments:
 ";
@@ -81,7 +75,7 @@ Arguments:
 
             logger.LogDebug($"Working with {runner.GetAdbVersion()}");
 
-            return InvokeHelper(
+            return Task.FromResult(InvokeHelper(
                 logger,
                 apkPackageName,
                 _arguments.InstrumentationName,
@@ -90,10 +84,10 @@ Arguments:
                 _arguments.DeviceOutputFolder,
                 _arguments.Timeout,
                 _arguments.ExpectedExitCode,
-                runner);
+                runner));
         }
 
-        public Task<ExitCode> InvokeHelper(
+        public ExitCode InvokeHelper(
             ILogger logger,
             string apkPackageName,
             string? instrumentationName,
@@ -205,11 +199,11 @@ Arguments:
                 else if (failurePullingFiles)
                 {
                     logger.LogError($"Received expected instrumentation exit code ({instrumentationExitCode}), but we hit errors pulling files from the device (see log for details.)");
-                    return Task.FromResult(ExitCode.DEVICE_FILE_COPY_FAILURE);
+                    return ExitCode.DEVICE_FILE_COPY_FAILURE;
                 }
                 else
                 {
-                    return Task.FromResult(ExitCode.SUCCESS);
+                    return ExitCode.SUCCESS;
                 }
             }
             catch (Exception toLog)
@@ -217,7 +211,7 @@ Arguments:
                 logger.LogCritical(toLog, $"Failure to run test package: {toLog.Message}");
             }
 
-            return Task.FromResult(ExitCode.GENERAL_FAILURE);
+            return ExitCode.GENERAL_FAILURE;
         }
 
         private (Dictionary<string, string> values, int exitCode) ParseInstrumentationOutputs(ILogger logger, string stdOut)

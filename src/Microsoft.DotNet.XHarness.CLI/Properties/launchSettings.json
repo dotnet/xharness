@@ -2,7 +2,10 @@
   "profiles": {
     "XHarness": {
       "commandName": "Project",
-      "commandLineArgs": "help"
+      "commandLineArgs": "help android run",
+      "environmentVariables": {
+        "ADB_EXE_PATH": "C:\\Program Files (x86)\\Android\\android-sdk\\platform-tools\\adb.exe"
+      }
     }
   }
 }

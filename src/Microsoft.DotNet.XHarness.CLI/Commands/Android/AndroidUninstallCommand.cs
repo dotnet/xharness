@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 
-        protected override string CommandUsage { get; } = "android uninstall [OPTIONS]";
+        protected override string CommandUsage { get; } = "android uninstall --package-name=... [OPTIONS]";
 
         private const string CommandHelp = "Uninstall an .apk from an Android device";
         protected override string CommandDescription { get; } = @$"

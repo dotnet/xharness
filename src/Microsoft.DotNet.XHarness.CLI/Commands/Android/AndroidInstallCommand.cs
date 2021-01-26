@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 
-        protected override string CommandUsage { get; } = "android install [OPTIONS]";
+        protected override string CommandUsage { get; } = "android install --package-name=... --app=... [OPTIONS]";
 
         private const string CommandHelp = "Install an .apk on an Android device without running it";
         protected override string CommandDescription { get; } = @$"
@@ -33,7 +33,7 @@ Arguments:
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            logger.LogDebug($"Android Install command called: App = {_arguments.AppPackagePath}{Environment.NewLine}");
+            logger.LogDebug($"Android Install command called: App = {_arguments.AppPackagePath}");
             logger.LogDebug($"Timeout = {_arguments.Timeout.TotalSeconds} seconds.");
 
             if (!File.Exists(_arguments.AppPackagePath))
@@ -63,10 +63,10 @@ Arguments:
 
             var runner = new AdbRunner(logger);
 
-            return InvokeHelper(logger, apkPackageName, appPackagePath, apkRequiredArchitecture, runner);
+            return Task.FromResult(InvokeHelper(logger, apkPackageName, appPackagePath, apkRequiredArchitecture, runner));
         }
 
-        public Task<ExitCode> InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string apkRequiredArchitecture, AdbRunner runner)
+        public ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string apkRequiredArchitecture, AdbRunner runner)
         {
             try
             {
@@ -81,7 +81,7 @@ Arguments:
 
                     if (deviceToUse == null)
                     {
-                        return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
+                        return ExitCode.ADB_DEVICE_ENUMERATION_FAILURE;
                     }
 
                     runner.SetActiveDevice(deviceToUse);
@@ -101,18 +101,18 @@ Arguments:
                     if (runner.InstallApk(appPackagePath) != 0)
                     {
                         logger.LogCritical("Install failure: Test command cannot continue");
-                        return Task.FromResult(ExitCode.PACKAGE_INSTALLATION_FAILURE);
+                        return ExitCode.PACKAGE_INSTALLATION_FAILURE;
                     }
                     runner.KillApk(apkPackageName);
                 }
-                return Task.FromResult(ExitCode.SUCCESS);
+                return ExitCode.SUCCESS;
             }
             catch (Exception toLog)
             {
                 logger.LogCritical(toLog, $"Failure to run test package: {toLog.Message}");
             }
 
-            return Task.FromResult(ExitCode.GENERAL_FAILURE);
+            return ExitCode.GENERAL_FAILURE;
         }
     }
 }

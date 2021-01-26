@@ -17,17 +17,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
     internal class AndroidTestCommand : XHarnessCommand
     {
-        // nunit2 one should go away eventually
-        private static readonly string[] s_xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
-        private const string TestRunSummaryVariableName = "test-execution-summary";
-        private const string ShortMessageVariableName = "shortMsg";
         private const string ReturnCodeVariableName = "return-code";
 
         private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 
-        protected override string CommandUsage { get; } = "android test [OPTIONS]";
+        protected override string CommandUsage { get; } = "android test --output-directory=... --package-name=... --app=... [OPTIONS]";
 
         private const string CommandHelp = "Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app";
         protected override string CommandDescription { get; } = @$"
@@ -37,12 +33,6 @@ APKs can communicate status back to XHarness using the parameters:
 
 Required:
 {ReturnCodeVariableName} - Exit code for instrumentation. Necessary because a crashing instrumentation may be indistinguishable from a passing one from exit codes.
-
-Optional:
-Test results Paths:
-{string.Join('\n', s_xmlOutputVariableNames)} - If specified, this file will be copied off the device after execution (used for external reporting)
-Reporting:
-{TestRunSummaryVariableName},{ShortMessageVariableName} - If specified, this will be printed to the console directly after execution (useful for printing summaries)
  
 Arguments:
 ";
