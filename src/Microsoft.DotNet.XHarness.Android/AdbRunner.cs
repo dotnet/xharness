@@ -433,6 +433,7 @@ namespace Microsoft.DotNet.XHarness.Android
                     if (!string.IsNullOrEmpty(lineParts[0]))
                     {
                         var deviceSerial = lineParts[0];
+
                         var shellResult = RunAdbCommand($"-s {deviceSerial} {command}");
 
                         // Assumption:  All Devices on a machine running Xharness should attempt to be be online or disconnected.
@@ -441,6 +442,7 @@ namespace Microsoft.DotNet.XHarness.Android
                         {
                             _log.LogWarning($"Device '{deviceSerial}' is offline; retrying up to one minute.");
                             Thread.Sleep(10000);
+
                             shellResult = RunAdbCommand($"-s {deviceSerial} {command}");
                         }
 
