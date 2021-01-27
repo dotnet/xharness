@@ -45,25 +45,21 @@ Arguments:
             // Assumption: APKs we test will only have one arch for now
             string apkRequiredArchitecture;
 
-            if (!string.IsNullOrEmpty(_arguments.DeviceArchitecture))
-            {
-                apkRequiredArchitecture = _arguments.DeviceArchitecture;
-                logger.LogInformation($"Will attempt to run device on specified architecture: '{apkRequiredArchitecture}'");
-            }
-            else
+            if (string.IsNullOrEmpty(_arguments.DeviceArchitecture))
             {
                 apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath).First();
                 logger.LogInformation($"Will attempt to run device on detected architecture: '{apkRequiredArchitecture}'");
             }
-
-            // Package Name is not guaranteed to match file name, so it needs to be mandatory.
-            string apkPackageName = _arguments.PackageName;
-
-            string appPackagePath = _arguments.AppPackagePath;
+            else
+            {
+                apkRequiredArchitecture = _arguments.DeviceArchitecture;
+                logger.LogInformation($"Will attempt to run device on specified architecture: '{apkRequiredArchitecture}'");
+            }
 
             var runner = new AdbRunner(logger);
 
-            return Task.FromResult(InvokeHelper(logger, apkPackageName, appPackagePath, apkRequiredArchitecture, runner));
+            // Package Name is not guaranteed to match file name, so it needs to be mandatory.
+            return Task.FromResult(InvokeHelper(logger, _arguments.PackageName, _arguments.AppPackagePath, apkRequiredArchitecture, runner));
         }
 
         public ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string apkRequiredArchitecture, AdbRunner runner)

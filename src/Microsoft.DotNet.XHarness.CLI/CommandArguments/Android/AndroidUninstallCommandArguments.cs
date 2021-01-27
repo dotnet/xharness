@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         public string PackageName
         {
-            get => _packageName ?? throw new ArgumentException("Package name not specified");
+            get => _packageName ?? throw new ArgumentNullException("Package name not specified");
             set => _packageName = value;
         }
 

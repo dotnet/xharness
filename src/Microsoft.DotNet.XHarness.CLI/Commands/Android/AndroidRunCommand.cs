@@ -112,10 +112,9 @@ Arguments:
                 {
                     if (result.ExitCode == (int)ExitCode.SUCCESS)
                     {
-                        (var resultValues, var instrExitCode) = ParseInstrumentationOutputs(logger, result.StandardOutput);
-
+                        Dictionary<string, string> resultValues;
                         // This is where test instrumentation can communicate outwardly that test execution failed
-                        instrumentationExitCode = instrExitCode;
+                        (resultValues, instrumentationExitCode) = ParseInstrumentationOutputs(logger, result.StandardOutput);
 
                         // Pull XUnit result XMLs off the device
                         foreach (string possibleResultKey in s_xmlOutputVariableNames)
