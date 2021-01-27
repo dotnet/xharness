@@ -434,7 +434,7 @@ namespace Microsoft.DotNet.XHarness.Android
                     {
                         var deviceSerial = lineParts[0];
 
-                        var shellResult = RunAdbCommand($"-s {deviceSerial} {command}");
+                        var shellResult = RunAdbCommand($"-s {deviceSerial} {command}", TimeSpan.FromSeconds(30));
 
                         // Assumption:  All Devices on a machine running Xharness should attempt to be be online or disconnected.
                         retriesLeft = 30; // Max 5 minutes (30 attempts * 10 second waits)
@@ -443,7 +443,7 @@ namespace Microsoft.DotNet.XHarness.Android
                             _log.LogWarning($"Device '{deviceSerial}' is offline; retrying up to one minute.");
                             Thread.Sleep(10000);
 
-                            shellResult = RunAdbCommand($"-s {deviceSerial} {command}");
+                            shellResult = RunAdbCommand($"-s {deviceSerial} {command}", TimeSpan.FromSeconds(30));
                         }
 
                         if (shellResult.ExitCode == (int)AdbExitCodes.SUCCESS)
@@ -487,7 +487,7 @@ namespace Microsoft.DotNet.XHarness.Android
                 return null;
             }
 
-            if (allDevicesAndTheirProperties.Any(kvp => kvp.Value.Equals(apkRequiredProperty, StringComparison.OrdinalIgnoreCase)))
+            if (allDevicesAndTheirProperties.Any(kvp => kvp.Value.Equals(apkRequiredProperty, StringComparison.OrdinalIgnoreCase) == true))
             {
                 // Key-value tuples here are of the form <device serial number, device property>
                 KeyValuePair<string, string?> firstAvailableCompatible = allDevicesAndTheirProperties.FirstOrDefault(kvp => apkRequiredProperty.Equals(kvp.Value, StringComparison.OrdinalIgnoreCase));
