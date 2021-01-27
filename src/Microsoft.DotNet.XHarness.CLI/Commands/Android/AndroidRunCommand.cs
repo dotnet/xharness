@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 APKs can communicate status back to XHarness using the parameters:
 
 Required:
-{ReturnCodeVariableName} - Exit code for instrumentation. Necessary because a crashing instrumentation may be indistinguishable from a passing one from exit codes.
+{ReturnCodeVariableName} - Exit code for instrumentation. Necessary because a crashing instrumentation may be indistinguishable from a passing one based solely on the exit code.
  
 Arguments:
 ";
