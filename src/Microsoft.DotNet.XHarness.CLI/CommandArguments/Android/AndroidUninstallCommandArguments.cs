@@ -10,6 +10,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
     internal class AndroidUninstallCommandArguments : TestCommandArguments
     {
         private string? _packageName;
+        private string? _deviceId;
 
         public string PackageName
         {
@@ -17,10 +18,20 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             set => _packageName = value;
         }
 
+        public string DeviceId
+        {
+            get => _deviceId ?? throw new ArgumentNullException("Device not specified");
+            set => _deviceId = value;
+        }
+
         protected override OptionSet GetTestCommandOptions() => new OptionSet
         {
             { "package-name=|p=", "Package name contained within the supplied APK",
                 v => PackageName = v
+            },
+            {
+                "device-id=", "Device where APK should be installed",
+                v => DeviceId = v
             },
         };
 
@@ -28,6 +39,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         {
             // Validate this field
             PackageName = PackageName;
+            DeviceId = DeviceId;
         }
     }
 }

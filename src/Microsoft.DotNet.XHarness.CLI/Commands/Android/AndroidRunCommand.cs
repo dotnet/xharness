@@ -56,16 +56,12 @@ Arguments:
             // Make sure the adb server is started
             runner.StartAdbServer();
 
-            // enumerate the devices attached and their architectures
-            // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
-            var deviceToUse = runner.GetDeviceToUse(logger, "package:" + apkPackageName, "app");
-
-            if (deviceToUse == null)
+            if (_arguments.DeviceId == null)
             {
                 return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
             }
 
-            runner.SetActiveDevice(deviceToUse);
+            runner.SetActiveDevice(_arguments.DeviceId);
 
             // Wait til at least device(s) are ready
             runner.WaitForDevice();

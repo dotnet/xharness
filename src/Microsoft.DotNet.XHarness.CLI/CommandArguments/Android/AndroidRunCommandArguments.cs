@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
     internal class AndroidRunCommandArguments : TestCommandArguments
     {
         private string? _packageName;
+        private string? _deviceId;
 
         /// <summary>
         /// If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.
@@ -22,6 +23,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         {
             get => _packageName ?? throw new ArgumentNullException("Package name not specified");
             set => _packageName = value;
+        }
+
+        public string DeviceId
+        {
+            get => _deviceId ?? throw new ArgumentNullException("Device not specified");
+            set => _deviceId = value;
         }
 
         /// <summary>
@@ -58,6 +65,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             { "package-name=|p=", "Package name contained within the supplied APK",
                 v => PackageName = v
             },
+            {
+                "device-id=", "Device where APK should be installed",
+                v => DeviceId = v
+            },
             { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
                 {
                     var argPair = v.Split('=');
@@ -83,6 +94,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
             // Validate this field
             PackageName = PackageName;
+            DeviceId = DeviceId;
         }
     }
 }

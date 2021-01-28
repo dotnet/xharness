@@ -77,18 +77,25 @@ Arguments:
 
             try
             {
-                installer.InvokeHelper(logger, apkPackageName, appPackagePath, apkRequiredArchitecture, runner);
+                installer.InvokeHelper(
+                    logger: logger,
+                    apkPackageName: apkPackageName,
+                    appPackagePath: appPackagePath,
+                    apkRequiredArchitecture: apkRequiredArchitecture,
+                    deviceId: null,
+                    runner: runner);
 
                 testRunner.InvokeHelper(
-                    logger,
-                    apkPackageName,
-                    _arguments.InstrumentationName,
-                    _arguments.InstrumentationArguments,
-                    _arguments.OutputDirectory,
-                    _arguments.DeviceOutputFolder,
-                    _arguments.Timeout,
-                    _arguments.ExpectedExitCode,
-                    runner);
+                    logger: logger,
+                    apkPackageName: apkPackageName,
+                    instrumentationName: _arguments.InstrumentationName,
+                    instrumentationArguments: _arguments.InstrumentationArguments,
+                    outputDirectory: _arguments.OutputDirectory,
+                    deviceOutputFolder: _arguments.DeviceOutputFolder,
+                    timeout: _arguments.Timeout,
+                    expectedExitCode: _arguments.ExpectedExitCode,
+                    runner: runner);
+
                 runner.UninstallApk(apkPackageName);
                 return Task.FromResult(ExitCode.SUCCESS);
             }

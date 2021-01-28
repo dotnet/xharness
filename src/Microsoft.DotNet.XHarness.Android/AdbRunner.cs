@@ -436,7 +436,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
                         var shellResult = RunAdbCommand($"-s {deviceSerial} {command}", TimeSpan.FromSeconds(30));
 
-                        // Assumption:  All Devices on a machine running Xharness should attempt to be be online or disconnected.
+                        // Assumption:  All Devices on a machine running Xharness should attempt to be online or disconnected.
                         retriesLeft = 30; // Max 5 minutes (30 attempts * 10 second waits)
                         while (retriesLeft-- > 0 && shellResult.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
                         {

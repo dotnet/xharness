@@ -59,10 +59,10 @@ Arguments:
             var runner = new AdbRunner(logger);
 
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
-            return Task.FromResult(InvokeHelper(logger, _arguments.PackageName, _arguments.AppPackagePath, apkRequiredArchitecture, runner));
+            return Task.FromResult(InvokeHelper(logger, _arguments.PackageName, _arguments.AppPackagePath, apkRequiredArchitecture, _arguments.DeviceId, runner));
         }
 
-        public ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string apkRequiredArchitecture, AdbRunner runner)
+        public ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string apkRequiredArchitecture, string deviceId, AdbRunner runner)
         {
             try
             {
@@ -73,7 +73,7 @@ Arguments:
 
                     // enumerate the devices attached and their architectures
                     // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
-                    var deviceToUse = runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture");
+                    var deviceToUse = deviceId ?? runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture");
 
                     if (deviceToUse == null)
                     {
