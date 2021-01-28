@@ -491,7 +491,7 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 // Key-value tuples here are of the form <device serial number, device property>
                 KeyValuePair<string, string?> firstAvailableCompatible = allDevicesAndTheirProperties.FirstOrDefault(kvp => apkRequiredProperty.Equals(kvp.Value, StringComparison.OrdinalIgnoreCase));
-                logger.LogInformation($"Using first-found compatible device of {allDevicesAndTheirProperties.Count} total- serial: '{firstAvailableCompatible.Key}' - {propertyName}: {firstAvailableCompatible.Value}");
+                logger.LogDebug($"Using first-found compatible device of {allDevicesAndTheirProperties.Count} total- serial: '{firstAvailableCompatible.Key}' - {propertyName}: {firstAvailableCompatible.Value}");
                 return firstAvailableCompatible.Key;
             }
             else

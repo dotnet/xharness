@@ -62,7 +62,7 @@ Arguments:
             return Task.FromResult(InvokeHelper(logger, _arguments.PackageName, _arguments.AppPackagePath, apkRequiredArchitecture, _arguments.DeviceId, runner));
         }
 
-        public ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string apkRequiredArchitecture, string deviceId, AdbRunner runner)
+        public ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string apkRequiredArchitecture, string? deviceId, AdbRunner runner)
         {
             try
             {
