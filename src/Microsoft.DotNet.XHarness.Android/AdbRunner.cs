@@ -487,7 +487,7 @@ namespace Microsoft.DotNet.XHarness.Android
                 return null;
             }
 
-            if (allDevicesAndTheirProperties.Any(kvp => kvp.Value?.Equals(apkRequiredProperty, StringComparison.OrdinalIgnoreCase) == true))
+            if (allDevicesAndTheirProperties.Any(kvp => apkRequiredProperty.Equals(kvp.Value, StringComparison.OrdinalIgnoreCase)))
             {
                 // Key-value tuples here are of the form <device serial number, device property>
                 KeyValuePair<string, string?> firstAvailableCompatible = allDevicesAndTheirProperties.FirstOrDefault(kvp => apkRequiredProperty.Equals(kvp.Value, StringComparison.OrdinalIgnoreCase));
