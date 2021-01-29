@@ -97,6 +97,7 @@ Arguments:
                     if (runner.InstallApk(appPackagePath) != 0)
                     {
                         logger.LogCritical("Install failure: Test command cannot continue");
+                        runner.UninstallApk(apkPackageName);
                         return ExitCode.PACKAGE_INSTALLATION_FAILURE;
                     }
                     runner.KillApk(apkPackageName);
@@ -108,6 +109,7 @@ Arguments:
                 logger.LogCritical(toLog, $"Failure to run test package: {toLog.Message}");
             }
 
+            runner.UninstallApk(apkPackageName);
             return ExitCode.GENERAL_FAILURE;
         }
     }
