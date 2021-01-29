@@ -85,9 +85,6 @@ Arguments:
                     // Wait till at least device(s) are ready
                     runner.WaitForDevice();
 
-                    // Empty log as we'll be uploading the full logcat for this execution
-                    runner.ClearAdbLog();
-
                     logger.LogDebug($"Working with {runner.GetAdbVersion()}");
 
                     // If anything changed about the app, Install will fail; uninstall it first.

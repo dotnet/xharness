@@ -56,12 +56,6 @@ Arguments:
 
                     runner.SetActiveDevice(_arguments.DeviceId);
 
-                    // Wait til at least device(s) are ready
-                    runner.WaitForDevice();
-
-                    // Empty log as we'll be uploading the full logcat for this execution
-                    runner.ClearAdbLog();
-
                     logger.LogDebug($"Working with {runner.GetAdbVersion()}");
 
                     runner.UninstallApk(apkPackageName);
