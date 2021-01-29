@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
                 Assert.Equal(fakeDeviceInfo.Item2, result[fakeDeviceInfo.Item1]);
 
             }
-            Assert.Equal(3, result.Count);
+            Assert.Equal(4, result.Count);
         }
 
         [Fact]
@@ -208,7 +208,8 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
             {
                 { new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86_64"), 0 },
                 { new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86"), 0 },
-                { new Tuple<string, string>($"somedevice-{r.Next(9999)}", "arm64v8"), 0 }
+                { new Tuple<string, string>($"somedevice-{r.Next(9999)}", "arm64-v8a"), 0 },
+                { new Tuple<string, string>($"somedevice-{r.Next(9999)}", "armeabi-v7a"), 0 }
             };
             return values;
         }

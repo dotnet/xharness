@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         protected override OptionSet GetTestCommandOptions() => new OptionSet
         {
-            { "device-arch=", "If specified, only run on a device with the listed architecture (x86, x86_64, or arm64_v8a).  Otherwise infer from supplied APK",
+            { "device-arch=", "If specified, only run on a device with the listed architecture (x86, x86_64, arm64-v8a or armeabi-v7a).  Otherwise infer from supplied APK",
                 v => DeviceArchitecture = v
             },
             { "device-out-folder=|dev-out=", "If specified, copy this folder recursively off the device to the path specified by the output directory",
