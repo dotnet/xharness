@@ -9,7 +9,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.DotNet.XHarness.Android.Execution;
-using Microsoft.DotNet.XHarness.Common.Utilities;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Android
@@ -25,6 +25,9 @@ namespace Microsoft.DotNet.XHarness.Android
         private readonly string _absoluteAdbExePath;
         private readonly ILogger _log;
         private readonly IAdbProcessManager _processManager;
+        private readonly Dictionary<string, string> CommandList = new Dictionary<string, string>{
+        { "architecture", "shell getprop ro.product.cpu.abi"},
+        { "app", "shell pm list packages -3"} }; 
 
 
         public AdbRunner(ILogger log, string adbExePath = "") : this(log, new AdbProcessManager(log), adbExePath) { }
@@ -397,9 +400,11 @@ namespace Microsoft.DotNet.XHarness.Android
             _log.LogDebug($"Copied {filesToCopy.Length} files");
         }
 
-        public Dictionary<string, string?> GetAttachedDevicesAndArchitectures()
+        public Dictionary<string, string?> GetAttachedDevicesWithProperties(string property)
         {
-            var devicesAndArchitectures = new Dictionary<string, string?>();
+            var devicesAndProperties = new Dictionary<string, string?>();
+
+            string command = CommandList[property];
 
             var result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
             string[] standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
@@ -428,25 +433,27 @@ namespace Microsoft.DotNet.XHarness.Android
                     if (!string.IsNullOrEmpty(lineParts[0]))
                     {
                         var deviceSerial = lineParts[0];
-                        var shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi", TimeSpan.FromSeconds(30));
 
-                        // Assumption:  All Devices on a machine running Xharness should attempt to be be online or disconnected.
+                        var shellResult = RunAdbCommand($"-s {deviceSerial} {command}", TimeSpan.FromSeconds(30));
+
+                        // Assumption:  All Devices on a machine running Xharness should attempt to be online or disconnected.
                         retriesLeft = 30; // Max 5 minutes (30 attempts * 10 second waits)
-                        while (retriesLeft-- > 0 && shellArchitecture.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
+                        while (retriesLeft-- > 0 && shellResult.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
                         {
                             _log.LogWarning($"Device '{deviceSerial}' is offline; retrying up to one minute.");
                             Thread.Sleep(10000);
-                            shellArchitecture = RunAdbCommand($"-s {deviceSerial} shell getprop ro.product.cpu.abi", TimeSpan.FromSeconds(30));
+
+                            shellResult = RunAdbCommand($"-s {deviceSerial} {command}", TimeSpan.FromSeconds(30));
                         }
 
-                        if (shellArchitecture.ExitCode == (int)AdbExitCodes.SUCCESS)
+                        if (shellResult.ExitCode == (int)AdbExitCodes.SUCCESS)
                         {
-                            devicesAndArchitectures.Add(deviceSerial, shellArchitecture.StandardOutput.Trim());
+                            devicesAndProperties.Add(deviceSerial, shellResult.StandardOutput.Trim());
                         }
                         else
                         {
-                            _log.LogError($"Error trying to get device architecture: {shellArchitecture.StandardError}");
-                            devicesAndArchitectures.Add(deviceSerial, null);
+                            _log.LogError($"Error trying to get device: {shellResult.StandardError}");
+                            devicesAndProperties.Add(deviceSerial, null);
                         }
                     }
                 }
@@ -457,7 +464,42 @@ namespace Microsoft.DotNet.XHarness.Android
                 _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}. Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, and unlocked.");
                 throw new Exception("One or more attached Android devices are offline");
             }
-            return devicesAndArchitectures;
+            return devicesAndProperties;
+        }
+
+
+        public string? GetDeviceToUse(ILogger logger, string apkRequiredProperty, string propertyName)
+        {
+            Dictionary<string, string?> allDevicesAndTheirProperties = new Dictionary<string, string?>();
+            try
+            {
+                allDevicesAndTheirProperties = GetAttachedDevicesWithProperties(propertyName);
+            }
+            catch (Exception toLog)
+            {
+                logger.LogError(toLog, "Exception thrown while trying to find compatible device with {propertyName} {apkRequiredProperty}");
+                return null;
+            }
+
+            if (allDevicesAndTheirProperties.Count == 0)
+            {
+                logger.LogError("No attached device detected");
+                return null;
+            }
+
+            if (allDevicesAndTheirProperties.Any(kvp => apkRequiredProperty.Equals(kvp.Value, StringComparison.OrdinalIgnoreCase)))
+            {
+                // Key-value tuples here are of the form <device serial number, device property>
+                KeyValuePair<string, string?> firstAvailableCompatible = allDevicesAndTheirProperties.FirstOrDefault(kvp => apkRequiredProperty.Equals(kvp.Value, StringComparison.OrdinalIgnoreCase));
+                logger.LogDebug($"Using first-found compatible device of {allDevicesAndTheirProperties.Count} total- serial: '{firstAvailableCompatible.Key}' - {propertyName}: {firstAvailableCompatible.Value}");
+                return firstAvailableCompatible.Key;
+            }
+            else
+            {
+                // In this case, the enumeration worked, we found one or more devices, but nothing matched the APK's architecture; fail out.
+                logger.LogError($"No devices found with {propertyName} '{apkRequiredProperty}'.");
+                return null;
+            }
         }
 
         public ProcessExecutionResults RunApkInstrumentation(string apkName, TimeSpan timeout) =>

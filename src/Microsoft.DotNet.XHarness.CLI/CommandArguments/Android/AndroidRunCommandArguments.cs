@@ -8,9 +8,10 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
-    internal class AndroidTestCommandArguments : TestCommandArguments
+    internal class AndroidRunCommandArguments : TestCommandArguments
     {
         private string? _packageName;
+        private string? _deviceId;
 
         /// <summary>
         /// If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.
@@ -20,15 +21,15 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         public string PackageName
         {
-            get => _packageName ?? throw new ArgumentException("Package name not specified");
+            get => _packageName ?? throw new ArgumentNullException("Package name not specified");
             set => _packageName = value;
         }
 
-        /// <summary>
-        /// If specified, attempt to run on a compatible attached device, failing if unavailable.
-        /// If not specified, we will open the apk using Zip APIs and guess what's usable based off folders found in under /lib
-        /// </summary>
-        public string? DeviceArchitecture { get; set; }
+        public string DeviceId
+        {
+            get => _deviceId ?? throw new ArgumentNullException("Device not specified");
+            set => _deviceId = value;
+        }
 
         /// <summary>
         /// Folder to copy off for output of executing the specified APK
@@ -44,9 +45,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         protected override OptionSet GetTestCommandOptions() => new OptionSet
         {
-            { "device-arch=", "If specified, only run on a device with the listed architecture (x86, x86_64, arm64-v8a or armeabi-v7a).  Otherwise infer from supplied APK",
-                v => DeviceArchitecture = v
-            },
             { "device-out-folder=|dev-out=", "If specified, copy this folder recursively off the device to the path specified by the output directory",
                 v => DeviceOutputFolder = RootPath(v)
             },
@@ -66,6 +64,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             },
             { "package-name=|p=", "Package name contained within the supplied APK",
                 v => PackageName = v
+            },
+            {
+                "device-id=", "Device where APK should be installed",
+                v => DeviceId = v
             },
             { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
                 {
@@ -92,7 +94,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
             // Validate this field
             PackageName = PackageName;
-            AppPackagePath = AppPackagePath;
+            DeviceId = DeviceId;
         }
     }
 }

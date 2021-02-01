@@ -40,10 +40,7 @@ dotnet tool install Microsoft.DotNet.XHarness.CLI \
 You can get a specific version from [the dotnet-eng feed](https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&view=versions&package=Microsoft.DotNet.XHarness.CLI&protocolType=NuGet) where it is published.
 So far we are in preview so omitting the version will fail to locate a stable version of the tool and it has to be supplied.
 
-To run the tool, use the `xharness` command. The tool always expects the platform (`android`/`apple`/`browser`) as the first argument and has following commands available:
-- `test` - run and test given application containing a TestRunner **\*** on a target device/emulator
-- `state` - print information about the machine and connected devices
-- `run` (Apple only) - run given application without a TestRunner **\*** on a target device/emulator
+To run the tool, use the `xharness` command. The tool always expects the platform (`android`/`apple`/`browser`) followed by a command. To get an up-to-date set of commands, please run `xharness help`.
 
 > Applications run via the `apple test` command require a TestRunner inside of the iOS/tvOS app bundle to work properly.
 The `apple run` command, on the other hand, doesn't expect the TestRunner and only runs the application and tries to detect the exit code. Detection of exit code might not work across different iOS versions reliably.
@@ -117,7 +114,7 @@ These files are:
 Example for Android apk:
 
 ```bash
-xharness android test --output-directory=out --package-name="net.dot.System.Numerics.Vectors.Tests" --app="/path/to/test.apk"
+xharness android test --output-directory=out --package-name=net.dot.System.Numerics.Vectors.Tests --app=/path/to/test.apk
 ```
 Output directory will have a file with dump from logcat and a file with tests results.
 
