@@ -124,6 +124,22 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         }
 
         [Fact]
+        public void StartAdbServer()
+        {
+            var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+            runner.StartAdbServer();
+            _processManager.Verify(pm => pm.Run(s_adbPath, "start-server", TimeSpan.FromMinutes(5)), Times.Once);
+        }
+
+        [Fact]
+        public void KillAdbServer()
+        {
+            var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+            runner.KillAdbServer();
+            _processManager.Verify(pm => pm.Run(s_adbPath, "kill-server", TimeSpan.FromMinutes(5)), Times.Once);
+        }
+
+        [Fact]
         public void InstallApk()
         {
             var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
@@ -152,6 +168,16 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
             int exitCode = runner.KillApk(fakeApkName);
             _processManager.Verify(pm => pm.Run(s_adbPath, $"shell am kill --user all {fakeApkName}", TimeSpan.FromMinutes(5)), Times.Once);
             Assert.Equal(0, exitCode);
+        }
+
+        [Fact]
+        public void GetDeviceToUse()
+        {
+            var requiredArchitecture = "x86_64";
+            var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+            var result = runner.GetDeviceToUse(_mainLog.Object, requiredArchitecture, "architecture");
+            _processManager.Verify(pm => pm.Run(s_adbPath, "devices -l", TimeSpan.FromSeconds(30)), Times.Once);
+            Assert.True(_fakeDeviceList.ContainsKey(new Tuple<string, string>(result, requiredArchitecture)));
         }
 
         [Fact]
@@ -289,6 +315,8 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
                 case "reboot":
                 case "uninstall":
                 case "wait-for-device":
+                case "start-server":
+                case "kill-server":
                     // No output needed, but pretend to wait a little
                     Thread.Sleep(1000);
                     break;

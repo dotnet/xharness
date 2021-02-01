@@ -42,27 +42,19 @@ Arguments:
                 return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
             }
 
-            // Assumption: APKs we test will only have one arch for now
-            string apkRequiredArchitecture;
-
-            if (string.IsNullOrEmpty(_arguments.DeviceArchitecture))
-            {
-                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath).First();
-                logger.LogInformation($"Will attempt to run device on detected architecture: '{apkRequiredArchitecture}'");
-            }
-            else
-            {
-                apkRequiredArchitecture = _arguments.DeviceArchitecture;
-                logger.LogInformation($"Will attempt to run device on specified architecture: '{apkRequiredArchitecture}'");
-            }
-
             var runner = new AdbRunner(logger);
 
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
-            return Task.FromResult(InvokeHelper(logger, _arguments.PackageName, _arguments.AppPackagePath, apkRequiredArchitecture, _arguments.DeviceId, runner));
+            return Task.FromResult(InvokeHelper(
+                logger: logger,
+                apkPackageName: _arguments.PackageName,
+                appPackagePath: _arguments.AppPackagePath,
+                apkRequiredArchitecture: null,
+                deviceId: _arguments.DeviceId,
+                runner: runner));
         }
 
-        public ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string apkRequiredArchitecture, string? deviceId, AdbRunner runner)
+        public ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string? apkRequiredArchitecture, string? deviceId, AdbRunner runner)
         {
             try
             {
@@ -71,8 +63,8 @@ Arguments:
                     // Make sure the adb server is started
                     runner.StartAdbServer();
 
-                    // enumerate the devices attached and their architectures
-                    // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
+                    // if call via install command device id must be set
+                    // otherwise - from test command - apkRequiredArchitecture was set by user or .apk architecture
                     var deviceToUse = deviceId ?? runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture");
 
                     if (deviceToUse == null)
