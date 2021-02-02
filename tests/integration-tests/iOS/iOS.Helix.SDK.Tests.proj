@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)\iOS.AppBundle.proj" />
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\iOS.AppBundle.proj" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
