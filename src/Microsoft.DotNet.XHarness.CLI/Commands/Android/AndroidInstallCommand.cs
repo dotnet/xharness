@@ -65,14 +65,16 @@ Arguments:
 
                     // if call via install command device id must be set
                     // otherwise - from test command - apkRequiredArchitecture was set by user or .apk architecture
-                    var deviceToUse = deviceId ?? runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture");
+                    deviceId ??= apkRequiredArchitecture != null
+                        ? runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture")
+                        : throw new ArgumentNullException("Required architecture not specified");
 
-                    if (deviceToUse == null)
+                    if (deviceId == null)
                     {
                         return ExitCode.ADB_DEVICE_ENUMERATION_FAILURE;
                     }
 
-                    runner.SetActiveDevice(deviceToUse);
+                    runner.SetActiveDevice(deviceId);
 
                     // Wait till at least device(s) are ready
                     runner.WaitForDevice();
