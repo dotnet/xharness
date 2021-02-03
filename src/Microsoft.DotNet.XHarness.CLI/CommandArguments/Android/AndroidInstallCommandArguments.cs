@@ -24,17 +24,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             set => _deviceId = value;
         }
 
-        /// <summary>
-        /// If specified, attempt to run on a compatible attached device, failing if unavailable.
-        /// If not specified, we will open the apk using Zip APIs and guess what's usable based off folders found in under /lib
-        /// </summary>
-        public string? DeviceArchitecture { get; set; }
-
         protected override OptionSet GetTestCommandOptions() => new OptionSet
         {
-            { "device-arch=", "If specified, forces running on a device with given architecture (x86, x86_64, arm64-v8a or armeabi-v7a). Otherwise inferred from supplied APK",
-                v => DeviceArchitecture = v
-            },
             { "package-name=|p=", "Package name contained within the supplied APK",
                 v => PackageName = v
             },

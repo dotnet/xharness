@@ -292,25 +292,6 @@ namespace Microsoft.DotNet.XHarness.Android
             return result.ExitCode;
         }
 
-        public void GrantPermissions(string apkName, string[] permissions)
-        {
-            _log.LogInformation($"Granting permissions to '{apkName}' ");
-
-            foreach (string permission in permissions)
-            {
-                var result = RunAdbCommand($"shell pm grant {apkName} {permission}");
-
-                if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                {
-                    _log.LogError($"Failed granting '{permission}': Exit code: {result.ExitCode}{Environment.NewLine}{result.StandardOutput}; execution may fail as a result.");
-                }
-                else
-                {
-                    _log.LogDebug($"Successfully granted permission:{Environment.NewLine}{permission}");
-                }
-            }
-        }
-
         // Assumes the directory is empty so any files present after the pull are new.
         public List<string> PullFiles(string devicePath, string localPath)
         {
@@ -362,42 +343,6 @@ namespace Microsoft.DotNet.XHarness.Android
             {
                 Directory.Delete(tempFolder, true);
             }
-        }
-
-        public void PushFiles(string localDirectory, string devicePath, bool removeIfPresent)
-        {
-            _log.LogInformation($"Pushing contents of '{localDirectory}' to '{devicePath}'");
-
-            if (string.IsNullOrEmpty(localDirectory))
-            {
-                throw new ArgumentNullException(nameof(localDirectory));
-            }
-            if (!Directory.Exists(localDirectory))
-            {
-                throw new DirectoryNotFoundException($"{localDirectory} does not exist");
-            }
-
-            // For now, we'll hard-code the assumption that files go into /sdcard/Documents.
-            // This functionality may not end up getting used, so don't need to polish it until we're sure it is.
-            if (removeIfPresent && devicePath.StartsWith("/sdcard/Documents/", StringComparison.OrdinalIgnoreCase))
-            {
-                RunAdbCommand($"shell rm -rf {devicePath}");
-            }
-            string[] filesToCopy = Directory.GetFiles(localDirectory, "*", SearchOption.AllDirectories);
-
-            foreach (string filePath in filesToCopy)
-            {
-                string relativeFilePath = Path.GetRelativePath(localDirectory, filePath).Replace("\\", "/");
-                var result = RunAdbCommand($"push \"{filePath}\" {devicePath}{relativeFilePath}");
-
-                if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                {
-                    var theException = new Exception($"ERROR: {result}");
-                    _log.LogError(theException, "Failure pushing files");
-                    throw theException;
-                }
-            }
-            _log.LogDebug($"Copied {filesToCopy.Length} files");
         }
 
         public Dictionary<string, string?> GetAttachedDevicesWithProperties(string property)
@@ -501,12 +446,6 @@ namespace Microsoft.DotNet.XHarness.Android
                 return null;
             }
         }
-
-        public ProcessExecutionResults RunApkInstrumentation(string apkName, TimeSpan timeout) =>
-            RunApkInstrumentation(apkName, "", new Dictionary<string, string>(), timeout);
-
-        public ProcessExecutionResults RunApkInstrumentation(string apkName, Dictionary<string, string> args, TimeSpan timeout) =>
-            RunApkInstrumentation(apkName, "", args, timeout);
 
         public ProcessExecutionResults RunApkInstrumentation(string apkName, string? instrumentationClassName, Dictionary<string, string> args, TimeSpan timeout)
         {
