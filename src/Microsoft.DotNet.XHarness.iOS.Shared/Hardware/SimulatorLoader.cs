@@ -367,7 +367,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
                 TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X"),
                 TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p",
-                TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "Apple-Watch-38mm" : "Apple-Watch-Series-3-38mm"),
+                TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-3-38mm", // min version from xcode12.5 and later.
                 _ => throw new Exception(string.Format("Invalid simulator target: {0}", target))
             };
 
