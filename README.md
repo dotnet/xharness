@@ -28,12 +28,21 @@ You can delete the folder after you're done, nothing is installed in your system
 
 ## Installation and usage
 
-To install the latest version of the tool run:
+To install the latest version of the tool run (in bash):
 
 ```bash
 dotnet tool install Microsoft.DotNet.XHarness.CLI \
     --global \
     --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json \
+    --version "1.0.0-prerelease*"
+```
+
+Or run (in PowerShell):
+
+```powershell
+dotnet tool install Microsoft.DotNet.XHarness.CLI `
+    --global `
+    --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
     --version "1.0.0-prerelease*"
 ```
 
