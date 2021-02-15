@@ -244,7 +244,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             // Arguments passed to the iOS app bundle
-            args.AddRange(_appArguments.Select(arg => new SetAppArgumentArgument(arg, true)));
+            args.AddRange(_appArguments.Select(arg => new SetAppArgumentArgument(arg)));
 
             return args;
         }

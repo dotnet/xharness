@@ -354,9 +354,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         {
             var args = new MlaunchArguments
             {
-                new SetEnvVariableArgument(EnviromentVariables.AutoStart, true),
                 new SetEnvVariableArgument(EnviromentVariables.AutoExit, true),
-                new SetEnvVariableArgument(EnviromentVariables.EnableNetwork, true),
             };
 
             if (skippedMethods?.Any() ?? skippedTestClasses?.Any() ?? false)
@@ -385,9 +383,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             // let the runner now via envars that we want to get a xml output, else the runner will default to plain text
             args.Add(new SetEnvVariableArgument(EnviromentVariables.EnableXmlOutput, true));
-            args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlMode, "wrapped"));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlVersion, $"{xmlResultJargon}"));
-            args.Add(new SetEnvVariableArgument(EnviromentVariables.Transport, listenerTransport.ToString().ToUpper()));
 
             if (listenerTransport == ListenerTransport.File)
             {
@@ -397,7 +393,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostPort, listenerPort));
 
             // Arguments passed to the iOS app bundle
-            args.AddRange(_appArguments.Select(arg => new SetAppArgumentArgument(arg, true)));
+            args.AddRange(_appArguments.Select(arg => new SetAppArgumentArgument(arg)));
 
             return args;
         }

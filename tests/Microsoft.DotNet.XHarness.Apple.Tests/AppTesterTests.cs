@@ -418,7 +418,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             var expectedArgs = GetExpectedDeviceMlaunchArgs(
                 useTunnel: useTunnel,
-                extraArgs: "-argument=--app-arg=--appArg1=value1 -argument=--app-arg=-f ");
+                extraArgs: "-argument=--appArg1=value1 -argument=-f ");
 
             _processManager
                 .Verify(
@@ -629,16 +629,12 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         }
 
         private static string GetExpectedDeviceMlaunchArgs(string skippedTests = null, bool useTunnel = false, string extraArgs = null) =>
-            "-setenv=NUNIT_AUTOSTART=true " +
             "-setenv=NUNIT_AUTOEXIT=true " +
-            "-setenv=NUNIT_ENABLE_NETWORK=true " +
             skippedTests +
             "-v " +
             "-v " +
             "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
-            "-setenv=NUNIT_ENABLE_XML_MODE=wrapped " +
             "-setenv=NUNIT_XML_VERSION=xUnit " +
-            "-setenv=NUNIT_TRANSPORT=TCP " +
             $"-setenv=NUNIT_HOSTPORT={Port} " +
             extraArgs +
             "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
@@ -649,15 +645,11 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "--wait-for-exit";
 
         private string GetExpectedSimulatorMlaunchArgs() =>
-            "-setenv=NUNIT_AUTOSTART=true " +
             "-setenv=NUNIT_AUTOEXIT=true " +
-            "-setenv=NUNIT_ENABLE_NETWORK=true " +
             "-v " +
             "-v " +
             "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
-            "-setenv=NUNIT_ENABLE_XML_MODE=wrapped " +
             "-setenv=NUNIT_XML_VERSION=xUnit " +
-            "-setenv=NUNIT_TRANSPORT=TCP " +
             $"-setenv=NUNIT_HOSTPORT={Port} " +
             "-setenv=NUNIT_HOSTNAME=127.0.0.1 " +
             $"--device=:v2:udid={_mockSimulator.Object.UDID} " +

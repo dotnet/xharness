@@ -52,6 +52,5 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 TerminateWithSuccess();
             }
         }
-
     }
 }

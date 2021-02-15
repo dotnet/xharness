@@ -323,8 +323,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         private static string GetExpectedDeviceMlaunchArgs() =>
             "-v " +
             "-v " +
-            "-argument=--app-arg=--appArg1=value1 " +
-            "-argument=--app-arg=-g " +
+            "-argument=--appArg1=value1 " +
+            "-argument=-g " +
             "--disable-memory-limits " +
             $"--devname \"{DeviceName}\" " +
             $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
@@ -333,8 +333,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         private string GetExpectedSimulatorMlaunchArgs() =>
             "-v " +
             "-v " +
-            "-argument=--app-arg=--appArg1=value1 " +
-            "-argument=--app-arg=-g " +
+            "-argument=--appArg1=value1 " +
+            "-argument=-g " +
             $"--device=:v2:udid={_mockSimulator.Object.UDID} " +
             $"--launchsim {StringUtils.FormatArguments(s_appPath)}";
 
