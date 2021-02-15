@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public static ApplicationOptions Current = new ApplicationOptions();
         private readonly List<string> _singleMethodFilters = new List<string>();
         private readonly List<string> _classMethodFilters = new List<string>();
+        private readonly List<string> _additionalArguments = new List<string>();
 
         public ApplicationOptions()
         {
@@ -126,6 +127,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                     "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
                     "ignored. Can be used more than once.",
                     v => _classMethodFilters.Add(v)
+                },
+                {
+                    "app-arg=",
+                    "Additional arguments (key=value pairs) that can be used by the application itself. Can be passed several times.",
+                    v => _additionalArguments.Add(v)
                 }
             };
 
@@ -145,17 +151,17 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// Specify if the Xml returned by the runner should be wrapped by an
         /// extra node so that the human readable test results are added.
         /// </summary>
-		public XmlMode XmlMode { get; set; }
+		public XmlMode XmlMode { get; private set; }
 
         /// <summary>
         /// Specify the version of Xml to be used for the results.
         /// </summary>
-        public XmlResultJargon XmlVersion { get; set; } = XmlResultJargon.xUnit;
+        public XmlResultJargon XmlVersion { get; private set; } = XmlResultJargon.xUnit;
 
         /// <summary>
         /// Return the test results as xml.
         /// </summary>
-        public bool EnableXml { get; set; } = true; // always true by default
+        public bool EnableXml { get; private set; } = true; // always true by default
 
         /// <summary>
         /// The name of the host that has the device plugged.
@@ -170,12 +176,12 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// <summary>
         /// Specify if tests should start without human input.
         /// </summary>
-        public bool AutoStart { get; set; }
+        public bool AutoStart { get; private set; }
 
         /// <summary>
         /// Specify is the application should exit once the tests are completed.
         /// </summary>
-        public bool TerminateAfterExecution { get; set; }
+        public bool TerminateAfterExecution { get; private set; }
 
         /// <summary>
         /// The transport to be used to communicate with the host. The default
@@ -186,17 +192,17 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// * TCP
         /// * HTTP
         /// </summary>
-        public string Transport { get; set; } = "TCP";
+        public string Transport { get; private set; } = "TCP";
 
         /// <summary>
         /// The path to the file in which logs will be written.
         /// </summary>
-        public string LogFile { get; set; }
+        public string LogFile { get; private set; }
 
         /// <summary>
         /// The path to the file in which results will be written.
         /// </summary>
-        public string ResultFile { get; set; }
+        public string ResultFile { get; private set; }
 
         public bool ShowUseNetworkLogger
         {
@@ -206,12 +212,12 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// <summary>
         /// Specify if test results should be sorted by name.
         /// </summary>
-        public bool SortNames { get; set; }
+        public bool SortNames { get; private set; }
 
         /// <summary>
         /// Specify if all the tests should be run by default or not. Defaults to true.
         /// </summary>
-        public bool RunAllTestsByDefault { get; set; } = true;
+        public bool RunAllTestsByDefault { get; private set; } = true;
 
         /// <summary>
         /// Specify the methods to be ran in the app.
@@ -222,5 +228,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// Specify the test classes to be ran in the app.
         /// </summary>
         public IEnumerable<string> ClassMethodFilters => _classMethodFilters;
+
+        /// <summary>
+        /// Additional arguments for the app itself.
+        /// </summary>
+        public IEnumerable<string> AdditionalArguments => _additionalArguments;
     }
 }
