@@ -189,7 +189,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 
             if (isAppArg)
             {
-                _value = "-app-arg:" + _value;
+                _value = "--app-arg=" + _value;
             }
         }
 
