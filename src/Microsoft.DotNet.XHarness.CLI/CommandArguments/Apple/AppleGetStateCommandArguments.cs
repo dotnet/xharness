@@ -7,16 +7,16 @@ using System.IO;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal class iOSGetStateCommandArguments : XHarnessCommandArguments
+    internal class AppleGetStateCommandArguments : XHarnessCommandArguments
     {
         /// <summary>
         /// Path to the mlaunch binary.
         /// Default comes from the NuGet.
         /// </summary>
         public string MlaunchPath { get; set; } = Path.Join(
-            Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(iOSTestCommandArguments))?.Location),
+            Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(AppleTestCommandArguments))?.Location),
             "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
 
         public bool ShowSimulatorsUUID { get; set; } = false;

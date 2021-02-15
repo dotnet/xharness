@@ -10,9 +10,9 @@ using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal abstract class iOSAppRunArguments : AppRunCommandArguments
+    internal abstract class AppleAppRunArguments : AppRunCommandArguments
     {
         /// <summary>
         /// Path to where Xcode is located.
@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         /// Default comes from the NuGet.
         /// </summary>
         public string MlaunchPath { get; set; } = Path.Join(
-            Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(iOSTestCommandArguments))?.Location),
+            Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(AppleTestCommandArguments))?.Location),
             "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
             {
                 var testTargets = new List<TestTargetOs>();
 
-                foreach (string targetName in value ?? throw new ArgumentNullException("Targets cannot be empty"))
+                foreach (var targetName in value ?? throw new ArgumentNullException("Targets cannot be empty"))
                 {
                     try
                     {

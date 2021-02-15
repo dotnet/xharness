@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.Execution;
@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         private const string SimulatorPrefix = "com.apple.CoreSimulator.SimDeviceType.";
 
-        private readonly iOSGetStateCommandArguments _arguments = new iOSGetStateCommandArguments();
+        private readonly AppleGetStateCommandArguments _arguments = new AppleGetStateCommandArguments();
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 

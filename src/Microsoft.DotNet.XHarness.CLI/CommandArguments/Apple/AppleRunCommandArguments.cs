@@ -5,9 +5,9 @@
 using System;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal class iOSRunCommandArguments : iOSAppRunArguments
+    internal class AppleRunCommandArguments : AppleAppRunArguments
     {
         /// <summary>
         /// Expected result code the app should return. Defaults to 0.
