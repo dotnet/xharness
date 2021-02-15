@@ -10,7 +10,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
     /// <summary>
     /// Specifies the channel that is used to communicate with the device.
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS
         UsbTunnel,
     }
 
-    internal class iOSTestCommandArguments : iOSAppRunArguments
+    internal class AppleTestCommandArguments : AppleAppRunArguments
     {
         private readonly List<string> _singleMethodFilters = new List<string>();
         private readonly List<string> _classMethodFilters = new List<string>();

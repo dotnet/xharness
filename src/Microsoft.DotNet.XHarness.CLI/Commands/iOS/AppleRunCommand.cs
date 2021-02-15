@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -26,9 +26,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     {
         private const string CommandHelp = "Runs a given iOS/tvOS/watchOS application bundle in a target device/simulator and tries to detect exit code (might not work reliably across iOS versions).";
 
-        private readonly iOSRunCommandArguments _arguments = new iOSRunCommandArguments();
+        private readonly AppleRunCommandArguments _arguments = new AppleRunCommandArguments();
 
-        protected override iOSAppRunArguments iOSRunArguments => _arguments;
+        protected override AppleAppRunArguments iOSRunArguments => _arguments;
         protected override string CommandUsage { get; } = "ios run [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 

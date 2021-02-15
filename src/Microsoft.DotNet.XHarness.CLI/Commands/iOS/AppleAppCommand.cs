@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments.iOS;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         protected readonly ErrorKnowledgeBase ErrorKnowledgeBase = new ErrorKnowledgeBase();
         protected override XHarnessCommandArguments Arguments => iOSRunArguments;
-        protected abstract iOSAppRunArguments iOSRunArguments { get; }
+        protected abstract AppleAppRunArguments iOSRunArguments { get; }
 
         private MlaunchProcessManager? _processManager = null;
         private HardwareDeviceLoader? _deviceLoader = null;
