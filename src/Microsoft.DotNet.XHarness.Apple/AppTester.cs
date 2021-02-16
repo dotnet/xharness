@@ -429,6 +429,8 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 arguments.AddRange(_appArguments);
 
+                await crashReporter.StartCaptureAsync();
+
                 var result = _processManager.ExecuteCommandAsync(
                     "open",
                     _appArguments.ToList(),

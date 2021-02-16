@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             do
             {
                 var newCrashFiles = await CreateCrashReportsSnapshotAsync();
-                newCrashFiles.ExceptWith(_initialCrashes);
+                newCrashFiles.ExceptWith(_initialCrashes ?? throw new InvalidOperationException("CrashSnapshotReport capturing was ended without being started first!"));
 
                 if (newCrashFiles.Count == 0)
                 {
