@@ -96,7 +96,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         public async Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default)
         {
-            var plistPath = Path.Combine(appPackagePath, "Info.plist");
+            string plistPath;
+
+            if (target == TestTarget.MacCatalyst)
+            {
+                plistPath = Path.Combine(appPackagePath, "Contents", "Info.plist");
+            }
+            else
+            {
+                plistPath = Path.Combine(appPackagePath, "Info.plist");
+            }
 
             if (!File.Exists(plistPath))
             {
