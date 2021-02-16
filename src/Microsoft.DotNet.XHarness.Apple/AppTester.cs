@@ -93,6 +93,31 @@ namespace Microsoft.DotNet.XHarness.Apple
                 autoExit: true,
                 xmlOutput: true); // cli always uses xml
 
+            if (target.Platform == TestTarget.MacCatalyst)
+            {
+                try
+                {
+                    var (catalystTestResult, catalystResultMessage) = await RunMacCatalystTests(
+                        deviceListenerTransport,
+                        deviceListener,
+                        deviceListenerTmpFile,
+                        appInformation,
+                        timeout,
+                        testLaunchTimeout,
+                        xmlResultJargon,
+                        skippedMethods,
+                        skippedTestClasses,
+                        cancellationToken);
+
+                    return ("MacCatalyst", catalystTestResult, catalystResultMessage);
+                }
+                finally
+                {
+                    deviceListener.Cancel();
+                    deviceListener.Dispose();
+                }
+            }
+
             ISimulatorDevice? simulator = null;
             ISimulatorDevice? companionSimulator = null;
 
@@ -343,6 +368,131 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
         }
 
+        private async Task<(TestExecutingResult Result, string ResultMessage)> RunMacCatalystTests(
+            ListenerTransport deviceListenerTransport,
+            ISimpleListener deviceListener,
+            string deviceListenerTmpFile,
+            AppBundleInformation appInformation,
+            TimeSpan timeout,
+            TimeSpan testLaunchTimeout,
+            XmlResultJargon xmlResultJargon,
+            string[]? skippedMethods,
+            string[]? skippedTestClasses,
+            CancellationToken cancellationToken)
+        {
+            var deviceListenerPort = deviceListener.InitializeAndGetPort();
+            deviceListener.StartAsync();
+
+            var crashLogs = new Logs(_logs.Directory);
+
+            // TODO: What to do here?
+            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: false, null);
+            ITestReporter testReporter = _testReporterFactory.Create(_mainLog,
+                _mainLog,
+                _logs,
+                crashReporter,
+                deviceListener,
+                _resultParser,
+                appInformation,
+                RunMode.MacOS,
+                xmlResultJargon,
+                null,
+                timeout,
+                null,
+                (level, message) => _mainLog.WriteLine(message));
+
+            deviceListener.ConnectedTask
+                .TimeoutAfter(testLaunchTimeout)
+                .ContinueWith(testReporter.LaunchCallback)
+                .DoNotAwait();
+
+            _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
+
+            try
+            {
+                using var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken);
+
+                var envVariables = GetEnvVariables(
+                    xmlResultJargon,
+                    skippedMethods,
+                    skippedTestClasses,
+                    deviceListenerTransport,
+                    deviceListenerPort,
+                    deviceListenerTmpFile);
+
+                // TODO: Get MacCatalyst system logs?
+                var arguments = new List<string>
+                {
+                    "-W",
+                    "\"{appInformation.LaunchAppPath}\"",
+                };
+
+                arguments.AddRange(_appArguments);
+
+                var result = _processManager.ExecuteCommandAsync(
+                    "open",
+                    _appArguments.ToList(),
+                    _mainLog,
+                    timeout,
+                    envVariables.ToDictionary(p => p.Key, p => p.Value.ToString()),
+                    cancellationToken);
+
+                await testReporter.CollectSimulatorResult(result);
+            }
+            finally
+            {
+                deviceListener.Cancel();
+                deviceListener.Dispose();
+            }
+
+            return await testReporter.ParseResult();
+        }
+
+        private Dictionary<string, object> GetEnvVariables(
+            XmlResultJargon xmlResultJargon,
+            string[]? skippedMethods,
+            string[]? skippedTestClasses,
+            ListenerTransport listenerTransport,
+            int listenerPort,
+            string listenerTmpFile)
+        {
+            var variables = new Dictionary<string, object>
+            {
+                { EnviromentVariables.AutoExit, true },
+                { EnviromentVariables.HostPort, listenerPort },
+
+                // Let the runner know that we want to get an XML output and not plain text
+                {  EnviromentVariables.EnableXmlOutput, true },
+                {  EnviromentVariables.XmlVersion, $"{xmlResultJargon}" },
+            };
+
+            if (skippedMethods?.Any() ?? skippedTestClasses?.Any() ?? false)
+            {
+                // Do not run all the tests, we are using filters
+                variables.Add(EnviromentVariables.RunAllTestsByDefault, false);
+
+                // Add the skipped test classes and methods
+                if (skippedMethods != null && skippedMethods.Length > 0)
+                {
+                    var skippedMethodsValue = string.Join(',', skippedMethods);
+                    variables.Add(EnviromentVariables.SkippedMethods, skippedMethodsValue);
+                }
+
+                if (skippedTestClasses != null && skippedTestClasses!.Length > 0)
+                {
+                    var skippedClassesValue = string.Join(',', skippedTestClasses);
+                    variables.Add(EnviromentVariables.SkippedClasses, skippedClassesValue);
+                }
+            }
+
+            if (listenerTransport == ListenerTransport.File)
+            {
+                variables.Add(EnviromentVariables.LogFilePath, listenerTmpFile);
+            }
+
+            return variables;
+        }
+
         private MlaunchArguments GetCommonArguments(
             int verbosity,
             XmlResultJargon xmlResultJargon,
@@ -352,45 +502,16 @@ namespace Microsoft.DotNet.XHarness.Apple
             int listenerPort,
             string listenerTmpFile)
         {
-            var args = new MlaunchArguments
-            {
-                new SetEnvVariableArgument(EnviromentVariables.AutoExit, true),
-            };
-
-            if (skippedMethods?.Any() ?? skippedTestClasses?.Any() ?? false)
-            {
-                // do not run all the tests, we are using filters
-                args.Add(new SetEnvVariableArgument(EnviromentVariables.RunAllTestsByDefault, false));
-
-                // add the skipped test classes and methods
-                if (skippedMethods != null && skippedMethods.Length > 0)
-                {
-                    var skippedMethodsValue = string.Join(',', skippedMethods);
-                    args.Add(new SetEnvVariableArgument(EnviromentVariables.SkippedMethods, skippedMethodsValue));
-                }
-
-                if (skippedTestClasses != null && skippedTestClasses!.Length > 0)
-                {
-                    var skippedClassesValue = string.Join(',', skippedTestClasses);
-                    args.Add(new SetEnvVariableArgument(EnviromentVariables.SkippedClasses, skippedClassesValue));
-                }
-            }
+            var args = new MlaunchArguments();
 
             for (var i = -1; i < verbosity; i++)
             {
                 args.Add(new VerbosityArgument());
             }
 
-            // let the runner now via envars that we want to get a xml output, else the runner will default to plain text
-            args.Add(new SetEnvVariableArgument(EnviromentVariables.EnableXmlOutput, true));
-            args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlVersion, $"{xmlResultJargon}"));
-
-            if (listenerTransport == ListenerTransport.File)
-            {
-                args.Add(new SetEnvVariableArgument(EnviromentVariables.LogFilePath, listenerTmpFile));
-            }
-
-            args.Add(new SetEnvVariableArgument(EnviromentVariables.HostPort, listenerPort));
+            // Environment variables
+            var envVariables = GetEnvVariables(xmlResultJargon, skippedMethods, skippedTestClasses, listenerTransport, listenerPort, listenerTmpFile);
+            args.AddRange(envVariables.Select(pair => new SetEnvVariableArgument(pair.Key, pair.Value)));
 
             // Arguments passed to the iOS app bundle
             args.AddRange(_appArguments.Select(arg => new SetAppArgumentArgument(arg)));
