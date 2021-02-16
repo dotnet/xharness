@@ -368,6 +368,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
         }
 
+        /// <summary>
+        /// Runs the MacCatalyst app via `open -W path.to.app`.
+        /// </summary>
         private async Task<(TestExecutingResult Result, string ResultMessage)> RunMacCatalystTests(
             ListenerTransport deviceListenerTransport,
             ISimpleListener deviceListener,
@@ -433,7 +436,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 var result = _processManager.ExecuteCommandAsync(
                     "open",
-                    _appArguments.ToList(),
+                    arguments,
                     _mainLog,
                     timeout,
                     envVariables.ToDictionary(p => p.Key, p => p.Value.ToString()),
