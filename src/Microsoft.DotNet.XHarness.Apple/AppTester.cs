@@ -423,6 +423,8 @@ namespace Microsoft.DotNet.XHarness.Apple
                     deviceListenerPort,
                     deviceListenerTmpFile);
 
+                envVariables[EnviromentVariables.HostName] = "127.0.0.1";
+
                 // TODO: Get MacCatalyst system logs?
                 var arguments = new List<string>
                 {
