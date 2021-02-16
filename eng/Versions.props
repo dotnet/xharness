@@ -2,6 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <VersionPrefix>1.0.0</VersionPrefix>
-    <PreReleaseVersionLabel>prerelease</PreReleaseVersionLabel>
+    <PreReleaseVersionLabel>branch-xcode-12.5</PreReleaseVersionLabel>
   </PropertyGroup>
 </Project>
