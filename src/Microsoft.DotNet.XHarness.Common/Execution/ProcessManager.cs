@@ -249,8 +249,11 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             };
 
             var sb = new StringBuilder();
+            sb.AppendLine($"Running {StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
+
             if (process.StartInfo.EnvironmentVariables != null)
             {
+                sb.Append("With env vars: ");
                 var currentEnvironment = Environment.GetEnvironmentVariables().Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
                 var processEnvironment = process.StartInfo.EnvironmentVariables.Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
                 var allKeys = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
@@ -271,7 +274,6 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                 }
             }
 
-            sb.Append($"{StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
             log.WriteLine(sb.ToString());
 
             process.Start();

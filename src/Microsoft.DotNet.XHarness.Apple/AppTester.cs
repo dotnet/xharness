@@ -424,7 +424,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 var arguments = new List<string>
                 {
                     "-W",
-                    "\"{appInformation.LaunchAppPath}\"",
+                    appInformation.LaunchAppPath,
                 };
 
                 arguments.AddRange(_appArguments);
