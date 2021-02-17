@@ -251,7 +251,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             var sb = new StringBuilder();
             sb.AppendLine($"Running {StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
 
-            if (process.StartInfo.EnvironmentVariables != null)
+            if (process.StartInfo.EnvironmentVariables != null && process.StartInfo.EnvironmentVariables.Count > 0)
             {
                 sb.Append("With env vars: ");
                 var currentEnvironment = Environment.GetEnvironmentVariables().Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
