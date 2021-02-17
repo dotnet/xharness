@@ -68,8 +68,15 @@ namespace Microsoft.DotNet.XHarness.Apple
         {
             var isSimulator = target.Platform.IsSimulator();
 
+            ProcessExecutionResult result;
             ISimulatorDevice? simulator = null;
             ISimulatorDevice? companionSimulator = null;
+
+            if (target.Platform == TestTarget.MacCatalyst)
+            {
+                result = await RunMacCatalystApp(appInformation, timeout, cancellationToken);
+                return ("MacCatalyst", result);
+            }
 
             // Find devices
             if (isSimulator)
@@ -84,11 +91,14 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             var crashLogs = new Logs(_logs.Directory);
 
-            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName);
+            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(
+                _mainLog,
+                crashLogs,
+                isDevice: !isSimulator,
+                deviceName);
 
             _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{deviceName}' ***");
 
-            ProcessExecutionResult result;
             if (isSimulator)
             {
                 if (simulator == null)
@@ -219,7 +229,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 await crashReporter.StartCaptureAsync();
 
-                _mainLog.WriteLine("Starting test run");
+                _mainLog.WriteLine("Starting the app");
 
                 return await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
@@ -232,6 +242,33 @@ namespace Microsoft.DotNet.XHarness.Apple
                 deviceLogCapturer.StopCapture();
                 deviceSystemLog.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Runs the MacCatalyst app via `open -W path.to.app`.
+        /// </summary>
+        private async Task<ProcessExecutionResult> RunMacCatalystApp(
+            AppBundleInformation appInformation,
+            TimeSpan timeout,
+            CancellationToken cancellationToken)
+        {
+            var crashLogs = new Logs(_logs.Directory);
+
+            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: false, null);
+
+            _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
+
+            await crashReporter.StartCaptureAsync();
+
+            var arguments = new List<string>
+            {
+                "-W",
+                appInformation.LaunchAppPath,
+            };
+
+            arguments.AddRange(_appArguments);
+
+            return await _processManager.ExecuteCommandAsync("open", arguments, _mainLog, timeout, null, cancellationToken);
         }
 
         private MlaunchArguments GetCommonArguments(int verbosity)
