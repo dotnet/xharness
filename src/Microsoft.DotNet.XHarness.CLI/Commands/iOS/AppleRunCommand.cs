@@ -11,7 +11,6 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -70,27 +69,35 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                 verbosity: GetMlaunchVerbosity(_arguments.Verbosity),
                 cancellationToken: cancellationToken);
 
-            if (!result.Succeeded)
+            if (result.TimedOut)
             {
-                if (result.TimedOut)
+                logger.LogError($"App run has timed out");
+                return ExitCode.TIMED_OUT;
+            }
+
+            int exitCode;
+            if (target.Platform == TestTarget.MacCatalyst)
+            {
+                exitCode = result.ExitCode;
+            }
+            else
+            {
+                if (!result.Succeeded)
                 {
-                    logger.LogError($"App run has timed out");
-                    return ExitCode.TIMED_OUT;
+                    logger.LogError($"App run has failed. mlaunch exited with {result.ExitCode}");
+                    return ExitCode.APP_LAUNCH_FAILURE;
                 }
 
-                logger.LogError($"App run has failed. mlaunch exited with {result.ExitCode}");
-                return ExitCode.APP_LAUNCH_FAILURE;
-            }
+                var systemLog = logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
+                if (systemLog == null)
+                {
+                    logger.LogError("Application has finished but no system log found. Failed to determine the exit code!");
+                    return ExitCode.RETURN_CODE_NOT_SET;
+                }
 
-            var systemLog = logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
-            if (systemLog == null)
-            {
-                logger.LogError("Application has finished but no system log found. Failed to determine the exit code!");
-                return ExitCode.RETURN_CODE_NOT_SET;
+                exitCode = new ExitCodeDetector().DetectExitCode(appBundleInfo, systemLog);
+                logger.LogInformation($"App run ended with {exitCode}");
             }
-
-            var exitCode = new ExitCodeDetector().DetectExitCode(appBundleInfo, systemLog);
-            logger.LogInformation($"App run ended with {exitCode}");
 
             if (_arguments.ExpectedExitCode != exitCode)
             {
@@ -100,6 +107,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
             logger.LogInformation("Application has finished with exit code: " + exitCode +
                 (_arguments.ExpectedExitCode != 0 ? " (as expected)" : null));
+
             return ExitCode.SUCCESS;
         }
     }
