@@ -84,6 +84,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             var runMode = target.Platform.ToRunMode();
             var isSimulator = target.Platform.IsSimulator();
 
+            // TODO #459: Get MacCatalyst system logs
             var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 runMode,
@@ -388,9 +389,9 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             var crashLogs = new Logs(_logs.Directory);
 
-            // TODO: What to do here?
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: false, null);
-            ITestReporter testReporter = _testReporterFactory.Create(_mainLog,
+            ITestReporter testReporter = _testReporterFactory.Create(
+                _mainLog,
                 _mainLog,
                 _logs,
                 crashReporter,
@@ -425,7 +426,6 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 envVariables[EnviromentVariables.HostName] = "127.0.0.1";
 
-                // TODO: Get MacCatalyst system logs?
                 var arguments = new List<string>
                 {
                     "-W",
@@ -441,7 +441,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     arguments,
                     _mainLog,
                     timeout,
-                    envVariables.ToDictionary(p => p.Key, p => p.Value.ToString()),
+                    envVariables.ToDictionary(p => p.Key, p => p.Value is bool ? p.Value.ToString().ToLowerInvariant() : p.Value.ToString()),
                     cancellationToken);
 
                 await testReporter.CollectSimulatorResult(result);
