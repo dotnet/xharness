@@ -251,25 +251,37 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             var sb = new StringBuilder();
             sb.AppendLine($"Running {StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
 
-            if (process.StartInfo.EnvironmentVariables != null && process.StartInfo.EnvironmentVariables.Count > 0)
+            if (process.StartInfo.EnvironmentVariables != null)
             {
-                sb.Append("With env vars: ");
-                var currentEnvironment = Environment.GetEnvironmentVariables().Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
-                var processEnvironment = process.StartInfo.EnvironmentVariables.Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
-                var allKeys = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
-                foreach (var key in allKeys)
+                static Dictionary<string, string?> NormalizeVariables(IEnumerable<DictionaryEntry> variables)
                 {
-                    if (key == null)
+                    return variables.ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
+                }
+
+                bool headerShown = false;
+
+                var currentEnvironment = NormalizeVariables(Environment.GetEnvironmentVariables().Cast<DictionaryEntry>());
+                var processEnvironment = NormalizeVariables(process.StartInfo.EnvironmentVariables.Cast<DictionaryEntry>());
+                var allVariables = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
+                foreach (var variable in allVariables)
+                {
+                    if (variable == null)
                     {
                         continue;
                     }
 
-                    string? a = null, b = null;
-                    currentEnvironment?.TryGetValue(key, out a);
-                    processEnvironment?.TryGetValue(key, out b);
+                    currentEnvironment.TryGetValue(variable, out var a);
+                    processEnvironment.TryGetValue(variable, out var b);
+
                     if (a != b)
                     {
-                        sb.Append($"{key}={StringUtils.Quote(b)} ");
+                        if (!headerShown)
+                        {
+                            sb.Append("With env vars: ");
+                            headerShown = true;
+                        }
+
+                        sb.Append($"{variable}={StringUtils.Quote(b)} ");
                     }
                 }
             }
