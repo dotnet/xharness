@@ -8,7 +8,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
@@ -258,7 +257,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                new[] { "--appArg1=value1", "--appArg2" });
+                Array.Empty<string>());
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -396,7 +395,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                new[] { "--appArg1=value1", "--appArg2" });
+                new[] { "--appArg1=value1", "-f" });
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -419,7 +418,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             var expectedArgs = GetExpectedDeviceMlaunchArgs(
                 useTunnel: useTunnel,
-                extraArgs: "-argument=-app-arg:--appArg1=value1 -argument=-app-arg:--appArg2 ");
+                extraArgs: "-argument=--appArg1=value1 -argument=-f ");
 
             _processManager
                 .Verify(
@@ -630,27 +629,14 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         }
 
         private static string GetExpectedDeviceMlaunchArgs(string skippedTests = null, bool useTunnel = false, string extraArgs = null) =>
-            "-argument=-connection-mode " +
-            "-argument=none " +
-            "-argument=-app-arg:-autostart " +
-            "-setenv=NUNIT_AUTOSTART=true " +
-            "-argument=-app-arg:-autoexit " +
             "-setenv=NUNIT_AUTOEXIT=true " +
-            "-argument=-app-arg:-enablenetwork " +
-            "-setenv=NUNIT_ENABLE_NETWORK=true " +
-            "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
             skippedTests +
             "-v " +
             "-v " +
             "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
-            "-setenv=NUNIT_ENABLE_XML_MODE=wrapped " +
             "-setenv=NUNIT_XML_VERSION=xUnit " +
-            "-argument=-app-arg:-transport:Tcp " +
-            "-setenv=NUNIT_TRANSPORT=TCP " +
-            $"-argument=-app-arg:-hostport:{Port} " +
             $"-setenv=NUNIT_HOSTPORT={Port} " +
             extraArgs +
-            "-argument=-app-arg:-hostname:127.0.0.1,::1 " +
             "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
             "--disable-memory-limits " +
             $"--devname \"{DeviceName}\" " +
@@ -659,27 +645,12 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "--wait-for-exit";
 
         private string GetExpectedSimulatorMlaunchArgs() =>
-            "-argument=-connection-mode " +
-            "-argument=none " +
-            "-argument=-app-arg:-autostart " +
-            "-setenv=NUNIT_AUTOSTART=true " +
-            "-argument=-app-arg:-autoexit " +
             "-setenv=NUNIT_AUTOEXIT=true " +
-            "-argument=-app-arg:-enablenetwork " +
-            "-setenv=NUNIT_ENABLE_NETWORK=true " +
-            "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
             "-v " +
             "-v " +
             "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
-            "-setenv=NUNIT_ENABLE_XML_MODE=wrapped " +
             "-setenv=NUNIT_XML_VERSION=xUnit " +
-            "-argument=-app-arg:-transport:Tcp " +
-            "-setenv=NUNIT_TRANSPORT=TCP " +
-            $"-argument=-app-arg:-hostport:{Port} " +
             $"-setenv=NUNIT_HOSTPORT={Port} " +
-            "-argument=-app-arg:--appArg1=value1 " +
-            "-argument=-app-arg:--appArg2 " +
-            "-argument=-app-arg:-hostname:127.0.0.1 " +
             "-setenv=NUNIT_HOSTNAME=127.0.0.1 " +
             $"--device=:v2:udid={_mockSimulator.Object.UDID} " +
             $"--launchsim {StringUtils.FormatArguments(s_appPath)}";

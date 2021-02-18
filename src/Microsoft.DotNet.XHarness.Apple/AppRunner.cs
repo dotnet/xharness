@@ -236,16 +236,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         private MlaunchArguments GetCommonArguments(int verbosity)
         {
-            var args = new MlaunchArguments
-            {
-                new SetAppArgumentArgument("-connection-mode"),
-                new SetAppArgumentArgument("none"), // This will prevent the app from trying to connect to any IDEs
-
-                // On macOS we can't edit the TCC database easily
-                // (it requires adding the mac has to be using MDM: https://carlashley.com/2018/09/28/tcc-round-up/)
-                // So by default ignore any tests that would pop up permission dialogs in CI.
-                new SetEnvVariableArgument(EnviromentVariables.DisableSystemPermissionTests, 1),
-            };
+            var args = new MlaunchArguments();
 
             for (var i = -1; i < verbosity; i++)
             {
@@ -253,7 +244,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             // Arguments passed to the iOS app bundle
-            args.AddRange(_appArguments.Select(arg => new SetAppArgumentArgument(arg, true)));
+            args.AddRange(_appArguments.Select(arg => new SetAppArgumentArgument(arg)));
 
             return args;
         }

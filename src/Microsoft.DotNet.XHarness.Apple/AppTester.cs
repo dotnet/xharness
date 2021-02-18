@@ -354,19 +354,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         {
             var args = new MlaunchArguments
             {
-                new SetAppArgumentArgument("-connection-mode"),
-                new SetAppArgumentArgument("none"), // This will prevent the app from trying to connect to any IDEs
-                new SetAppArgumentArgument("-autostart", true),
-                new SetEnvVariableArgument(EnviromentVariables.AutoStart, true),
-                new SetAppArgumentArgument("-autoexit", true),
                 new SetEnvVariableArgument(EnviromentVariables.AutoExit, true),
-                new SetAppArgumentArgument("-enablenetwork", true),
-                new SetEnvVariableArgument(EnviromentVariables.EnableNetwork, true),
-
-                // On macOS we can't edit the TCC database easily
-                // (it requires adding the mac has to be using MDM: https://carlashley.com/2018/09/28/tcc-round-up/)
-                // So by default ignore any tests that would pop up permission dialogs in CI.
-                new SetEnvVariableArgument(EnviromentVariables.DisableSystemPermissionTests, 1),
             };
 
             if (skippedMethods?.Any() ?? skippedTestClasses?.Any() ?? false)
@@ -395,21 +383,17 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             // let the runner now via envars that we want to get a xml output, else the runner will default to plain text
             args.Add(new SetEnvVariableArgument(EnviromentVariables.EnableXmlOutput, true));
-            args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlMode, "wrapped"));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.XmlVersion, $"{xmlResultJargon}"));
-            args.Add(new SetAppArgumentArgument($"-transport:{listenerTransport}", true));
-            args.Add(new SetEnvVariableArgument(EnviromentVariables.Transport, listenerTransport.ToString().ToUpper()));
 
             if (listenerTransport == ListenerTransport.File)
             {
                 args.Add(new SetEnvVariableArgument(EnviromentVariables.LogFilePath, listenerTmpFile));
             }
 
-            args.Add(new SetAppArgumentArgument($"-hostport:{listenerPort}", true));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostPort, listenerPort));
 
             // Arguments passed to the iOS app bundle
-            args.AddRange(_appArguments.Select(arg => new SetAppArgumentArgument(arg, true)));
+            args.AddRange(_appArguments.Select(arg => new SetAppArgumentArgument(arg)));
 
             return args;
         }
@@ -434,7 +418,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                 deviceListenerPort,
                 deviceListenerTmpFile);
 
-            args.Add(new SetAppArgumentArgument("-hostname:127.0.0.1", true));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"));
             args.Add(new SimulatorUDIDArgument(simulator.UDID));
 
@@ -481,7 +464,6 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             var ips = string.Join(",", _helpers.GetLocalIpAddresses().Select(ip => ip.ToString()));
 
-            args.Add(new SetAppArgumentArgument($"-hostname:{ips}", true));
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, ips));
             args.Add(new DisableMemoryLimitsArgument());
             args.Add(new DeviceNameArgument(deviceName));
