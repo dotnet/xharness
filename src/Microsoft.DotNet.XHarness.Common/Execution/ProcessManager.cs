@@ -253,16 +253,11 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 
             if (process.StartInfo.EnvironmentVariables != null)
             {
-                static Dictionary<string, string?> NormalizeVariables(IEnumerable<DictionaryEntry> variables)
-                {
-                    return variables.ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
-                }
+                var currentEnvironment = Environment.GetEnvironmentVariables().Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
+                var processEnvironment = process.StartInfo.EnvironmentVariables.Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
+                var allVariables = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
 
                 bool headerShown = false;
-
-                var currentEnvironment = NormalizeVariables(Environment.GetEnvironmentVariables().Cast<DictionaryEntry>());
-                var processEnvironment = NormalizeVariables(process.StartInfo.EnvironmentVariables.Cast<DictionaryEntry>());
-                var allVariables = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
                 foreach (var variable in allVariables)
                 {
                     if (variable == null)
