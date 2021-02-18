@@ -237,7 +237,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             testResult.LaunchCallback(t);
             // verify that we did report the launch proble
             _mainLog.Verify(l => l.WriteLine(
-               It.Is<string>(s => s.StartsWith($"Test launch failed:"))), Times.Once);
+               It.Is<string>(s => s.StartsWith($"Test execution failed:"))), Times.Once);
         }
 
         [Fact]
@@ -248,7 +248,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             tcs.TrySetCanceled();
             testResult.LaunchCallback(tcs.Task);
             // verify we notify that the execution was canceled
-            _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test launch was cancelled."))), Times.Once);
+            _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test execution was cancelled"))), Times.Once);
         }
 
         [Fact]
@@ -257,7 +257,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             var testResult = BuildTestResult();
             var t = Task.FromResult(true);
             testResult.LaunchCallback(t);
-            _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test run started"))), Times.Once);
+            _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test execution started"))), Times.Once);
         }
 
         // copy the sample data to a given tmp file
