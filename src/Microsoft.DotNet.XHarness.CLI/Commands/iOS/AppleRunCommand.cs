@@ -44,7 +44,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            // only add the extra callback if we do know that the feature was indeed enabled
+            // TODO #462: Implement support for getting exit code when targeting MacCatalyst
+            if (target.Platform == TestTarget.MacCatalyst)
+            {
+                if (_arguments.ExpectedExitCode != 0)
+                {
+                    logger.LogCritical("Getting app's exit code is currently not supported in MacCatalyst!");
+                    return ExitCode.INVALID_ARGUMENTS;
+                }
+
+                logger.LogWarning("Getting app's exit code is currently not supported in MacCatalyst");
+            }
+
+            // Only add the extra callback if we do know that the feature was indeed enabled
             Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(logger, l) : (Action<string>?)null;
 
             var appRunner = new AppRunner(
