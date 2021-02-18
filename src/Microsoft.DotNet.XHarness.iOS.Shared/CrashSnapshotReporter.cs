@@ -62,6 +62,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
         public async Task EndCaptureAsync(TimeSpan timeout)
         {
+            if (_initialCrashes == null)
+            {
+                throw new InvalidOperationException("CrashSnapshotReport capturing was ended without being started first!");
+            }
+
+            _log.WriteLine($"No crash reports, waiting {(int)timeout.TotalSeconds} seconds for the crash report service...");
+
             // Check for crash reports
             var stopwatch = Stopwatch.StartNew();
 
@@ -78,9 +85,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     }
                     else
                     {
-                        _log.WriteLine(
-                            "No crash reports, waiting a second to see if the crash report service just didn't complete in time ({0})",
-                            (int)(timeout.TotalSeconds - stopwatch.Elapsed.TotalSeconds));
 
                         Thread.Sleep(TimeSpan.FromSeconds(1));
                     }

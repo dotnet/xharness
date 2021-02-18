@@ -280,20 +280,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         {
             if (launchResult.IsFaulted)
             {
-                _mainLog.WriteLine($"Test launch failed: {launchResult.Exception}");
+                _mainLog.WriteLine($"Test execution failed: {launchResult.Exception}");
             }
             else if (launchResult.IsCanceled)
             {
-                _mainLog.WriteLine("Test launch was cancelled.");
+                _mainLog.WriteLine("Test execution was cancelled");
             }
             else if (launchResult.Result)
             {
-                _mainLog.WriteLine("Test run started");
+                _mainLog.WriteLine("Test execution started");
             }
             else
             {
                 _cancellationTokenSource.Cancel();
-                _mainLog.WriteLine("Test launch timed out after {0} minute(s).", _timeoutWatch.Elapsed.TotalMinutes);
+                _mainLog.WriteLine("Test execution timed out after {0} minute(s).", _timeoutWatch.Elapsed.TotalMinutes);
                 _timedout = true;
             }
         }
