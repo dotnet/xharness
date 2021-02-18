@@ -9,11 +9,13 @@ trigger:
   branches:
     include:
     - main
+    - xcode/*
 
 pr:
   branches:
     include:
     - main
+    - xcode/*
 
 stages:
 - stage: Build_Windows_NT
