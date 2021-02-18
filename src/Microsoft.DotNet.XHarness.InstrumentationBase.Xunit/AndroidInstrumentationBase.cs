@@ -5,6 +5,7 @@ using System.Reflection;
 using Android.App;
 using Android.OS;
 using Android.Runtime;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 using Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
@@ -29,9 +30,6 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
 
         protected Dictionary<string, string> bundleArguments;
 
-        protected AndroidInstrumentationBase()
-        {
-        }
         protected AndroidInstrumentationBase(IntPtr handle, JniHandleOwnership transfer)
             : base(handle, transfer)
         {
@@ -58,10 +56,8 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
                 }
             }
 
-            if (bundleArguments.ContainsKey(ResultsFileArgumentName) == false)
-            {
-                bundleArguments.Add(ResultsFileArgumentName, "TestResults.xml");
-            }
+            // use default name for test results file
+            bundleArguments.TryAdd(ResultsFileArgumentName, "TestResults.xml");
 
             Start();
         }
@@ -83,7 +79,7 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
                     $"Ignored: {results.SkippedTests}";
                 bundle.PutString(SummaryMessageArgumentName, message);
                 
-                bundle.PutLong(ExitCodeArgumentName, results.FailedTests == 0 ? 0 : 1);
+                bundle.PutLong(ExitCodeArgumentName, (long)(results.FailedTests == 0 ? ExitCode.SUCCESS : ExitCode.TESTS_FAILED));
             };
 
             entryPoint.Tests = Tests;
@@ -95,9 +91,9 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
                 bundle.PutString(ResultsPathArgumentName, entryPoint.TestsResultsFinalPath);
             }
             
-            if (bundle.GetLong(ExitCodeArgumentName, -1) == -1)
+            if (bundle.GetLong(ExitCodeArgumentName, 82) == (long)ExitCode.RETURN_CODE_NOT_SET)
             {
-                bundle.PutLong(ExitCodeArgumentName, 1);
+                bundle.PutLong(ExitCodeArgumentName, (long)ExitCode.RETURN_CODE_NOT_SET);
             }
 
             Finish(Result.Ok, bundle);
@@ -105,12 +101,12 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
 
         class TestsEntryPoint : AndroidApplicationEntryPoint
         {
-            readonly string resultsPath;
-            readonly string includeMethod;
-            readonly string excludeCategories;
-            readonly string excludeMethod;
-            readonly string includeClass;
-            readonly string excludeClass;
+            readonly string _resultsPath;
+            readonly string _includeMethod;
+            readonly string _excludeCategories;
+            readonly string _excludeMethod;
+            readonly string _includeClass;
+            readonly string _excludeClass;
 
             public TestsEntryPoint(Dictionary<string, string> arguments)
             {
@@ -123,19 +119,19 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
                     Directory.CreateDirectory(docsDir);
                 }
 
-                resultsPath = Path.Combine(docsDir, arguments[ResultsFileArgumentName]);
-                includeMethod = arguments[IncludeMethodArgumentName];
-                excludeCategories = arguments[ExcludeCategoriesArgumentName];
-                excludeMethod = arguments[ExcludeMethodArgumentName];
-                includeClass = arguments[IncludeClassArgumentName];
-                excludeClass = arguments[ExcludeClassArgumentName];
+                _resultsPath = Path.Combine(docsDir, arguments[ResultsFileArgumentName]);
+                _includeMethod = arguments[IncludeMethodArgumentName];
+                _excludeCategories = arguments[ExcludeCategoriesArgumentName];
+                _excludeMethod = arguments[ExcludeMethodArgumentName];
+                _includeClass = arguments[IncludeClassArgumentName];
+                _excludeClass = arguments[ExcludeClassArgumentName];
             }
 
             protected override bool LogExcludedTests => true;
 
             public override TextWriter Logger => null;
 
-            public override string TestsResultsFinalPath => resultsPath;
+            public override string TestsResultsFinalPath => _resultsPath;
 
             protected override int? MaxParallelThreads => System.Environment.ProcessorCount;
 
@@ -145,8 +141,6 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
 
             protected override IEnumerable<TestAssemblyInfo> GetTestAssemblies()
             {
-                //yield return new TestAssemblyInfo(Assembly.GetExecutingAssembly(), Assembly.GetExecutingAssembly().Location);
-                //yield return new TestAssemblyInfo(typeof(Battery_Tests).Assembly, typeof(Battery_Tests).Assembly.Location);
                 foreach (string file in Tests)
                 {
                     yield return new TestAssemblyInfo(Assembly.LoadFrom(file), file);
@@ -159,34 +153,36 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
             protected override TestRunner GetTestRunner(LogWriter logWriter)
             {
                 var testRunner = base.GetTestRunner(logWriter);
-                if (excludeCategories != null)
+                if (_excludeCategories != null)
                 {
-                    testRunner.SkipCategories(excludeCategories.Split(' '));
+                    testRunner.SkipCategories(_excludeCategories.Split(' '));
                 }
-                if (excludeMethod != null)
+                if (_excludeMethod != null)
                 {
-                    foreach (var method in excludeMethod.Split(' '))
+                    testRunner.RunAllTestsByDefault = false;
+                    foreach (var method in _excludeMethod.Split(' '))
                     {
                         testRunner.SkipMethod(method, true);
                     }
                 }
-                if (excludeClass != null)
+                if (_excludeClass != null)
                 {
-                    foreach (var item in excludeClass.Split(' '))
+                    testRunner.RunAllTestsByDefault = false;
+                    foreach (var item in _excludeClass.Split(' '))
                     {
                         testRunner.SkipMethod(item, true);
                     }
                 }
-                if (includeMethod != null)
+                if (_includeMethod != null)
                 {
-                    foreach (var method in includeMethod.Split(' '))
+                    foreach (var method in _includeMethod.Split(' '))
                     {
                         testRunner.SkipMethod(method, false);
                     }
                 }
-                if (includeClass != null)
+                if (_includeClass != null)
                 {
-                    foreach (var item in includeClass.Split(' '))
+                    foreach (var item in _includeClass.Split(' '))
                     {
                         testRunner.SkipMethod(item, false);
                     }
