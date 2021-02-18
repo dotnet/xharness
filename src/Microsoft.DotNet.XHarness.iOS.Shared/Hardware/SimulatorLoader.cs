@@ -363,8 +363,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             string simulatorRuntime = runtimePrefix + runtimeVersion.Replace('.', '-');
             string simulatorDeviceType = target.Platform switch
             {
-                TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
-                TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
+                TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimDeviceType.iPhone-5s",
+                TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimDeviceType.iPhone-5s",
                 TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X"),
                 TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p",
                 TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-3-38mm", // min version from xcode12.5 and later.
