@@ -29,6 +29,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 TerminateAfterExecution = b;
             }
 
+            if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.AutoStart), out b))
+            {
+                AutoStart = b;
+            }
+
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.HostName)))
             {
                 HostName = Environment.GetEnvironmentVariable(EnviromentVariables.HostName);
@@ -67,15 +72,21 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             }
 
             var os = new OptionSet() {
-                { "autoexit", "Exit application once the test run has completed.", v => TerminateAfterExecution = true },
+                { "autoexit", "Exit application once the test run has completed", v => TerminateAfterExecution = true },
+                { "autostart", "If the app should automatically start running the tests", v => AutoStart = true },
                 { "hostname=", "Comma-separated list of host names or IP address to (try to) connect to", v => HostName = v },
-                { "hostport=", "HTTP/TCP port to connect to.", v => HostPort = int.Parse (v) },
-                { "enablexml", "Enable the xml reported.", v => EnableXml = false },
-                { "xmlversion", "The xml version.", v => XmlVersion = (XmlResultJargon) Enum.Parse (typeof (XmlResultJargon), v, false) },
-                { "run-all-tests:", "Run all the tests found in the assembly. Defaults to true.", v =>
-                {
-                    // if cannot parse, use default
-                    if (bool.TryParse(v, out var runAll)) { RunAllTestsByDefault = runAll; } }},
+                { "hostport=", "HTTP/TCP port to connect to", v => HostPort = int.Parse (v) },
+                { "enablexml", "Enable the xml reported", v => EnableXml = false },
+                { "xmlversion", "The XML format", v => XmlVersion = (XmlResultJargon) Enum.Parse (typeof (XmlResultJargon), v, false) },
+                { "run-all-tests:", "Run all the tests found in the assembly, defaults to true", v =>
+                    {
+                        // if cannot parse, use default
+                        if (bool.TryParse(v, out var runAll))
+                        {
+                            RunAllTestsByDefault = runAll;
+                        }
+                    }
+                },
                 {
                     "method|m=",
                     "Method to be ran in the test application. When this parameter is used only the " +
@@ -101,6 +112,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 Console.WriteLine("{0} for options '{1}'", oe.Message, oe.OptionName);
             }
         }
+
+        /// <summary>
+        /// Specify if tests should start without human input.
+        /// </summary>
+        public bool AutoStart { get; set; }
 
         /// <summary>
         /// Specify the version of Xml to be used for the results.
