@@ -126,12 +126,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         /// </summary>
         private async Task<(int pid, bool launchFailure)> GetPidFromRunLog()
         {
-            (int pid, bool launchFailure) pidData = (-1, true);
+            int pid = -1;
+            bool launchFailure = false;
+
             using var reader = _runLog.GetReader(); // diposed at the end of the method, which is what we want
             if (reader.Peek() == -1)
             {
-                // empty file! we definetly had a launch error in this case
-                pidData.launchFailure = true;
+                // empty file! we definitely had a launch error in this case
+                launchFailure = true;
             }
             else
             {
@@ -147,7 +149,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     if (line.StartsWith("Application launched. PID = ", StringComparison.Ordinal))
                     {
                         var pidstr = line.Substring("Application launched. PID = ".Length);
-                        if (!int.TryParse(pidstr, out pidData.pid))
+                        if (!int.TryParse(pidstr, out pid))
                         {
                             _mainLog.WriteLine("Could not parse pid: {0}", pidstr);
                         }
@@ -155,18 +157,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     else if (line.Contains("Xamarin.Hosting: Launched ") && line.Contains(" with pid "))
                     {
                         var pidstr = line.Substring(line.LastIndexOf(' '));
-                        if (!int.TryParse(pidstr, out pidData.pid))
+                        if (!int.TryParse(pidstr, out pid))
                         {
                             _mainLog.WriteLine("Could not parse pid: {0}", pidstr);
                         }
                     }
                     else if (line.Contains("error MT1008"))
                     {
-                        pidData.launchFailure = true;
+                        launchFailure = true;
                     }
                 }
             }
-            return pidData;
+
+            return (pid, launchFailure);
         }
 
         /// <summary>
@@ -621,7 +624,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             {
                 result.ExecutingResult = TestExecutingResult.LaunchFailure;
             }
-            else if (_launchFailure)
+            else if (crashed)
             {
                 result.ExecutingResult = TestExecutingResult.Crashed;
             }

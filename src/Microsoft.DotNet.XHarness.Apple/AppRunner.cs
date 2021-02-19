@@ -28,6 +28,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
         private readonly ICaptureLogFactory _captureLogFactory;
         private readonly IDeviceLogCapturerFactory _deviceLogCapturerFactory;
+        private readonly IFileBackedLog _mainLog;
         private readonly ILogs _logs;
         private readonly IHelpers _helpers;
         private readonly IEnumerable<string> _appArguments; // Arguments that will be passed to the iOS application
@@ -44,13 +45,14 @@ namespace Microsoft.DotNet.XHarness.Apple
             IHelpers helpers,
             IEnumerable<string> appArguments,
             Action<string>? logCallback = null)
-            : base(hardwareDeviceLoader, mainLog, logCallback)
+            : base(processManager, hardwareDeviceLoader, mainLog, logCallback)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
             _snapshotReporterFactory = snapshotReporterFactory ?? throw new ArgumentNullException(nameof(snapshotReporterFactory));
             _captureLogFactory = captureLogFactory ?? throw new ArgumentNullException(nameof(captureLogFactory));
             _deviceLogCapturerFactory = deviceLogCapturerFactory ?? throw new ArgumentNullException(nameof(deviceLogCapturerFactory));
+            _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
             _appArguments = appArguments;
@@ -253,19 +255,21 @@ namespace Microsoft.DotNet.XHarness.Apple
             CancellationToken cancellationToken)
         {
             var crashLogs = new Logs(_logs.Directory);
-
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: false, null);
 
             _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
 
             await crashReporter.StartCaptureAsync();
 
-            var arguments = new List<string>();
-            arguments.AddRange(_appArguments);
+            var result = await RunMacCatalystApp(appInformation, timeout, _appArguments, new Dictionary<string, object>(), cancellationToken);
 
-            var binaryPath = Path.Combine(appInformation.AppPath, "Contents", "MacOS", appInformation.AppName);
+            if (!result.Succeeded)
+            {
+                _mainLog.WriteLine("The app run was not successful. Looking ofr crash logs...");
+                await crashReporter.EndCaptureAsync(TimeSpan.FromSeconds(15));
+            }
 
-            return await _processManager.ExecuteCommandAsync(binaryPath, arguments, _mainLog, timeout, null, cancellationToken);
+            return result;
         }
 
         private MlaunchArguments GetCommonArguments(int verbosity)

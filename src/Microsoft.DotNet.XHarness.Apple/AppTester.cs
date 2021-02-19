@@ -34,11 +34,13 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IDeviceLogCapturerFactory _deviceLogCapturerFactory;
         private readonly ITestReporterFactory _testReporterFactory;
         private readonly IResultParser _resultParser;
+        private readonly IFileBackedLog _mainLog;
         private readonly ILogs _logs;
         private readonly IHelpers _helpers;
         private readonly IEnumerable<string> _appArguments; // Arguments that will be passed to the iOS application
 
-        public AppTester(IMlaunchProcessManager processManager,
+        public AppTester(
+            IMlaunchProcessManager processManager,
             IHardwareDeviceLoader hardwareDeviceLoader,
             ISimulatorLoader simulatorLoader,
             ISimpleListenerFactory simpleListenerFactory,
@@ -52,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IHelpers helpers,
             IEnumerable<string> appArguments,
             Action<string>? logCallback = null)
-            : base(hardwareDeviceLoader, mainLog, logCallback)
+            : base(processManager, hardwareDeviceLoader, mainLog, logCallback)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
@@ -62,6 +64,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             _deviceLogCapturerFactory = deviceLogCapturerFactory ?? throw new ArgumentNullException(nameof(deviceLogCapturerFactory));
             _testReporterFactory = reporterFactory ?? throw new ArgumentNullException(nameof(_testReporterFactory));
             _resultParser = resultParser ?? throw new ArgumentNullException(nameof(resultParser));
+            _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
             _appArguments = appArguments;
@@ -436,13 +439,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 await crashReporter.StartCaptureAsync();
 
-                var result = _processManager.ExecuteCommandAsync(
-                    "open",
-                    arguments,
-                    _mainLog,
-                    timeout,
-                    envVariables.ToDictionary(p => p.Key, p => p.Value is bool ? p.Value.ToString().ToLowerInvariant() : p.Value.ToString()),
-                    cancellationToken);
+                var result = RunMacCatalystApp(appInformation, timeout, _appArguments, envVariables, combinedCancellationToken.Token);
 
                 await testReporter.CollectSimulatorResult(result);
             }
