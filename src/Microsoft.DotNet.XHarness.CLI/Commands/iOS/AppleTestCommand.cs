@@ -10,7 +10,6 @@ using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
@@ -29,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
 
         private readonly AppleTestCommandArguments _arguments = new AppleTestCommandArguments();
 
-        protected override string CommandUsage { get; } = "ios test [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
+        protected override string CommandUsage { get; } = "apple test [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
         protected override AppleAppRunArguments iOSRunArguments => _arguments;
 
