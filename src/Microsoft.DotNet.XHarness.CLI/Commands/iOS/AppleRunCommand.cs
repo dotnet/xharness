@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
     /// </summary>
     internal class AppleRunCommand : AppleAppCommand
     {
-        private const string CommandHelp = "Runs a given iOS/tvOS/watchOS application bundle in a target device/simulator and tries to detect exit code (might not work reliably across iOS versions).";
+        private const string CommandHelp = "Runs a given iOS/tvOS/watchOS/MacCatalyst application bundle in a target device/simulator and tries to detect exit code (might not work reliably across iOS versions).";
 
         private readonly AppleRunCommandArguments _arguments = new AppleRunCommandArguments();
 
@@ -44,18 +44,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            // TODO #462: Implement support for getting exit code when targeting MacCatalyst
-            if (target.Platform == TestTarget.MacCatalyst)
-            {
-                if (_arguments.ExpectedExitCode != 0)
-                {
-                    logger.LogCritical("Getting app's exit code is currently not supported in MacCatalyst!");
-                    return ExitCode.INVALID_ARGUMENTS;
-                }
-
-                logger.LogWarning("Getting app's exit code is currently not supported in MacCatalyst");
-            }
-
             // Only add the extra callback if we do know that the feature was indeed enabled
             Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(logger, l) : (Action<string>?)null;
 

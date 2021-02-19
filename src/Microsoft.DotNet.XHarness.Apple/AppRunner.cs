@@ -245,7 +245,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         }
 
         /// <summary>
-        /// Runs the MacCatalyst app via `open -W path.to.app`.
+        /// Runs the MacCatalyst app via running its binary in Contents/MacOS/[binary.app].
         /// </summary>
         private async Task<ProcessExecutionResult> RunMacCatalystApp(
             AppBundleInformation appInformation,
@@ -260,15 +260,12 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             await crashReporter.StartCaptureAsync();
 
-            var arguments = new List<string>
-            {
-                "-W",
-                appInformation.LaunchAppPath,
-            };
-
+            var arguments = new List<string>();
             arguments.AddRange(_appArguments);
 
-            return await _processManager.ExecuteCommandAsync("open", arguments, _mainLog, timeout, null, cancellationToken);
+            var binaryPath = Path.Combine(appInformation.AppPath, "Contents", "MacOS", appInformation.AppName);
+
+            return await _processManager.ExecuteCommandAsync(binaryPath, arguments, _mainLog, timeout, null, cancellationToken);
         }
 
         private MlaunchArguments GetCommonArguments(int verbosity)
