@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 log.WriteLine("Property UIRequiredDeviceCapabilities not present in Info.plist, assuming 32-bit is not supported");
             }
 
-            string bundleExecutable = null;
+            string? bundleExecutable = null;
             if (target == TestTarget.MacCatalyst)
             {
                 try
