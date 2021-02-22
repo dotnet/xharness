@@ -76,7 +76,8 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             if (target.Platform == TestTarget.MacCatalyst)
             {
-                result = await RunMacCatalystApp(appInformation, timeout, cancellationToken);
+                _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
+                result = await RunMacCatalystApp(appInformation, timeout, _appArguments, new Dictionary<string, object>(), cancellationToken);
                 return ("MacCatalyst", result);
             }
 
@@ -244,32 +245,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                 deviceLogCapturer.StopCapture();
                 deviceSystemLog.Dispose();
             }
-        }
-
-        /// <summary>
-        /// Runs the MacCatalyst app via running its binary in Contents/MacOS/[binary.app].
-        /// </summary>
-        private async Task<ProcessExecutionResult> RunMacCatalystApp(
-            AppBundleInformation appInformation,
-            TimeSpan timeout,
-            CancellationToken cancellationToken)
-        {
-            var crashLogs = new Logs(_logs.Directory);
-            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: false, null);
-
-            _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
-
-            await crashReporter.StartCaptureAsync();
-
-            var result = await RunMacCatalystApp(appInformation, timeout, _appArguments, new Dictionary<string, object>(), cancellationToken);
-
-            if (!result.Succeeded)
-            {
-                _mainLog.WriteLine("The app run was not successful. Looking ofr crash logs...");
-                await crashReporter.EndCaptureAsync(TimeSpan.FromSeconds(15));
-            }
-
-            return result;
         }
 
         private MlaunchArguments GetCommonArguments(int verbosity)
