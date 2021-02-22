@@ -22,42 +22,35 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
         private const string ResultsPathArgumentName = "test-results-path";
         private const string SummaryMessageArgumentName = "test-execution-summary";
         private const string ExitCodeArgumentName = "return-code";
-        private const string ExcludeCategoriesArgumentName = "exclude-categories";
+        private const string ExcludeCategoriesDirArgumentName = "exclude-categories-dir";
+        private const string ExcludeCategoriesFileArgumentName = "exclude-categories-file";
         private const string ExcludeMethodArgumentName = "exclude-method";
         private const string IncludeMethodArgumentName = "include-method";
         private const string ExcludeClassArgumentName = "exclude-class";
         private const string IncludeClassArgumentName = "include-class";
 
-        protected Dictionary<string, string> bundleArguments;
+        private Bundle? _bundle;
+
+        protected Dictionary<string, string> bundleArguments = new Dictionary<string, string>();
 
         protected AndroidInstrumentationBase(IntPtr handle, JniHandleOwnership transfer)
             : base(handle, transfer)
         {
         }
 
-        protected virtual IEnumerable<string> Tests
+        protected virtual IEnumerable<Assembly> Tests
         {
             get
             {
-                yield return Assembly.GetExecutingAssembly().Location;
+                yield return Assembly.GetExecutingAssembly();
             }
         }
 
-        public override void OnCreate(Bundle arguments)
+        public override void OnCreate(Bundle? arguments)
         {
             base.OnCreate(arguments);
 
-            foreach (var key in arguments.KeySet())
-            {
-                string value = arguments.GetString(key);
-                if (!string.IsNullOrEmpty(value))
-                {
-                    bundleArguments.Add(key, value);
-                }
-            }
-
-            // use default name for test results file
-            bundleArguments.TryAdd(ResultsFileArgumentName, "TestResults.xml");
+            _bundle = arguments;
 
             Start();
         }
@@ -68,15 +61,12 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
 
             var bundle = new Bundle();
 
-            var entryPoint = new TestsEntryPoint(bundleArguments);
+            var entryPoint = new TestsEntryPoint(_bundle);
             entryPoint.TestsCompleted += (sender, results) =>
             {
-                var message =
-                    $"Tests run: {results.ExecutedTests} " +
-                    $"Passed: {results.PassedTests} " +
-                    $"Inconclusive: {results.InconclusiveTests} " +
-                    $"Failed: {results.FailedTests} " +
-                    $"Ignored: {results.SkippedTests}";
+                var message = String.Format("Tests run: {0} Passed: {1} Inconclusive: {2} Failed: {3} Ignored: {4}",
+                results.SkippedTests, results.ExecutedTests, results.PassedTests, results.InconclusiveTests, results.FailedTests);
+
                 bundle.PutString(SummaryMessageArgumentName, message);
                 
                 bundle.PutLong(ExitCodeArgumentName, (long)(results.FailedTests == 0 ? ExitCode.SUCCESS : ExitCode.TESTS_FAILED));
@@ -102,15 +92,21 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
         class TestsEntryPoint : AndroidApplicationEntryPoint
         {
             readonly string _resultsPath;
-            readonly string _includeMethod;
-            readonly string _excludeCategories;
-            readonly string _excludeMethod;
-            readonly string _includeClass;
-            readonly string _excludeClass;
+            readonly string _excludeCategoriesDir;
+            readonly string _excludeCategoriesFile;
+            private Dictionary<string, string> _parsedArguments = new Dictionary<string, string>();
 
-            public TestsEntryPoint(Dictionary<string, string> arguments)
+            protected override string IgnoreFilesDirectory => _excludeCategoriesDir;
+            protected override string IgnoredTraitsFilePath => _excludeCategoriesFile;
+
+            public TestsEntryPoint(Bundle bundle)
             {
                 var root = Application.Context.GetExternalFilesDir(null)?.AbsolutePath;
+
+                if (root == null)
+                {
+                    throw new InvalidOperationException("Unable to retrieve tests results final path.");
+                }
 
                 var docsDir = Path.Combine(root, "Documents");
 
@@ -119,74 +115,76 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
                     Directory.CreateDirectory(docsDir);
                 }
 
-                _resultsPath = Path.Combine(docsDir, arguments[ResultsFileArgumentName]);
-                _includeMethod = arguments[IncludeMethodArgumentName];
-                _excludeCategories = arguments[ExcludeCategoriesArgumentName];
-                _excludeMethod = arguments[ExcludeMethodArgumentName];
-                _includeClass = arguments[IncludeClassArgumentName];
-                _excludeClass = arguments[ExcludeClassArgumentName];
+                if (bundle != null)
+                {
+                    foreach (var key in bundle.KeySet())
+                    {
+                        var value = bundle.GetString(key);
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            _parsedArguments.Add(key, value);
+                        }
+                    }
+                }
+
+                // use default name for test results file
+                _parsedArguments.TryAdd(ResultsFileArgumentName, "TestResults.xml");
+
+                _resultsPath = Path.Combine(docsDir, _parsedArguments[ResultsFileArgumentName]);
+                _excludeCategoriesDir = _parsedArguments[ExcludeCategoriesDirArgumentName];
+                _excludeCategoriesFile = _parsedArguments[ExcludeCategoriesFileArgumentName];
             }
 
             protected override bool LogExcludedTests => true;
 
-            public override TextWriter Logger => null;
+            public override TextWriter? Logger => null;
 
             public override string TestsResultsFinalPath => _resultsPath;
 
-            protected override int? MaxParallelThreads => System.Environment.ProcessorCount;
+            protected override int? MaxParallelThreads => System.Environment.ProcessorCount/2;
 
-            protected override IDevice Device => null;
+            protected override IDevice? Device => null;
 
-            public IEnumerable<string> Tests { get; internal set; }
+            public IEnumerable<Assembly> Tests
+            {
+                get
+                {
+                    return new List<Assembly>();
+                }
+                internal set { }
+            }
 
             protected override IEnumerable<TestAssemblyInfo> GetTestAssemblies()
             {
-                foreach (string file in Tests)
+                foreach (var assembly in Tests)
                 {
-                    yield return new TestAssemblyInfo(Assembly.LoadFrom(file), file);
+                    yield return new TestAssemblyInfo(assembly, assembly.Location);
                 }
             }
             protected override void TerminateWithSuccess()
             {
             }
 
+            private void ConfigureFilters(string? filter, Action<string, bool> filterMethod, bool isExcluded)
+            {
+                if (filter != null)
+                {
+                    foreach (var f in filter.Split(' '))
+                    {
+                        filterMethod(f, isExcluded);
+                    }
+                }
+            }
+
             protected override TestRunner GetTestRunner(LogWriter logWriter)
             {
                 var testRunner = base.GetTestRunner(logWriter);
-                if (_excludeCategories != null)
-                {
-                    testRunner.SkipCategories(_excludeCategories.Split(' '));
-                }
-                if (_excludeMethod != null)
-                {
-                    testRunner.RunAllTestsByDefault = false;
-                    foreach (var method in _excludeMethod.Split(' '))
-                    {
-                        testRunner.SkipMethod(method, true);
-                    }
-                }
-                if (_excludeClass != null)
-                {
-                    testRunner.RunAllTestsByDefault = false;
-                    foreach (var item in _excludeClass.Split(' '))
-                    {
-                        testRunner.SkipMethod(item, true);
-                    }
-                }
-                if (_includeMethod != null)
-                {
-                    foreach (var method in _includeMethod.Split(' '))
-                    {
-                        testRunner.SkipMethod(method, false);
-                    }
-                }
-                if (_includeClass != null)
-                {
-                    foreach (var item in _includeClass.Split(' '))
-                    {
-                        testRunner.SkipMethod(item, false);
-                    }
-                }
+
+                ConfigureFilters(_parsedArguments[ExcludeMethodArgumentName], testRunner.SkipMethod, true);
+                ConfigureFilters(_parsedArguments[ExcludeClassArgumentName], testRunner.SkipClass, true);
+                ConfigureFilters(_parsedArguments[IncludeMethodArgumentName], testRunner.SkipMethod, false);
+                ConfigureFilters(_parsedArguments[IncludeClassArgumentName], testRunner.SkipClass, false);
+
                 return testRunner;
             }
         }
