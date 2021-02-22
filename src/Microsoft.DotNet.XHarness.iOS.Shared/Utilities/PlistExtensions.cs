@@ -69,8 +69,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public static string GetCFBundleDisplayName(this XmlDocument plist) =>
             plist.GetPListStringValue("CFBundleDisplayName");
 
-        public static string GetCFBundleExecutable(this XmlDocument plist) =>
-            plist.GetPListStringValue("CFBundleExecutable");
+        public static string GetCFBundleExecutable(this XmlDocument plist)
+        {
+            TryGetPListStringValue(plist, BundleExecutablePropertyName, out var value);
+            return value;
+        }
 
         public static string GetMinimumOSVersion(this XmlDocument plist) =>
             plist.GetPListStringValue("MinimumOSVersion");
@@ -93,8 +96,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         public static string GetCFBundleName(this XmlDocument plist) =>
             plist.GetPListStringValue(BundleNamePropertyName);
 
-        public static string GetNSExtensionPointIdentifier(this XmlDocument plist) =>
-            plist.SelectSingleNode("//dict/key[text()='NSExtensionPointIdentifier']")?.NextSibling?.InnerText;
+        public static string GetNSExtensionPointIdentifier(this XmlDocument plist)
+        {
+            TryGetPListStringValue(plist, "NSExtensionPointIdentifier", out var value);
+            return value;
+        }
 
         public static void SetPListStringValue(this XmlDocument plist, string node, string value)
         {
@@ -142,7 +148,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         }
 
         public static bool ContainsKey(this XmlDocument plist, string key) =>
-            plist.SelectSingleNode("//dict/key[text()='" + key + "']") != null;
+            TryGetPListStringValue(plist, key, out _);
 
         private static void SetPListArrayOfIntegerValues(this XmlDocument plist, string node, params int[] values)
         {
@@ -160,5 +166,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         private static string GetPListStringValue(this XmlDocument plist, string node) =>
             plist.SelectSingleNode("//dict/key[text()='" + node + "']").NextSibling.InnerText;
+
+        private static bool TryGetPListStringValue(this XmlDocument plist, string nodeName, out string value)
+        {
+            var node = plist.SelectSingleNode("//dict/key[text()='" + nodeName + "']")?.NextSibling;
+            if (node == null)
+            {
+                value = null;
+                return false;
+            }
+
+            value = node.InnerText;
+            return true;
+        }
     }
 }
