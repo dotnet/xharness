@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                    Path.Combine(_logs.Object.Directory, "tvos.log"),
                    "/path/to/_mockSimulator.log",
                    false,
-                   It.IsAny<string>()))
+                   It.IsAny<LogType>()))
                 .Returns(captureLog.Object);
 
             _listenerFactory.Setup(f => f.UseTunnel).Returns(useTcpTunnel);
@@ -240,7 +240,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                    Path.Combine(_logs.Object.Directory, _mockSimulator.Object.Name + ".log"),
                    _mockSimulator.Object.SystemLog,
                    false,
-                   It.IsAny<string>()))
+                   It.IsAny<LogType>()))
                 .Returns(captureLog.Object);
 
             _listenerFactory.Setup(f => f.UseTunnel).Returns(useTunnel);
@@ -649,7 +649,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                    Path.Combine(_logs.Object.Directory, _mockSimulator.Object.Name + ".log"),
                    _mockSimulator.Object.SystemLog,
                    false,
-                   It.IsAny<string>()))
+                   It.IsAny<LogType>()))
                 .Returns(captureLog.Object);
 
             // Act

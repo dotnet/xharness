@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                    Path.Combine(_logs.Object.Directory, "tvos.log"),
                    "/path/to/simulator.log",
                    false,
-                   It.IsAny<string>()))
+                   It.IsAny<LogType>()))
                 .Returns(captureLog.Object);
 
             // Act
@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                    Path.Combine(_logs.Object.Directory, _mockSimulator.Object.Name + ".log"),
                    _mockSimulator.Object.SystemLog,
                    false,
-                   LogType.SystemLog.ToString()))
+                   LogType.SystemLog))
                 .Returns(captureLog.Object);
 
             SetupLogList(new[] { captureLog.Object });

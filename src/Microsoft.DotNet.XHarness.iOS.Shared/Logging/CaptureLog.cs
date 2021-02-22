@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     public interface ICaptureLogFactory
     {
         ICaptureLog Create(string path, string systemLogPath, bool entireFile, string description = null);
+        ICaptureLog Create(string path, string systemLogPath, bool entireFile, LogType logType);
     }
 
     public class CaptureLogFactory : ICaptureLogFactory
@@ -20,6 +21,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             {
                 Description = description
             };
+
+        public ICaptureLog Create(string path, string systemLogPath, bool entireFile, LogType logType)
+            => Create(path, systemLogPath, entireFile, logType.ToString());
     }
 
     public interface ICaptureLog : IFileBackedLog

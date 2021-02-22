@@ -412,7 +412,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     if (_generateHtml)
                     {
                         // write the human readable results in a tmp file, which we later use to step on the logs
-                        var humanReadableLog = _logs.CreateFile(Path.GetFileNameWithoutExtension(test_log_path) + ".log", LogType.NUnitResult.ToString());
+                        var humanReadableLog = _logs.CreateFile(Path.GetFileNameWithoutExtension(test_log_path) + ".log", LogType.NUnitResult);
                         (parseResult.resultLine, parseResult.failed) = _resultParser.ParseResults(path, xmlType, humanReadableLog);
                     }
                     else

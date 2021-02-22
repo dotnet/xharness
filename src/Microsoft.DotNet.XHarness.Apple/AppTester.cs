@@ -254,7 +254,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
                     systemLogPath: simulator.SystemLog,
                     entireFile: false,
-                    LogType.SystemLog.ToString());
+                    LogType.SystemLog);
 
                 simulatorLog.StartCapture();
                 _logs.Add(simulatorLog);
@@ -268,7 +268,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                         path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
                         systemLogPath: companionSimulator.SystemLog,
                         entireFile: false,
-                        LogType.CompanionSystemLog.ToString());
+                        LogType.CompanionSystemLog);
 
                     companionLog.StartCapture();
                     _logs.Add(companionLog);
