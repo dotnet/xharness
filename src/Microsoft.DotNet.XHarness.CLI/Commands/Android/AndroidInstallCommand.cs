@@ -71,7 +71,7 @@ Arguments:
 
                     if (deviceId == null)
                     {
-                        throw new Exception($"Failure to find compatible device: {apkRequiredArchitecture}");
+                        throw new Exception($"Failed to find compatible device: {apkRequiredArchitecture}");
                     }
 
                     runner.SetActiveDevice(deviceId);
@@ -97,7 +97,7 @@ Arguments:
             }
             catch (Exception toLog)
             {
-                throw new Exception($"Failure to run test package: {toLog.Message}");
+                throw new Exception($"Failed to run test package: {toLog.Message}");
             }
         }
     }
