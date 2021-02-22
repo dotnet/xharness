@@ -230,13 +230,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
             }
         }
 
-        public void GenerateFailure(ILogs logs, string source, string appName, string variation, string title, string message, string stderrPath, XmlResultJargon jargon)
+        public void GenerateFailure(ILogs logs, string source, string appName, string? variation, string title, string message, string stderrPath, XmlResultJargon jargon)
         {
             using var stderrReader = new StreamReader(stderrPath);
             GenerateFailure(logs, source, appName, variation, title, message, stderrReader, jargon);
         }
 
-        public void GenerateFailure(ILogs logs, string source, string appName, string variation, string title,
+        public void GenerateFailure(ILogs logs, string source, string appName, string? variation, string title,
             string message, TextReader stderrReader, XmlResultJargon jargon)
         {
             // VSTS does not provide a nice way to report build errors, create a fake

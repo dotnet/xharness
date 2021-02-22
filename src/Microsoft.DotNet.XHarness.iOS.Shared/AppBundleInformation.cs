@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
     public class AppBundleInformation
@@ -9,11 +10,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         public string AppName { get; }
         public string BundleIdentifier { get; }
         public string AppPath { get; }
-        public string Variation { get; set; }
+        public string? Variation { get; set; }
         public string LaunchAppPath { get; }
         public bool Supports32Bit { get; }
         public Extension? Extension { get; }
-        public string BundleExecutable { get; }
+        public string? BundleExecutable { get; }
 
         public AppBundleInformation(
             string appName,
@@ -22,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             string launchAppPath,
             bool supports32b,
             Extension? extension = null,
-            string bundleExecutable = null)
+            string? bundleExecutable = null)
         {
             AppName = appName;
             BundleIdentifier = bundleIdentifier;
