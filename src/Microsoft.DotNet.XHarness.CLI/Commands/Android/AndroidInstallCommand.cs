@@ -71,7 +71,7 @@ Arguments:
 
                     if (deviceId == null)
                     {
-                        return ExitCode.ADB_DEVICE_ENUMERATION_FAILURE;
+                        throw new Exception($"Failed to find compatible device: {apkRequiredArchitecture}");
                     }
 
                     runner.SetActiveDevice(deviceId);
@@ -97,11 +97,8 @@ Arguments:
             }
             catch (Exception toLog)
             {
-                logger.LogCritical(toLog, $"Failure to run test package: {toLog.Message}");
+                throw new Exception($"Failed to run test package: {toLog.Message}");
             }
-
-            runner.UninstallApk(apkPackageName);
-            return ExitCode.GENERAL_FAILURE;
         }
     }
 }
