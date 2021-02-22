@@ -13,6 +13,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
     {
         private static readonly ConditionalWeakTable<XmlDocument, string> s_filenames = new ConditionalWeakTable<XmlDocument, string>();
 
+        public const string BundleExecutablePropertyName = "CFBundleExecutable";
         public const string BundleIdentifierPropertyName = "CFBundleIdentifier";
         public const string BundleNamePropertyName = "CFBundleName";
         public const string RequiredDeviceCapabilities = "UIRequiredDeviceCapabilities";
@@ -56,15 +57,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
         }
 
-        public static void SetMinimumOSVersion(this XmlDocument plist, string value) => plist.SetPListStringValue("MinimumOSVersion", value);
+        public static void SetMinimumOSVersion(this XmlDocument plist, string value) =>
+            plist.SetPListStringValue("MinimumOSVersion", value);
 
-        public static void SetMinimummacOSVersion(this XmlDocument plist, string value) => plist.SetPListStringValue("LSMinimumSystemVersion", value);
+        public static void SetMinimummacOSVersion(this XmlDocument plist, string value) =>
+            plist.SetPListStringValue("LSMinimumSystemVersion", value);
 
         public static void SetCFBundleDisplayName(this XmlDocument plist, string value) =>
             plist.SetPListStringValue("CFBundleDisplayName", value);
 
         public static string GetCFBundleDisplayName(this XmlDocument plist) =>
             plist.GetPListStringValue("CFBundleDisplayName");
+
+        public static string GetCFBundleExecutable(this XmlDocument plist) =>
+            plist.GetPListStringValue("CFBundleExecutable");
 
         public static string GetMinimumOSVersion(this XmlDocument plist) =>
             plist.GetPListStringValue("MinimumOSVersion");

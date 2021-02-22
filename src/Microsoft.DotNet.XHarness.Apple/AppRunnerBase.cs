@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             Dictionary<string, object> environmentVariables,
             CancellationToken cancellationToken)
         {
-            var binaryPath = Path.Combine(appInfo.AppPath, "Contents", "MacOS", appInfo.AppName);
+            var binaryPath = Path.Combine(appInfo.AppPath, "Contents", "MacOS", appInfo.BundleExecutable ?? appInfo.AppName);
             var arguments = new List<string>();
 
             if (!File.Exists(binaryPath))

@@ -55,6 +55,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             infoPlist.LoadWithoutNetworkAccess(plistPath);
 
             string bundleIdentifier = infoPlist.GetCFBundleIdentifier();
+            string bundleExecutable = infoPlist.GetCFBundleExecutable();
 
             Extension? extension = null;
             string extensionPointIdentifier = infoPlist.GetNSExtensionPointIdentifier();
@@ -91,7 +92,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 ? Directory.GetDirectories(Path.Combine(appPath, "Watch"), "*.app")[0]
                 : appPath;
 
-            return new AppBundleInformation(appName, bundleIdentifier, appPath, launchAppPath, supports32, extension);
+            return new AppBundleInformation(
+                appName,
+                bundleIdentifier,
+                appPath,
+                launchAppPath,
+                supports32,
+                extension,
+                bundleExecutable);
         }
 
         public async Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default)
@@ -124,7 +132,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             catch
             {
                 // The property might not be present
-                log.WriteLine("Failed to get the UIRequiredDeviceCapabilities Info.plist property. Assumes 32 bit is not supported");
+                log.WriteLine("Property UIRequiredDeviceCapabilities not present in Info.plist, assuming 32-bit is not supported");
+            }
+
+            string bundleExecutable = null;
+            if (target == TestTarget.MacCatalyst)
+            {
+                try
+                {
+                    bundleExecutable = await GetPlistProperty(plistPath, PListExtensions.BundleExecutablePropertyName, log, cancellationToken);
+                }
+                catch
+                {
+                    log.WriteLine("Failed to locate the bundle executable property in Info.plist");
+                }
             }
 
             string launchAppPath = target.ToRunMode() == RunMode.WatchOS
@@ -137,7 +158,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                 appPath: appPackagePath,
                 launchAppPath: launchAppPath,
                 supports32b: Contains(supports32, Armv7),
-                extension: null);
+                extension: null,
+                bundleExecutable: bundleExecutable);
         }
 
         private async Task<string> GetPlistProperty(string plistPath, string propertyName, ILog log, CancellationToken cancellationToken = default)
