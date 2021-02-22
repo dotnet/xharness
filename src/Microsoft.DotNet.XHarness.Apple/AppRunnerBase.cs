@@ -17,6 +17,8 @@ namespace Microsoft.DotNet.XHarness.Apple
 {
     public abstract class AppRunnerBase
     {
+        protected const string SystemLogPath = "/var/log/system.log";
+
         private readonly IFileBackedLog _mainLog;
         private readonly IHardwareDeviceLoader _hardwareDeviceLoader;
         private readonly IProcessManager _processManager;

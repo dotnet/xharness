@@ -394,7 +394,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             using var systemLog = _captureLogFactory.Create(
                 path: _logs.CreateFile("MacCatalyst.system.log", LogType.SystemLog),
-                systemLogPath: "/var/log/system.log",
+                systemLogPath: SystemLogPath,
                 entireFile: false,
                 LogType.SystemLog);
 

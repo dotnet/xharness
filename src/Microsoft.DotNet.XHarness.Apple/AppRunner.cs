@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 using var systemLog = _captureLogFactory.Create(
                     path: _logs.CreateFile("MacCatalyst.system.log", LogType.SystemLog),
-                    systemLogPath: "/var/log/system.log",
+                    systemLogPath: SystemLogPath,
                     entireFile: false,
                     LogType.SystemLog);
 
@@ -92,8 +92,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                 }
                 finally
                 {
-                    // Wait for logs to be flushed
-                    Thread.Sleep(3000);
                     systemLog.StopCapture();
                 }
             }
