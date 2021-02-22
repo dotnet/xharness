@@ -354,8 +354,8 @@ namespace Microsoft.DotNet.XHarness.Android
             var result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
             string[] standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
-            // Retry up to 5 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
-            int retriesLeft = 30;
+            // Retry up to 3 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
+            int retriesLeft = 18;
 
             // We will keep retrying until we get something back like 'List of devices attached...{newline} {info about a device} ',
             // which when split on newlines ignoring empties will be at least 2 lines when there are any available devices.
@@ -422,7 +422,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             catch (Exception toLog)
             {
-                logger.LogError(toLog, "Exception thrown while trying to find compatible device with {propertyName} {apkRequiredProperty}");
+                logger.LogError(toLog, $"Exception thrown while trying to find compatible device with {propertyName} {apkRequiredProperty}");
                 return null;
             }
 
