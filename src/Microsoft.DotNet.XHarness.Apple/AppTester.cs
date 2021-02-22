@@ -373,7 +373,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         }
 
         /// <summary>
-        /// Runs the MacCatalyst app via `open -W path.to.app`.
+        /// Runs the MacCatalyst app by executing its binary (or if not found, via `open -W path.to.app`).
         /// </summary>
         private async Task<(TestExecutingResult Result, string ResultMessage)> RunMacCatalystTests(
             ListenerTransport deviceListenerTransport,
