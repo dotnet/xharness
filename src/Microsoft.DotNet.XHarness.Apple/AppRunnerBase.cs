@@ -76,8 +76,9 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             var envVars = environmentVariables.ToDictionary(
                 p => p.Key,
-                p => p.Value is bool ? p.Value.ToString().ToLowerInvariant() : p.Value.ToString()); // turn True to true
+                p => p.Value is bool ? p.Value.ToString().ToLowerInvariant() : p.Value.ToString()); // turns "True" to "true"
 
+            // We must not await here thanks to the way the TestReporter is designed since it expects the Task to be running still
             return _processManager.ExecuteCommandAsync(binaryPath, arguments, _mainLog, timeout, envVars, cancellationToken);
         }
     }

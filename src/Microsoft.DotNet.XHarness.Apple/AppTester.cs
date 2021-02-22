@@ -392,6 +392,12 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             var crashLogs = new Logs(_logs.Directory);
 
+            using var systemLog = _captureLogFactory.Create(
+                path: _logs.CreateFile("MacCatalyst.system.log", LogType.SystemLog),
+                systemLogPath: "/var/log/system.log",
+                entireFile: false,
+                LogType.SystemLog);
+
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: false, null);
             ITestReporter testReporter = _testReporterFactory.Create(
                 _mainLog,
@@ -437,6 +443,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 arguments.AddRange(_appArguments);
 
+                systemLog.StartCapture();
                 await crashReporter.StartCaptureAsync();
 
                 var result = RunMacCatalystApp(appInformation, timeout, _appArguments, envVariables, combinedCancellationToken.Token);
@@ -445,6 +452,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             finally
             {
+                systemLog.StopCapture();
                 deviceListener.Cancel();
                 deviceListener.Dispose();
             }

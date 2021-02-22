@@ -77,8 +77,25 @@ namespace Microsoft.DotNet.XHarness.Apple
             if (target.Platform == TestTarget.MacCatalyst)
             {
                 _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
-                result = await RunMacCatalystApp(appInformation, timeout, _appArguments, new Dictionary<string, object>(), cancellationToken);
-                return ("MacCatalyst", result);
+
+                using var systemLog = _captureLogFactory.Create(
+                    path: _logs.CreateFile("MacCatalyst.system.log", LogType.SystemLog),
+                    systemLogPath: "/var/log/system.log",
+                    entireFile: false,
+                    LogType.SystemLog);
+
+                systemLog.StartCapture();
+                try
+                {
+                    result = await RunMacCatalystApp(appInformation, timeout, _appArguments, new Dictionary<string, object>(), cancellationToken);
+                    return ("MacCatalyst", result);
+                }
+                finally
+                {
+                    // Wait for logs to be flushed
+                    Thread.Sleep(3000);
+                    systemLog.StopCapture();
+                }
             }
 
             // Find devices
