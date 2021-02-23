@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IHelpers helpers,
             IEnumerable<string> appArguments,
             Action<string>? logCallback = null)
-            : base(processManager, hardwareDeviceLoader, mainLog, logCallback)
+            : base(processManager, hardwareDeviceLoader, captureLogFactory, logs, mainLog, logCallback)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
@@ -77,23 +77,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             if (target.Platform == TestTarget.MacCatalyst)
             {
                 _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
-
-                using var systemLog = _captureLogFactory.Create(
-                    path: _logs.CreateFile("MacCatalyst.system.log", LogType.SystemLog),
-                    systemLogPath: SystemLogPath,
-                    entireFile: false,
-                    LogType.SystemLog);
-
-                systemLog.StartCapture();
-                try
-                {
-                    result = await RunMacCatalystApp(appInformation, timeout, _appArguments, new Dictionary<string, object>(), cancellationToken);
-                    return ("MacCatalyst", result);
-                }
-                finally
-                {
-                    systemLog.StopCapture();
-                }
+                result = await RunMacCatalystApp(appInformation, timeout, _appArguments, new Dictionary<string, object>(), cancellationToken);
+                return ("MacCatalyst", result);
             }
 
             // Find devices

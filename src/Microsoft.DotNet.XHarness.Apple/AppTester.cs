@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IHelpers helpers,
             IEnumerable<string> appArguments,
             Action<string>? logCallback = null)
-            : base(processManager, hardwareDeviceLoader, mainLog, logCallback)
+            : base(processManager, hardwareDeviceLoader, captureLogFactory, logs, mainLog, logCallback)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
@@ -289,11 +289,10 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 _mainLog.WriteLine("Starting test run");
 
-                var result = _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
-
+                var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
                 await testReporter.CollectSimulatorResult(result);
 
-                // cleanup after us
+                // Cleanup after us
                 if (ensureCleanSimulatorState)
                 {
                     await simulator.KillEverything(_mainLog);
@@ -345,7 +344,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit).
                 var aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
-                var result = _processManager.ExecuteCommandAsync(
+                var result = await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     aggregatedLog,
                     timeout,
@@ -392,12 +391,6 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             var crashLogs = new Logs(_logs.Directory);
 
-            using var systemLog = _captureLogFactory.Create(
-                path: _logs.CreateFile("MacCatalyst.system.log", LogType.SystemLog),
-                systemLogPath: SystemLogPath,
-                entireFile: false,
-                LogType.SystemLog);
-
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: false, null);
             ITestReporter testReporter = _testReporterFactory.Create(
                 _mainLog,
@@ -443,16 +436,13 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 arguments.AddRange(_appArguments);
 
-                systemLog.StartCapture();
                 await crashReporter.StartCaptureAsync();
 
-                var result = RunMacCatalystApp(appInformation, timeout, _appArguments, envVariables, combinedCancellationToken.Token);
-
+                var result = await RunMacCatalystApp(appInformation, timeout, _appArguments, envVariables, combinedCancellationToken.Token);
                 await testReporter.CollectSimulatorResult(result);
             }
             finally
             {
-                systemLog.StopCapture();
                 deviceListener.Cancel();
                 deviceListener.Dispose();
             }

@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 .Setup(r => r.ParseResult())
                 .ReturnsAsync((TestExecutingResult.Succeeded, "Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0"));
             _testReporter
-                .Setup(x => x.CollectSimulatorResult(It.IsAny<Task<ProcessExecutionResult>>()))
+                .Setup(x => x.CollectSimulatorResult(It.IsAny<ProcessExecutionResult>()))
                 .Returns(Task.CompletedTask);
 
             _logs = new Mock<ILogs>();
