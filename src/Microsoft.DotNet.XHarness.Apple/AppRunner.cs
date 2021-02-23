@@ -28,6 +28,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
         private readonly ICaptureLogFactory _captureLogFactory;
         private readonly IDeviceLogCapturerFactory _deviceLogCapturerFactory;
+        private readonly IFileBackedLog _mainLog;
         private readonly ILogs _logs;
         private readonly IHelpers _helpers;
         private readonly IEnumerable<string> _appArguments; // Arguments that will be passed to the iOS application
@@ -44,13 +45,14 @@ namespace Microsoft.DotNet.XHarness.Apple
             IHelpers helpers,
             IEnumerable<string> appArguments,
             Action<string>? logCallback = null)
-            : base(hardwareDeviceLoader, mainLog, logCallback)
+            : base(processManager, hardwareDeviceLoader, mainLog, logCallback)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
             _snapshotReporterFactory = snapshotReporterFactory ?? throw new ArgumentNullException(nameof(snapshotReporterFactory));
             _captureLogFactory = captureLogFactory ?? throw new ArgumentNullException(nameof(captureLogFactory));
             _deviceLogCapturerFactory = deviceLogCapturerFactory ?? throw new ArgumentNullException(nameof(deviceLogCapturerFactory));
+            _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
             _appArguments = appArguments;
@@ -68,8 +70,16 @@ namespace Microsoft.DotNet.XHarness.Apple
         {
             var isSimulator = target.Platform.IsSimulator();
 
+            ProcessExecutionResult result;
             ISimulatorDevice? simulator = null;
             ISimulatorDevice? companionSimulator = null;
+
+            if (target.Platform == TestTarget.MacCatalyst)
+            {
+                _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
+                result = await RunMacCatalystApp(appInformation, timeout, _appArguments, new Dictionary<string, object>(), cancellationToken);
+                return ("MacCatalyst", result);
+            }
 
             // Find devices
             if (isSimulator)
@@ -84,11 +94,14 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             var crashLogs = new Logs(_logs.Directory);
 
-            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName);
+            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(
+                _mainLog,
+                crashLogs,
+                isDevice: !isSimulator,
+                deviceName);
 
             _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{deviceName}' ***");
 
-            ProcessExecutionResult result;
             if (isSimulator)
             {
                 if (simulator == null)
@@ -219,7 +232,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 await crashReporter.StartCaptureAsync();
 
-                _mainLog.WriteLine("Starting test run");
+                _mainLog.WriteLine("Starting the app");
 
                 return await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,

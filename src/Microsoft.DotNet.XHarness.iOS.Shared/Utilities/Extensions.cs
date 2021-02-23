@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             TestTarget.Simulator_iOS64 => "ios-simulator-64",
             TestTarget.Simulator_tvOS => "tvos-simulator",
             TestTarget.Simulator_watchOS => "watchos-simulator",
+            TestTarget.MacCatalyst => "maccatalyst",
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -38,6 +39,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             "ios-simulator-64" => TestTarget.Simulator_iOS64,
             "tvos-simulator" => TestTarget.Simulator_tvOS,
             "watchos-simulator" => TestTarget.Simulator_watchOS,
+            "maccatalyst" => TestTarget.MacCatalyst,
             null => TestTarget.None,
             "" => TestTarget.None,
             _ => throw new ArgumentOutOfRangeException()
