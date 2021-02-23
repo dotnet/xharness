@@ -646,8 +646,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             var captureLogFactory = new Mock<ICaptureLogFactory>();
             captureLogFactory
                 .Setup(x => x.Create(
-                   Path.Combine(_logs.Object.Directory, _mockSimulator.Object.Name + ".log"),
-                   _mockSimulator.Object.SystemLog,
+                   It.IsAny<string>(),
+                   "/var/log/system.log",
                    false,
                    It.IsAny<LogType>()))
                 .Returns(captureLog.Object);
