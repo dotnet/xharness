@@ -246,28 +246,25 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return _processManager.KillTreeAsync(pid, _mainLog, true);
         }
 
-        private async Task CollectResult(Task<ProcessExecutionResult> processExecution)
+        private async Task CollectResult(ProcessExecutionResult runResult)
         {
-            // wait for the execution of the process, once that is done, perform all the parsing operations and
-            // leave a clean API to be used by AppRunner, hidding all the diff details
-            var result = await processExecution;
-            if (!_waitedForExit && !result.TimedOut)
+            if (!_waitedForExit && !runResult.TimedOut)
             {
                 // mlaunch couldn't wait for exit for some reason. Let's assume the app exits when the test listener completes.
                 _mainLog.WriteLine("Waiting for listener to complete, since mlaunch won't tell.");
                 if (!await _listener.CompletionTask.TimeoutAfter(_timeout - _timeoutWatch.Elapsed))
                 {
-                    result.TimedOut = true;
+                    runResult.TimedOut = true;
                 }
             }
 
-            if (result.TimedOut)
+            if (runResult.TimedOut)
             {
                 _timedout = true;
                 Success = false;
                 _mainLog.WriteLine(TimeoutMessage, _timeout.TotalMinutes);
             }
-            else if (result.Succeeded)
+            else if (runResult.Succeeded)
             {
                 _mainLog.WriteLine(CompletionMessage);
                 Success = true;
@@ -301,10 +298,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        public async Task CollectSimulatorResult(Task<ProcessExecutionResult> processExecution)
+        public async Task CollectSimulatorResult(ProcessExecutionResult runResult)
         {
             _isSimulatorTest = true;
-            await CollectResult(processExecution);
+            await CollectResult(runResult);
 
             if (Success != null && !Success.Value)
             {
@@ -321,10 +318,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        public async Task CollectDeviceResult(Task<ProcessExecutionResult> processExecution)
+        public async Task CollectDeviceResult(ProcessExecutionResult runResult)
         {
             _isSimulatorTest = false;
-            await CollectResult(processExecution);
+            await CollectResult(runResult);
         }
 
         private async Task<(string? ResultLine, bool Failed)> GetResultLine(string logPath)
@@ -412,7 +409,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     if (_generateHtml)
                     {
                         // write the human readable results in a tmp file, which we later use to step on the logs
-                        var humanReadableLog = _logs.CreateFile(Path.GetFileNameWithoutExtension(test_log_path) + ".log", LogType.NUnitResult.ToString());
+                        var humanReadableLog = _logs.CreateFile(Path.GetFileNameWithoutExtension(test_log_path) + ".log", LogType.NUnitResult);
                         (parseResult.resultLine, parseResult.failed) = _resultParser.ParseResults(path, xmlType, humanReadableLog);
                     }
                     else

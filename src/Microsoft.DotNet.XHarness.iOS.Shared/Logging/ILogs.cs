@@ -27,5 +27,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         // Create an empty file in the log directory and return the full path to the file
         string CreateFile(string path, string description);
+        string CreateFile(string path, LogType type);
     }
 }

@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IHelpers helpers,
             IEnumerable<string> appArguments,
             Action<string>? logCallback = null)
-            : base(processManager, hardwareDeviceLoader, mainLog, logCallback)
+            : base(processManager, hardwareDeviceLoader, captureLogFactory, logs, mainLog, logCallback)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
@@ -254,7 +254,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
                     systemLogPath: simulator.SystemLog,
                     entireFile: false,
-                    LogType.SystemLog.ToString());
+                    LogType.SystemLog);
 
                 simulatorLog.StartCapture();
                 _logs.Add(simulatorLog);
@@ -268,7 +268,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                         path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
                         systemLogPath: companionSimulator.SystemLog,
                         entireFile: false,
-                        LogType.CompanionSystemLog.ToString());
+                        LogType.CompanionSystemLog);
 
                     companionLog.StartCapture();
                     _logs.Add(companionLog);
@@ -289,11 +289,10 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 _mainLog.WriteLine("Starting test run");
 
-                var result = _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
-
+                var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
                 await testReporter.CollectSimulatorResult(result);
 
-                // cleanup after us
+                // Cleanup after us
                 if (ensureCleanSimulatorState)
                 {
                     await simulator.KillEverything(_mainLog);
@@ -345,7 +344,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit).
                 var aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
-                var result = _processManager.ExecuteCommandAsync(
+                var result = await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     aggregatedLog,
                     timeout,
@@ -439,8 +438,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 await crashReporter.StartCaptureAsync();
 
-                var result = RunMacCatalystApp(appInformation, timeout, _appArguments, envVariables, combinedCancellationToken.Token);
-
+                var result = await RunMacCatalystApp(appInformation, timeout, _appArguments, envVariables, combinedCancellationToken.Token);
                 await testReporter.CollectSimulatorResult(result);
             }
             finally

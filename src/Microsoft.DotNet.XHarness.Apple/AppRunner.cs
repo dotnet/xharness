@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IHelpers helpers,
             IEnumerable<string> appArguments,
             Action<string>? logCallback = null)
-            : base(processManager, hardwareDeviceLoader, mainLog, logCallback)
+            : base(processManager, hardwareDeviceLoader, captureLogFactory, logs, mainLog, logCallback)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
                     systemLogPath: simulator.SystemLog,
                     entireFile: false,
-                    LogType.SystemLog.ToString());
+                    LogType.SystemLog);
 
                 simulatorLog.StartCapture();
                 _logs.Add(simulatorLog);
@@ -171,7 +171,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                         path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
                         systemLogPath: companionSimulator.SystemLog,
                         entireFile: false,
-                        LogType.CompanionSystemLog.ToString());
+                        LogType.CompanionSystemLog);
 
                     companionLog.StartCapture();
                     _logs.Add(companionLog);
