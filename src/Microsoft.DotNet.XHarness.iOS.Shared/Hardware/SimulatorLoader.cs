@@ -445,7 +445,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         {
             TestTargetOs testTarget = target switch
             {
-                TestTarget.Simulator_iOS32 => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : "10.3"),
+                TestTarget.Simulator_iOS32 => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : "11.3"),
                 TestTarget.Simulator_iOS64 => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator),
                 TestTarget.Simulator_iOS => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator),
                 TestTarget.Simulator_tvOS => new TestTargetOs(target, minVersion ? SdkVersions.MinTVOSSimulator : SdkVersions.MaxTVOSSimulator),
