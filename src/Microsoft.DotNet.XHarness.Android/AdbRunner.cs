@@ -436,7 +436,8 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             else if (devices.Count > 1)
             {
-                logger.LogError("There are more than one device with the app installed, please provide --device-id to choose the required one");
+                logger.LogError("There is more than one device with the app installed, please provide --device-id to choose the required one");
+
                 return null;
             }
             return devices.Keys.First();
