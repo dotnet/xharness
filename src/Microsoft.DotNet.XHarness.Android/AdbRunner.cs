@@ -431,13 +431,12 @@ namespace Microsoft.DotNet.XHarness.Android
             var devices = GetAllDevicesToUse(logger, apkRequiredProperty, propertyName);
             if (devices.Count == 0)
             {
-                logger.LogError("Cannot find a device with app installed, please check that a device is attached or run install first");
+                logger.LogError($"Cannot find a device with {propertyName}={apkRequiredProperty}, please check that a device is attached");
                 return null;
             }
             else if (devices.Count > 1)
             {
-                logger.LogError("There is more than one device with the app installed, please provide --device-id to choose the required one");
-
+                logger.LogError($"There is more than one device with {propertyName}={apkRequiredProperty}, please provide --device-id to choose the required one");
                 return null;
             }
             return devices.Keys.First();
@@ -465,12 +464,12 @@ namespace Microsoft.DotNet.XHarness.Android
 
             var result = allDevicesAndTheirProperties
                 .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split().Contains(apkRequiredProperty))
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value) as Dictionary<string, string>;
             
             if (result.Count() == 0)
             {
                 // In this case, the enumeration worked, we found one or more devices, but nothing matched the APK's architecture; fail out.
-                logger.LogError($"No devices found with {propertyName} '{apkRequiredProperty}'.");
+                logger.LogError($"No devices with {propertyName} '{apkRequiredProperty}' was found among attached devices.");
             }
             return result;
         }
