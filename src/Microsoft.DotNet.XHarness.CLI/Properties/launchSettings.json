@@ -2,10 +2,7 @@
   "profiles": {
     "XHarness": {
       "commandName": "Project",
-      "commandLineArgs": "android device --app=\"C:\\Users\\esokolov\\Downloads\\System.Numerics.Vectors.Tests-x86.apk\"",
-      "environmentVariables": {
-        "ADB_EXE_PATH": "C:\\Program Files (x86)\\Android\\android-sdk\\platform-tools\\adb.exe"
-      }
+      "commandLineArgs": "help"
     }
   }
 }
