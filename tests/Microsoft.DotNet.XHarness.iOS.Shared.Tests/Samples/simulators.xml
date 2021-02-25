@@ -460,7 +460,7 @@
       </SimDevice>
       <SimDevice UDID="78A86F96-8333-42DE-81F3-1D8CFEC1FB17" Name="iPhone 5s">
         <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
-        <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-5ss</SimDeviceType>
+        <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-5s</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/78A86F96-8333-42DE-81F3-1D8CFEC1FB17</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/78A86F96-8333-42DE-81F3-1D8CFEC1FB17</LogPath>
       </SimDevice>
@@ -550,7 +550,7 @@
       </SimDevice>
       <SimDevice UDID="711BA51B-6261-4394-84A6-BE9F8B5D3B80" Name="iPhone 5s">
         <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-12-2</SimRuntime>
-        <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-5ss</SimDeviceType>
+        <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-5s</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/711BA51B-6261-4394-84A6-BE9F8B5D3B80</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/711BA51B-6261-4394-84A6-BE9F8B5D3B80</LogPath>
       </SimDevice>
