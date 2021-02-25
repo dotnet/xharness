@@ -68,7 +68,7 @@
       </SimDeviceType>
       <SimDeviceType>
         <Name>iPhone 5s</Name>
-        <Identifier>com.apple.CoreSimulator.SimDeviceType.iPhone-5ss</Identifier>
+        <Identifier>com.apple.CoreSimulator.SimDeviceType.iPhone-5s</Identifier>
         <ProductFamilyId>IPhone</ProductFamilyId>
         <MinRuntimeVersion>458752</MinRuntimeVersion>
         <MaxRuntimeVersion>851967</MaxRuntimeVersion>
