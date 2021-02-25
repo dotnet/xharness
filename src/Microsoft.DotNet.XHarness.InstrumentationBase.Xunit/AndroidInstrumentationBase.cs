@@ -91,9 +91,9 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
 
         class TestsEntryPoint : AndroidApplicationEntryPoint
         {
-            readonly string _resultsPath;
-            readonly string _excludeCategoriesDir;
-            readonly string _excludeCategoriesFile;
+            private readonly string _resultsPath;
+            private readonly string _excludeCategoriesDir;
+            private readonly string _excludeCategoriesFile;
             private Dictionary<string, string> _parsedArguments = new Dictionary<string, string>();
 
             protected override string IgnoreFilesDirectory => _excludeCategoriesDir;
