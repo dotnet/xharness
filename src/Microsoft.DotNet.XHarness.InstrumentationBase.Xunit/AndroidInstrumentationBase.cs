@@ -145,15 +145,7 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
 
             protected override IDevice? Device => null;
 
-            public IEnumerable<Assembly> Tests
-            {
-                get
-                {
-                    return new List<Assembly>();
-                }
-                internal set { }
-            }
-
+            public IEnumerable<Assembly> Tests { get; set; } = new List<Assembly>();
             protected override IEnumerable<TestAssemblyInfo> GetTestAssemblies()
             {
                 foreach (var assembly in Tests)
@@ -180,10 +172,18 @@ namespace Microsoft.DotNet.XHarness.InstrumentationBase.Xunit
             {
                 var testRunner = base.GetTestRunner(logWriter);
 
-                ConfigureFilters(_parsedArguments[ExcludeMethodArgumentName], testRunner.SkipMethod, true);
-                ConfigureFilters(_parsedArguments[ExcludeClassArgumentName], testRunner.SkipClass, true);
-                ConfigureFilters(_parsedArguments[IncludeMethodArgumentName], testRunner.SkipMethod, false);
-                ConfigureFilters(_parsedArguments[IncludeClassArgumentName], testRunner.SkipClass, false);
+                Tuple<string, Action<string, bool>, bool>[] filters =
+                {
+                    Tuple.Create<string, Action<string, bool>, bool>(_parsedArguments[ExcludeMethodArgumentName], testRunner.SkipMethod, true),
+                    Tuple.Create<string, Action<string, bool>, bool>(_parsedArguments[ExcludeClassArgumentName], testRunner.SkipClass, true),
+                    Tuple.Create<string, Action<string, bool>, bool>(_parsedArguments[IncludeMethodArgumentName], testRunner.SkipMethod, false),
+                    Tuple.Create<string, Action<string, bool>, bool>(_parsedArguments[IncludeClassArgumentName], testRunner.SkipClass, false)
+                };
+
+                foreach (var t in filters)
+                {
+                    ConfigureFilters(t.Item1, t.Item2, t.Item3);
+                }
 
                 return testRunner;
             }
