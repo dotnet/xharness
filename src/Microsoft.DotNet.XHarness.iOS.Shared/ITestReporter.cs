@@ -9,20 +9,18 @@ using Microsoft.DotNet.XHarness.Common.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared
 {
-
-    // interface that represents a class that know how to parse the results from an app run.
+    /// <summary>
+    /// Interface that represents a class that knows how to parse test results.
+    /// </summary>
     public interface ITestReporter
     {
-
         ILog CallbackLog { get; }
-
         bool? Success { get; }
         CancellationToken CancellationToken { get; }
 
         void LaunchCallback(Task<bool> launchResult);
-
-        Task CollectSimulatorResult(Task<ProcessExecutionResult> processExecution);
-        Task CollectDeviceResult(Task<ProcessExecutionResult> processExecution);
+        Task CollectSimulatorResult(ProcessExecutionResult runResult);
+        Task CollectDeviceResult(ProcessExecutionResult runResult);
         Task<(TestExecutingResult ExecutingResult, string ResultMessage)> ParseResult();
     }
 }

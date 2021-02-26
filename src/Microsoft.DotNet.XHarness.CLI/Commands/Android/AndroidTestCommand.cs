@@ -101,7 +101,7 @@ Arguments:
             }
             catch (Exception toLog)
             {
-                logger.LogCritical(toLog, $"Failure to run test package: {toLog.Message}");
+                logger.LogCritical(toLog, toLog.Message);
             }
 
             return Task.FromResult(ExitCode.GENERAL_FAILURE);
