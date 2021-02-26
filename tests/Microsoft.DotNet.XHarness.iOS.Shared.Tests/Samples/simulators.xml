@@ -5,7 +5,7 @@
     <SupportedRuntimes Count="9">
       <SimRuntime>
         <Name>iOS 10.3</Name>
-        <Identifier>com.apple.CoreSimulator.SimRuntime.iOS-11-3</Identifier>
+        <Identifier>com.apple.CoreSimulator.SimRuntime.iOS-11-4</Identifier>
         <Version>656129</Version>
       </SimRuntime>
       <SimRuntime>
@@ -453,97 +453,97 @@
     </SupportedDeviceTypes>
     <AvailableDevices Count="75">
       <SimDevice UDID="B0CF5BA5-318E-4FC8-8FC1-FB82D9F2FB42" Name="iPhone 5">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-5s</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/B0CF5BA5-318E-4FC8-8FC1-FB82D9F2FB42</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/B0CF5BA5-318E-4FC8-8FC1-FB82D9F2FB42</LogPath>
       </SimDevice>
       <SimDevice UDID="78A86F96-8333-42DE-81F3-1D8CFEC1FB17" Name="iPhone 5s">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-5s</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/78A86F96-8333-42DE-81F3-1D8CFEC1FB17</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/78A86F96-8333-42DE-81F3-1D8CFEC1FB17</LogPath>
       </SimDevice>
       <SimDevice UDID="A921DF18-F3A1-4EDC-90DA-20E85D94685C" Name="iPhone 6 Plus">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-6-Plus</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/A921DF18-F3A1-4EDC-90DA-20E85D94685C</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/A921DF18-F3A1-4EDC-90DA-20E85D94685C</LogPath>
       </SimDevice>
       <SimDevice UDID="62992D4C-C669-4C51-AAD4-1877891EC26B" Name="iPhone 6">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-6</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/62992D4C-C669-4C51-AAD4-1877891EC26B</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/62992D4C-C669-4C51-AAD4-1877891EC26B</LogPath>
       </SimDevice>
       <SimDevice UDID="5C41C297-EDF4-4D97-804C-4186843CAC71" Name="iPhone 6s">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-6s</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/5C41C297-EDF4-4D97-804C-4186843CAC71</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/5C41C297-EDF4-4D97-804C-4186843CAC71</LogPath>
       </SimDevice>
       <SimDevice UDID="619E6E2A-1B6E-42AC-93A5-2EE548689274" Name="iPhone 6s Plus">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-6s-Plus</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/619E6E2A-1B6E-42AC-93A5-2EE548689274</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/619E6E2A-1B6E-42AC-93A5-2EE548689274</LogPath>
       </SimDevice>
       <SimDevice UDID="B239B550-AB0B-416C-987B-9AD8A856D429" Name="iPhone SE">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-SE</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/B239B550-AB0B-416C-987B-9AD8A856D429</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/B239B550-AB0B-416C-987B-9AD8A856D429</LogPath>
       </SimDevice>
       <SimDevice UDID="216D7E4C-679F-4E57-9680-805930EA9D1E" Name="iPhone 7">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-7</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/216D7E4C-679F-4E57-9680-805930EA9D1E</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/216D7E4C-679F-4E57-9680-805930EA9D1E</LogPath>
       </SimDevice>
       <SimDevice UDID="71AFDC06-B30E-4B2D-BF63-0EDDA0A62063" Name="iPhone 7 Plus">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-7-Plus</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/71AFDC06-B30E-4B2D-BF63-0EDDA0A62063</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/71AFDC06-B30E-4B2D-BF63-0EDDA0A62063</LogPath>
       </SimDevice>
       <SimDevice UDID="8C322CFC-A086-454E-BCA6-2BFC86E60B5E" Name="iPad Air">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPad-Air</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/8C322CFC-A086-454E-BCA6-2BFC86E60B5E</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/8C322CFC-A086-454E-BCA6-2BFC86E60B5E</LogPath>
       </SimDevice>
       <SimDevice UDID="FD05BCC6-2FE6-4F06-B954-5C835D10F14A" Name="iPad Air 2">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPad-Air-2</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/FD05BCC6-2FE6-4F06-B954-5C835D10F14A</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/FD05BCC6-2FE6-4F06-B954-5C835D10F14A</LogPath>
       </SimDevice>
       <SimDevice UDID="0D858881-E7D8-47CE-A972-CB93727A1184" Name="iPad Pro (9.7 inch)">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPad-Pro--9-7-inch-</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/0D858881-E7D8-47CE-A972-CB93727A1184</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/0D858881-E7D8-47CE-A972-CB93727A1184</LogPath>
       </SimDevice>
       <SimDevice UDID="C5DF41A6-4AB2-4427-B4C3-504D59D1D6A2" Name="iPad Pro (12.9 inch)">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPad-Pro</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/C5DF41A6-4AB2-4427-B4C3-504D59D1D6A2</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/C5DF41A6-4AB2-4427-B4C3-504D59D1D6A2</LogPath>
       </SimDevice>
       <SimDevice UDID="19086AC5-F933-43BD-AEA6-1C1D0737E3DB" Name="iPad (5th generation)">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPad--5th-generation-</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/19086AC5-F933-43BD-AEA6-1C1D0737E3DB</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/19086AC5-F933-43BD-AEA6-1C1D0737E3DB</LogPath>
       </SimDevice>
       <SimDevice UDID="1688E430-E910-46EC-980C-A281C8BA8AAE" Name="iPad Pro (12.9-inch) (2nd generation)">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPad-Pro--12-9-inch---2nd-generation-</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/1688E430-E910-46EC-980C-A281C8BA8AAE</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/1688E430-E910-46EC-980C-A281C8BA8AAE</LogPath>
       </SimDevice>
       <SimDevice UDID="356B263C-8516-4F3B-BBF1-CA23FA5478E6" Name="iPad Pro (10.5-inch)">
-        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-3</SimRuntime>
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-11-4</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPad-Pro--10-5-inch-</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/356B263C-8516-4F3B-BBF1-CA23FA5478E6</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/356B263C-8516-4F3B-BBF1-CA23FA5478E6</LogPath>
