@@ -44,12 +44,29 @@ Arguments:
 
             var runner = new AdbRunner(logger);
 
+            string? apkRequiredArchitecture = null;
+
+            if (string.IsNullOrEmpty(_arguments.DeviceId))
+            {
+                // trying to choose suitable device
+                if (!string.IsNullOrEmpty(_arguments.DeviceArchitecture))
+                {
+                    apkRequiredArchitecture = _arguments.DeviceArchitecture;
+                    logger.LogInformation($"Will attempt to run device on specified architecture: '{apkRequiredArchitecture}'");
+                }
+                else
+                {
+                    apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath).First();
+                    logger.LogInformation($"Will attempt to run device on detected architecture: '{apkRequiredArchitecture}'");
+                }
+            }
+
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
             return Task.FromResult(InvokeHelper(
                 logger: logger,
                 apkPackageName: _arguments.PackageName,
                 appPackagePath: _arguments.AppPackagePath,
-                apkRequiredArchitecture: null,
+                apkRequiredArchitecture: apkRequiredArchitecture,
                 deviceId: _arguments.DeviceId,
                 runner: runner));
         }

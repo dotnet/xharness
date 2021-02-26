@@ -11,7 +11,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
     internal class AndroidRunCommandArguments : TestCommandArguments
     {
         private string? _packageName;
-        private string? _deviceId;
 
         /// <summary>
         /// If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.
@@ -25,11 +24,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             set => _packageName = value;
         }
 
-        public string DeviceId
-        {
-            get => _deviceId ?? throw new ArgumentNullException("Device not specified");
-            set => _deviceId = value;
-        }
+        public string? DeviceId { get; set; }
 
         /// <summary>
         /// Folder to copy off for output of executing the specified APK
