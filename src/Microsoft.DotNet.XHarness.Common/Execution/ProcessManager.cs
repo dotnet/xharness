@@ -249,29 +249,38 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             };
 
             var sb = new StringBuilder();
+            sb.AppendLine($"Running {StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
+
             if (process.StartInfo.EnvironmentVariables != null)
             {
                 var currentEnvironment = Environment.GetEnvironmentVariables().Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
                 var processEnvironment = process.StartInfo.EnvironmentVariables.Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
-                var allKeys = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
-                foreach (var key in allKeys)
+                var allVariables = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
+
+                bool headerShown = false;
+                foreach (var variable in allVariables)
                 {
-                    if (key == null)
+                    if (variable == null)
                     {
                         continue;
                     }
 
-                    string? a = null, b = null;
-                    currentEnvironment?.TryGetValue(key, out a);
-                    processEnvironment?.TryGetValue(key, out b);
+                    currentEnvironment.TryGetValue(variable, out var a);
+                    processEnvironment.TryGetValue(variable, out var b);
+
                     if (a != b)
                     {
-                        sb.Append($"{key}={StringUtils.Quote(b)} ");
+                        if (!headerShown)
+                        {
+                            sb.Append("With env vars: ");
+                            headerShown = true;
+                        }
+
+                        sb.Append($"{variable}={StringUtils.Quote(b)} ");
                     }
                 }
             }
 
-            sb.Append($"{StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
             log.WriteLine(sb.ToString());
 
             process.Start();

@@ -10,7 +10,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
     internal class AndroidUninstallCommandArguments : TestCommandArguments
     {
         private string? _packageName;
-        private string? _deviceId;
 
         public string PackageName
         {
@@ -18,11 +17,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             set => _packageName = value;
         }
 
-        public string DeviceId
-        {
-            get => _deviceId ?? throw new ArgumentNullException("Device not specified");
-            set => _deviceId = value;
-        }
+        public string? DeviceId { get; set; }
 
         protected override OptionSet GetTestCommandOptions() => new OptionSet
         {

@@ -3,12 +3,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 .Setup(r => r.ParseResult())
                 .ReturnsAsync((TestExecutingResult.Succeeded, "Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0"));
             _testReporter
-                .Setup(x => x.CollectSimulatorResult(It.IsAny<Task<ProcessExecutionResult>>()))
+                .Setup(x => x.CollectSimulatorResult(It.IsAny<ProcessExecutionResult>()))
                 .Returns(Task.CompletedTask);
 
             _logs = new Mock<ILogs>();
@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                    Path.Combine(_logs.Object.Directory, "tvos.log"),
                    "/path/to/_mockSimulator.log",
                    false,
-                   It.IsAny<string>()))
+                   It.IsAny<LogType>()))
                 .Returns(captureLog.Object);
 
             _listenerFactory.Setup(f => f.UseTunnel).Returns(useTcpTunnel);
@@ -240,7 +240,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                    Path.Combine(_logs.Object.Directory, _mockSimulator.Object.Name + ".log"),
                    _mockSimulator.Object.SystemLog,
                    false,
-                   It.IsAny<string>()))
+                   It.IsAny<LogType>()))
                 .Returns(captureLog.Object);
 
             _listenerFactory.Setup(f => f.UseTunnel).Returns(useTunnel);
@@ -258,7 +258,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                new[] { "--appArg1=value1", "--appArg2" });
+                Array.Empty<string>());
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -396,7 +396,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                new[] { "--appArg1=value1", "--appArg2" });
+                new[] { "--appArg1=value1", "-f" });
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -419,7 +419,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             var expectedArgs = GetExpectedDeviceMlaunchArgs(
                 useTunnel: useTunnel,
-                extraArgs: "-argument=-app-arg:--appArg1=value1 -argument=-app-arg:--appArg2 ");
+                extraArgs: "-argument=--appArg1=value1 -argument=-f ");
 
             _processManager
                 .Verify(
@@ -629,28 +629,94 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
         }
 
+        [Fact]
+        public async Task TestOnMacCatalystSuccessfullyTest()
+        {
+            var testResultFilePath = Path.GetTempFileName();
+            var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
+            File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
+
+            _logs
+                .Setup(x => x.Create("test-maccatalyst-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
+                .Returns(listenerLogFile);
+
+            var captureLog = new Mock<ICaptureLog>();
+            captureLog.SetupGet(x => x.FullPath).Returns(_simulatorLogPath);
+
+            var captureLogFactory = new Mock<ICaptureLogFactory>();
+            captureLogFactory
+                .Setup(x => x.Create(
+                   It.IsAny<string>(),
+                   "/var/log/system.log",
+                   false,
+                   It.IsAny<LogType>()))
+                .Returns(captureLog.Object);
+
+            // Act
+            var appTester = new AppTester(_processManager.Object,
+                _hardwareDeviceLoader.Object,
+                _simulatorLoader.Object,
+                _listenerFactory.Object,
+                _snapshotReporterFactory,
+                captureLogFactory.Object,
+                Mock.Of<IDeviceLogCapturerFactory>(),
+                _testReporterFactory,
+                new XmlResultParser(),
+                _mainLog.Object,
+                _logs.Object,
+                _helpers.Object,
+                Array.Empty<string>());
+
+            var appInformation = new AppBundleInformation(
+                appName: AppName,
+                bundleIdentifier: AppBundleIdentifier,
+                appPath: s_appPath,
+                launchAppPath: s_appPath,
+                supports32b: false,
+                extension: null);
+
+            var (deviceName, result, resultMessage) = await appTester.TestApp(
+                appInformation,
+                new TestTargetOs(TestTarget.MacCatalyst, null),
+                TimeSpan.FromSeconds(30),
+                TimeSpan.FromSeconds(30),
+                ensureCleanSimulatorState: true);
+
+            // Verify
+            Assert.Equal(TestExecutingResult.Succeeded, result);
+            Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
+
+            _processManager
+                .Verify(
+                    x => x.ExecuteCommandAsync(
+                       "open",
+                       It.Is<IList<string>>(args => args.Contains(s_appPath)),
+                       _mainLog.Object,
+                       It.IsAny<TimeSpan>(),
+                       It.Is<Dictionary<string, string>>(envVars =>
+                            envVars["NUNIT_HOSTNAME"] == "127.0.0.1" &&
+                            envVars["NUNIT_HOSTPORT"] == Port.ToString() &&
+                            envVars["NUNIT_AUTOEXIT"] == "true" &&
+                            envVars["NUNIT_XML_VERSION"] == "xUnit" &&
+                            envVars["NUNIT_ENABLE_XML_OUTPUT"] == "true"),
+                       It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            _listener.Verify(x => x.InitializeAndGetPort(), Times.AtLeastOnce);
+            _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
+            _listener.Verify(x => x.Cancel(), Times.AtLeastOnce);
+            _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
+        }
+
         private static string GetExpectedDeviceMlaunchArgs(string skippedTests = null, bool useTunnel = false, string extraArgs = null) =>
-            "-argument=-connection-mode " +
-            "-argument=none " +
-            "-argument=-app-arg:-autostart " +
-            "-setenv=NUNIT_AUTOSTART=true " +
-            "-argument=-app-arg:-autoexit " +
+            "-v " +
+            "-v " +
             "-setenv=NUNIT_AUTOEXIT=true " +
-            "-argument=-app-arg:-enablenetwork " +
-            "-setenv=NUNIT_ENABLE_NETWORK=true " +
-            "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
-            skippedTests +
-            "-v " +
-            "-v " +
-            "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
-            "-setenv=NUNIT_ENABLE_XML_MODE=wrapped " +
-            "-setenv=NUNIT_XML_VERSION=xUnit " +
-            "-argument=-app-arg:-transport:Tcp " +
-            "-setenv=NUNIT_TRANSPORT=TCP " +
-            $"-argument=-app-arg:-hostport:{Port} " +
             $"-setenv=NUNIT_HOSTPORT={Port} " +
+            "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
+            "-setenv=NUNIT_XML_VERSION=xUnit " +
+            skippedTests +
             extraArgs +
-            "-argument=-app-arg:-hostname:127.0.0.1,::1 " +
             "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
             "--disable-memory-limits " +
             $"--devname \"{DeviceName}\" " +
@@ -659,27 +725,12 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "--wait-for-exit";
 
         private string GetExpectedSimulatorMlaunchArgs() =>
-            "-argument=-connection-mode " +
-            "-argument=none " +
-            "-argument=-app-arg:-autostart " +
-            "-setenv=NUNIT_AUTOSTART=true " +
-            "-argument=-app-arg:-autoexit " +
+            "-v " +
+            "-v " +
             "-setenv=NUNIT_AUTOEXIT=true " +
-            "-argument=-app-arg:-enablenetwork " +
-            "-setenv=NUNIT_ENABLE_NETWORK=true " +
-            "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
-            "-v " +
-            "-v " +
-            "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
-            "-setenv=NUNIT_ENABLE_XML_MODE=wrapped " +
-            "-setenv=NUNIT_XML_VERSION=xUnit " +
-            "-argument=-app-arg:-transport:Tcp " +
-            "-setenv=NUNIT_TRANSPORT=TCP " +
-            $"-argument=-app-arg:-hostport:{Port} " +
             $"-setenv=NUNIT_HOSTPORT={Port} " +
-            "-argument=-app-arg:--appArg1=value1 " +
-            "-argument=-app-arg:--appArg2 " +
-            "-argument=-app-arg:-hostname:127.0.0.1 " +
+            "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
+            "-setenv=NUNIT_XML_VERSION=xUnit " +
             "-setenv=NUNIT_HOSTNAME=127.0.0.1 " +
             $"--device=:v2:udid={_mockSimulator.Object.UDID} " +
             $"--launchsim {StringUtils.FormatArguments(s_appPath)}";

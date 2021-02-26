@@ -9,7 +9,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
@@ -122,7 +121,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                    Path.Combine(_logs.Object.Directory, "tvos.log"),
                    "/path/to/simulator.log",
                    false,
-                   It.IsAny<string>()))
+                   It.IsAny<LogType>()))
                 .Returns(captureLog.Object);
 
             // Act
@@ -167,7 +166,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                    Path.Combine(_logs.Object.Directory, _mockSimulator.Object.Name + ".log"),
                    _mockSimulator.Object.SystemLog,
                    false,
-                   LogType.SystemLog.ToString()))
+                   LogType.SystemLog))
                 .Returns(captureLog.Object);
 
             SetupLogList(new[] { captureLog.Object });
@@ -184,7 +183,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                new[] { "--appArg1=value1", "--appArg2" });
+                new[] { "--appArg1=value1", "-g" });
 
             var (deviceName, result) = await appRunner.RunApp(
                 appInformation,
@@ -281,7 +280,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 _mainLog.Object,
                 _logs.Object,
                 _helpers.Object,
-                new[] { "--appArg1=value1", "--appArg2" });
+                new[] { "--appArg1=value1", "-g" });
 
             var (deviceName, result) = await appRunner.RunApp(
                 appInformation,
@@ -322,26 +321,20 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 extension: null);
 
         private static string GetExpectedDeviceMlaunchArgs() =>
-            "-argument=-connection-mode " +
-            "-argument=none " +
-            "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
             "-v " +
             "-v " +
-            "-argument=-app-arg:--appArg1=value1 " +
-            "-argument=-app-arg:--appArg2 " +
+            "-argument=--appArg1=value1 " +
+            "-argument=-g " +
             "--disable-memory-limits " +
             $"--devname \"{DeviceName}\" " +
             $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
             "--wait-for-exit";
 
         private string GetExpectedSimulatorMlaunchArgs() =>
-            "-argument=-connection-mode " +
-            "-argument=none " +
-            "-setenv=DISABLE_SYSTEM_PERMISSION_TESTS=1 " +
             "-v " +
             "-v " +
-            "-argument=-app-arg:--appArg1=value1 " +
-            "-argument=-app-arg:--appArg2 " +
+            "-argument=--appArg1=value1 " +
+            "-argument=-g " +
             $"--device=:v2:udid={_mockSimulator.Object.UDID} " +
             $"--launchsim {StringUtils.FormatArguments(s_appPath)}";
 

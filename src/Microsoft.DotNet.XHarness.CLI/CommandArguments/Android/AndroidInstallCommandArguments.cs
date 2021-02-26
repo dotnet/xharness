@@ -10,7 +10,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
     internal class AndroidInstallCommandArguments : TestCommandArguments
     {
         private string? _packageName;
-        private string? _deviceId;
 
         public string PackageName
         {
@@ -18,11 +17,13 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             set => _packageName = value;
         }
 
-        public string DeviceId
-        {
-            get => _deviceId ?? throw new ArgumentNullException("Device not specified");
-            set => _deviceId = value;
-        }
+        public string? DeviceId { get; set; }
+
+        /// <summary>
+        /// If specified, attempt to run on a compatible attached device, failing if unavailable.
+        /// If not specified, we will open the apk using Zip APIs and guess what's usable based off folders found in under /lib
+        /// </summary>
+        public string? DeviceArchitecture { get; set; }
 
         protected override OptionSet GetTestCommandOptions() => new OptionSet
         {
