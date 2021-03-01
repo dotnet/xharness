@@ -76,26 +76,18 @@ namespace Microsoft.DotNet.XHarness.Apple
                 entireFile: false,
                 LogType.SystemLog);
 
+            // We need to make the binary executable
             var binaryPath = Path.Combine(appInfo.AppPath, "Contents", "MacOS", appInfo.BundleExecutable ?? appInfo.AppName);
-            var arguments = new List<string>();
-
             if (File.Exists(binaryPath))
             {
-                // We need to make the binary executable
-                var result = await _processManager.ExecuteCommandAsync("chmod", new[] { "+x", binaryPath }, _mainLog, TimeSpan.FromSeconds(10), cancellationToken: cancellationToken);
+                await _processManager.ExecuteCommandAsync("chmod", new[] { "+x", binaryPath }, _mainLog, TimeSpan.FromSeconds(10), cancellationToken: cancellationToken);
+            }
 
-                if (!result.Succeeded)
-                {
-                    _mainLog.WriteLine($"Failed to make the binary at {binaryPath} executable, the run might fail");
-                }
-            }
-            else
+            var arguments = new List<string>
             {
-                _mainLog.WriteLine($"Failed to find an executable binary at {binaryPath}. Trying to run app using `open -W`");
-                binaryPath = "open";
-                arguments.Add("-W");
-                arguments.Add(appInfo.LaunchAppPath);
-            }
+                "-W",
+                appInfo.LaunchAppPath
+            };
 
             arguments.AddRange(appArguments);
 
@@ -107,7 +99,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             try
             {
-                return await _processManager.ExecuteCommandAsync(binaryPath, arguments, _mainLog, timeout, envVars, cancellationToken);
+                return await _processManager.ExecuteCommandAsync("open", arguments, _mainLog, timeout, envVars, cancellationToken);
             }
             finally
             {

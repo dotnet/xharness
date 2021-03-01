@@ -76,28 +76,25 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
 
             int exitCode;
-            if (target.Platform == TestTarget.MacCatalyst)
+            if (target.Platform != TestTarget.MacCatalyst && !result.Succeeded)
             {
-                exitCode = result.ExitCode;
+                logger.LogError($"App run has failed. mlaunch exited with {result.ExitCode}");
+                return ExitCode.APP_LAUNCH_FAILURE;
             }
-            else
+
+            var systemLog = logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
+            if (systemLog == null)
             {
-                if (!result.Succeeded)
-                {
-                    logger.LogError($"App run has failed. mlaunch exited with {result.ExitCode}");
-                    return ExitCode.APP_LAUNCH_FAILURE;
-                }
-
-                var systemLog = logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
-                if (systemLog == null)
-                {
-                    logger.LogError("Application has finished but no system log found. Failed to determine the exit code!");
-                    return ExitCode.RETURN_CODE_NOT_SET;
-                }
-
-                exitCode = new ExitCodeDetector().DetectExitCode(appBundleInfo, systemLog);
-                logger.LogInformation($"App run ended with {exitCode}");
+                logger.LogError("Application has finished but no system log found. Failed to determine the exit code!");
+                return ExitCode.RETURN_CODE_NOT_SET;
             }
+
+            var exitCodeDetector = target.Platform == TestTarget.MacCatalyst
+                ? new MacCatalystExitCodeDetector()
+                : (ExitCodeDetector)new iOSExitCodeDetector();
+
+            exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, systemLog);
+            logger.LogInformation($"App run ended with {exitCode}");
 
             if (_arguments.ExpectedExitCode != exitCode)
             {
