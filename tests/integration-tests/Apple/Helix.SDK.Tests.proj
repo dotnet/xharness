@@ -9,10 +9,7 @@
     <HelixType>test/product/</HelixType>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-    <EnableXUnitReporter Condition=" '$(AGENT_JOBNAME)' != '' ">true</EnableXUnitReporter>
-    <EnableXUnitReporter Condition=" '$(AGENT_JOBNAME)' == '' ">false</EnableXUnitReporter>
-    <EnableAzurePipelinesReporter Condition=" '$(AGENT_JOBNAME)' != '' ">true</EnableAzurePipelinesReporter>
-    <EnableAzurePipelinesReporter Condition=" '$(AGENT_JOBNAME)' != '' ">false</EnableAzurePipelinesReporter>
+    <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
     <XHarnessNupkgPath>$(ArtifactsShippingPackagesDir)/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
@@ -21,7 +18,6 @@
 
   <!-- For non-ci local runs -->
   <PropertyGroup Condition=" '$(AGENT_JOBNAME)' == '' ">
-    <EnableXUnitReporter>false</EnableXUnitReporter>
     <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-dev</MicrosoftDotNetXHarnessCLIVersion>
   </PropertyGroup>
