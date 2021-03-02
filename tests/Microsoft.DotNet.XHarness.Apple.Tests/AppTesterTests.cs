@@ -300,7 +300,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             _simulatorLoader.VerifyAll();
 
             captureLog.Verify(x => x.StartCapture(), Times.AtLeastOnce);
-            captureLog.Verify(x => x.StopCapture(), Times.AtLeastOnce);
 
             // When ensureCleanSimulatorState == true
             _mockSimulator.Verify(x => x.PrepareSimulator(_mainLog.Object, AppBundleIdentifier));
