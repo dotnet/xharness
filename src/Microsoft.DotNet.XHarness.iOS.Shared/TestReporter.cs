@@ -112,7 +112,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             CallbackLog = new CallbackLog(line =>
             {
-                // MT1111: Application launched successfully, but it's not possible to wait for the app to exit as requested because it's not possible to detect app termination when launching using gdbserver
+                // MT1111: Application launched successfully, but it's not possible to wait for the app to exit as
+                // requested because it's not possible to detect app termination when launching using gdbserver
                 _waitedForExit &= line?.Contains("MT1111: ") != true;
                 if (line?.Contains("error MT1007") == true)
                 {
@@ -124,16 +125,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         /// <summary>
         /// Parse the run log and decide if we managed to start the process or not
         /// </summary>
-        private async Task<(int pid, bool launchFailure)> GetPidFromRunLog()
+        private async Task<int> GetPidFromRunLog()
         {
             int pid = -1;
-            bool launchFailure = false;
 
             using var reader = _runLog.GetReader(); // diposed at the end of the method, which is what we want
             if (reader.Peek() == -1)
             {
-                // empty file! we definitely had a launch error in this case
-                launchFailure = true;
+                // Empty file! If the app never connected to our listener, it probably never launched
+                if (!_listener.ConnectedTask.IsCompleted || !_listener.ConnectedTask.Result)
+                {
+                    _launchFailure = true;
+                }
             }
             else
             {
@@ -164,12 +167,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     }
                     else if (line.Contains("error MT1008"))
                     {
-                        launchFailure = true;
+                        _launchFailure = true;
                     }
                 }
             }
 
-            return (pid, launchFailure);
+            return pid;
         }
 
         /// <summary>
@@ -305,8 +308,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             if (Success != null && !Success.Value)
             {
-                var (pid, launchFailure) = await GetPidFromRunLog();
-                _launchFailure = launchFailure;
+                var pid = await GetPidFromRunLog();
                 if (pid > 0)
                 {
                     await KillAppProcess(pid, _cancellationTokenSource);
