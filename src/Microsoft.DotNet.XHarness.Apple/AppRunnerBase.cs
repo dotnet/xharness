@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             finally
             {
-                systemLog.StopCapture();
+                systemLog.StopCapture(waitIfEmpty: TimeSpan.FromSeconds(10));
             }
         }
     }
