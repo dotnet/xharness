@@ -9,6 +9,7 @@ using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.Commands.iOS;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Mono.Options;
 
@@ -34,15 +35,28 @@ namespace Microsoft.DotNet.XHarness.CLI
             {
                 commands.Add(new AppleCommandSet());
             }
+            else if (args[0] == "apple")
+            {
+                // Otherwise the command would just not be found
+                Console.Error.WriteLine("The 'apple' command is not available on non-OSX platforms!");
+                return (int)ExitCode.INVALID_ARGUMENTS;
+            }
 
             commands.Add(new AndroidCommandSet());
             commands.Add(new WasmCommandSet());
             commands.Add(new XHarnessHelpCommand());
-            commands.Add(new XHarnessVersionCommand());            
+            commands.Add(new XHarnessVersionCommand());
 
             // Mono.Options wouldn't allow "--" and CommandSet parser will temporarily rename it
             int result = commands.Run(args.Select(a => a == "--" ? XHarnessCommand.VerbatimArgumentPlaceholder : a));
-            Console.WriteLine($"XHarness exit code: {result}");
+
+            string? exitCodeName = null;
+            if (result != 0 && Enum.IsDefined(typeof(ExitCode), result))
+            {
+                exitCodeName = $" ({(ExitCode)result})";
+            }
+
+            Console.WriteLine($"XHarness exit code: {result}{exitCodeName}");
             return result;
         }
 
