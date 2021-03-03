@@ -42,6 +42,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 
         public List<string> BrowserArgs { get; set; } = new List<string>();
         public string HTMLFile { get; set; } = "index.html";
+        public int ExpectedExitCode { get; set; } = (int)Common.CLI.ExitCode.SUCCESS;
 
         protected override OptionSet GetTestCommandOptions() => new OptionSet{
             { "browser=|b=", "Specifies the browser to be used",
@@ -52,6 +53,18 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             },
             { "html-file=", "Main html file to load from the app directory. Default is index.html",
                 v => HTMLFile = v
+            },
+            { "expected-exit-code=", "If specified, sets the expected exit code for a successful test run.",
+                v => {
+                    if (int.TryParse(v, out var number))
+                    {
+                        ExpectedExitCode = number;
+                    }
+                    else
+                    {
+                        throw new ArgumentException("expected-exit-code must be an integer");
+                    }
+                }
             },
         };
 
