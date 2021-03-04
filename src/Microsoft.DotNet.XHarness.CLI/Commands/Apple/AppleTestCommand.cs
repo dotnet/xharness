@@ -81,6 +81,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 skippedMethods: _arguments.SingleMethodFilters?.ToArray(),
                 skippedTestClasses: _arguments.ClassMethodFilters?.ToArray());
 
+            string nl = Environment.NewLine;
+            const string checkLogsMessage = "Check logs for more information";
+
             switch (testResult)
             {
                 case TestExecutingResult.Succeeded:
@@ -97,30 +100,44 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
                 case TestExecutingResult.LaunchFailure:
 
-                    if (resultMessage != null)
+                    const string launchMessage = "Failed to launch the application";
+
+                    if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
                     {
-                        logger.LogError($"Failed to launch the application:{Environment.NewLine}" +
-                            $"{resultMessage}{Environment.NewLine}{Environment.NewLine}" +
-                            $"Check logs for more information.");
+                        logger.LogError(launchMessage + nl + failureMessage);
                     }
                     else
                     {
-                        logger.LogError($"Failed to launch the application. Check logs for more information");
+                        if (resultMessage != null)
+                        {
+                            logger.LogError(launchMessage + nl + resultMessage + nl + nl + checkLogsMessage);
+                        }
+                        else
+                        {
+                            logger.LogError(launchMessage + nl + checkLogsMessage);
+                        }
                     }
 
                     return ExitCode.APP_LAUNCH_FAILURE;
 
                 case TestExecutingResult.Crashed:
 
-                    if (resultMessage != null)
+                    const string crashMessage = "Application run crashed";
+
+                    if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var issueMessage))
                     {
-                        logger.LogError($"Application run crashed:{Environment.NewLine}" +
-                            $"{resultMessage}{Environment.NewLine}{Environment.NewLine}" +
-                            $"Check logs for more information.");
+                        logger.LogError(crashMessage + nl + issueMessage);
                     }
                     else
                     {
-                        logger.LogError($"Application test run crashed. Check logs for more information");
+                        if (resultMessage != null)
+                        {
+                            logger.LogError(crashMessage + nl + resultMessage + nl + nl + checkLogsMessage);
+                        }
+                        else
+                        {
+                            logger.LogError(crashMessage + nl + checkLogsMessage);
+                        }
                     }
 
                     return ExitCode.APP_CRASH;
@@ -131,17 +148,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                     return ExitCode.TIMED_OUT;
 
                 default:
-
-                    if (resultMessage != null)
-                    {
-                        logger.LogError($"Application test run ended in an unexpected way: '{testResult}'{Environment.NewLine}" +
-                            $"{resultMessage}{Environment.NewLine}{Environment.NewLine}" +
-                            $"Check logs for more information.");
-                    }
-                    else
-                    {
-                        logger.LogError($"Application test run ended in an unexpected way: '{testResult}'. Check logs for more information");
-                    }
+                    logger.LogError($"Application test run ended in an unexpected way: '{testResult}'" +
+                        nl + (resultMessage != null ? resultMessage + nl + nl : null) + checkLogsMessage);
 
                     return ExitCode.GENERAL_FAILURE;
             }

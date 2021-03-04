@@ -99,6 +99,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             if (_arguments.ExpectedExitCode != exitCode)
             {
                 logger.LogError($"Application has finished with exit code {exitCode} but {_arguments.ExpectedExitCode} was expected");
+
+                if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
+                {
+                    logger.LogError(failureMessage.Value.HumanMessage);
+                }
+
                 return ExitCode.GENERAL_FAILURE;
             }
 
