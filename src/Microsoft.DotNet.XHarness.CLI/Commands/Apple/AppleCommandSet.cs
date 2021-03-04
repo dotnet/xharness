@@ -4,7 +4,7 @@
 
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
     // Main iOS command set that contains the plaform specific commands. This allows the command line to
     // support different options in different platforms.
