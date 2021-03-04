@@ -102,9 +102,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
                     const string launchMessage = "Failed to launch the application";
 
-                    if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
+                    if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var issue))
                     {
-                        logger.LogError(launchMessage + nl + failureMessage);
+                        logger.LogError(launchMessage + nl + issue.Value.HumanMessage);
                     }
                     else
                     {
@@ -124,9 +124,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
                     const string crashMessage = "Application run crashed";
 
-                    if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var issueMessage))
+                    if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var testIssue))
                     {
-                        logger.LogError(crashMessage + nl + issueMessage);
+                        logger.LogError(crashMessage + nl + testIssue.Value.HumanMessage);
                     }
                     else
                     {
