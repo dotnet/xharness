@@ -21,7 +21,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
     internal abstract class AppleAppCommand : XHarnessCommand
     {
