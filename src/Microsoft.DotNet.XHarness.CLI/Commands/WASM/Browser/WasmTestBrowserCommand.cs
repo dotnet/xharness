@@ -70,7 +70,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             try
             {
-                return await runner.RunTestsWithWebDriver(driverService, driver);
+                var exitCode = await runner.RunTestsWithWebDriver(driverService, driver);
+                if ((int)exitCode != _arguments.ExpectedExitCode)
+                {
+                    logger.LogError($"Application has finished with exit code {exitCode} but {_arguments.ExpectedExitCode} was expected");
+                    return ExitCode.GENERAL_FAILURE;
+                }
+
+                return ExitCode.SUCCESS;
             }
             finally
             {
