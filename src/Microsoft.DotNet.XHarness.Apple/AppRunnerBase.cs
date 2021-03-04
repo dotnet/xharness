@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             AppBundleInformation appInfo,
             TimeSpan timeout,
             IEnumerable<string> appArguments,
-            Dictionary<string, object> environmentVariables,
+            Dictionary<string, string> environmentVariables,
             CancellationToken cancellationToken)
         {
             using var systemLog = _captureLogFactory.Create(
@@ -89,21 +89,60 @@ namespace Microsoft.DotNet.XHarness.Apple
                 appInfo.LaunchAppPath
             };
 
-            arguments.AddRange(appArguments);
-
-            var envVars = environmentVariables.ToDictionary(
-                p => p.Key,
-                p => p.Value is bool ? p.Value.ToString().ToLowerInvariant() : p.Value.ToString()); // turns "True" to "true"
+            AddExtraEnvVars(environmentVariables, appArguments);
 
             systemLog.StartCapture();
 
             try
             {
-                return await _processManager.ExecuteCommandAsync("open", arguments, _mainLog, timeout, envVars, cancellationToken);
+                return await _processManager.ExecuteCommandAsync(
+                    "open",
+                    arguments,
+                    _mainLog,
+                    timeout,
+                    environmentVariables,
+                    cancellationToken);
             }
             finally
             {
                 systemLog.StopCapture(waitIfEmpty: TimeSpan.FromSeconds(10));
+            }
+        }
+
+        /// <summary>
+        /// User can pass additional arguments after the -- which get turned to environmental variables.
+        /// </summary>
+        /// <param name="envVariables">Environmental variables where the arguments are added</param>
+        /// <param name="arguments">Arguments to parse</param>
+        protected void AddExtraEnvVars(Dictionary<string, string> envVariables, IEnumerable<string> arguments)
+        {
+            using (var enumerator = arguments.GetEnumerator())
+            {
+                while (enumerator.MoveNext())
+                {
+                    var arg = enumerator.Current;
+                    int position = arg.IndexOf('=');
+
+                    string name;
+                    string value;
+                    if (position == -1)
+                    {
+                        name = arg;
+                        value = enumerator.MoveNext() ? enumerator.Current : string.Empty;
+                    }
+                    else
+                    {
+                        name = arg.Substring(0, position);
+                        value = arg.Substring(position + 1);
+                    }
+
+                    if (envVariables.ContainsKey(name))
+                    {
+                        _mainLog.WriteLine($"Environmental variable {name} is already passed to the application to drive test run, skipping..");
+                    }
+
+                    envVariables[name] = value;
+                }
             }
         }
     }

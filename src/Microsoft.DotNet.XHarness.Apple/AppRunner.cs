@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             if (target.Platform == TestTarget.MacCatalyst)
             {
                 _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
-                result = await RunMacCatalystApp(appInformation, timeout, _appArguments, new Dictionary<string, object>(), cancellationToken);
+                result = await RunMacCatalystApp(appInformation, timeout, _appArguments, new Dictionary<string, string>(), cancellationToken);
                 return ("MacCatalyst", result);
             }
 
@@ -192,7 +192,10 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 _mainLog.WriteLine("Starting test run");
 
-                var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+                var envVars = new Dictionary<string, string>();
+                AddExtraEnvVars(envVars, _appArguments);
+
+                var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, envVars, cancellationToken);
 
                 // cleanup after us
                 if (ensureCleanSimulatorState)

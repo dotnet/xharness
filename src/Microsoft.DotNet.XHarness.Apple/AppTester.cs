@@ -450,7 +450,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             return await testReporter.ParseResult();
         }
 
-        private Dictionary<string, object> GetEnvVariables(
+        private Dictionary<string, string> GetEnvVariables(
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
             string[]? skippedTestClasses,
@@ -458,20 +458,20 @@ namespace Microsoft.DotNet.XHarness.Apple
             int listenerPort,
             string listenerTmpFile)
         {
-            var variables = new Dictionary<string, object>
+            var variables = new Dictionary<string, string>
             {
-                { EnviromentVariables.AutoExit, true },
-                { EnviromentVariables.HostPort, listenerPort },
+                { EnviromentVariables.AutoExit, "true" },
+                { EnviromentVariables.HostPort, listenerPort.ToString() },
 
                 // Let the runner know that we want to get an XML output and not plain text
-                {  EnviromentVariables.EnableXmlOutput, true },
-                {  EnviromentVariables.XmlVersion, $"{xmlResultJargon}" },
+                {  EnviromentVariables.EnableXmlOutput, "true" },
+                {  EnviromentVariables.XmlVersion, xmlResultJargon.ToString() },
             };
 
             if (skippedMethods?.Any() ?? skippedTestClasses?.Any() ?? false)
             {
                 // Do not run all the tests, we are using filters
-                variables.Add(EnviromentVariables.RunAllTestsByDefault, false);
+                variables.Add(EnviromentVariables.RunAllTestsByDefault, "false");
 
                 // Add the skipped test classes and methods
                 if (skippedMethods != null && skippedMethods.Length > 0)
@@ -491,6 +491,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 variables.Add(EnviromentVariables.LogFilePath, listenerTmpFile);
             }
+
+            AddExtraEnvVars(variables, _appArguments);
 
             return variables;
         }
