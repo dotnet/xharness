@@ -8,11 +8,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 {
     /// <summary>
     /// These commands allow management of Xcode iOS/WatchOS/tvOS Simulators on MacOS.
-    /// Originally taken from: https://github.com/xamarin/xamarin-macios/blob/master/tools/siminstaller/Program.cs
+    /// Originally taken from: https://github.com/xamarin/xamarin-macios/blob/master/tools/siminstaller
     /// </summary>
-    public class WasmCommandSet : CommandSet
+    public class SimulatorsCommandSet : CommandSet
     {
-        public WasmCommandSet() : base("simulators")
+        public SimulatorsCommandSet() : base("simulators")
         {
             Add(new ListCommand());
             Add(new FindCommand());

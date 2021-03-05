@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                     PrintCommandHelp(new WasmCommandSet(), subCommand);
                     break;
                 default:
-                    Console.WriteLine($"No help available for command '{command}'. Allowed commands are 'ios' and 'android'");
+                    Console.WriteLine($"No help available for command '{command}'. Allowed commands are 'apple', 'wasm' and 'android'");
                     break;
             }
 
