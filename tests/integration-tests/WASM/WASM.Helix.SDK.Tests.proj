@@ -13,8 +13,17 @@
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
     <!-- Pick up the nupkg from this repo for testing purposes -->
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
-    <XHarnessNupkgPath>$(MSBuildThisFileDirectory)../../../artifacts/packages/$(Configuration)/Shipping/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
     <TestPayloadUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/wasm/System.Reflection.Extensions.Tests.zip</TestPayloadUrl>
+  </PropertyGroup>
+
+  <!-- For non-ci local runs -->
+  <PropertyGroup Condition=" '$(AGENT_JOBNAME)' == '' ">
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
+    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-dev</MicrosoftDotNetXHarnessCLIVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <XHarnessNupkgPath>$(ArtifactsShippingPackagesDir)/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
   </PropertyGroup>
 
   <ItemGroup>

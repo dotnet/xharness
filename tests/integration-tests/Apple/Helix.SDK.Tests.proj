@@ -12,7 +12,6 @@
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
-    <XHarnessNupkgPath>$(ArtifactsShippingPackagesDir)/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
     <DotNetCliVersion>5.0.1</DotNetCliVersion>
   </PropertyGroup>
 
@@ -20,6 +19,10 @@
   <PropertyGroup Condition=" '$(AGENT_JOBNAME)' == '' ">
     <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-dev</MicrosoftDotNetXHarnessCLIVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <XHarnessNupkgPath>$(ArtifactsShippingPackagesDir)/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
   </PropertyGroup>
 
   <ItemGroup>
