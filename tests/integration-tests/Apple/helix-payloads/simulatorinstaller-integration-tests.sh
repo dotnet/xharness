@@ -1,10 +1,12 @@
 #!/bin/bash
 
+set -x
+
 echo "Testing simulator download availability"
 echo "Getting list of available simulators"
 
 IFS=$'\n'
-list=($("$sim_installer" list | grep 'Source:'))
+list=($(dotnet "$XHARNESS_CLI_PATH" apple simulators list | grep 'Source:'))
 
 length="${#list[@]}"
 
@@ -41,7 +43,7 @@ done
 echo "Testing installed simulators and the find command"
 
 IFS=$'\n'
-installed_simulators=($("$sim_installer" list --installed | grep 'Identifier:'))
+installed_simulators=($(dotnet "$XHARNESS_CLI_PATH" apple simulators list --installed | grep 'Identifier:'))
 
 length="${#installed_simulators[@]}"
 
@@ -60,7 +62,7 @@ if [ "$length" != "0" ]; then
     echo ""
     set -x
 
-    eval "$sim_installer" find $simulator_args
+    eval dotnet "$XHARNESS_CLI_PATH" apple simulators find $simulator_args
 
     if [ "$?" != 0 ]; then
         echo "Failed to find listed simulators"

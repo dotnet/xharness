@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.CLI
                 args[0] = "apple";
             }
 
-            if (args[0] == "apple" && RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (args.Length > 0 && args[0] == "apple" && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 // Otherwise the command would just not be found
                 Console.Error.WriteLine("The 'apple' command is not available on non-OSX platforms!");

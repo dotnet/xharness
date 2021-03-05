@@ -28,7 +28,7 @@
   <ItemGroup>
     <HelixWorkItem Include="SimulatorInstaller.Tests">
       <PayloadDirectory>$(RepoRoot)\tests\integration-tests\Apple\helix-payloads</PayloadDirectory>
-      <Command>sudo ./simulatorinstaller-integration-tests.sh</Command>
+      <Command>./simulatorinstaller-integration-tests.sh</Command>
       <Timeout>00:05:00</Timeout>
     </HelixWorkItem>
   </ItemGroup>
