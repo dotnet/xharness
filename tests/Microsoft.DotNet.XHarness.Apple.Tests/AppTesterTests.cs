@@ -525,7 +525,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
-                       null,
+                       It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -614,7 +614,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
-                       null,
+                       It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 
