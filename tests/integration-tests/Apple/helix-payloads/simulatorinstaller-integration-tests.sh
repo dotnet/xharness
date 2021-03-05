@@ -1,20 +1,5 @@
 #!/bin/bash
 
-set -ex
-
-here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-DOTNET_ROOT=$(dirname "$(which dotnet)")
-export DOTNET_ROOT
-dotnet tool install --no-cache --tool-path "$here/tools" --version "1.0.0-ci" --add-source "$here" Microsoft.DotNet.XHarness.SimulatorInstaller
-
-sim_installer="$here/tools/simulator-installer"
-
-export XHARNESS_DISABLE_COLORED_OUTPUT=true
-export XHARNESS_LOG_WITH_TIMESTAMPS=true
-
-set +ex
-
 echo "Testing simulator download availability"
 echo "Getting list of available simulators"
 
