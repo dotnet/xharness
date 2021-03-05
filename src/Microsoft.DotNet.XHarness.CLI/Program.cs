@@ -28,27 +28,18 @@ namespace Microsoft.DotNet.XHarness.CLI
                 args[0] = "apple";
             }
 
-            // Root command: will use the platform specific commands to perform the appropriate action.
-            var commands = new CommandSet("xharness");
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                commands.Add(new AppleCommandSet());
-            }
-            else if (args[0] == "apple")
+            if (args[0] == "apple" && RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 // Otherwise the command would just not be found
                 Console.Error.WriteLine("The 'apple' command is not available on non-OSX platforms!");
                 return (int)ExitCode.INVALID_ARGUMENTS;
             }
 
-            commands.Add(new AndroidCommandSet());
-            commands.Add(new WasmCommandSet());
-            commands.Add(new XHarnessHelpCommand());
-            commands.Add(new XHarnessVersionCommand());
+            // Mono.Options wouldn't allow "--" so we will temporarily rename it and parse it ourselves later
+            args = args.Select(a => a == "--" ? XHarnessCommand.VerbatimArgumentPlaceholder : a).ToArray();
 
-            // Mono.Options wouldn't allow "--" and CommandSet parser will temporarily rename it
-            int result = commands.Run(args.Select(a => a == "--" ? XHarnessCommand.VerbatimArgumentPlaceholder : a));
+            var commands = GetXHarnessCommandSet();
+            int result = commands.Run(args);
 
             string? exitCodeName = null;
             if (result != 0 && Enum.IsDefined(typeof(ExitCode), result))
@@ -67,6 +58,23 @@ namespace Microsoft.DotNet.XHarness.CLI
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Warning: The 'ios' command has been renamed to 'apple' and will soon be deprecated!");
             Console.ForegroundColor = color;
+        }
+
+        public static CommandSet GetXHarnessCommandSet()
+        {
+            var commandSet = new CommandSet("xharness");
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                commandSet.Add(new AppleCommandSet());
+            }
+
+            commandSet.Add(new AndroidCommandSet());
+            commandSet.Add(new WasmCommandSet());
+            commandSet.Add(new XHarnessHelpCommand());
+            commandSet.Add(new XHarnessVersionCommand());
+
+            return commandSet;
         }
     }
 }
