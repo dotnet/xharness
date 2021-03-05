@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
@@ -66,7 +65,6 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected async Task<ProcessExecutionResult> RunMacCatalystApp(
             AppBundleInformation appInfo,
             TimeSpan timeout,
-            IEnumerable<string> appArguments,
             Dictionary<string, string> environmentVariables,
             CancellationToken cancellationToken)
         {
@@ -88,8 +86,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                 "-W",
                 appInfo.LaunchAppPath
             };
-
-            AddExtraEnvVars(environmentVariables, appArguments);
 
             systemLog.StartCapture();
 

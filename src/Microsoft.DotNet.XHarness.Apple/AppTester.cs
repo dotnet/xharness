@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IFileBackedLog _mainLog;
         private readonly ILogs _logs;
         private readonly IHelpers _helpers;
-        private readonly IEnumerable<string> _appArguments; // Arguments that will be passed to the iOS application
+        private readonly IEnumerable<string> _appArguments; // Arguments that will be passed to the iOS application using env variables
 
         public AppTester(
             IMlaunchProcessManager processManager,
@@ -87,8 +87,11 @@ namespace Microsoft.DotNet.XHarness.Apple
             var runMode = target.Platform.ToRunMode();
             var isSimulator = target.Platform.IsSimulator();
 
-            // TODO #459: Get MacCatalyst system logs
-            var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
+            var deviceListenerLog = _logs.Create(
+                $"test-{target.AsString()}-{_helpers.Timestamp}.log",
+                LogType.TestLog.ToString(),
+                timestamp: true);
+
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 runMode,
                 log: _mainLog,
@@ -428,17 +431,17 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 envVariables[EnviromentVariables.HostName] = "127.0.0.1";
 
+                AddExtraEnvVars(envVariables, _appArguments);
+
                 var arguments = new List<string>
                 {
                     "-W",
                     appInformation.LaunchAppPath,
                 };
 
-                arguments.AddRange(_appArguments);
-
                 await crashReporter.StartCaptureAsync();
 
-                var result = await RunMacCatalystApp(appInformation, timeout, _appArguments, envVariables, combinedCancellationToken.Token);
+                var result = await RunMacCatalystApp(appInformation, timeout, envVariables, combinedCancellationToken.Token);
                 await testReporter.CollectSimulatorResult(result);
             }
             finally
@@ -514,7 +517,14 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             // Environment variables
-            var envVariables = GetEnvVariables(xmlResultJargon, skippedMethods, skippedTestClasses, listenerTransport, listenerPort, listenerTmpFile);
+            var envVariables = GetEnvVariables(
+                xmlResultJargon,
+                skippedMethods,
+                skippedTestClasses,
+                listenerTransport,
+                listenerPort,
+                listenerTmpFile);
+
             args.AddRange(envVariables.Select(pair => new SetEnvVariableArgument(pair.Key, pair.Value)));
 
             // Arguments passed to the iOS app bundle
