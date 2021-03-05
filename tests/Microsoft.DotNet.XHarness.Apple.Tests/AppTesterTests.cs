@@ -381,7 +381,10 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 _tunnelBore.Setup(t => t.Create(DeviceName, It.IsAny<ILog>()));
             }
 
-            _listenerFactory.Setup(f => f.UseTunnel).Returns((useTunnel));
+            _listenerFactory
+                .Setup(f => f.UseTunnel)
+                .Returns(useTunnel);
+
             // Act
             var appTester = new AppTester(_processManager.Object,
                 _hardwareDeviceLoader.Object,
@@ -418,7 +421,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             var expectedArgs = GetExpectedDeviceMlaunchArgs(
                 useTunnel: useTunnel,
-                extraArgs: "-argument=--appArg1=value1 -argument=-f ");
+                extraArgs: "-setenv=appArg1=value1 -setenv=f= -argument=--appArg1=value1 -argument=-f ");
 
             _processManager
                 .Verify(
@@ -426,7 +429,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
-                       null,
+                       It.Is<Dictionary<string, string>>(d => d["appArg1"] == "value1"),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 

@@ -37,7 +37,10 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IFileBackedLog _mainLog;
         private readonly ILogs _logs;
         private readonly IHelpers _helpers;
-        private readonly IEnumerable<string> _appArguments; // Arguments that will be passed to the iOS application using env variables
+
+        // Arguments that will be passed to the iOS application
+        // They will also be set as env variables for the application
+        private readonly IEnumerable<string> _appArguments;
 
         public AppTester(
             IMlaunchProcessManager processManager,
@@ -87,10 +90,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             var runMode = target.Platform.ToRunMode();
             var isSimulator = target.Platform.IsSimulator();
 
-            var deviceListenerLog = _logs.Create(
-                $"test-{target.AsString()}-{_helpers.Timestamp}.log",
-                LogType.TestLog.ToString(),
-                timestamp: true);
+            var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
 
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 runMode,
@@ -345,12 +345,16 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 _mainLog.WriteLine("Starting test run");
 
+                var envVars = new Dictionary<string, string>();
+                AddExtraEnvVars(envVars, _appArguments);
+
                 // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit).
                 var aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
                 var result = await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     aggregatedLog,
                     timeout,
+                    envVars,
                     cancellationToken: cancellationToken);
 
                 await testReporter.CollectDeviceResult(result);
@@ -517,13 +521,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             // Environment variables
-            var envVariables = GetEnvVariables(
-                xmlResultJargon,
-                skippedMethods,
-                skippedTestClasses,
-                listenerTransport,
-                listenerPort,
-                listenerTmpFile);
+            var envVariables = GetEnvVariables(xmlResultJargon, skippedMethods, skippedTestClasses, listenerTransport, listenerPort, listenerTmpFile);
 
             args.AddRange(envVariables.Select(pair => new SetEnvVariableArgument(pair.Key, pair.Value)));
 

@@ -241,10 +241,14 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 _mainLog.WriteLine("Starting the app");
 
+                var envVars = new Dictionary<string, string>();
+                AddExtraEnvVars(envVars, _appArguments);
+
                 return await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     _mainLog,
                     timeout,
+                    envVars,
                     cancellationToken: cancellationToken);
             }
             finally
