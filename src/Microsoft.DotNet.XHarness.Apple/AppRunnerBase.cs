@@ -132,6 +132,12 @@ namespace Microsoft.DotNet.XHarness.Apple
                         value = arg.Substring(position + 1);
                     }
 
+                    // Remove initial --
+                    while (name.StartsWith("-"))
+                    {
+                        name = name.Substring(1);
+                    }
+
                     if (envVariables.ContainsKey(name))
                     {
                         _mainLog.WriteLine($"Environmental variable {name} is already passed to the application to drive test run, skipping..");
