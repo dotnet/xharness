@@ -5,11 +5,11 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 {
     internal class ListCommand : SimulatorInstallerCommand
     {
@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
         protected override string CommandDescription => CommandHelp;
 
         private readonly ListCommandArguments _arguments = new ListCommandArguments();
-        protected override SimulatorInstallerCommandArguments SimulatorInstallerArguments => _arguments;
+        protected override SimulatorsCommandArguments SimulatorsArguments => _arguments;
 
         public ListCommand() : base(CommandName, CommandHelp)
         {
