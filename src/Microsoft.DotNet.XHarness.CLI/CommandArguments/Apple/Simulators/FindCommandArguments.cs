@@ -7,9 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
 {
-    internal class FindCommandArguments : SimulatorInstallerCommandArguments
+    internal class FindCommandArguments : SimulatorsCommandArguments
     {
         public IEnumerable<string> Simulators { get; } = new List<string>();
 
