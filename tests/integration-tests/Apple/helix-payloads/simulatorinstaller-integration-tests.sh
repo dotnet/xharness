@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x
-
 echo "Testing simulator download availability"
 echo "Getting list of available simulators"
 
