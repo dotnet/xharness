@@ -21,18 +21,21 @@ namespace Microsoft.DotNet.XHarness.CLI
         {
             Console.WriteLine($"XHarness command issued: {string.Join(' ', args)}");
 
-            // TODO (#400): We can remove this after some time when users get used to the new commands
-            if (args.Length > 1 && args[0] == "ios")
+            if (args.Length > 0)
             {
-                DisplayRenameWarning();
-                args[0] = "apple";
-            }
+                // TODO (#400): We can remove this after some time when users get used to the new commands
+                if (args[0] == "ios")
+                {
+                    DisplayRenameWarning();
+                    args[0] = "apple";
+                }
 
-            if (args.Length > 0 && args[0] == "apple" && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                // Otherwise the command would just not be found
-                Console.Error.WriteLine("The 'apple' command is not available on non-OSX platforms!");
-                return (int)ExitCode.INVALID_ARGUMENTS;
+                if (args[0] == "apple" && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    // Otherwise the command would just not be found
+                    Console.Error.WriteLine("The 'apple' command is not available on non-OSX platforms!");
+                    return (int)ExitCode.INVALID_ARGUMENTS;
+                }
             }
 
             // Mono.Options wouldn't allow "--" so we will temporarily rename it and parse it ourselves later
