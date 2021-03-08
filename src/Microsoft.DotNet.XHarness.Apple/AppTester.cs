@@ -437,12 +437,6 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 AddExtraEnvVars(envVariables, _appArguments);
 
-                var arguments = new List<string>
-                {
-                    "-W",
-                    appInformation.LaunchAppPath,
-                };
-
                 await crashReporter.StartCaptureAsync();
 
                 var result = await RunMacCatalystApp(appInformation, timeout, envVariables, combinedCancellationToken.Token);

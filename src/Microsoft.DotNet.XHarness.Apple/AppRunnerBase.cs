@@ -113,38 +113,37 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected void AddExtraEnvVars(Dictionary<string, string> envVariables, IEnumerable<string> arguments)
         {
             using (var enumerator = arguments.GetEnumerator())
+            while (enumerator.MoveNext())
             {
-                while (enumerator.MoveNext())
+                var arg = enumerator.Current;
+                int position = arg.IndexOf('=');
+
+                string name;
+                string value;
+                if (position == -1)
                 {
-                    var arg = enumerator.Current;
-                    int position = arg.IndexOf('=');
-
-                    string name;
-                    string value;
-                    if (position == -1)
-                    {
-                        name = arg;
-                        value = enumerator.MoveNext() ? enumerator.Current : string.Empty;
-                    }
-                    else
-                    {
-                        name = arg.Substring(0, position);
-                        value = arg.Substring(position + 1);
-                    }
-
-                    // Remove initial --
-                    while (name.StartsWith("-"))
-                    {
-                        name = name.Substring(1);
-                    }
-
-                    if (envVariables.ContainsKey(name))
-                    {
-                        _mainLog.WriteLine($"Environmental variable {name} is already passed to the application to drive test run, skipping..");
-                    }
-
-                    envVariables[name] = value;
+                    name = arg;
+                    value = enumerator.MoveNext() ? enumerator.Current : string.Empty;
                 }
+                else
+                {
+                    name = arg.Substring(0, position);
+                    value = arg.Substring(position + 1);
+                }
+
+                // Remove initial --
+                while (name.StartsWith("-"))
+                {
+                    name = name.Substring(1);
+                }
+
+                if (envVariables.ContainsKey(name))
+                {
+                    _mainLog.WriteLine($"Environmental variable {name} is already passed to the application to drive test run, skipping..");
+                    continue;
+                }
+
+                envVariables[name] = value;
             }
         }
     }
