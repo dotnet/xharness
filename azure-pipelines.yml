@@ -127,20 +127,6 @@ stages:
               displayName: Build and run tests
               condition: succeeded()
 
-            - bash: |
-                targetDir=$(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
-                mkdir $targetDir
-                cp tests/integration-tests/Apple/helix-payloads/simulatorinstaller-integration-tests.sh $targetDir
-                cp artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.SimulatorInstaller*.nupkg $targetDir
-              displayName: Prepare the SimulatorInstaller IntegrationTests artifact
-              workingDirectory: $(Build.SourcesDirectory)
-              condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
-
-            - publish: $(Build.ArtifactStagingDirectory)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
-              artifact: Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.$(_BuildConfig)
-              displayName: Publish the SimulatorInstaller IntegrationTests artifact
-              condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
-
             - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.1.0.0-ci.nupkg
               artifact: Microsoft.DotNet.XHarness.CLI.$(_BuildConfig)
               displayName: Publish XHarness CLI for Helix Testing
@@ -283,34 +269,42 @@ stages:
     displayName: SimulatorInstaller Integration Tests
     dependsOn: Build_OSX
     jobs:
-    - job: integration_tests
-      displayName: SimulatorInstaller Integration Tests
-      pool:
-        name: Hosted macOS
-      variables:
-        _BuildConfig: debug
-      steps:
-      - download: current
-        artifact: Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.Debug
+    - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        workspace:
+          clean: all
+        jobs:
+        - job: OSX
+          pool:
+            name: Hosted macOS
+          strategy:
+            matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+          preSteps:
+          - checkout: self
+            clean: true
+          displayName: Submit Helix Job
+          steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              source: current
+              artifact: Microsoft.DotNet.XHarness.CLI.Debug
+              path: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/
 
-      - template: /eng/common/templates/steps/send-to-helix.yml
-        parameters:
-          DisplayNamePrefix: Run Tests
-          HelixBaseUri: https://helix.dot.net/
-          HelixType: test/product/
-          IncludeDotNetCli: true
-          DotNetCliPackageType: sdk
-          DotNetCliVersion: 3.1.201
-          WaitForWorkItemCompletion: true
-          HelixTargetQueues: osx.1015.amd64.open
-          Creator: xharness
-          EnableXUnitReporter: false
-          WorkItemDirectory: $(Pipeline.Workspace)/Microsoft.DotNet.XHarness.SimulatorInstaller.IntegrationTests.OSX.Debug
-          WorkItemCommand: sudo ./simulatorinstaller-integration-tests.sh
-          WorkItemTimeout: 00:05:00
-          env:
-            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-            HelixAccessToken: ''
+          - script: eng/common/build.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              --ci
+              --restore
+              --test
+              --projects $(Build.SourcesDirectory)/tests/integration-tests/Apple/SimulatorInstaller.Tests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Apple.SimulatorInstaller.Tests.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: Run Helix Tests
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml

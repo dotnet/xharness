@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.SimulatorInstaller
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 {
     internal class Simulator
     {
