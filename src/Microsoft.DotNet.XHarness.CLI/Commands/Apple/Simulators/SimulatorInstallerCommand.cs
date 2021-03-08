@@ -10,14 +10,14 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 {
     internal abstract class SimulatorInstallerCommand : XHarnessCommand
     {
@@ -32,9 +32,9 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
         protected ILogger Logger { get; set; } = null!;
 
-        protected override XHarnessCommandArguments Arguments => SimulatorInstallerArguments;
+        protected override XHarnessCommandArguments Arguments => SimulatorsArguments;
 
-        protected abstract SimulatorInstallerCommandArguments SimulatorInstallerArguments { get; }
+        protected abstract SimulatorsCommandArguments SimulatorsArguments { get; }
 
         protected SimulatorInstallerCommand(string name, string help) : base(name, false, help)
         {
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
         {
             get
             {
-                string? path = Path.Combine(Path.GetTempPath(), "simulator-installer");
+                var path = Path.Combine(Path.GetTempPath(), "simulator-installer");
 
                 if (!Directory.Exists(path))
                 {
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
                 stderrLog,
                 timeout ?? TimeSpan.FromSeconds(30));
 
-            string stderr = stderrLog.ToString();
+            var stderr = stderrLog.ToString();
             if (stderr.Length > 0)
             {
                 Logger.LogDebug("Error output:" + Environment.NewLine + stderr);
@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
             }
 
             var doc = new XmlDocument();
-            doc.LoadXml((await GetSimulatorIndexXml()) ?? throw new FailedToGetIndexException());
+            doc.LoadXml(await GetSimulatorIndexXml() ?? throw new FailedToGetIndexException());
 
             var simulators = new List<Simulator>();
 
@@ -196,7 +196,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
 
         private async Task<(string XcodeVersion, string XcodeUuid)> GetXcodeInformation()
         {
-            var plistPath = Path.Combine(SimulatorInstallerArguments.XcodeRoot, "Contents", "Info.plist");
+            var plistPath = Path.Combine(SimulatorsArguments.XcodeRoot, "Contents", "Info.plist");
 
             var (succeeded, xcodeVersion) = await ExecuteCommand("/usr/libexec/PlistBuddy", TimeSpan.FromSeconds(5), "-c", "Print :DTXcode", plistPath);
             if (!succeeded)
