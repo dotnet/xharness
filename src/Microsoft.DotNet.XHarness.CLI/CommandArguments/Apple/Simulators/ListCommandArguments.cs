@@ -4,9 +4,9 @@
 
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
 {
-    internal class ListCommandArguments : SimulatorInstallerCommandArguments
+    internal class ListCommandArguments : SimulatorsCommandArguments
     {
         public bool ListInstalledOnly { get; private set; } = false;
 

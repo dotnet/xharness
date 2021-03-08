@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple;
+using Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Mono.Options;
@@ -19,6 +20,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
         public override int Invoke(IEnumerable<string> arguments)
         {
             string[] args = arguments.ToArray();
+
+            // TODO (#400): We can remove this after some time when users get used to the new commands
+            if (args[0] == "ios")
+            {
+                Program.DisplayRenameWarning();
+                args[0] = "apple";
+            }
 
             if (args.Length == 0)
             {
@@ -34,13 +42,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 subCommand = args[1];
             }
 
-            // TODO (#400): We can remove this after some time when users get used to the new commands
-            if (command == "ios")
-            {
-                Program.DisplayRenameWarning();
-                command = "apple";
-            }
-
+            // Unfortunately, CommandSet.NestedCommandSets is not visible and we cannot go through
+            // the command tree dynamically to any depth.
             switch (command)
             {
                 case "android":
@@ -49,19 +52,27 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 case "apple":
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                     {
-                        PrintCommandHelp(new AppleCommandSet(), subCommand);
+                        var simulatorsSubset = new SimulatorsCommandSet();
+                        if (subCommand == simulatorsSubset.Suite)
+                        {
+                            PrintCommandHelp(simulatorsSubset, args.ElementAtOrDefault(2));
+                        }
+                        else
+                        {
+                            PrintCommandHelp(new AppleCommandSet(), subCommand);
+                        }
                     }
                     else
                     {
                         Console.WriteLine($"Command '{command}' could be run on OSX only.");
                     }
-                    
+
                     break;
                 case "wasm":
                     PrintCommandHelp(new WasmCommandSet(), subCommand);
                     break;
                 default:
-                    Console.WriteLine($"No help available for command '{command}'. Allowed commands are 'ios' and 'android'");
+                    Console.WriteLine($"No help available for command '{command}'. Allowed commands are 'apple', 'wasm' and 'android'");
                     break;
             }
 
