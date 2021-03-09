@@ -42,7 +42,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.TestRunners.NUnit", "src\Microsoft.DotNet.XHarness.TestRunners.NUnit\Microsoft.DotNet.XHarness.TestRunners.NUnit.csproj", "{D51E7536-E698-42F4-939A-F259D543D1E1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.InstrumentationBase.Xunit", "src\Microsoft.DotNet.XHarness.InstrumentationBase.Xunit\Microsoft.DotNet.XHarness.InstrumentationBase.Xunit.csproj", "{FBDF39C0-1096-4088-B057-2FF8CCDFB32D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit", "src\Microsoft.DotNet.XHarness.InstrumentationBase.Xunit\Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit.csproj", "{FBDF39C0-1096-4088-B057-2FF8CCDFB32D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

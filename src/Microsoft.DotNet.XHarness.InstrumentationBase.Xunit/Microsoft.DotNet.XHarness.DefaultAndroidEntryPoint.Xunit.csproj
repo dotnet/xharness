@@ -1,15 +1,14 @@
-﻿<Project Sdk="MSBuild.Sdk.Extras/3.0.23">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <TargetFrameworks>MonoAndroid10.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1</TargetFrameworks>
+    <nullable>enable</nullable>
     <RootNamespace>Microsoft.DotNet.XHarness.TestRunners.Xunit</RootNamespace>
     <OutputType>Library</OutputType>
-    <nullable>enable</nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.XHarness.TestRunners.Xunit\Microsoft.DotNet.XHarness.TestRunners.Xunit.csproj" />
   </ItemGroup>
 
