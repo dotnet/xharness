@@ -94,8 +94,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             logger.LogInformation("Starting Safari");
 
-            var driverService = SafariDriverService.CreateDefaultService();
-            return (driverService, new SafariDriver(driverService, options, _arguments.Timeout));
+            return CreateWebDriver(
+                        () => SafariDriverService.CreateDefaultService(),
+                        driverService => new SafariDriver(driverService, options, _arguments.Timeout));
         }
 
         private (DriverService, IWebDriver) GetFirefoxDriver(ILogger logger)
@@ -111,8 +112,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             logger.LogInformation($"Starting Firefox with args: {string.Join(' ', options.ToCapabilities())}");
 
-            var driverService = FirefoxDriverService.CreateDefaultService();
-            return (driverService, new FirefoxDriver(driverService, options, _arguments.Timeout));
+            return CreateWebDriver(
+                        () => FirefoxDriverService.CreateDefaultService(),
+                        (driverService) => new FirefoxDriver(driverService, options, _arguments.Timeout));
         }
 
         private (DriverService, IWebDriver) GetChromeDriver(ILogger logger)
@@ -218,6 +220,21 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 }
 
                 retry_num++;
+            }
+        }
+
+        private static (DriverService, IWebDriver) CreateWebDriver<TDriverService>(Func<TDriverService> getDriverService, Func<TDriverService, IWebDriver> getDriver)
+            where TDriverService: DriverService
+        {
+            var driverService = getDriverService();
+            try
+            {
+                return (driverService, getDriver(driverService));
+            }
+            catch
+            {
+                driverService?.Dispose();
+                throw;
             }
         }
     }
