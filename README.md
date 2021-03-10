@@ -132,6 +132,10 @@ Output directory will have a file with dump from logcat and a file with tests re
 The repository also contains several TestRunners which are libraries that can be bundled inside of the application and execute the tests.
 The TestRunner detects and executes unit tests inside of the application. It also connects to XHarness over TCP connection from within the running app bundle and reports test run results/state.
 
+There is a library `Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit` that provides default logic for Android test app entry point.
+It is possible to use `DefaultAndroidEntryPoint` from there for the test app by providing only test result path and test assemblies.
+Other parameters can be overrided as well if needed.
+
 Currently we support Xunit and NUnit test assemblies but the `Microsoft.DotNet.XHarness.Tests.Runners` supports implementation of custom runner too.
 
 ## Contribution

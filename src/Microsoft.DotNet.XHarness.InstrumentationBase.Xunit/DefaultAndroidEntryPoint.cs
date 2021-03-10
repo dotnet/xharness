@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -7,6 +11,20 @@ using Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
 namespace Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit
 {
+    /// <summary>
+    /// Class that implements basic functionality for the entry point of
+    /// the Android test application.
+    ///
+    /// The minimum required to run succesfully the test app based on
+    /// DefaultAndroidEntryPoint is to provide results-file-path as an argument.
+    ///
+    /// Client is able to provide test assemblies by overriding
+    /// GetTestAssemblies method.
+    ///
+    /// Other methods such as Device, Logger etc. have default implementation
+    /// but can be overrided if needed.
+    ///
+    /// </summary>
     public class DefaultAndroidEntryPoint : AndroidApplicationEntryPoint
     {
         private const string ResultsFileArgumentName = "results-file-name";
@@ -79,17 +97,17 @@ namespace Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit
         {
             var testRunner = base.GetTestRunner(logWriter);
 
-            Tuple<string, Action<string, bool>, bool>[] filters =
+            (string Filter, Action<string, bool> FilterMethod, bool IsExcluded)[] filters =
             {
-                Tuple.Create<string, Action<string, bool>, bool>(_parsedArguments.GetValueOrDefault(ExcludeMethodArgumentName), testRunner.SkipMethod, true),
-                Tuple.Create<string, Action<string, bool>, bool>(_parsedArguments.GetValueOrDefault(ExcludeClassArgumentName), testRunner.SkipClass, true),
-                Tuple.Create<string, Action<string, bool>, bool>(_parsedArguments.GetValueOrDefault(IncludeMethodArgumentName), testRunner.SkipMethod, false),
-                Tuple.Create<string, Action<string, bool>, bool>(_parsedArguments.GetValueOrDefault(IncludeClassArgumentName), testRunner.SkipClass, false)
+                (_parsedArguments.GetValueOrDefault(ExcludeMethodArgumentName), testRunner.SkipMethod, true),
+                (_parsedArguments.GetValueOrDefault(ExcludeClassArgumentName), testRunner.SkipClass, true),
+                (_parsedArguments.GetValueOrDefault(IncludeMethodArgumentName), testRunner.SkipMethod, false),
+                (_parsedArguments.GetValueOrDefault(IncludeClassArgumentName), testRunner.SkipClass, false)
             };
 
             foreach (var t in filters)
             {
-                ConfigureFilters(t.Item1, t.Item2, t.Item3);
+                ConfigureFilters(t.Filter, t.FilterMethod, t.IsExcluded);
             }
 
             return testRunner;
