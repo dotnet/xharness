@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 ? new TunnelBore(ProcessManager)
                 : null;
 
-            // only add the extra callback if we do know that the feature was indeed enabled
+            // Only add the extra callback if we do know that the feature was indeed enabled
             Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(logger, l) : (Action<string>?)null;
 
             var appTester = new AppTester(
@@ -81,76 +81,55 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 skippedMethods: _arguments.SingleMethodFilters?.ToArray(),
                 skippedTestClasses: _arguments.ClassMethodFilters?.ToArray());
 
-            string nl = Environment.NewLine;
+            string newLine = Environment.NewLine;
             const string checkLogsMessage = "Check logs for more information";
+
+            void LogProblem(string message)
+            {
+                if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var issue))
+                {
+                    logger.LogError(message + newLine + issue.Value.HumanMessage);
+                }
+                else
+                {
+                    if (resultMessage != null)
+                    {
+                        logger.LogError(message + newLine + resultMessage + newLine + newLine + checkLogsMessage);
+                    }
+                    else
+                    {
+                        logger.LogError(message + newLine + checkLogsMessage);
+                    }
+                }
+            }
 
             switch (testResult)
             {
                 case TestExecutingResult.Succeeded:
                     logger.LogInformation($"Application finished the test run successfully");
                     logger.LogInformation(resultMessage);
-
                     return ExitCode.SUCCESS;
 
                 case TestExecutingResult.Failed:
                     logger.LogInformation($"Application finished the test run successfully with some failed tests");
                     logger.LogInformation(resultMessage);
-
                     return ExitCode.TESTS_FAILED;
 
                 case TestExecutingResult.LaunchFailure:
-
-                    const string launchMessage = "Failed to launch the application";
-
-                    if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var issue))
-                    {
-                        logger.LogError(launchMessage + nl + issue.Value.HumanMessage);
-                    }
-                    else
-                    {
-                        if (resultMessage != null)
-                        {
-                            logger.LogError(launchMessage + nl + resultMessage + nl + nl + checkLogsMessage);
-                        }
-                        else
-                        {
-                            logger.LogError(launchMessage + nl + checkLogsMessage);
-                        }
-                    }
-
+                    LogProblem("Failed to launch the application");
                     return ExitCode.APP_LAUNCH_FAILURE;
 
                 case TestExecutingResult.Crashed:
-
-                    const string crashMessage = "Application run crashed";
-
-                    if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var testIssue))
-                    {
-                        logger.LogError(crashMessage + nl + testIssue.Value.HumanMessage);
-                    }
-                    else
-                    {
-                        if (resultMessage != null)
-                        {
-                            logger.LogError(crashMessage + nl + resultMessage + nl + nl + checkLogsMessage);
-                        }
-                        else
-                        {
-                            logger.LogError(crashMessage + nl + checkLogsMessage);
-                        }
-                    }
-
+                    LogProblem("Application run crashed");
                     return ExitCode.APP_CRASH;
 
                 case TestExecutingResult.TimedOut:
                     logger.LogWarning($"Application test run timed out");
-
                     return ExitCode.TIMED_OUT;
 
                 default:
                     logger.LogError($"Application test run ended in an unexpected way: '{testResult}'" +
-                        nl + (resultMessage != null ? resultMessage + nl + nl : null) + checkLogsMessage);
-
+                        newLine + (resultMessage != null ? resultMessage + newLine + newLine : null) + checkLogsMessage);
                     return ExitCode.GENERAL_FAILURE;
             }
         }
