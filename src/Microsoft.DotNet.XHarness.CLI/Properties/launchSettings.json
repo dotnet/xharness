@@ -2,10 +2,7 @@
   "profiles": {
     "XHarness": {
       "commandName": "Project",
-      "commandLineArgs": "android test --app=\"C:\\Users\\esokolov\\Downloads\\APK\\bin\\Debug\\com.xamarin.essentials.devicetests-Signed.apk\" --package-name=\"com.xamarin.essentials.devicetests\" --device-arch=\"x86\" --class=\"TestInstrumentation\"  --output-directory=\"C:\\Users\\esokolov\\Downloads\\APK\\bin\\Debug\\com.xamarin.essentials.devicetests-Signed.apk-results\" --verbosity=\"Debug\"",
-      "environmentVariables": {
-        "ADB_EXE_PATH": "C:\\Program Files (x86)\\Android\\android-sdk\\platform-tools\\adb.exe"
-      }
+      "commandLineArgs": "help"
     }
   }
 }

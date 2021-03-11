@@ -354,8 +354,8 @@ namespace Microsoft.DotNet.XHarness.Android
             var result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
             string[] standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
-            // Retry up to 5 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
-            int retriesLeft = 30;
+            // Retry up to 3 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
+            int retriesLeft = 18;
 
             // We will keep retrying until we get something back like 'List of devices attached...{newline} {info about a device} ',
             // which when split on newlines ignoring empties will be at least 2 lines when there are any available devices.
@@ -413,8 +413,38 @@ namespace Microsoft.DotNet.XHarness.Android
         }
 
 
+
         public string? GetDeviceToUse(ILogger logger, string apkRequiredProperty, string propertyName)
         {
+            var allDevicesAndTheirProperties = GetAllDevicesToUse(logger, apkRequiredProperty, propertyName);
+            if (allDevicesAndTheirProperties.Count > 0)
+            {
+                var firstAvailableCompatible = allDevicesAndTheirProperties.First();
+                logger.LogDebug($"Using first-found compatible device of {allDevicesAndTheirProperties.Count} total- serial: '{firstAvailableCompatible.Key}' - {propertyName}: {firstAvailableCompatible.Value}");
+                return firstAvailableCompatible.Key;
+            }
+            return null;
+        }
+
+        public string? GetUniqueDeviceToUse(ILogger logger, string apkRequiredProperty, string propertyName)
+        {
+            var devices = GetAllDevicesToUse(logger, apkRequiredProperty, propertyName);
+            if (devices.Count == 0)
+            {
+                logger.LogError($"Cannot find a device with {propertyName}={apkRequiredProperty}, please check that a device is attached");
+                return null;
+            }
+            else if (devices.Count > 1)
+            {
+                logger.LogError($"There is more than one device with {propertyName}={apkRequiredProperty}, please provide --device-id to choose the required one");
+                return null;
+            }
+            return devices.Keys.First();
+        }
+
+        public Dictionary<string, string> GetAllDevicesToUse(ILogger logger, string apkRequiredProperty, string propertyName)
+        {
+
             Dictionary<string, string?> allDevicesAndTheirProperties = new Dictionary<string, string?>();
             try
             {
@@ -422,29 +452,26 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             catch (Exception toLog)
             {
-                logger.LogError(toLog, "Exception thrown while trying to find compatible device with {propertyName} {apkRequiredProperty}");
-                return null;
+                logger.LogError(toLog, $"Exception thrown while trying to find compatible device with {propertyName} {apkRequiredProperty}");
+                return new Dictionary<string, string>();
             }
 
             if (allDevicesAndTheirProperties.Count == 0)
             {
                 logger.LogError("No attached device detected");
-                return null;
+                return new Dictionary<string, string>();
             }
 
-            if (allDevicesAndTheirProperties.Any(kvp => apkRequiredProperty.Equals(kvp.Value, StringComparison.OrdinalIgnoreCase)))
-            {
-                // Key-value tuples here are of the form <device serial number, device property>
-                KeyValuePair<string, string?> firstAvailableCompatible = allDevicesAndTheirProperties.FirstOrDefault(kvp => apkRequiredProperty.Equals(kvp.Value, StringComparison.OrdinalIgnoreCase));
-                logger.LogDebug($"Using first-found compatible device of {allDevicesAndTheirProperties.Count} total- serial: '{firstAvailableCompatible.Key}' - {propertyName}: {firstAvailableCompatible.Value}");
-                return firstAvailableCompatible.Key;
-            }
-            else
+            var result = allDevicesAndTheirProperties
+                .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split().Contains(apkRequiredProperty))
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value) as Dictionary<string, string>;
+            
+            if (result.Count() == 0)
             {
                 // In this case, the enumeration worked, we found one or more devices, but nothing matched the APK's architecture; fail out.
-                logger.LogError($"No devices found with {propertyName} '{apkRequiredProperty}'.");
-                return null;
+                logger.LogError($"No devices with {propertyName} '{apkRequiredProperty}' was found among attached devices.");
             }
+            return result;
         }
 
         public ProcessExecutionResults RunApkInstrumentation(string apkName, string? instrumentationClassName, Dictionary<string, string> args, TimeSpan timeout)

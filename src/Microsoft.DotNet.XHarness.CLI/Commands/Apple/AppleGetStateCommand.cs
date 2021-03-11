@@ -17,7 +17,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
     internal class AppleGetStateCommand : GetStateCommand
     {

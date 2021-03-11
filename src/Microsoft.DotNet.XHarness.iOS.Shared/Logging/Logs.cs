@@ -79,6 +79,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             }
         }
 
+        public string CreateFile(string path, LogType type) => CreateFile(path, type.ToString());
+
         public void Dispose()
         {
             foreach (var log in this)

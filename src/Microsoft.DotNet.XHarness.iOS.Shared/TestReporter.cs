@@ -112,7 +112,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             CallbackLog = new CallbackLog(line =>
             {
-                // MT1111: Application launched successfully, but it's not possible to wait for the app to exit as requested because it's not possible to detect app termination when launching using gdbserver
+                // MT1111: Application launched successfully, but it's not possible to wait for the app to exit as
+                // requested because it's not possible to detect app termination when launching using gdbserver
                 _waitedForExit &= line?.Contains("MT1111: ") != true;
                 if (line?.Contains("error MT1007") == true)
                 {
@@ -124,14 +125,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         /// <summary>
         /// Parse the run log and decide if we managed to start the process or not
         /// </summary>
-        private async Task<(int pid, bool launchFailure)> GetPidFromRunLog()
+        private async Task<int> GetPidFromRunLog()
         {
-            (int pid, bool launchFailure) pidData = (-1, true);
+            int pid = -1;
+
             using var reader = _runLog.GetReader(); // diposed at the end of the method, which is what we want
             if (reader.Peek() == -1)
             {
-                // empty file! we definetly had a launch error in this case
-                pidData.launchFailure = true;
+                // Empty file! If the app never connected to our listener, it probably never launched
+                if (!_listener.ConnectedTask.IsCompleted || !_listener.ConnectedTask.Result)
+                {
+                    _launchFailure = true;
+                }
             }
             else
             {
@@ -147,7 +152,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     if (line.StartsWith("Application launched. PID = ", StringComparison.Ordinal))
                     {
                         var pidstr = line.Substring("Application launched. PID = ".Length);
-                        if (!int.TryParse(pidstr, out pidData.pid))
+                        if (!int.TryParse(pidstr, out pid))
                         {
                             _mainLog.WriteLine("Could not parse pid: {0}", pidstr);
                         }
@@ -155,18 +160,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     else if (line.Contains("Xamarin.Hosting: Launched ") && line.Contains(" with pid "))
                     {
                         var pidstr = line.Substring(line.LastIndexOf(' '));
-                        if (!int.TryParse(pidstr, out pidData.pid))
+                        if (!int.TryParse(pidstr, out pid))
                         {
                             _mainLog.WriteLine("Could not parse pid: {0}", pidstr);
                         }
                     }
                     else if (line.Contains("error MT1008"))
                     {
-                        pidData.launchFailure = true;
+                        _launchFailure = true;
                     }
                 }
             }
-            return pidData;
+
+            return pid;
         }
 
         /// <summary>
@@ -243,28 +249,25 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             return _processManager.KillTreeAsync(pid, _mainLog, true);
         }
 
-        private async Task CollectResult(Task<ProcessExecutionResult> processExecution)
+        private async Task CollectResult(ProcessExecutionResult runResult)
         {
-            // wait for the execution of the process, once that is done, perform all the parsing operations and
-            // leave a clean API to be used by AppRunner, hidding all the diff details
-            var result = await processExecution;
-            if (!_waitedForExit && !result.TimedOut)
+            if (!_waitedForExit && !runResult.TimedOut)
             {
                 // mlaunch couldn't wait for exit for some reason. Let's assume the app exits when the test listener completes.
                 _mainLog.WriteLine("Waiting for listener to complete, since mlaunch won't tell.");
                 if (!await _listener.CompletionTask.TimeoutAfter(_timeout - _timeoutWatch.Elapsed))
                 {
-                    result.TimedOut = true;
+                    runResult.TimedOut = true;
                 }
             }
 
-            if (result.TimedOut)
+            if (runResult.TimedOut)
             {
                 _timedout = true;
                 Success = false;
                 _mainLog.WriteLine(TimeoutMessage, _timeout.TotalMinutes);
             }
-            else if (result.Succeeded)
+            else if (runResult.Succeeded)
             {
                 _mainLog.WriteLine(CompletionMessage);
                 Success = true;
@@ -280,33 +283,32 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         {
             if (launchResult.IsFaulted)
             {
-                _mainLog.WriteLine($"Test launch failed: {launchResult.Exception}");
+                _mainLog.WriteLine($"Test execution failed: {launchResult.Exception}");
             }
             else if (launchResult.IsCanceled)
             {
-                _mainLog.WriteLine("Test launch was cancelled.");
+                _mainLog.WriteLine("Test execution was cancelled");
             }
             else if (launchResult.Result)
             {
-                _mainLog.WriteLine("Test run started");
+                _mainLog.WriteLine("Test execution started");
             }
             else
             {
                 _cancellationTokenSource.Cancel();
-                _mainLog.WriteLine("Test launch timed out after {0} minute(s).", _timeoutWatch.Elapsed.TotalMinutes);
+                _mainLog.WriteLine("Test execution timed out after {0} minute(s).", _timeoutWatch.Elapsed.TotalMinutes);
                 _timedout = true;
             }
         }
 
-        public async Task CollectSimulatorResult(Task<ProcessExecutionResult> processExecution)
+        public async Task CollectSimulatorResult(ProcessExecutionResult runResult)
         {
             _isSimulatorTest = true;
-            await CollectResult(processExecution);
+            await CollectResult(runResult);
 
             if (Success != null && !Success.Value)
             {
-                var (pid, launchFailure) = await GetPidFromRunLog();
-                _launchFailure = launchFailure;
+                var pid = await GetPidFromRunLog();
                 if (pid > 0)
                 {
                     await KillAppProcess(pid, _cancellationTokenSource);
@@ -318,10 +320,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             }
         }
 
-        public async Task CollectDeviceResult(Task<ProcessExecutionResult> processExecution)
+        public async Task CollectDeviceResult(ProcessExecutionResult runResult)
         {
             _isSimulatorTest = false;
-            await CollectResult(processExecution);
+            await CollectResult(runResult);
         }
 
         private async Task<(string? ResultLine, bool Failed)> GetResultLine(string logPath)
@@ -409,7 +411,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     if (_generateHtml)
                     {
                         // write the human readable results in a tmp file, which we later use to step on the logs
-                        var humanReadableLog = _logs.CreateFile(Path.GetFileNameWithoutExtension(test_log_path) + ".log", LogType.NUnitResult.ToString());
+                        var humanReadableLog = _logs.CreateFile(Path.GetFileNameWithoutExtension(test_log_path) + ".log", LogType.NUnitResult);
                         (parseResult.resultLine, parseResult.failed) = _resultParser.ParseResults(path, xmlType, humanReadableLog);
                     }
                     else
@@ -621,7 +623,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             {
                 result.ExecutingResult = TestExecutingResult.LaunchFailure;
             }
-            else if (_launchFailure)
+            else if (crashed)
             {
                 result.ExecutingResult = TestExecutingResult.Crashed;
             }

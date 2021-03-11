@@ -11,9 +11,8 @@
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
-    <!-- Pick up the nupkg from this repo for testing purposes -->
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
-    <TestPayloadUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/wasm/System.Reflection.Extensions.Tests.zip</TestPayloadUrl>
+    <DotNetCliVersion>5.0.1</DotNetCliVersion>
   </PropertyGroup>
 
   <!-- For non-ci local runs -->
@@ -27,7 +26,33 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <HelixTargetQueue Include="ubuntu.2004.amd64.open"/>
+    <!-- apple test / ios-simulator-64 -->
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+      <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=System.Numerics.Vectors.Tests.app</AdditionalProperties>
+    </XHarnessAppleProject>
+
+    <!-- apple run / ios-simlator-64 -->
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+      <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=HelloiOS.app;IncludesTestRunner=false;ExpectedExitCode=200</AdditionalProperties>
+    </XHarnessAppleProject>
+
+    <!-- apple test / maccatalyst -->
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+      <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.AppContext.Tests.app</AdditionalProperties>
+    </XHarnessAppleProject>
+
+    <!-- apple run / maccatalyst -->
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+      <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.Buffers.Tests.app;IncludesTestRunner=false;ExpectedExitCode=43</AdditionalProperties>
+    </XHarnessAppleProject>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
+    <HelixTargetQueue Include="osx.1015.amd64"/>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <HelixTargetQueue Include="osx.1015.amd64.open"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -40,22 +65,6 @@
   <PropertyGroup>
     <Language>msbuild</Language>
   </PropertyGroup>
-
-  <Target Name="TestWasm" BeforeTargets="CoreTest">
-    <DownloadFile SourceUrl="$(TestPayloadUrl)" DestinationFolder="$(ArtifactsTmpDir)wasm" SkipUnchangedFiles="True" Retries="5">
-      <Output TaskParameter="DownloadedFile" ItemName="TestPayloadArchive" />
-    </DownloadFile>
-
-    <Message Text="Downloaded @(TestPayloadArchive) for XHarness Test purposes" Importance="High" />
-
-    <ItemGroup>
-      <HelixWorkItem Include="System.Reflection.Extensions.Tests">
-        <Command>cd "$HELIX_WORKITEM_PAYLOAD/System.Reflection.Extensions.Tests" &amp;&amp; dotnet exec $XHARNESS_CLI_PATH wasm test --engine=V8 --js-file=runtime.js -v --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" -- --enable-gc --run WasmTestRunner.dll System.Reflection.Extensions.Tests.dll -notrait category=IgnoreForCI -notrait category=OuterLoop -notrait category=failing</Command>
-        <PayloadArchive>@(TestPayloadArchive)</PayloadArchive>
-        <Timeout>00:10:00</Timeout>
-      </HelixWorkItem>
-    </ItemGroup>
-  </Target>
 
   <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
 </Project>

@@ -3,24 +3,41 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
     public abstract class AppRunnerBase
     {
-        protected readonly IFileBackedLog _mainLog;
+        private const string SystemLogPath = "/var/log/system.log";
+
+        private readonly IFileBackedLog _mainLog;
         private readonly IHardwareDeviceLoader _hardwareDeviceLoader;
+        private readonly ICaptureLogFactory _captureLogFactory;
+        private readonly ILogs _logs;
+        private readonly IProcessManager _processManager;
 
         protected AppRunnerBase(
+            IProcessManager processManager,
             IHardwareDeviceLoader hardwareDeviceLoader,
+            ICaptureLogFactory captureLogFactory,
+            ILogs logs,
             IFileBackedLog mainLog,
             Action<string>? logCallback = null)
         {
             _hardwareDeviceLoader = hardwareDeviceLoader ?? throw new ArgumentNullException(nameof(hardwareDeviceLoader));
+            _captureLogFactory = captureLogFactory ?? throw new ArgumentNullException(nameof(captureLogFactory));
+            _logs = logs ?? throw new ArgumentNullException(nameof(logs));
+            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
 
             if (logCallback == null)
             {
@@ -44,6 +61,50 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             return companionDevice?.Name ?? device.Name;
+        }
+
+        protected async Task<ProcessExecutionResult> RunMacCatalystApp(
+            AppBundleInformation appInfo,
+            TimeSpan timeout,
+            IEnumerable<string> appArguments,
+            Dictionary<string, object> environmentVariables,
+            CancellationToken cancellationToken)
+        {
+            using var systemLog = _captureLogFactory.Create(
+                path: _logs.CreateFile("MacCatalyst.system.log", LogType.SystemLog),
+                systemLogPath: SystemLogPath,
+                entireFile: false,
+                LogType.SystemLog);
+
+            // We need to make the binary executable
+            var binaryPath = Path.Combine(appInfo.AppPath, "Contents", "MacOS", appInfo.BundleExecutable ?? appInfo.AppName);
+            if (File.Exists(binaryPath))
+            {
+                await _processManager.ExecuteCommandAsync("chmod", new[] { "+x", binaryPath }, _mainLog, TimeSpan.FromSeconds(10), cancellationToken: cancellationToken);
+            }
+
+            var arguments = new List<string>
+            {
+                "-W",
+                appInfo.LaunchAppPath
+            };
+
+            arguments.AddRange(appArguments);
+
+            var envVars = environmentVariables.ToDictionary(
+                p => p.Key,
+                p => p.Value is bool ? p.Value.ToString().ToLowerInvariant() : p.Value.ToString()); // turns "True" to "true"
+
+            systemLog.StartCapture();
+
+            try
+            {
+                return await _processManager.ExecuteCommandAsync("open", arguments, _mainLog, timeout, envVars, cancellationToken);
+            }
+            finally
+            {
+                systemLog.StopCapture(waitIfEmpty: TimeSpan.FromSeconds(10));
+            }
         }
     }
 }

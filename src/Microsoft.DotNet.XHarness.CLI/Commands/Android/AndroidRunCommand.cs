@@ -56,12 +56,19 @@ Arguments:
             // Make sure the adb server is started
             runner.StartAdbServer();
 
-            if (_arguments.DeviceId == null)
+            var deviceId = _arguments.DeviceId;
+
+            if (string.IsNullOrEmpty(deviceId))
             {
-                return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
+                // trying to find out if there is only one device with the app installed
+                deviceId = runner.GetUniqueDeviceToUse(logger, "package:" + apkPackageName, "app");
+                if (string.IsNullOrEmpty(deviceId))
+                {
+                    return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
+                }
             }
 
-            runner.SetActiveDevice(_arguments.DeviceId);
+            runner.SetActiveDevice(deviceId);
 
             // Wait til at least device(s) are ready
             runner.WaitForDevice();

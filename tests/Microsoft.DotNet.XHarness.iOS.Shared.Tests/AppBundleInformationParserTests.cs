@@ -16,6 +16,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
     public class AppBundleInformationParserTests : IDisposable
     {
         private const string AppName = "com.xamarin.bcltests.SystemXunit";
+        private const string Executable = "SystemXunit.bcltests.xamarin.com";
         private static readonly string s_outputPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(AppBundleInformationParser)).Location);
         private static readonly string s_sampleProjectPath = Path.Combine(s_outputPath, "Samples", "TestProject");
         private static readonly string s_appPath = Path.Combine(s_sampleProjectPath, "bin", AppName + ".app");
@@ -45,6 +46,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             Assert.Equal(s_appPath, info.AppPath);
             Assert.Equal(s_appPath, info.LaunchAppPath);
             Assert.Equal(AppName, info.BundleIdentifier);
+        }
+
+        [Fact]
+        public async Task ParseFromMacCatalystProjectTest()
+        {
+            var parser = new AppBundleInformationParser(Mock.Of<IMlaunchProcessManager>());
+
+            var info = await parser.ParseFromProject(s_projectFilePath, TestTarget.MacCatalyst, "Debug");
+
+            Assert.Equal(AppName, info.AppName);
+            Assert.Equal(s_appPath, info.AppPath);
+            Assert.Equal(s_appPath, info.LaunchAppPath);
+            Assert.Equal(AppName, info.BundleIdentifier);
+            Assert.Equal(Executable, info.BundleExecutable);
         }
 
         [Fact]

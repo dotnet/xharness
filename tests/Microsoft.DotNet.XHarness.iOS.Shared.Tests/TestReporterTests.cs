@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
 
             var testResult = BuildTestResult();
-            var processResult = Task.FromResult(new ProcessExecutionResult() { TimedOut = false, ExitCode = 0 });
+            var processResult = new ProcessExecutionResult() { TimedOut = false, ExitCode = 0 };
             await testResult.CollectSimulatorResult(processResult);
             // we should have timeout, since the task completion source was never set
             Assert.True(testResult.Success, "success");
@@ -139,7 +139,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(File.Create(tmpFile)));
 
             var testResult = BuildTestResult();
-            var processResult = Task.FromResult(new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 });
+            var processResult = new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 };
             await testResult.CollectSimulatorResult(processResult);
             // we should have timeout, since the task completion source was never set
             Assert.False(testResult.Success, "success");
@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             // fake the best case scenario, we got the process to exit correctly
             var cancellationTokenSource = new CancellationTokenSource();
             var tcs = new TaskCompletionSource<object>();
-            var processResult = Task.FromResult(new ProcessExecutionResult() { TimedOut = false, ExitCode = processExitCode });
+            var processResult = new ProcessExecutionResult() { TimedOut = false, ExitCode = processExitCode };
 
             // ensure we do not consider it to be a launch failure
             _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
 
             var testResult = BuildTestResult();
-            var processResult = Task.FromResult(new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 });
+            var processResult = new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 };
             await testResult.CollectDeviceResult(processResult);
             // we should have timeout, since the task completion source was never set
             Assert.False(testResult.Success, "success");
@@ -210,7 +210,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         public async Task CollectDeviceResultSuccessTest(int processExitCode)
         {
             // fake the best case scenario, we got the process to exit correctly
-            var processResult = Task.FromResult(new ProcessExecutionResult() { TimedOut = false, ExitCode = processExitCode });
+            var processResult = new ProcessExecutionResult() { TimedOut = false, ExitCode = processExitCode };
 
             // ensure we do not consider it to be a launch failure
             _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
@@ -237,7 +237,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             testResult.LaunchCallback(t);
             // verify that we did report the launch proble
             _mainLog.Verify(l => l.WriteLine(
-               It.Is<string>(s => s.StartsWith($"Test launch failed:"))), Times.Once);
+               It.Is<string>(s => s.StartsWith($"Test execution failed:"))), Times.Once);
         }
 
         [Fact]
@@ -248,7 +248,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             tcs.TrySetCanceled();
             testResult.LaunchCallback(tcs.Task);
             // verify we notify that the execution was canceled
-            _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test launch was cancelled."))), Times.Once);
+            _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test execution was cancelled"))), Times.Once);
         }
 
         [Fact]
@@ -257,7 +257,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             var testResult = BuildTestResult();
             var t = Task.FromResult(true);
             testResult.LaunchCallback(t);
-            _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test run started"))), Times.Once);
+            _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test execution started"))), Times.Once);
         }
 
         // copy the sample data to a given tmp file
@@ -341,7 +341,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             _mainLog.Setup(l => l.FullPath).Returns(stderr);
 
             var testResult = BuildTestResult();
-            var processResult = Task.FromResult(new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 });
+            var processResult = new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 };
             await testResult.CollectDeviceResult(processResult);
             // we should have timeout, since the task completion source was never set
             var (result, failure) = await testResult.ParseResult();

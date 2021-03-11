@@ -9,15 +9,28 @@
     <HelixType>test/product/</HelixType>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-    <EnableXUnitReporter>true</EnableXUnitReporter>
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
-    <XHarnessNupkgPath>$(MSBuildThisFileDirectory)../../../artifacts/packages/$(Configuration)/Shipping/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
+    <DotNetCliVersion>5.0.1</DotNetCliVersion>
+  </PropertyGroup>
+
+  <!-- For non-ci local runs -->
+  <PropertyGroup Condition=" '$(AGENT_JOBNAME)' == '' ">
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
+    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-dev</MicrosoftDotNetXHarnessCLIVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <XHarnessNupkgPath>$(ArtifactsShippingPackagesDir)\Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\iOS.AppBundle.proj" />
+    <HelixWorkItem Include="SimulatorInstaller.Tests">
+      <PayloadDirectory>$(RepoRoot)\tests\integration-tests\Apple\helix-payloads</PayloadDirectory>
+      <Command>./simulatorinstaller-integration-tests.sh</Command>
+      <Timeout>00:05:00</Timeout>
+    </HelixWorkItem>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">

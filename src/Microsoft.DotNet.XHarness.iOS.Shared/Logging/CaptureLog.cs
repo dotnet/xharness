@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using Microsoft.DotNet.XHarness.Common.Logging;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
@@ -11,6 +12,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
     public interface ICaptureLogFactory
     {
         ICaptureLog Create(string path, string systemLogPath, bool entireFile, string description = null);
+        ICaptureLog Create(string path, string systemLogPath, bool entireFile, LogType logType);
     }
 
     public class CaptureLogFactory : ICaptureLogFactory
@@ -20,12 +22,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             {
                 Description = description
             };
+
+        public ICaptureLog Create(string path, string systemLogPath, bool entireFile, LogType logType)
+            => Create(path, systemLogPath, entireFile, logType.ToString());
     }
 
     public interface ICaptureLog : IFileBackedLog
     {
         void StartCapture();
-        void StopCapture();
+        void StopCapture(TimeSpan? waitIfEmpty = null);
     }
 
     // A log that captures data written to a separate file between two moments in time
@@ -62,11 +67,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             _started = true;
         }
 
-        public void StopCapture()
+        public void StopCapture(TimeSpan? waitIfEmpty = null)
         {
             if (!_started && !_entireFile)
             {
-                throw new InvalidOperationException("StartCapture most be called before StopCature on when the entire file will be captured.");
+                throw new InvalidOperationException("StartCapture() must be called before StopCature() on when the entire file is being captured.");
             }
 
             if (!File.Exists(CapturePath))
@@ -75,13 +80,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
                 return;
             }
 
+            _endPosition = new FileInfo(CapturePath).Length;
+
+            if ((_endPosition == 0 || (_startPosition == _endPosition && !_entireFile)) && waitIfEmpty.HasValue)
+            {
+                Thread.Sleep((int)waitIfEmpty.Value.TotalMilliseconds);
+            }
+
             if (_entireFile)
             {
                 File.Copy(CapturePath, FullPath, true);
                 return;
             }
-
-            _endPosition = new FileInfo(CapturePath).Length;
 
             Capture();
         }
