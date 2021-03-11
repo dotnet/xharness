@@ -44,6 +44,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit", "src\Microsoft.DotNet.XHarness.InstrumentationBase.Xunit\Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit.csproj", "{FBDF39C0-1096-4088-B057-2FF8CCDFB32D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Essentials.DeviceTests.Android", "..\..\..\Downloads\APK\Xamarin.Essentials.DeviceTests.Android.csproj", "{CB2072E0-A437-4811-AE17-16CAE0DDA1B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -110,6 +112,12 @@ Global
 		{FBDF39C0-1096-4088-B057-2FF8CCDFB32D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBDF39C0-1096-4088-B057-2FF8CCDFB32D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FBDF39C0-1096-4088-B057-2FF8CCDFB32D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB2072E0-A437-4811-AE17-16CAE0DDA1B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB2072E0-A437-4811-AE17-16CAE0DDA1B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB2072E0-A437-4811-AE17-16CAE0DDA1B1}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{CB2072E0-A437-4811-AE17-16CAE0DDA1B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB2072E0-A437-4811-AE17-16CAE0DDA1B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB2072E0-A437-4811-AE17-16CAE0DDA1B1}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -27,35 +27,36 @@ namespace Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit
     /// </summary>
     public class DefaultAndroidEntryPoint : AndroidApplicationEntryPoint
     {
-        private const string ResultsFileArgumentName = "results-file-name";
-        private const string ResultsFileArgumentPath = "results-file-path";
-        private const string ExcludeCategoriesDirArgumentName = "exclude-categories-dir";
-        private const string ExcludeCategoriesFileArgumentName = "exclude-categories-file";
-        private const string ExcludeMethodArgumentName = "exclude-method";
-        private const string IncludeMethodArgumentName = "include-method";
-        private const string ExcludeClassArgumentName = "exclude-class";
-        private const string IncludeClassArgumentName = "include-class";
         private readonly string _resultsPath;
         private readonly string _excludeCategoriesDir;
         private readonly string _excludeCategoriesFile;
         private readonly Dictionary<string, string> _parsedArguments;
 
+        public const string ResultsFileArgumentName = "results-file-name";
+        public const string ResultsFileArgumentPath = "results-file-path";
+        public const string ExcludeCategoriesDirArgumentName = "exclude-categories-dir";
+        public const string ExcludeCategoriesFileArgumentName = "exclude-categories-file";
+        public const string ExcludeMethodArgumentName = "exclude-method";
+        public const string IncludeMethodArgumentName = "include-method";
+        public const string ExcludeClassArgumentName = "exclude-class";
+        public const string IncludeClassArgumentName = "include-class";
+
         protected override string IgnoreFilesDirectory => _excludeCategoriesDir;
         protected override string IgnoredTraitsFilePath => _excludeCategoriesFile;
 
-        public DefaultAndroidEntryPoint(Dictionary<string, string> bundle)
+        public DefaultAndroidEntryPoint(string resultsPath, Dictionary<string, string> optionalBundle)
         {
-            _parsedArguments = bundle;
+            _parsedArguments = optionalBundle;
 
             // use default name for test results file
             _parsedArguments.TryAdd(ResultsFileArgumentName, "TestResults.xml");
 
-            if (!Directory.Exists(_parsedArguments[ResultsFileArgumentPath]))
+            if (!Directory.Exists(resultsPath))
             {
-                Directory.CreateDirectory(_parsedArguments[ResultsFileArgumentPath]);
+                Directory.CreateDirectory(resultsPath);
             }
 
-            _resultsPath = Path.Combine(_parsedArguments[ResultsFileArgumentPath], _parsedArguments[ResultsFileArgumentName]);
+            _resultsPath = Path.Combine(resultsPath, _parsedArguments[ResultsFileArgumentName]);
             _excludeCategoriesDir = _parsedArguments.GetValueOrDefault(ExcludeCategoriesDirArgumentName);
             _excludeCategoriesFile = _parsedArguments.GetValueOrDefault(ExcludeCategoriesFileArgumentName);
         }
