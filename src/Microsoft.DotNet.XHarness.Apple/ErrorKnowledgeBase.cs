@@ -23,6 +23,9 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             ["the device is locked"] =
                 ("Cannot launch the application because the device is locked. Please unlock the device and try again", null),
+
+            ["LSOpenURLsWithRole() failed with error -10825"] =
+                ("This application requires a newer version of MacOS", null),
         };
 
         private static readonly Dictionary<string, (string HumanMessage, string? IssueLink)> s_buildErrorMaps = new Dictionary<string, (string HumanMessage, string? IssueLink)>();
