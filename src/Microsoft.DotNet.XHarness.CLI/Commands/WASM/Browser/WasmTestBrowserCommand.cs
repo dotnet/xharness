@@ -104,6 +104,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var options = new FirefoxOptions();
             options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
 
+            if (!string.IsNullOrEmpty(_arguments.BrowserLocation))
+            {
+                options.BrowserExecutableLocation = _arguments.BrowserLocation;
+                logger.LogInformation($"Using Firefox from {_arguments.BrowserLocation}");
+            }
+
             options.AddArguments(new List<string>(_arguments.BrowserArgs)
             {
                 "--incognito",
@@ -140,6 +146,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         {
             var options = Activator.CreateInstance<TDriverOptions>();
             options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
+
+            if (!string.IsNullOrEmpty(_arguments.BrowserLocation))
+            {
+                options.BinaryLocation = _arguments.BrowserLocation;
+                logger.LogInformation($"Using Chrome from {_arguments.BrowserLocation}");
+            }
 
             options.AddArguments(new List<string>(_arguments.BrowserArgs)
             {
