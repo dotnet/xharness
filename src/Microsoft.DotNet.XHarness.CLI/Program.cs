@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.CLI
 
             if (args.Length > 0)
             {
-                // TODO (#400): We can remove this after some time when users get used to the new commands
+                // TODO (#502): We can remove this after some time when users get used to the new commands
                 if (args[0] == "ios")
                 {
                     DisplayRenameWarning();
@@ -36,16 +36,16 @@ namespace Microsoft.DotNet.XHarness.CLI
                     Console.Error.WriteLine("The 'apple' command is not available on non-OSX platforms!");
                     return (int)ExitCode.INVALID_ARGUMENTS;
                 }
-            }
 
-            // Mono.Options wouldn't allow "--" so we will temporarily rename it and parse it ourselves later
-            args = args.Select(a => a == "--" ? XHarnessCommand.VerbatimArgumentPlaceholder : a).ToArray();
+                // Mono.Options wouldn't allow "--" so we will temporarily rename it and parse it ourselves later
+                args = args.Select(a => a == "--" ? XHarnessCommand.VerbatimArgumentPlaceholder : a).ToArray();
+            }
 
             var commands = GetXHarnessCommandSet();
             int result = commands.Run(args);
 
             string? exitCodeName = null;
-            if (result != 0 && Enum.IsDefined(typeof(ExitCode), result))
+            if (args.Length > 0 && result != 0 && Enum.IsDefined(typeof(ExitCode), result))
             {
                 exitCodeName = $" ({(ExitCode)result})";
             }
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.CLI
             return result;
         }
 
-        // TODO (#400): We can remove this after some time when users get used to the new commands
+        // TODO (#502): We can remove this after some time when users get used to the new commands
         public static void DisplayRenameWarning()
         {
             var color = Console.ForegroundColor;

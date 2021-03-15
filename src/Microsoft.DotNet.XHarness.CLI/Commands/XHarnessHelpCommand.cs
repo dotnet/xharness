@@ -21,17 +21,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
         {
             string[] args = arguments.ToArray();
 
-            // TODO (#400): We can remove this after some time when users get used to the new commands
-            if (args[0] == "ios")
-            {
-                Program.DisplayRenameWarning();
-                args[0] = "apple";
-            }
-
             if (args.Length == 0)
             {
                 base.Invoke(arguments);
                 return (int)ExitCode.HELP_SHOWN;
+            }
+
+            // TODO (#502): We can remove this after some time when users get used to the new commands
+            if (args[0] == "ios")
+            {
+                Program.DisplayRenameWarning();
+                args[0] = "apple";
             }
 
             var command = args[0].ToLowerInvariant();
