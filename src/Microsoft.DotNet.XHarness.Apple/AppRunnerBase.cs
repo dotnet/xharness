@@ -65,6 +65,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected async Task<ProcessExecutionResult> RunMacCatalystApp(
             AppBundleInformation appInfo,
             TimeSpan timeout,
+            IEnumerable<string> extraArguments,
             Dictionary<string, string> environmentVariables,
             CancellationToken cancellationToken)
         {
@@ -86,6 +87,8 @@ namespace Microsoft.DotNet.XHarness.Apple
                 "-W",
                 appInfo.LaunchAppPath
             };
+
+            arguments.AddRange(extraArguments);
 
             systemLog.StartCapture();
 
@@ -109,34 +112,13 @@ namespace Microsoft.DotNet.XHarness.Apple
         /// User can pass additional arguments after the -- which get turned to environmental variables.
         /// </summary>
         /// <param name="envVariables">Environmental variables where the arguments are added</param>
-        /// <param name="arguments">Arguments to parse</param>
-        protected void AddExtraEnvVars(Dictionary<string, string> envVariables, IEnumerable<string> arguments)
+        /// <param name="variables">Variables to set</param>
+        protected void AddExtraEnvVars(Dictionary<string, string> envVariables, IEnumerable<(string, string)> variables)
         {
-            using (var enumerator = arguments.GetEnumerator())
+            using (var enumerator = variables.GetEnumerator())
             while (enumerator.MoveNext())
             {
-                var arg = enumerator.Current;
-                int position = arg.IndexOf('=');
-
-                string name;
-                string value;
-                if (position == -1)
-                {
-                    name = arg;
-                    value = enumerator.MoveNext() ? enumerator.Current : string.Empty;
-                }
-                else
-                {
-                    name = arg.Substring(0, position);
-                    value = arg.Substring(position + 1);
-                }
-
-                // Remove initial --
-                while (name.StartsWith("-"))
-                {
-                    name = name.Substring(1);
-                }
-
+                var (name, value) = enumerator.Current;
                 if (envVariables.ContainsKey(name))
                 {
                     _mainLog.WriteLine($"Environmental variable {name} is already passed to the application to drive test run, skipping..");
