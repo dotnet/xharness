@@ -16,7 +16,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
     /// <summary>
     /// Command which executes a given, already-packaged iOS application, waits on it and returns status based on the outcome.
@@ -76,6 +76,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
             }
 
             int exitCode;
+            if (target.Platform != TestTarget.MacCatalyst && !result.Succeeded)
+            {
+                logger.LogError($"App run has failed. mlaunch exited with {result.ExitCode}");
+                return ExitCode.APP_LAUNCH_FAILURE;
+            }
+
+            int exitCode;
             if (target.Platform == TestTarget.MacCatalyst)
             {
                 exitCode = result.ExitCode;
@@ -88,20 +95,22 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.iOS
                     return ExitCode.APP_LAUNCH_FAILURE;
                 }
 
-                var systemLog = logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
-                if (systemLog == null)
-                {
-                    logger.LogError("Application has finished but no system log found. Failed to determine the exit code!");
-                    return ExitCode.RETURN_CODE_NOT_SET;
-                }
+            var exitCodeDetector = target.Platform == TestTarget.MacCatalyst
+                ? new MacCatalystExitCodeDetector()
+                : (ExitCodeDetector)new iOSExitCodeDetector();
 
-                exitCode = new ExitCodeDetector().DetectExitCode(appBundleInfo, systemLog);
-                logger.LogInformation($"App run ended with {exitCode}");
-            }
+            exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, systemLog);
+            logger.LogInformation($"App run ended with {exitCode}");
 
             if (_arguments.ExpectedExitCode != exitCode)
             {
                 logger.LogError($"Application has finished with exit code {exitCode} but {_arguments.ExpectedExitCode} was expected");
+
+                if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
+                {
+                    logger.LogError(failureMessage.Value.HumanMessage);
+                }
+
                 return ExitCode.GENERAL_FAILURE;
             }
 

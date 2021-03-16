@@ -165,10 +165,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                         line += Environment.NewLine;
 
                         _messagesProcessor.Invoke(line);
+                        mem.SetLength(0);
+                        mem.Seek(0, SeekOrigin.Begin);
                     }
-
-                    mem.SetLength(0);
-                    mem.Seek(0, SeekOrigin.Begin);
                 }
 
                 // the result is not used

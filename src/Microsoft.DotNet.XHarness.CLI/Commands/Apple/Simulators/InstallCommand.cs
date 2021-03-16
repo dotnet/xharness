@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -11,11 +10,11 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 {
     internal class InstallCommand : SimulatorInstallerCommand
     {
@@ -27,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Commands
         protected override string CommandDescription => CommandHelp;
 
         private readonly InstallCommandArguments _arguments = new InstallCommandArguments();
-        protected override SimulatorInstallerCommandArguments SimulatorInstallerArguments => _arguments;
+        protected override SimulatorsCommandArguments SimulatorsArguments => _arguments;
 
         public InstallCommand() : base(CommandName, CommandHelp)
         {
