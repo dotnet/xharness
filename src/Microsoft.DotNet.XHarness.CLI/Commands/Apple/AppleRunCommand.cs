@@ -82,18 +82,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 return ExitCode.APP_LAUNCH_FAILURE;
             }
 
-            int exitCode;
-            if (target.Platform == TestTarget.MacCatalyst)
+            var systemLog = logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
+            if (systemLog == null)
             {
-                exitCode = result.ExitCode;
+                logger.LogError("Application has finished but no system log found. Failed to determine the exit code!");
+                return ExitCode.RETURN_CODE_NOT_SET;
             }
-            else
-            {
-                if (!result.Succeeded)
-                {
-                    logger.LogError($"App run has failed. mlaunch exited with {result.ExitCode}");
-                    return ExitCode.APP_LAUNCH_FAILURE;
-                }
 
             var exitCodeDetector = target.Platform == TestTarget.MacCatalyst
                 ? new MacCatalystExitCodeDetector()
