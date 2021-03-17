@@ -203,10 +203,6 @@ if [[ "$internal" == true ]]; then
     if [[ "$alpine" = "true" ]]; then
         queue=alpine.amd64.tiger.perf
     fi
-
-    if [[ "$alpine" = "true" ]]; then
-        queue=alpine.amd64.tiger.perf
-    fi
 else
     if [[ "$architecture" = "arm64" ]]; then
         queue=ubuntu.1804.armarch.open
