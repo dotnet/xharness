@@ -9,7 +9,6 @@
     <HelixType>test/product/</HelixType>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-    <EnableXUnitReporter>true</EnableXUnitReporter>
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
     <!-- Pick up the nupkg from this repo for testing purposes -->

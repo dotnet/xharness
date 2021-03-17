@@ -8,9 +8,9 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
 {
-    internal abstract class SimulatorInstallerCommandArguments : XHarnessCommandArguments
+    internal abstract class SimulatorsCommandArguments : XHarnessCommandArguments
     {
         private string? _xcodeRoot;
 
@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.XHarness.SimulatorInstaller.Arguments
         {
             var options = GetAdditionalOptions();
 
-            options.Add("xcode=", "Path to where Xcode is located, e.g. /Application/Xcode114.app. If not set, xcode-select is used to determine the location", v => XcodeRoot = RootPath(v));
+            options.Add("xcode=", "Path to where Xcode is located, e.g. /Application/Xcode114.app. If not set, xcode-select is used to determine the location",v => XcodeRoot = RootPath(v));
 
             return options;
         }

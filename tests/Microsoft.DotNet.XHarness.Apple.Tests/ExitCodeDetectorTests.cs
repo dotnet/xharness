@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         {
             var appBundleInformation = new AppBundleInformation("HelloiOS", "HelloiOS", "some/path", "some/path", false, null);
 
-            var detector = new ExitCodeDetector();
+            var detector = new iOSExitCodeDetector();
 
             var log = new[]
             {
@@ -36,11 +36,43 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         }
 
         [Fact]
+        public void ExitCodeIsDetectedOnMacCatalystTest()
+        {
+            var appBundleInformation = new AppBundleInformation("System.Buffers.Tests", "net.dot.System.Buffers.Tests", "some/path", "some/path", false, null);
+
+            var detector = new MacCatalystExitCodeDetector();
+
+            var log = new[]
+            {
+                "Feb 18 06:40:16 Admins-Mac-Mini System.Buffers.Tests[59229]: CDN - client insert callback function client = 0 type = 17 function = 0x7fff3b262246 local_olny = false",
+                "Feb 18 06:40:16 Admins-Mac-Mini System.Buffers.Tests[59229]: CDN - client setup_remote_port",
+                "Feb 18 06:40:16 Admins-Mac-Mini System.Buffers.Tests[59229]: CDN - Bootstrap Port: 1799",
+                "Feb 18 06:40:16 Admins-Mac-Mini System.Buffers.Tests[59229]: CDN - Remote Port: 56835 (com.apple.CoreDisplay.Notification)",
+                "Feb 18 06:40:16 Admins-Mac-Mini System.Buffers.Tests[59229]: CDN - client setup_local_port",
+                "Feb 18 06:40:16 Admins-Mac-Mini System.Buffers.Tests[59229]: CDN - Local Port: 78339",
+                "Feb 18 06:40:16 Admins-Mac-Mini com.apple.xpc.launchd[1] (net.dot.System.Buffers.Tests.15140[59229]): Service exited with abnormal code: 74",
+                "Feb 18 06:40:49 Admins-Mac-Mini com.apple.xpc.launchd[1] (com.apple.mdworker.shared.09000000-0600-0000-0000-000000000000[59231]): Service exited due to SIGKILL | sent by mds[88]",
+                "Feb 18 06:40:58 Admins-Mac-Mini com.apple.xpc.launchd[1] (com.apple.mdworker.shared.02000000-0100-0000-0000-000000000000[59232]): Service exited due to SIGKILL | sent by mds[88]",
+                "Feb 18 06:41:01 Admins-Mac-Mini com.apple.xpc.launchd[1] (com.apple.mdworker.shared.0D000000-0000-0000-0000-000000000000[59237]): Service exited due to SIGKILL | sent by mds[88]",
+                "Feb 18 06:41:23 Admins-Mac-Mini System.Buffers.Tests[59248]: CDN - client insert callback function client = 0 type = 17 function = 0x7fff3b262246 local_olny = false",
+                "Feb 18 06:41:23 Admins-Mac-Mini System.Buffers.Tests[59248]: CDN - client setup_remote_port",
+                "Feb 18 06:41:23 Admins-Mac-Mini System.Buffers.Tests[59248]: CDN - Bootstrap Port: 1799",
+                "Feb 18 06:41:23 Admins-Mac-Mini System.Buffers.Tests[59248]: CDN - Remote Port: 75271 (com.apple.CoreDisplay.Notification)",
+                "Feb 18 06:41:23 Admins-Mac-Mini System.Buffers.Tests[59248]: CDN - client setup_local_port",
+                "Feb 18 06:41:23 Admins-Mac-Mini System.Buffers.Tests[59248]: CDN - Local Port: 52995",
+            };
+
+            var exitCode = detector.DetectExitCode(appBundleInformation, GetLogMock(log));
+
+            Assert.Equal(74, exitCode);
+        }
+
+        [Fact]
         public void NegativeExitCodeIsDetectedTest()
         {
             var appBundleInformation = new AppBundleInformation("HelloiOS", "HelloiOS", "some/path", "some/path", false, null);
 
-            var detector = new ExitCodeDetector();
+            var detector = new iOSExitCodeDetector();
 
             var log = new[]
             {
@@ -62,7 +94,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         {
             var appBundleInformation = new AppBundleInformation("HelloiOS", "HelloiOS", "some/path", "some/path", false, null);
 
-            var detector = new ExitCodeDetector();
+            var detector = new iOSExitCodeDetector();
 
             var log = new[]
             {
@@ -109,7 +141,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             captureLog.StopCapture();
 
             var appBundleInformation = new AppBundleInformation("net.dot.HelloiOS", "net.dot.HelloiOS", "some/path", "some/path", false, null);
-            var exitCode = new ExitCodeDetector().DetectExitCode(appBundleInformation, captureLog);
+            var exitCode = new iOSExitCodeDetector().DetectExitCode(appBundleInformation, captureLog);
 
             Assert.Equal(72, exitCode);
         }

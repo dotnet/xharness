@@ -1,0 +1,35 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    This is a mock project that doesn't build the app bundle but only downloads a pre-prepared one from a storage account.
+  -->
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+
+  <PropertyGroup>
+    <AppStorageUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/test-app/$(TestTarget)</AppStorageUrl>
+    <XHarnessTestAppBundleUrl>$(AppStorageUrl)/$(TestAppBundleName).zip</XHarnessTestAppBundleUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\$(TestTarget)</TestAppDestinationDir>
+  </PropertyGroup>
+
+  <Target Name="Build" Returns="@(XHarnessAppFoldersToTest)">
+    <DownloadFile SourceUrl="$(XHarnessTestAppBundleUrl)" DestinationFolder="$(TestAppDestinationDir)" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle" />
+    </DownloadFile>
+
+    <Message Text="Downloaded $(TestAppBundleName) from @(ZippedAppBundle). Extracting..." Importance="High" />
+    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(TestAppDestinationDir)" />
+    <Message Text="Extracted to $(TestAppDestinationDir)" Importance="High" />
+
+    <ItemGroup>
+      <XHarnessAppFoldersToTest Include="$(TestAppDestinationDir)\$(TestAppBundleName)">
+        <Targets>$(TestTarget)</Targets>
+        <WorkItemTimeout>00:07:00</WorkItemTimeout>
+        <TestTimeout>00:03:00</TestTimeout>
+        <IncludesTestRunner>$(IncludesTestRunner)</IncludesTestRunner>
+        <ExpectedExitCode>$(ExpectedExitCode)</ExpectedExitCode>
+      </XHarnessAppFoldersToTest>
+    </ItemGroup>
+  </Target>
+
+</Project>
