@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -363,11 +363,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             string simulatorRuntime = runtimePrefix + runtimeVersion.Replace('.', '-');
             string simulatorDeviceType = target.Platform switch
             {
-                TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
-                TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
+                TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimDeviceType.iPhone-5s",
+                TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimDeviceType.iPhone-5s",
                 TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X"),
                 TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p",
-                TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "Apple-Watch-38mm" : "Apple-Watch-Series-3-38mm"),
+                TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-3-38mm", // min version from xcode12.5 and later.
                 _ => throw new Exception(string.Format("Invalid simulator target: {0}", target))
             };
 
@@ -445,7 +445,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         {
             TestTargetOs testTarget = target switch
             {
-                TestTarget.Simulator_iOS32 => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : "10.3"),
+                TestTarget.Simulator_iOS32 => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : "11.4"),
                 TestTarget.Simulator_iOS64 => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator),
                 TestTarget.Simulator_iOS => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator),
                 TestTarget.Simulator_tvOS => new TestTargetOs(target, minVersion ? SdkVersions.MinTVOSSimulator : SdkVersions.MaxTVOSSimulator),
