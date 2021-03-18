@@ -36,7 +36,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         private static string GetFullPathTo(string engineBinary)
         {
+            if (Path.IsPathRooted(engineBinary))
+                return engineBinary;
+
             var path = Environment.GetEnvironmentVariable("PATH");
+
             if (path == null)
                 return engineBinary;
 
