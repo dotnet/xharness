@@ -57,7 +57,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 mainLog,
                 logs,
                 new Helpers(),
-                PassThroughArguments,
                 logCallback);
 
             ProcessExecutionResult result;
@@ -65,6 +64,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 appBundleInfo,
                 target,
                 _arguments.Timeout,
+                PassThroughArguments,
+                _arguments.EnvironmentalVariables,
                 deviceName,
                 verbosity: GetMlaunchVerbosity(_arguments.Verbosity),
                 cancellationToken: cancellationToken);

@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
@@ -66,8 +65,8 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected async Task<ProcessExecutionResult> RunMacCatalystApp(
             AppBundleInformation appInfo,
             TimeSpan timeout,
-            IEnumerable<string> appArguments,
-            Dictionary<string, object> environmentVariables,
+            IEnumerable<string> extraArguments,
+            Dictionary<string, string> environmentVariables,
             CancellationToken cancellationToken)
         {
             using var systemLog = _captureLogFactory.Create(
@@ -89,21 +88,44 @@ namespace Microsoft.DotNet.XHarness.Apple
                 appInfo.LaunchAppPath
             };
 
-            arguments.AddRange(appArguments);
-
-            var envVars = environmentVariables.ToDictionary(
-                p => p.Key,
-                p => p.Value is bool ? p.Value.ToString().ToLowerInvariant() : p.Value.ToString()); // turns "True" to "true"
+            arguments.AddRange(extraArguments);
 
             systemLog.StartCapture();
 
             try
             {
-                return await _processManager.ExecuteCommandAsync("open", arguments, _mainLog, timeout, envVars, cancellationToken);
+                return await _processManager.ExecuteCommandAsync(
+                    "open",
+                    arguments,
+                    _mainLog,
+                    timeout,
+                    environmentVariables,
+                    cancellationToken);
             }
             finally
             {
                 systemLog.StopCapture(waitIfEmpty: TimeSpan.FromSeconds(10));
+            }
+        }
+
+        /// <summary>
+        /// User can pass additional arguments after the -- which get turned to environmental variables.
+        /// </summary>
+        /// <param name="envVariables">Environmental variables where the arguments are added</param>
+        /// <param name="variables">Variables to set</param>
+        protected void AddExtraEnvVars(Dictionary<string, string> envVariables, IEnumerable<(string, string)> variables)
+        {
+            using (var enumerator = variables.GetEnumerator())
+            while (enumerator.MoveNext())
+            {
+                var (name, value) = enumerator.Current;
+                if (envVariables.ContainsKey(name))
+                {
+                    _mainLog.WriteLine($"Environmental variable {name} is already passed to the application to drive test run, skipping..");
+                    continue;
+                }
+
+                envVariables[name] = value;
             }
         }
     }

@@ -37,7 +37,6 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IFileBackedLog _mainLog;
         private readonly ILogs _logs;
         private readonly IHelpers _helpers;
-        private readonly IEnumerable<string> _appArguments; // Arguments that will be passed to the iOS application
 
         public AppTester(
             IMlaunchProcessManager processManager,
@@ -52,7 +51,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IFileBackedLog mainLog,
             ILogs logs,
             IHelpers helpers,
-            IEnumerable<string> appArguments,
             Action<string>? logCallback = null)
             : base(processManager, hardwareDeviceLoader, captureLogFactory, logs, mainLog, logCallback)
         {
@@ -67,7 +65,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
-            _appArguments = appArguments;
         }
 
         public async Task<(string DeviceName, TestExecutingResult Result, string ResultMessage)> TestApp(
@@ -75,6 +72,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             TestTargetOs target,
             TimeSpan timeout,
             TimeSpan testLaunchTimeout,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
             string? deviceName = null,
             string? companionDeviceName = null,
             bool ensureCleanSimulatorState = false,
@@ -87,8 +86,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             var runMode = target.Platform.ToRunMode();
             var isSimulator = target.Platform.IsSimulator();
 
-            // TODO #459: Get MacCatalyst system logs
             var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
+
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 runMode,
                 log: _mainLog,
@@ -111,6 +110,8 @@ namespace Microsoft.DotNet.XHarness.Apple
                         xmlResultJargon,
                         skippedMethods,
                         skippedTestClasses,
+                        extraAppArguments,
+                        extraEnvVariables,
                         cancellationToken);
 
                     return ("MacCatalyst", catalystTestResult, catalystResultMessage);
@@ -184,7 +185,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                         skippedTestClasses,
                         deviceListenerTransport,
                         deviceListenerPort,
-                        deviceListenerTmpFile);
+                        deviceListenerTmpFile,
+                        extraAppArguments,
+                        extraEnvVariables);
 
                     await RunSimulatorTests(
                         mlaunchArguments,
@@ -209,7 +212,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                         skippedTestClasses,
                         deviceListenerTransport,
                         deviceListenerPort,
-                        deviceListenerTmpFile);
+                        deviceListenerTmpFile,
+                        extraAppArguments,
+                        extraEnvVariables);
 
                     await RunDeviceTests(
                         mlaunchArguments,
@@ -218,6 +223,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                         deviceListener,
                         deviceName,
                         timeout,
+                        extraEnvVariables,
                         combinedCancellationToken.Token);
                 }
             }
@@ -320,6 +326,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             ISimpleListener deviceListener,
             string deviceName,
             TimeSpan timeout,
+            IEnumerable<(string, string)> extraEnvVariables,
             CancellationToken cancellationToken)
         {
             var deviceSystemLog = _logs.Create($"device-{deviceName}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
@@ -342,12 +349,16 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 _mainLog.WriteLine("Starting test run");
 
+                var envVars = new Dictionary<string, string>();
+                AddExtraEnvVars(envVars, extraEnvVariables);
+
                 // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit).
                 var aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
                 var result = await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     aggregatedLog,
                     timeout,
+                    envVars,
                     cancellationToken: cancellationToken);
 
                 await testReporter.CollectDeviceResult(result);
@@ -384,6 +395,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
             string[]? skippedTestClasses,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
             CancellationToken cancellationToken)
         {
             var deviceListenerPort = deviceListener.InitializeAndGetPort();
@@ -424,21 +437,16 @@ namespace Microsoft.DotNet.XHarness.Apple
                     skippedTestClasses,
                     deviceListenerTransport,
                     deviceListenerPort,
-                    deviceListenerTmpFile);
+                    deviceListenerTmpFile,
+                    extraEnvVariables);
 
                 envVariables[EnviromentVariables.HostName] = "127.0.0.1";
 
-                var arguments = new List<string>
-                {
-                    "-W",
-                    appInformation.LaunchAppPath,
-                };
-
-                arguments.AddRange(_appArguments);
+                AddExtraEnvVars(envVariables, extraEnvVariables);
 
                 await crashReporter.StartCaptureAsync();
 
-                var result = await RunMacCatalystApp(appInformation, timeout, _appArguments, envVariables, combinedCancellationToken.Token);
+                var result = await RunMacCatalystApp(appInformation, timeout, extraAppArguments, envVariables, combinedCancellationToken.Token);
                 await testReporter.CollectSimulatorResult(result);
             }
             finally
@@ -450,28 +458,29 @@ namespace Microsoft.DotNet.XHarness.Apple
             return await testReporter.ParseResult();
         }
 
-        private Dictionary<string, object> GetEnvVariables(
+        private Dictionary<string, string> GetEnvVariables(
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
             string[]? skippedTestClasses,
             ListenerTransport listenerTransport,
             int listenerPort,
-            string listenerTmpFile)
+            string listenerTmpFile,
+            IEnumerable<(string, string)> extraEnvVariables)
         {
-            var variables = new Dictionary<string, object>
+            var variables = new Dictionary<string, string>
             {
-                { EnviromentVariables.AutoExit, true },
-                { EnviromentVariables.HostPort, listenerPort },
+                { EnviromentVariables.AutoExit, "true" },
+                { EnviromentVariables.HostPort, listenerPort.ToString() },
 
                 // Let the runner know that we want to get an XML output and not plain text
-                {  EnviromentVariables.EnableXmlOutput, true },
-                {  EnviromentVariables.XmlVersion, $"{xmlResultJargon}" },
+                {  EnviromentVariables.EnableXmlOutput, "true" },
+                {  EnviromentVariables.XmlVersion, xmlResultJargon.ToString() },
             };
 
             if (skippedMethods?.Any() ?? skippedTestClasses?.Any() ?? false)
             {
                 // Do not run all the tests, we are using filters
-                variables.Add(EnviromentVariables.RunAllTestsByDefault, false);
+                variables.Add(EnviromentVariables.RunAllTestsByDefault, "false");
 
                 // Add the skipped test classes and methods
                 if (skippedMethods != null && skippedMethods.Length > 0)
@@ -492,6 +501,8 @@ namespace Microsoft.DotNet.XHarness.Apple
                 variables.Add(EnviromentVariables.LogFilePath, listenerTmpFile);
             }
 
+            AddExtraEnvVars(variables, extraEnvVariables);
+
             return variables;
         }
 
@@ -502,7 +513,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             string[]? skippedTestClasses,
             ListenerTransport listenerTransport,
             int listenerPort,
-            string listenerTmpFile)
+            string listenerTmpFile,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables)
         {
             var args = new MlaunchArguments();
 
@@ -512,11 +525,18 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             // Environment variables
-            var envVariables = GetEnvVariables(xmlResultJargon, skippedMethods, skippedTestClasses, listenerTransport, listenerPort, listenerTmpFile);
+            var envVariables = GetEnvVariables(
+                xmlResultJargon,
+                skippedMethods,
+                skippedTestClasses,
+                listenerTransport,
+                listenerPort,
+                listenerTmpFile,
+                extraEnvVariables);
             args.AddRange(envVariables.Select(pair => new SetEnvVariableArgument(pair.Key, pair.Value)));
 
             // Arguments passed to the iOS app bundle
-            args.AddRange(_appArguments.Select(arg => new SetAppArgumentArgument(arg)));
+            args.AddRange(extraAppArguments.Select(arg => new SetAppArgumentArgument(arg)));
 
             return args;
         }
@@ -530,7 +550,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             string[]? skippedTestClasses,
             ListenerTransport deviceListenerTransport,
             int deviceListenerPort,
-            string deviceListenerTmpFile)
+            string deviceListenerTmpFile,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables)
         {
             var args = GetCommonArguments(
                 verbosity,
@@ -539,7 +561,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                 skippedTestClasses,
                 deviceListenerTransport,
                 deviceListenerPort,
-                deviceListenerTmpFile);
+                deviceListenerTmpFile,
+                extraAppArguments,
+                extraEnvVariables);
 
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"));
             args.Add(new SimulatorUDIDArgument(simulator.UDID));
@@ -574,7 +598,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             string[]? skippedTestClasses,
             ListenerTransport deviceListenerTransport,
             int deviceListenerPort,
-            string deviceListenerTmpFile)
+            string deviceListenerTmpFile,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables)
         {
             var args = GetCommonArguments(
                 verbosity,
@@ -583,7 +609,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                 skippedTestClasses,
                 deviceListenerTransport,
                 deviceListenerPort,
-                deviceListenerTmpFile);
+                deviceListenerTmpFile,
+                extraAppArguments,
+                extraEnvVariables);
 
             var ips = string.Join(",", _helpers.GetLocalIpAddresses().Select(ip => ip.ToString()));
 

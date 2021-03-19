@@ -133,8 +133,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 Mock.Of<IDeviceLogCapturerFactory>(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object,
-                Enumerable.Empty<string>());
+                _helpers.Object);
 
             var appInformation = GetMockedAppBundleInfo();
 
@@ -142,7 +141,9 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 async () => await appRunner.RunApp(
                     appInformation,
                     new TestTargetOs(TestTarget.Simulator_tvOS, null),
-                    TimeSpan.FromSeconds(30)));
+                    TimeSpan.FromSeconds(30),
+                    Array.Empty<string>(),
+                    Array.Empty<(string, string)>()));
 
             // Verify
             _mainLog.Verify(x => x.WriteLine("App run ended with 0"), Times.Never);
@@ -182,13 +183,14 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 Mock.Of<IDeviceLogCapturerFactory>(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object,
-                new[] { "--appArg1=value1", "-g" });
+                _helpers.Object);
 
             var (deviceName, result) = await appRunner.RunApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Simulator_tvOS, null),
                 TimeSpan.FromSeconds(30),
+                new[] { "--foo=bar", "--xyz" },
+                new[] { ("appArg1", "value1") },
                 ensureCleanSimulatorState: true);
 
             // Verify
@@ -203,7 +205,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        _mainLog.Object,
                        It.IsAny<TimeSpan>(),
-                       null,
+                       It.Is<Dictionary<string, string>>(d => d["appArg1"] == "value1"),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -233,8 +235,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 Mock.Of<IDeviceLogCapturerFactory>(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object,
-                Enumerable.Empty<string>());
+                _helpers.Object);
 
             var appInformation = GetMockedAppBundleInfo();
 
@@ -243,6 +244,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                     appInformation,
                     new TestTargetOs(TestTarget.Device_iOS, null),
                     TimeSpan.FromSeconds(30),
+                    Enumerable.Empty<string>(),
+                    Enumerable.Empty<(string, string)>(),
                     ensureCleanSimulatorState: true));
         }
 
@@ -278,13 +281,14 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 deviceLogCapturerFactory.Object,
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object,
-                new[] { "--appArg1=value1", "-g" });
+                _helpers.Object);
 
             var (deviceName, result) = await appRunner.RunApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
-                TimeSpan.FromSeconds(30));
+                TimeSpan.FromSeconds(30),
+                new[] { "--foo=bar", "--xyz" },
+                new[] { ("appArg1", "value1") });
 
             // Verify
             Assert.Equal(DeviceName, deviceName);
@@ -298,7 +302,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
-                       null,
+                       It.Is<Dictionary<string, string>>(d => d["appArg1"] == "value1"),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -322,8 +326,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         private static string GetExpectedDeviceMlaunchArgs() =>
             "-v " +
             "-v " +
-            "-argument=--appArg1=value1 " +
-            "-argument=-g " +
+            "-argument=--foo=bar " +
+            "-argument=--xyz " +
             "--disable-memory-limits " +
             $"--devname \"{DeviceName}\" " +
             $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
@@ -332,8 +336,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         private string GetExpectedSimulatorMlaunchArgs() =>
             "-v " +
             "-v " +
-            "-argument=--appArg1=value1 " +
-            "-argument=-g " +
+            "-argument=--foo=bar " +
+            "-argument=--xyz " +
             $"--device=:v2:udid={_mockSimulator.Object.UDID} " +
             $"--launchsim {StringUtils.FormatArguments(s_appPath)}";
 

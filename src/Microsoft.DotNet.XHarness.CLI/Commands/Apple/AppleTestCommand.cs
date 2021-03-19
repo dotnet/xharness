@@ -65,15 +65,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 mainLog,
                 logs,
                 new Helpers(),
-                logCallback: logCallback,
-                appArguments: PassThroughArguments);
+                logCallback: logCallback);
 
             string resultMessage;
             TestExecutingResult testResult;
-            (deviceName, testResult, resultMessage) = await appTester.TestApp(appBundleInfo,
+            (deviceName, testResult, resultMessage) = await appTester.TestApp(
+                appBundleInfo,
                 target,
                 _arguments.Timeout,
                 _arguments.LaunchTimeout,
+                PassThroughArguments,
+                _arguments.EnvironmentalVariables,
                 deviceName,
                 verbosity: GetMlaunchVerbosity(_arguments.Verbosity),
                 xmlResultJargon: _arguments.XmlResultJargon,

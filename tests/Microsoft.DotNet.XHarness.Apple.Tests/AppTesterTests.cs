@@ -185,8 +185,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object,
-                Enumerable.Empty<string>());
+                _helpers.Object);
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -201,16 +200,14 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                     appInformation,
                     new TestTargetOs(TestTarget.Simulator_tvOS, null),
                     TimeSpan.FromSeconds(30),
-                    TimeSpan.FromSeconds(30)));
+                    TimeSpan.FromSeconds(30),
+                    new[] { "--foo=bar", "--xyz" },
+                    new[] { ("appArg1", "value1") }));
 
             // Verify
-
             _mainLog.Verify(x => x.WriteLine("Test run completed"), Times.Never);
-
             _simulatorLoader.VerifyAll();
-
             _listener.Verify(x => x.StartAsync(), Times.Never);
-
             _tunnelBore.Verify(t => t.Create(It.IsAny<string>(), It.IsAny<ILog>()), Times.Never); // never create tunnels on simulators
         }
 
@@ -257,8 +254,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object,
-                Array.Empty<string>());
+                _helpers.Object);
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -273,6 +269,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 new TestTargetOs(TestTarget.Simulator_tvOS, null),
                 TimeSpan.FromSeconds(30),
                 TimeSpan.FromSeconds(30),
+                new string[] { "--foo=bar", "--xyz" },
+                new[] { ("appArg1", "value1") },
                 ensureCleanSimulatorState: true);
 
             // Verify
@@ -288,7 +286,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        _mainLog.Object,
                        It.IsAny<TimeSpan>(),
-                       null,
+                       It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -328,8 +326,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object,
-                Enumerable.Empty<string>());
+                _helpers.Object);
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -345,6 +342,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                     new TestTargetOs(TestTarget.Device_iOS, null),
                     TimeSpan.FromSeconds(30),
                     TimeSpan.FromSeconds(30),
+                    new[] { "--foo=bar", "--xyz" },
+                    new[] { ("appArg1", "value1") },
                     ensureCleanSimulatorState: true));
         }
 
@@ -381,7 +380,10 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 _tunnelBore.Setup(t => t.Create(DeviceName, It.IsAny<ILog>()));
             }
 
-            _listenerFactory.Setup(f => f.UseTunnel).Returns((useTunnel));
+            _listenerFactory
+                .Setup(f => f.UseTunnel)
+                .Returns(useTunnel);
+
             // Act
             var appTester = new AppTester(_processManager.Object,
                 _hardwareDeviceLoader.Object,
@@ -394,8 +396,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object,
-                new[] { "--appArg1=value1", "-f" });
+                _helpers.Object);
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -409,7 +410,9 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
                 TimeSpan.FromSeconds(30),
-                TimeSpan.FromSeconds(30));
+                TimeSpan.FromSeconds(30),
+                new[] { "--foo=bar", "--xyz" },
+                new[] { ("appArg1", "value1") });
 
             // Verify
             Assert.Equal(DeviceName, deviceName);
@@ -418,7 +421,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             var expectedArgs = GetExpectedDeviceMlaunchArgs(
                 useTunnel: useTunnel,
-                extraArgs: "-argument=--appArg1=value1 -argument=-f ");
+                extraArgs: "-setenv=appArg1=value1 -argument=--foo=bar -argument=--xyz ");
 
             _processManager
                 .Verify(
@@ -426,7 +429,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
-                       null,
+                       It.Is<Dictionary<string, string>>(d => d["appArg1"] == "value1"),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -489,8 +492,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object,
-                Enumerable.Empty<string>());
+                _helpers.Object);
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -504,6 +506,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
                 timeout: TimeSpan.FromSeconds(30),
+                extraAppArguments: new[] { "--foo=bar", "--xyz" },
+                extraEnvVariables: new[] { ("appArg1", "value1") },
                 testLaunchTimeout: TimeSpan.FromSeconds(30),
                 skippedMethods: skippedTests);
 
@@ -514,7 +518,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             var skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_METHODS={string.Join(',', skippedTests)} ";
 
-            var expectedArgs = GetExpectedDeviceMlaunchArgs(skippedTestsArg);
+            var expectedArgs = GetExpectedDeviceMlaunchArgs(skippedTestsArg, extraArgs: "-setenv=appArg1=value1 -argument=--foo=bar -argument=--xyz ");
 
             _processManager
                 .Verify(
@@ -522,7 +526,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
-                       null,
+                       It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -578,8 +582,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object,
-                Enumerable.Empty<string>());
+                _helpers.Object);
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -592,6 +595,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             var (deviceName, result, resultMessage) = await appTester.TestApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
+                extraAppArguments: new[] { "--foo=bar", "--xyz" },
+                extraEnvVariables: new[] { ("appArg1", "value1") },
                 timeout: TimeSpan.FromSeconds(30),
                 testLaunchTimeout: TimeSpan.FromSeconds(30),
                 skippedTestClasses: skippedClasses);
@@ -602,8 +607,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
 
             var skippedTestsArg = $"-setenv=NUNIT_RUN_ALL=false -setenv=NUNIT_SKIPPED_CLASSES={string.Join(',', skippedClasses)} ";
-
-            var expectedArgs = GetExpectedDeviceMlaunchArgs(skippedTestsArg);
+            var expectedArgs = GetExpectedDeviceMlaunchArgs(skippedTestsArg, extraArgs: "-setenv=appArg1=value1 -argument=--foo=bar -argument=--xyz ");
 
             _processManager
                 .Verify(
@@ -611,7 +615,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
-                       null,
+                       It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -663,8 +667,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 new XmlResultParser(),
                 _mainLog.Object,
                 _logs.Object,
-                _helpers.Object,
-                Array.Empty<string>());
+                _helpers.Object);
 
             var appInformation = new AppBundleInformation(
                 appName: AppName,
@@ -679,6 +682,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 new TestTargetOs(TestTarget.MacCatalyst, null),
                 TimeSpan.FromSeconds(30),
                 TimeSpan.FromSeconds(30),
+                extraAppArguments: new[] { "--foo=bar", "--xyz" },
+                extraEnvVariables: new[] { ("appArg1", "value1") },
                 ensureCleanSimulatorState: true);
 
             // Verify
@@ -689,7 +694,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 .Verify(
                     x => x.ExecuteCommandAsync(
                        "open",
-                       It.Is<IList<string>>(args => args.Contains(s_appPath)),
+                       It.Is<IList<string>>(args => args.Contains(s_appPath) && args.Contains("--foo=bar") && args.Contains("--foo=bar")),
                        _mainLog.Object,
                        It.IsAny<TimeSpan>(),
                        It.Is<Dictionary<string, string>>(envVars =>
@@ -730,6 +735,9 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             $"-setenv=NUNIT_HOSTPORT={Port} " +
             "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
             "-setenv=NUNIT_XML_VERSION=xUnit " +
+            "-setenv=appArg1=value1 " +
+            "-argument=--foo=bar " +
+            "-argument=--xyz " +
             "-setenv=NUNIT_HOSTNAME=127.0.0.1 " +
             $"--device=:v2:udid={_mockSimulator.Object.UDID} " +
             $"--launchsim {StringUtils.FormatArguments(s_appPath)}";

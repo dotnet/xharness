@@ -37,6 +37,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// </summary>
         public bool EnableLldb { get; set; }
 
+        /// <summary>
+        /// Environmental variables set when executing the application.
+        /// </summary>
+        public IReadOnlyCollection<(string, string)> EnvironmentalVariables => _environmentalVariables;
+        private readonly List<(string, string)> _environmentalVariables = new List<(string, string)>();
+
         public override IReadOnlyCollection<string> Targets
         {
             get => RunTargets.Select(t => t.AsString()).ToArray();
@@ -90,6 +96,20 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
                 {
                     "enable-lldb", "Allow to debug the launched application using lldb.",
                     v => EnableLldb = v != null
+                },
+                {
+                    "set-env", "Environmental variable to set for the application in format key=value. Can be used multiple times",
+                    v => {
+                        var position = v.IndexOf('=');
+                        if (position == -1)
+                        {
+                            throw new ArgumentException($"The set-env argument {v} must be in the key=value format");
+                        }
+
+                        var key = v.Substring(0, position);
+                        var value = v.Substring(position + 1);
+                        _environmentalVariables.Add((key, value));
+                    }
                 },
             };
 

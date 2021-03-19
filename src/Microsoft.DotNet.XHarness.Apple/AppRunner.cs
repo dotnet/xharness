@@ -31,7 +31,6 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IFileBackedLog _mainLog;
         private readonly ILogs _logs;
         private readonly IHelpers _helpers;
-        private readonly IEnumerable<string> _appArguments; // Arguments that will be passed to the iOS application
 
         public AppRunner(
             IMlaunchProcessManager processManager,
@@ -43,7 +42,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IFileBackedLog mainLog,
             ILogs logs,
             IHelpers helpers,
-            IEnumerable<string> appArguments,
             Action<string>? logCallback = null)
             : base(processManager, hardwareDeviceLoader, captureLogFactory, logs, mainLog, logCallback)
         {
@@ -55,13 +53,14 @@ namespace Microsoft.DotNet.XHarness.Apple
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
-            _appArguments = appArguments;
         }
 
         public async Task<(string DeviceName, ProcessExecutionResult result)> RunApp(
             AppBundleInformation appInformation,
             TestTargetOs target,
             TimeSpan timeout,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
             string? deviceName = null,
             string? companionDeviceName = null,
             bool ensureCleanSimulatorState = false,
@@ -77,7 +76,11 @@ namespace Microsoft.DotNet.XHarness.Apple
             if (target.Platform == TestTarget.MacCatalyst)
             {
                 _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
-                result = await RunMacCatalystApp(appInformation, timeout, _appArguments, new Dictionary<string, object>(), cancellationToken);
+
+                var envVariables = new Dictionary<string, string>();
+                AddExtraEnvVars(envVariables, extraEnvVariables);
+
+                result = await RunMacCatalystApp(appInformation, timeout, extraAppArguments ?? Enumerable.Empty<string>(), envVariables, cancellationToken);
                 return ("MacCatalyst", result);
             }
 
@@ -110,7 +113,11 @@ namespace Microsoft.DotNet.XHarness.Apple
                     throw new NoDeviceFoundException();
                 }
 
-                var mlaunchArguments = GetSimulatorArguments(appInformation, simulator, verbosity);
+                var mlaunchArguments = GetSimulatorArguments(
+                    appInformation,
+                    simulator,
+                    extraAppArguments,
+                    verbosity);
 
                 result = await RunSimulatorApp(
                     mlaunchArguments,
@@ -118,18 +125,25 @@ namespace Microsoft.DotNet.XHarness.Apple
                     crashReporter,
                     simulator,
                     companionSimulator,
+                    extraEnvVariables,
                     ensureCleanSimulatorState,
                     timeout,
                     cancellationToken);
             }
             else
             {
-                var mlaunchArguments = GetDeviceArguments(appInformation, deviceName, target.Platform.IsWatchOSTarget(), verbosity);
+                var mlaunchArguments = GetDeviceArguments(
+                    appInformation,
+                    deviceName,
+                    target.Platform.IsWatchOSTarget(),
+                    extraAppArguments,
+                    verbosity);
 
                 result = await RunDeviceApp(
                     mlaunchArguments,
                     crashReporter,
                     deviceName,
+                    extraEnvVariables,
                     timeout,
                     cancellationToken);
             }
@@ -143,6 +157,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             ICrashSnapshotReporter crashReporter,
             ISimulatorDevice simulator,
             ISimulatorDevice? companionSimulator,
+            IEnumerable<(string, string)> extraEnvVariables,
             bool ensureCleanSimulatorState,
             TimeSpan timeout,
             CancellationToken cancellationToken)
@@ -192,7 +207,10 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 _mainLog.WriteLine("Starting test run");
 
-                var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+                var envVariables = new Dictionary<string, string>();
+                AddExtraEnvVars(envVariables, extraEnvVariables);
+
+                var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, envVariables, cancellationToken);
 
                 // cleanup after us
                 if (ensureCleanSimulatorState)
@@ -221,6 +239,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             MlaunchArguments mlaunchArguments,
             ICrashSnapshotReporter crashReporter,
             string deviceName,
+            IEnumerable<(string, string)> extraEnvVariables,
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
@@ -234,10 +253,14 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 _mainLog.WriteLine("Starting the app");
 
+                var envVars = new Dictionary<string, string>();
+                AddExtraEnvVars(envVars, extraEnvVariables);
+
                 return await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     _mainLog,
                     timeout,
+                    envVars,
                     cancellationToken: cancellationToken);
             }
             finally
@@ -247,7 +270,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
         }
 
-        private MlaunchArguments GetCommonArguments(int verbosity)
+        private static MlaunchArguments GetCommonArguments(IEnumerable<string> extraAppArguments, int verbosity)
         {
             var args = new MlaunchArguments();
 
@@ -257,7 +280,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             // Arguments passed to the iOS app bundle
-            args.AddRange(_appArguments.Select(arg => new SetAppArgumentArgument(arg)));
+            args.AddRange(extraAppArguments.Select(arg => new SetAppArgumentArgument(arg)));
 
             return args;
         }
@@ -265,9 +288,10 @@ namespace Microsoft.DotNet.XHarness.Apple
         private MlaunchArguments GetSimulatorArguments(
             AppBundleInformation appInformation,
             ISimulatorDevice simulator,
+            IEnumerable<string> extraAppArguments,
             int verbosity)
         {
-            var args = GetCommonArguments(verbosity);
+            var args = GetCommonArguments(extraAppArguments, verbosity);
 
             args.Add(new SimulatorUDIDArgument(simulator.UDID));
 
@@ -295,9 +319,10 @@ namespace Microsoft.DotNet.XHarness.Apple
             AppBundleInformation appInformation,
             string deviceName,
             bool isWatchTarget,
+            IEnumerable<string> extraAppArguments,
             int verbosity)
         {
-            var args = GetCommonArguments(verbosity);
+            var args = GetCommonArguments(extraAppArguments, verbosity);
 
             args.Add(new DisableMemoryLimitsArgument());
             args.Add(new DeviceNameArgument(deviceName));
