@@ -32,11 +32,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         {
         }
 
-        static readonly string[] s_extensions = { ".cmd", ".exe" };
-
-        private static string GetFullPathTo(string engineBinary)
+        private static string FindEngineInPath(string engineBinary)
         {
-            if (Path.IsPathRooted(engineBinary))
+            if (File.Exists (engineBinary) || Path.IsPathRooted(engineBinary))
                 return engineBinary;
 
             var path = Environment.GetEnvironmentVariable("PATH");
@@ -44,17 +42,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             if (path == null)
                 return engineBinary;
 
-            foreach (var folder in path.Split(";"))
+            foreach (var folder in path.Split(Path.PathSeparator))
             {
-                foreach (var ext in s_extensions)
-                {
-                    var fullPath = Path.Combine(folder, engineBinary + ext);
-                    if (File.Exists(fullPath))
-                    {
-                        engineBinary = fullPath;
-                        break;
-                    }
-                }
+                var fullPath = Path.Combine(folder, engineBinary);
+                if (File.Exists(fullPath))
+                    return fullPath;
             }
 
             return engineBinary;
@@ -73,7 +65,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             };
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                engineBinary = GetFullPathTo(engineBinary);
+                engineBinary = FindEngineInPath(engineBinary + ".cmd");
 
             var engineArgs = new List<string>();
 
