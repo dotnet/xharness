@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
@@ -21,7 +22,6 @@ using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 using OpenQA.Selenium;
 using System.Linq;
 using OpenQA.Selenium.Edge;
-using System.Runtime.InteropServices;
 using OpenQA.Selenium.Chromium;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
@@ -212,7 +212,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
                     return (driverService, driver);
                 }
-                catch (WebDriverException wde) when (err_snippets.Any(s => wde.Message.Contains(s)) && retry_num < max_retries - 1)
+                catch (TargetInvocationException tie) when
+                            (tie.InnerException is WebDriverException wde
+                                && err_snippets.Any(s => wde.ToString().Contains(s)) && retry_num < max_retries - 1)
                 {
                     // chrome can sometimes crash on startup when launching from chromedriver.
                     // As a *workaround*, let's retry that a few times
