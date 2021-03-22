@@ -75,9 +75,9 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 
         #endregion
 
-        #region Private methods
+        #region Static methods
 
-        private static string DetectXcodePath()
+        public static string DetectXcodePath()
         {
             using var process = new Process();
             process.StartInfo.FileName = "xcode-select";

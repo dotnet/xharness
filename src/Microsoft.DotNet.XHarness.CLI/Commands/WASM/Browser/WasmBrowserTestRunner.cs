@@ -271,10 +271,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 .Build();
 
             await host.StartAsync(token);
-            return host.ServerFeatures
-                    .Get<IServerAddressesFeature>()
-                    .Addresses
-                    .First();
+
+            var ipAddress = host.ServerFeatures
+                .Get<IServerAddressesFeature>()?
+                .Addresses
+                .FirstOrDefault();
+
+            return ipAddress ?? throw new InvalidOperationException("Failed to determine web server's IP address");
         }
     }
 }
