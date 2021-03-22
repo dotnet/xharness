@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             _snapshotReporterFactory = snapshotReporterFactory ?? throw new ArgumentNullException(nameof(snapshotReporterFactory));
             _captureLogFactory = captureLogFactory ?? throw new ArgumentNullException(nameof(captureLogFactory));
             _deviceLogCapturerFactory = deviceLogCapturerFactory ?? throw new ArgumentNullException(nameof(deviceLogCapturerFactory));
-            _testReporterFactory = reporterFactory ?? throw new ArgumentNullException(nameof(_testReporterFactory));
+            _testReporterFactory = reporterFactory ?? throw new ArgumentNullException(nameof(reporterFactory));
             _resultParser = resultParser ?? throw new ArgumentNullException(nameof(resultParser));
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));

@@ -23,8 +23,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         public override void Validate()
         {
+            base.Validate();
+
             // Validate this field
-            AppPackagePath = AppPackagePath;
+            _ = AppPackagePath;
         }
     }
 }

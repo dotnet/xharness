@@ -43,10 +43,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         public WasmBrowserTestRunner(WasmTestBrowserCommandArguments arguments, IEnumerable<string> passThroughArguments,
                                             WasmTestMessagesProcessor messagesProcessor, ILogger logger)
         {
-            this._arguments = arguments;
-            this._logger = logger;
-            this._passThroughArguments = passThroughArguments;
-            this._messagesProcessor = messagesProcessor;
+            _arguments = arguments;
+            _logger = logger;
+            _passThroughArguments = passThroughArguments;
+            _messagesProcessor = messagesProcessor;
         }
 
         public async Task<ExitCode> RunTestsWithWebDriver(DriverService driverService, IWebDriver driver)
@@ -239,7 +239,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             foreach (var arg in _passThroughArguments)
             {
                 if (sb.Length > 0)
-                    sb.Append("&");
+                    sb.Append('&');
 
                 sb.Append($"arg={HttpUtility.UrlEncode(arg)}");
             }

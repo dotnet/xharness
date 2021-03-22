@@ -25,10 +25,11 @@ namespace Microsoft.DotNet.XHarness.Android
         private readonly string _absoluteAdbExePath;
         private readonly ILogger _log;
         private readonly IAdbProcessManager _processManager;
-        private readonly Dictionary<string, string> CommandList = new()
+        private readonly Dictionary<string, string> _commandList = new()
         {
-        { "architecture", "shell getprop ro.product.cpu.abi"},
-        { "app", "shell pm list packages -3"} }; 
+            { "architecture", "shell getprop ro.product.cpu.abi"},
+            { "app", "shell pm list packages -3"}
+        }; 
 
 
         public AdbRunner(ILogger log, string adbExePath = "") : this(log, new AdbProcessManager(log), adbExePath) { }
@@ -200,7 +201,7 @@ namespace Microsoft.DotNet.XHarness.Android
             _log.LogInformation($"Attempting to install {apkPath}: ");
             if (string.IsNullOrEmpty(apkPath))
             {
-                throw new ArgumentNullException($"No value supplied for {nameof(apkPath)} ");
+                throw new ArgumentException($"No value supplied for {nameof(apkPath)} ");
             }
             if (!File.Exists(apkPath))
             {
@@ -331,7 +332,7 @@ namespace Microsoft.DotNet.XHarness.Android
                         }
                         else
                         {
-                            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath) ?? throw new ArgumentNullException(nameof(destinationPath)));
+                            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath) ?? throw new ArgumentException(nameof(destinationPath)));
                             File.Move(filePath, destinationPath);
                             copiedFiles.Add(destinationPath);
                         }
@@ -350,7 +351,7 @@ namespace Microsoft.DotNet.XHarness.Android
         {
             var devicesAndProperties = new Dictionary<string, string?>();
 
-            string command = CommandList[property];
+            string command = _commandList[property];
 
             var result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
             string[] standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
@@ -446,7 +447,7 @@ namespace Microsoft.DotNet.XHarness.Android
         public Dictionary<string, string> GetAllDevicesToUse(ILogger logger, string apkRequiredProperty, string propertyName)
         {
 
-            Dictionary<string, string?> allDevicesAndTheirProperties = new Dictionary<string, string?>();
+            var allDevicesAndTheirProperties = new Dictionary<string, string?>();
             try
             {
                 allDevicesAndTheirProperties = GetAttachedDevicesWithProperties(propertyName);
@@ -467,11 +468,12 @@ namespace Microsoft.DotNet.XHarness.Android
                 .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split().Contains(apkRequiredProperty))
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value) as Dictionary<string, string>;
             
-            if (result.Count() == 0)
+            if (result.Count == 0)
             {
                 // In this case, the enumeration worked, we found one or more devices, but nothing matched the APK's architecture; fail out.
                 logger.LogError($"No devices with {propertyName} '{apkRequiredProperty}' was found among attached devices.");
             }
+
             return result;
         }
 

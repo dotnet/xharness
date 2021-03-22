@@ -727,7 +727,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
         private Action<string> EnsureLogger(Action<string> log) => log ?? OnInfo;
 
+#pragma warning disable IDE0060 // Remove unused parameter
         private void LogTestMethodDetails(IMethodInfo method, Action<string> log = null, StringBuilder sb = null)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             // log = EnsureLogger(log);
             // log ($"   Test method name: {method.Type.Name}.{method.Name}");

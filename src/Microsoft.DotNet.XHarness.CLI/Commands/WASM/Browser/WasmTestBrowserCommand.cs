@@ -207,8 +207,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     driverService.EnableVerboseLogging = true;
                     driverService.LogPath = Path.Combine(_arguments.OutputDirectory, $"{driverName}-{retry_num}.log");
 
-                    if (!(Activator.CreateInstance(typeof(TDriver), driverService, options, _arguments.Timeout) is TDriver driver))
+                    if (Activator.CreateInstance(typeof(TDriver), driverService, options, _arguments.Timeout) is not TDriver driver)
+                    {
                         throw new ArgumentException($"Failed to create instance of {typeof(TDriver)}");
+                    }
 
                     return (driverService, driver);
                 }

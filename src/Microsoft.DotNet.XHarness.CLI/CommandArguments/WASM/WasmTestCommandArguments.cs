@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public override void Validate()
         {
             base.Validate();
-            Engine = Engine;
+            _ = Engine;
         }
     }
 }

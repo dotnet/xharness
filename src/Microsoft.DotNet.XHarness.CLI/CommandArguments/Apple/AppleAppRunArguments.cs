@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             {
                 var testTargets = new List<TestTargetOs>();
 
-                foreach (var targetName in value ?? throw new ArgumentNullException("Targets cannot be empty"))
+                foreach (var targetName in value ?? throw new ArgumentException("Targets cannot be empty"))
                 {
                     try
                     {

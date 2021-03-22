@@ -33,8 +33,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         public override void Validate()
         {
             // Validate this field
-            PackageName = PackageName;
-            DeviceId = DeviceId;
+            _ = PackageName;
         }
     }
 }

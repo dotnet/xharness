@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 JavaScriptEngine.V8 => "v8",
                 JavaScriptEngine.JavaScriptCore => "jsc",
                 JavaScriptEngine.SpiderMonkey => "sm",
-                _ => throw new ArgumentException()
+                _ => throw new ArgumentException("Engine not set")
             };
 
             var engineArgs = new List<string>();

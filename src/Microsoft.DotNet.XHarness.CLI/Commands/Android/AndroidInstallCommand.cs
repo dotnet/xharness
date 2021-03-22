@@ -84,7 +84,7 @@ Arguments:
                     // otherwise - from test command - apkRequiredArchitecture was set by user or .apk architecture
                     deviceId ??= apkRequiredArchitecture != null
                         ? runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture")
-                        : throw new ArgumentNullException("Required architecture not specified");
+                        : throw new ArgumentException("Required architecture not specified");
 
                     if (deviceId == null)
                     {

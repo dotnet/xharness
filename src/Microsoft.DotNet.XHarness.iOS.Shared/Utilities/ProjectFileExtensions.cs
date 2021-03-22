@@ -1212,7 +1212,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             {
                 "MtouchExtraArgs",
             };
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
             Func<string, string>? convert = null;
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
             convert = (input) =>
             {
                 if (input.IndexOf(';') >= 0)
