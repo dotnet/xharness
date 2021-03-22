@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
     internal class AndroidUninstallCommand : XHarnessCommand
     {
-        private readonly AndroidUninstallCommandArguments _arguments = new AndroidUninstallCommandArguments();
+        private readonly AndroidUninstallCommandArguments _arguments = new();
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 

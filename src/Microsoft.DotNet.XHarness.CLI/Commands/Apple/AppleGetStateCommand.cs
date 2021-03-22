@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         private const string SimulatorPrefix = "com.apple.CoreSimulator.SimDeviceType.";
 
-        private readonly AppleGetStateCommandArguments _arguments = new AppleGetStateCommandArguments();
+        private readonly AppleGetStateCommandArguments _arguments = new();
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 

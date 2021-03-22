@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
         protected override string CommandDescription => CommandHelp;
 
-        private readonly InstallCommandArguments _arguments = new InstallCommandArguments();
+        private readonly InstallCommandArguments _arguments = new();
         protected override SimulatorsCommandArguments SimulatorsArguments => _arguments;
 
         public InstallCommand() : base(CommandName, CommandHelp)

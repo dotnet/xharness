@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// </summary>
         public string? DeviceArchitecture { get; set; }
 
-        protected override OptionSet GetTestCommandOptions() => new OptionSet
+        protected override OptionSet GetTestCommandOptions() => new()
         {
             { "device-arch=", "If specified, forces running on a device with given architecture (x86, x86_64, arm64-v8a or armeabi-v7a). Otherwise inferred from supplied APK",
                 v => DeviceArchitecture = v

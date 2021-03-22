@@ -25,7 +25,8 @@ namespace Microsoft.DotNet.XHarness.Android
         private readonly string _absoluteAdbExePath;
         private readonly ILogger _log;
         private readonly IAdbProcessManager _processManager;
-        private readonly Dictionary<string, string> CommandList = new Dictionary<string, string>{
+        private readonly Dictionary<string, string> CommandList = new()
+        {
         { "architecture", "shell getprop ro.product.cpu.abi"},
         { "app", "shell pm list packages -3"} }; 
 

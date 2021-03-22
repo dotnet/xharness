@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
     {
         public IEnumerable<string> Simulators { get; } = new List<string>();
 
-        protected override OptionSet GetAdditionalOptions() => new OptionSet
+        protected override OptionSet GetAdditionalOptions() => new()
         {
             { "s|simulator=", "ID of the Simulator to look for. Repeat multiple times to define more", v => ((IList<string>)Simulators).Add(v) },
         };

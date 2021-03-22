@@ -6,6 +6,7 @@
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>CS8002;</NoWarn>
     <RootNamespace>Microsoft.DotNet.XHarness.TestRunners.Common</RootNamespace>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

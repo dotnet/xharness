@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         // Messages from selenium prepend the url, and location where the message originated
         // Eg. `foo` becomes `http://localhost:8000/xyz.js 0:12 "foo"
-        static readonly Regex s_consoleLogRegex = new Regex(@"^\s*[a-z]*://[^\s]+\s+\d+:\d+\s+""(.*)""\s*$", RegexOptions.Compiled);
+        static readonly Regex s_consoleLogRegex = new(@"^\s*[a-z]*://[^\s]+\s+\d+:\d+\s+""(.*)""\s*$", RegexOptions.Compiled);
 
         public WasmBrowserTestRunner(WasmTestBrowserCommandArguments arguments, IEnumerable<string> passThroughArguments,
                                             WasmTestMessagesProcessor messagesProcessor, ILogger logger)

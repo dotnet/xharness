@@ -9,8 +9,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
     internal abstract class TestCommandArguments : AppRunCommandArguments
     {
-        private readonly List<string> _singleMethodFilters = new List<string>();
-        private readonly List<string> _classMethodFilters = new List<string>();
+        private readonly List<string> _singleMethodFilters = new();
+        private readonly List<string> _classMethodFilters = new();
 
         /// <summary>
         /// Methods to be included in the test run while all others are ignored.

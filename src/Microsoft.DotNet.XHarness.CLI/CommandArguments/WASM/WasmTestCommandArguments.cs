@@ -43,7 +43,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 
         public int ExpectedExitCode { get; set; } = (int)Common.CLI.ExitCode.SUCCESS;
 
-        protected override OptionSet GetTestCommandOptions() => new OptionSet{
+        protected override OptionSet GetTestCommandOptions() => new()
+        {
             { "engine=|e=", "Specifies the JavaScript engine to be used",
                 v => Engine = ParseArgument<JavaScriptEngine>("engine", v)
             },

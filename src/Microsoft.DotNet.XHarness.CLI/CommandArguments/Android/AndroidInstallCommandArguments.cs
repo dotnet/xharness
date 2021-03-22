@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// </summary>
         public string? DeviceArchitecture { get; set; }
 
-        protected override OptionSet GetTestCommandOptions() => new OptionSet
+        protected override OptionSet GetTestCommandOptions() => new()
         {
             { "package-name=|p=", "Package name contained within the supplied APK",
                 v => PackageName = v

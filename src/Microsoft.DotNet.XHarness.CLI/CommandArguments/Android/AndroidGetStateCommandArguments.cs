@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
     internal class AndroidGetStateCommandArguments : GetStateCommandArguments
     {
-        protected override OptionSet GetCommandOptions() => new OptionSet();
+        protected override OptionSet GetCommandOptions() => new();
 
         public override void Validate()
         {

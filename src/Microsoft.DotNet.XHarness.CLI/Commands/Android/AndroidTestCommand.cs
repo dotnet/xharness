@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
     {
         private const string ReturnCodeVariableName = "return-code";
 
-        private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
+        private readonly AndroidTestCommandArguments _arguments = new();
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 

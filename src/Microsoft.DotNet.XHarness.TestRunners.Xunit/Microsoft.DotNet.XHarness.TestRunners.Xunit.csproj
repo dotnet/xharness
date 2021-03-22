@@ -5,6 +5,7 @@
     <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
     <RootNamespace>Microsoft.DotNet.XHarness.TestRunners.Xunit</RootNamespace>
     <Nullable>disable</Nullable>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

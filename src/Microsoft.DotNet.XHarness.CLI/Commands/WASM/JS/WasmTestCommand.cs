@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
     {
         private const string CommandHelp = "Executes tests on WASM using a selected JavaScript engine";
 
-        private readonly WasmTestCommandArguments _arguments = new WasmTestCommandArguments();
+        private readonly WasmTestCommandArguments _arguments = new();
 
         protected override XHarnessCommandArguments Arguments => _arguments;
         protected override string CommandUsage { get; } = "wasm test [OPTIONS] -- [ENGINE OPTIONS]";

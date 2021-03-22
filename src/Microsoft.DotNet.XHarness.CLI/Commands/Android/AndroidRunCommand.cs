@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
         private const string ReturnCodeVariableName = "return-code";
         private const string ProcessCrashedShortMessage = "Process crashed";
 
-        private readonly AndroidRunCommandArguments _arguments = new AndroidRunCommandArguments();
+        private readonly AndroidRunCommandArguments _arguments = new();
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 

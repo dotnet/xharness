@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public int? MaxParallelThreads { get; set; }
 
         private XElement _assembliesElement;
-        private XUnitFiltersCollection _filters = new XUnitFiltersCollection();
+        private XUnitFiltersCollection _filters = new();
 
         public AppDomainSupport AppDomainSupport { get; set; } = AppDomainSupport.Denied;
         protected override string ResultsFileName { get; set; } = "TestResults.xUnit.xml";

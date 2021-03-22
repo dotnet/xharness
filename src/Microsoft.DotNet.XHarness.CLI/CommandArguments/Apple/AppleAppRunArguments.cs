@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// Environmental variables set when executing the application.
         /// </summary>
         public IReadOnlyCollection<(string, string)> EnvironmentalVariables => _environmentalVariables;
-        private readonly List<(string, string)> _environmentalVariables = new List<(string, string)>();
+        private readonly List<(string, string)> _environmentalVariables = new();
 
         public override IReadOnlyCollection<string> Targets
         {

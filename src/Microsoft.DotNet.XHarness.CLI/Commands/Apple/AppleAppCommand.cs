@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
     {
         protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
 
-        protected readonly ErrorKnowledgeBase ErrorKnowledgeBase = new ErrorKnowledgeBase();
+        protected readonly ErrorKnowledgeBase ErrorKnowledgeBase = new();
         protected override XHarnessCommandArguments Arguments => iOSRunArguments;
         protected abstract AppleAppRunArguments iOSRunArguments { get; }
 

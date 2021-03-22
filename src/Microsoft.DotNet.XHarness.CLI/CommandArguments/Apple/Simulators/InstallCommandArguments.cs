@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
         public IEnumerable<string> Simulators { get; } = new List<string>();
         public bool Force { get; private set; } = false;
 
-        protected override OptionSet GetAdditionalOptions() => new OptionSet
+        protected override OptionSet GetAdditionalOptions() => new()
         {
             { "s|simulator=", "ID of the Simulator to install. Repeat multiple times to define more", v => ((IList<string>)Simulators).Add(v) },
             { "force", "Install again even if already installed", v => Force = true },

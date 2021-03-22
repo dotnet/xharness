@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
     {
         private const string CommandHelp = "Executes tests on WASM using a browser";
 
-        private readonly WasmTestBrowserCommandArguments _arguments = new WasmTestBrowserCommandArguments();
+        private readonly WasmTestBrowserCommandArguments _arguments = new();
 
         protected TestCommandArguments TestArguments => _arguments;
         protected override string CommandUsage { get; } = "wasm test-browser [OPTIONS] -- [BROWSER OPTIONS]";

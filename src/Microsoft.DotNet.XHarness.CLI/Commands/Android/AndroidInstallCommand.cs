@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
     internal class AndroidInstallCommand : XHarnessCommand
     {
 
-        private readonly AndroidInstallCommandArguments _arguments = new AndroidInstallCommandArguments();
+        private readonly AndroidInstallCommandArguments _arguments = new();
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 
