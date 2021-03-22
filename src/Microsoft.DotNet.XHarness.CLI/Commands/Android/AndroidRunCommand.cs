@@ -90,7 +90,7 @@ Arguments:
                 runner));
         }
 
-        public ExitCode InvokeHelper(
+        public static ExitCode InvokeHelper(
             ILogger logger,
             string apkPackageName,
             string? instrumentationName,
@@ -216,7 +216,7 @@ Arguments:
             return ExitCode.GENERAL_FAILURE;
         }
 
-        private (Dictionary<string, string> values, int exitCode) ParseInstrumentationOutputs(ILogger logger, string stdOut)
+        private static (Dictionary<string, string> values, int exitCode) ParseInstrumentationOutputs(ILogger logger, string stdOut)
         {
             // If ADB.exe's output changes (which we control when we take updates in this repo), we'll need to fix this.
             string resultPrefix = "INSTRUMENTATION_RESULT:";

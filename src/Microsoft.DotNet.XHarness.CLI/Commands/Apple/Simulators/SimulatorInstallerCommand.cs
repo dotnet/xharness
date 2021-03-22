@@ -128,7 +128,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
                 dict.Add(IDENTIFIER_PLACEHOLDER, identifier);
 
-                double.TryParse(fileSizeNode?.InnerText, out var parsedFileSize);
+                _  = double.TryParse(fileSizeNode?.InnerText, out var parsedFileSize);
 
                 simulators.Add(new Simulator(
                     name: Replace(nameNode.InnerText, dict),

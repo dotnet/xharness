@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 {
     internal class ThreadlessXunitTestRunner
     {
-        public async Task<int> Run(string assemblyFileName, bool printXml, XunitFilters filters)
+        public static async Task<int> Run(string assemblyFileName, bool printXml, XunitFilters filters)
         {
             var configuration = new TestAssemblyConfiguration() { ShadowCopy = false, ParallelizeAssembly = false, ParallelizeTestCollections = false, MaxParallelThreads = 1, PreEnumerateTheories = false };
             var discoveryOptions = TestFrameworkOptions.ForDiscovery(configuration);

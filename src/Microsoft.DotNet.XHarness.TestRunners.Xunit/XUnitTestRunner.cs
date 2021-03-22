@@ -728,7 +728,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         private Action<string> EnsureLogger(Action<string> log) => log ?? OnInfo;
 
 #pragma warning disable IDE0060 // Remove unused parameter
-        private void LogTestMethodDetails(IMethodInfo method, Action<string> log = null, StringBuilder sb = null)
+        private static void LogTestMethodDetails(IMethodInfo method, Action<string> log = null, StringBuilder sb = null)
 #pragma warning restore IDE0060 // Remove unused parameter
         {
             // log = EnsureLogger(log);
@@ -806,7 +806,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             sb?.AppendLine();
         }
 
-        private string GetAssemblyInfo(ITestAssembly assembly)
+        private static string GetAssemblyInfo(ITestAssembly assembly)
         {
             string name = assembly?.Assembly?.Name?.Trim();
             if (string.IsNullOrEmpty(name))

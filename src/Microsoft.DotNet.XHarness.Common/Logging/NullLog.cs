@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
         {
         }
 
-        public void WriteLine(StringBuilder value)
+        public static void WriteLine(StringBuilder value)
         {
         }
 

@@ -72,12 +72,9 @@ Arguments:
             string apkPackageName = _arguments.PackageName;
             string appPackagePath = _arguments.AppPackagePath;
 
-            var installer = new AndroidInstallCommand();
-            var testRunner = new AndroidRunCommand();
-
             try
             {
-                installer.InvokeHelper(
+                AndroidInstallCommand.InvokeHelper(
                     logger: logger,
                     apkPackageName: apkPackageName,
                     appPackagePath: appPackagePath,
@@ -85,7 +82,7 @@ Arguments:
                     deviceId: null,
                     runner: runner);
 
-                testRunner.InvokeHelper(
+                AndroidRunCommand.InvokeHelper(
                     logger: logger,
                     apkPackageName: apkPackageName,
                     instrumentationName: _arguments.InstrumentationName,

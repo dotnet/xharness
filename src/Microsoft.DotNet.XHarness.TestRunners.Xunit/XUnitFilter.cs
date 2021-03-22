@@ -244,7 +244,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             return excluded;
         }
 
-        private bool ReportFilteredAssembly(TestAssemblyInfo assemblyInfo, bool excluded, Action<string>? log = null)
+        private static bool ReportFilteredAssembly(TestAssemblyInfo assemblyInfo, bool excluded, Action<string>? log = null)
         {
             if (log == null)
             {

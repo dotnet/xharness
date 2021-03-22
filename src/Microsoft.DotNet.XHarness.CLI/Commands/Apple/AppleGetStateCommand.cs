@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 
-        private async Task AsJson(SystemInfo info)
+        private static async Task AsJson(SystemInfo info)
         {
             var options = new JsonSerializerOptions
             {

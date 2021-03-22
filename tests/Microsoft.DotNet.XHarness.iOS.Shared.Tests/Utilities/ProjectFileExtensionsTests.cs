@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities
 			return doc;
 		}
 
-        private XmlDocument GetMSBuildProject(string snippet)
+        private static XmlDocument GetMSBuildProject(string snippet)
 		{
 			return CreateDoc($@"<?xml version=""1.0"" encoding=""utf-8""?>
 <Project DefaultTargets=""Build"" ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">

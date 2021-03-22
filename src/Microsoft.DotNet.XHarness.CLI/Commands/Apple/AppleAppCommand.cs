@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected static bool IsLldbEnabled() => File.Exists(s_mlaunchLldbConfigFile);
 
-        protected void NotifyUserLldbCommand(ILogger logger, string line)
+        protected static void NotifyUserLldbCommand(ILogger logger, string line)
         {
             if (!line.Contains("mtouch-lldb-prep-cmds"))
             {
