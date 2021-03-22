@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.Android
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
 
             // We need to find ADB.exe somewhere
-            string environmentPath = Environment.GetEnvironmentVariable(AdbEnvironmentVariableName);
+            string? environmentPath = Environment.GetEnvironmentVariable(AdbEnvironmentVariableName);
             if (!string.IsNullOrEmpty(environmentPath))
             {
                 _log.LogDebug($"Using {AdbEnvironmentVariableName} environment variable ({environmentPath}) for ADB path.");
@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             else
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath));
+                Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath) ?? throw new ArgumentNullException(nameof(outputFilePath)));
                 File.WriteAllText(outputFilePath, result.StandardOutput);
                 _log.LogInformation($"Wrote current ADB log to {outputFilePath}");
             }
@@ -330,7 +330,7 @@ namespace Microsoft.DotNet.XHarness.Android
                         }
                         else
                         {
-                            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
+                            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath) ?? throw new ArgumentNullException(nameof(destinationPath)));
                             File.Move(filePath, destinationPath);
                             copiedFiles.Add(destinationPath);
                         }

@@ -127,6 +127,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                     {
                         return log(Exclude);
                     }
+
+                    return log(!Exclude);
                 }
 
                 return values.Any(value => value.Equals(SelectorValue, StringComparison.InvariantCultureIgnoreCase)) ?

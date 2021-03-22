@@ -10,6 +10,7 @@ using System.Xml;
 using Microsoft.DotNet.XHarness.Common;
 using NUnit.Framework.Internal;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 {
     /// <summary>
@@ -120,6 +121,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 
         private void WriteResultElement(IResultSummary result)
         {
+            if (_xmlWriter == null) // should never happen, would mean a programmer's error
+            {
+                throw new InvalidOperationException("Null writer");
+            }
+
             // much simpler than in other writers, we just need to get the child nodes of each of the test-run and write
             // them. NUnit3 already gave us the xml we need to use
             foreach (var testRun in result)
@@ -127,12 +133,12 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
                 for (var i = 0; i < testRun.Result.ChildNodes.Count; i++)
                 {
                     var node = testRun.Result.ChildNodes[i];
-                    if (node.Name == "environment")
+                    if (node?.Name == "environment")
                     {
                         continue;
                     }
 
-                    node.WriteTo(_xmlWriter);
+                    node?.WriteTo(_xmlWriter);
                 }
             }
         }

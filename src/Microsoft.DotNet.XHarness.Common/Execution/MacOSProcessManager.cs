@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                     try
                     {
                         doc.Load(plistPath);
-                        _xcode_version = Version.Parse(doc.SelectSingleNode("//key[text() = 'CFBundleShortVersionString']/following-sibling::string").InnerText);
+                        _xcode_version = Version.Parse(doc.SelectSingleNode("//key[text() = 'CFBundleShortVersionString']/following-sibling::string")?.InnerText ?? throw new Exception("Failed to find the CFBundleShortVersionString property"));
                     }
                     catch (IOException)
                     {

@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <Nullable>enable</Nullable>
     <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>CS8002;</NoWarn>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

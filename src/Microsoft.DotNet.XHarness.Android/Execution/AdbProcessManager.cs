@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
             {
                 CreateNoWindow = true,
                 UseShellExecute = false,
-                WorkingDirectory = Path.GetDirectoryName(adbExePath),
+                WorkingDirectory = Path.GetDirectoryName(adbExePath) ?? throw new ArgumentNullException(nameof(adbExePath)),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 FileName = adbExePath,
