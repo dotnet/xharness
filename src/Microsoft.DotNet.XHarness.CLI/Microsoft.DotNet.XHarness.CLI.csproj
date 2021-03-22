@@ -2,12 +2,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>xharness</ToolCommandName>
     <RollForward>Major</RollForward>
+    <LangVersion>9.0</LangVersion>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>CS8002;</NoWarn>
 
