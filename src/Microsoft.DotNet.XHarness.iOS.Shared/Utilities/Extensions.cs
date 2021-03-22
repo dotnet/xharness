@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             TestTarget.Simulator_tvOS => "tvos-simulator",
             TestTarget.Simulator_watchOS => "watchos-simulator",
             TestTarget.MacCatalyst => "maccatalyst",
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(target))
         };
 
         public static string AsString(this TestTargetOs targetOs) =>
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             "maccatalyst" => TestTarget.MacCatalyst,
             null => TestTarget.None,
             "" => TestTarget.None,
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(target))
         };
 
         public static TestTargetOs ParseAsAppRunnerTargetOs(this string targetName)
@@ -67,14 +67,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             "com.apple.widget-extension" => Extension.TodayExtension,
             "com.apple.watchkit" => Extension.WatchKit2,
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(identifier))
         };
 
         public static string AsNSExtensionPointIdentifier(this Extension extension) => extension switch
         {
             Extension.TodayExtension => "com.apple.widget-extension",
             Extension.WatchKit2 => "com.apple.watchkit",
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(extension))
         };
 
         public static void DoNotAwait(this Task task)

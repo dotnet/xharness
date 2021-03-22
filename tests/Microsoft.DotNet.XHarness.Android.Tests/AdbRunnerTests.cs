@@ -48,7 +48,11 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
                It.IsAny<TimeSpan>())).Returns((string p, string a, TimeSpan t) => CallFakeProcessManager(p, a, t));
         }
 
-        public void Dispose() => Directory.Delete(s_scratchAndOutputPath, true);
+        public void Dispose()
+        {
+            Directory.Delete(s_scratchAndOutputPath, true);
+            GC.SuppressFinalize(this);
+        }
 
         #region Tests
 

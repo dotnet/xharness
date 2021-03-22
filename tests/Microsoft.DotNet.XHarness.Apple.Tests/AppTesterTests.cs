@@ -138,7 +138,11 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             Directory.CreateDirectory(s_outputPath);
         }
 
-        public void Dispose() => Directory.Delete(s_outputPath, true);
+        public void Dispose()
+        {
+            Directory.Delete(s_outputPath, true);
+            GC.SuppressFinalize(this);
+        }
 
         [Theory]
         [InlineData(false)]

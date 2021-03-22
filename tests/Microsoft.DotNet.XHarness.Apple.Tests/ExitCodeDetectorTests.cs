@@ -152,6 +152,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             {
                 File.Delete(_tempFilename);
             }
+            GC.SuppressFinalize(this);
         }
 
         private static IFileBackedLog GetLogMock(string[] loglines)

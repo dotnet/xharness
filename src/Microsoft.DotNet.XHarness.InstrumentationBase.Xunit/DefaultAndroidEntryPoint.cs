@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit
         {
         }
 
-        private void ConfigureFilters(string? filter, Action<string, bool> filterMethod, bool isExcluded)
+        private static void ConfigureFilters(string? filter, Action<string, bool> filterMethod, bool isExcluded)
         {
             if (filter != null)
             {

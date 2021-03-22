@@ -1217,7 +1217,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 #pragma warning restore IDE0059 // Unnecessary assignment of a value
             convert = (input) =>
             {
-                if (input.IndexOf(';') >= 0)
+                if (input.Contains(';'))
                 {
                     var split = input.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
                     for (var i = 0; i < split.Length; i++)

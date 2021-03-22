@@ -187,6 +187,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         public override void Dispose()
         {
+            GC.SuppressFinalize(this);
         }
     }
 }

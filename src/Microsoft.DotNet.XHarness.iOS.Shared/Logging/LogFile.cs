@@ -86,6 +86,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             }
 
             _disposed = true;
+            GC.SuppressFinalize(this);
         }
     }
 }

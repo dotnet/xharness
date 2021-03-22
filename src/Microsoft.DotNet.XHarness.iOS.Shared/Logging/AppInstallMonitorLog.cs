@@ -55,6 +55,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         {
             _copyTo.Dispose();
             _cancellationSource.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         private void ResetTimer() => _cancellationSource.CancelAfter(TimeSpan.FromMinutes(1));
