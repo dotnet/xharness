@@ -11,19 +11,19 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 {
-    internal class FindCommand : SimulatorInstallerCommand
+    internal class FindCommand : SimulatorsCommand
     {
         private const string CommandName = "find";
         private const string CommandHelp = "Finds whether given simulators are installed and outputs list of missing ones (returns 0 when none missing)";
 
-        protected override string CommandUsage => CommandName + " [OPTIONS]";
+        protected override string CommandUsage => CommandName + " [OPTIONS] [SIMULATOR] [SIMULATOR] ..";
 
-        protected override string CommandDescription => CommandHelp;
+        protected override string CommandDescription => CommandHelp + Environment.NewLine + Environment.NewLine + SimulatorHelpString;
 
         private readonly FindCommandArguments _arguments = new FindCommandArguments();
         protected override SimulatorsCommandArguments SimulatorsArguments => _arguments;
 
-        public FindCommand() : base(CommandName, CommandHelp)
+        public FindCommand() : base(CommandName, true, CommandHelp)
         {
         }
 
@@ -31,10 +31,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
         {
             Logger = logger;
 
+            var searchedSimulators = ParseSimulatorIds();
+
             var simulators = await GetAvailableSimulators();
             var exitCode = ExitCode.SUCCESS;
 
-            var unknownSimulators = _arguments.Simulators.Where(identifier =>
+            var unknownSimulators = searchedSimulators.Where(identifier =>
                 !simulators.Any(sim => sim.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)));
 
             if (unknownSimulators.Any())
@@ -60,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
             {
                 var installedVersion = await IsInstalled(simulator.Identifier);
 
-                if (installedVersion == null && _arguments.Simulators.Any(identifier => simulator.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
+                if (installedVersion == null && searchedSimulators.Any(identifier => simulator.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     if (_arguments.Verbosity == LogLevel.Debug)
                     {
