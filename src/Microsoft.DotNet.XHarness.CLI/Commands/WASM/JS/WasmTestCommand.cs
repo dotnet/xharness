@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
@@ -31,6 +32,26 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         {
         }
 
+        private static string FindEngineInPath(string engineBinary)
+        {
+            if (File.Exists (engineBinary) || Path.IsPathRooted(engineBinary))
+                return engineBinary;
+
+            var path = Environment.GetEnvironmentVariable("PATH");
+
+            if (path == null)
+                return engineBinary;
+
+            foreach (var folder in path.Split(Path.PathSeparator))
+            {
+                var fullPath = Path.Combine(folder, engineBinary);
+                if (File.Exists(fullPath))
+                    return fullPath;
+            }
+
+            return engineBinary;
+        }
+
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
             var processManager = ProcessManagerFactory.CreateProcessManager();
@@ -42,6 +63,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 JavaScriptEngine.SpiderMonkey => "sm",
                 _ => throw new ArgumentException()
             };
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                engineBinary = FindEngineInPath(engineBinary + ".cmd");
 
             var engineArgs = new List<string>();
 
