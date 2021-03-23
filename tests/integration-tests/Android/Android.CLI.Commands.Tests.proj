@@ -29,15 +29,51 @@
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
   </PropertyGroup>
 
+  <!-- For non-ci local runs -->
+  <PropertyGroup Condition=" '$(AGENT_JOBNAME)' == '' ">
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
+    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-dev</MicrosoftDotNetXHarnessCLIVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <XHarnessNupkgPath>$(ArtifactsShippingPackagesDir)/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
+  </PropertyGroup>
+
   <!-- Required: Configuration that is already needed for the Helix SDK -->
-  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+  <ItemGroup>
     <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
   </ItemGroup>
 
-  <ItemGroup>
-    <HelixWorkItem Include="Run Android tests">
-      <Command Condition="$(IsPosixShell) != ''">dotnet exec $XHARNESS_CLI_PATH android device</Command>
-      <Command Condition="$(IsPosixShell) == ''">dotnet exec %XHARNESS_CLI_PATH% android device</Command>
-    </HelixWorkItem>
-  </ItemGroup>
+  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <IsExternal>true</IsExternal>
+    <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
+    <Creator Condition=" '$(Creator)' == '' ">anon</Creator>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <XHarnessX86TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/x86/System.Numerics.Vectors.Tests-x86.apk</XHarnessX86TestApkUrl>
+  </PropertyGroup>
+
+  <!-- Useless stuff to make Arcade SDK happy -->
+  <PropertyGroup>
+    <Language>msbuild</Language>
+  </PropertyGroup>
+
+  <Target Name="Build" BeforeTargets="CoreTest">
+
+    <DownloadFile SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)apk/x86" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
+    </DownloadFile>
+
+    <Message Text="Downloaded @(DownloadedApkFile) for XHarness Test purposes" Importance="High" />
+
+    <ItemGroup>
+      <HelixWorkItem Include="@(DownloadedApkFile)">
+        <Command>dotnet exec $XHARNESS_CLI_PATH android install --package-name="net.dot.System.Numerics.Vectors.Tests" --app="$HELIX_WORKITEM_PAYLOAD/apk/x86/System.Numerics.Vectors.Tests-x86.apk"</Command>
+        <PayloadArchive>@(DownloadedApkFile)</PayloadArchive>
+      </HelixWorkItem>
+    </ItemGroup>
+  </Target>
+
+  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
 </Project>
