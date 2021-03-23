@@ -194,6 +194,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
                 string simulatorName = target.Platform switch
                 {
                     TestTarget.Simulator_iOS => "iPhone",
+                    TestTarget.Simulator_iOS32 => "iPhone",
+                    TestTarget.Simulator_iOS64 => "iPhone",
                     TestTarget.Simulator_tvOS => "AppleTV",
                     TestTarget.Simulator_watchOS => "Watch",
                     _ => throw new ArgumentException($"Failed to parse simulator '{argument}'. " +
