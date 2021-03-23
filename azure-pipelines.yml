@@ -215,6 +215,7 @@ stages:
               --prepareMachine
               --ci
               --restore
+              --test
               --projects $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.CLI.Commands.Tests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Android.CLI.Commands.Tests.binlog
               /p:RestoreUsingNuGetTargets=false

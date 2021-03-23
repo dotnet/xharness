@@ -18,9 +18,6 @@
     <!-- Required: Version of XHarness CLI to use -->
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
 
-    <!-- Required: Version of XHarness CLI to use. Check the NuGet feed for current version: https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&package=Microsoft.DotNet.XHarness.CLI&protocolType=NuGet -->
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.20322.1</MicrosoftDotNetXHarnessCLIVersion>
-
     <!-- Optional: Properties that are also valid for the Arcade Helix SDK (some might be needed for CI runs only) -->
     <HelixType>test/product/</HelixType>
     <HelixBaseUri>https://helix.int-dot.net</HelixBaseUri>
@@ -51,7 +48,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <XHarnessX86TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/x86/System.Numerics.Vectors.Tests-x86.apk</XHarnessX86TestApkUrl>
+    <XHarnessX86TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/x86/System.Numerics.Vectors.Tests-x86.zip</XHarnessX86TestApkUrl>
   </PropertyGroup>
 
   <!-- Useless stuff to make Arcade SDK happy -->
@@ -59,18 +56,22 @@
     <Language>msbuild</Language>
   </PropertyGroup>
 
-  <Target Name="Build" BeforeTargets="CoreTest">
+  <Target Name="TestAndroid" BeforeTargets="CoreTest">
 
-    <DownloadFile SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)apk/x86" SkipUnchangedFiles="True" Retries="5">
+    <DownloadFile SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)apk" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
 
     <Message Text="Downloaded @(DownloadedApkFile) for XHarness Test purposes" Importance="High" />
 
     <ItemGroup>
-      <HelixWorkItem Include="@(DownloadedApkFile)">
-        <Command>dotnet exec $XHARNESS_CLI_PATH android install --package-name="net.dot.System.Numerics.Vectors.Tests" --app="$HELIX_WORKITEM_PAYLOAD/apk/x86/System.Numerics.Vectors.Tests-x86.apk"</Command>
-        <PayloadArchive>@(DownloadedApkFile)</PayloadArchive>
+      <HelixWorkItem Include="System.Numerics.Vectors.Tests">
+        <Command>
+          deviceId=`dotnet exec $XHARNESS_CLI_PATH android device --output-directory=out | head -2 | tail -1`;
+          dotnet exec $XHARNESS_CLI_PATH android install --device-id="$deviceId" --package-name="net.dot.System.Numerics.Vectors.Tests" --app="$HELIX_WORKITEM_PAYLOAD/System.Numerics.Vectors.Tests-x86.apk";
+          dotnet exec $XHARNESS_CLI_PATH android run --device-id="$deviceId" --output-directory=out --package-name="net.dot.System.Numerics.Vectors.Tests";
+          dotnet exec $XHARNESS_CLI_PATH android uninstall --device-id="$deviceId" --package-name="net.dot.System.Numerics.Vectors.Tests"
+        </Command>
       </HelixWorkItem>
     </ItemGroup>
   </Target>
