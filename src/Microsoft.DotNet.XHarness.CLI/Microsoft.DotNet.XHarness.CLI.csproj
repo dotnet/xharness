@@ -47,7 +47,7 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
-  <Target Name="DownloadAndroidSdks" BeforeTargets="Build">
+  <Target Name="DownloadAndroidSdks" BeforeTargets="Build" Condition="'$(TargetFramework)' == 'net6.0'">
     <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="True" />
     <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />
     <DownloadFile SourceUrl="$(MacOsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(MacOsAndroidSdkFileName)" SkipUnchangedFiles="True" />
@@ -76,7 +76,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="DownloadMlaunch" BeforeTargets="Build">
+  <Target Name="DownloadMlaunch" BeforeTargets="Build" Condition="'$(TargetFramework)' == 'net6.0'">
     <PropertyGroup>
       <RemoveSymbols></RemoveSymbols>
       <RemoveSymbols Condition=" '$(Configuration)|$(OS)' == 'Release|Windows_NT' ">-RemoveSymbols</RemoveSymbols>
