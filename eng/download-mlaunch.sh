@@ -15,36 +15,39 @@ set -e
 source="${BASH_SOURCE[0]}"
 # resolve $source until the file is no longer a symlink
 while [[ -h "$source" ]]; do
-  scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
+  script_root="$( cd -P "$( dirname "$source" )" && pwd )"
   source="$(readlink "$source")"
   # if $source was a relative symlink, we need to resolve it relative to the path where the
   # symlink file was located
-  [[ $source != /* ]] && source="$scriptroot/$source"
+  [[ $source != /* ]] && source="$script_root/$source"
 done
-scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
-. "$scriptroot/common/tools.sh"
+script_root="$( cd -P "$( dirname "$source" )" && pwd )"
+
+# shellcheck source=./common/tools.sh
+source "$script_root/common/tools.sh"
 
 copy_mlaunch () {
   # Copy mlaunch to the target folder
-  cp -Rv $1 $2
+  cp -Rv "$1" "$2"
 
   # Clean what we don't need
   rm -rf "$2/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch.dSYM"
 
   if [ "$3" = true ]; then
     echo "Removing debug symbols"
-    rm -v $2/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.pdb
-    rm -v $2/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.mdb
+    rm -v "$2"/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.pdb
+    rm -v "$2"/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.mdb
   fi
 }
 
 commit=''
+target=''
 target_dir="$artifacts_dir/mlaunch"
 remove_symbols=false
 
 while (($# > 0)); do
-  lowerI="$(echo $1 | awk '{print tolower($0)}')"
+  lowerI="$(echo "$1" | awk '{print tolower($0)}')"
   case $lowerI in
     --commit)
       shift
@@ -54,6 +57,11 @@ while (($# > 0)); do
     --target-dir)
       shift
       target_dir=$1
+      ;;
+
+    --target)
+      shift
+      target=$1
       ;;
 
     --remove-symbols)
@@ -72,6 +80,11 @@ if [[ -z $commit ]]; then
   exit 1
 fi
 
+if [[ -z $target ]]; then
+  echo "Please specify target (e.g. net6.0)" 1>&2
+  exit 1
+fi
+
 echo "Getting mlaunch revision $commit into $target_dir"
 
 tag_file="$target_dir/$commit.tag"
@@ -81,7 +94,7 @@ if [ -f "$tag_file" ]; then
   exit 0
 fi
 
-binaries_repo="$temp_dir/macios-binaries"
+binaries_repo="$temp_dir/$target/macios-binaries"
 tag_file_in_repo="$binaries_repo/$commit.tag"
 
 # Check if the repo was already checked out

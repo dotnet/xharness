@@ -47,7 +47,7 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
-  <Target Name="DownloadAndroidSdks" BeforeTargets="Build" Condition="'$(TargetFramework)' == 'net6.0'">
+  <Target Name="DownloadAndroidSdks" BeforeTargets="Build" Condition=" '$(TargetFramework)' != '' ">
     <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="True" />
     <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />
     <DownloadFile SourceUrl="$(MacOsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(MacOsAndroidSdkFileName)" SkipUnchangedFiles="True" />
@@ -76,16 +76,16 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="DownloadMlaunch" BeforeTargets="Build" Condition="'$(TargetFramework)' == 'net6.0'">
+  <Target Name="DownloadMlaunch" BeforeTargets="Build" Condition=" '$(TargetFramework)' != '' ">
     <PropertyGroup>
       <RemoveSymbols></RemoveSymbols>
       <RemoveSymbols Condition=" '$(Configuration)|$(OS)' == 'Release|Windows_NT' ">-RemoveSymbols</RemoveSymbols>
       <RemoveSymbols Condition=" '$(Configuration)' == 'Release' AND '$(OS)' != 'Windows_NT' ">--remove-symbols</RemoveSymbols>
     </PropertyGroup>
 
-    <Exec Condition=" '$(OS)' != 'Windows_NT' " Command="chmod 0755 ../../eng/download-mlaunch.sh &amp;&amp; ../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target-dir $(IntermediateOutputPath)mlaunch $(RemoveSymbols)" />
+    <Exec Condition=" '$(OS)' != 'Windows_NT' " Command="chmod 0755 ../../eng/download-mlaunch.sh &amp;&amp; ../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target $(TargetFramework) --target-dir $(IntermediateOutputPath)mlaunch $(RemoveSymbols)" />
 
-    <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' $(RemoveSymbols) } &quot;" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -Target $(TargetFramework) -TargetDir '$(IntermediateOutputPath)mlaunch' $(RemoveSymbols) } &quot;" />
 
     <ItemGroup>
       <Content Include="$(IntermediateOutputPath)/mlaunch/**/*.*">

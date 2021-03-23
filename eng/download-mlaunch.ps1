@@ -4,17 +4,21 @@
 
     Revision is cached in a temp dir and re-used for new builds.
 #>
-[CmdletBinding(PositionalBinding=$false)]
+[CmdletBinding(PositionalBinding = $false)]
 Param(
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$True)]
+    [Parameter(Mandatory = $True)]
     [string] $Commit,
 
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$True)]
+    [Parameter(Mandatory = $True)]
+    [string] $Target,
+
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory = $True)]
     [string] $TargetDir,
 
-    [switch] $RemoveSymbols=$False
+    [switch] $RemoveSymbols = $False
 )
 
 function Copy-Mlaunch([string] $sourceDir, [string] $targetDir, [bool] $removeSymbols) {
@@ -37,6 +41,8 @@ function Copy-Mlaunch([string] $sourceDir, [string] $targetDir, [bool] $removeSy
 
 New-Item -Path $TargetDir -ItemType Directory -ErrorAction SilentlyContinue
 
+$ErrorActionPreference = 'Stop'
+
 Write-Host "Getting mlaunch revision $commit into $TargetDir"
 
 $tagFile = Join-Path $TargetDir "$commit.tag"
@@ -46,7 +52,7 @@ if (Test-Path $tagFile) {
     ExitWithExitCode 0
 }
 
-$binariesRepo = Join-Path $TempDir "macios-binaries"
+$binariesRepo = Join-Path $TempDir $Target "macios-binaries"
 $tagFileInRepo = Join-Path $binariesRepo "$commit.tag"
 
 if (Test-Path $binariesRepo) {
