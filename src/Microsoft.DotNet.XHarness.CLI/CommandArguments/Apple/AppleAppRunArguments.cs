@@ -43,6 +43,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public IReadOnlyCollection<(string, string)> EnvironmentalVariables => _environmentalVariables;
         private readonly List<(string, string)> _environmentalVariables = new List<(string, string)>();
 
+        /// <summary>
+        /// Kills running simulator processes and removes any previous data before running.
+        /// </summary>
+        public bool ResetSimulator { get; set; }
+
         public override IReadOnlyCollection<string> Targets
         {
             get => RunTargets.Select(t => t.AsString()).ToArray();
@@ -94,8 +99,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
                     v => DeviceName = v
                 },
                 {
-                    "enable-lldb", "Allow to debug the launched application using lldb.",
+                    "enable-lldb", "Allow to debug the launched application using lldb",
                     v => EnableLldb = v != null
+                },
+                {
+                    "reset-simulator", "Shuts down the simulator and clears all data before running. Shuts it down after the run too",
+                    v => ResetSimulator = v != null
                 },
                 {
                     "set-env", "Environmental variable to set for the application in format key=value. Can be used multiple times",
