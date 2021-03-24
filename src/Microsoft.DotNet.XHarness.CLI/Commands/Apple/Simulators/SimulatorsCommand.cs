@@ -15,11 +15,13 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 {
-    internal abstract class SimulatorInstallerCommand : XHarnessCommand
+    internal abstract class SimulatorsCommand : XHarnessCommand
     {
         private const string MAJOR_VERSION_PLACEHOLDER = "DOWNLOADABLE_VERSION_MAJOR";
         private const string MINOR_VERSION_PLACEHOLDER = "DOWNLOADABLE_VERSION_MINOR";
@@ -27,6 +29,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
         private const string IDENTIFIER_PLACEHOLDER = "DOWNLOADABLE_IDENTIFIER";
 
         private const string SimulatorIndexUrl = "https://devimages-cdn.apple.com/downloads/xcode/simulators/index-{0}-{1}.dvtdownloadableindex";
+
+        protected const string SimulatorHelpString = 
+            "Accepts a list of simulator IDs to install. The ID can be a fully qualified string, " +
+            "e.g. com.apple.pkg.AppleTVSimulatorSDK14_2 or you can use the format in which you specify " +
+            "apple targets for XHarness tests (ios-simulator, tvos-simulator, watchos-simulator).";
 
         private readonly MacOSProcessManager _processManager = new MacOSProcessManager();
 
@@ -36,7 +43,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
         protected abstract SimulatorsCommandArguments SimulatorsArguments { get; }
 
-        protected SimulatorInstallerCommand(string name, string help) : base(name, false, help)
+        protected SimulatorsCommand(string name, bool allowsExtraArgs, string help) : base(name, allowsExtraArgs, help)
         {
         }
 
@@ -151,6 +158,57 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
             var lines = pkgInfo.Split('\n');
             var version = lines.First(v => v.StartsWith("version: ", StringComparison.Ordinal)).Substring("version: ".Length);
             return Version.Parse(version);
+        }
+
+        protected IEnumerable<string> ParseSimulatorIds()
+        {
+            var simulators = new List<string>();
+
+            foreach (string argument in ExtraArguments)
+            {
+                if (argument.StartsWith("com.apple.pkg."))
+                {
+                    simulators.Add(argument);
+                    continue;
+                }
+
+                TestTargetOs target;
+                try
+                {
+                    target = argument.ParseAsAppRunnerTargetOs();
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    throw new ArgumentException(
+                        $"Failed to parse simulator '{argument}'. Available values are ios-simulator, tvos-simulator and watchos-simulator." +
+                        Environment.NewLine + Environment.NewLine +
+                        "You need to also specify the version. Example: ios-simulator_13.4");
+                }
+
+                if (string.IsNullOrEmpty(target.OSVersion))
+                {
+                    throw new ArgumentException($"Failed to parse simulator '{argument}'. " +
+                        $"You need to specify the exact version. Example: ios-simulator_13.4");
+                }
+
+                string simulatorName = target.Platform switch
+                {
+                    TestTarget.Simulator_iOS => "iPhone",
+                    TestTarget.Simulator_iOS32 => "iPhone",
+                    TestTarget.Simulator_iOS64 => "iPhone",
+                    TestTarget.Simulator_tvOS => "AppleTV",
+                    TestTarget.Simulator_watchOS => "Watch",
+                    _ => throw new ArgumentException($"Failed to parse simulator '{argument}'. " +
+                        "Available values are ios-simulator, tvos-simulator and watchos-simulator." +
+                        Environment.NewLine + Environment.NewLine +
+                        "You need to also specify the version. Example: ios-simulator_13.4"),
+                };
+
+                // e.g. com.apple.pkg.AppleTVSimulatorSDK14_3
+                simulators.Add($"com.apple.pkg.{simulatorName}SimulatorSDK{target.OSVersion.Replace(".", "_")}");
+            }
+
+            return simulators;
         }
 
         private async Task<string?> GetSimulatorIndexXml()

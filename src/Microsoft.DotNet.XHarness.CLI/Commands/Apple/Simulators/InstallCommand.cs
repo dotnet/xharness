@@ -16,19 +16,19 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 {
-    internal class InstallCommand : SimulatorInstallerCommand
+    internal class InstallCommand : SimulatorsCommand
     {
         private const string CommandName = "install";
         private const string CommandHelp = "Installs given simulators";
 
-        protected override string CommandUsage => CommandName + " [OPTIONS]";
+        protected override string CommandUsage => CommandName + " [OPTIONS] [SIMULATOR] [SIMULATOR] ..";
 
-        protected override string CommandDescription => CommandHelp;
+        protected override string CommandDescription => CommandHelp + Environment.NewLine + Environment.NewLine + SimulatorHelpString;
 
         private readonly InstallCommandArguments _arguments = new InstallCommandArguments();
         protected override SimulatorsCommandArguments SimulatorsArguments => _arguments;
 
-        public InstallCommand() : base(CommandName, CommandHelp)
+        public InstallCommand() : base(CommandName, true, CommandHelp)
         {
         }
 
@@ -36,10 +36,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
         {
             Logger = logger;
 
+            var simulatorIds = ParseSimulatorIds();
+
             var simulators = await GetAvailableSimulators();
             var exitCode = ExitCode.SUCCESS;
 
-            var unknownSimulators = _arguments.Simulators.Where(identifier =>
+            if (!simulatorIds.Any())
+            {
+                logger.LogError("You have to specify at least one simulator to install!");
+                return ExitCode.INVALID_ARGUMENTS;
+            }
+
+            var unknownSimulators = simulatorIds.Where(identifier =>
                 !simulators.Any(sim => sim.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)));
 
             if (unknownSimulators.Any())
@@ -50,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
             foreach (var simulator in simulators)
             {
-                if (!_arguments.Simulators.Any(identifier => simulator.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
+                if (!simulatorIds.Any(identifier => simulator.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     Logger.LogDebug($"Skipping '{simulator.Identifier}'");
                     continue;
