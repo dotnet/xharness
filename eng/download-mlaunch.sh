@@ -83,7 +83,7 @@ if [ -f "$tag_file" ]; then
   exit 0
 fi
 
-binaries_repo="$temp_dir/$target/macios-binaries"
+binaries_repo="$temp_dir/macios-binaries"
 tag_file_in_repo="$binaries_repo/$commit.tag"
 
 # Check if the repo was already checked out
