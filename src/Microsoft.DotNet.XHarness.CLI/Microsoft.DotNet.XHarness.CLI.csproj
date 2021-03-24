@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
@@ -48,7 +48,7 @@
   </ItemGroup>
 
   <Target Name="DownloadAdb">
-    <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="True" />
+    <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="true" />
     <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />
     <DownloadFile SourceUrl="$(MacOsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(MacOsAndroidSdkFileName)" SkipUnchangedFiles="True" />
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
@@ -68,7 +68,7 @@
     <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' $(RemoveSymbols) } &quot;" />
   </Target>
 
-  <Target Name="IncludeAdb" BeforeTargets="_GetPackageFiles" DependsOnTargets="DownloadMlaunch">
+  <Target Name="IncludeAdb" BeforeTargets="_GetPackageFiles" DependsOnTargets="DownloadAdb">
     <ItemGroup>
       <WindowsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
       <LinuxAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />
