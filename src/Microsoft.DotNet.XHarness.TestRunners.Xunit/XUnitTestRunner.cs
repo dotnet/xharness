@@ -39,12 +39,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public AppDomainSupport AppDomainSupport { get; set; } = AppDomainSupport.Denied;
         protected override string ResultsFileName { get; set; } = "TestResults.xUnit.xml";
 
-        public override bool RunAllTestsByDefault
-        {
-            get => _filters.RunAllTestsByDefault;
-            set => _filters.RunAllTestsByDefault = value;
-        }
-
         public XUnitTestRunner(LogWriter logger) : base(logger)
         {
             _messageSink = new TestMessageSink();
