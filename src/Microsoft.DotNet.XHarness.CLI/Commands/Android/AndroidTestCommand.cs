@@ -74,7 +74,7 @@ Arguments:
 
             try
             {
-                AndroidInstallCommand.InvokeHelper(
+                var exitCode = AndroidInstallCommand.InvokeHelper(
                     logger: logger,
                     apkPackageName: apkPackageName,
                     appPackagePath: appPackagePath,
@@ -82,19 +82,22 @@ Arguments:
                     deviceId: null,
                     runner: runner);
 
-                AndroidRunCommand.InvokeHelper(
-                    logger: logger,
-                    apkPackageName: apkPackageName,
-                    instrumentationName: _arguments.InstrumentationName,
-                    instrumentationArguments: _arguments.InstrumentationArguments,
-                    outputDirectory: _arguments.OutputDirectory,
-                    deviceOutputFolder: _arguments.DeviceOutputFolder,
-                    timeout: _arguments.Timeout,
-                    expectedExitCode: _arguments.ExpectedExitCode,
-                    runner: runner);
+                if (exitCode == ExitCode.SUCCESS)
+                {
+                    exitCode = AndroidRunCommand.InvokeHelper(
+                        logger: logger,
+                        apkPackageName: apkPackageName,
+                        instrumentationName: _arguments.InstrumentationName,
+                        instrumentationArguments: _arguments.InstrumentationArguments,
+                        outputDirectory: _arguments.OutputDirectory,
+                        deviceOutputFolder: _arguments.DeviceOutputFolder,
+                        timeout: _arguments.Timeout,
+                        expectedExitCode: _arguments.ExpectedExitCode,
+                        runner: runner);
+                } 
 
                 runner.UninstallApk(apkPackageName);
-                return Task.FromResult(ExitCode.SUCCESS);
+                return Task.FromResult(exitCode);
             }
             catch (Exception toLog)
             {
