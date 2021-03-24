@@ -195,7 +195,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 TimeSpan.FromSeconds(30),
                 new[] { "--foo=bar", "--xyz" },
                 new[] { ("appArg1", "value1") },
-                ensureCleanSimulatorState: true);
+                resetSimulator: true);
 
             // Verify
             Assert.Equal(SimulatorDeviceName, deviceName);
@@ -217,7 +217,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             captureLog.Verify(x => x.StartCapture(), Times.AtLeastOnce);
 
-            // When ensureCleanSimulatorState == true
+            // When resetSimulator == true
             _mockSimulator.Verify(x => x.PrepareSimulator(_mainLog.Object, AppBundleIdentifier));
             _mockSimulator.Verify(x => x.KillEverything(_mainLog.Object));
         }
@@ -250,7 +250,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                     TimeSpan.FromSeconds(30),
                     Enumerable.Empty<string>(),
                     Enumerable.Empty<(string, string)>(),
-                    ensureCleanSimulatorState: true));
+                    resetSimulator: true));
         }
 
         [Fact]

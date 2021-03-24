@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<(string, string)> extraEnvVariables,
             string? deviceName = null,
             string? companionDeviceName = null,
-            bool ensureCleanSimulatorState = false,
+            bool resetSimulator = false,
             int verbosity = 1,
             XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
             string[]? skippedMethods = null,
@@ -196,7 +196,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                         testReporter,
                         simulator,
                         companionSimulator,
-                        ensureCleanSimulatorState,
+                        resetSimulator,
                         timeout,
                         combinedCancellationToken.Token);
                 }
@@ -246,7 +246,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             ITestReporter testReporter,
             ISimulatorDevice simulator,
             ISimulatorDevice? companionSimulator,
-            bool ensureCleanSimulatorState,
+            bool resetSimulator,
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
@@ -281,7 +281,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     systemLogs.Add(companionLog);
                 }
 
-                if (ensureCleanSimulatorState)
+                if (resetSimulator)
                 {
                     await simulator.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
 
@@ -299,7 +299,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 await testReporter.CollectSimulatorResult(result);
 
                 // Cleanup after us
-                if (ensureCleanSimulatorState)
+                if (resetSimulator)
                 {
                     await simulator.KillEverything(_mainLog);
 

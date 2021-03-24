@@ -67,6 +67,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 PassThroughArguments,
                 _arguments.EnvironmentalVariables,
                 deviceName,
+                resetSimulator: _arguments.ResetSimulator,
                 verbosity: GetMlaunchVerbosity(_arguments.Verbosity),
                 cancellationToken: cancellationToken);
 
