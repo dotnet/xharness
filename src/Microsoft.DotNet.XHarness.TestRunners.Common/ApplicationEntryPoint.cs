@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Common
@@ -158,7 +157,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             runner.RunAllTestsByDefault = options.RunAllTestsByDefault;
 
             // Add the provided method and class filters
-            if (options.SingleMethodFilters.Any() || options.ClassMethodFilters.Any())
+            if (options.SingleMethodFilters.Count != 0 || options.ClassMethodFilters.Count != 0)
             {
                 // Having methods/classes explicitly specified means only those methods/classes should be run
                 runner.RunAllTestsByDefault = false;
