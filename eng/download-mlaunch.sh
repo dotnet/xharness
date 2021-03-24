@@ -42,7 +42,6 @@ copy_mlaunch () {
 }
 
 commit=''
-target=''
 target_dir="$artifacts_dir/mlaunch"
 remove_symbols=false
 
@@ -59,11 +58,6 @@ while (($# > 0)); do
       target_dir=$1
       ;;
 
-    --target)
-      shift
-      target=$1
-      ;;
-
     --remove-symbols)
       remove_symbols=true
       ;;
@@ -77,11 +71,6 @@ done
 
 if [[ -z $commit ]]; then
   echo "Please specify a git commit ID of the xamarin/macios-binaries repository using the --commit option" 1>&2
-  exit 1
-fi
-
-if [[ -z $target ]]; then
-  echo "Please specify target (e.g. net6.0)" 1>&2
   exit 1
 fi
 

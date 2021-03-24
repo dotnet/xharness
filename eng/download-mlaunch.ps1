@@ -12,10 +12,6 @@ Param(
 
     [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory = $True)]
-    [string] $Target,
-
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory = $True)]
     [string] $TargetDir,
 
     [switch] $RemoveSymbols = $False
@@ -52,7 +48,7 @@ if (Test-Path $tagFile) {
     ExitWithExitCode 0
 }
 
-$binariesRepo = Join-Path $TempDir $Target "macios-binaries"
+$binariesRepo = Join-Path $TempDir "macios-binaries"
 $tagFileInRepo = Join-Path $binariesRepo "$commit.tag"
 
 if (Test-Path $binariesRepo) {
