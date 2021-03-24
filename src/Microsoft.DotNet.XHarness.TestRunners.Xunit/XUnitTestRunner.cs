@@ -875,7 +875,12 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             Action<string> log = LogExcludedTests ? (s) => do_log(s) : (Action<string>)null;
             foreach (TestAssemblyInfo assemblyInfo in testAssemblies)
             {
-                if (assemblyInfo == null || assemblyInfo.Assembly == null || _filters.IsExcluded(assemblyInfo, log))
+                if (assemblyInfo == null || assemblyInfo.Assembly == null)
+                {
+                    continue;
+                }
+
+                if (_filters.AssemblyFilters.Any() && _filters.IsExcluded(assemblyInfo, log))
                 {
                     continue;
                 }
@@ -1096,7 +1101,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
                     TotalTests += discoverySink.TestCases.Count;
                     List<ITestCase> testCases;
-                    if (_filters != null && _filters.Count > 0)
+                    if (_filters != null && _filters.TestCaseFilters.Any())
                     {
                         Action<string> log = LogExcludedTests ? (s) => do_log(s) : (Action<string>)null;
                         testCases = discoverySink.TestCases.Where(

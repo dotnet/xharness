@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Common
@@ -152,18 +153,24 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             return categories;
         }
 
-        internal static void ConfigureRunner(TestRunner runner, ApplicationOptions options)
+        internal static void ConfigureRunnerFilters(TestRunner runner, ApplicationOptions options)
         {
             runner.RunAllTestsByDefault = options.RunAllTestsByDefault;
-            // add the provided method and class filters
-            foreach (string methodName in options.SingleMethodFilters)
-            {
-                runner.SkipMethod(methodName, !options.RunAllTestsByDefault);
-            }
 
-            foreach (string className in options.ClassMethodFilters)
+            // Add the provided method and class filters
+            if (options.SingleMethodFilters.Any() || options.ClassMethodFilters.Any())
             {
-                runner.SkipClass(className, !options.RunAllTestsByDefault);
+                // Having methods/classes explicitly specified means only those methods/classes should be run
+                runner.RunAllTestsByDefault = false;
+                foreach (string methodName in options.SingleMethodFilters)
+                {
+                    runner.SkipMethod(methodName, isExcluded: false);
+                }
+
+                foreach (string className in options.ClassMethodFilters)
+                {
+                    runner.SkipClass(className, isExcluded: false);
+                }
             }
         }
 
