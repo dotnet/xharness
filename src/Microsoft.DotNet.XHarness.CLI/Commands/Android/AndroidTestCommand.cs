@@ -77,7 +77,7 @@ Arguments:
 
             try
             {
-                installer.InvokeHelper(
+                var exitCode = installer.InvokeHelper(
                     logger: logger,
                     apkPackageName: apkPackageName,
                     appPackagePath: appPackagePath,
@@ -85,7 +85,9 @@ Arguments:
                     deviceId: null,
                     runner: runner);
 
-                testRunner.InvokeHelper(
+                if (exitCode == ExitCode.SUCCESS)
+                {
+                    exitCode = testRunner.InvokeHelper(
                     logger: logger,
                     apkPackageName: apkPackageName,
                     instrumentationName: _arguments.InstrumentationName,
@@ -95,9 +97,10 @@ Arguments:
                     timeout: _arguments.Timeout,
                     expectedExitCode: _arguments.ExpectedExitCode,
                     runner: runner);
+                } 
 
                 runner.UninstallApk(apkPackageName);
-                return Task.FromResult(ExitCode.SUCCESS);
+                return Task.FromResult(exitCode);
             }
             catch (Exception toLog)
             {
