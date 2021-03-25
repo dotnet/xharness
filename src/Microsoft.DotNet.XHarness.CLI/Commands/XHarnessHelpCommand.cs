@@ -50,8 +50,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                     PrintCommandHelp(new AndroidCommandSet(), subCommand);
                     break;
                 case "apple":
+#if !DEBUG
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                     {
+#endif
                         var simulatorsSubset = new SimulatorsCommandSet();
                         if (subCommand == simulatorsSubset.Suite)
                         {
@@ -61,12 +63,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                         {
                             PrintCommandHelp(new AppleCommandSet(), subCommand);
                         }
+#if !DEBUG
                     }
                     else
                     {
                         Console.WriteLine($"Command '{command}' could be run on OSX only.");
                     }
-
+#endif
                     break;
                 case "wasm":
                     PrintCommandHelp(new WasmCommandSet(), subCommand);

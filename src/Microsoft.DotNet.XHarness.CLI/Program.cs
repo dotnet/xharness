@@ -30,12 +30,14 @@ namespace Microsoft.DotNet.XHarness.CLI
                     args[0] = "apple";
                 }
 
+#if !DEBUG
                 if (args[0] == "apple" && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
                     // Otherwise the command would just not be found
                     Console.Error.WriteLine("The 'apple' command is not available on non-OSX platforms!");
                     return (int)ExitCode.INVALID_ARGUMENTS;
                 }
+#endif
 
                 // Mono.Options wouldn't allow "--" so we will temporarily rename it and parse it ourselves later
                 args = args.Select(a => a == "--" ? XHarnessCommand.VerbatimArgumentPlaceholder : a).ToArray();
@@ -67,10 +69,14 @@ namespace Microsoft.DotNet.XHarness.CLI
         {
             var commandSet = new CommandSet("xharness");
 
+#if !DEBUG
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 commandSet.Add(new AppleCommandSet());
             }
+#else
+            commandSet.Add(new AppleCommandSet());
+#endif
 
             commandSet.Add(new AndroidCommandSet());
             commandSet.Add(new WasmCommandSet());
