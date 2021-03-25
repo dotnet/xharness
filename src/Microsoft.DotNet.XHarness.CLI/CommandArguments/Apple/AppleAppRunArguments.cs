@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
                     v => ResetSimulator = v != null
                 },
                 {
-                    "set-env", "Environmental variable to set for the application in format key=value. Can be used multiple times",
+                    "set-env=", "Environmental variable to set for the application in format key=value. Can be used multiple times",
                     v => {
                         var position = v.IndexOf('=');
                         if (position == -1)
