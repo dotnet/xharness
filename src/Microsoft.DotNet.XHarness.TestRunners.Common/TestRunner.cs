@@ -127,11 +127,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         protected void OnInfo(string message) => Logger.OnInfo(message);
 
-        protected static void OnAssemblyStart(Assembly asm)
+        protected void OnAssemblyStart(Assembly asm)
         {
         }
 
-        protected static void OnAssemblyFinish(Assembly asm)
+        protected void OnAssemblyFinish(Assembly asm)
         {
         }
 
