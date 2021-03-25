@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.IO;
 using System.Text;
 
@@ -28,6 +29,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
 
         public override void Dispose()
         {
+            GC.SuppressFinalize(this);
         }
 
         public override string ToString() => _captured.ToString();

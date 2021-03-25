@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Text;
 
 namespace Microsoft.DotNet.XHarness.Common.Logging
@@ -18,6 +19,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
         }
 
         public void Flush()
@@ -36,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
         {
         }
 
-        public void WriteLine(StringBuilder value)
+        public static void WriteLine(StringBuilder value)
         {
         }
 

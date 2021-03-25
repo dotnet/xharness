@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <TargetFrameworks>netstandard2.1</TargetFrameworks>
+    <TargetFramework>net6.0</TargetFramework>
     <nullable>enable</nullable>
     <RootNamespace>Microsoft.DotNet.XHarness.TestRunners.Xunit</RootNamespace>
     <OutputType>Library</OutputType>

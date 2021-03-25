@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 {
     public class ExitCodeDetectorTests : IDisposable
     {
-        private string _tempFilename = null;
+        private readonly string _tempFilename = null;
 
         [Fact]
         public void ExitCodeIsDetectedTest()
@@ -152,6 +152,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             {
                 File.Delete(_tempFilename);
             }
+            GC.SuppressFinalize(this);
         }
 
         private static IFileBackedLog GetLogMock(string[] loglines)

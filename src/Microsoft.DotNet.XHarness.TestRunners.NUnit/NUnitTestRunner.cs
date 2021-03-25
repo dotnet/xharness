@@ -12,6 +12,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 using NUnit.Engine;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 {
     internal class NUnitTestRunner : TestRunner, INUnitTestRunner

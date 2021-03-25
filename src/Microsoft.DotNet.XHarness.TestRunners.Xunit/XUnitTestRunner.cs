@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public int? MaxParallelThreads { get; set; }
 
         private XElement _assembliesElement;
-        private XUnitFiltersCollection _filters = new XUnitFiltersCollection();
+        private XUnitFiltersCollection _filters = new();
 
         public AppDomainSupport AppDomainSupport { get; set; } = AppDomainSupport.Denied;
         protected override string ResultsFileName { get; set; } = "TestResults.xUnit.xml";
@@ -727,7 +727,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
         private Action<string> EnsureLogger(Action<string> log) => log ?? OnInfo;
 
-        private void LogTestMethodDetails(IMethodInfo method, Action<string> log = null, StringBuilder sb = null)
+#pragma warning disable IDE0060 // Remove unused parameter
+        private static void LogTestMethodDetails(IMethodInfo method, Action<string> log = null, StringBuilder sb = null)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             // log = EnsureLogger(log);
             // log ($"   Test method name: {method.Type.Name}.{method.Name}");
@@ -804,7 +806,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             sb?.AppendLine();
         }
 
-        private string GetAssemblyInfo(ITestAssembly assembly)
+        private static string GetAssemblyInfo(ITestAssembly assembly)
         {
             string name = assembly?.Assembly?.Name?.Trim();
             if (string.IsNullOrEmpty(name))

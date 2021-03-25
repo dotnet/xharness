@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
         protected override string CommandDescription => CommandHelp;
 
-        private readonly ListCommandArguments _arguments = new ListCommandArguments();
+        private readonly ListCommandArguments _arguments = new();
         protected override SimulatorsCommandArguments SimulatorsArguments => _arguments;
 
         public ListCommand() : base(CommandName, false, CommandHelp)

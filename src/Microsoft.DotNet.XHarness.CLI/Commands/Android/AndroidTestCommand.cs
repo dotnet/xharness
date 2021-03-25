@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
     {
         private const string ReturnCodeVariableName = "return-code";
 
-        private readonly AndroidTestCommandArguments _arguments = new AndroidTestCommandArguments();
+        private readonly AndroidTestCommandArguments _arguments = new();
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 
@@ -72,12 +72,9 @@ Arguments:
             string apkPackageName = _arguments.PackageName;
             string appPackagePath = _arguments.AppPackagePath;
 
-            var installer = new AndroidInstallCommand();
-            var testRunner = new AndroidRunCommand();
-
             try
             {
-                var exitCode = installer.InvokeHelper(
+                var exitCode = AndroidInstallCommand.InvokeHelper(
                     logger: logger,
                     apkPackageName: apkPackageName,
                     appPackagePath: appPackagePath,
@@ -87,16 +84,16 @@ Arguments:
 
                 if (exitCode == ExitCode.SUCCESS)
                 {
-                    exitCode = testRunner.InvokeHelper(
-                    logger: logger,
-                    apkPackageName: apkPackageName,
-                    instrumentationName: _arguments.InstrumentationName,
-                    instrumentationArguments: _arguments.InstrumentationArguments,
-                    outputDirectory: _arguments.OutputDirectory,
-                    deviceOutputFolder: _arguments.DeviceOutputFolder,
-                    timeout: _arguments.Timeout,
-                    expectedExitCode: _arguments.ExpectedExitCode,
-                    runner: runner);
+                    exitCode = AndroidRunCommand.InvokeHelper(
+                        logger: logger,
+                        apkPackageName: apkPackageName,
+                        instrumentationName: _arguments.InstrumentationName,
+                        instrumentationArguments: _arguments.InstrumentationArguments,
+                        outputDirectory: _arguments.OutputDirectory,
+                        deviceOutputFolder: _arguments.DeviceOutputFolder,
+                        timeout: _arguments.Timeout,
+                        expectedExitCode: _arguments.ExpectedExitCode,
+                        runner: runner);
                 } 
 
                 runner.UninstallApk(apkPackageName);

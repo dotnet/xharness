@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 var line = reader.ReadLine();
 
-                if (IsSignalLine(appBundleInfo, line))
+                if (!string.IsNullOrEmpty(line) && IsSignalLine(appBundleInfo, line))
                 {
                     var match = ExitCodeRegex.Match(line);
 

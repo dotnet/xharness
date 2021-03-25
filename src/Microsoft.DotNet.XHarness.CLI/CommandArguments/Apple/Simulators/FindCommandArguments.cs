@@ -8,6 +8,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
 {
     internal class FindCommandArguments : SimulatorsCommandArguments
     {
-        protected override OptionSet GetAdditionalOptions() => new OptionSet();
+        protected override OptionSet GetAdditionalOptions() => new();
     }
 }

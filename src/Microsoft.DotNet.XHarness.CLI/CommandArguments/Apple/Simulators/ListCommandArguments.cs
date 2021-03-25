@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
     {
         public bool ListInstalledOnly { get; private set; } = false;
 
-        protected override OptionSet GetAdditionalOptions() => new OptionSet
+        protected override OptionSet GetAdditionalOptions() => new()
         {
             { "installed", "Lists installed simulators only", v => ListInstalledOnly = true },
         };

@@ -45,7 +45,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public string HTMLFile { get; set; } = "index.html";
         public int ExpectedExitCode { get; set; } = (int)Common.CLI.ExitCode.SUCCESS;
 
-        protected override OptionSet GetTestCommandOptions() => new OptionSet{
+        protected override OptionSet GetTestCommandOptions() => new()
+        {
             { "browser=|b=", "Specifies the browser to be used. Default is Chrome",
                 v => Browser = ParseArgument<Browser>("browser", v)
             },

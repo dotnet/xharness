@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
             return (int)ExitCode.HELP_SHOWN;
         }
 
-        private void PrintCommandHelp(CommandSet commandSet, string? subcommand)
+        private static void PrintCommandHelp(CommandSet commandSet, string? subcommand)
         {
             if (subcommand != null)
             {

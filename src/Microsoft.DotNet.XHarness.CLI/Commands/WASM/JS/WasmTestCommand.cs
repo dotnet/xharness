@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
     {
         private const string CommandHelp = "Executes tests on WASM using a selected JavaScript engine";
 
-        private readonly WasmTestCommandArguments _arguments = new WasmTestCommandArguments();
+        private readonly WasmTestCommandArguments _arguments = new();
 
         protected override XHarnessCommandArguments Arguments => _arguments;
         protected override string CommandUsage { get; } = "wasm test [OPTIONS] -- [ENGINE OPTIONS]";
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 JavaScriptEngine.V8 => "v8",
                 JavaScriptEngine.JavaScriptCore => "jsc",
                 JavaScriptEngine.SpiderMonkey => "sm",
-                _ => throw new ArgumentException()
+                _ => throw new ArgumentException("Engine not set")
             };
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

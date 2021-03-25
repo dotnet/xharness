@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// </summary>
         public int ExpectedExitCode { get; set; } = (int)Common.CLI.ExitCode.SUCCESS;
 
-        protected override OptionSet GetTestCommandOptions() => new OptionSet
+        protected override OptionSet GetTestCommandOptions() => new()
         {
             { "device-out-folder=|dev-out=", "If specified, copy this folder recursively off the device to the path specified by the output directory",
                 v => DeviceOutputFolder = RootPath(v)
@@ -88,8 +88,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             base.Validate();
 
             // Validate this field
-            PackageName = PackageName;
-            DeviceId = DeviceId;
+            _ = PackageName;
         }
     }
 }

@@ -48,7 +48,11 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
                It.IsAny<TimeSpan>())).Returns((string p, string a, TimeSpan t) => CallFakeProcessManager(p, a, t));
         }
 
-        public void Dispose() => Directory.Delete(s_scratchAndOutputPath, true);
+        public void Dispose()
+        {
+            Directory.Delete(s_scratchAndOutputPath, true);
+            GC.SuppressFinalize(this);
+        }
 
         #region Tests
 
@@ -227,7 +231,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         #region Helper Functions
         // Generates a list of fake devices, one per supported architecture so we can test AdbRunner's parsing of the output.
         // As with most of these tests, if adb.exe changes, this will break (we are locked into specific version) 
-        private Dictionary<Tuple<string, string>, int> InitializeFakeDeviceList()
+        private static Dictionary<Tuple<string, string>, int> InitializeFakeDeviceList()
         {
             var r = new Random();
             var values = new Dictionary<Tuple<string, string>, int>

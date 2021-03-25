@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml;
@@ -35,7 +36,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
             "e.g. com.apple.pkg.AppleTVSimulatorSDK14_2 or you can use the format in which you specify " +
             "apple targets for XHarness tests (ios-simulator, tvos-simulator, watchos-simulator).";
 
-        private readonly MacOSProcessManager _processManager = new MacOSProcessManager();
+        private static readonly HttpClient s_client = new();
+        private readonly MacOSProcessManager _processManager = new();
 
         protected ILogger Logger { get; set; } = null!;
 
@@ -105,19 +107,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
             var simulators = new List<Simulator>();
 
             var downloadables = doc.SelectNodes("//plist/dict/key[text()='downloadables']/following-sibling::array/dict");
-            foreach (XmlNode? downloadable in downloadables)
+            foreach (XmlNode? downloadable in downloadables!)
             {
                 if (downloadable == null)
                 {
                     continue;
                 }
 
-                var nameNode = downloadable.SelectSingleNode("key[text()='name']/following-sibling::string");
-                var versionNode = downloadable.SelectSingleNode("key[text()='version']/following-sibling::string");
-                var sourceNode = downloadable.SelectSingleNode("key[text()='source']/following-sibling::string");
-                var identifierNode = downloadable.SelectSingleNode("key[text()='identifier']/following-sibling::string");
+                var nameNode = downloadable.SelectSingleNode("key[text()='name']/following-sibling::string") ?? throw new Exception("Name node not found");
+                var versionNode = downloadable.SelectSingleNode("key[text()='version']/following-sibling::string") ?? throw new Exception("Version node not found");
+                var sourceNode = downloadable.SelectSingleNode("key[text()='source']/following-sibling::string") ?? throw new Exception("Source node not found");
+                var identifierNode = downloadable.SelectSingleNode("key[text()='identifier']/following-sibling::string") ?? throw new Exception("Identifier node not found");
                 var fileSizeNode = downloadable.SelectSingleNode("key[text()='fileSize']/following-sibling::integer|key[text()='fileSize']/following-sibling::real");
-                var installPrefixNode = downloadable.SelectSingleNode("key[text()='userInfo']/following-sibling::dict/key[text()='InstallPrefix']/following-sibling::string");
+                var installPrefixNode = downloadable.SelectSingleNode("key[text()='userInfo']/following-sibling::dict/key[text()='InstallPrefix']/following-sibling::string") ?? throw new Exception("InstallPrefix node not found");
 
                 var version = versionNode.InnerText;
                 var versions = version.Split('.');
@@ -133,7 +135,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
                 dict.Add(IDENTIFIER_PLACEHOLDER, identifier);
 
-                double.TryParse(fileSizeNode?.InnerText, out var parsedFileSize);
+                _  = double.TryParse(fileSizeNode?.InnerText, out var parsedFileSize);
 
                 simulators.Add(new Simulator(
                     name: Replace(nameNode.InnerText, dict),
@@ -221,26 +223,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
             if (!File.Exists(tmpfile))
             {
-                var client = new WebClient();
-                try
-                {
-                    Logger.LogInformation($"Downloading '{uri}'");
-                    client.DownloadFile(uri, tmpfile);
-                }
-                catch (Exception ex)
-                {
-                    // 403 means 404
-                    if (ex is WebException we && (we.Response as HttpWebResponse)?.StatusCode == HttpStatusCode.Forbidden)
-                    {
-                        Logger.LogWarning($"Failed to download {url}: Not found"); // Apple's servers return a 403 if the file doesn't exist, which can be quite confusing, so show a better error.
-                    }
-                    else
-                    {
-                        Logger.LogWarning($"Failed to download {url}: {ex}");
-                    }
-
-                    return null;
-                }
+                await DownloadFile(url, tmpfile);
+            }
+            else
+            {
+                Logger.LogInformation($"File '{tmpfile}' already exists, skipped download");
             }
 
             var (succeeded, xmlResult) = await ExecuteCommand("plutil", TimeSpan.FromSeconds(30), "-convert", "xml1", "-o", "-", tmpfile);
@@ -250,6 +237,38 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
             }
 
             return xmlResult;
+        }
+
+        private async Task DownloadFile(string url, string destinationPath)
+        {
+            try
+            {
+                Logger.LogInformation($"Downloading {url}...");
+
+                var downloadTask = s_client.GetStreamAsync(url);
+                using var fileStream = new FileStream(destinationPath, FileMode.Create);
+                using var bodyStream = await downloadTask;
+                await bodyStream.CopyToAsync(fileStream);
+            }
+            catch (HttpRequestException e)
+            {
+                // 403 means 404
+#if NETCOREAPP3_1
+                {
+#else
+                if (e.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    // Apple's servers return a 403 if the file doesn't exist, which can be quite confusing, so show a better error.
+                    Logger.LogWarning($"Failed to download {url}: Not found");
+                }
+                else
+                {
+#endif
+                    Logger.LogWarning($"Failed to download {url}: {e}");
+                }
+
+                throw;
+            }
         }
 
         private async Task<(string XcodeVersion, string XcodeUuid)> GetXcodeInformation()

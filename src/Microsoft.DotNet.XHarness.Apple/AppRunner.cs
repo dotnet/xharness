@@ -285,7 +285,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             return args;
         }
 
-        private MlaunchArguments GetSimulatorArguments(
+        private static MlaunchArguments GetSimulatorArguments(
             AppBundleInformation appInformation,
             ISimulatorDevice simulator,
             IEnumerable<string> extraAppArguments,
@@ -315,7 +315,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             return args;
         }
 
-        private MlaunchArguments GetDeviceArguments(
+        private static MlaunchArguments GetDeviceArguments(
             AppBundleInformation appInformation,
             string deviceName,
             bool isWatchTarget,

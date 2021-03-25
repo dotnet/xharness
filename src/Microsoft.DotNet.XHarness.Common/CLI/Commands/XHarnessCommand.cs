@@ -128,7 +128,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
         protected abstract Task<ExitCode> InvokeInternal(ILogger logger);
 
-        private ILoggerFactory CreateLoggerFactory(LogLevel verbosity) => LoggerFactory.Create(builder =>
+        private static ILoggerFactory CreateLoggerFactory(LogLevel verbosity) => LoggerFactory.Create(builder =>
         {
             builder
                 .AddConsoleFormatter<XHarnessConsoleLoggerFormatter, SimpleConsoleFormatterOptions>(options => {

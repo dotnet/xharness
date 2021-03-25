@@ -28,8 +28,8 @@ namespace Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit
     public class DefaultAndroidEntryPoint : AndroidApplicationEntryPoint
     {
         private readonly string _resultsPath;
-        private readonly string _excludeCategoriesDir;
-        private readonly string _excludeCategoriesFile;
+        private readonly string? _excludeCategoriesDir;
+        private readonly string? _excludeCategoriesFile;
         private readonly Dictionary<string, string> _parsedArguments;
 
         public const string ResultsFileArgumentName = "results-file-name";
@@ -41,8 +41,8 @@ namespace Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit
         public const string ExcludeClassArgumentName = "exclude-class";
         public const string IncludeClassArgumentName = "include-class";
 
-        protected override string IgnoreFilesDirectory => _excludeCategoriesDir;
-        protected override string IgnoredTraitsFilePath => _excludeCategoriesFile;
+        protected override string? IgnoreFilesDirectory => _excludeCategoriesDir;
+        protected override string? IgnoredTraitsFilePath => _excludeCategoriesFile;
 
         public DefaultAndroidEntryPoint(string resultsPath, Dictionary<string, string> optionalBundle)
         {
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit
         {
         }
 
-        private void ConfigureFilters(string? filter, Action<string, bool> filterMethod, bool isExcluded)
+        private static void ConfigureFilters(string? filter, Action<string, bool> filterMethod, bool isExcluded)
         {
             if (filter != null)
             {
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit
         {
             var testRunner = base.GetTestRunner(logWriter);
 
-            (string Filter, Action<string, bool> FilterMethod, bool IsExcluded)[] filters =
+            (string? Filter, Action<string, bool> FilterMethod, bool IsExcluded)[] filters =
             {
                 (_parsedArguments.GetValueOrDefault(ExcludeMethodArgumentName), testRunner.SkipMethod, true),
                 (_parsedArguments.GetValueOrDefault(ExcludeClassArgumentName), testRunner.SkipClass, true),

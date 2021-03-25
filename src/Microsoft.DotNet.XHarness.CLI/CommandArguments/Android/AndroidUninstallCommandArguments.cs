@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         public string? DeviceId { get; set; }
 
-        protected override OptionSet GetTestCommandOptions() => new OptionSet
+        protected override OptionSet GetTestCommandOptions() => new()
         {
             { "package-name=|p=", "Package name contained within the supplied APK",
                 v => PackageName = v
@@ -33,8 +33,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         public override void Validate()
         {
             // Validate this field
-            PackageName = PackageName;
-            DeviceId = DeviceId;
+            _ = PackageName;
         }
     }
 }

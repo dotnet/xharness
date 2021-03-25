@@ -29,8 +29,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 
     internal class AppleTestCommandArguments : AppleAppRunArguments
     {
-        private readonly List<string> _singleMethodFilters = new List<string>();
-        private readonly List<string> _classMethodFilters = new List<string>();
+        private readonly List<string> _singleMethodFilters = new();
+        private readonly List<string> _classMethodFilters = new();
 
         /// <summary>
         /// Methods to be included in the test run while all others are ignored.

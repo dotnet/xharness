@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
                 TestStatus.Skipped => "Skip",
                 _ => "Fail",
             },
-            _ => throw new ArgumentOutOfRangeException(),
+            _ => throw new ArgumentOutOfRangeException(nameof(status)),
         };
     }
 }

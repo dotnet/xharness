@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
     {
         protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
 
-        protected readonly ErrorKnowledgeBase ErrorKnowledgeBase = new ErrorKnowledgeBase();
+        protected readonly ErrorKnowledgeBase ErrorKnowledgeBase = new();
         protected override XHarnessCommandArguments Arguments => iOSRunArguments;
         protected abstract AppleAppRunArguments iOSRunArguments { get; }
 
@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected static bool IsLldbEnabled() => File.Exists(s_mlaunchLldbConfigFile);
 
-        protected void NotifyUserLldbCommand(ILogger logger, string line)
+        protected static void NotifyUserLldbCommand(ILogger logger, string line)
         {
             if (!line.Contains("mtouch-lldb-prep-cmds"))
             {

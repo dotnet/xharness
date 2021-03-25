@@ -38,15 +38,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         // Messages from selenium prepend the url, and location where the message originated
         // Eg. `foo` becomes `http://localhost:8000/xyz.js 0:12 "foo"
-        static readonly Regex s_consoleLogRegex = new Regex(@"^\s*[a-z]*://[^\s]+\s+\d+:\d+\s+""(.*)""\s*$", RegexOptions.Compiled);
+        static readonly Regex s_consoleLogRegex = new(@"^\s*[a-z]*://[^\s]+\s+\d+:\d+\s+""(.*)""\s*$", RegexOptions.Compiled);
 
         public WasmBrowserTestRunner(WasmTestBrowserCommandArguments arguments, IEnumerable<string> passThroughArguments,
                                             WasmTestMessagesProcessor messagesProcessor, ILogger logger)
         {
-            this._arguments = arguments;
-            this._logger = logger;
-            this._passThroughArguments = passThroughArguments;
-            this._messagesProcessor = messagesProcessor;
+            _arguments = arguments;
+            _logger = logger;
+            _passThroughArguments = passThroughArguments;
+            _messagesProcessor = messagesProcessor;
         }
 
         public async Task<ExitCode> RunTestsWithWebDriver(DriverService driverService, IWebDriver driver)
@@ -239,7 +239,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             foreach (var arg in _passThroughArguments)
             {
                 if (sb.Length > 0)
-                    sb.Append("&");
+                    sb.Append('&');
 
                 sb.Append($"arg={HttpUtility.UrlEncode(arg)}");
             }
@@ -271,10 +271,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 .Build();
 
             await host.StartAsync(token);
-            return host.ServerFeatures
-                    .Get<IServerAddressesFeature>()
-                    .Addresses
-                    .First();
+
+            var ipAddress = host.ServerFeatures
+                .Get<IServerAddressesFeature>()?
+                .Addresses
+                .FirstOrDefault();
+
+            return ipAddress ?? throw new InvalidOperationException("Failed to determine web server's IP address");
         }
     }
 }

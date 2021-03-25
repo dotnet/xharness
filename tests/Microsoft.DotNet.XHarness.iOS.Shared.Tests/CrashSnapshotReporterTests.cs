@@ -45,7 +45,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
             File.WriteAllText(Path.Combine(_symbolicatePath, "symbolicatecrash"), "");
         }
 
-        public void Dispose() => Directory.Delete(_tempXcodeRoot, true);
+        public void Dispose()
+        {
+            Directory.Delete(_tempXcodeRoot, true);
+            GC.SuppressFinalize(this);
+        }
 
         [Fact]
         public async Task DeviceCaptureTest()

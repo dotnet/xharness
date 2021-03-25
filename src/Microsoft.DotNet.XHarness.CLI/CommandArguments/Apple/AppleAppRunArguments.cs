@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// Environmental variables set when executing the application.
         /// </summary>
         public IReadOnlyCollection<(string, string)> EnvironmentalVariables => _environmentalVariables;
-        private readonly List<(string, string)> _environmentalVariables = new List<(string, string)>();
+        private readonly List<(string, string)> _environmentalVariables = new();
 
         /// <summary>
         /// Kills running simulator processes and removes any previous data before running.
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             {
                 var testTargets = new List<TestTargetOs>();
 
-                foreach (var targetName in value ?? throw new ArgumentNullException("Targets cannot be empty"))
+                foreach (var targetName in value ?? throw new ArgumentException("Targets cannot be empty"))
                 {
                     try
                     {

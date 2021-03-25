@@ -2,12 +2,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>xharness</ToolCommandName>
     <RollForward>Major</RollForward>
+    <LangVersion>9.0</LangVersion>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>CS8002;</NoWarn>
 
@@ -46,13 +47,28 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
-  <Target Name="DownloadAndroidSdks" BeforeTargets="Build">
-    <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="True" />
+  <Target Name="DownloadAdb">
+    <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="true" />
     <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />
     <DownloadFile SourceUrl="$(MacOsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(MacOsAndroidSdkFileName)" SkipUnchangedFiles="True" />
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(LinuxAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/linux" OverwriteReadOnlyFiles="true" />
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(MacOsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/macos" OverwriteReadOnlyFiles="true" />
+  </Target>
+
+  <Target Name="DownloadMlaunch">
+    <PropertyGroup>
+      <RemoveSymbols></RemoveSymbols>
+      <RemoveSymbols Condition=" '$(Configuration)|$(OS)' == 'Release|Windows_NT' ">-RemoveSymbols</RemoveSymbols>
+      <RemoveSymbols Condition=" '$(Configuration)' == 'Release' AND '$(OS)' != 'Windows_NT' ">--remove-symbols</RemoveSymbols>
+    </PropertyGroup>
+
+    <Exec Condition=" '$(OS)' != 'Windows_NT' " Command="chmod 0755 ../../eng/download-mlaunch.sh &amp;&amp; ../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target-dir $(IntermediateOutputPath)mlaunch $(RemoveSymbols)" />
+
+    <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' $(RemoveSymbols) } &quot;" />
+  </Target>
+
+  <Target Name="IncludeAdb" BeforeTargets="_GetPackageFiles" DependsOnTargets="DownloadAdb">
     <ItemGroup>
       <WindowsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
       <LinuxAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />
@@ -75,17 +91,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="DownloadMlaunch" BeforeTargets="Build">
-    <PropertyGroup>
-      <RemoveSymbols></RemoveSymbols>
-      <RemoveSymbols Condition=" '$(Configuration)|$(OS)' == 'Release|Windows_NT' ">-RemoveSymbols</RemoveSymbols>
-      <RemoveSymbols Condition=" '$(Configuration)' == 'Release' AND '$(OS)' != 'Windows_NT' ">--remove-symbols</RemoveSymbols>
-    </PropertyGroup>
-
-    <Exec Condition=" '$(OS)' != 'Windows_NT' " Command="chmod 0755 ../../eng/download-mlaunch.sh &amp;&amp; ../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target-dir $(IntermediateOutputPath)mlaunch $(RemoveSymbols)" />
-
-    <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' $(RemoveSymbols) } &quot;" />
-
+  <Target Name="IncludeMlaunch" BeforeTargets="_GetPackageFiles" DependsOnTargets="DownloadMlaunch">
     <ItemGroup>
       <Content Include="$(IntermediateOutputPath)/mlaunch/**/*.*">
         <Pack>true</Pack>
@@ -93,6 +99,5 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
-
   </Target>
 </Project>

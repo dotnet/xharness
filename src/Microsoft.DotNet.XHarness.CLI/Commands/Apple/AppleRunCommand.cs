@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
     {
         private const string CommandHelp = "Runs a given iOS/tvOS/watchOS/MacCatalyst application bundle in a target device/simulator and tries to detect exit code (might not work reliably across iOS versions).";
 
-        private readonly AppleRunCommandArguments _arguments = new AppleRunCommandArguments();
+        private readonly AppleRunCommandArguments _arguments = new();
 
         protected override AppleAppRunArguments iOSRunArguments => _arguments;
         protected override string CommandUsage { get; } = "apple run [OPTIONS] [-- [RUNTIME ARGUMENTS]]";

@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
     {
         public bool Force { get; private set; } = false;
 
-        protected override OptionSet GetAdditionalOptions() => new OptionSet
+        protected override OptionSet GetAdditionalOptions() => new()
         {
             { "force", "Install again even if already installed", v => Force = true },
         };
