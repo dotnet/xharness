@@ -132,14 +132,11 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         {
             builder
                 .AddConsoleFormatter<XHarnessConsoleLoggerFormatter, SimpleConsoleFormatterOptions>(options => {
-                    options.ColorBehavior = IsEnvVarTrue("XHARNESS_DISABLE_COLORED_OUTPUT") ? LoggerColorBehavior.Disabled : LoggerColorBehavior.Default;
-                    options.TimestampFormat = IsEnvVarTrue("XHARNESS_LOG_WITH_TIMESTAMPS") ? "[HH:mm:ss] " : null!;
+                    options.ColorBehavior = EnvironmentVariables.IsTrue(EnvironmentVariables.Names.DISABLE_COLOR_OUTPUT) ? LoggerColorBehavior.Disabled : LoggerColorBehavior.Default;
+                    options.TimestampFormat = EnvironmentVariables.IsTrue(EnvironmentVariables.Names.LOG_TIMESTAMPS) ? "[HH:mm:ss] " : null!;
                 })
                 .AddConsole(options => options.FormatterName = XHarnessConsoleLoggerFormatter.FormatterName)
                 .SetMinimumLevel(verbosity);
         });
-
-        private static bool IsEnvVarTrue(string varName) =>
-            Environment.GetEnvironmentVariable(varName)?.ToLower().Equals("true") ?? false;
     }
 }
