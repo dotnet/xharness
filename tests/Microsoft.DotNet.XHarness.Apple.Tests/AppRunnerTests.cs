@@ -209,7 +209,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        _mainLog.Object,
                        It.IsAny<TimeSpan>(),
-                       It.Is<Dictionary<string, string>>(d => d["appArg1"] == "value1"),
+                       It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -306,7 +306,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
-                       It.Is<Dictionary<string, string>>(d => d["appArg1"] == "value1"),
+                       It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -332,6 +332,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "-v " +
             "-argument=--foo=bar " +
             "-argument=--xyz " +
+            "-setenv=appArg1=value1 " +
             "--disable-memory-limits " +
             $"--devname \"{DeviceName}\" " +
             $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
@@ -342,6 +343,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "-v " +
             "-argument=--foo=bar " +
             "-argument=--xyz " +
+            "-setenv=appArg1=value1 " +
             $"--device=:v2:udid={_mockSimulator.Object.UDID} " +
             $"--launchsim {StringUtils.FormatArguments(s_appPath)}";
 

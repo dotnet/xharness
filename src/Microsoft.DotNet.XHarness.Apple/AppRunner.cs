@@ -117,6 +117,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     appInformation,
                     simulator,
                     extraAppArguments,
+                    extraEnvVariables,
                     verbosity);
 
                 result = await RunSimulatorApp(
@@ -125,7 +126,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                     crashReporter,
                     simulator,
                     companionSimulator,
-                    extraEnvVariables,
                     resetSimulator,
                     timeout,
                     cancellationToken);
@@ -137,6 +137,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     deviceName,
                     target.Platform.IsWatchOSTarget(),
                     extraAppArguments,
+                    extraEnvVariables,
                     verbosity);
 
                 result = await RunDeviceApp(
@@ -157,7 +158,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             ICrashSnapshotReporter crashReporter,
             ISimulatorDevice simulator,
             ISimulatorDevice? companionSimulator,
-            IEnumerable<(string, string)> extraEnvVariables,
             bool resetSimulator,
             TimeSpan timeout,
             CancellationToken cancellationToken)
@@ -207,10 +207,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 _mainLog.WriteLine("Starting test run");
 
-                var envVariables = new Dictionary<string, string>();
-                AddExtraEnvVars(envVariables, extraEnvVariables);
-
-                var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, envVariables, cancellationToken);
+                var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
 
                 // cleanup after us
                 if (resetSimulator)
@@ -270,7 +267,10 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
         }
 
-        private static MlaunchArguments GetCommonArguments(IEnumerable<string> extraAppArguments, int verbosity)
+        private static MlaunchArguments GetCommonArguments(
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
+            int verbosity)
         {
             var args = new MlaunchArguments();
 
@@ -281,6 +281,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             // Arguments passed to the iOS app bundle
             args.AddRange(extraAppArguments.Select(arg => new SetAppArgumentArgument(arg)));
+            args.AddRange(extraEnvVariables.Select(v => new SetEnvVariableArgument(v.Item1, v.Item2)));
 
             return args;
         }
@@ -289,9 +290,10 @@ namespace Microsoft.DotNet.XHarness.Apple
             AppBundleInformation appInformation,
             ISimulatorDevice simulator,
             IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
             int verbosity)
         {
-            var args = GetCommonArguments(extraAppArguments, verbosity);
+            var args = GetCommonArguments(extraAppArguments, extraEnvVariables, verbosity);
 
             args.Add(new SimulatorUDIDArgument(simulator.UDID));
 
@@ -320,9 +322,10 @@ namespace Microsoft.DotNet.XHarness.Apple
             string deviceName,
             bool isWatchTarget,
             IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
             int verbosity)
         {
-            var args = GetCommonArguments(extraAppArguments, verbosity);
+            var args = GetCommonArguments(extraAppArguments, extraEnvVariables, verbosity);
 
             args.Add(new DisableMemoryLimitsArgument());
             args.Add(new DeviceNameArgument(deviceName));
