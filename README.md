@@ -157,19 +157,18 @@ You can also use Visual Studio 2019+ and just F5 the `Microsoft.DotNet.XHarness.
 In order for XHarness to work, you will need ADB (for Android) and mlaunch (for anything Apple).
 These are executables that go with the packaged .NET xharness tool.
 
-The easiest way to get these at the moment for development purposes is to run
+The easiest way to get these at the moment for development purposes is to build the CLI project and they will be downloaded.
 ```
-dotnet pack src/Microsoft.DotNet.XHarness.CLI/Microsoft.DotNet.XHarness.CLI.csproj
+dotnet build src/Microsoft.DotNet.XHarness.CLI/Microsoft.DotNet.XHarness.CLI.csproj
 ```
-which apart from producing the tool's resulting `.nupkg` downloads these so that they can be packaged inside.
 
-You can then find these dependencies in `artifacts/obj/Microsoft.DotNet.XHarness.CLI/Debug`.
+You can then find these dependencies in `artifacts/obj/Microsoft.DotNet.XHarness.CLI/Debug/net6.0`.
 
 For iOS flows, you can further store the path to mlaunch to an environmental variable `XHARNESS_MLAUNCH_PATH`
 ```
-export XHARNESS_MLAUNCH_PATH='[xharness root]/artifacts/obj/Microsoft.DotNet.XHarness.CLI/Debug/mlaunch/bin/mlaunch'
+export XHARNESS_MLAUNCH_PATH='[xharness root]/artifacts/obj/Microsoft.DotNet.XHarness.CLI/Debug/net6.0/mlaunch/bin/mlaunch'
 ```
-and you won't have to specify the `--mlaunch` option.
+and you won't have to specify the `--mlaunch` argument.
 
 ## Contribution
 
