@@ -45,6 +45,11 @@
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
       <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.Buffers.Tests.app;IncludesTestRunner=false;ExpectedExitCode=43</AdditionalProperties>
     </XHarnessAppleProject>
+
+    <!-- apple test / tvos-simulator -->
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+      <AdditionalProperties>TestTarget=tvos-simulator;TestAppBundleName=Microsoft.Extensions.Configuration.Ini.Tests.app</AdditionalProperties>
+    </XHarnessAppleProject>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
