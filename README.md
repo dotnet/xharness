@@ -81,7 +81,8 @@ There are other settings which can be controlled via **environmental variables**
 
 - `XHARNESS_DISABLE_COLORED_OUTPUT` - disable colored logging so that control characters are not making the logs hard to read
 - `XHARNESS_LOG_WITH_TIMESTAMPS` - enable timestamps for logging
-- `XHARNESS_LOG_TEST_START` - log test start messages, useful to diagnose when tests are hanging. Currently only works for WebAssembly.
+- `XHARNESS_LOG_TEST_START` - log test start messages, useful to diagnose when tests are hanging. Currently only works for WebAssembly
+- `XHARNESS_MLAUNCH_PATH` - local path to the mlaunch binary when developing XHarness (when not using as .NET tool)
 
 ### Arcade/Helix integration
 
@@ -137,6 +138,38 @@ It is possible to use `DefaultAndroidEntryPoint` from there for the test app by 
 Other parameters can be overrided as well if needed.
 
 Currently we support Xunit and NUnit test assemblies but the `Microsoft.DotNet.XHarness.Tests.Runners` supports implementation of custom runner too.
+
+## Development instructions
+When working on XHarness, there are couple of neat hacks that can improve the inner loop.
+The repository can either be built using regular .NET, assuming you have new enough version:
+```
+dotnet build XHarness.sln
+```
+or you can use the build scripts `build.sh` or `Build.cmd` in repository root which will install the correct .NET SDK into the `.dotnet` folder.
+You can then use
+```
+./.dotnet/dotnet build XHarness.sln
+```
+
+You can also use Visual Studio 2019+ and just F5 the `Microsoft.DotNet.XHarness.CLI` project.
+
+### ADB, mlaunch
+In order for XHarness to work, you will need ADB (for Android) and mlaunch (for anything Apple).
+These are executables that go with the packaged .NET xharness tool.
+
+The easiest way to get these at the moment for development purposes is to run
+```
+dotnet pack src/Microsoft.DotNet.XHarness.CLI/Microsoft.DotNet.XHarness.CLI.csproj
+```
+which apart from producing the tool's resulting `.nupkg` downloads these so that they can be packaged inside.
+
+You can then find these dependencies in `artifacts/obj/Microsoft.DotNet.XHarness.CLI/Debug`.
+
+For iOS flows, you can further store the path to mlaunch to an environmental variable `XHARNESS_MLAUNCH_PATH`
+```
+export XHARNESS_MLAUNCH_PATH='[xharness root]/artifacts/obj/Microsoft.DotNet.XHarness.CLI/Debug/mlaunch/bin/mlaunch'
+```
+and you won't have to specify the `--mlaunch` option.
 
 ## Contribution
 
