@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected async Task<string> FindDevice(TestTargetOs target)
         {
             IHardwareDevice? companionDevice = null;
-            IHardwareDevice device = await _hardwareDeviceLoader.FindDevice(target.Platform.ToRunMode(), _mainLog, includeLocked: false, force: false);
+            IHardwareDevice device = await _hardwareDeviceLoader.FindDevice(target.Platform.ToRunMode(), _mainLog, includeLocked: false);
 
             if (target.Platform.IsWatchOSTarget())
             {

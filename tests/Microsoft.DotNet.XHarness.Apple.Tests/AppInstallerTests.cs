@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         {
             _hardwareDeviceLoader = new Mock<IHardwareDeviceLoader>();
             _hardwareDeviceLoader
-                .Setup(x => x.FindDevice(RunMode.iOS, _mainLog.Object, false, false))
+                .Setup(x => x.FindDevice(RunMode.iOS, _mainLog.Object, false))
                 .ThrowsAsync(new NoDeviceFoundException());
 
             var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 1);

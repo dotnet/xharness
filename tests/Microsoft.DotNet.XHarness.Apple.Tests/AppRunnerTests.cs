@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             _hardwareDeviceLoader = new Mock<IHardwareDeviceLoader>();
             _hardwareDeviceLoader
-                .Setup(x => x.FindDevice(RunMode.iOS, _mainLog.Object, false, false))
+                .Setup(x => x.FindDevice(RunMode.iOS, _mainLog.Object, false))
                 .ReturnsAsync(s_mockDevice);
 
             _simulatorLoader = new Mock<ISimulatorLoader>();
@@ -227,7 +227,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         {
             _hardwareDeviceLoader = new Mock<IHardwareDeviceLoader>();
             _hardwareDeviceLoader
-                .Setup(x => x.FindDevice(RunMode.iOS, _mainLog.Object, false, false))
+                .Setup(x => x.FindDevice(RunMode.iOS, _mainLog.Object, false))
                 .ThrowsAsync(new NoDeviceFoundException());
 
             // Act
