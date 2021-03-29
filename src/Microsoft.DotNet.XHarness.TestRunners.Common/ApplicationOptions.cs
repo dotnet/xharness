@@ -151,11 +151,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// <summary>
         /// Specify the methods to be ran in the app.
         /// </summary>
-        public IEnumerable<string> SingleMethodFilters => _singleMethodFilters;
+        public ICollection<string> SingleMethodFilters => _singleMethodFilters;
 
         /// <summary>
         /// Specify the test classes to be ran in the app.
         /// </summary>
-        public IEnumerable<string> ClassMethodFilters => _classMethodFilters;
+        public ICollection<string> ClassMethodFilters => _classMethodFilters;
     }
 }

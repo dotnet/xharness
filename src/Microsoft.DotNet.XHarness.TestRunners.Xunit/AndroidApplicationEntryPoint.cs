@@ -28,8 +28,12 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
         protected override bool IsXunit => true;
 
-        protected override TestRunner GetTestRunner(LogWriter logWriter) =>
-            new XUnitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
+        protected override TestRunner GetTestRunner(LogWriter logWriter)
+        {
+            var runner = new XUnitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
+            ConfigureRunnerFilters(runner, ApplicationOptions.Current);
+            return runner;
+        }
 
         public override async Task RunAsync()
         {
@@ -41,8 +45,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             logger.MinimumLogLevel = MinimumLogLevel.Info;
 
             var runner = await InternalRunAsync(logger);
-            ConfigureRunner(runner, options);
-
             if (options.EnableXml)
             {
                 if (TestsResultsFinalPath == null)

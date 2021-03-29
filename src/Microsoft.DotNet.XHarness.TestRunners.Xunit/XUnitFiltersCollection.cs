@@ -16,12 +16,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
     /// </summary>
     internal class XUnitFiltersCollection : List<XUnitFilter>
     {
-
-        /// <summary>
-        /// Gets/sets if by default all tests are ran.
-        /// </summary>
-        public bool RunAllTestsByDefault { get; set; } = true;
-
         /// <summary>
         /// Return all the filters that are applied to assemblies.
         /// </summary>
@@ -39,7 +33,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         // you ran in.
         private bool IsExcludedInternal(IEnumerable<XUnitFilter> filters, Func<XUnitFilter, bool> isExcludedCb)
         {
-            var isExcluded = !RunAllTestsByDefault;
+            // No filters           : include by default
+            // Any exclude filters  : include by default
+            // Only include filters : exclude by default
+            var isExcluded = filters.Any() && filters.All(f => !f.Exclude);
             foreach (var filter in filters)
             {
                 var doesExclude = isExcludedCb(filter);
@@ -64,7 +61,21 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public bool IsExcluded(TestAssemblyInfo assembly, Action<string>? log = null) =>
             IsExcludedInternal(AssemblyFilters, f => f.IsExcluded(assembly, log));
 
-        public bool IsExcluded(ITestCase testCase, Action<string>? log = null) =>
-            IsExcludedInternal(TestCaseFilters, f => f.IsExcluded(testCase, log));
+        public bool IsExcluded(ITestCase testCase, Action<string>? log = null)
+        {
+            // Check each type of filter separately. For conflicts within a type of filter, we want the inclusion
+            // (the logic in IsExcludedInternal), but if all filters for a filter type exclude a test case, we want
+            // the exclusion. For example, if a test class is included, but it contains tests that have excluded
+            // traits, the behaviour should be to run all tests in that class without the excluded traits.
+            foreach (IGrouping<XUnitFilterType, XUnitFilter> filterGroup in TestCaseFilters.GroupBy(f => f.FilterType))
+            {
+                if (IsExcludedInternal(filterGroup, f => f.IsExcluded(testCase, log)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

@@ -152,18 +152,24 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             return categories;
         }
 
-        internal static void ConfigureRunner(TestRunner runner, ApplicationOptions options)
+        internal static void ConfigureRunnerFilters(TestRunner runner, ApplicationOptions options)
         {
             runner.RunAllTestsByDefault = options.RunAllTestsByDefault;
-            // add the provided method and class filters
-            foreach (string methodName in options.SingleMethodFilters)
-            {
-                runner.SkipMethod(methodName, !options.RunAllTestsByDefault);
-            }
 
-            foreach (string className in options.ClassMethodFilters)
+            // Add the provided method and class filters
+            if (options.SingleMethodFilters.Count != 0 || options.ClassMethodFilters.Count != 0)
             {
-                runner.SkipClass(className, !options.RunAllTestsByDefault);
+                // Having methods/classes explicitly specified means only those methods/classes should be run
+                runner.RunAllTestsByDefault = false;
+                foreach (string methodName in options.SingleMethodFilters)
+                {
+                    runner.SkipMethod(methodName, isExcluded: false);
+                }
+
+                foreach (string className in options.ClassMethodFilters)
+                {
+                    runner.SkipClass(className, isExcluded: false);
+                }
             }
         }
 
