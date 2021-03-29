@@ -533,6 +533,8 @@ namespace Microsoft.DotNet.XHarness.Apple
                 listenerPort,
                 listenerTmpFile,
                 extraEnvVariables);
+
+            // Variables passed through --set-env
             args.AddRange(envVariables.Select(pair => new SetEnvVariableArgument(pair.Key, pair.Value)));
 
             // Arguments passed to the iOS app bundle
