@@ -39,15 +39,20 @@ Arguments:
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            if (ExtraArguments.Count() != 1)
-            {
-                throw CreateException("You have to specify a target OS");
-            }
-
             var processManager = new MlaunchProcessManager(_arguments.XcodeRoot, _arguments.MlaunchPath);
 
             var log = new CallbackLog(m => logger.LogDebug(m));
-            var target = ParseTarget(ExtraArguments.First());
+            TestTargetOs target;
+
+            try
+            {
+                target = ParseTarget();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message);
+                return ExitCode.INVALID_ARGUMENTS;
+            }
 
             try
             {
@@ -75,14 +80,21 @@ Arguments:
             return ExitCode.SUCCESS;
         }
 
-        private static TestTargetOs ParseTarget(string targetName)
+        private TestTargetOs ParseTarget()
         {
+            if (ExtraArguments.Count() != 1)
+            {
+                throw CreateException("You have to specify a target OS");
+            }
+
+            string targetName = ExtraArguments.First();
             TestTargetOs target;
+
             try
             {
                 target = targetName.ParseAsAppRunnerTargetOs();
             }
-            catch (ArgumentOutOfRangeException)
+            catch (Exception)
             {
                 throw CreateException($"Failed to parse test target '{targetName}'");
             }
@@ -97,7 +109,7 @@ Arguments:
 
         private static Exception CreateException(string message) => new ArgumentException(
             $"{message}. Available targets are:" +
-            XHarnessCommandArguments.GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None) +
+            XHarnessCommandArguments.GetAllowedValues(t => t.AsString(), TestTarget.None, TestTarget.MacCatalyst) +
             Environment.NewLine + Environment.NewLine +
             "You can also specify desired iOS/tvOS/WatchOS version. Example: ios-simulator-64_13.4");
     }
