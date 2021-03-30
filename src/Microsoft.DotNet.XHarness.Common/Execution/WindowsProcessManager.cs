@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 
         protected override int Kill(int pid, int sig)
         {
-#if NETCOREAPP3_1
+#if NET6_0_OR_GREATER
             Process.GetProcessById(pid).Kill(entireProcessTree: true);
 #else
             Process.GetProcessById(pid).Kill();
