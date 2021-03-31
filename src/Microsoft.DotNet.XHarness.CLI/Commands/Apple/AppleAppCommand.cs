@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,7 +57,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected abstract Task<ExitCode> RunAppInternal(
             AppBundleInformation appBundleInfo,
-            string? deviceName,
+            IDevice device,
+            IDevice? companionDevice,
             ILogger logger,
             TestTargetOs target,
             Logs logs,
@@ -137,8 +139,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             int verbosity = GetMlaunchVerbosity(iOSRunArguments.Verbosity);
 
-            string? deviceName = iOSRunArguments.DeviceName;
-
             var appBundleInformationParser = new AppBundleInformationParser(ProcessManager);
 
             logger.LogInformation("Getting app bundle information..");
@@ -161,75 +161,65 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             ExitCode exitCode = ExitCode.SUCCESS;
 
-            // Install app on the device
-            if (!target.Platform.IsSimulator())
+            IDevice device;
+            IDevice? companionDevice;
+
+            try
             {
-                try
-                {
-                    (deviceName, exitCode) = await InstallApp(appBundleInfo, deviceName, logger, target, mainLog, cancellationToken);
-                }
-                catch (Exception e)
-                {
-                    var message = new StringBuilder()
-                        .AppendLine("Application installation failed:")
-                        .AppendLine(e.ToString());
+                (device, companionDevice) = await FindDevice(target, iOSRunArguments.DeviceName, mainLog);
+            }
+            catch (NoDeviceFoundException e)
+            {
+                logger.LogError(e.Message);
+                return ExitCode.DEVICE_NOT_FOUND;
+            }
 
-                    logger.LogError(message.ToString());
-                    return ExitCode.PACKAGE_INSTALLATION_FAILURE;
-                }
+            try
+            {
+                exitCode = await InstallApp(appBundleInfo, device, logger, target, mainLog, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                var message = new StringBuilder()
+                    .AppendLine("Application installation failed:")
+                    .AppendLine(e.ToString());
 
-                if (exitCode != ExitCode.SUCCESS)
+                logger.LogError(message.ToString());
+                return ExitCode.PACKAGE_INSTALLATION_FAILURE;
+            }
+
+            if (exitCode != ExitCode.SUCCESS)
+            {
+                var message = new StringBuilder().Append("Application installation failed");
+
+                if (ErrorKnowledgeBase.IsKnownInstallIssue(mainLog, out var failureMessage))
                 {
-                    var message = new StringBuilder().Append("Application installation failed");
-
-                    if (ErrorKnowledgeBase.IsKnownInstallIssue(mainLog, out var failureMessage))
+                    message.AppendLine(":");
+                    message.Append(failureMessage.Value.HumanMessage);
+                    if (failureMessage.Value.IssueLink != null)
                     {
-                        message.AppendLine(":");
-                        message.Append(failureMessage.Value.HumanMessage);
-                        if (failureMessage.Value.IssueLink != null)
-                        {
-                            message.AppendLine($" Find more information at {failureMessage.Value.IssueLink}");
-                        }
+                        message.AppendLine($" Find more information at {failureMessage.Value.IssueLink}");
                     }
-
-                    logger.LogError(message.ToString());
-
-                    if (!string.IsNullOrEmpty(deviceName))
-                    {
-                        logger.LogInformation($"Cleaning up the failed installation from {deviceName}...");
-                        await UninstallApp(appBundleInfo, deviceName, logger, mainLog, new CancellationToken());
-                    }
-
-                    return exitCode;
                 }
 
-                if (string.IsNullOrEmpty(deviceName))
+                logger.LogError(message.ToString());
+
+                string? deviceName = device?.UDID ?? iOSRunArguments.DeviceName;
+                if (!string.IsNullOrEmpty(deviceName))
                 {
-                    logger.LogError("Failed to get the name of the device where application was installed!");
-                    return ExitCode.PACKAGE_INSTALLATION_FAILURE;
+                    logger.LogInformation($"Cleaning up the failed installation from {iOSRunArguments.DeviceName}...");
+                    await UninstallApp(appBundleInfo, deviceName, logger, mainLog, new CancellationToken());
                 }
+
+                return exitCode;
             }
 
             // Run / test app
             try
             {
-                logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on " + (deviceName != null ? $"device '{deviceName}'" : target.AsString()));
+                logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on '{device.Name}'");
 
-                exitCode = await RunAppInternal(
-                    appBundleInfo,
-                    deviceName,
-                    logger,
-                    target,
-                    logs,
-                    mainLog,
-                    cancellationToken);
-            }
-            catch (NoDeviceFoundException)
-            {
-                logger.LogError($"Failed to find suitable device for target {target.AsString()}" +
-                    (target.Platform.IsSimulator() ? Environment.NewLine + "Please make sure suitable Simulator is installed in Xcode" : string.Empty));
-
-                return ExitCode.DEVICE_NOT_FOUND;
+                exitCode = await RunAppInternal(appBundleInfo, device, companionDevice, logger, target, logs, mainLog, cancellationToken);
             }
             catch (Exception e)
             {
@@ -256,7 +246,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             {
                 mainLog.Dispose();
 
-                if (!target.Platform.IsSimulator() && deviceName != null)
+                string? deviceName = device?.UDID ?? iOSRunArguments.DeviceName;
+                if (!target.Platform.IsSimulator() && !string.IsNullOrEmpty(deviceName))
                 {
                     await UninstallApp(appBundleInfo, deviceName, logger, mainLog, new CancellationToken());
                 }
@@ -270,34 +261,94 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             return exitCode;
         }
 
-        private async Task<(string?, ExitCode)> InstallApp(
+        private async Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(TestTargetOs target, string? deviceName, ILog mainLog)
+        {
+            IDevice? device;
+            IDevice? companionDevice = null;
+
+            bool IsMatchingDevice(IDevice device) =>
+                device.Name.Equals(deviceName, StringComparison.InvariantCultureIgnoreCase) ||
+                device.UDID.Equals(deviceName, StringComparison.InvariantCultureIgnoreCase);
+
+            if (target.Platform.IsSimulator())
+            {
+                if (deviceName == null)
+                {
+                    (device, companionDevice) = await SimulatorLoader.FindSimulators(target, mainLog, 3);
+                }
+                else
+                {
+                    await SimulatorLoader.LoadDevices(mainLog, false);
+
+                    device = SimulatorLoader.AvailableDevices.FirstOrDefault(IsMatchingDevice)
+                        ?? throw new NoDeviceFoundException($"Failed to find a simulator '{deviceName}'");
+                }
+            }
+            else
+            {
+                // The DeviceLoader.FindDevice will return the fist device of the type, but we want to make sure that
+                // the device we use is of the correct arch, therefore, we will use the LoadDevices and handpick one
+                await DeviceLoader.LoadDevices(mainLog, false, false);
+
+                if (deviceName == null)
+                {
+
+                    IHardwareDevice? hardwareDevice = target.Platform switch
+                    {
+                        TestTarget.Simulator_iOS32 => DeviceLoader.Connected32BitIOS.FirstOrDefault(),
+                        TestTarget.Device_iOS => DeviceLoader.Connected64BitIOS.FirstOrDefault(),
+                        TestTarget.Device_tvOS => DeviceLoader.ConnectedTV.FirstOrDefault(),
+                        _ => throw new ArgumentOutOfRangeException(nameof(target), $"Unrecognized device platform {target.Platform}")
+                    };
+
+                    if (target.Platform.IsWatchOSTarget() && hardwareDevice != null)
+                    {
+                        companionDevice = await DeviceLoader.FindCompanionDevice(mainLog, hardwareDevice);
+                    }
+
+                    device = hardwareDevice;
+                }
+                else
+                {
+                    device = DeviceLoader.ConnectedDevices.FirstOrDefault(IsMatchingDevice)
+                        ?? throw new NoDeviceFoundException($"Failed to find a device '{deviceName}'. " +
+                                                            "Please make sure the device is connected and unlocked.");
+                }
+            }
+
+            if (device == null)
+            {
+                throw new NoDeviceFoundException($"Failed to find a suitable device for target {target.AsString()}");
+            }
+
+            return (device, companionDevice);
+        }
+
+        private async Task<ExitCode> InstallApp(
             AppBundleInformation appBundleInfo,
-            string? deviceName,
+            IDevice device,
             ILogger logger,
             TestTargetOs target,
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            logger.LogInformation($"Installing application '{appBundleInfo.AppName}' on " + (deviceName != null ? $" on device '{deviceName}'" : target.AsString()));
+            logger.LogInformation($"Installing application '{appBundleInfo.AppName}' on '{device}'");
 
-            var appInstaller = new AppInstaller(ProcessManager, DeviceLoader, mainLog, GetMlaunchVerbosity(iOSRunArguments.Verbosity));
+            var appInstaller = new AppInstaller(
+                ProcessManager,
+                mainLog,
+                GetMlaunchVerbosity(iOSRunArguments.Verbosity));
 
             ProcessExecutionResult result;
 
             try
             {
-                (deviceName, result) = await appInstaller.InstallApp(appBundleInfo, target, cancellationToken: cancellationToken);
-            }
-            catch (NoDeviceFoundException)
-            {
-                logger.LogError($"Failed to find suitable device for target {target.AsString()}" + Environment.NewLine +
-                    "Please make sure the device is connected and unlocked.");
-                return (null, ExitCode.DEVICE_NOT_FOUND);
+                result = await appInstaller.InstallApp(appBundleInfo, target, device, cancellationToken: cancellationToken);
             }
             catch (Exception e)
             {
                 logger.LogError($"Failed to install the app bundle:{Environment.NewLine}{e}");
-                return (null, ExitCode.PACKAGE_INSTALLATION_FAILURE);
+                return ExitCode.PACKAGE_INSTALLATION_FAILURE;
             }
 
             if (!result.Succeeded)
@@ -319,12 +370,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                     logger.LogError($"Failed to install the app bundle (exit code={result.ExitCode})");
                 }
 
-                return (deviceName, ExitCode.PACKAGE_INSTALLATION_FAILURE);
+                return ExitCode.PACKAGE_INSTALLATION_FAILURE;
             }
 
-            logger.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on device '{deviceName}'");
+            logger.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on device '{device}'");
 
-            return (deviceName, ExitCode.SUCCESS);
+            return ExitCode.SUCCESS;
         }
 
         private async Task UninstallApp(

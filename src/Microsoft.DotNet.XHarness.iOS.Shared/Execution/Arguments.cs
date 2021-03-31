@@ -88,6 +88,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
     }
 
     /// <summary>
+    /// Install the specified iOS app bundle on the Simulator.
+    /// </summary>
+    public sealed class InstallAppOnSimulatorArgument : SingleValueArgument
+    {
+        public InstallAppOnSimulatorArgument(string appPath) : base("installsim", appPath, false)
+        {
+        }
+    }
+
+    /// <summary>
     /// Uninstall the specified bundle id from the device.
     /// </summary>
     public sealed class UninstallAppFromDeviceArgument : SingleValueArgument

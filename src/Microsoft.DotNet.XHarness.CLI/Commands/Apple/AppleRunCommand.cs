@@ -12,6 +12,7 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.Extensions.Logging;
@@ -37,7 +38,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected override async Task<ExitCode> RunAppInternal(
             AppBundleInformation appBundleInfo,
-            string? deviceName,
+            IDevice device,
+            IDevice? companionDevice,
             ILogger logger,
             TestTargetOs target,
             Logs logs,
@@ -49,8 +51,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var appRunner = new AppRunner(
                 ProcessManager,
-                DeviceLoader,
-                SimulatorLoader,
                 new CrashSnapshotReporterFactory(ProcessManager),
                 new CaptureLogFactory(),
                 new DeviceLogCapturerFactory(ProcessManager),
@@ -59,14 +59,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 new Helpers(),
                 logCallback);
 
-            ProcessExecutionResult result;
-            (deviceName, result) = await appRunner.RunApp(
+            ProcessExecutionResult result = await appRunner.RunApp(
                 appBundleInfo,
                 target,
+                device,
                 _arguments.Timeout,
                 PassThroughArguments,
                 _arguments.EnvironmentalVariables,
-                deviceName,
                 resetSimulator: _arguments.ResetSimulator,
                 verbosity: GetMlaunchVerbosity(_arguments.Verbosity),
                 cancellationToken: cancellationToken);

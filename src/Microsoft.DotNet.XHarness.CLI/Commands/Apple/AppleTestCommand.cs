@@ -11,6 +11,7 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -38,7 +39,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected override async Task<ExitCode> RunAppInternal(
             AppBundleInformation appBundleInfo,
-            string? deviceName,
+            IDevice device,
+            IDevice? companionDevice,
             ILogger logger,
             TestTargetOs target,
             Logs logs,
@@ -54,8 +56,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var appTester = new AppTester(
                 ProcessManager,
-                DeviceLoader,
-                SimulatorLoader,
                 new SimpleListenerFactory(tunnelBore),
                 new CrashSnapshotReporterFactory(ProcessManager),
                 new CaptureLogFactory(),
@@ -69,14 +69,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             string resultMessage;
             TestExecutingResult testResult;
-            (deviceName, testResult, resultMessage) = await appTester.TestApp(
+            (testResult, resultMessage) = await appTester.TestApp(
                 appBundleInfo,
                 target,
                 _arguments.Timeout,
                 _arguments.LaunchTimeout,
                 PassThroughArguments,
                 _arguments.EnvironmentalVariables,
-                deviceName,
+                device,
+                companionDevice,
                 resetSimulator: _arguments.ResetSimulator,
                 verbosity: GetMlaunchVerbosity(_arguments.Verbosity),
                 xmlResultJargon: _arguments.XmlResultJargon,

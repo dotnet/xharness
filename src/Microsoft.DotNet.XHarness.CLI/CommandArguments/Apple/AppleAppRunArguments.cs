@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
                     v => MlaunchPath = RootPath(v)
                 },
                 {
-                    "device-name=", "Name of a specific device, if you wish to target one",
+                    "device=", "Name or UDID of a simulator/device you wish to target",
                     v => DeviceName = v
                 },
                 {
