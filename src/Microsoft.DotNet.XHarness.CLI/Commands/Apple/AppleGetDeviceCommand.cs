@@ -84,7 +84,7 @@ Arguments:
         {
             if (ExtraArguments.Count() != 1)
             {
-                throw CreateException("You have to specify a target OS");
+                throw CreateException("You have to specify one target platform");
             }
 
             string targetName = ExtraArguments.First();
