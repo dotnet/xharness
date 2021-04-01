@@ -72,7 +72,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<(string, string)> extraEnvVariables,
             IDevice device,
             IDevice? companionDevice,
-            bool resetSimulator = false,
             int verbosity = 1,
             XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
             string[]? skippedMethods = null,
@@ -167,12 +166,10 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                     await RunSimulatorTests(
                         mlaunchArguments,
-                        appInformation,
                         crashReporter,
                         testReporter,
                         (ISimulatorDevice)device,
                         companionDevice as ISimulatorDevice,
-                        resetSimulator,
                         timeout,
                         combinedCancellationToken.Token);
                 }
@@ -215,12 +212,10 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         private async Task RunSimulatorTests(
             MlaunchArguments mlaunchArguments,
-            AppBundleInformation appInformation,
             ICrashSnapshotReporter crashReporter,
             ITestReporter testReporter,
             ISimulatorDevice simulator,
             ISimulatorDevice? companionSimulator,
-            bool resetSimulator,
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
@@ -255,33 +250,12 @@ namespace Microsoft.DotNet.XHarness.Apple
                     systemLogs.Add(companionLog);
                 }
 
-                if (resetSimulator)
-                {
-                    await simulator.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
-
-                    if (companionSimulator != null)
-                    {
-                        await companionSimulator.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
-                    }
-                }
-
                 await crashReporter.StartCaptureAsync();
 
                 _mainLog.WriteLine("Starting test run");
 
                 var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
                 await testReporter.CollectSimulatorResult(result);
-
-                // Cleanup after us
-                if (resetSimulator)
-                {
-                    await simulator.KillEverything(_mainLog);
-
-                    if (companionSimulator != null)
-                    {
-                        await companionSimulator.KillEverything(_mainLog);
-                    }
-                }
             }
             finally
             {
@@ -558,7 +532,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             else
             {
-                args.Add(new LaunchSimulatorArgument(appInformation.LaunchAppPath));
+                args.Add(new LaunchSimulatorBundleArgument(appInformation.BundleIdentifier));
             }
 
             return args;
@@ -593,7 +567,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, ips));
             args.Add(new DisableMemoryLimitsArgument());
-            args.Add(new DeviceNameArgument(device.UDID));
+            args.Add(new DeviceNameArgument(device));
 
             if (_listenerFactory.UseTunnel)
             {

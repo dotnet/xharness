@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 : null;
 
             // Only add the extra callback if we do know that the feature was indeed enabled
-            Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(logger, l) : (Action<string>?)null;
+            Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(logger, l) : null;
 
             var appTester = new AppTester(
                 ProcessManager,
@@ -78,7 +78,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 _arguments.EnvironmentalVariables,
                 device,
                 companionDevice,
-                resetSimulator: _arguments.ResetSimulator,
                 verbosity: GetMlaunchVerbosity(_arguments.Verbosity),
                 xmlResultJargon: _arguments.XmlResultJargon,
                 cancellationToken: cancellationToken,

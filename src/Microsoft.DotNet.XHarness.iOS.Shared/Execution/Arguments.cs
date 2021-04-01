@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 {
@@ -73,6 +74,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
     public sealed class DeviceNameArgument : SingleValueArgument
     {
         public DeviceNameArgument(string deviceName) : base("devname", deviceName, false)
+        {
+        }
+
+        public DeviceNameArgument(IDevice device) : base("devname", device.UDID, false)
         {
         }
     }
@@ -262,11 +267,21 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
     }
 
     /// <summary>
-    /// Launch the specified MonoTouch.app in the simulator.
+    /// Launch the specified app in the simulator.
     /// </summary>
     public sealed class LaunchSimulatorArgument : SingleValueArgument
     {
         public LaunchSimulatorArgument(string launchAppPath) : base("launchsim", launchAppPath, false)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Launch the specified already installed app in the simulator.
+    /// </summary>
+    public sealed class LaunchSimulatorBundleArgument : SingleValueArgument
+    {
+        public LaunchSimulatorBundleArgument(string bundleId) : base("launchsimbundleid", bundleId, true)
         {
         }
     }
@@ -281,6 +296,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         public SimulatorUDIDArgument(string udid)
         {
             _udid = udid ?? throw new ArgumentNullException(nameof(udid));
+        }
+
+        public SimulatorUDIDArgument(IDevice device)
+        {
+            _udid = device?.UDID ?? throw new ArgumentNullException(nameof(device));
         }
 
         public override string AsCommandLineArgument() => $"--device=:v2:udid={_udid}";

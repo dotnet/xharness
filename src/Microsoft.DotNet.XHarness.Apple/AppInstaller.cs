@@ -39,28 +39,27 @@ namespace Microsoft.DotNet.XHarness.Apple
                 throw new DirectoryNotFoundException("Failed to find the app bundle directory");
             }
 
-            var args = new MlaunchArguments
-            {
-                new DeviceNameArgument(device.UDID)
-            };
+            var args = new MlaunchArguments();
 
             if (target.Platform.IsSimulator())
             {
+                args.Add(new SimulatorUDIDArgument(device));
                 args.Add(new InstallAppOnSimulatorArgument(appBundleInformation.LaunchAppPath));
             }
             else
             {
+                args.Add(new DeviceNameArgument(device));
                 args.Add(new InstallAppOnDeviceArgument(appBundleInformation.LaunchAppPath));
+
+                if (target.Platform.IsWatchOSTarget())
+                {
+                    args.Add(new DeviceArgument("ios,watchos"));
+                }
             }
 
             for (var i = 0; i <= _verbosity; i++)
             {
                 args.Add(new VerbosityArgument());
-            }
-
-            if (target.Platform.IsWatchOSTarget())
-            {
-                args.Add(new DeviceArgument("ios,watchos"));
             }
 
             var totalSize = Directory.GetFiles(appBundleInformation.LaunchAppPath, "*", SearchOption.AllDirectories).Select((v) => new FileInfo(v).Length).Sum();

@@ -313,7 +313,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             var args = GetCommonArguments(extraAppArguments, extraEnvVariables, verbosity);
 
             args.Add(new DisableMemoryLimitsArgument());
-            args.Add(new DeviceNameArgument(device.UDID));
+            args.Add(new DeviceNameArgument(device));
 
             if (appInformation.Extension.HasValue)
             {

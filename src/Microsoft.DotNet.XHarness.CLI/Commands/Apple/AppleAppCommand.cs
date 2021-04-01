@@ -174,17 +174,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 {
                     var simulator = (ISimulatorDevice)device;
 
-                    logger.LogInformation($"Reseting simulator '{device.Name}'");
+                    logger.LogInformation($"Reseting simulator '{device.Name}'..");
                     await simulator.PrepareSimulator(mainLog, appBundleInfo.BundleIdentifier);
 
                     if (companionDevice != null)
                     {
-                        logger.LogInformation($"Reseting companion simulator '{companionDevice.Name}'");
+                        logger.LogInformation($"Reseting companion simulator '{companionDevice.Name}'..");
                         var companionSimulator = (ISimulatorDevice)companionDevice;
                         await companionSimulator.PrepareSimulator(mainLog, appBundleInfo.BundleIdentifier);
                     }
 
-                    logger.LogInformation($"Simulator reset finished");
+                    logger.LogInformation("Simulator reset finished");
                 }
             }
             catch (NoDeviceFoundException e)
@@ -226,7 +226,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 string? deviceName = device?.UDID ?? iOSRunArguments.DeviceName;
                 if (!string.IsNullOrEmpty(deviceName))
                 {
-                    logger.LogInformation($"Cleaning up the failed installation from {iOSRunArguments.DeviceName}...");
+                    logger.LogInformation($"Cleaning up the failed installation from {deviceName}..");
                     await UninstallApp(appBundleInfo, deviceName, logger, mainLog, new CancellationToken());
                 }
 
@@ -269,19 +269,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                     {
                         var simulator = (ISimulatorDevice)device;
 
-                        logger.LogInformation($"Cleaning up simulator '{device.Name}'");
+                        logger.LogInformation($"Cleaning up simulator '{device.Name}'..");
                         await simulator.KillEverything(mainLog);
 
                         if (companionDevice != null)
                         {
-                            logger.LogInformation($"Cleaning up companion simulator '{companionDevice.Name}'");
+                            logger.LogInformation($"Cleaning up companion simulator '{companionDevice.Name}'..");
                             var companionSimulator = (ISimulatorDevice)companionDevice;
                             await companionSimulator.KillEverything(mainLog);
                         }
                     }
                     finally
                     {
-                        logger.LogInformation($"Simulators cleaned up");
+                        logger.LogInformation("Simulators cleaned up");
                     }
                 }
 
@@ -290,8 +290,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 string? deviceName = device?.UDID ?? iOSRunArguments.DeviceName;
                 if (!target.Platform.IsSimulator() && !string.IsNullOrEmpty(deviceName))
                 {
-                    // TODO: Uninstall from simulator as well
-                    await UninstallApp(appBundleInfo, deviceName, logger, mainLog, new CancellationToken());
+                    try
+                    {
+                        // TODO: Uninstall from simulator as well
+                        await UninstallApp(appBundleInfo, deviceName, logger, mainLog, new CancellationToken());
+                        logger.LogInformation("Application uninstalled");
+                    }
+                    finally
+                    {
+                    }
                 }
 
                 if (lldbFileCreated)
@@ -311,7 +318,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            logger.LogInformation($"Installing application '{appBundleInfo.AppName}' on '{device.Name}'");
+            logger.LogInformation($"Installing application '{appBundleInfo.AppName}' on '{device.Name}'..");
 
             var appInstaller = new AppInstaller(
                 ProcessManager,
@@ -352,7 +359,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 return ExitCode.PACKAGE_INSTALLATION_FAILURE;
             }
 
-            logger.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on device '{device}'");
+            logger.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on device '{device.Name}'");
 
             return ExitCode.SUCCESS;
         }
