@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var appBundleInformationParser = new AppBundleInformationParser(ProcessManager);
 
-            logger.LogInformation("Getting app bundle information..");
+            logger.LogInformation("Getting app bundle information");
 
             AppBundleInformation appBundleInfo;
 
@@ -173,12 +173,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 {
                     var simulator = (ISimulatorDevice)device;
 
-                    logger.LogInformation($"Reseting simulator '{device.Name}'..");
+                    logger.LogInformation($"Reseting simulator '{device.Name}'");
                     await simulator.PrepareSimulator(mainLog, appBundleInfo.BundleIdentifier);
 
                     if (companionDevice != null)
                     {
-                        logger.LogInformation($"Reseting companion simulator '{companionDevice.Name}'..");
+                        logger.LogInformation($"Reseting companion simulator '{companionDevice.Name}'");
                         var companionSimulator = (ISimulatorDevice)companionDevice;
                         await companionSimulator.PrepareSimulator(mainLog, appBundleInfo.BundleIdentifier);
                     }
@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             {
                 if (!target.Platform.IsSimulator())
                 {
-                    logger.LogInformation($"Cleaning up the failed installation from '{device.Name}'..");
+                    logger.LogInformation($"Cleaning up the failed installation from '{device.Name}'");
                     await UninstallApp(appBundleInfo, device, logger, mainLog, new CancellationToken());
                 }
 
@@ -240,12 +240,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                     {
                         var simulator = (ISimulatorDevice)device;
 
-                        logger.LogInformation($"Cleaning up simulator '{device.Name}'..");
+                        logger.LogInformation($"Cleaning up simulator '{device.Name}'");
                         await simulator.KillEverything(mainLog);
 
                         if (companionDevice != null)
                         {
-                            logger.LogInformation($"Cleaning up companion simulator '{companionDevice.Name}'..");
+                            logger.LogInformation($"Cleaning up companion simulator '{companionDevice.Name}'");
                             var companionSimulator = (ISimulatorDevice)companionDevice;
                             await companionSimulator.KillEverything(mainLog);
                         }
@@ -280,7 +280,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            logger.LogInformation($"Installing application '{appBundleInfo.AppName}' on '{device.Name}'..");
+            logger.LogInformation($"Installing application '{appBundleInfo.AppName}' on '{device.Name}'");
 
             var appInstaller = new AppInstaller(
                 ProcessManager,
@@ -326,7 +326,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 return ExitCode.PACKAGE_INSTALLATION_FAILURE;
             }
 
-            logger.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on device '{device.Name}'");
+            logger.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on '{device.Name}'");
 
             return ExitCode.SUCCESS;
         }
@@ -338,7 +338,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from '{device.Name}'..");
+            logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from '{device.Name}'");
 
             var appUninstaller = new AppUninstaller(ProcessManager, mainLog, GetMlaunchVerbosity(iOSRunArguments.Verbosity));
             var uninstallResult = await appUninstaller.UninstallApp(device, appBundleInfo.BundleIdentifier, cancellationToken);
