@@ -253,9 +253,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
             catch (HttpRequestException e)
             {
                 // 403 means 404
-#if NETCOREAPP3_1
-                {
-#else
                 if (e.StatusCode == HttpStatusCode.Forbidden)
                 {
                     // Apple's servers return a 403 if the file doesn't exist, which can be quite confusing, so show a better error.
@@ -263,7 +260,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
                 }
                 else
                 {
-#endif
                     Logger.LogWarning($"Failed to download {url}: {e}");
                 }
 

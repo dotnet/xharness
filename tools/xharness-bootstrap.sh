@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ### This script is a quick way to install and test XHarness on any POSIX machine.
-### It installs the .NET Core 3.1 SDK and the XHarness tool, everything in a local folder.
+### It installs the .NET SDK and the XHarness tool, everything in a local folder.
 ###
 ### Use the following command to run this script from anywhere:
-### curl -L https://aka.ms/xharness-bootstrap | bash -
+### curl -L https://aka.ms/get-xharness | bash -
 
 set -e
 
@@ -35,14 +35,14 @@ curl -L https://dot.net/v1/dotnet-install.sh -o "$dotnet_install"
 chmod u+x "$dotnet_install"
 dotnet_dir="$here/.dotnet"
 
-printf "Installing .NET 3.1 SDK locally to \033[0;33m%s\033[0m..\n" "$dotnet_dir"
-$dotnet_install --install-dir "$dotnet_dir" --channel "3.1"
+printf "Installing .NET SDK locally to \033[0;33m%s\033[0m..\n" "$dotnet_dir"
+$dotnet_install --install-dir "$dotnet_dir" --version "6.0.100-preview.2.21155.3"
 echo 'dotnet installed'
 
 export DOTNET_ROOT="$here/.dotnet"
 
 printf "Installing XHarness.CLI locally to \033[0;33m%s\033[0m..\n" "$here"
-./.dotnet/dotnet tool install --tool-path . --version "$xharness_version" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json Microsoft.DotNet.XHarness.CLI || true
+./.dotnet/dotnet tool install --tool-path . --version "$xharness_version" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json Microsoft.DotNet.XHarness.CLI
 echo "XHarness.CLI installed"
 
 echo 'Run following command:'
