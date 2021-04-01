@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 async () => await appRunner.RunApp(
                     appInformation,
                     new TestTargetOs(TestTarget.Simulator_tvOS, null),
-                    _mockSimulator.Object,
+                    _mockSimulator,
                     timeout: TimeSpan.FromSeconds(30),
                     extraAppArguments: Array.Empty<string>(),
                     extraEnvVariables: Array.Empty<(string, string)>()));
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             captureLogFactory
                 .Setup(x => x.Create(
                    Path.Combine(_logs.Object.Directory, _mockSimulator.Name + ".log"),
-                   _mockSimulator.Object.SystemLog,
+                   _mockSimulator.SystemLog,
                    false,
                    LogType.SystemLog))
                 .Returns(captureLog.Object);
@@ -96,11 +96,10 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             var result = await appRunner.RunApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Simulator_tvOS, null),
-                _mockSimulator.Object,
+                _mockSimulator,
                 timeout: TimeSpan.FromSeconds(30),
                 extraAppArguments: new[] { "--foo=bar", "--xyz" },
-                extraEnvVariables: new[] { ("appArg1", "value1") },
-                resetSimulator: true);
+                extraEnvVariables: new[] { ("appArg1", "value1") });
 
             // Verify
             Assert.True(result.Succeeded);
@@ -118,10 +117,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                     Times.Once);
 
             captureLog.Verify(x => x.StartCapture(), Times.AtLeastOnce);
-
-            // When resetSimulator == true
-            _mockSimulator.Verify(x => x.PrepareSimulator(_mainLog.Object, AppBundleIdentifier));
-            _mockSimulator.Verify(x => x.KillEverything(_mainLog.Object));
         }
 
         [Fact]
@@ -212,7 +207,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "-argument=--foo=bar " +
             "-argument=--xyz " +
             "-setenv=appArg1=value1 " +
-            $"--device=:v2:udid={_mockSimulator.Object.UDID} " +
+            $"--device=:v2:udid={_mockSimulator.UDID} " +
             $"--launchsimbundleid {StringUtils.FormatArguments(s_appPath)}";
 
         private void SetupLogList(IEnumerable<IFileBackedLog> logs)

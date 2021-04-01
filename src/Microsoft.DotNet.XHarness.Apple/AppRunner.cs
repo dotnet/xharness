@@ -59,7 +59,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables,
             string? companionDeviceName = null,
-            bool resetSimulator = false,
             int verbosity = 1,
             CancellationToken cancellationToken = default)
         {
@@ -107,11 +106,9 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 result = await RunSimulatorApp(
                     mlaunchArguments,
-                    appInformation,
                     crashReporter,
                     simulator,
                     companionSimulator,
-                    resetSimulator,
                     timeout,
                     cancellationToken);
             }
@@ -139,11 +136,9 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         private async Task<ProcessExecutionResult> RunSimulatorApp(
             MlaunchArguments mlaunchArguments,
-            AppBundleInformation appInformation,
             ICrashSnapshotReporter crashReporter,
             ISimulatorDevice simulator,
             ISimulatorDevice? companionSimulator,
-            bool resetSimulator,
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
@@ -178,34 +173,11 @@ namespace Microsoft.DotNet.XHarness.Apple
                     systemLogs.Add(companionLog);
                 }
 
-                if (resetSimulator)
-                {
-                    await simulator.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
-
-                    if (companionSimulator != null)
-                    {
-                        await companionSimulator.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
-                    }
-                }
-
                 await crashReporter.StartCaptureAsync();
 
                 _mainLog.WriteLine("Starting test run");
 
-                var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
-
-                // cleanup after us
-                if (resetSimulator)
-                {
-                    await simulator.KillEverything(_mainLog);
-
-                    if (companionSimulator != null)
-                    {
-                        await companionSimulator.KillEverything(_mainLog);
-                    }
-                }
-
-                return result;
+                return await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
             }
             finally
             {

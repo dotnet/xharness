@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
         protected readonly string _simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
 
-        protected readonly Mock<ISimulatorDevice> _mockSimulator;
+        protected readonly ISimulatorDevice _mockSimulator;
 
         protected readonly Mock<IMlaunchProcessManager> _processManager;
         protected readonly Mock<ILogs> _logs;
@@ -65,8 +65,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             factory2.SetReturnsDefault(_snapshotReporter.Object);
             _snapshotReporterFactory = factory2.Object;
 
-            _mockSimulator = new Mock<ISimulatorDevice>();
-            _mockSimulator.Setup(x =>
+            _mockSimulator = Mock.Of<ISimulatorDevice>(x =>
                 x.UDID == "58F21118E4D34FD69EAB7860BB9B38A0" &&
                 x.Name == SimulatorDeviceName &&
                 x.LogPath == _simulatorLogPath &&

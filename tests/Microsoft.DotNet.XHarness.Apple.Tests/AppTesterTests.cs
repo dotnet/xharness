@@ -89,8 +89,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             var captureLogFactory = new Mock<ICaptureLogFactory>();
             captureLogFactory
                 .Setup(x => x.Create(
-                   Path.Combine(_logs.Object.Directory, _mockSimulator.Object.Name + ".log"),
-                   _mockSimulator.Object.SystemLog,
+                   Path.Combine(_logs.Object.Directory, _mockSimulator.Name + ".log"),
+                   _mockSimulator.SystemLog,
                    false,
                    It.IsAny<LogType>()))
                 .Returns(captureLog.Object);
@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             var (result, resultMessage) = await appTester.TestApp(
                 appInformation,
                 new TestTargetOs(TestTarget.Simulator_tvOS, null),
-                _mockSimulator.Object,
+                _mockSimulator,
                 null,
                 TimeSpan.FromSeconds(30),
                 TimeSpan.FromSeconds(30),
@@ -150,10 +150,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
 
             captureLog.Verify(x => x.StartCapture(), Times.AtLeastOnce);
-
-            // When resetSimulator == true
-            _mockSimulator.Verify(x => x.PrepareSimulator(_mainLog.Object, AppBundleIdentifier));
-            _mockSimulator.Verify(x => x.KillEverything(_mainLog.Object));
         }
 
         [Theory]
@@ -541,7 +537,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "-argument=--foo=bar " +
             "-argument=--xyz " +
             "-setenv=NUNIT_HOSTNAME=127.0.0.1 " +
-            $"--device=:v2:udid={_mockSimulator.Object.UDID} " +
+            $"--device=:v2:udid={_mockSimulator.UDID} " +
             $"--launchsim {StringUtils.FormatArguments(s_appPath)}";
     }
 }
