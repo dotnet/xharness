@@ -33,22 +33,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected abstract AppleAppRunArguments iOSRunArguments { get; }
 
         private MlaunchProcessManager? _processManager = null;
-        private HardwareDeviceLoader? _deviceLoader = null;
-        private SimulatorLoader? _simulatorLoader = null;
+        private DeviceFinder? _deviceFinder = null;
 
         protected MlaunchProcessManager ProcessManager
         {
             get => _processManager ?? throw new NullReferenceException("ProcessManager wasn't initialized properly");
         }
 
-        protected HardwareDeviceLoader DeviceLoader
+        protected DeviceFinder DeviceFinder
         {
-            get => _deviceLoader ?? throw new NullReferenceException("DeviceLoader wasn't initialized properly");
-        }
-
-        protected SimulatorLoader SimulatorLoader
-        {
-            get => _simulatorLoader ?? throw new NullReferenceException("SimulatorLoader wasn't initialized properly");
+            get => _deviceFinder ?? throw new NullReferenceException("DeviceFinder wasn't initialized properly");
         }
 
         protected AppleAppCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, allowsExtraArgs, help)
@@ -83,12 +77,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             logger.LogInformation(sb.ToString());
         }
 
-        protected override async Task<ExitCode> InvokeInternal(ILogger logger)
+        protected override sealed async Task<ExitCode> InvokeInternal(ILogger logger)
         {
             // We have to set these here because command arguments are not initialized in the ctor yet
             _processManager = new MlaunchProcessManager(iOSRunArguments.XcodeRoot, iOSRunArguments.MlaunchPath);
-            _deviceLoader = new HardwareDeviceLoader(_processManager);
-            _simulatorLoader = new SimulatorLoader(_processManager);
+            var deviceLoader = new HardwareDeviceLoader(_processManager);
+            var simulatorLoader = new SimulatorLoader(_processManager);
+            _deviceFinder = new DeviceFinder(deviceLoader, simulatorLoader);
 
             var logs = new Logs(iOSRunArguments.OutputDirectory);
 
@@ -166,7 +161,31 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             try
             {
-                (device, companionDevice) = await FindDevice(target, iOSRunArguments.DeviceName, mainLog);
+                (device, companionDevice) = await DeviceFinder.FindDevice(target, iOSRunArguments.DeviceName, mainLog);
+
+                logger.LogInformation($"Found {(target.Platform.IsSimulator() ? "simulator" : "physical")} device '{device.Name}'");
+
+                if (companionDevice != null)
+                {
+                    logger.LogInformation($"Found companion {(target.Platform.IsSimulator() ? "simulator" : "physical")} device '{companionDevice.Name}'");
+                }
+
+                if (target.Platform.IsSimulator() && iOSRunArguments.ResetSimulator)
+                {
+                    var simulator = (ISimulatorDevice)device;
+
+                    logger.LogInformation($"Reseting simulator '{device.Name}'");
+                    await simulator.PrepareSimulator(mainLog, appBundleInfo.BundleIdentifier);
+
+                    if (companionDevice != null)
+                    {
+                        logger.LogInformation($"Reseting companion simulator '{companionDevice.Name}'");
+                        var companionSimulator = (ISimulatorDevice)companionDevice;
+                        await companionSimulator.PrepareSimulator(mainLog, appBundleInfo.BundleIdentifier);
+                    }
+
+                    logger.LogInformation($"Simulator reset finished");
+                }
             }
             catch (NoDeviceFoundException e)
             {
@@ -244,11 +263,34 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             }
             finally
             {
+                if (target.Platform.IsSimulator() && iOSRunArguments.ResetSimulator)
+                {
+                    try
+                    {
+                        var simulator = (ISimulatorDevice)device;
+
+                        logger.LogInformation($"Cleaning up simulator '{device.Name}'");
+                        await simulator.KillEverything(mainLog);
+
+                        if (companionDevice != null)
+                        {
+                            logger.LogInformation($"Cleaning up companion simulator '{companionDevice.Name}'");
+                            var companionSimulator = (ISimulatorDevice)companionDevice;
+                            await companionSimulator.KillEverything(mainLog);
+                        }
+                    }
+                    finally
+                    {
+                        logger.LogInformation($"Simulators cleaned up");
+                    }
+                }
+
                 mainLog.Dispose();
 
                 string? deviceName = device?.UDID ?? iOSRunArguments.DeviceName;
                 if (!target.Platform.IsSimulator() && !string.IsNullOrEmpty(deviceName))
                 {
+                    // TODO: Uninstall from simulator as well
                     await UninstallApp(appBundleInfo, deviceName, logger, mainLog, new CancellationToken());
                 }
 
@@ -261,69 +303,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             return exitCode;
         }
 
-        private async Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(TestTargetOs target, string? deviceName, ILog mainLog)
-        {
-            IDevice? device;
-            IDevice? companionDevice = null;
-
-            bool IsMatchingDevice(IDevice device) =>
-                device.Name.Equals(deviceName, StringComparison.InvariantCultureIgnoreCase) ||
-                device.UDID.Equals(deviceName, StringComparison.InvariantCultureIgnoreCase);
-
-            if (target.Platform.IsSimulator())
-            {
-                if (deviceName == null)
-                {
-                    (device, companionDevice) = await SimulatorLoader.FindSimulators(target, mainLog, 3);
-                }
-                else
-                {
-                    await SimulatorLoader.LoadDevices(mainLog, false);
-
-                    device = SimulatorLoader.AvailableDevices.FirstOrDefault(IsMatchingDevice)
-                        ?? throw new NoDeviceFoundException($"Failed to find a simulator '{deviceName}'");
-                }
-            }
-            else
-            {
-                // The DeviceLoader.FindDevice will return the fist device of the type, but we want to make sure that
-                // the device we use is of the correct arch, therefore, we will use the LoadDevices and handpick one
-                await DeviceLoader.LoadDevices(mainLog, false, false);
-
-                if (deviceName == null)
-                {
-
-                    IHardwareDevice? hardwareDevice = target.Platform switch
-                    {
-                        TestTarget.Simulator_iOS32 => DeviceLoader.Connected32BitIOS.FirstOrDefault(),
-                        TestTarget.Device_iOS => DeviceLoader.Connected64BitIOS.FirstOrDefault(),
-                        TestTarget.Device_tvOS => DeviceLoader.ConnectedTV.FirstOrDefault(),
-                        _ => throw new ArgumentOutOfRangeException(nameof(target), $"Unrecognized device platform {target.Platform}")
-                    };
-
-                    if (target.Platform.IsWatchOSTarget() && hardwareDevice != null)
-                    {
-                        companionDevice = await DeviceLoader.FindCompanionDevice(mainLog, hardwareDevice);
-                    }
-
-                    device = hardwareDevice;
-                }
-                else
-                {
-                    device = DeviceLoader.ConnectedDevices.FirstOrDefault(IsMatchingDevice)
-                        ?? throw new NoDeviceFoundException($"Failed to find a device '{deviceName}'. " +
-                                                            "Please make sure the device is connected and unlocked.");
-                }
-            }
-
-            if (device == null)
-            {
-                throw new NoDeviceFoundException($"Failed to find a suitable device for target {target.AsString()}");
-            }
-
-            return (device, companionDevice);
-        }
-
         private async Task<ExitCode> InstallApp(
             AppBundleInformation appBundleInfo,
             IDevice device,
@@ -332,7 +311,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            logger.LogInformation($"Installing application '{appBundleInfo.AppName}' on '{device}'");
+            logger.LogInformation($"Installing application '{appBundleInfo.AppName}' on '{device.Name}'");
 
             var appInstaller = new AppInstaller(
                 ProcessManager,
