@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
@@ -24,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             _verbosity = verbosity;
         }
 
-        public async Task<ProcessExecutionResult> UninstallApp(string deviceName, string appBundleId, CancellationToken cancellationToken = default)
+        public async Task<ProcessExecutionResult> UninstallApp(IDevice device, string appBundleId, CancellationToken cancellationToken = default)
         {
             var args = new MlaunchArguments();
 
@@ -34,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             args.Add(new UninstallAppFromDeviceArgument(appBundleId));
-            args.Add(new DeviceNameArgument(deviceName));
+            args.Add(new DeviceNameArgument(device.Name));
 
             return await _processManager.ExecuteCommandAsync(args, _mainLog, TimeSpan.FromMinutes(1), cancellationToken: cancellationToken);
         }

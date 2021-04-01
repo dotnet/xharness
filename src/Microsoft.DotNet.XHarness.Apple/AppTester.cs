@@ -66,12 +66,12 @@ namespace Microsoft.DotNet.XHarness.Apple
         public async Task<(TestExecutingResult Result, string ResultMessage)> TestApp(
             AppBundleInformation appInformation,
             TestTargetOs target,
+            IDevice device,
+            IDevice? companionDevice,
             TimeSpan timeout,
             TimeSpan testLaunchTimeout,
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables,
-            IDevice device,
-            IDevice? companionDevice,
             int verbosity = 1,
             XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
             string[]? skippedMethods = null,
@@ -516,7 +516,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 extraEnvVariables);
 
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"));
-            args.Add(new SimulatorUDIDArgument(simulator.UDID));
+            args.Add(new SimulatorUDIDArgument(simulator));
 
             if (appInformation.Extension.HasValue)
             {

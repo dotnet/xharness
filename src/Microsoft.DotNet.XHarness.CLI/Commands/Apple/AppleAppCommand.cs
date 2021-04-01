@@ -4,7 +4,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -193,47 +192,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 return ExitCode.DEVICE_NOT_FOUND;
             }
 
-            try
-            {
-                exitCode = await InstallApp(appBundleInfo, device, logger, target, mainLog, cancellationToken);
-            }
-            catch (Exception e)
-            {
-                var message = new StringBuilder()
-                    .AppendLine("Application installation failed:")
-                    .AppendLine(e.ToString());
-
-                logger.LogError(message.ToString());
-                return ExitCode.PACKAGE_INSTALLATION_FAILURE;
-            }
+            exitCode = await InstallApp(appBundleInfo, device, logger, target, mainLog, cancellationToken);
 
             if (exitCode != ExitCode.SUCCESS)
             {
-                var message = new StringBuilder().Append("Application installation failed");
-
-                if (ErrorKnowledgeBase.IsKnownInstallIssue(mainLog, out var failureMessage))
+                if (!target.Platform.IsSimulator())
                 {
-                    message.AppendLine(":");
-                    message.Append(failureMessage.Value.HumanMessage);
-                    if (failureMessage.Value.IssueLink != null)
-                    {
-                        message.AppendLine($" Find more information at {failureMessage.Value.IssueLink}");
-                    }
-                }
-
-                logger.LogError(message.ToString());
-
-                string? deviceName = device?.UDID ?? iOSRunArguments.DeviceName;
-                if (!string.IsNullOrEmpty(deviceName))
-                {
-                    logger.LogInformation($"Cleaning up the failed installation from {deviceName}..");
-                    await UninstallApp(appBundleInfo, deviceName, logger, mainLog, new CancellationToken());
+                    logger.LogInformation($"Cleaning up the failed installation from '{device.Name}'..");
+                    await UninstallApp(appBundleInfo, device, logger, mainLog, new CancellationToken());
                 }
 
                 return exitCode;
             }
 
-            // Run / test app
             try
             {
                 logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on '{device.Name}'");
@@ -285,21 +256,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                     }
                 }
 
-                mainLog.Dispose();
-
-                string? deviceName = device?.UDID ?? iOSRunArguments.DeviceName;
-                if (!target.Platform.IsSimulator() && !string.IsNullOrEmpty(deviceName))
+                if (!target.Platform.IsSimulator() && device != null)
                 {
-                    try
-                    {
-                        // TODO: Uninstall from simulator as well
-                        await UninstallApp(appBundleInfo, deviceName, logger, mainLog, new CancellationToken());
-                        logger.LogInformation("Application uninstalled");
-                    }
-                    finally
-                    {
-                    }
+                    await UninstallApp(appBundleInfo, device, logger, mainLog, new CancellationToken());
                 }
+
+                mainLog.Dispose();
 
                 if (lldbFileCreated)
                 {
@@ -343,17 +305,22 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 // the failure reason
                 if (ErrorKnowledgeBase.IsKnownInstallIssue(mainLog, out var errorMessage))
                 {
-                    var msg = $"Failed to install the app bundle (exit code={result.ExitCode}): {errorMessage.Value.HumanMessage}.";
+                    var error = new StringBuilder()
+                        .AppendLine("Failed to install the application")
+                        .AppendLine(errorMessage.Value.HumanMessage);
+
                     if (errorMessage.Value.IssueLink != null)
                     {
-                        msg += $" Find more information at {errorMessage.Value.IssueLink}";
+                        error
+                            .AppendLine()
+                            .AppendLine($" Find more information at {errorMessage.Value.IssueLink}");
                     }
 
-                    logger.LogError(msg);
+                    logger.LogError(error.ToString());
                 }
                 else
                 {
-                    logger.LogError($"Failed to install the app bundle (exit code={result.ExitCode})");
+                    logger.LogError($"Failed to install the application");
                 }
 
                 return ExitCode.PACKAGE_INSTALLATION_FAILURE;
@@ -366,15 +333,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         private async Task UninstallApp(
             AppBundleInformation appBundleInfo,
-            string deviceName,
+            IDevice device,
             ILogger logger,
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from device '{deviceName}'");
+            logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from '{device.Name}'..");
 
             var appUninstaller = new AppUninstaller(ProcessManager, mainLog, GetMlaunchVerbosity(iOSRunArguments.Verbosity));
-            var uninstallResult = await appUninstaller.UninstallApp(deviceName, appBundleInfo.BundleIdentifier, cancellationToken);
+            var uninstallResult = await appUninstaller.UninstallApp(device, appBundleInfo.BundleIdentifier, cancellationToken);
             if (!uninstallResult.Succeeded)
             {
                 logger.LogError($"Failed to uninstall the app bundle with exit code: {uninstallResult.ExitCode}");

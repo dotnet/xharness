@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             CancellationToken cancellationToken)
         {
             // Only add the extra callback if we do know that the feature was indeed enabled
-            Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(logger, l) : (Action<string>?)null;
+            Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(logger, l) : null;
 
             var appRunner = new AppRunner(
                 ProcessManager,
