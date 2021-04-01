@@ -5,11 +5,11 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Moq;
 using Xunit;
 
@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         public async Task UninstallFromDeviceTest()
         {
             // Act
-            var result = await _appUninstaller.UninstallApp(DeviceName, AppBundleId);
+            var result = await _appUninstaller.UninstallApp(Mock.Of<IDevice>(x => x.Name == DeviceName), AppBundleId);
 
             // Verify
             Assert.Equal(0, result.ExitCode);

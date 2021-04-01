@@ -22,19 +22,14 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
     {
         private static readonly string s_appPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         private static readonly string s_appIdentifier = Guid.NewGuid().ToString();
-        private static readonly IHardwareDevice s_mockDevice = new Device(
-            buildVersion: "17A577",
-            deviceClass: DeviceClass.iPhone,
-            deviceIdentifier: "8A450AA31EA94191AD6B02455F377CC1",
-            interfaceType: "Usb",
-            isUsableForDebugging: true,
-            name: "Test iPhone",
-            productType: "iPhone12,1",
-            productVersion: "13.0");
+        private const string UDID = "8A450AA31EA94191AD6B02455F377CC1";
+        private static readonly IDevice s_mockDevice = Mock.Of<IDevice>(x =>
+            x.UDID == UDID &&
+            x.Name == "Test iPhone" &&
+            x.OSVersion == "13.4");
         private readonly Mock<IMlaunchProcessManager> _processManager;
         private readonly Mock<ILog> _mainLog;
         private readonly AppBundleInformation _appBundleInformation;
-        private Mock<IHardwareDeviceLoader> _hardwareDeviceLoader;
 
         public AppInstallerTests()
         {
@@ -42,10 +37,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             _processManager = new Mock<IMlaunchProcessManager>();
             _processManager.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult() { ExitCode = 0 }));
-
-            _hardwareDeviceLoader = new Mock<IHardwareDeviceLoader>();
-            _hardwareDeviceLoader
-                .Setup(x => x.Connected64BitIOS).Returns(new List<IHardwareDevice> { s_mockDevice });
 
             Directory.CreateDirectory(s_appPath);
             _appBundleInformation = new AppBundleInformation(
@@ -64,39 +55,36 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         }
 
         [Fact]
-        public async Task InstallToSimulatorTest()
+        public async Task InstallOnSimulatorTest()
         {
-            var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 1);
+            // Act
+            var appInstaller = new AppInstaller(_processManager.Object, _mainLog.Object, 2);
 
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Simulator_iOS64, null)));
-        }
+            var result = await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Simulator_iOS64, null), s_mockDevice);
 
-        [Fact]
-        public async Task InstallWhenNoDevicesTest()
-        {
-            _hardwareDeviceLoader = new Mock<IHardwareDeviceLoader>();
-            _hardwareDeviceLoader
-                .Setup(x => x.FindDevice(RunMode.iOS, _mainLog.Object, false, false))
-                .ThrowsAsync(new NoDeviceFoundException());
+            // Verify
+            Assert.Equal(0, result.ExitCode);
 
-            var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 1);
+            var expectedArgs = $"-v -v -v --installsim {StringUtils.FormatArguments(s_appPath)} --devname \"{s_mockDevice.Name}\"";
 
-            await Assert.ThrowsAsync<NoDeviceFoundException>(
-                async () => await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Device_iOS, null)));
+            _processManager.Verify(x => x.ExecuteCommandAsync(
+               It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
+               _mainLog.Object,
+               It.IsAny<TimeSpan>(),
+               null,
+               It.IsAny<CancellationToken>()));
         }
 
         [Fact]
         public async Task InstallOnDeviceTest()
         {
             // Act
-            var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 2);
+            var appInstaller = new AppInstaller(_processManager.Object, _mainLog.Object, 2);
 
-            var (deviceName, result) = await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Device_iOS, null));
+            var result = await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Device_iOS, null), s_mockDevice);
 
             // Verify
             Assert.Equal(0, result.ExitCode);
-            Assert.Equal(s_mockDevice.Name, deviceName);
 
             var expectedArgs = $"-v -v -v --installdev {StringUtils.FormatArguments(s_appPath)} --devname \"{s_mockDevice.Name}\"";
 
@@ -112,13 +100,12 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         public async Task InstallOnPredefinedDeviceTest()
         {
             // Act
-            var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 2);
+            var appInstaller = new AppInstaller(_processManager.Object, _mainLog.Object, 2);
 
-            var (deviceName, result) = await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Device_iOS, null), deviceName: "OtherDevice");
+            var result = await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Device_iOS, null), s_mockDevice);
 
             // Verify
             Assert.Equal(0, result.ExitCode);
-            Assert.Equal("OtherDevice", deviceName);
 
             var expectedArgs = $"-v -v -v --installdev {StringUtils.FormatArguments(s_appPath)} --devname OtherDevice";
 
@@ -141,10 +128,10 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 supports32b: true,
                 extension: null);
 
-            var appInstaller = new AppInstaller(_processManager.Object, _hardwareDeviceLoader.Object, _mainLog.Object, 1);
+            var appInstaller = new AppInstaller(_processManager.Object, _mainLog.Object, 1);
 
             await Assert.ThrowsAsync<NoDeviceFoundException>(
-                async () => await appInstaller.InstallApp(appBundle32b, new TestTargetOs(TestTarget.Device_iOS, null)));
+                async () => await appInstaller.InstallApp(appBundle32b, new TestTargetOs(TestTarget.Device_iOS, null), s_mockDevice));
         }
     }
 }
