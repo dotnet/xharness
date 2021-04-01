@@ -13,7 +13,7 @@
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
     <!-- Pick up the nupkg from this repo for testing purposes -->
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
-    <XHarnessNupkgPath>$(MSBuildThisFileDirectory)../../../artifacts/packages/$(Configuration)/Shipping/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
+    <XHarnessNupkgPath>$(ArtifactsShippingPackagesDir)/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
 
     <!-- Required: Version of XHarness CLI to use -->
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
@@ -67,10 +67,11 @@
     <ItemGroup>
       <HelixWorkItem Include="System.Numerics.Vectors.Tests">
         <Command>
-          deviceId=`dotnet exec $XHARNESS_CLI_PATH android device --output-directory=out | head -2 | tail -1`;
+          set -e;
+          deviceId=`dotnet exec "$XHARNESS_CLI_PATH" android device | head -2 | tail -1`;
           dotnet exec $XHARNESS_CLI_PATH android install --device-id="$deviceId" --package-name="net.dot.System.Numerics.Vectors.Tests" --app="$HELIX_WORKITEM_PAYLOAD/System.Numerics.Vectors.Tests-x86.apk";
-          dotnet exec $XHARNESS_CLI_PATH android run --device-id="$deviceId" --output-directory=out --package-name="net.dot.System.Numerics.Vectors.Tests";
-          dotnet exec $XHARNESS_CLI_PATH android uninstall --device-id="$deviceId" --package-name="net.dot.System.Numerics.Vectors.Tests"
+          dotnet exec "$XHARNESS_CLI_PATH" android run --device-id="$deviceId" --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" --package-name="net.dot.System.Numerics.Vectors.Tests";
+          dotnet exec "$XHARNESS_CLI_PATH" android uninstall --device-id="$deviceId" --package-name="net.dot.System.Numerics.Vectors.Tests"
         </Command>
       </HelixWorkItem>
     </ItemGroup>
