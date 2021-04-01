@@ -236,6 +236,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         {
             var uriBuilder = new UriBuilder($"{webServerAddr}/{_arguments.HTMLFile}");
             var sb = new StringBuilder();
+
+            if (_arguments.DebuggerPort != null)
+                sb.Append($"arg=--debug");
+
             foreach (var arg in _passThroughArguments)
             {
                 if (sb.Length > 0)

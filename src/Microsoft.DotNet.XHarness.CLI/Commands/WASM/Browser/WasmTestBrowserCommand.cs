@@ -3,9 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
@@ -81,6 +81,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
             finally
             {
+                if (!_arguments.QuitAppAtEnd)
+                {
+                    logger.LogInformation("Tests are done. Press Ctrl+C to exit");
+                    var token = new CancellationToken(false);
+                    token.WaitHandle.WaitOne();
+                }
+
                 driver.Quit();  // Firefox driver hangs if Quit is not issued.
                 driverService.Dispose();
                 driver.Dispose();
@@ -110,11 +117,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 logger.LogInformation($"Using Firefox from {_arguments.BrowserLocation}");
             }
 
-            options.AddArguments(new List<string>(_arguments.BrowserArgs)
-            {
-                "--incognito",
-                "--headless",
-            });
+            options.AddArguments(_arguments.BrowserArgs);
+            if (_arguments.Headless)
+                options.AddArguments("--headless");
+
+            if (_arguments.Incognito)
+                options.AddArguments("--incognito");
 
             logger.LogInformation($"Starting Firefox with args: {string.Join(' ', options.ToCapabilities())}");
 
@@ -153,11 +161,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 logger.LogInformation($"Using Chrome from {_arguments.BrowserLocation}");
             }
 
-            options.AddArguments(new List<string>(_arguments.BrowserArgs)
-            {
-                "--incognito",
-                "--headless",
+            options.AddArguments(_arguments.BrowserArgs);
+            if (_arguments.Headless)
+                options.AddArguments("--headless");
 
+            if (_arguments.DebuggerPort.HasValue)
+                options.AddArguments($"--remote-debugging-port={_arguments.DebuggerPort.Value}");
+
+            if (_arguments.Incognito)
+                options.AddArguments("--incognito");
+
+            options.AddArguments(new []
+            {
                 // added based on https://github.com/puppeteer/puppeteer/blob/main/src/node/Launcher.ts#L159-L181
                 "--enable-features=NetworkService,NetworkServiceInProcess",
                 "--disable-background-timer-throttling",
@@ -172,6 +187,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 "--force-color-profile=srgb",
                 "--metrics-recording-only"
             });
+
+            if (!_arguments.QuitAppAtEnd)
+                options.LeaveBrowserRunning = true;
 
             logger.LogInformation($"Starting {driverName} with args: {string.Join(' ', options.Arguments)}");
 
