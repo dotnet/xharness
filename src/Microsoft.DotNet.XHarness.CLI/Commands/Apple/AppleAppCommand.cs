@@ -50,10 +50,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 logger.LogInformation($"Preparing run for {target.AsString()}{ (AppleAppArguments.DeviceName != null ? " targeting " + AppleAppArguments.DeviceName : null) }");
 
                 // Create main log file for the run
-                string mainLogFile = Path.Join(AppleAppArguments.OutputDirectory, $"run-{target.AsString()}{(AppleAppArguments.DeviceName != null ? "-" + AppleAppArguments.DeviceName : null)}.log");
+                string logFileName = $"run-{target.AsString()}{(AppleAppArguments.DeviceName != null ? "-" + AppleAppArguments.DeviceName : null)}.log";
 
                 IFileBackedLog mainLog = Log.CreateReadableAggregatedLog(
-                    logs.Create(mainLogFile, LogType.ExecutionLog.ToString(), true),
+                    logs.Create(logFileName, LogType.ExecutionLog.ToString(), true),
                     new CallbackLog(message => logger.LogDebug(message.Trim())) { Timestamp = false });
 
                 using var orchestrator = GetOrchestrator(processManager, deviceFinder, logger, target, logs, mainLog, cts.Token);
