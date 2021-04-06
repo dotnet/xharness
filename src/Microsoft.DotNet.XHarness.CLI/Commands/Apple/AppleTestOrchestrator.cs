@@ -21,7 +21,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
-    internal class AppleTestOrchestrator : AppleBaseOrchestrator<AppleTestCommandArguments>
+    /// <summary>
+    /// This orchestrator implements the `test` command flow.
+    /// In this flow we need to connect to the running application over TCP and receive
+    /// the test results. We also need to watch timeouts better and parse the results
+    /// more comprehensively.
+    /// </summary>
+    internal class AppleTestOrchestrator : AppleOrchestrator<AppleTestCommandArguments>
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILogger _logger;

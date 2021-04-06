@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected override AppleBaseOrchestrator<AppleTestCommandArguments> GetOrchestrator(
+        protected override AppleOrchestrator<AppleTestCommandArguments> GetOrchestrator(
             IMlaunchProcessManager processManager,
             DeviceFinder deviceFinder,
             ILogger logger,

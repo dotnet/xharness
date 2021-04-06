@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             return exitCode;
         }
 
-        protected abstract AppleBaseOrchestrator<TArguments> GetOrchestrator(
+        protected abstract AppleOrchestrator<TArguments> GetOrchestrator(
             IMlaunchProcessManager processManager,
             DeviceFinder deviceFinder,
             ILogger logger,

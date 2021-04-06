@@ -21,12 +21,13 @@ namespace Microsoft.DotNet.XHarness.Apple
 {
     /// <summary>
     /// Base class that implements the high level flow that enables running iOS/tvOS/MacCatalyst apps:
-    ///   - Find device
+    ///   - Find device (+ prepare / reset)
     ///   - Install app
     ///   - Run/Test app (abstract)
     ///   - Clean up / uninstall
+    ///   - Dispose everything properly
     /// </summary>
-    internal abstract class AppleBaseOrchestrator<TArguments> : IDisposable where TArguments : AppleAppRunArguments
+    internal abstract class AppleOrchestrator<TArguments> : IDisposable where TArguments : AppleAppRunArguments
     {
         protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
 
@@ -38,7 +39,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         private bool _lldbFileCreated;
 
-        protected AppleBaseOrchestrator(
+        protected AppleOrchestrator(
             IMlaunchProcessManager processManager,
             DeviceFinder deviceFinder,
             ILogger consoleLogger,

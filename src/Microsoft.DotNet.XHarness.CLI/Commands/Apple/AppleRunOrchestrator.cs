@@ -20,7 +20,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
-    internal class AppleRunOrchestrator : AppleBaseOrchestrator<AppleRunCommandArguments>
+    /// <summary>
+    /// This orchestrator implements the `run` command flow.
+    /// In this flow we spawn the application and do not expect TestRunner inside.
+    /// We only try to detect the exit code after the app run is finished.
+    /// </summary>
+    internal class AppleRunOrchestrator : AppleOrchestrator<AppleRunCommandArguments>
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILogger _logger;
