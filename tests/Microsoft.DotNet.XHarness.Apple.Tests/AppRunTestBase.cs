@@ -91,8 +91,14 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
         public void Dispose()
         {
-            Directory.Delete(s_outputPath, true);
-            GC.SuppressFinalize(this);
+            try
+            {
+                Directory.Delete(s_outputPath, true);
+            }
+            finally
+            {
+                GC.SuppressFinalize(this);
+            }            
         }
     }
 }
