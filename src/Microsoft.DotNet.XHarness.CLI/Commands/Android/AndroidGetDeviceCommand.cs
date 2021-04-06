@@ -42,6 +42,8 @@ Arguments:
                 return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
             }
 
+            _arguments.Verbosity = LogLevel.Critical;
+
             var runner = new AdbRunner(logger);
             string apkRequiredArchitecture;
 

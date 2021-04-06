@@ -387,7 +387,7 @@ namespace Microsoft.DotNet.XHarness.Android
                         retriesLeft = 30; // Max 5 minutes (30 attempts * 10 second waits)
                         while (retriesLeft-- > 0 && shellResult.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
                         {
-                            _log.LogDebug($"Device '{deviceSerial}' is offline; retrying up to one minute.");
+                            _log.LogWarning($"Device '{deviceSerial}' is offline; retrying up to one minute.");
                             Thread.Sleep(10000);
 
                             shellResult = RunAdbCommand($"-s {deviceSerial} {command}", TimeSpan.FromSeconds(30));
