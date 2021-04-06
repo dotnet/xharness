@@ -12,7 +12,6 @@
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
-    <DotNetCliVersion>5.0.1</DotNetCliVersion>
   </PropertyGroup>
 
   <!-- For non-ci local runs -->

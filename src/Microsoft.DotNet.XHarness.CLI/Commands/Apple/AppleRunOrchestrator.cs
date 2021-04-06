@@ -85,6 +85,22 @@ namespace Microsoft.DotNet.XHarness.Apple
             return ParseResult(new iOSExitCodeDetector(), arguments, appBundleInfo, result);
         }
 
+        protected override async Task<ExitCode> ExecuteMacCatalystApp(
+            AppleRunCommandArguments arguments,
+            IEnumerable<string> passthroughArguments,
+            AppBundleInformation appBundleInfo,
+            CancellationToken cancellationToken)
+        {
+            ProcessExecutionResult result = await _appRunner.RunMacCatalystApp(
+                appBundleInfo,
+                arguments.Timeout,
+                passthroughArguments,
+                arguments.EnvironmentalVariables,
+                cancellationToken: cancellationToken);
+
+            return ParseResult(new MacCatalystExitCodeDetector(), arguments, appBundleInfo, result);
+        }
+
         private ExitCode ParseResult(
             IExitCodeDetector exitCodeDetector,
             AppleRunCommandArguments arguments,
@@ -125,22 +141,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                 (arguments.ExpectedExitCode != 0 ? " (as expected)" : null));
 
             return ExitCode.SUCCESS;
-        }
-
-        protected override async Task<ExitCode> ExecuteMacCatalystApp(
-            AppleRunCommandArguments arguments,
-            IEnumerable<string> passthroughArguments,
-            AppBundleInformation appBundleInfo,
-            CancellationToken cancellationToken)
-        {
-            ProcessExecutionResult result = await _appRunner.RunMacCatalystApp(
-                appBundleInfo,
-                arguments.Timeout,
-                passthroughArguments,
-                arguments.EnvironmentalVariables,
-                cancellationToken: cancellationToken);
-
-            return ParseResult(new MacCatalystExitCodeDetector(), arguments, appBundleInfo, result);
         }
     }
 }

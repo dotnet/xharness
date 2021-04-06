@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         /// <param name="display">How to print each enum value. Default is ToString()</param>
         /// <param name="invalidValues">List of values that should not be available to set and are not listed then</param>
         /// <returns>Print-ready list of allowed values</returns>
-        protected static string GetAllowedValues<TEnum>(Func<TEnum, string>? display = null, params TEnum[]? invalidValues) where TEnum : struct, IConvertible
+        public static string GetAllowedValues<TEnum>(Func<TEnum, string>? display = null, params TEnum[]? invalidValues) where TEnum : struct, IConvertible
         {
             var values = Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
 

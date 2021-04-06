@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         Task<IHardwareDevice> FindCompanionDevice(ILog log, IHardwareDevice device);
 
-        Task<IHardwareDevice> FindDevice(RunMode runMode, ILog log, bool includeLocked, bool force);
+        Task<IHardwareDevice> FindDevice(RunMode runMode, ILog log, bool includeLocked);
     }
 
     public class HardwareDeviceLoader : IHardwareDeviceLoader
@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             }
         }
 
-        public async Task<IHardwareDevice> FindDevice(RunMode runMode, ILog log, bool includeLocked, bool force)
+        public async Task<IHardwareDevice> FindDevice(RunMode runMode, ILog log, bool includeLocked)
         {
             DeviceClass[] deviceClasses = runMode switch
             {

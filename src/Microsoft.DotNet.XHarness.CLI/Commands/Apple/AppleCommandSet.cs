@@ -13,6 +13,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
             Add(new AppleTestCommand());
             Add(new AppleRunCommand());
+            Add(new AppleGetDeviceCommand());
             Add(new AppleGetStateCommand());
             Add(new SimulatorsCommandSet());
         }

@@ -19,7 +19,12 @@ namespace Microsoft.DotNet.XHarness.CLI
     {
         public static int Main(string[] args)
         {
-            Console.WriteLine($"XHarness command issued: {string.Join(' ', args)}");
+            bool shouldOutput = !IsOutputSensitive(args);
+
+            if (shouldOutput)
+            {
+                Console.WriteLine($"XHarness command issued: {string.Join(' ', args)}");
+            }
 
             if (args.Length > 0)
             {
@@ -52,7 +57,11 @@ namespace Microsoft.DotNet.XHarness.CLI
                 exitCodeName = $" ({(ExitCode)result})";
             }
 
-            Console.WriteLine($"XHarness exit code: {result}{exitCodeName}");
+            if (shouldOutput)
+            {
+                Console.WriteLine($"XHarness exit code: {result}{exitCodeName}");
+            }
+
             return result;
         }
 
@@ -84,6 +93,27 @@ namespace Microsoft.DotNet.XHarness.CLI
             commandSet.Add(new XHarnessVersionCommand());
 
             return commandSet;
+        }
+
+        /// <summary>
+        /// Returns true when the command outputs data suitable for parsing and we should keep the output clean.
+        /// </summary>
+        private static bool IsOutputSensitive(string[] args)
+        {
+            if (args.Length < 2 || args.Contains("--help") || args.Contains("-h"))
+            {
+                return false;
+            }
+
+            switch (args[0])
+            {
+                case "ios":
+                case "apple":
+                case "android":
+                    return args[1] == "device";
+            }
+
+            return false;
         }
     }
 }

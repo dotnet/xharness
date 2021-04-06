@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
+    <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
@@ -91,7 +91,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="IncludeMlaunch" BeforeTargets="_GetPackageFiles" DependsOnTargets="DownloadMlaunch">
+  <Target Name="IncludeMlaunch" BeforeTargets="Build" DependsOnTargets="DownloadMlaunch">
     <ItemGroup>
       <Content Include="$(IntermediateOutputPath)/mlaunch/**/*.*">
         <Pack>true</Pack>
