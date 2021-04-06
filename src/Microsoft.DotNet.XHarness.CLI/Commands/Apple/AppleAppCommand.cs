@@ -20,11 +20,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal abstract class AppleAppCommand : XHarnessCommand
+    internal abstract class AppleAppCommand<TArguments> : XHarnessCommand where TArguments : AppleAppRunArguments
     {
         protected readonly ErrorKnowledgeBase ErrorKnowledgeBase = new();
-        protected override XHarnessCommandArguments Arguments => iOSRunArguments;
-        protected abstract AppleAppRunArguments iOSRunArguments { get; }
+        protected override XHarnessCommandArguments Arguments => AppleAppArguments;
+        protected abstract TArguments AppleAppArguments { get; }
 
         protected AppleAppCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, allowsExtraArgs, help)
         {
@@ -33,31 +33,32 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected sealed override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
             // We have to set these here because command arguments are not initialized in the ctor yet
-            var processManager = new MlaunchProcessManager(iOSRunArguments.XcodeRoot, iOSRunArguments.MlaunchPath);
+            var processManager = new MlaunchProcessManager(AppleAppArguments.XcodeRoot, AppleAppArguments.MlaunchPath);
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
             var deviceFinder = new DeviceFinder(deviceLoader, simulatorLoader);
 
-            var logs = new Logs(iOSRunArguments.OutputDirectory);
+            var logs = new Logs(AppleAppArguments.OutputDirectory);
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(iOSRunArguments.Timeout);
+            cts.CancelAfter(AppleAppArguments.Timeout);
 
             var exitCode = ExitCode.SUCCESS;
 
-            foreach (var target in iOSRunArguments.RunTargets)
+            foreach (var target in AppleAppArguments.RunTargets)
             {
-                logger.LogInformation($"Preparing run for {target.AsString()}{ (iOSRunArguments.DeviceName != null ? " targeting " + iOSRunArguments.DeviceName : null) }");
+                logger.LogInformation($"Preparing run for {target.AsString()}{ (AppleAppArguments.DeviceName != null ? " targeting " + AppleAppArguments.DeviceName : null) }");
 
                 // Create main log file for the run
-                string mainLogFile = Path.Join(iOSRunArguments.OutputDirectory, $"run-{target.AsString()}{(iOSRunArguments.DeviceName != null ? "-" + iOSRunArguments.DeviceName : null)}.log");
+                string mainLogFile = Path.Join(AppleAppArguments.OutputDirectory, $"run-{target.AsString()}{(AppleAppArguments.DeviceName != null ? "-" + AppleAppArguments.DeviceName : null)}.log");
 
                 IFileBackedLog mainLog = Log.CreateReadableAggregatedLog(
                     logs.Create(mainLogFile, LogType.ExecutionLog.ToString(), true),
                     new CallbackLog(message => logger.LogDebug(message.Trim())) { Timestamp = false });
 
-                var exitCodeForRun = await InvokeInternal(processManager, deviceFinder, logger, target, logs, mainLog, cts.Token);
+                using var orchestrator = GetOrchestrator(processManager, deviceFinder, logger, target, logs, mainLog, cts.Token);
 
+                var exitCodeForRun = await orchestrator.OrchestrateRun(AppleAppArguments, PassThroughArguments, target, cts.Token);
                 if (exitCodeForRun != ExitCode.SUCCESS)
                 {
                     exitCode = exitCodeForRun;
@@ -67,7 +68,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             return exitCode;
         }
 
-        protected abstract Task<ExitCode> InvokeInternal(
+        protected abstract AppleBaseOrchestrator<TArguments> GetOrchestrator(
             IMlaunchProcessManager processManager,
             DeviceFinder deviceFinder,
             ILogger logger,

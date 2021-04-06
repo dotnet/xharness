@@ -3,10 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
-using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
@@ -18,13 +16,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
     /// <summary>
     /// Command which executes a given, already-packaged iOS application, waits on it and returns status based on the outcome.
     /// </summary>
-    internal class AppleRunCommand : AppleAppCommand
+    internal class AppleRunCommand : AppleAppCommand<AppleRunCommandArguments>
     {
         private const string CommandHelp = "Runs a given iOS/tvOS/watchOS/MacCatalyst application bundle in a target device/simulator and tries to detect exit code (might not work reliably across iOS versions).";
 
-        private readonly AppleRunCommandArguments _arguments = new();
-
-        protected override AppleAppRunArguments iOSRunArguments => _arguments;
+        protected override AppleRunCommandArguments AppleAppArguments { get; } = new();
         protected override string CommandUsage { get; } = "apple run [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 
@@ -32,17 +28,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected override Task<ExitCode> InvokeInternal(
+        protected override AppleBaseOrchestrator<AppleRunCommandArguments> GetOrchestrator(
             IMlaunchProcessManager processManager,
             DeviceFinder deviceFinder,
             ILogger logger,
             TestTargetOs target,
             ILogs logs,
             IFileBackedLog mainLog,
-            CancellationToken cancellationToken)
-        {
-            var orchestrator = new AppleRunOrchestrator(processManager, deviceFinder, logger, logs, mainLog, ErrorKnowledgeBase);
-            return orchestrator.Execute(_arguments, PassThroughArguments, target, cancellationToken);
-        }
+            CancellationToken cancellationToken) =>
+
+        new AppleRunOrchestrator(processManager, deviceFinder, logger, logs, mainLog, ErrorKnowledgeBase);
     }
 }

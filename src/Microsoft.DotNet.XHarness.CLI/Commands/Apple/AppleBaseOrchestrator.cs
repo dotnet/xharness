@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             AppBundleInformation appBundleInfo,
             CancellationToken cancellationToken);
 
-        public async Task<ExitCode> Execute(
+        public async Task<ExitCode> OrchestrateRun(
             TArguments arguments,
             IEnumerable<string> passthroughArguments,
             TestTargetOs target,

@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             TestTargetOs target,
             CancellationToken cancellationToken)
         {
-            AppTester? appTester = GetAppTester(arguments, target.Platform.IsSimulator());
+            AppTester appTester = GetAppTester(arguments.CommunicationChannel, target.Platform.IsSimulator());
 
             (TestExecutingResult testResult, string resultMessage) = await appTester.TestApp(
                 appBundleInfo,
@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             AppBundleInformation appBundleInfo,
             CancellationToken cancellationToken)
         {
-            AppTester? appTester = GetAppTester(arguments, TestTarget.MacCatalyst.IsSimulator());
+            AppTester appTester = GetAppTester(arguments.CommunicationChannel, TestTarget.MacCatalyst.IsSimulator());
 
             (TestExecutingResult testResult, string resultMessage) = await appTester.TestMacCatalystApp(
                 appBundleInfo,
@@ -94,9 +94,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             return ParseResult(testResult, resultMessage);
         }
 
-        private AppTester GetAppTester(AppleTestCommandArguments arguments, bool isSimulator)
+        private AppTester GetAppTester(CommunicationChannel communicationChannel, bool isSimulator)
         {
-            var tunnelBore = (arguments.CommunicationChannel == CommunicationChannel.UsbTunnel && !isSimulator)
+            var tunnelBore = (communicationChannel == CommunicationChannel.UsbTunnel && !isSimulator)
                 ? new TunnelBore(_processManager)
                 : null;
 

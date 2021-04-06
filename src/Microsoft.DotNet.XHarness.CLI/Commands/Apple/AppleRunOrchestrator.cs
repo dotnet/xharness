@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 return ExitCode.APP_LAUNCH_FAILURE;
             }
 
-            return ParseResult(new iOSExitCodeDetector(), arguments, appBundleInfo, result);
+            return ParseResult(new iOSExitCodeDetector(), arguments.ExpectedExitCode, appBundleInfo, result);
         }
 
         protected override async Task<ExitCode> ExecuteMacCatalystApp(
@@ -98,12 +98,12 @@ namespace Microsoft.DotNet.XHarness.Apple
                 arguments.EnvironmentalVariables,
                 cancellationToken: cancellationToken);
 
-            return ParseResult(new MacCatalystExitCodeDetector(), arguments, appBundleInfo, result);
+            return ParseResult(new MacCatalystExitCodeDetector(), arguments.ExpectedExitCode, appBundleInfo, result);
         }
 
         private ExitCode ParseResult(
             IExitCodeDetector exitCodeDetector,
-            AppleRunCommandArguments arguments,
+            int expectedExitCode,
             AppBundleInformation appBundleInfo,
             ProcessExecutionResult result)
         {
@@ -125,9 +125,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, systemLog);
             _logger.LogInformation($"App run ended with {exitCode}");
 
-            if (arguments.ExpectedExitCode != exitCode)
+            if (expectedExitCode != exitCode)
             {
-                _logger.LogError($"Application has finished with exit code {exitCode} but {arguments.ExpectedExitCode} was expected");
+                _logger.LogError($"Application has finished with exit code {exitCode} but {expectedExitCode} was expected");
 
                 if (_errorKnowledgeBase.IsKnownTestIssue(_mainLog, out var failureMessage))
                 {
@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             _logger.LogInformation("Application has finished with exit code: " + exitCode +
-                (arguments.ExpectedExitCode != 0 ? " (as expected)" : null));
+                (expectedExitCode != 0 ? " (as expected)" : null));
 
             return ExitCode.SUCCESS;
         }
