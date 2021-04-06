@@ -110,6 +110,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             await _tcpTunnelExecutionTask;
         }
 
-        public async ValueTask DisposeAsync() => await Close();
+        public async ValueTask DisposeAsync()
+        {
+            await Close();
+            GC.SuppressFinalize(this);
+        }
     }
 }

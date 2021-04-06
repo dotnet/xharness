@@ -73,6 +73,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     await tunnel.DisposeAsync(); // alls close already
                 }
             }
+            GC.SuppressFinalize(this);
         }
     }
 }

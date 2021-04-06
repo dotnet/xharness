@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Mono.Options;
@@ -23,9 +24,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// Path to the mlaunch binary.
         /// Default comes from the NuGet.
         /// </summary>
-        public string MlaunchPath { get; set; } = Path.Join(
-            Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(AppleTestCommandArguments))?.Location),
-            "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
+        public string MlaunchPath { get; set; }
 
         /// <summary>
         /// Name of a specific device we want to target.
@@ -37,6 +36,17 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// </summary>
         public bool EnableLldb { get; set; }
 
+        /// <summary>
+        /// Environmental variables set when executing the application.
+        /// </summary>
+        public IReadOnlyCollection<(string, string)> EnvironmentalVariables => _environmentalVariables;
+        private readonly List<(string, string)> _environmentalVariables = new();
+
+        /// <summary>
+        /// Kills running simulator processes and removes any previous data before running.
+        /// </summary>
+        public bool ResetSimulator { get; set; }
+
         public override IReadOnlyCollection<string> Targets
         {
             get => RunTargets.Select(t => t.AsString()).ToArray();
@@ -44,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             {
                 var testTargets = new List<TestTargetOs>();
 
-                foreach (var targetName in value ?? throw new ArgumentNullException("Targets cannot be empty"))
+                foreach (var targetName in value ?? throw new ArgumentException("Targets cannot be empty"))
                 {
                     try
                     {
@@ -69,6 +79,21 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// </summary>
         public IReadOnlyCollection<TestTargetOs> RunTargets { get; private set; } = Array.Empty<TestTargetOs>();
 
+        protected AppleAppRunArguments()
+        {
+            string? pathFromEnv = Environment.GetEnvironmentVariable(Common.CLI.EnvironmentVariables.Names.MLAUNCH_PATH);
+            if (!string.IsNullOrEmpty(pathFromEnv))
+            {
+                MlaunchPath = pathFromEnv;
+            }
+            else
+            {
+                // This path is where mlaunch is when the .NET tool is extracted
+                var assemblyPath = Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(AppleTestCommandArguments))?.Location);
+                MlaunchPath = Path.Join(assemblyPath, "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
+            }
+        }
+
         protected override OptionSet GetCommandOptions()
         {
             var options = base.GetCommandOptions();
@@ -88,8 +113,26 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
                     v => DeviceName = v
                 },
                 {
-                    "enable-lldb", "Allow to debug the launched application using lldb.",
+                    "enable-lldb", "Allow to debug the launched application using lldb",
                     v => EnableLldb = v != null
+                },
+                {
+                    "reset-simulator", "Shuts down the simulator and clears all data before running. Shuts it down after the run too",
+                    v => ResetSimulator = v != null
+                },
+                {
+                    "set-env=", "Environmental variable to set for the application in format key=value. Can be used multiple times",
+                    v => {
+                        var position = v.IndexOf('=');
+                        if (position == -1)
+                        {
+                            throw new ArgumentException($"The set-env argument {v} must be in the key=value format");
+                        }
+
+                        var key = v.Substring(0, position);
+                        var value = v.Substring(position + 1);
+                        _environmentalVariables.Add((key, value));
+                    }
                 },
             };
 
@@ -121,7 +164,14 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 
             if (!File.Exists(MlaunchPath))
             {
-                throw new ArgumentException($"Failed to find mlaunch at {MlaunchPath}");
+#if DEBUG
+                string message = $"Failed to find mlaunch at {MlaunchPath}. " +
+                    $"Make sure you specify --mlaunch or set the {EnvironmentVariables.Names.MLAUNCH_PATH} env var. " +
+                    $"See README.md for more information";
+#else
+                string message = $"Failed to find mlaunch at {MlaunchPath}";
+#endif
+                throw new ArgumentException(message);
             }
 
             if (XcodeRoot != null && !Directory.Exists(XcodeRoot))

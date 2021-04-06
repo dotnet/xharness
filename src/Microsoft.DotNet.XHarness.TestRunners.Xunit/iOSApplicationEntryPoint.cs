@@ -10,8 +10,12 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 {
     public abstract class iOSApplicationEntryPoint : ApplicationEntryPoint
     {
-        protected override TestRunner GetTestRunner(LogWriter logWriter) =>
-            new XUnitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
+        protected override TestRunner GetTestRunner(LogWriter logWriter)
+        {
+            var runner = new XUnitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
+            ConfigureRunnerFilters(runner, ApplicationOptions.Current);
+            return runner;
+        }
 
         protected override bool IsXunit => true;
 
@@ -40,8 +44,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
             // if we have ignore files, ignore those tests
             var runner = await InternalRunAsync(logger);
-
-            ConfigureRunner(runner, options);
 
             WriteResults(runner, options, logger, writer ?? Console.Out);
 

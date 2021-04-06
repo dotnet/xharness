@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// </summary>
         public int ExpectedExitCode { get; set; } = (int)Common.CLI.ExitCode.SUCCESS;
 
-        protected override OptionSet GetTestCommandOptions() => new OptionSet
+        protected override OptionSet GetTestCommandOptions() => new()
         {
             { "device-arch=", "If specified, only run on a device with the listed architecture (x86, x86_64, arm64-v8a or armeabi-v7a).  Otherwise infer from supplied APK",
                 v => DeviceArchitecture = v
@@ -91,8 +91,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             base.Validate();
 
             // Validate this field
-            PackageName = PackageName;
-            AppPackagePath = AppPackagePath;
+            _ = PackageName;
+            _ = AppPackagePath;
         }
     }
 }

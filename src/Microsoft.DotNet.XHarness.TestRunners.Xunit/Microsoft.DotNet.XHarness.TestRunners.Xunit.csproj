@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
-    <TargetFrameworks>netstandard2.1;netcoreapp3.1</TargetFrameworks>
-    <RootNamespace>Microsoft.DotNet.XHarness.TestRunners.Xunit</RootNamespace>
+    <Nullable>disable</Nullable>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

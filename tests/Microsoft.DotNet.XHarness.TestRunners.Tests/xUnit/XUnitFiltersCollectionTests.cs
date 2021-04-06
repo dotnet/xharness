@@ -23,14 +23,25 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
             {
                 get
                 {
-                    // single filter that excludes
                     var testDisplayName = "MyNameSpace.MyClassTest.TestThatFooEqualsBat";
+
+                    // no filters, should include
+                    var collection = new XUnitFiltersCollection { };
+                    var testCase = new Mock<ITestCase>();
+                    yield return new object[]
+                    {
+                        collection,
+                        testCase.Object,
+                        false,
+                    };
+
+                    // single filter that excludes
                     // match and exclude
                     var filter = XUnitFilter.CreateSingleFilter(
                         singleTestName: testDisplayName,
                         exclude: true);
-                    var collection = new XUnitFiltersCollection { filter };
-                    var testCase = new Mock<ITestCase>();
+                    collection = new XUnitFiltersCollection { filter };
+                    testCase = new Mock<ITestCase>();
                     testCase.Setup(t => t.DisplayName).Returns(testDisplayName);
 
                     yield return new object[]
@@ -55,7 +66,37 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                         false,
                     };
 
-                    // two excluding filters
+                    // one excluding filter, no match, should include
+                    collection = new XUnitFiltersCollection { };
+                    filter = XUnitFilter.CreateSingleFilter(
+                        singleTestName: $"not_{testDisplayName}",
+                        exclude: true);
+                    collection = new XUnitFiltersCollection { filter };
+                    testCase = new Mock<ITestCase>();
+                    testCase.Setup(t => t.DisplayName).Returns(testDisplayName);
+                    yield return new object[]
+                    {
+                        collection,
+                        testCase.Object,
+                        false,
+                    };
+
+                    // one including filter, no match, should exclude
+                    collection = new XUnitFiltersCollection { };
+                    filter = XUnitFilter.CreateSingleFilter(
+                        singleTestName: $"not_{testDisplayName}",
+                        exclude: false);
+                    collection = new XUnitFiltersCollection { filter };
+                    testCase = new Mock<ITestCase>();
+                    testCase.Setup(t => t.DisplayName).Returns(testDisplayName);
+                    yield return new object[]
+                    {
+                        collection,
+                        testCase.Object,
+                        true,
+                    };
+
+                    // two excluding filters, match both, should exclude
                     filter = XUnitFilter.CreateSingleFilter(
                         singleTestName: testDisplayName,
                         exclude: true);
@@ -73,7 +114,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                         true,
                     };
 
-                    // two including filters
+                    // two including filters, match both, should include
                     filter = XUnitFilter.CreateSingleFilter(
                         singleTestName: testDisplayName,
                         exclude: false);
@@ -91,7 +132,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                         false,
                     };
 
-                    // one filter that includes, other that excludes, should include
+                    // one filter that includes, other that excludes, match both, should include
                     filter = XUnitFilter.CreateSingleFilter(
                         singleTestName: testDisplayName,
                         exclude: true);
@@ -108,6 +149,97 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit
                         testCase.Object,
                         false,
                     };
+
+                    // one filter that includes, other that excludes
+                    {
+                        // match including, should include
+                        var excludedTestDisplayName = $"excluded_{testDisplayName}";
+                        filter = XUnitFilter.CreateSingleFilter(
+                            singleTestName: testDisplayName,
+                            exclude: false);
+                        filter2 = XUnitFilter.CreateSingleFilter(
+                            singleTestName: excludedTestDisplayName,
+                            exclude: true);
+                        collection = new XUnitFiltersCollection { filter, filter2 };
+
+                        // match including, should include
+                        testCase = new Mock<ITestCase>();
+                        testCase.Setup(t => t.DisplayName).Returns(testDisplayName);
+                        yield return new object[]
+                        {
+                            collection,
+                            testCase.Object,
+                            false,
+                        };
+
+                        // match excluding, should exclude
+                        testCase = new Mock<ITestCase>();
+                        testCase.Setup(t => t.DisplayName).Returns(excludedTestDisplayName);
+                        yield return new object[]
+                        {
+                            collection,
+                            testCase.Object,
+                            true,
+                        };
+                    }
+
+                    // name filter that excludes, trait filter that includes
+                    {
+                        var traitName = "testTrait";
+                        filter = XUnitFilter.CreateSingleFilter(
+                            singleTestName: testDisplayName,
+                            exclude: true);
+                        filter2 = XUnitFilter.CreateTraitFilter(
+                            traitName: traitName,
+                            traitValue: null,
+                            exclude: false);
+                        collection = new XUnitFiltersCollection { filter, filter2 };
+                        
+                        var matchingTestTraits = new Dictionary<string, List<string>>() { { traitName, new List<string>() } };
+                        var notTestDisplayName = $"not_{testDisplayName}";
+
+                        // name match, trait match, should exclude
+                        testCase = new Mock<ITestCase>();
+                        testCase.Setup(t => t.DisplayName).Returns(testDisplayName);
+                        testCase.Setup(t => t.Traits).Returns(matchingTestTraits);
+                        yield return new object[]
+                        {
+                            collection,
+                            testCase.Object,
+                            true,
+                        };
+
+                        // name match, no trait match, should exclude
+                        testCase = new Mock<ITestCase>();
+                        testCase.Setup(t => t.DisplayName).Returns(testDisplayName);
+                        yield return new object[]
+                        {
+                            collection,
+                            testCase.Object,
+                            true,
+                        };
+
+                        // no name match, trait match, should include
+                        testCase = new Mock<ITestCase>();
+                        testCase.Setup(t => t.DisplayName).Returns(notTestDisplayName);
+                        testCase.Setup(t => t.Traits).Returns(matchingTestTraits);
+                        yield return new object[]
+                        {
+                            collection,
+                            testCase.Object,
+                            false,
+                        };
+
+                        // no name match, no trait match, should exclude
+                        testCase = new Mock<ITestCase>();
+                        testCase.Setup(t => t.DisplayName).Returns(notTestDisplayName);
+                        yield return new object[]
+                        {
+                            collection,
+                            testCase.Object,
+                            true,
+                        };
+                    }
                 }
             }
 

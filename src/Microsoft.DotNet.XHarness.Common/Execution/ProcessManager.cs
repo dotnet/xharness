@@ -253,8 +253,8 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 
             if (process.StartInfo.EnvironmentVariables != null)
             {
-                var currentEnvironment = Environment.GetEnvironmentVariables().Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
-                var processEnvironment = process.StartInfo.EnvironmentVariables.Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString(), v => v.Value?.ToString(), StringComparer.Ordinal);
+                var currentEnvironment = ToDictionary(Environment.GetEnvironmentVariables());
+                var processEnvironment = ToDictionary(process.StartInfo.EnvironmentVariables);
                 var allVariables = currentEnvironment.Keys.Union(processEnvironment.Keys).Distinct();
 
                 bool headerShown = false;
@@ -392,6 +392,9 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             }
         }
 
-#endregion
+        private static Dictionary<string, string?> ToDictionary(IEnumerable enumerable) =>
+            enumerable.Cast<DictionaryEntry>().ToDictionary(v => v.Key.ToString()!, v => v.Value?.ToString(), StringComparer.Ordinal);
+
+        #endregion
     }
 }

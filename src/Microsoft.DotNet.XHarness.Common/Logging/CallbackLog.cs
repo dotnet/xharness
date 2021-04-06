@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
 
         public override void Dispose()
         {
+            GC.SuppressFinalize(this);
         }
 
         public override void Flush()

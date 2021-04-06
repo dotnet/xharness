@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
@@ -21,7 +22,6 @@ using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 using OpenQA.Selenium;
 using System.Linq;
 using OpenQA.Selenium.Edge;
-using System.Runtime.InteropServices;
 using OpenQA.Selenium.Chromium;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
     {
         private const string CommandHelp = "Executes tests on WASM using a browser";
 
-        private readonly WasmTestBrowserCommandArguments _arguments = new WasmTestBrowserCommandArguments();
+        private readonly WasmTestBrowserCommandArguments _arguments = new();
 
         protected TestCommandArguments TestArguments => _arguments;
         protected override string CommandUsage { get; } = "wasm test-browser [OPTIONS] -- [BROWSER OPTIONS]";
@@ -104,6 +104,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var options = new FirefoxOptions();
             options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
 
+            if (!string.IsNullOrEmpty(_arguments.BrowserLocation))
+            {
+                options.BrowserExecutableLocation = _arguments.BrowserLocation;
+                logger.LogInformation($"Using Firefox from {_arguments.BrowserLocation}");
+            }
+
             options.AddArguments(new List<string>(_arguments.BrowserArgs)
             {
                 "--incognito",
@@ -140,6 +146,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         {
             var options = Activator.CreateInstance<TDriverOptions>();
             options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
+
+            if (!string.IsNullOrEmpty(_arguments.BrowserLocation))
+            {
+                options.BinaryLocation = _arguments.BrowserLocation;
+                logger.LogInformation($"Using Chrome from {_arguments.BrowserLocation}");
+            }
 
             options.AddArguments(new List<string>(_arguments.BrowserArgs)
             {
@@ -195,12 +207,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     driverService.EnableVerboseLogging = true;
                     driverService.LogPath = Path.Combine(_arguments.OutputDirectory, $"{driverName}-{retry_num}.log");
 
-                    if (!(Activator.CreateInstance(typeof(TDriver), driverService, options, _arguments.Timeout) is TDriver driver))
+                    if (Activator.CreateInstance(typeof(TDriver), driverService, options, _arguments.Timeout) is not TDriver driver)
+                    {
                         throw new ArgumentException($"Failed to create instance of {typeof(TDriver)}");
+                    }
 
                     return (driverService, driver);
                 }
-                catch (WebDriverException wde) when (err_snippets.Any(s => wde.Message.Contains(s)) && retry_num < max_retries - 1)
+                catch (TargetInvocationException tie) when
+                            (tie.InnerException is WebDriverException wde
+                                && err_snippets.Any(s => wde.ToString().Contains(s)) && retry_num < max_retries - 1)
                 {
                     // chrome can sometimes crash on startup when launching from chromedriver.
                     // As a *workaround*, let's retry that a few times

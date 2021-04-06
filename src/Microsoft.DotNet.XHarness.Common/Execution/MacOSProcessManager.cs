@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                     try
                     {
                         doc.Load(plistPath);
-                        _xcode_version = Version.Parse(doc.SelectSingleNode("//key[text() = 'CFBundleShortVersionString']/following-sibling::string").InnerText);
+                        _xcode_version = Version.Parse(doc.SelectSingleNode("//key[text() = 'CFBundleShortVersionString']/following-sibling::string")?.InnerText ?? throw new Exception("Failed to find the CFBundleShortVersionString property"));
                     }
                     catch (IOException)
                     {
@@ -75,9 +75,9 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
 
         #endregion
 
-        #region Private methods
+        #region Static methods
 
-        private static string DetectXcodePath()
+        public static string DetectXcodePath()
         {
             using var process = new Process();
             process.StartInfo.FileName = "xcode-select";
@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                     log,
                     stdout,
                     stderr,
-                    (pid, signal) => kill(pid, signal),
+                    (pid, signal) => _ = kill(pid, signal),
                     (log, pid) => GetChildProcessIdsInternal(log, pid),
                     timeout)
                 .GetAwaiter().GetResult();

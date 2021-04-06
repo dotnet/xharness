@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
             IEnumerable<IHardwareDevice> compatibleDevices = ConnectedDevices.Where(v => deviceClasses.Contains(v.DeviceClass) && v.IsUsableForDebugging != false);
             IHardwareDevice device;
-            if (compatibleDevices.Count() == 0)
+            if (!compatibleDevices.Any())
             {
                 throw new NoDeviceFoundException($"Could not find any applicable devices with device class(es): {string.Join(", ", deviceClasses)}");
             }
@@ -185,14 +185,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             await LoadDevices(log, false, false);
 
             var companion = ConnectedDevices.Where((v) => v.DeviceIdentifier == device.CompanionIdentifier);
-            if (companion.Count() == 0)
+            var count = companion.Count();
+            if (count == 0)
             {
                 throw new Exception($"Could not find the companion device for '{device.Name}'");
             }
 
-            if (companion.Count() > 1)
+            if (count > 1)
             {
-                log.WriteLine("Found {0} companion devices for {1}?!?", companion.Count(), device.Name);
+                log.WriteLine("Found {0} companion devices for {1}?!?", count, device.Name);
             }
 
             return companion.First();

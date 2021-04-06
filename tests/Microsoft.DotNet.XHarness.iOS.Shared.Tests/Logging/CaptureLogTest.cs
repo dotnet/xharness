@@ -28,6 +28,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Logging
             {
                 File.Delete(_filePath);
             }
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

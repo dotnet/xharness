@@ -22,7 +22,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
         public async Task<int> Run()
         {
-            var testRunner = new ThreadlessXunitTestRunner();
             var filters = new XunitFilters();
 
             foreach (var trait in ExcludedTraits) ParseEqualSeparatedArgument(filters.ExcludedTraits, trait);
@@ -31,12 +30,12 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             foreach (var cl in IncludedClasses) filters.IncludedClasses.Add(cl);
             foreach (var me in IncludedMethods) filters.IncludedMethods.Add(me);
 
-            var result = await testRunner.Run(TestAssembly, printXml: true, filters);
+            var result = await ThreadlessXunitTestRunner.Run(TestAssembly, printXml: true, filters);
 
             return result;
         }
 
-        private void ParseEqualSeparatedArgument(Dictionary<string, List<string>> targetDictionary, string argument)
+        private static void ParseEqualSeparatedArgument(Dictionary<string, List<string>> targetDictionary, string argument)
         {
             var parts = argument.Split('=');
             if (parts.Length != 2 || string.IsNullOrEmpty(parts[0]) || string.IsNullOrEmpty(parts[1]))

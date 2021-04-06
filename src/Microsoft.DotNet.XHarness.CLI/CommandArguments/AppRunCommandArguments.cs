@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(15);
 
-        protected override OptionSet GetCommandOptions() => new OptionSet
+        protected override OptionSet GetCommandOptions() => new()
         {
             {
                 "app|a=", "Path to already-packaged app",

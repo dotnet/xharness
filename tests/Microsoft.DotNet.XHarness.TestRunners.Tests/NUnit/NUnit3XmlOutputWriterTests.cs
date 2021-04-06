@@ -91,6 +91,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit
             Assert.Equal(1, enviroment.Count);
         }
 
-        public void Dispose() => File.Delete(_tempPath);
+        public void Dispose()
+        {
+            File.Delete(_tempPath);
+            GC.SuppressFinalize(this);
+        }
     }
 }

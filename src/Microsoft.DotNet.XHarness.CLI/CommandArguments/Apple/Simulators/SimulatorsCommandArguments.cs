@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
                 if (_xcodeRoot == null)
                 {
                     // Determine it automatically from xcode-select
-                    _xcodeRoot = new MacOSProcessManager().XcodeRoot;
+                    _xcodeRoot = MacOSProcessManager.DetectXcodePath();
                 }
 
                 return _xcodeRoot;
@@ -36,7 +36,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
         {
             var options = GetAdditionalOptions();
 
-            options.Add("xcode=", "Path to where Xcode is located, e.g. /Application/Xcode114.app. If not set, xcode-select is used to determine the location",v => XcodeRoot = RootPath(v));
+            options.Add("xcode=", "Path to where Xcode is located, e.g. /Application/Xcode114.app. If not set, xcode-select is used to determine the location",
+                v => XcodeRoot = RootPath(v));
 
             return options;
         }

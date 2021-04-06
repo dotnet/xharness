@@ -22,10 +22,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger)
         {
-            this._xmlResultsFilePath = xmlResultsFilePath;
-            this._stdoutFileWriter = File.CreateText(stdoutFilePath);
-            this._stdoutFileWriter.AutoFlush = true;
-            this._logger = logger;
+            _xmlResultsFilePath = xmlResultsFilePath;
+            _stdoutFileWriter = File.CreateText(stdoutFilePath);
+            _stdoutFileWriter.AutoFlush = true;
+            _logger = logger;
         }
 
         public void Invoke(string message)

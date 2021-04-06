@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
         {
             Directory.Delete(s_appPath, true);
             Directory.Delete(s_appPath2, true);
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

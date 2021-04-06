@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
     {
         private const string CommandHelp = "Runs a given iOS/tvOS/watchOS/MacCatalyst application bundle in a target device/simulator and tries to detect exit code (might not work reliably across iOS versions).";
 
-        private readonly AppleRunCommandArguments _arguments = new AppleRunCommandArguments();
+        private readonly AppleRunCommandArguments _arguments = new();
 
         protected override AppleAppRunArguments iOSRunArguments => _arguments;
         protected override string CommandUsage { get; } = "apple run [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
@@ -57,7 +57,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 mainLog,
                 logs,
                 new Helpers(),
-                PassThroughArguments,
                 logCallback);
 
             ProcessExecutionResult result;
@@ -65,7 +64,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 appBundleInfo,
                 target,
                 _arguments.Timeout,
+                PassThroughArguments,
+                _arguments.EnvironmentalVariables,
                 deviceName,
+                resetSimulator: _arguments.ResetSimulator,
                 verbosity: GetMlaunchVerbosity(_arguments.Verbosity),
                 cancellationToken: cancellationToken);
 
@@ -99,6 +101,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             if (_arguments.ExpectedExitCode != exitCode)
             {
                 logger.LogError($"Application has finished with exit code {exitCode} but {_arguments.ExpectedExitCode} was expected");
+
+                if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
+                {
+                    logger.LogError(failureMessage.Value.HumanMessage);
+                }
+
                 return ExitCode.GENERAL_FAILURE;
             }
 

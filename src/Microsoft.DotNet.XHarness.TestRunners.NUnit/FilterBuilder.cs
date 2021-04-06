@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Engine;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
 {
     /// <summary>

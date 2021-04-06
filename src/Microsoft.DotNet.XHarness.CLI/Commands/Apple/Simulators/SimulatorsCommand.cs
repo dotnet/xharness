@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml;
@@ -15,11 +16,13 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 {
-    internal abstract class SimulatorInstallerCommand : XHarnessCommand
+    internal abstract class SimulatorsCommand : XHarnessCommand
     {
         private const string MAJOR_VERSION_PLACEHOLDER = "DOWNLOADABLE_VERSION_MAJOR";
         private const string MINOR_VERSION_PLACEHOLDER = "DOWNLOADABLE_VERSION_MINOR";
@@ -28,7 +31,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
         private const string SimulatorIndexUrl = "https://devimages-cdn.apple.com/downloads/xcode/simulators/index-{0}-{1}.dvtdownloadableindex";
 
-        private readonly MacOSProcessManager _processManager = new MacOSProcessManager();
+        protected const string SimulatorHelpString = 
+            "Accepts a list of simulator IDs to install. The ID can be a fully qualified string, " +
+            "e.g. com.apple.pkg.AppleTVSimulatorSDK14_2 or you can use the format in which you specify " +
+            "apple targets for XHarness tests (ios-simulator, tvos-simulator, watchos-simulator).";
+
+        private static readonly HttpClient s_client = new();
+        private readonly MacOSProcessManager _processManager = new();
 
         protected ILogger Logger { get; set; } = null!;
 
@@ -36,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
         protected abstract SimulatorsCommandArguments SimulatorsArguments { get; }
 
-        protected SimulatorInstallerCommand(string name, string help) : base(name, false, help)
+        protected SimulatorsCommand(string name, bool allowsExtraArgs, string help) : base(name, allowsExtraArgs, help)
         {
         }
 
@@ -98,19 +107,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
             var simulators = new List<Simulator>();
 
             var downloadables = doc.SelectNodes("//plist/dict/key[text()='downloadables']/following-sibling::array/dict");
-            foreach (XmlNode? downloadable in downloadables)
+            foreach (XmlNode? downloadable in downloadables!)
             {
                 if (downloadable == null)
                 {
                     continue;
                 }
 
-                var nameNode = downloadable.SelectSingleNode("key[text()='name']/following-sibling::string");
-                var versionNode = downloadable.SelectSingleNode("key[text()='version']/following-sibling::string");
-                var sourceNode = downloadable.SelectSingleNode("key[text()='source']/following-sibling::string");
-                var identifierNode = downloadable.SelectSingleNode("key[text()='identifier']/following-sibling::string");
+                var nameNode = downloadable.SelectSingleNode("key[text()='name']/following-sibling::string") ?? throw new Exception("Name node not found");
+                var versionNode = downloadable.SelectSingleNode("key[text()='version']/following-sibling::string") ?? throw new Exception("Version node not found");
+                var sourceNode = downloadable.SelectSingleNode("key[text()='source']/following-sibling::string") ?? throw new Exception("Source node not found");
+                var identifierNode = downloadable.SelectSingleNode("key[text()='identifier']/following-sibling::string") ?? throw new Exception("Identifier node not found");
                 var fileSizeNode = downloadable.SelectSingleNode("key[text()='fileSize']/following-sibling::integer|key[text()='fileSize']/following-sibling::real");
-                var installPrefixNode = downloadable.SelectSingleNode("key[text()='userInfo']/following-sibling::dict/key[text()='InstallPrefix']/following-sibling::string");
+                var installPrefixNode = downloadable.SelectSingleNode("key[text()='userInfo']/following-sibling::dict/key[text()='InstallPrefix']/following-sibling::string") ?? throw new Exception("InstallPrefix node not found");
 
                 var version = versionNode.InnerText;
                 var versions = version.Split('.');
@@ -126,7 +135,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
                 dict.Add(IDENTIFIER_PLACEHOLDER, identifier);
 
-                double.TryParse(fileSizeNode?.InnerText, out var parsedFileSize);
+                _  = double.TryParse(fileSizeNode?.InnerText, out var parsedFileSize);
 
                 simulators.Add(new Simulator(
                     name: Replace(nameNode.InnerText, dict),
@@ -153,6 +162,57 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
             return Version.Parse(version);
         }
 
+        protected IEnumerable<string> ParseSimulatorIds()
+        {
+            var simulators = new List<string>();
+
+            foreach (string argument in ExtraArguments)
+            {
+                if (argument.StartsWith("com.apple.pkg."))
+                {
+                    simulators.Add(argument);
+                    continue;
+                }
+
+                TestTargetOs target;
+                try
+                {
+                    target = argument.ParseAsAppRunnerTargetOs();
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    throw new ArgumentException(
+                        $"Failed to parse simulator '{argument}'. Available values are ios-simulator, tvos-simulator and watchos-simulator." +
+                        Environment.NewLine + Environment.NewLine +
+                        "You need to also specify the version. Example: ios-simulator_13.4");
+                }
+
+                if (string.IsNullOrEmpty(target.OSVersion))
+                {
+                    throw new ArgumentException($"Failed to parse simulator '{argument}'. " +
+                        $"You need to specify the exact version. Example: ios-simulator_13.4");
+                }
+
+                string simulatorName = target.Platform switch
+                {
+                    TestTarget.Simulator_iOS => "iPhone",
+                    TestTarget.Simulator_iOS32 => "iPhone",
+                    TestTarget.Simulator_iOS64 => "iPhone",
+                    TestTarget.Simulator_tvOS => "AppleTV",
+                    TestTarget.Simulator_watchOS => "Watch",
+                    _ => throw new ArgumentException($"Failed to parse simulator '{argument}'. " +
+                        "Available values are ios-simulator, tvos-simulator and watchos-simulator." +
+                        Environment.NewLine + Environment.NewLine +
+                        "You need to also specify the version. Example: ios-simulator_13.4"),
+                };
+
+                // e.g. com.apple.pkg.AppleTVSimulatorSDK14_3
+                simulators.Add($"com.apple.pkg.{simulatorName}SimulatorSDK{target.OSVersion.Replace(".", "_")}");
+            }
+
+            return simulators;
+        }
+
         private async Task<string?> GetSimulatorIndexXml()
         {
             var (xcodeVersion, xcodeUuid) = await GetXcodeInformation();
@@ -163,26 +223,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
             if (!File.Exists(tmpfile))
             {
-                var client = new WebClient();
-                try
-                {
-                    Logger.LogInformation($"Downloading '{uri}'");
-                    client.DownloadFile(uri, tmpfile);
-                }
-                catch (Exception ex)
-                {
-                    // 403 means 404
-                    if (ex is WebException we && (we.Response as HttpWebResponse)?.StatusCode == HttpStatusCode.Forbidden)
-                    {
-                        Logger.LogWarning($"Failed to download {url}: Not found"); // Apple's servers return a 403 if the file doesn't exist, which can be quite confusing, so show a better error.
-                    }
-                    else
-                    {
-                        Logger.LogWarning($"Failed to download {url}: {ex}");
-                    }
-
-                    return null;
-                }
+                await DownloadFile(url, tmpfile);
+            }
+            else
+            {
+                Logger.LogInformation($"File '{tmpfile}' already exists, skipped download");
             }
 
             var (succeeded, xmlResult) = await ExecuteCommand("plutil", TimeSpan.FromSeconds(30), "-convert", "xml1", "-o", "-", tmpfile);
@@ -192,6 +237,34 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
             }
 
             return xmlResult;
+        }
+
+        private async Task DownloadFile(string url, string destinationPath)
+        {
+            try
+            {
+                Logger.LogInformation($"Downloading {url}...");
+
+                var downloadTask = s_client.GetStreamAsync(url);
+                using var fileStream = new FileStream(destinationPath, FileMode.Create);
+                using var bodyStream = await downloadTask;
+                await bodyStream.CopyToAsync(fileStream);
+            }
+            catch (HttpRequestException e)
+            {
+                // 403 means 404
+                if (e.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    // Apple's servers return a 403 if the file doesn't exist, which can be quite confusing, so show a better error.
+                    Logger.LogWarning($"Failed to download {url}: Not found");
+                }
+                else
+                {
+                    Logger.LogWarning($"Failed to download {url}: {e}");
+                }
+
+                throw;
+            }
         }
 
         private async Task<(string XcodeVersion, string XcodeUuid)> GetXcodeInformation()

@@ -6,8 +6,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Threading;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
@@ -16,19 +15,20 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 {
-    internal class InstallCommand : SimulatorInstallerCommand
+    internal class InstallCommand : SimulatorsCommand
     {
         private const string CommandName = "install";
         private const string CommandHelp = "Installs given simulators";
+        private static readonly HttpClient s_client = new();
 
-        protected override string CommandUsage => CommandName + " [OPTIONS]";
+        protected override string CommandUsage => CommandName + " [OPTIONS] [SIMULATOR] [SIMULATOR] ..";
 
-        protected override string CommandDescription => CommandHelp;
+        protected override string CommandDescription => CommandHelp + Environment.NewLine + Environment.NewLine + SimulatorHelpString;
 
-        private readonly InstallCommandArguments _arguments = new InstallCommandArguments();
+        private readonly InstallCommandArguments _arguments = new();
         protected override SimulatorsCommandArguments SimulatorsArguments => _arguments;
 
-        public InstallCommand() : base(CommandName, CommandHelp)
+        public InstallCommand() : base(CommandName, true, CommandHelp)
         {
         }
 
@@ -36,10 +36,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
         {
             Logger = logger;
 
+            var simulatorIds = ParseSimulatorIds();
+
             var simulators = await GetAvailableSimulators();
             var exitCode = ExitCode.SUCCESS;
 
-            var unknownSimulators = _arguments.Simulators.Where(identifier =>
+            if (!simulatorIds.Any())
+            {
+                logger.LogError("You have to specify at least one simulator to install!");
+                return ExitCode.INVALID_ARGUMENTS;
+            }
+
+            var unknownSimulators = simulatorIds.Where(identifier =>
                 !simulators.Any(sim => sim.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)));
 
             if (unknownSimulators.Any())
@@ -50,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
             foreach (var simulator in simulators)
             {
-                if (!_arguments.Simulators.Any(identifier => simulator.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
+                if (!simulatorIds.Any(identifier => simulator.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     Logger.LogDebug($"Skipping '{simulator.Identifier}'");
                     continue;
@@ -136,41 +144,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
             if (download)
             {
-                var downloadDone = new ManualResetEvent(false);
-                var wc = new WebClient();
-                long lastProgress = 0;
                 var watch = Stopwatch.StartNew();
-                wc.DownloadProgressChanged += (sender, progressArgs) =>
+
+                using (var response = await s_client.GetAsync(simulator.Source))
+                using (var fileStream = File.Create(downloadPath))
                 {
-                    var progress = progressArgs.BytesReceived * 100 / simulator.FileSize;
-                    if (progress > lastProgress)
-                    {
-                        lastProgress = progress;
-                        var duration = watch.Elapsed.TotalSeconds;
-                        var speed = progressArgs.BytesReceived / duration;
-                        var timeLeft = TimeSpan.FromSeconds((progressArgs.TotalBytesToReceive - progressArgs.BytesReceived) / speed);
+                    await response.Content.CopyToAsync(fileStream);
+                }
 
-                        Logger.LogDebug($"Downloaded {progressArgs.BytesReceived:N0}/{simulator.FileSize:N0} bytes = " +
-                            $"{progress}% in {duration:N1}s ({speed / 1024.0 / 1024.0:N1} MB/s; approximately " +
-                            $"{new TimeSpan(timeLeft.Days, timeLeft.Hours, timeLeft.Minutes, timeLeft.Seconds)} left)");
-                    }
-                };
+                watch.Stop();
 
-                wc.DownloadFileCompleted += (sender, completedArgs) =>
-                {
-                    Logger.LogInformation($"Download completed in {watch.Elapsed.TotalSeconds}s");
-
-                    if (completedArgs.Error != null)
-                    {
-                        Logger.LogError($"    with error: {completedArgs.Error}");
-                    }
-
-                    downloadDone.Set();
-                };
-
-                await wc.DownloadFileTaskAsync(new Uri(simulator.Source), downloadPath);
-
-                downloadDone.WaitOne();
+                var size = new FileInfo(downloadPath).Length;
+                Logger.LogInformation($"Downloaded {size / 1024.0 / 1024.0:N1} MB in {(int)watch.Elapsed.TotalSeconds}s");
             }
 
             var mount_point = Path.Combine(TempDirectory, filename + "-mount");
@@ -224,7 +209,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
                         // Add the install-location attribute to the pkg-info node
                         var attr = packageInfoDoc.CreateAttribute("install-location");
                         attr.Value = simulator.InstallPrefix;
-                        packageInfoDoc.SelectSingleNode("/pkg-info").Attributes.Append(attr);
+                        packageInfoDoc.SelectSingleNode("/pkg-info")?.Attributes?.Append(attr);
                         packageInfoDoc.Save(packageInfoPath);
 
                         var fixed_path = Path.Combine(Path.GetDirectoryName(downloadPath)!, Path.GetFileNameWithoutExtension(downloadPath) + "-fixed.pkg");

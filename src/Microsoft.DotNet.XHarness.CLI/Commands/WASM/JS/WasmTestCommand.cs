@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
@@ -21,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
     {
         private const string CommandHelp = "Executes tests on WASM using a selected JavaScript engine";
 
-        private readonly WasmTestCommandArguments _arguments = new WasmTestCommandArguments();
+        private readonly WasmTestCommandArguments _arguments = new();
 
         protected override XHarnessCommandArguments Arguments => _arguments;
         protected override string CommandUsage { get; } = "wasm test [OPTIONS] -- [ENGINE OPTIONS]";
@@ -29,6 +30,26 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         public WasmTestCommand() : base("test", true, CommandHelp)
         {
+        }
+
+        private static string FindEngineInPath(string engineBinary)
+        {
+            if (File.Exists (engineBinary) || Path.IsPathRooted(engineBinary))
+                return engineBinary;
+
+            var path = Environment.GetEnvironmentVariable("PATH");
+
+            if (path == null)
+                return engineBinary;
+
+            foreach (var folder in path.Split(Path.PathSeparator))
+            {
+                var fullPath = Path.Combine(folder, engineBinary);
+                if (File.Exists(fullPath))
+                    return fullPath;
+            }
+
+            return engineBinary;
         }
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
@@ -40,8 +61,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 JavaScriptEngine.V8 => "v8",
                 JavaScriptEngine.JavaScriptCore => "jsc",
                 JavaScriptEngine.SpiderMonkey => "sm",
-                _ => throw new ArgumentException()
+                _ => throw new ArgumentException("Engine not set")
             };
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                engineBinary = FindEngineInPath(engineBinary + ".cmd");
 
             var engineArgs = new List<string>();
 

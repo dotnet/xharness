@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 {
-    internal class ListCommand : SimulatorInstallerCommand
+    internal class ListCommand : SimulatorsCommand
     {
         private const string CommandName = "list";
         private const string CommandHelp = "Lists available simulators";
@@ -20,10 +20,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
         protected override string CommandDescription => CommandHelp;
 
-        private readonly ListCommandArguments _arguments = new ListCommandArguments();
+        private readonly ListCommandArguments _arguments = new();
         protected override SimulatorsCommandArguments SimulatorsArguments => _arguments;
 
-        public ListCommand() : base(CommandName, CommandHelp)
+        public ListCommand() : base(CommandName, false, CommandHelp)
         {
         }
 

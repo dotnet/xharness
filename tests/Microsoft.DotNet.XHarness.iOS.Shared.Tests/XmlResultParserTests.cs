@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
 {
     public class XmlResultParserTests
     {
-        private static readonly Dictionary<XmlResultJargon, Action<string, string, string, string, string, string, string, int>> s_validationMap = new Dictionary<XmlResultJargon, Action<string, string, string, string, string, string, string, int>>
+        private static readonly Dictionary<XmlResultJargon, Action<string, string, string, string, string, string, string, int>> s_validationMap = new()
         {
             [XmlResultJargon.NUnitV2] = ValidateNUnitV2Failure,
             [XmlResultJargon.NUnitV3] = ValidateNUnitV3Failure,

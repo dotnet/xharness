@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             {
                 File.Delete(_logPath);
             }
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

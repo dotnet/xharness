@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
     internal class AndroidInstallCommand : XHarnessCommand
     {
 
-        private readonly AndroidInstallCommandArguments _arguments = new AndroidInstallCommandArguments();
+        private readonly AndroidInstallCommandArguments _arguments = new();
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 
@@ -71,7 +71,7 @@ Arguments:
                 runner: runner));
         }
 
-        public ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string? apkRequiredArchitecture, string? deviceId, AdbRunner runner)
+        public static ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string? apkRequiredArchitecture, string? deviceId, AdbRunner runner)
         {
             try
             {
@@ -84,7 +84,7 @@ Arguments:
                     // otherwise - from test command - apkRequiredArchitecture was set by user or .apk architecture
                     deviceId ??= apkRequiredArchitecture != null
                         ? runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture")
-                        : throw new ArgumentNullException("Required architecture not specified");
+                        : throw new ArgumentException("Required architecture not specified");
 
                     if (deviceId == null)
                     {

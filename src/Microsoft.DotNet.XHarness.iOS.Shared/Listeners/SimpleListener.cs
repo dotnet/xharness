@@ -103,7 +103,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
         }
 
-        public virtual void Dispose() => TestLog.Dispose();
+        public virtual void Dispose()
+        {
+            TestLog.Dispose();
+            GC.SuppressFinalize(this);
+        }
     }
 }
 

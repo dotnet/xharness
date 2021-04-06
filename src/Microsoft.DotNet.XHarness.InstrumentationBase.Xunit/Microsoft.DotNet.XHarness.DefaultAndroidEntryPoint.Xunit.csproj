@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <TargetFramework>net6.0</TargetFramework>
+    <nullable>enable</nullable>
+    <RootNamespace>Microsoft.DotNet.XHarness.TestRunners.Xunit</RootNamespace>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.XHarness.TestRunners.Xunit\Microsoft.DotNet.XHarness.TestRunners.Xunit.csproj" />
+  </ItemGroup>
+
+</Project>

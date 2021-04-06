@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 
         public bool UseJson { get; set; } = false;
 
-        protected override OptionSet GetCommandOptions() => new OptionSet
+        protected override OptionSet GetCommandOptions() => new()
         {
             { "mlaunch=", "Path to the mlaunch binary", v => MlaunchPath = RootPath(v) },
             { "include-simulator-uuid", "Include the simulators UUID. Defaults to false.", v => ShowSimulatorsUUID = v != null },

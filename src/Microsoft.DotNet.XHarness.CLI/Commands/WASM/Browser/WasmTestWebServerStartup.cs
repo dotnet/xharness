@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 using System;
@@ -18,11 +17,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
     public class WasmTestWebServerStartup
     {
-        private readonly IWebHostEnvironment s_hostingEnvironment;
+        private readonly IWebHostEnvironment _hostingEnvironment;
 
         public WasmTestWebServerStartup(IWebHostEnvironment hostingEnvironment)
         {
-            this.s_hostingEnvironment = hostingEnvironment;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         public void Configure(IApplicationBuilder app, IOptionsMonitor<WasmTestWebServerOptions> optionsAccessor)
@@ -37,7 +36,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = new PhysicalFileProvider(s_hostingEnvironment.ContentRootPath),
+                FileProvider = new PhysicalFileProvider(_hostingEnvironment.ContentRootPath),
                 ContentTypeProvider = provider,
                 ServeUnknownFileTypes = true
             });

@@ -1212,10 +1212,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             {
                 "MtouchExtraArgs",
             };
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
             Func<string, string>? convert = null;
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
             convert = (input) =>
             {
-                if (input.IndexOf(';') >= 0)
+                if (input.Contains(';'))
                 {
                     var split = input.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
                     for (var i = 0; i < split.Length; i++)
