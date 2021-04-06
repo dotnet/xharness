@@ -264,6 +264,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         public LaunchDeviceArgument(string launchAppPath) : base("launchdev", launchAppPath, false)
         {
         }
+
+        public LaunchDeviceArgument(AppBundleInformation appInfo) : base("launchdev", appInfo.AppPath, false)
+        {
+        }
     }
 
     /// <summary>
@@ -274,6 +278,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         public LaunchSimulatorArgument(string launchAppPath) : base("launchsim", launchAppPath, false)
         {
         }
+
+        public LaunchSimulatorArgument(AppBundleInformation appInfo) : base("launchsim", appInfo.AppPath, false)
+        {
+        }
     }
 
     /// <summary>
@@ -281,7 +289,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
     /// </summary>
     public sealed class LaunchSimulatorBundleArgument : SingleValueArgument
     {
-        public LaunchSimulatorBundleArgument(string bundleId) : base("launchsimbundleid", bundleId, true)
+        public LaunchSimulatorBundleArgument(AppBundleInformation appInfo) : base("launchsimbundleid", appInfo.BundleIdentifier, true)
         {
         }
     }

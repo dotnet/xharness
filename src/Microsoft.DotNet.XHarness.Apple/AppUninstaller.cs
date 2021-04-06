@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             var args = new MlaunchArguments
             {
                 new UninstallAppFromDeviceArgument(appBundleId),
-                new DeviceNameArgument(device.Name)
+                new DeviceNameArgument(device)
             };
 
             return await _processManager.ExecuteCommandAsync(args, _mainLog, TimeSpan.FromMinutes(1), cancellationToken: cancellationToken);

@@ -12,7 +12,6 @@ using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Moq;
 using Xunit;
@@ -22,49 +21,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
     public class AppRunnerTests : AppRunTestBase
     {
         [Fact]
-        public async Task RunOnSimulatorWithNoAvailableSimulatorTest()
-        {
-            var captureLog = new Mock<ICaptureLog>();
-            captureLog
-                .SetupGet(x => x.FullPath)
-                .Returns(_simulatorLogPath);
-
-            var captureLogFactory = new Mock<ICaptureLogFactory>();
-            captureLogFactory
-                .Setup(x => x.Create(
-                   Path.Combine(_logs.Object.Directory, "tvos.log"),
-                   "/path/to/simulator.log",
-                   false,
-                   It.IsAny<LogType>()))
-                .Returns(captureLog.Object);
-
-            // Act
-            var appRunner = new AppRunner(
-                _processManager.Object,
-                _snapshotReporterFactory,
-                captureLogFactory.Object,
-                Mock.Of<IDeviceLogCapturerFactory>(),
-                _mainLog.Object,
-                _logs.Object,
-                _helpers.Object);
-
-            var appInformation = GetMockedAppBundleInfo();
-
-            await Assert.ThrowsAsync<NoDeviceFoundException>(
-                async () => await appRunner.RunApp(
-                    appInformation,
-                    new TestTargetOs(TestTarget.Simulator_tvOS, null),
-                    _mockSimulator,
-                    timeout: TimeSpan.FromSeconds(30),
-                    extraAppArguments: Array.Empty<string>(),
-                    extraEnvVariables: Array.Empty<(string, string)>()));
-
-            // Verify
-            _mainLog.Verify(x => x.WriteLine("App run ended with 0"), Times.Never);
-        }
-
-        [Fact]
-        public async Task RunOnSimulatorSuccessfullyTest()
+        public async Task RunOnSimulatorTest()
         {
             var captureLog = new Mock<ICaptureLog>();
             captureLog.SetupGet(x => x.FullPath).Returns(_simulatorLogPath);
@@ -97,6 +54,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 appInformation,
                 new TestTargetOs(TestTarget.Simulator_tvOS, null),
                 _mockSimulator,
+                null,
                 timeout: TimeSpan.FromSeconds(30),
                 extraAppArguments: new[] { "--foo=bar", "--xyz" },
                 extraEnvVariables: new[] { ("appArg1", "value1") });
@@ -120,7 +78,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         }
 
         [Fact]
-        public async Task RunOnDeviceSuccessfullyTest()
+        public async Task RunOnDeviceTest()
         {
             var deviceSystemLog = new Mock<IFileBackedLog>();
             deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
@@ -156,6 +114,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 appInformation,
                 new TestTargetOs(TestTarget.Device_iOS, null),
                 s_mockDevice,
+                null,
                 timeout: TimeSpan.FromSeconds(30),
                 extraAppArguments: new[] { "--foo=bar", "--xyz" },
                 extraEnvVariables: new[] { ("appArg1", "value1") });
@@ -181,6 +140,61 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
         }
 
+        [Fact]
+        public async Task RunOnMacCatalystTest()
+        {
+            var captureLog = new Mock<ICaptureLog>();
+            captureLog.SetupGet(x => x.FullPath).Returns(_simulatorLogPath);
+            captureLog.SetupGet(x => x.Description).Returns(LogType.SystemLog.ToString());
+
+            var captureLogFactory = new Mock<ICaptureLogFactory>();
+            captureLogFactory
+                .Setup(x => x.Create(
+                   It.IsAny<string>(),
+                   It.IsAny<string>(),
+                   false,
+                   LogType.SystemLog))
+                .Returns(captureLog.Object);
+
+            SetupLogList(new[] { captureLog.Object });
+
+            var appInformation = GetMockedAppBundleInfo();
+
+            // Act
+            var appRunner = new AppRunner(
+                _processManager.Object,
+                _snapshotReporterFactory,
+                captureLogFactory.Object,
+                Mock.Of<IDeviceLogCapturerFactory>(),
+                _mainLog.Object,
+                _logs.Object,
+                _helpers.Object);
+
+            var result = await appRunner.RunMacCatalystApp(
+                appInformation,
+                timeout: TimeSpan.FromSeconds(30),
+                extraAppArguments: new[] { "--foo=bar", "--xyz" },
+                extraEnvVariables: new[] { ("appArg1", "value1") });
+
+            // Verify
+            Assert.True(result.Succeeded);
+
+            var expectedArgs = GetExpectedSimulatorMlaunchArgs();
+
+            _processManager
+                .Verify(
+                    x => x.ExecuteCommandAsync(
+                       "open",
+                       It.Is<IList<string>>(args => args[0] == "-W" && args[1] == s_appPath),
+                       _mainLog.Object,
+                       It.IsAny<TimeSpan>(),
+                       It.IsAny<Dictionary<string, string>>(),
+                       It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            captureLog.Verify(x => x.StartCapture(), Times.AtLeastOnce);
+        }
+
         private static AppBundleInformation GetMockedAppBundleInfo() =>
             new AppBundleInformation(
                 appName: AppName,
@@ -191,24 +205,20 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 extension: null);
 
         private static string GetExpectedDeviceMlaunchArgs() =>
-            "-v " +
-            "-v " +
             "-argument=--foo=bar " +
             "-argument=--xyz " +
             "-setenv=appArg1=value1 " +
             "--disable-memory-limits " +
-            $"--devname \"{s_mockDevice.DeviceIdentifier}\" " +
+            $"--devname {s_mockDevice.DeviceIdentifier} " +
             $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
             "--wait-for-exit";
 
         private string GetExpectedSimulatorMlaunchArgs() =>
-            "-v " +
-            "-v " +
             "-argument=--foo=bar " +
             "-argument=--xyz " +
             "-setenv=appArg1=value1 " +
             $"--device=:v2:udid={_mockSimulator.UDID} " +
-            $"--launchsimbundleid {StringUtils.FormatArguments(s_appPath)}";
+            $"--launchsimbundleid={AppBundleIdentifier}";
 
         private void SetupLogList(IEnumerable<IFileBackedLog> logs)
         {

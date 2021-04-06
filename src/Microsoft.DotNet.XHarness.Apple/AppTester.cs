@@ -540,7 +540,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             else
             {
-                args.Add(new LaunchSimulatorBundleArgument(appInformation.BundleIdentifier));
+                args.Add(new LaunchSimulatorBundleArgument(appInformation));
             }
 
             return args;
@@ -594,7 +594,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             else
             {
-                args.Add(new LaunchDeviceArgument(appInformation.LaunchAppPath));
+                args.Add(new LaunchDeviceArgument(appInformation));
             }
 
             if (isWatchTarget)

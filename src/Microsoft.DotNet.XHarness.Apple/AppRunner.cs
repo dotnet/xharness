@@ -70,15 +70,15 @@ namespace Microsoft.DotNet.XHarness.Apple
             AppBundleInformation appInformation,
             TestTargetOs target,
             IDevice device,
+            IDevice? companionDevice,
             TimeSpan timeout,
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables,
-            string? companionDeviceName = null,
             CancellationToken cancellationToken = default)
         {
             ProcessExecutionResult result;
-            ISimulatorDevice? simulator = null;
-            ISimulatorDevice? companionSimulator = null;
+            ISimulatorDevice? simulator;
+            ISimulatorDevice? companionSimulator;
 
             var isSimulator = target.Platform.IsSimulator();
             var crashLogs = new Logs(_logs.Directory);
@@ -93,6 +93,9 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             if (isSimulator)
             {
+                simulator = device as ISimulatorDevice;
+                companionSimulator = companionDevice as ISimulatorDevice;
+
                 if (simulator == null)
                 {
                     _mainLog.WriteLine("Didn't find any suitable simulator");
@@ -261,7 +264,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             else
             {
-                args.Add(new LaunchSimulatorArgument(appInformation.LaunchAppPath));
+                args.Add(new LaunchSimulatorBundleArgument(appInformation));
             }
 
             return args;
@@ -293,7 +296,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             else
             {
-                args.Add(new LaunchDeviceArgument(appInformation.LaunchAppPath));
+                args.Add(new LaunchDeviceArgument(appInformation));
             }
 
             if (isWatchTarget)

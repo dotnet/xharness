@@ -70,10 +70,11 @@ namespace Microsoft.DotNet.XHarness.Apple
                 appBundleInfo,
                 target,
                 device,
+                companionDevice,
                 arguments.Timeout,
                 passthroughArguments,
                 arguments.EnvironmentalVariables,
-                cancellationToken: cancellationToken);
+                cancellationToken);
 
             if (!result.Succeeded)
             {

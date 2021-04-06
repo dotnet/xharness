@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -65,7 +64,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             // Verify
             Assert.Equal(0, result.ExitCode);
 
-            var expectedArgs = $"--device=:v2:udid={s_mockDevice.UDID} --installsim {StringUtils.FormatArguments(s_appPath)} -v -v -v -v -v";
+            var expectedArgs = $"--device=:v2:udid={s_mockDevice.UDID} --installsim {StringUtils.FormatArguments(s_appPath)}";
 
             _processManager.Verify(x => x.ExecuteCommandAsync(
                It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
@@ -86,7 +85,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             // Verify
             Assert.Equal(0, result.ExitCode);
 
-            var expectedArgs = $"--devname {s_mockDevice.UDID} --installdev {StringUtils.FormatArguments(s_appPath)} -v -v -v -v -v";
+            var expectedArgs = $"--devname {s_mockDevice.UDID} --installdev {StringUtils.FormatArguments(s_appPath)}";
 
             _processManager.Verify(x => x.ExecuteCommandAsync(
                It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),

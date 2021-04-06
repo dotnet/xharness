@@ -31,6 +31,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             x.BuildVersion == "17A577" &&
             x.DeviceClass == DeviceClass.iPhone &&
             x.DeviceIdentifier == "8A450AA31EA94191AD6B02455F377CC1" &&
+            x.UDID == "8A450AA31EA94191AD6B02455F377CC1" &&
             x.InterfaceType == "Usb" &&
             x.IsUsableForDebugging == true &&
             x.Name == DeviceName &&

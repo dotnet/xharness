@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task TestOnSimulatorSuccessfullyTest(bool useTunnel)
+        public async Task TestOnSimulatorTest(bool useTunnel)
         {
             var testResultFilePath = Path.GetTempFileName();
             var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
@@ -155,7 +155,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task TestOnDeviceSuccessfullyTest(bool useTunnel)
+        public async Task TestOnDeviceTest(bool useTunnel)
         {
             var deviceSystemLog = new Mock<IFileBackedLog>();
             deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
@@ -247,7 +247,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             // we dont want to leak a process
             if (useTunnel)
             {
-                _tunnelBore.Verify(t => t.Close(DeviceName));
+                _tunnelBore.Verify(t => t.Close(s_mockDevice.DeviceIdentifier));
             }
 
             _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
@@ -431,7 +431,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         }
 
         [Fact]
-        public async Task TestOnMacCatalystSuccessfullyTest()
+        public async Task TestOnMacCatalystTest()
         {
             var testResultFilePath = Path.GetTempFileName();
             var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
@@ -474,11 +474,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 supports32b: false,
                 extension: null);
 
-            var (result, resultMessage) = await appTester.TestApp(
+            var (result, resultMessage) = await appTester.TestMacCatalystApp(
                 appInformation,
-                new TestTargetOs(TestTarget.MacCatalyst, null),
-                null, // TODO
-                null,
                 timeout: TimeSpan.FromSeconds(30),
                 testLaunchTimeout: TimeSpan.FromSeconds(30),
                 extraAppArguments: new[] { "--foo=bar", "--xyz" },
@@ -511,8 +508,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         }
 
         private static string GetExpectedDeviceMlaunchArgs(string skippedTests = null, bool useTunnel = false, string extraArgs = null) =>
-            "-v " +
-            "-v " +
             "-setenv=NUNIT_AUTOEXIT=true " +
             $"-setenv=NUNIT_HOSTPORT={Port} " +
             "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
@@ -521,14 +516,12 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             extraArgs +
             "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
             "--disable-memory-limits " +
-            $"--devname \"{DeviceName}\" " +
+            $"--devname {s_mockDevice.DeviceIdentifier} " +
             (useTunnel ? "-setenv=USE_TCP_TUNNEL=true " : null) +
             $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
             "--wait-for-exit";
 
         private string GetExpectedSimulatorMlaunchArgs() =>
-            "-v " +
-            "-v " +
             "-setenv=NUNIT_AUTOEXIT=true " +
             $"-setenv=NUNIT_HOSTPORT={Port} " +
             "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
@@ -538,6 +531,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "-argument=--xyz " +
             "-setenv=NUNIT_HOSTNAME=127.0.0.1 " +
             $"--device=:v2:udid={_mockSimulator.UDID} " +
-            $"--launchsim {StringUtils.FormatArguments(s_appPath)}";
+            $"--launchsimbundleid={AppBundleIdentifier}";
     }
 }
