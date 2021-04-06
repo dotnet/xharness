@@ -95,6 +95,10 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             {
                 Directory.Delete(s_outputPath, true);
             }
+            catch
+            {
+                // Concurrency can cause these
+            }
             finally
             {
                 GC.SuppressFinalize(this);
