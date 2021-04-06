@@ -21,7 +21,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 namespace Microsoft.DotNet.XHarness.Apple
 {
     /// <summary>
-    /// Class that will run an app bundle that contains the TestRunner on a target device.
+    /// Class that will run an app bundle that contains the TestRunner on a given simulator/device.
     /// It will collect test results ran in the app and return results.
     /// </summary>
     public class AppTester : AppRunnerBase
@@ -63,6 +63,52 @@ namespace Microsoft.DotNet.XHarness.Apple
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
         }
 
+        public async Task<(TestExecutingResult Result, string ResultMessage)> TestMacCatalystApp(
+            AppBundleInformation appInformation,
+            TimeSpan timeout,
+            TimeSpan testLaunchTimeout,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
+            XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
+            string[]? skippedMethods = null,
+            string[]? skippedTestClasses = null,
+            CancellationToken cancellationToken = default)
+        {
+            var deviceListenerLog = _logs.Create($"test-maccatalyst-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
+
+            var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
+                RunMode.MacOS,
+                log: _mainLog,
+                testLog: deviceListenerLog,
+                isSimulator: true,
+                autoExit: true,
+                xmlOutput: true);
+
+            try
+            {
+                var (catalystTestResult, catalystResultMessage) = await RunMacCatalystTests(
+                    deviceListenerTransport,
+                    deviceListener,
+                    deviceListenerTmpFile,
+                    appInformation,
+                    timeout,
+                    testLaunchTimeout,
+                    xmlResultJargon,
+                    skippedMethods,
+                    skippedTestClasses,
+                    extraAppArguments,
+                    extraEnvVariables,
+                    cancellationToken);
+
+                return (catalystTestResult, catalystResultMessage);
+            }
+            finally
+            {
+                deviceListener.Cancel();
+                deviceListener.Dispose();
+            }
+        }
+
         public async Task<(TestExecutingResult Result, string ResultMessage)> TestApp(
             AppBundleInformation appInformation,
             TestTargetOs target,
@@ -72,7 +118,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             TimeSpan testLaunchTimeout,
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables,
-            int verbosity = 1,
             XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
             string[]? skippedMethods = null,
             string[]? skippedTestClasses = null,
@@ -90,33 +135,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                 isSimulator: isSimulator,
                 autoExit: true,
                 xmlOutput: true); // cli always uses xml
-
-            if (target.Platform == TestTarget.MacCatalyst)
-            {
-                try
-                {
-                    var (catalystTestResult, catalystResultMessage) = await RunMacCatalystTests(
-                        deviceListenerTransport,
-                        deviceListener,
-                        deviceListenerTmpFile,
-                        appInformation,
-                        timeout,
-                        testLaunchTimeout,
-                        xmlResultJargon,
-                        skippedMethods,
-                        skippedTestClasses,
-                        extraAppArguments,
-                        extraEnvVariables,
-                        cancellationToken);
-
-                    return (catalystTestResult, catalystResultMessage);
-                }
-                finally
-                {
-                    deviceListener.Cancel();
-                    deviceListener.Dispose();
-                }
-            }
 
             var deviceListenerPort = deviceListener.InitializeAndGetPort();
             deviceListener.StartAsync();
@@ -154,7 +172,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                     var mlaunchArguments = GetSimulatorArguments(
                         appInformation,
                         device,
-                        verbosity,
                         xmlResultJargon,
                         skippedMethods,
                         skippedTestClasses,
@@ -179,7 +196,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                         appInformation,
                         device,
                         target.Platform.IsWatchOSTarget(),
-                        verbosity,
                         xmlResultJargon,
                         skippedMethods,
                         skippedTestClasses,
@@ -455,7 +471,6 @@ namespace Microsoft.DotNet.XHarness.Apple
         }
 
         private MlaunchArguments GetCommonArguments(
-            int verbosity,
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
             string[]? skippedTestClasses,
@@ -466,11 +481,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<(string, string)> extraEnvVariables)
         {
             var args = new MlaunchArguments();
-
-            for (var i = -1; i < verbosity; i++)
-            {
-                args.Add(new VerbosityArgument());
-            }
 
             // Environment variables
             var envVariables = GetEnvVariables(
@@ -494,7 +504,6 @@ namespace Microsoft.DotNet.XHarness.Apple
         private MlaunchArguments GetSimulatorArguments(
             AppBundleInformation appInformation,
             IDevice simulator,
-            int verbosity,
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
             string[]? skippedTestClasses,
@@ -505,7 +514,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<(string, string)> extraEnvVariables)
         {
             var args = GetCommonArguments(
-                verbosity,
                 xmlResultJargon,
                 skippedMethods,
                 skippedTestClasses,
@@ -542,7 +550,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             AppBundleInformation appInformation,
             IDevice device,
             bool isWatchTarget,
-            int verbosity,
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
             string[]? skippedTestClasses,
@@ -553,7 +560,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<(string, string)> extraEnvVariables)
         {
             var args = GetCommonArguments(
-                verbosity,
                 xmlResultJargon,
                 skippedMethods,
                 skippedTestClasses,

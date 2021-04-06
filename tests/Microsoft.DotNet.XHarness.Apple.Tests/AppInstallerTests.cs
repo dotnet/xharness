@@ -58,14 +58,14 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         public async Task InstallOnSimulatorTest()
         {
             // Act
-            var appInstaller = new AppInstaller(_processManager.Object, _mainLog.Object, 2);
+            var appInstaller = new AppInstaller(_processManager.Object, _mainLog.Object);
 
             var result = await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Simulator_iOS64, null), s_mockDevice);
 
             // Verify
             Assert.Equal(0, result.ExitCode);
 
-            var expectedArgs = $"--device=:v2:udid={s_mockDevice.UDID} --installsim {StringUtils.FormatArguments(s_appPath)} -v -v -v";
+            var expectedArgs = $"--device=:v2:udid={s_mockDevice.UDID} --installsim {StringUtils.FormatArguments(s_appPath)} -v -v -v -v -v";
 
             _processManager.Verify(x => x.ExecuteCommandAsync(
                It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
@@ -79,14 +79,14 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         public async Task InstallOnDeviceTest()
         {
             // Act
-            var appInstaller = new AppInstaller(_processManager.Object, _mainLog.Object, 2);
+            var appInstaller = new AppInstaller(_processManager.Object, _mainLog.Object);
 
             var result = await appInstaller.InstallApp(_appBundleInformation, new TestTargetOs(TestTarget.Device_iOS, null), s_mockDevice);
 
             // Verify
             Assert.Equal(0, result.ExitCode);
 
-            var expectedArgs = $"--devname {s_mockDevice.UDID} --installdev {StringUtils.FormatArguments(s_appPath)} -v -v -v";
+            var expectedArgs = $"--devname {s_mockDevice.UDID} --installdev {StringUtils.FormatArguments(s_appPath)} -v -v -v -v -v";
 
             _processManager.Verify(x => x.ExecuteCommandAsync(
                It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),

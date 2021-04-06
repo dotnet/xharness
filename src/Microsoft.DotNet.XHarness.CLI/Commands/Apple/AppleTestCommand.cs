@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -11,11 +9,8 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
-using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
-using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
@@ -37,104 +32,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected override async Task<ExitCode> RunAppInternal(
-            AppBundleInformation appBundleInfo,
-            IDevice device,
-            IDevice? companionDevice,
+        protected override Task<ExitCode> InvokeInternal(
+            IMlaunchProcessManager processManager,
+            DeviceFinder deviceFinder,
             ILogger logger,
             TestTargetOs target,
-            Logs logs,
+            ILogs logs,
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            var tunnelBore = (_arguments.CommunicationChannel == CommunicationChannel.UsbTunnel && !target.Platform.IsSimulator())
-                ? new TunnelBore(ProcessManager)
-                : null;
-
-            // Only add the extra callback if we do know that the feature was indeed enabled
-            Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(logger, l) : null;
-
-            var appTester = new AppTester(
-                ProcessManager,
-                new SimpleListenerFactory(tunnelBore),
-                new CrashSnapshotReporterFactory(ProcessManager),
-                new CaptureLogFactory(),
-                new DeviceLogCapturerFactory(ProcessManager),
-                new TestReporterFactory(ProcessManager),
-                new XmlResultParser(),
-                mainLog,
-                logs,
-                new Helpers(),
-                logCallback: logCallback);
-
-            string resultMessage;
-            TestExecutingResult testResult;
-            (testResult, resultMessage) = await appTester.TestApp(
-                appBundleInfo,
-                target,
-                device,
-                companionDevice,
-                _arguments.Timeout,
-                _arguments.LaunchTimeout,
-                PassThroughArguments,
-                _arguments.EnvironmentalVariables,
-                verbosity: GetMlaunchVerbosity(_arguments.Verbosity),
-                xmlResultJargon: _arguments.XmlResultJargon,
-                cancellationToken: cancellationToken,
-                skippedMethods: _arguments.SingleMethodFilters?.ToArray(),
-                skippedTestClasses: _arguments.ClassMethodFilters?.ToArray());
-
-            string newLine = Environment.NewLine;
-            const string checkLogsMessage = "Check logs for more information";
-
-            void LogProblem(string message)
-            {
-                if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var issue))
-                {
-                    logger.LogError(message + newLine + issue.Value.HumanMessage);
-                }
-                else
-                {
-                    if (resultMessage != null)
-                    {
-                        logger.LogError(message + newLine + resultMessage + newLine + newLine + checkLogsMessage);
-                    }
-                    else
-                    {
-                        logger.LogError(message + newLine + checkLogsMessage);
-                    }
-                }
-            }
-
-            switch (testResult)
-            {
-                case TestExecutingResult.Succeeded:
-                    logger.LogInformation($"Application finished the test run successfully");
-                    logger.LogInformation(resultMessage);
-                    return ExitCode.SUCCESS;
-
-                case TestExecutingResult.Failed:
-                    logger.LogInformation($"Application finished the test run successfully with some failed tests");
-                    logger.LogInformation(resultMessage);
-                    return ExitCode.TESTS_FAILED;
-
-                case TestExecutingResult.LaunchFailure:
-                    LogProblem("Failed to launch the application");
-                    return ExitCode.APP_LAUNCH_FAILURE;
-
-                case TestExecutingResult.Crashed:
-                    LogProblem("Application run crashed");
-                    return ExitCode.APP_CRASH;
-
-                case TestExecutingResult.TimedOut:
-                    logger.LogWarning($"Application test run timed out");
-                    return ExitCode.TIMED_OUT;
-
-                default:
-                    logger.LogError($"Application test run ended in an unexpected way: '{testResult}'" +
-                        newLine + (resultMessage != null ? resultMessage + newLine + newLine : null) + checkLogsMessage);
-                    return ExitCode.GENERAL_FAILURE;
-            }
+            var orchestrator = new AppleTestOrchestrator(processManager, deviceFinder, logger, logs, mainLog, ErrorKnowledgeBase);
+            return orchestrator.Execute(_arguments, PassThroughArguments, target, cancellationToken);
         }
     }
 }

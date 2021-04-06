@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                 args = new MlaunchArguments(args.Prepend(new SdkRootArgument(XcodeRoot)).ToArray());
             }
 
-            for (var i = 0; i <= 5; i++)
+            for (var i = 0; i < 5; i++)
             {
                 args.Add(new VerbosityArgument());
             }

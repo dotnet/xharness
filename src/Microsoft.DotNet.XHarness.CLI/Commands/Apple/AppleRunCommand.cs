@@ -2,19 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
@@ -36,82 +32,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected override async Task<ExitCode> RunAppInternal(
-            AppBundleInformation appBundleInfo,
-            IDevice device,
-            IDevice? companionDevice,
+        protected override Task<ExitCode> InvokeInternal(
+            IMlaunchProcessManager processManager,
+            DeviceFinder deviceFinder,
             ILogger logger,
             TestTargetOs target,
-            Logs logs,
+            ILogs logs,
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            // Only add the extra callback if we do know that the feature was indeed enabled
-            Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(logger, l) : null;
-
-            var appRunner = new AppRunner(
-                ProcessManager,
-                new CrashSnapshotReporterFactory(ProcessManager),
-                new CaptureLogFactory(),
-                new DeviceLogCapturerFactory(ProcessManager),
-                mainLog,
-                logs,
-                new Helpers(),
-                logCallback);
-
-            ProcessExecutionResult result = await appRunner.RunApp(
-                appBundleInfo,
-                target,
-                device,
-                _arguments.Timeout,
-                PassThroughArguments,
-                _arguments.EnvironmentalVariables,
-                verbosity: GetMlaunchVerbosity(_arguments.Verbosity),
-                cancellationToken: cancellationToken);
-
-            if (result.TimedOut)
-            {
-                logger.LogError($"App run has timed out");
-                return ExitCode.TIMED_OUT;
-            }
-
-            int exitCode;
-            if (target.Platform != TestTarget.MacCatalyst && !result.Succeeded)
-            {
-                logger.LogError($"App run has failed. mlaunch exited with {result.ExitCode}");
-                return ExitCode.APP_LAUNCH_FAILURE;
-            }
-
-            var systemLog = logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
-            if (systemLog == null)
-            {
-                logger.LogError("Application has finished but no system log found. Failed to determine the exit code!");
-                return ExitCode.RETURN_CODE_NOT_SET;
-            }
-
-            var exitCodeDetector = target.Platform == TestTarget.MacCatalyst
-                ? new MacCatalystExitCodeDetector()
-                : (ExitCodeDetector)new iOSExitCodeDetector();
-
-            exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, systemLog);
-            logger.LogInformation($"App run ended with {exitCode}");
-
-            if (_arguments.ExpectedExitCode != exitCode)
-            {
-                logger.LogError($"Application has finished with exit code {exitCode} but {_arguments.ExpectedExitCode} was expected");
-
-                if (ErrorKnowledgeBase.IsKnownTestIssue(mainLog, out var failureMessage))
-                {
-                    logger.LogError(failureMessage.Value.HumanMessage);
-                }
-
-                return ExitCode.GENERAL_FAILURE;
-            }
-
-            logger.LogInformation("Application has finished with exit code: " + exitCode +
-                (_arguments.ExpectedExitCode != 0 ? " (as expected)" : null));
-
-            return ExitCode.SUCCESS;
+            var orchestrator = new AppleRunOrchestrator(processManager, deviceFinder, logger, logs, mainLog, ErrorKnowledgeBase);
+            return orchestrator.Execute(_arguments, PassThroughArguments, target, cancellationToken);
         }
     }
 }
