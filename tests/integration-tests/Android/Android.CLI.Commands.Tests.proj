@@ -54,7 +54,7 @@
       <HelixWorkItem Include="System.Numerics.Vectors.Tests">
         <Command>
           deviceId=`dotnet exec "$XHARNESS_CLI_PATH" android device --app="$HELIX_WORKITEM_PAYLOAD/System.Numerics.Vectors.Tests-x86.apk" | head -2 | tail -1`;
-          dotnet exec $XHARNESS_CLI_PATH android install --device-id="$deviceId" --package-name="net.dot.System.Numerics.Vectors.Tests" --app="$HELIX_WORKITEM_PAYLOAD/System.Numerics.Vectors.Tests-x86.apk";
+          dotnet exec $XHARNESS_CLI_PATH android install --device-id="$deviceId" --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" --package-name="net.dot.System.Numerics.Vectors.Tests" --app="$HELIX_WORKITEM_PAYLOAD/System.Numerics.Vectors.Tests-x86.apk";
           dotnet exec "$XHARNESS_CLI_PATH" android run --device-id="$deviceId" --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" --package-name="net.dot.System.Numerics.Vectors.Tests";
           dotnet exec "$XHARNESS_CLI_PATH" android uninstall --device-id="$deviceId" --package-name="net.dot.System.Numerics.Vectors.Tests"
         </Command>
