@@ -17,7 +17,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
     internal class AndroidGetDeviceCommand : XHarnessCommand
     {
-        private readonly AndroidGetDeviceCommandArguments _arguments = new();
+        private readonly AndroidGetDeviceCommandArguments _arguments = new()
+        {
+            Verbosity = LogLevel.Error
+        };
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 
