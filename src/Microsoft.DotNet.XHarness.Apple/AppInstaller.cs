@@ -19,13 +19,11 @@ namespace Microsoft.DotNet.XHarness.Apple
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILog _mainLog;
-        private readonly int _verbosity;
 
-        public AppInstaller(IMlaunchProcessManager processManager, ILog mainLog, int verbosity)
+        public AppInstaller(IMlaunchProcessManager processManager, ILog mainLog)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
-            _verbosity = verbosity;
         }
 
         public async Task<ProcessExecutionResult> InstallApp(
@@ -55,11 +53,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                 {
                     args.Add(new DeviceArgument("ios,watchos"));
                 }
-            }
-
-            for (var i = 0; i <= _verbosity; i++)
-            {
-                args.Add(new VerbosityArgument());
             }
 
             var totalSize = Directory.GetFiles(appBundleInformation.LaunchAppPath, "*", SearchOption.AllDirectories).Select((v) => new FileInfo(v).Length).Sum();
