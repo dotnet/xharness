@@ -15,11 +15,11 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 namespace Microsoft.DotNet.XHarness.Apple
 {
     /// <summary>
-    /// This orchestrator implements the `install` command flow.
+    /// This orchestrator implements the `uninstall` command flow.
     /// </summary>
-    public class AppInstallOrchestrator : BaseOrchestrator
+    public class AppUninstallOrchestrator : BaseOrchestrator
     {
-        public AppInstallOrchestrator(
+        public AppUninstallOrchestrator(
             IMlaunchProcessManager processManager,
             DeviceFinder deviceFinder,
             ILogger consoleLogger,
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         {
         }
 
-        public Task<ExitCode> OrchestrateAppInstall(
+        public Task<ExitCode> OrchestrateAppUninstall(
             TestTargetOs target,
             string? deviceName,
             string appPackagePath,
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             CancellationToken cancellationToken)
         {
             Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo)
-                => throw new InvalidOperationException("install command not available on maccatalyst");
+                => throw new InvalidOperationException("uninstall command not available on maccatalyst");
 
             Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice)
                 => Task.FromResult(ExitCode.SUCCESS); // no-op
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
             => Task.CompletedTask; // no-op so that we don't remove the app after (reset will only clean it up before)
 
-        protected override Task UninstallApp(AppBundleInformation appBundleInfo, IDevice device, CancellationToken cancellationToken)
-            => Task.CompletedTask; // no-op for obvious reasons
+        protected override Task<ExitCode> InstallApp(AppBundleInformation appBundleInfo, IDevice device, TestTargetOs target, CancellationToken cancellationToken)
+            => Task.FromResult(ExitCode.SUCCESS); // no-op for obvious reasons
     }
 }
