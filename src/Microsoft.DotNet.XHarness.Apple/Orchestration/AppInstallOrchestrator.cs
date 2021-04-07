@@ -21,11 +21,12 @@ namespace Microsoft.DotNet.XHarness.Apple
     {
         public AppInstallOrchestrator(
             IMlaunchProcessManager processManager,
+            IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,
-            IErrorKnowledgeBase errorKnowledgeBase) : base(processManager, deviceFinder, consoleLogger, mainLog, errorKnowledgeBase)
+            IErrorKnowledgeBase errorKnowledgeBase) : base(processManager, appBundleInformationParser, deviceFinder, consoleLogger, mainLog, errorKnowledgeBase)
         {
         }
 

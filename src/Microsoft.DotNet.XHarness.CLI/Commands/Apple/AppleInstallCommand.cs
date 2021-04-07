@@ -30,6 +30,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected override Task<ExitCode> InvokeInternal(
             IMlaunchProcessManager processManager,
+            IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
             Extensions.Logging.ILogger logger,
             TestTargetOs target,
@@ -45,6 +46,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var orchestrator = new AppInstallOrchestrator(
                 processManager,
+                appBundleInformationParser,
                 deviceFinder,
                 new ConsoleLogger(logger),
                 logs,
