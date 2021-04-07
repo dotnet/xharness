@@ -11,6 +11,8 @@ using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
@@ -35,6 +37,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
+            if (target.Platform.IsSimulator())
+            {
+                logger.LogError($"Cannot uninstall application from {target.Platform.AsString()}");
+                return Task.FromResult(ExitCode.PACKAGE_INSTALLATION_FAILURE);
+            }
+
             var orchestrator = new AppUninstallOrchestrator(
                 processManager,
                 deviceFinder,
