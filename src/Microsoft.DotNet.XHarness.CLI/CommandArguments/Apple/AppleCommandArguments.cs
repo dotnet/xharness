@@ -10,7 +10,7 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal class AppleGetDeviceArguments : XHarnessCommandArguments
+    internal abstract class AppleCommandArguments : XHarnessCommandArguments
     {
         /// <summary>
         /// Path to where Xcode is located.
@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// </summary>
         public string MlaunchPath { get; set; }
 
-        public AppleGetDeviceArguments()
+        protected AppleCommandArguments()
         {
             string? pathFromEnv = Environment.GetEnvironmentVariable(EnvironmentVariables.Names.MLAUNCH_PATH);
             if (!string.IsNullOrEmpty(pathFromEnv))
@@ -40,10 +40,14 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 
         protected override OptionSet GetCommandOptions() => new()
         {
-            { "xcode=", "Path where Xcode is installed",
+            {
+                "xcode=",
+                "Path where Xcode is installed",
                 v => XcodeRoot = RootPath(v)
             },
-            { "mlaunch=", "Path to the mlaunch binary",
+            {
+                "mlaunch=",
+                "Path to the mlaunch binary",
                 v => MlaunchPath = RootPath(v)
             },
         };
