@@ -3,11 +3,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Linq;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal class AppleUninstallCommandArguments : AppRunCommandArguments
+    internal class AppleUninstallCommandArguments : AppleAppRunArguments
     {
         private string? _bundleIdentifier = null;
 
@@ -25,32 +26,39 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             // We are validating that it exists, so we just set the current one and don't use it later
             // It is replaced with the bundle identifier argument
             AppPackagePath = ".";
+            ResetSimulator = false;
+            EnableLldb = false;
         }
 
         protected override OptionSet GetCommandOptions()
         {
             var options = base.GetCommandOptions();
 
-            var runOptions = new OptionSet
+            var uninstallOptions = new OptionSet
             {
                 {
                     "app|a=", "Bundle identifier of the app that should be uninstalled",
-                    v => AppPackagePath = RootPath(v)
+                    v => BundleIdentifier = RootPath(v)
                 },
             };
 
-            foreach (var option in runOptions)
+            var optionsToRemove = new[]
             {
-                // Replaced by ours
-                if (option.Prototype == "app|a")
-                {
-                    continue;
-                }
+                "app|a=",
+                "enable-lldb",
+                "set-env=",
+                "reset-simulator",
+            };
 
-                options.Add(option);
+            foreach (var option in options)
+            {
+                if (!optionsToRemove.Contains(option.Prototype))
+                {
+                    uninstallOptions.Add(option);
+                }
             }
 
-            return options;
+            return uninstallOptions;
         }
     }
 }
