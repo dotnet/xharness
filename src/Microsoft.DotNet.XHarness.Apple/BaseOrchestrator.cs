@@ -3,19 +3,16 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
@@ -27,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.Apple
     ///   - Clean up / uninstall
     ///   - Dispose everything properly
     /// </summary>
-    internal abstract class AppleOrchestrator<TArguments> : IDisposable where TArguments : AppleAppRunArguments
+    public abstract class BaseOrchestrator : IDisposable
     {
         protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
 
@@ -39,7 +36,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         private bool _lldbFileCreated;
 
-        protected AppleOrchestrator(
+        protected BaseOrchestrator(
             IMlaunchProcessManager processManager,
             DeviceFinder deviceFinder,
             ILogger consoleLogger,
@@ -53,35 +50,24 @@ namespace Microsoft.DotNet.XHarness.Apple
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
         }
 
-        protected abstract Task<ExitCode> ExecuteApp(
-            TArguments arguments,
-            IEnumerable<string> passthroughArguments,
-            AppBundleInformation appBundleInfo,
-            IDevice device,
-            IDevice? companionDevice,
+        protected async Task<ExitCode> OrchestrateRun(
             TestTargetOs target,
-            CancellationToken cancellationToken);
-
-        protected abstract Task<ExitCode> ExecuteMacCatalystApp(
-            TArguments arguments,
-            IEnumerable<string> passthroughArguments,
-            AppBundleInformation appBundleInfo,
-            CancellationToken cancellationToken);
-
-        public async Task<ExitCode> OrchestrateRun(
-            TArguments arguments,
-            IEnumerable<string> passthroughArguments,
-            TestTargetOs target,
+            string? deviceName,
+            string appPackagePath,
+            bool resetSimulator,
+            bool enableLldb,
+            Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp,
+            Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp,
             CancellationToken cancellationToken)
         {
             _lldbFileCreated = false;
             var isLldbEnabled = IsLldbEnabled();
-            if (isLldbEnabled && !arguments.EnableLldb)
+            if (isLldbEnabled && !enableLldb)
             {
                 // the file is present, but the user did not set it, warn him about it
                 _logger.LogWarning("Lldb will be used since '~/.mtouch-launch-with-lldb' was found in the system but it was not created by xharness.");
             }
-            else if (arguments.EnableLldb)
+            else if (enableLldb)
             {
                 if (!File.Exists(s_mlaunchLldbConfigFile))
                 {
@@ -100,7 +86,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             try
             {
                 appBundleInfo = await appBundleInformationParser.ParseFromAppBundle(
-                    arguments.AppPackagePath,
+                    appPackagePath,
                     target.Platform,
                     _mainLog,
                     cancellationToken);
@@ -119,9 +105,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 try
                 {
-                    _logger.LogInformation($"Starting '{appBundleInfo.AppName}' on MacCatalyst");
-
-                    return await ExecuteMacCatalystApp(arguments, passthroughArguments, appBundleInfo, cancellationToken);
+                    return await executeMacCatalystApp(appBundleInfo);
                 }
                 catch (Exception e)
                 {
@@ -148,7 +132,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             try
             {
-                (device, companionDevice) = await _deviceFinder.FindDevice(target, arguments.DeviceName, _mainLog);
+                (device, companionDevice) = await _deviceFinder.FindDevice(target, deviceName, _mainLog);
 
                 _logger.LogInformation($"Found {(target.Platform.IsSimulator() ? "simulator" : "physical")} device '{device.Name}'");
 
@@ -157,7 +141,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     _logger.LogInformation($"Found companion {(target.Platform.IsSimulator() ? "simulator" : "physical")} device '{companionDevice.Name}'");
                 }
 
-                if (target.Platform.IsSimulator() && arguments.ResetSimulator)
+                if (target.Platform.IsSimulator() && resetSimulator)
                 {
                     var simulator = (ISimulatorDevice)device;
 
@@ -195,16 +179,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             try
             {
-                _logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on '{device.Name}'");
-
-                exitCode = await ExecuteApp(
-                    arguments,
-                    passthroughArguments,
-                    appBundleInfo,
-                    device,
-                    companionDevice,
-                    target,
-                    cancellationToken);
+                exitCode = await executeApp(appBundleInfo, device, companionDevice);
             }
             catch (Exception e)
             {
@@ -229,7 +204,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             finally
             {
-                if (target.Platform.IsSimulator() && arguments.ResetSimulator)
+                if (target.Platform.IsSimulator() && resetSimulator)
                 {
                     await CleanUpSimulators(device, companionDevice);
                 }
@@ -251,6 +226,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 File.Delete(s_mlaunchLldbConfigFile);
             }
+
+            GC.SuppressFinalize(this);
         }
 
         private async Task<ExitCode> InstallApp(

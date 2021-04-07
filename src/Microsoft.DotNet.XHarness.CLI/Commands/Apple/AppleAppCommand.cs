@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -30,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected sealed override async Task<ExitCode> InvokeInternal(ILogger logger)
+        protected sealed override async Task<ExitCode> InvokeInternal(Extensions.Logging.ILogger logger)
         {
             // We have to set these here because command arguments are not initialized in the ctor yet
             var processManager = new MlaunchProcessManager(AppleAppArguments.XcodeRoot, AppleAppArguments.MlaunchPath);
@@ -56,9 +55,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                     logs.Create(logFileName, LogType.ExecutionLog.ToString(), true),
                     new CallbackLog(message => logger.LogDebug(message.Trim())) { Timestamp = false });
 
-                using var orchestrator = GetOrchestrator(processManager, deviceFinder, logger, target, logs, mainLog, cts.Token);
-
-                var exitCodeForRun = await orchestrator.OrchestrateRun(AppleAppArguments, PassThroughArguments, target, cts.Token);
+                var exitCodeForRun = await InvokeInternal(processManager, deviceFinder, logger, target, logs, mainLog, cts.Token);
                 if (exitCodeForRun != ExitCode.SUCCESS)
                 {
                     exitCode = exitCodeForRun;
@@ -68,13 +65,30 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             return exitCode;
         }
 
-        protected abstract AppleOrchestrator<TArguments> GetOrchestrator(
+        protected abstract Task<ExitCode> InvokeInternal(
             IMlaunchProcessManager processManager,
             DeviceFinder deviceFinder,
-            ILogger logger,
+            Extensions.Logging.ILogger logger,
             TestTargetOs target,
             ILogs logs,
             IFileBackedLog mainLog,
-            CancellationToken cancellationToken);
+            CancellationToken token);
+
+        protected class ConsoleLogger : XHarness.Apple.ILogger
+        {
+            private readonly Extensions.Logging.ILogger _logger;
+
+            public ConsoleLogger(Extensions.Logging.ILogger logger)
+            {
+                _logger = logger;
+            }
+
+            public void LogDebug(string message) => _logger.LogDebug(message);
+            public void LogInformation(string message) => _logger.LogInformation(message);
+            public void LogWarning(string message) => _logger.LogWarning(message);
+
+            public void LogError(string message) => _logger.LogError(message);
+            public void LogCritical(string message) => _logger.LogCritical(message);
+        }
     }
 }

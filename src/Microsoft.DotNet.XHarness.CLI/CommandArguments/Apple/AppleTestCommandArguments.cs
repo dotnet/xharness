@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -12,21 +13,6 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    /// <summary>
-    /// Specifies the channel that is used to communicate with the device.
-    /// </summary>
-    internal enum CommunicationChannel
-    {
-        /// <summary>
-        /// Connect to the device using the LAN or WAN.
-        /// </summary>
-        Network,
-        /// <summary>
-        /// Connect to the device using a tcp-tunnel
-        /// </summary>
-        UsbTunnel,
-    }
-
     internal class AppleTestCommandArguments : AppleAppRunArguments
     {
         private readonly List<string> _singleMethodFilters = new();

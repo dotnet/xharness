@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -16,7 +15,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
@@ -25,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// In this flow we spawn the application and do not expect TestRunner inside.
     /// We only try to detect the exit code after the app run is finished.
     /// </summary>
-    internal class AppleRunOrchestrator : AppleOrchestrator<AppleRunCommandArguments>
+    public class AppRunOrchestrator : BaseOrchestrator
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILogger _logger;
@@ -34,16 +32,16 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
         private readonly AppRunner _appRunner;
 
-        public AppleRunOrchestrator(
+        public AppRunOrchestrator(
             IMlaunchProcessManager processManager,
             DeviceFinder deviceFinder,
-            ILogger consoleLogger,
+            ILogger logger,
             ILogs logs,
             IFileBackedLog mainLog,
-            IErrorKnowledgeBase errorKnowledgeBase) : base(processManager, deviceFinder, consoleLogger, mainLog, errorKnowledgeBase)
+            IErrorKnowledgeBase errorKnowledgeBase) : base(processManager, deviceFinder, logger, mainLog, errorKnowledgeBase)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
-            _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
@@ -62,23 +60,71 @@ namespace Microsoft.DotNet.XHarness.Apple
                 logCallback);
         }
 
-        protected override async Task<ExitCode> ExecuteApp(
-            AppleRunCommandArguments arguments,
-            IEnumerable<string> passthroughArguments,
-            AppBundleInformation appBundleInfo,
-            IDevice device,
-            IDevice? companionDevice,
+        public Task<ExitCode> OrchestrateAppRun(
             TestTargetOs target,
+            string? deviceName,
+            string appPackagePath,
+            TimeSpan timeout,
+            int expectedExitCode,
+            bool resetSimulator,
+            bool enableLldb,
+            IReadOnlyCollection<(string, string)> environmentalVariables,
+            IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
         {
+            Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo) =>
+                ExecuteMacCatalystApp(
+                    appBundleInfo,
+                    timeout,
+                    expectedExitCode,
+                    environmentalVariables,
+                    passthroughArguments,
+                    cancellationToken);
+
+            Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice) =>
+                ExecuteApp(
+                    appBundleInfo,
+                    target,
+                    device,
+                    companionDevice,
+                    timeout,
+                    expectedExitCode,
+                    environmentalVariables,
+                    passthroughArguments,
+                    cancellationToken);
+
+            return OrchestrateRun(
+                target,
+                deviceName,
+                appPackagePath,
+                resetSimulator,
+                enableLldb,
+                executeMacCatalystApp,
+                executeApp,
+                cancellationToken);
+        }
+
+        private async Task<ExitCode> ExecuteApp(
+            AppBundleInformation appBundleInfo,
+            TestTargetOs target,
+            IDevice device,
+            IDevice? companionDevice,
+            TimeSpan timeout,
+            int expectedExitCode,
+            IReadOnlyCollection<(string, string)> environmentalVariables,
+            IEnumerable<string> passthroughArguments,
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on '{device.Name}'");
+
             ProcessExecutionResult result = await _appRunner.RunApp(
                 appBundleInfo,
                 target,
                 device,
                 companionDevice,
-                arguments.Timeout,
+                timeout,
                 passthroughArguments,
-                arguments.EnvironmentalVariables,
+                environmentalVariables,
                 cancellationToken);
 
             if (!result.Succeeded)
@@ -87,23 +133,27 @@ namespace Microsoft.DotNet.XHarness.Apple
                 return ExitCode.APP_LAUNCH_FAILURE;
             }
 
-            return ParseResult(new iOSExitCodeDetector(), arguments.ExpectedExitCode, appBundleInfo, result);
+            return ParseResult(new iOSExitCodeDetector(), expectedExitCode, appBundleInfo, result);
         }
 
-        protected override async Task<ExitCode> ExecuteMacCatalystApp(
-            AppleRunCommandArguments arguments,
-            IEnumerable<string> passthroughArguments,
+        private async Task<ExitCode> ExecuteMacCatalystApp(
             AppBundleInformation appBundleInfo,
+            TimeSpan timeout,
+            int expectedExitCode,
+            IReadOnlyCollection<(string, string)> environmentalVariables,
+            IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
         {
+            _logger.LogInformation($"Starting '{appBundleInfo.AppName}' on MacCatalyst");
+
             ProcessExecutionResult result = await _appRunner.RunMacCatalystApp(
                 appBundleInfo,
-                arguments.Timeout,
+                timeout,
                 passthroughArguments,
-                arguments.EnvironmentalVariables,
+                environmentalVariables,
                 cancellationToken: cancellationToken);
 
-            return ParseResult(new MacCatalystExitCodeDetector(), arguments.ExpectedExitCode, appBundleInfo, result);
+            return ParseResult(new MacCatalystExitCodeDetector(), expectedExitCode, appBundleInfo, result);
         }
 
         private ExitCode ParseResult(

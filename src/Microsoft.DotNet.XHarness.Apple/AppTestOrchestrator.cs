@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
@@ -17,7 +17,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
@@ -27,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// the test results. We also need to watch timeouts better and parse the results
     /// more comprehensively.
     /// </summary>
-    internal class AppleTestOrchestrator : AppleOrchestrator<AppleTestCommandArguments>
+    public class AppTestOrchestrator : BaseOrchestrator
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILogger _logger;
@@ -35,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IFileBackedLog _mainLog;
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
 
-        public AppleTestOrchestrator(
+        public AppTestOrchestrator(
             IMlaunchProcessManager processManager,
             DeviceFinder deviceFinder,
             ILogger consoleLogger,
@@ -50,51 +49,119 @@ namespace Microsoft.DotNet.XHarness.Apple
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
         }
 
-        protected override async Task<ExitCode> ExecuteApp(
-            AppleTestCommandArguments arguments,
-            IEnumerable<string> passthroughArguments,
-            AppBundleInformation appBundleInfo,
-            IDevice device,
-            IDevice? companionDevice,
+        public Task<ExitCode> OrchestrateAppTest(
             TestTargetOs target,
+            string? deviceName,
+            string appPackagePath,
+            TimeSpan timeout,
+            TimeSpan launchTimeout,
+            CommunicationChannel communicationChannel,
+            XmlResultJargon xmlResultJargon,
+            IEnumerable<string> singleMethodFilters,
+            IEnumerable<string> classMethodFilters,
+            bool resetSimulator,
+            bool enableLldb,
+            IReadOnlyCollection<(string, string)> environmentalVariables,
+            IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
         {
-            AppTester appTester = GetAppTester(arguments.CommunicationChannel, target.Platform.IsSimulator());
+            Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo) =>
+                ExecuteMacCatalystApp(
+                    appBundleInfo,
+                    timeout,
+                    launchTimeout,
+                    communicationChannel,
+                    xmlResultJargon,
+                    singleMethodFilters,
+                    classMethodFilters,
+                    environmentalVariables,
+                    passthroughArguments,
+                    cancellationToken);
+
+            Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice) =>
+                ExecuteApp(
+                    appBundleInfo,
+                    target,
+                    device,
+                    companionDevice,
+                    timeout,
+                    launchTimeout,
+                    communicationChannel,
+                    xmlResultJargon,
+                    singleMethodFilters,
+                    classMethodFilters,
+                    environmentalVariables,
+                    passthroughArguments,
+                    cancellationToken);
+
+            return OrchestrateRun(
+                target,
+                deviceName,
+                appPackagePath,
+                resetSimulator,
+                enableLldb,
+                executeMacCatalystApp,
+                executeApp,
+                cancellationToken);
+        }
+
+        private async Task<ExitCode> ExecuteApp(
+            AppBundleInformation appBundleInfo,
+            TestTargetOs target,
+            IDevice device,
+            IDevice? companionDevice,
+            TimeSpan timeout,
+            TimeSpan launchTimeout,
+            CommunicationChannel communicationChannel,
+            XmlResultJargon xmlResultJargon,
+            IEnumerable<string> singleMethodFilters,
+            IEnumerable<string> classMethodFilters,
+            IReadOnlyCollection<(string, string)> environmentalVariables,
+            IEnumerable<string> passthroughArguments,
+            CancellationToken cancellationToken)
+        {
+            AppTester appTester = GetAppTester(communicationChannel, target.Platform.IsSimulator());
 
             (TestExecutingResult testResult, string resultMessage) = await appTester.TestApp(
                 appBundleInfo,
                 target,
                 device,
                 companionDevice,
-                arguments.Timeout,
-                arguments.LaunchTimeout,
+                timeout,
+                launchTimeout,
                 passthroughArguments,
-                arguments.EnvironmentalVariables,
-                arguments.XmlResultJargon,
-                skippedMethods: arguments.SingleMethodFilters?.ToArray(),
-                skippedTestClasses: arguments.ClassMethodFilters?.ToArray(),
+                environmentalVariables,
+                xmlResultJargon,
+                skippedMethods: singleMethodFilters?.ToArray(),
+                skippedTestClasses: classMethodFilters?.ToArray(),
                 cancellationToken: cancellationToken);
 
             return ParseResult(testResult, resultMessage);
         }
 
-        protected override async Task<ExitCode> ExecuteMacCatalystApp(
-            AppleTestCommandArguments arguments,
-            IEnumerable<string> passthroughArguments,
+        private async Task<ExitCode> ExecuteMacCatalystApp(
             AppBundleInformation appBundleInfo,
+            TimeSpan timeout,
+            TimeSpan launchTimeout,
+            CommunicationChannel communicationChannel,
+            XmlResultJargon xmlResultJargon,
+            IEnumerable<string> singleMethodFilters,
+            IEnumerable<string> classMethodFilters,
+            IReadOnlyCollection<(string, string)> environmentalVariables,
+            IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
         {
-            AppTester appTester = GetAppTester(arguments.CommunicationChannel, TestTarget.MacCatalyst.IsSimulator());
+            AppTester appTester = GetAppTester(communicationChannel, TestTarget.MacCatalyst.IsSimulator());
 
             (TestExecutingResult testResult, string resultMessage) = await appTester.TestMacCatalystApp(
                 appBundleInfo,
-                arguments.Timeout,
-                arguments.LaunchTimeout,
+                timeout,
+                launchTimeout,
                 passthroughArguments,
-                arguments.EnvironmentalVariables,
-                arguments.XmlResultJargon,
-                skippedMethods: arguments.SingleMethodFilters?.ToArray(),
-                skippedTestClasses: arguments.ClassMethodFilters?.ToArray(),
+                environmentalVariables,
+                xmlResultJargon,
+                skippedMethods: singleMethodFilters?.ToArray(),
+                skippedTestClasses: classMethodFilters?.ToArray(),
                 cancellationToken: cancellationToken);
 
             return ParseResult(testResult, resultMessage);

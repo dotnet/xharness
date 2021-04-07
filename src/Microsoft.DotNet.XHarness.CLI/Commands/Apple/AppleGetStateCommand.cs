@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             }
         }
 
-        protected override async Task<ExitCode> InvokeInternal(ILogger logger)
+        protected override async Task<ExitCode> InvokeInternal(Extensions.Logging.ILogger logger)
         {
             var processManager = new MlaunchProcessManager(mlaunchPath: _arguments.MlaunchPath);
             var deviceLoader = new HardwareDeviceLoader(processManager);

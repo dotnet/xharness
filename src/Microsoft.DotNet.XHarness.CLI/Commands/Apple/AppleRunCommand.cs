@@ -3,13 +3,14 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
@@ -28,15 +29,36 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected override AppleOrchestrator<AppleRunCommandArguments> GetOrchestrator(
+        protected override Task<ExitCode> InvokeInternal(
             IMlaunchProcessManager processManager,
             DeviceFinder deviceFinder,
-            ILogger logger,
+            Extensions.Logging.ILogger logger,
             TestTargetOs target,
             ILogs logs,
             IFileBackedLog mainLog,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
+        {
+            var orchestrator = new AppRunOrchestrator(
+                processManager,
+                deviceFinder,
+                new ConsoleLogger(logger),
+                logs,
+                mainLog,
+                ErrorKnowledgeBase);
 
-        new AppleRunOrchestrator(processManager, deviceFinder, logger, logs, mainLog, ErrorKnowledgeBase);
+            var args = AppleAppArguments;
+
+            return orchestrator.OrchestrateAppRun(
+                target,
+                args.DeviceName,
+                args.AppPackagePath,
+                args.Timeout,
+                args.ExpectedExitCode,
+                args.ResetSimulator,
+                args.EnableLldb,
+                args.EnvironmentalVariables,
+                PassThroughArguments,
+                cancellationToken);
+        }
     }
 }
