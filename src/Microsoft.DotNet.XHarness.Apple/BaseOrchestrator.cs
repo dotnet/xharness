@@ -230,7 +230,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             GC.SuppressFinalize(this);
         }
 
-        private async Task<ExitCode> InstallApp(
+        protected virtual async Task<ExitCode> InstallApp(
             AppBundleInformation appBundleInfo,
             IDevice device,
             TestTargetOs target,
@@ -284,7 +284,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             return ExitCode.SUCCESS;
         }
 
-        private async Task UninstallApp(AppBundleInformation appBundleInfo, IDevice device, CancellationToken cancellationToken)
+        protected virtual async Task UninstallApp(AppBundleInformation appBundleInfo, IDevice device, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from '{device.Name}'");
 
@@ -300,7 +300,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
         }
 
-        private async Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
+        protected virtual async Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
         {
             try
             {

@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             TestTargetOs target,
             ILogs logs,
             IFileBackedLog mainLog,
-            CancellationToken token);
+            CancellationToken cancellationToken);
 
         protected class ConsoleLogger : XHarness.Apple.ILogger
         {

@@ -3,13 +3,14 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
@@ -19,13 +20,40 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected override AppleInstallCommandArguments AppleAppArguments { get; } = new();
 
-        protected override string CommandUsage { get; } = "apple install [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
+        protected override string CommandUsage { get; } = "apple install [OPTIONS]";
         protected override string CommandDescription { get; } = CommandHelp;
 
-        public AppleInstallCommand() : base("run", false, CommandHelp)
+        public AppleInstallCommand() : base("install", false, CommandHelp)
         {
         }
 
-        protected override AppleOrchestrator<AppleInstallCommandArguments> GetOrchestrator(IMlaunchProcessManager processManager, DeviceFinder deviceFinder, ILogger logger, TestTargetOs target, ILogs logs, IFileBackedLog mainLog, CancellationToken cancellationToken) => throw new System.NotImplementedException();
+        protected override Task<ExitCode> InvokeInternal(
+            IMlaunchProcessManager processManager,
+            DeviceFinder deviceFinder,
+            Extensions.Logging.ILogger logger,
+            TestTargetOs target,
+            ILogs logs,
+            IFileBackedLog mainLog,
+            CancellationToken cancellationToken)
+        {
+            var orchestrator = new AppInstallOrchestrator(
+                processManager,
+                deviceFinder,
+                new ConsoleLogger(logger),
+                logs,
+                mainLog,
+                ErrorKnowledgeBase);
+
+            var args = AppleAppArguments;
+
+            return orchestrator.OrchestrateAppInstall(
+                target,
+                args.DeviceName,
+                args.AppPackagePath,
+                args.Timeout,
+                args.ResetSimulator,
+                args.EnableLldb,
+                cancellationToken);
+        }
     }
 }
