@@ -54,6 +54,7 @@
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(LinuxAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/linux" OverwriteReadOnlyFiles="true" />
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(MacOsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/macos" OverwriteReadOnlyFiles="true" />
+    <RemoveDir Directories="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/systrace;$(IntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/systrace;$(IntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/systrace" />
   </Target>
 
   <Target Name="DownloadMlaunch">
@@ -68,7 +69,7 @@
     <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' $(RemoveSymbols) } &quot;" />
   </Target>
 
-  <Target Name="IncludeAdb" BeforeTargets="_GetPackageFiles" DependsOnTargets="DownloadAdb">
+  <Target Name="IncludeAdb" BeforeTargets="Build" DependsOnTargets="DownloadAdb">
     <ItemGroup>
       <WindowsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
       <LinuxAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />
