@@ -73,9 +73,6 @@ Arguments:
             // Wait til at least device(s) are ready
             runner.WaitForDevice();
 
-            // Empty log as we'll be uploading the full logcat for this execution
-            runner.ClearAdbLog();
-
             logger.LogDebug($"Working with {runner.GetAdbVersion()}");
 
             return Task.FromResult(InvokeHelper(
@@ -103,6 +100,9 @@ Arguments:
         {
 
             int instrumentationExitCode = (int)ExitCode.GENERAL_FAILURE;
+
+            // Empty log as we'll be uploading the full logcat for this execution
+            runner.ClearAdbLog();
 
             try
             {
@@ -186,7 +186,7 @@ Arguments:
                         }
                     }
 
-                    runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{apkPackageName}.log"));
+                    runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log"));
 
                     if (processCrashed)
                     {
