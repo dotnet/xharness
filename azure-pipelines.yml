@@ -257,8 +257,8 @@ stages:
               --ci
               --restore
               --test
-              --projects $(Build.SourcesDirectory)/tests/integration-tests/Apple/Helix.SDK.Tests.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Apple.Helix.SDK.Tests.binlog
+              --projects $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Tests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Apple.Simulator.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: Run Helix Tests
             env:
