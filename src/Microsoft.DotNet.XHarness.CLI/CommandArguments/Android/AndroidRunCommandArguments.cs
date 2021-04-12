@@ -24,6 +24,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             set => _packageName = value;
         }
 
+        /// <summary>
+        /// If specified, attempt to run APK on that device.
+        /// If there are more than one device with required architecture, failing to specify this may cause execution failure.
+        /// </summary>
         public string? DeviceId { get; set; }
 
         /// <summary>
@@ -31,12 +35,20 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// </summary>
         public string? DeviceOutputFolder { get; set; }
 
+        /// <summary>
+        /// Passing these arguments as testing options to a test runner
+        /// </summary>
         public Dictionary<string, string> InstrumentationArguments { get; } = new Dictionary<string, string>();
 
         /// <summary>
         /// Exit code returned by the instrumentation for a successful run. Defaults to 0.
         /// </summary>
         public int ExpectedExitCode { get; set; } = (int)Common.CLI.ExitCode.SUCCESS;
+
+        /// <summary>
+        /// Time to wait for boot completion. Defaults to 5 minutes.
+        /// </summary>
+        public int BootTimeoutSeconds { get; set; } = 300;
 
         protected override OptionSet GetTestCommandOptions() => new()
         {
@@ -63,6 +75,18 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             {
                 "device-id=", "Device where APK should be installed",
                 v => DeviceId = v
+            },
+            {
+                "boot-timeout=", "Timeout in seconds to wait for a device after boot competion",
+                v => {
+                    if (int.TryParse(v, out var number))
+                    {
+                        BootTimeoutSeconds = number;
+                        return;
+                    }
+
+                    throw new ArgumentException("timeout must be an integer");
+                }
             },
             { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
                 {

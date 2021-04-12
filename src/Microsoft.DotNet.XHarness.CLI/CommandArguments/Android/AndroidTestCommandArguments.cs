@@ -35,12 +35,20 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// </summary>
         public string? DeviceOutputFolder { get; set; }
 
+        /// <summary>
+        /// Passing these arguments as testing options to a test runner
+        /// </summary>
         public Dictionary<string, string> InstrumentationArguments { get; } = new Dictionary<string, string>();
 
         /// <summary>
         /// Exit code returned by the instrumentation for a successful run. Defaults to 0.
         /// </summary>
         public int ExpectedExitCode { get; set; } = (int)Common.CLI.ExitCode.SUCCESS;
+
+        /// <summary>
+        /// Time to wait for boot completion. Defaults to 5 minutes.
+        /// </summary>
+        public int BootTimeoutSeconds { get; set; } = 300;
 
         protected override OptionSet GetTestCommandOptions() => new()
         {
@@ -62,6 +70,18 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
                     }
 
                     throw new ArgumentException("expected-exit-code must be an integer");
+                }
+            },
+            {
+                "boot-timeout=", "Timeout in seconds to wait for a device after boot competion",
+                v => {
+                    if (int.TryParse(v, out var number))
+                    {
+                        BootTimeoutSeconds = number;
+                        return;
+                    }
+
+                    throw new ArgumentException("timeout must be an integer");
                 }
             },
             { "package-name=|p=", "Package name contained within the supplied APK",
