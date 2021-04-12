@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
                 }
             },
             {
-                "launch-timeout=|lt=", "Time span in the form of \"00:00:00\" or number of seconds to wait for a device after boot completion",
+                "launch-timeout=|lt=", "Time span in the form of \"00:00:00\" or number of seconds to wait for the device to boot to complete",
                 v =>
                 {
                     if (int.TryParse(v, out var timeout))
