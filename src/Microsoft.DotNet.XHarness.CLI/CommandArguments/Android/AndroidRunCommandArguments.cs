@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         /// <summary>
         /// If specified, attempt to run APK on that device.
-        /// If there are more than one device with required architecture, failing to specify this may cause execution failure.
+        /// If there is more than one device with required architecture, failing to specify this may cause execution failure.
         /// </summary>
         public string? DeviceId { get; set; }
 

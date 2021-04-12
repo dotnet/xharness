@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         /// <summary>
         /// If specified, attempt to run APK on that device.
-        /// If there are more than one device with required architecture, failing to specify this may cause execution failure.
+        /// If there is more than one device with required architecture, failing to specify this may cause execution failure.
         /// </summary>
         public string? DeviceId { get; set; }
 
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
                 v => DeviceId = v
             },
             {
-                "boot-timeout=", "Timeout in seconds to wait for a device after boot competion",
+                "boot-timeout=", "Timeout in seconds to wait for a device after boot completion",
                 v => {
                     if (int.TryParse(v, out var number))
                     {
