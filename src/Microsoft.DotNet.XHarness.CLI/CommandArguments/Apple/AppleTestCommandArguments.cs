@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             var testOptions = new OptionSet
             {
                 {
-                    "launch-timeout=|lt=", "TimeSpan or number of seconds to wait for the iOS app to start",
+                    "launch-timeout=|lt=", "Time span in the form of \"00:00:00\" or number of seconds to wait for the iOS app to start",
                     v =>
                     {
                         if (int.TryParse(v, out var timeout))

@@ -70,7 +70,7 @@ Arguments:
 
             runner.SetActiveDevice(deviceId);
 
-            runner.TimeToWaitForBootCompletionSeconds = _arguments.LaunchTimeout;
+            runner.TimeToWaitForBootCompletion = _arguments.LaunchTimeout;
 
             // Wait til at least device(s) are ready
             runner.WaitForDevice();

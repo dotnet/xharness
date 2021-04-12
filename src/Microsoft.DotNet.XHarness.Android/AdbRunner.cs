@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
         #region Functions
 
-        public TimeSpan TimeToWaitForBootCompletionSeconds { get; set; } = TimeSpan.FromMinutes(5);
+        public TimeSpan TimeToWaitForBootCompletion { get; set; } = TimeSpan.FromMinutes(5);
 
         public string GetAdbVersion() => RunAdbCommand("version").StandardOutput;
 
@@ -156,10 +156,10 @@ namespace Microsoft.DotNet.XHarness.Android
             }
 
             // Some users will be installing the emulator and immediately calling xharness, they need to be able to expect the device is ready to load APKs.
-            // Once wait-for-device returns, we'll give it up to TimeToWaitForBootCompletionSeconds seconds (default 5 min) for 'adb shell getprop sys.boot_completed'
+            // Once wait-for-device returns, we'll give it up to TimeToWaitForBootCompletion (default 5 min) for 'adb shell getprop sys.boot_completed'
             // to be '1' (as opposed to empty) to make subsequent automation happy.
             var began = DateTimeOffset.UtcNow;
-            var waitingUntil = began.Add(TimeToWaitForBootCompletionSeconds);
+            var waitingUntil = began.Add(TimeToWaitForBootCompletion);
             var bootCompleted = RunAdbCommand($"shell getprop {AdbShellPropertyForBootCompletion}");
 
             while (!bootCompleted.StandardOutput.Trim().StartsWith("1") && DateTimeOffset.UtcNow < waitingUntil)
