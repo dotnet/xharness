@@ -68,11 +68,11 @@ Arguments:
                 appPackagePath: _arguments.AppPackagePath,
                 apkRequiredArchitecture: apkRequiredArchitecture,
                 deviceId: _arguments.DeviceId,
-                bootTimeoutSeconds: _arguments.BootTimeoutSeconds,
+                bootTimeoutSeconds: _arguments.LaunchTimeout,
                 runner: runner));
         }
 
-        public static ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string? apkRequiredArchitecture, string? deviceId, int bootTimeoutSeconds, AdbRunner runner)
+        public static ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string? apkRequiredArchitecture, string? deviceId, TimeSpan bootTimeoutSeconds, AdbRunner runner)
         {
             try
             {

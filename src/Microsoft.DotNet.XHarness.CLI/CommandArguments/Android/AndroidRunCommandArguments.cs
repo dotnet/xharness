@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// <summary>
         /// Time to wait for boot completion. Defaults to 5 minutes.
         /// </summary>
-        public int BootTimeoutSeconds { get; set; } = 300;
+        public TimeSpan LaunchTimeout { get; set; } = TimeSpan.FromMinutes(5);
 
         protected override OptionSet GetTestCommandOptions() => new()
         {
@@ -77,15 +77,22 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
                 v => DeviceId = v
             },
             {
-                "boot-timeout=", "Timeout in seconds to wait for a device after boot competion",
-                v => {
-                    if (int.TryParse(v, out var number))
+                "launch-timeout=|lt=", "TimeSpan or number of seconds to wait for a device after boot competion",
+                v =>
+                {
+                    if (int.TryParse(v, out var timeout))
                     {
-                        BootTimeoutSeconds = number;
+                        LaunchTimeout = TimeSpan.FromSeconds(timeout);
                         return;
                     }
 
-                    throw new ArgumentException("timeout must be an integer");
+                    if (TimeSpan.TryParse(v, out var timespan))
+                    {
+                        LaunchTimeout = timespan;
+                        return;
+                    }
+
+                    throw new ArgumentException("launch-timeout must be an integer - a number of seconds, or a timespan (00:30:00)");
                 }
             },
             { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>

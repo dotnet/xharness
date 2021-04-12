@@ -80,7 +80,7 @@ Arguments:
                     appPackagePath: appPackagePath,
                     apkRequiredArchitecture: apkRequiredArchitecture,
                     deviceId: null,
-                    bootTimeoutSeconds: _arguments.BootTimeoutSeconds,
+                    bootTimeoutSeconds: _arguments.LaunchTimeout,
                     runner: runner);
 
                 if (exitCode == ExitCode.SUCCESS)
