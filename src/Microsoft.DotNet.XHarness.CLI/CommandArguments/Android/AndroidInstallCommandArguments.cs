@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
                 v => DeviceId = v
             },
             {
-                "launch-timeout=|lt=", "TimeSpan or number of seconds to wait for a device after boot competion",
+                "launch-timeout=|lt=", "TimeSpan or number of seconds to wait for a device after boot completion",
                 v =>
                 {
                     if (int.TryParse(v, out var timeout))
