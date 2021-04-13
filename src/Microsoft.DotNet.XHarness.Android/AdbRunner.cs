@@ -105,6 +105,8 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public void ClearAdbLog() => RunAdbCommand("logcat -c");
 
+        public void EnableWifi(bool enable) => RunAdbCommand($"shell svc wifi {(enable ? "enable" : "disable")}");
+
         public void DumpAdbLog(string outputFilePath, string filterSpec = "")
         {
             // Workaround: Doesn't seem to have a flush() function and sometimes it doesn't have the full log on emulators.

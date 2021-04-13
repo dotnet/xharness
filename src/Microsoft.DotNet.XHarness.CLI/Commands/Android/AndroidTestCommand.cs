@@ -94,6 +94,7 @@ Arguments:
                         deviceOutputFolder: _arguments.DeviceOutputFolder,
                         timeout: _arguments.Timeout,
                         expectedExitCode: _arguments.ExpectedExitCode,
+                        wifi: _arguments.Wifi,
                         runner: runner);
                 } 
 
