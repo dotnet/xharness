@@ -70,10 +70,10 @@ Arguments:
 
             runner.SetActiveDevice(deviceId);
 
+            runner.TimeToWaitForBootCompletion = _arguments.LaunchTimeout;
+
             // Wait til at least device(s) are ready
             runner.WaitForDevice();
-
-            logger.LogDebug($"Working with {runner.GetAdbVersion()}");
 
             return Task.FromResult(InvokeHelper(
                 logger,
@@ -98,8 +98,9 @@ Arguments:
             int expectedExitCode,
             AdbRunner runner)
         {
-
             int instrumentationExitCode = (int)ExitCode.GENERAL_FAILURE;
+
+            logger.LogDebug($"Working with {runner.GetAdbVersion()}");
 
             // Empty log as we'll be uploading the full logcat for this execution
             runner.ClearAdbLog();
