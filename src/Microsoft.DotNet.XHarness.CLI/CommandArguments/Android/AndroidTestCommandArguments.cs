@@ -110,8 +110,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
                 v => PackageName = v
             },
             {
-                "wifi:", "Enable/disable wifi, is not checking by default. If passed without value, 'enable' is assumed.",
-                v => Wifi = string.IsNullOrEmpty(v) ? WifiStatus.Enable : ParseArgument<WifiStatus>("wifi", v)
+                "wifi:", "Enable/disable WiFi. WiFi state is ignored by default. If passed without value, 'enable' is assumed.",
+                v => Wifi = string.IsNullOrEmpty(v) ? WifiStatus.Enable : ParseArgument<WifiStatus>("wifi", v, invalidValues: WifiStatus.Unknown)
             },
             { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
                 {
