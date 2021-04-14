@@ -8,6 +8,16 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
+
+    internal enum WifiStatus
+    {
+        /// <summary>
+        /// Not checked by default.
+        /// </summary>
+        Unknown,
+        Enable,
+        Disable,
+    }
     internal class AndroidTestCommandArguments : TestCommandArguments
     {
         private string? _packageName;
@@ -49,6 +59,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// Time to wait for boot completion. Defaults to 5 minutes.
         /// </summary>
         public TimeSpan LaunchTimeout { get; set; } = TimeSpan.FromMinutes(5);
+
+        /// <summary>
+        /// Switch on/off wifi on the device.
+        /// </summary>
+        public WifiStatus Wifi { get; set; } = WifiStatus.Unknown;
 
         protected override OptionSet GetTestCommandOptions() => new()
         {
@@ -93,6 +108,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             },
             { "package-name=|p=", "Package name contained within the supplied APK",
                 v => PackageName = v
+            },
+            {
+                "wifi:", "Enable/disable WiFi. WiFi state is ignored by default. If passed without value, 'enable' is assumed.",
+                v => Wifi = string.IsNullOrEmpty(v) ? WifiStatus.Enable : ParseArgument<WifiStatus>("wifi", v, invalidValues: WifiStatus.Unknown)
             },
             { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
                 {

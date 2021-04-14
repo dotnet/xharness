@@ -84,6 +84,7 @@ Arguments:
                 _arguments.DeviceOutputFolder,
                 _arguments.Timeout,
                 _arguments.ExpectedExitCode,
+                _arguments.Wifi,
                 runner));
         }
 
@@ -96,6 +97,7 @@ Arguments:
             string? deviceOutputFolder,
             TimeSpan timeout,
             int expectedExitCode,
+            WifiStatus wifi,
             AdbRunner runner)
         {
             int instrumentationExitCode = (int)ExitCode.GENERAL_FAILURE;
@@ -104,6 +106,11 @@ Arguments:
 
             // Empty log as we'll be uploading the full logcat for this execution
             runner.ClearAdbLog();
+
+            if (wifi != WifiStatus.Unknown)
+            {
+                runner.EnableWifi(wifi == WifiStatus.Enable);
+            }
 
             try
             {

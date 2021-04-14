@@ -50,6 +50,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// </summary>
         public TimeSpan LaunchTimeout { get; set; } = TimeSpan.FromMinutes(5);
 
+        /// <summary>
+        /// Switch on/off wifi on the device.
+        /// </summary>
+        public WifiStatus Wifi { get; set; } = WifiStatus.Unknown;
+
         protected override OptionSet GetTestCommandOptions() => new()
         {
             { "device-out-folder=|dev-out=", "If specified, copy this folder recursively off the device to the path specified by the output directory",
@@ -94,6 +99,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
                     throw new ArgumentException("launch-timeout must be an integer - a number of seconds, or a timespan (00:30:00)");
                 }
+            },
+            { "wifi:", "Enable/disable wifi, is not checking by default. If passed without value, 'enable' is assumed.",
+                v => Wifi = string.IsNullOrEmpty(v) ? WifiStatus.Enable : ParseArgument<WifiStatus>("wifi", v, invalidValues: WifiStatus.Unknown)
             },
             { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
                 {
