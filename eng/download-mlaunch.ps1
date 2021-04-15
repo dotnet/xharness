@@ -29,7 +29,6 @@ function Copy-Mlaunch([string] $sourceDir, [string] $targetDir, [bool] $removeSy
     if ($removeSymbols) {
         Write-Host "Removing debug symbols"
         Get-ChildItem -Path (Join-Path $targetDir "lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.pdb") | ForEach-Object { Remove-Item -Path $_.FullName -Verbose }
-        Get-ChildItem -Path (Join-Path $targetDir "lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.mdb") | ForEach-Object { Remove-Item -Path $_.FullName -Verbose }
     }
 }
 

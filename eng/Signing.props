@@ -2,17 +2,18 @@
 
   <ItemGroup>
     <FileSignInfo Include="mlaunch.exe" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Mono.Security.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="mscorlib.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Newtonsoft.Json.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="System.Core.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="System.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="System.Net.Http.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="System.Numerics.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="System.Xml.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Xamarin.Hosting.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Xamarin.Mac.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Mono.Security.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="mscorlib.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="System.Core.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="System.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="WebDriver.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Newtonsoft.Json.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Xamarin.Hosting.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Xamarin.Localization.Mlaunch.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Xamarin.Mac.dll" CertificateName="3PartySHA2" />
   </ItemGroup>
 
 </Project>
