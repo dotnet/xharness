@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                 v => Targets = v.Split(',')
             },
             {
-                "timeout=", "TimeSpan or number of seconds to wait for instrumentation to complete",
+                "timeout=", "Time span in the form of \"00:00:00\" or number of seconds to wait for instrumentation to complete",
                 v =>
                 {
                     if (int.TryParse(v, out var timeout))

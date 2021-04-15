@@ -24,6 +24,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             set => _packageName = value;
         }
 
+        /// <summary>
+        /// If specified, attempt to run APK on that device.
+        /// If there is more than one device with required architecture, failing to specify this may cause execution failure.
+        /// </summary>
         public string? DeviceId { get; set; }
 
         /// <summary>
@@ -31,12 +35,25 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// </summary>
         public string? DeviceOutputFolder { get; set; }
 
+        /// <summary>
+        /// Passing these arguments as testing options to a test runner
+        /// </summary>
         public Dictionary<string, string> InstrumentationArguments { get; } = new Dictionary<string, string>();
 
         /// <summary>
         /// Exit code returned by the instrumentation for a successful run. Defaults to 0.
         /// </summary>
         public int ExpectedExitCode { get; set; } = (int)Common.CLI.ExitCode.SUCCESS;
+
+        /// <summary>
+        /// Time to wait for boot completion. Defaults to 5 minutes.
+        /// </summary>
+        public TimeSpan LaunchTimeout { get; set; } = TimeSpan.FromMinutes(5);
+
+        /// <summary>
+        /// Switch on/off wifi on the device.
+        /// </summary>
+        public WifiStatus Wifi { get; set; } = WifiStatus.Unknown;
 
         protected override OptionSet GetTestCommandOptions() => new()
         {
@@ -63,6 +80,28 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             {
                 "device-id=", "Device where APK should be installed",
                 v => DeviceId = v
+            },
+            {
+                "launch-timeout=|lt=", "Time span in the form of \"00:00:00\" or number of seconds to wait for the device to boot to complete",
+                v =>
+                {
+                    if (int.TryParse(v, out var timeout))
+                    {
+                        LaunchTimeout = TimeSpan.FromSeconds(timeout);
+                        return;
+                    }
+
+                    if (TimeSpan.TryParse(v, out var timespan))
+                    {
+                        LaunchTimeout = timespan;
+                        return;
+                    }
+
+                    throw new ArgumentException("launch-timeout must be an integer - a number of seconds, or a timespan (00:30:00)");
+                }
+            },
+            { "wifi:", "Enable/disable wifi, is not checking by default. If passed without value, 'enable' is assumed.",
+                v => Wifi = string.IsNullOrEmpty(v) ? WifiStatus.Enable : ParseArgument<WifiStatus>("wifi", v, invalidValues: WifiStatus.Unknown)
             },
             { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
                 {

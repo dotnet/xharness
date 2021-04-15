@@ -68,10 +68,11 @@ Arguments:
                 appPackagePath: _arguments.AppPackagePath,
                 apkRequiredArchitecture: apkRequiredArchitecture,
                 deviceId: _arguments.DeviceId,
+                bootTimeoutSeconds: _arguments.LaunchTimeout,
                 runner: runner));
         }
 
-        public static ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string? apkRequiredArchitecture, string? deviceId, AdbRunner runner)
+        public static ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string? apkRequiredArchitecture, string? deviceId, TimeSpan bootTimeoutSeconds, AdbRunner runner)
         {
             try
             {
@@ -92,6 +93,8 @@ Arguments:
                     }
 
                     runner.SetActiveDevice(deviceId);
+
+                    runner.TimeToWaitForBootCompletion = bootTimeoutSeconds;
 
                     // Wait till at least device(s) are ready
                     runner.WaitForDevice();
