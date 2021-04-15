@@ -14,7 +14,7 @@
 
     <!-- This is a git revision of the xamarin/macios-binaries repo where we get the mlaunch tool from
          If you change the version, please run /eng/download-mlaunch.sh to get this version into your environment -->
-    <MlaunchVersion>5b4f91e14dc18dc57b9ac7978c696883e289f94f</MlaunchVersion>
+    <MlaunchVersion>fd29206d98dedbcc08b992916afa2fac1718bf55</MlaunchVersion>
 
     <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
     <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-windows.zip</WindowsAndroidSdkUrl>
