@@ -21,13 +21,12 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 namespace Microsoft.DotNet.XHarness.Apple
 {
     /// <summary>
-    /// Class that will run an app bundle that contains the TestRunner on a target device.
+    /// Class that will run an app bundle that contains the TestRunner on a given simulator/device.
     /// It will collect test results ran in the app and return results.
     /// </summary>
     public class AppTester : AppRunnerBase
     {
         private readonly IMlaunchProcessManager _processManager;
-        private readonly ISimulatorLoader _simulatorLoader;
         private readonly ISimpleListenerFactory _listenerFactory;
         private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
         private readonly ICaptureLogFactory _captureLogFactory;
@@ -40,8 +39,6 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         public AppTester(
             IMlaunchProcessManager processManager,
-            IHardwareDeviceLoader hardwareDeviceLoader,
-            ISimulatorLoader simulatorLoader,
             ISimpleListenerFactory simpleListenerFactory,
             ICrashSnapshotReporterFactory snapshotReporterFactory,
             ICaptureLogFactory captureLogFactory,
@@ -52,10 +49,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             ILogs logs,
             IHelpers helpers,
             Action<string>? logCallback = null)
-            : base(processManager, hardwareDeviceLoader, captureLogFactory, logs, mainLog, logCallback)
+            : base(processManager, captureLogFactory, logs, mainLog, logCallback)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
-            _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
             _listenerFactory = simpleListenerFactory ?? throw new ArgumentNullException(nameof(simpleListenerFactory));
             _snapshotReporterFactory = snapshotReporterFactory ?? throw new ArgumentNullException(nameof(snapshotReporterFactory));
             _captureLogFactory = captureLogFactory ?? throw new ArgumentNullException(nameof(captureLogFactory));
@@ -67,17 +63,61 @@ namespace Microsoft.DotNet.XHarness.Apple
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
         }
 
-        public async Task<(string DeviceName, TestExecutingResult Result, string ResultMessage)> TestApp(
+        public async Task<(TestExecutingResult Result, string ResultMessage)> TestMacCatalystApp(
             AppBundleInformation appInformation,
-            TestTargetOs target,
             TimeSpan timeout,
             TimeSpan testLaunchTimeout,
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables,
-            string? deviceName = null,
-            string? companionDeviceName = null,
-            bool resetSimulator = false,
-            int verbosity = 1,
+            XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
+            string[]? skippedMethods = null,
+            string[]? skippedTestClasses = null,
+            CancellationToken cancellationToken = default)
+        {
+            var deviceListenerLog = _logs.Create($"test-maccatalyst-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
+
+            var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
+                RunMode.MacOS,
+                log: _mainLog,
+                testLog: deviceListenerLog,
+                isSimulator: true,
+                autoExit: true,
+                xmlOutput: true);
+
+            try
+            {
+                var (catalystTestResult, catalystResultMessage) = await RunMacCatalystTests(
+                    deviceListenerTransport,
+                    deviceListener,
+                    deviceListenerTmpFile,
+                    appInformation,
+                    timeout,
+                    testLaunchTimeout,
+                    xmlResultJargon,
+                    skippedMethods,
+                    skippedTestClasses,
+                    extraAppArguments,
+                    extraEnvVariables,
+                    cancellationToken);
+
+                return (catalystTestResult, catalystResultMessage);
+            }
+            finally
+            {
+                deviceListener.Cancel();
+                deviceListener.Dispose();
+            }
+        }
+
+        public async Task<(TestExecutingResult Result, string ResultMessage)> TestApp(
+            AppBundleInformation appInformation,
+            TestTargetOs target,
+            IDevice device,
+            IDevice? companionDevice,
+            TimeSpan timeout,
+            TimeSpan testLaunchTimeout,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
             XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
             string[]? skippedMethods = null,
             string[]? skippedTestClasses = null,
@@ -96,53 +136,12 @@ namespace Microsoft.DotNet.XHarness.Apple
                 autoExit: true,
                 xmlOutput: true); // cli always uses xml
 
-            if (target.Platform == TestTarget.MacCatalyst)
-            {
-                try
-                {
-                    var (catalystTestResult, catalystResultMessage) = await RunMacCatalystTests(
-                        deviceListenerTransport,
-                        deviceListener,
-                        deviceListenerTmpFile,
-                        appInformation,
-                        timeout,
-                        testLaunchTimeout,
-                        xmlResultJargon,
-                        skippedMethods,
-                        skippedTestClasses,
-                        extraAppArguments,
-                        extraEnvVariables,
-                        cancellationToken);
-
-                    return ("MacCatalyst", catalystTestResult, catalystResultMessage);
-                }
-                finally
-                {
-                    deviceListener.Cancel();
-                    deviceListener.Dispose();
-                }
-            }
-
-            ISimulatorDevice? simulator = null;
-            ISimulatorDevice? companionSimulator = null;
-
-            // Find devices
-            if (isSimulator)
-            {
-                (simulator, companionSimulator) = await _simulatorLoader.FindSimulators(target, _mainLog, 3);
-                deviceName = companionSimulator?.Name ?? simulator.Name;
-            }
-            else
-            {
-                deviceName ??= await FindDevice(target) ?? throw new NoDeviceFoundException();
-            }
-
             var deviceListenerPort = deviceListener.InitializeAndGetPort();
             deviceListener.StartAsync();
 
             var crashLogs = new Logs(_logs.Directory);
 
-            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, deviceName);
+            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, device.Name);
             ITestReporter testReporter = _testReporterFactory.Create(_mainLog,
                 _mainLog,
                 _logs,
@@ -152,7 +151,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 appInformation,
                 runMode,
                 xmlResultJargon,
-                deviceName,
+                device.Name,
                 timeout,
                 null,
                 (level, message) => _mainLog.WriteLine(message));
@@ -162,7 +161,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 .ContinueWith(testReporter.LaunchCallback)
                 .DoNotAwait();
 
-            _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{deviceName}' ***");
+            _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{device.Name}' ***");
 
             try
             {
@@ -170,16 +169,9 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 if (isSimulator)
                 {
-                    if (simulator == null)
-                    {
-                        _mainLog.WriteLine("Didn't find any suitable simulator");
-                        throw new NoDeviceFoundException();
-                    }
-
                     var mlaunchArguments = GetSimulatorArguments(
                         appInformation,
-                        simulator,
-                        verbosity,
+                        device,
                         xmlResultJargon,
                         skippedMethods,
                         skippedTestClasses,
@@ -191,12 +183,10 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                     await RunSimulatorTests(
                         mlaunchArguments,
-                        appInformation,
                         crashReporter,
                         testReporter,
-                        simulator,
-                        companionSimulator,
-                        resetSimulator,
+                        (ISimulatorDevice)device,
+                        companionDevice as ISimulatorDevice,
                         timeout,
                         combinedCancellationToken.Token);
                 }
@@ -204,9 +194,8 @@ namespace Microsoft.DotNet.XHarness.Apple
                 {
                     var mlaunchArguments = GetDeviceArguments(
                         appInformation,
-                        deviceName,
+                        device,
                         target.Platform.IsWatchOSTarget(),
-                        verbosity,
                         xmlResultJargon,
                         skippedMethods,
                         skippedTestClasses,
@@ -221,7 +210,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                         crashReporter,
                         testReporter,
                         deviceListener,
-                        deviceName,
+                        device,
                         timeout,
                         extraEnvVariables,
                         combinedCancellationToken.Token);
@@ -234,19 +223,15 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             // Check the final status, copy all the required data
-            var (testResult, resultMessage) = await testReporter.ParseResult();
-
-            return (deviceName, testResult, resultMessage);
+            return await testReporter.ParseResult();
         }
 
         private async Task RunSimulatorTests(
             MlaunchArguments mlaunchArguments,
-            AppBundleInformation appInformation,
             ICrashSnapshotReporter crashReporter,
             ITestReporter testReporter,
             ISimulatorDevice simulator,
             ISimulatorDevice? companionSimulator,
-            bool resetSimulator,
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
@@ -281,33 +266,12 @@ namespace Microsoft.DotNet.XHarness.Apple
                     systemLogs.Add(companionLog);
                 }
 
-                if (resetSimulator)
-                {
-                    await simulator.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
-
-                    if (companionSimulator != null)
-                    {
-                        await companionSimulator.PrepareSimulator(_mainLog, appInformation.BundleIdentifier);
-                    }
-                }
-
                 await crashReporter.StartCaptureAsync();
 
                 _mainLog.WriteLine("Starting test run");
 
                 var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
                 await testReporter.CollectSimulatorResult(result);
-
-                // Cleanup after us
-                if (resetSimulator)
-                {
-                    await simulator.KillEverything(_mainLog);
-
-                    if (companionSimulator != null)
-                    {
-                        await companionSimulator.KillEverything(_mainLog);
-                    }
-                }
             }
             finally
             {
@@ -324,13 +288,13 @@ namespace Microsoft.DotNet.XHarness.Apple
             ICrashSnapshotReporter crashReporter,
             ITestReporter testReporter,
             ISimpleListener deviceListener,
-            string deviceName,
+            IDevice device,
             TimeSpan timeout,
             IEnumerable<(string, string)> extraEnvVariables,
             CancellationToken cancellationToken)
         {
-            var deviceSystemLog = _logs.Create($"device-{deviceName}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
-            var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, deviceName);
+            var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
+            var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.Name);
             deviceLogCapturer.StartCapture();
 
             try
@@ -341,8 +305,8 @@ namespace Microsoft.DotNet.XHarness.Apple
                 if (_listenerFactory.UseTunnel && deviceListener is SimpleTcpListener tcpListener)
                 {
                     // create a new tunnel using the listener
-                    var tunnel = _listenerFactory.TunnelBore.Create(deviceName, _mainLog);
-                    tunnel.Open(deviceName, tcpListener, timeout, _mainLog);
+                    var tunnel = _listenerFactory.TunnelBore.Create(device.UDID, _mainLog);
+                    tunnel.Open(device.UDID, tcpListener, timeout, _mainLog);
                     // wait until we started the tunnel
                     await tunnel.Started;
                 }
@@ -371,7 +335,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 // close a tunnel if it was created
                 if (_listenerFactory.UseTunnel)
                 {
-                    await _listenerFactory.TunnelBore.Close(deviceName);
+                    await _listenerFactory.TunnelBore.Close(device.UDID);
                 }
             }
 
@@ -507,7 +471,6 @@ namespace Microsoft.DotNet.XHarness.Apple
         }
 
         private MlaunchArguments GetCommonArguments(
-            int verbosity,
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
             string[]? skippedTestClasses,
@@ -518,11 +481,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<(string, string)> extraEnvVariables)
         {
             var args = new MlaunchArguments();
-
-            for (var i = -1; i < verbosity; i++)
-            {
-                args.Add(new VerbosityArgument());
-            }
 
             // Environment variables
             var envVariables = GetEnvVariables(
@@ -545,8 +503,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         private MlaunchArguments GetSimulatorArguments(
             AppBundleInformation appInformation,
-            ISimulatorDevice simulator,
-            int verbosity,
+            IDevice simulator,
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
             string[]? skippedTestClasses,
@@ -557,7 +514,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<(string, string)> extraEnvVariables)
         {
             var args = GetCommonArguments(
-                verbosity,
                 xmlResultJargon,
                 skippedMethods,
                 skippedTestClasses,
@@ -568,7 +524,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 extraEnvVariables);
 
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"));
-            args.Add(new SimulatorUDIDArgument(simulator.UDID));
+            args.Add(new SimulatorUDIDArgument(simulator));
 
             if (appInformation.Extension.HasValue)
             {
@@ -584,7 +540,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             else
             {
-                args.Add(new LaunchSimulatorArgument(appInformation.LaunchAppPath));
+                args.Add(new LaunchSimulatorBundleArgument(appInformation));
             }
 
             return args;
@@ -592,9 +548,8 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         private MlaunchArguments GetDeviceArguments(
             AppBundleInformation appInformation,
-            string deviceName,
+            IDevice device,
             bool isWatchTarget,
-            int verbosity,
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
             string[]? skippedTestClasses,
@@ -605,7 +560,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<(string, string)> extraEnvVariables)
         {
             var args = GetCommonArguments(
-                verbosity,
                 xmlResultJargon,
                 skippedMethods,
                 skippedTestClasses,
@@ -619,7 +573,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, ips));
             args.Add(new DisableMemoryLimitsArgument());
-            args.Add(new DeviceNameArgument(deviceName));
+            args.Add(new DeviceNameArgument(device));
 
             if (_listenerFactory.UseTunnel)
             {
@@ -640,7 +594,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             else
             {
-                args.Add(new LaunchDeviceArgument(appInformation.LaunchAppPath));
+                args.Add(new LaunchDeviceArgument(appInformation));
             }
 
             if (isWatchTarget)

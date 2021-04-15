@@ -5,11 +5,11 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Moq;
 using Xunit;
 
@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
     {
         private const string DeviceName = "Test iPad";
         private const string AppBundleId = "some.bundle.name.app";
+        private const string UDID = "8A450AA31EA94191AD6B02455F377CC1";
 
         private readonly Mock<IMlaunchProcessManager> _processManager;
         private readonly Mock<ILog> _mainLog;
@@ -31,19 +32,21 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             _processManager = new Mock<IMlaunchProcessManager>();
             _processManager.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult() { ExitCode = 0 }));
 
-            _appUninstaller = new AppUninstaller(_processManager.Object, _mainLog.Object, 1);
+            _appUninstaller = new AppUninstaller(_processManager.Object, _mainLog.Object);
         }
 
         [Fact]
         public async Task UninstallFromDeviceTest()
         {
+            var device = Mock.Of<IDevice>(x => x.Name == DeviceName && x.UDID == UDID);
+
             // Act
-            var result = await _appUninstaller.UninstallApp(DeviceName, AppBundleId);
+            var result = await _appUninstaller.UninstallApp(device, AppBundleId);
 
             // Verify
             Assert.Equal(0, result.ExitCode);
 
-            var expectedArgs = $"-v -v --uninstalldevbundleid {StringUtils.FormatArguments(AppBundleId)} --devname \"{DeviceName}\"";
+            var expectedArgs = $"--uninstalldevbundleid {StringUtils.FormatArguments(AppBundleId)} --devname {UDID}";
 
             _processManager.Verify(x => x.ExecuteCommandAsync(
                It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),

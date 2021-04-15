@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 {
@@ -75,6 +76,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         public DeviceNameArgument(string deviceName) : base("devname", deviceName, false)
         {
         }
+
+        public DeviceNameArgument(IDevice device) : base("devname", device.UDID, false)
+        {
+        }
     }
 
     /// <summary>
@@ -83,6 +88,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
     public sealed class InstallAppOnDeviceArgument : SingleValueArgument
     {
         public InstallAppOnDeviceArgument(string appPath) : base("installdev", appPath, false)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Install the specified iOS app bundle on the Simulator.
+    /// </summary>
+    public sealed class InstallAppOnSimulatorArgument : SingleValueArgument
+    {
+        public InstallAppOnSimulatorArgument(string appPath) : base("installsim", appPath, false)
         {
         }
     }
@@ -249,14 +264,32 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         public LaunchDeviceArgument(string launchAppPath) : base("launchdev", launchAppPath, false)
         {
         }
+
+        public LaunchDeviceArgument(AppBundleInformation appInfo) : base("launchdev", appInfo.AppPath, false)
+        {
+        }
     }
 
     /// <summary>
-    /// Launch the specified MonoTouch.app in the simulator.
+    /// Launch the specified app in the simulator.
     /// </summary>
     public sealed class LaunchSimulatorArgument : SingleValueArgument
     {
         public LaunchSimulatorArgument(string launchAppPath) : base("launchsim", launchAppPath, false)
+        {
+        }
+
+        public LaunchSimulatorArgument(AppBundleInformation appInfo) : base("launchsim", appInfo.AppPath, false)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Launch the specified already installed app in the simulator.
+    /// </summary>
+    public sealed class LaunchSimulatorBundleArgument : SingleValueArgument
+    {
+        public LaunchSimulatorBundleArgument(AppBundleInformation appInfo) : base("launchsimbundleid", appInfo.BundleIdentifier, true)
         {
         }
     }
@@ -271,6 +304,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         public SimulatorUDIDArgument(string udid)
         {
             _udid = udid ?? throw new ArgumentNullException(nameof(udid));
+        }
+
+        public SimulatorUDIDArgument(IDevice device)
+        {
+            _udid = device?.UDID ?? throw new ArgumentNullException(nameof(device));
         }
 
         public override string AsCommandLineArgument() => $"--device=:v2:udid={_udid}";

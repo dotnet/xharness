@@ -66,9 +66,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             lock (_processExecutionLock)
             {
                 // launch app, but do not await for the result, since we need to create the tunnel
-                var tcpArgs = new MlaunchArguments {
+                var tcpArgs = new MlaunchArguments
+                {
                     new TcpTunnelArgument (simpleListener.Port),
-                    new VerbosityArgument (),
                     new DeviceNameArgument (device),
                 };
 

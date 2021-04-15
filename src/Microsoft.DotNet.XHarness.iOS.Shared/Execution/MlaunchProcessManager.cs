@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
 #nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
@@ -83,6 +82,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             if (!args.Any(a => a is SdkRootArgument))
             {
                 args = new MlaunchArguments(args.Prepend(new SdkRootArgument(XcodeRoot)).ToArray());
+            }
+
+            // Set maximum verbosity for mlaunch (adds several '-v' args, each increasing the verbosity)
+            for (var i = 0; i < 5; i++)
+            {
+                args.Add(new VerbosityArgument());
             }
 
             process.StartInfo.FileName = MlaunchPath;
