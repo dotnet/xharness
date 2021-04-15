@@ -40,14 +40,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 
         protected override OptionSet GetCommandOptions() => new()
         {
-            {
-                "xcode=",
-                "Path where Xcode is installed",
+            { "xcode=", "Path where Xcode is installed",
                 v => XcodeRoot = RootPath(v)
             },
-            {
-                "mlaunch=",
-                "Path to the mlaunch binary",
+            { "mlaunch=", "Path to the mlaunch binary",
                 v => MlaunchPath = RootPath(v)
             },
         };
