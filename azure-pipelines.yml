@@ -76,11 +76,10 @@ stages:
               testRunTitle: XHarness unit tests - $(Agent.JobName)
             condition: succeededOrFailed()
 
-        - ${{ if eq(variables._RunAsPublic, False) }}:
-          - task: ComponentGovernanceComponentDetection@0
-            displayName: Component Governance scan
-            inputs:
-              ignoreDirectories: '$(Build.SourcesDirectory)/.packages,$(Build.SourcesDirectory)/artifacts/obj/Microsoft.DotNet.XHarness.CLI/$(_BuildConfig)/net6.0/android-tools-unzipped'
+        - task: ComponentGovernanceComponentDetection@0
+          displayName: Component Governance scan
+          inputs:
+            ignoreDirectories: '$(Build.SourcesDirectory)/.packages,$(Build.SourcesDirectory)/artifacts/obj/Microsoft.DotNet.XHarness.CLI/$(_BuildConfig)/net6.0/android-tools-unzipped'
 
 - ${{ if eq(variables._RunAsPublic, True) }}:
   - stage: Build_OSX
@@ -183,6 +182,47 @@ stages:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
 
+  - stage: Test_CLI_Manual_Commands_In_Helix_Android
+    displayName: 'CLI Android Manual Commands Integration tests (Helix SDK)'
+    dependsOn: Build_OSX
+    jobs:
+    - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        workspace:
+          clean: all
+        jobs:
+        - job: Linux
+          pool:
+            vmimage: ubuntu-latest
+          strategy:
+            matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+          preSteps:
+          - checkout: self
+            clean: true
+          displayName: Submit Helix Job
+          steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              source: current
+              artifact: Microsoft.DotNet.XHarness.CLI.Debug
+              path: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/
+
+          - script: eng/common/build.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              --ci
+              --restore
+              --test
+              --projects $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.CLI.Commands.Tests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Android.CLI.Commands.Tests.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: Run Helix Tests
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
+
   - stage: Test_CLI_Package_In_Helix_Apple
     displayName: 'CLI Apple Integration tests (Helix SDK)'
     dependsOn: Build_OSX
@@ -216,8 +256,8 @@ stages:
               --ci
               --restore
               --test
-              --projects $(Build.SourcesDirectory)/tests/integration-tests/Apple/Helix.SDK.Tests.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Apple.Helix.SDK.Tests.binlog
+              --projects $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Tests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Apple.Simulator.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: Run Helix Tests
             env:

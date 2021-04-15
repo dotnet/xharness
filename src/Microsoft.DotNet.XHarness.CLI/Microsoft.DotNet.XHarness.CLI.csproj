@@ -14,7 +14,7 @@
 
     <!-- This is a git revision of the xamarin/macios-binaries repo where we get the mlaunch tool from
          If you change the version, please run /eng/download-mlaunch.sh to get this version into your environment -->
-    <MlaunchVersion>5b4f91e14dc18dc57b9ac7978c696883e289f94f</MlaunchVersion>
+    <MlaunchVersion>fd29206d98dedbcc08b992916afa2fac1718bf55</MlaunchVersion>
 
     <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
     <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-windows.zip</WindowsAndroidSdkUrl>
@@ -54,6 +54,7 @@
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(LinuxAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/linux" OverwriteReadOnlyFiles="true" />
     <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(MacOsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/macos" OverwriteReadOnlyFiles="true" />
+    <RemoveDir Directories="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/systrace;$(IntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/systrace;$(IntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/systrace" />
   </Target>
 
   <Target Name="DownloadMlaunch">
@@ -68,7 +69,7 @@
     <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' $(RemoveSymbols) } &quot;" />
   </Target>
 
-  <Target Name="IncludeAdb" BeforeTargets="_GetPackageFiles" DependsOnTargets="DownloadAdb">
+  <Target Name="IncludeAdb" BeforeTargets="Build" DependsOnTargets="DownloadAdb">
     <ItemGroup>
       <WindowsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
       <LinuxAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />

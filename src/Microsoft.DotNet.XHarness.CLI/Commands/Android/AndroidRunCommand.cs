@@ -70,13 +70,10 @@ Arguments:
 
             runner.SetActiveDevice(deviceId);
 
+            runner.TimeToWaitForBootCompletion = _arguments.LaunchTimeout;
+
             // Wait til at least device(s) are ready
             runner.WaitForDevice();
-
-            // Empty log as we'll be uploading the full logcat for this execution
-            runner.ClearAdbLog();
-
-            logger.LogDebug($"Working with {runner.GetAdbVersion()}");
 
             return Task.FromResult(InvokeHelper(
                 logger,
@@ -87,6 +84,7 @@ Arguments:
                 _arguments.DeviceOutputFolder,
                 _arguments.Timeout,
                 _arguments.ExpectedExitCode,
+                _arguments.Wifi,
                 runner));
         }
 
@@ -99,10 +97,20 @@ Arguments:
             string? deviceOutputFolder,
             TimeSpan timeout,
             int expectedExitCode,
+            WifiStatus wifi,
             AdbRunner runner)
         {
-
             int instrumentationExitCode = (int)ExitCode.GENERAL_FAILURE;
+
+            logger.LogDebug($"Working with {runner.GetAdbVersion()}");
+
+            // Empty log as we'll be uploading the full logcat for this execution
+            runner.ClearAdbLog();
+
+            if (wifi != WifiStatus.Unknown)
+            {
+                runner.EnableWifi(wifi == WifiStatus.Enable);
+            }
 
             try
             {
@@ -186,7 +194,7 @@ Arguments:
                         }
                     }
 
-                    runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{apkPackageName}.log"));
+                    runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log"));
 
                     if (processCrashed)
                     {

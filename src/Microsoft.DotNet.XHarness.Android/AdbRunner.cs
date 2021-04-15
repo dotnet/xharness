@@ -95,6 +95,8 @@ namespace Microsoft.DotNet.XHarness.Android
 
         #region Functions
 
+        public TimeSpan TimeToWaitForBootCompletion { get; set; } = TimeSpan.FromMinutes(5);
+
         public string GetAdbVersion() => RunAdbCommand("version").StandardOutput;
 
         public string GetAdbState() => RunAdbCommand("get-state").StandardOutput;
@@ -102,6 +104,8 @@ namespace Microsoft.DotNet.XHarness.Android
         public string RebootAndroidDevice() => RunAdbCommand("reboot").StandardOutput;
 
         public void ClearAdbLog() => RunAdbCommand("logcat -c");
+
+        public void EnableWifi(bool enable) => RunAdbCommand($"shell svc wifi {(enable ? "enable" : "disable")}");
 
         public void DumpAdbLog(string outputFilePath, string filterSpec = "")
         {
@@ -139,7 +143,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
         }
 
-        public void WaitForDevice(int timeToWaitForBootCompletionSeconds = 300)
+        public void WaitForDevice()
         {
             // This command waits for ANY kind of device to be available (emulator or real)
             // Needed because emulators start up asynchronously and take a while.
@@ -154,10 +158,10 @@ namespace Microsoft.DotNet.XHarness.Android
             }
 
             // Some users will be installing the emulator and immediately calling xharness, they need to be able to expect the device is ready to load APKs.
-            // Once wait-for-device returns, we'll give it up to timeToWaitForBootCompletionSeconds seconds (default 5 min) for 'adb shell getprop sys.boot_completed'
+            // Once wait-for-device returns, we'll give it up to TimeToWaitForBootCompletion (default 5 min) for 'adb shell getprop sys.boot_completed'
             // to be '1' (as opposed to empty) to make subsequent automation happy.
             var began = DateTimeOffset.UtcNow;
-            var waitingUntil = began.AddSeconds(timeToWaitForBootCompletionSeconds);
+            var waitingUntil = began.Add(TimeToWaitForBootCompletion);
             var bootCompleted = RunAdbCommand($"shell getprop {AdbShellPropertyForBootCompletion}");
 
             while (!bootCompleted.StandardOutput.Trim().StartsWith("1") && DateTimeOffset.UtcNow < waitingUntil)

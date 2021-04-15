@@ -37,7 +37,6 @@ copy_mlaunch () {
   if [ "$3" = true ]; then
     echo "Removing debug symbols"
     rm -v "$2"/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.pdb
-    rm -v "$2"/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.mdb
   fi
 }
 
