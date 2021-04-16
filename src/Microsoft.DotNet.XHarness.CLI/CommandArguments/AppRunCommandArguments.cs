@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                 v => AppPackagePath = RootPath(v)
             },
             {
-                "output-directory=|o=", "Directory in which the resulting package will be outputted",
+                "output-directory=|o=", "Directory where logs and results will be saved",
                 v => OutputDirectory = RootPath(v)
             },
             {

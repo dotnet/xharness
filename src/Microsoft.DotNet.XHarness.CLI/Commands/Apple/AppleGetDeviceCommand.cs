@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
     internal class AppleGetDeviceCommand : XHarnessCommand
     {
-        private readonly AppleGetDeviceArguments _arguments = new();
+        private readonly AppleGetDeviceCommandsArguments _arguments = new();
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 

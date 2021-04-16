@@ -34,11 +34,12 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         public AppRunOrchestrator(
             IMlaunchProcessManager processManager,
+            IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
             ILogger logger,
             ILogs logs,
             IFileBackedLog mainLog,
-            IErrorKnowledgeBase errorKnowledgeBase) : base(processManager, deviceFinder, logger, mainLog, errorKnowledgeBase)
+            IErrorKnowledgeBase errorKnowledgeBase) : base(processManager, appBundleInformationParser, deviceFinder, logger, mainLog, errorKnowledgeBase)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

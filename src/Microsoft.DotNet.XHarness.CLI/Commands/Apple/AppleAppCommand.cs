@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
             // We have to set these here because command arguments are not initialized in the ctor yet
             var processManager = new MlaunchProcessManager(AppleAppArguments.XcodeRoot, AppleAppArguments.MlaunchPath);
+            var appBundleInformationParser = new AppBundleInformationParser(processManager);
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
             var deviceFinder = new DeviceFinder(deviceLoader, simulatorLoader);
@@ -55,7 +56,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                     logs.Create(logFileName, LogType.ExecutionLog.ToString(), true),
                     new CallbackLog(message => logger.LogDebug(message.Trim())) { Timestamp = false });
 
-                var exitCodeForRun = await InvokeInternal(processManager, deviceFinder, logger, target, logs, mainLog, cts.Token);
+                var exitCodeForRun = await InvokeInternal(processManager, appBundleInformationParser, deviceFinder, logger, target, logs, mainLog, cts.Token);
                 if (exitCodeForRun != ExitCode.SUCCESS)
                 {
                     exitCode = exitCodeForRun;
@@ -67,6 +68,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected abstract Task<ExitCode> InvokeInternal(
             IMlaunchProcessManager processManager,
+            IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
             Extensions.Logging.ILogger logger,
             TestTargetOs target,

@@ -29,6 +29,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
 
         private readonly IMlaunchProcessManager _processManager;
+        private readonly IAppBundleInformationParser _appBundleInformationParser;
         private readonly DeviceFinder _deviceFinder;
         private readonly ILogger _logger;
         private readonly IFileBackedLog _mainLog;
@@ -38,12 +39,14 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         protected BaseOrchestrator(
             IMlaunchProcessManager processManager,
+            IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
             ILogger consoleLogger,
             IFileBackedLog mainLog,
             IErrorKnowledgeBase errorKnowledgeBase)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _appBundleInformationParser = appBundleInformationParser ?? throw new ArgumentNullException(nameof(appBundleInformationParser));
             _deviceFinder = deviceFinder ?? throw new ArgumentNullException(nameof(deviceFinder));
             _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
@@ -77,15 +80,13 @@ namespace Microsoft.DotNet.XHarness.Apple
                 }
             }
 
-            var appBundleInformationParser = new AppBundleInformationParser(_processManager);
-
             _logger.LogInformation("Getting app bundle information");
 
             AppBundleInformation appBundleInfo;
 
             try
             {
-                appBundleInfo = await appBundleInformationParser.ParseFromAppBundle(
+                appBundleInfo = await _appBundleInformationParser.ParseFromAppBundle(
                     appPackagePath,
                     target.Platform,
                     _mainLog,
@@ -230,7 +231,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             GC.SuppressFinalize(this);
         }
 
-        private async Task<ExitCode> InstallApp(
+        protected virtual async Task<ExitCode> InstallApp(
             AppBundleInformation appBundleInfo,
             IDevice device,
             TestTargetOs target,
@@ -284,7 +285,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             return ExitCode.SUCCESS;
         }
 
-        private async Task UninstallApp(AppBundleInformation appBundleInfo, IDevice device, CancellationToken cancellationToken)
+        protected virtual async Task UninstallApp(AppBundleInformation appBundleInfo, IDevice device, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from '{device.Name}'");
 
@@ -300,7 +301,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
         }
 
-        private async Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
+        protected virtual async Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
         {
             try
             {
