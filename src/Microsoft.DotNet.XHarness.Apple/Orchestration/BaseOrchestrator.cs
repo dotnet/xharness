@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 }
             }
 
-            _logger.LogInformation("Getting app bundle information");
+            _logger.LogInformation($"Getting app bundle information from '{appPackagePath}'");
 
             AppBundleInformation appBundleInfo;
 
