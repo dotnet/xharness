@@ -18,7 +18,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             // Commands for more fine grained control over the separate operations
             Add(new AppleInstallCommand());
             Add(new AppleUninstallCommand());
-            Add(new AppleTestOnlyCommand());
+            Add(new AppleJustTestCommand());
+            Add(new AppleRunOnlyCommand());
 
             // Commands for getting information
             Add(new AppleGetDeviceCommand());

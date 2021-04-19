@@ -24,9 +24,9 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// the test results. We also need to watch timeouts better and parse the results
     /// more comprehensively.
     /// </summary>
-    public class AppRunTestOrchestrator : BaseAppTestOrchestrator
+    public class AppJustTestOrchestrator : BaseAppTestOrchestrator
     {
-        public AppRunTestOrchestrator(
+        public AppJustTestOrchestrator(
             IMlaunchProcessManager processManager,
             IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
