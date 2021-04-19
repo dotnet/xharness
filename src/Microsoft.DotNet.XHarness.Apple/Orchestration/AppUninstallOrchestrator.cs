@@ -57,11 +57,8 @@ namespace Microsoft.DotNet.XHarness.Apple
                 cancellationToken);
         }
 
-        protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
-            => Task.CompletedTask; // no-op so that we don't remove the app after (reset will only clean it up before)
-
         protected override Task<ExitCode> InstallApp(AppBundleInformation appBundleInfo, IDevice device, TestTargetOs target, CancellationToken cancellationToken)
-            => Task.FromResult(ExitCode.SUCCESS); // no-op for obvious reasons
+            => Task.FromResult(ExitCode.SUCCESS); // no-op - we only want to uninstall the app
 
         private class FakeAppBundleInformationParser : IAppBundleInformationParser
         {

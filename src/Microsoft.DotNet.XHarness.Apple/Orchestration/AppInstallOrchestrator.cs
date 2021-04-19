@@ -60,6 +60,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             => Task.CompletedTask; // no-op so that we don't remove the app after (reset will only clean it up before)
 
         protected override Task UninstallApp(AppBundleInformation appBundleInfo, IDevice device, CancellationToken cancellationToken)
-            => Task.CompletedTask; // no-op for obvious reasons
+            => Task.CompletedTask; // no-op - we only want to install the app
     }
 }

@@ -93,5 +93,14 @@ namespace Microsoft.DotNet.XHarness.Apple
                 executeApp,
                 cancellationToken);
         }
+
+        protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
+            => Task.CompletedTask; // no-op so that we don't remove the app after (reset will only clean it up before)
+
+        protected override Task<ExitCode> InstallApp(AppBundleInformation appBundleInfo, IDevice device, TestTargetOs target, CancellationToken cancellationToken)
+            => Task.FromResult(ExitCode.SUCCESS); // no-op - we only want to run the app
+
+        protected override Task UninstallApp(AppBundleInformation appBundleInfo, IDevice device, CancellationToken cancellationToken)
+            => Task.CompletedTask; // no-op - we only want to run the app
     }
 }
