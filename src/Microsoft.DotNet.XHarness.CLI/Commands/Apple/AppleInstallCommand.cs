@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 return Task.FromResult(ExitCode.PACKAGE_INSTALLATION_FAILURE);
             }
 
-            var orchestrator = new AppInstallOrchestrator(
+            var orchestrator = new InstallOrchestrator(
                 processManager,
                 appBundleInformationParser,
                 deviceFinder,
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var args = AppleAppArguments;
 
-            return orchestrator.OrchestrateAppInstall(
+            return orchestrator.OrchestrateInstall(
                 target,
                 args.DeviceName,
                 args.AppPackagePath,

@@ -21,9 +21,9 @@ using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 namespace Microsoft.DotNet.XHarness.Apple
 {
     /// <summary>
-    /// Common ancestor for `test` and `run-test` orchestrators.
+    /// Common ancestor for `test` and `just-test` orchestrators.
     /// </summary>
-    public abstract class BaseAppTestOrchestrator : BaseOrchestrator
+    public abstract class BaseTestOrchestrator : BaseOrchestrator
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILogger _logger;
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IFileBackedLog _mainLog;
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
 
-        protected BaseAppTestOrchestrator(
+        protected BaseTestOrchestrator(
             IMlaunchProcessManager processManager,
             IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,

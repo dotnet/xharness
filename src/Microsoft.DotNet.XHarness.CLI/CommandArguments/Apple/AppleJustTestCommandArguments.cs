@@ -4,7 +4,7 @@
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal class AppleRunTestCommandArguments : AppleTestCommandArguments
+    internal class AppleJustTestCommandArguments : AppleTestCommandArguments
     {
     }
 }

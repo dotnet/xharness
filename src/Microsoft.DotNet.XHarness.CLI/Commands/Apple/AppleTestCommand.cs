@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            var orchestrator = new AppTestOrchestrator(
+            var orchestrator = new TestOrchestrator(
                 processManager,
                 appBundleInformationParser,
                 deviceFinder,
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var args = AppleAppArguments;
 
-            return orchestrator.OrchestrateAppTest(
+            return orchestrator.OrchestrateTest(
                 target,
                 args.DeviceName,
                 args.AppPackagePath,

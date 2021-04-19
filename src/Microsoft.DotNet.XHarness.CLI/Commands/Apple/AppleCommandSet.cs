@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             Add(new AppleInstallCommand());
             Add(new AppleUninstallCommand());
             Add(new AppleJustTestCommand());
-            Add(new AppleRunOnlyCommand());
+            Add(new AppleJustRunCommand());
 
             // Commands for getting information
             Add(new AppleGetDeviceCommand());

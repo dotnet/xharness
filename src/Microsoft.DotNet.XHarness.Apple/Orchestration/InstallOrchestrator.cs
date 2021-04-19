@@ -17,9 +17,9 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// <summary>
     /// This orchestrator implements the `install` command flow.
     /// </summary>
-    public class AppInstallOrchestrator : BaseOrchestrator
+    public class InstallOrchestrator : BaseOrchestrator
     {
-        public AppInstallOrchestrator(
+        public InstallOrchestrator(
             IMlaunchProcessManager processManager,
             IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         {
         }
 
-        public Task<ExitCode> OrchestrateAppInstall(
+        public Task<ExitCode> OrchestrateInstall(
             TestTargetOs target,
             string? deviceName,
             string appPackagePath,

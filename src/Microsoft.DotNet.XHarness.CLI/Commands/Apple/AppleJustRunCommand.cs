@@ -14,16 +14,16 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal class AppleRunOnlyCommand : AppleAppCommand<AppleRunCommandArguments>
+    internal class AppleJustRunCommand : AppleAppCommand<AppleRunCommandArguments>
     {
         private const string CommandHelp = "Runs an already installed iOS/tvOS/watchOS/MacCatalyst test application containing a TestRunner " +
             "in a target device/simulator and tries to detect the exit code.";
 
-        protected override string CommandUsage { get; } = "apple run-test --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
+        protected override string CommandUsage { get; } = "apple just-run --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
         protected override AppleRunCommandArguments AppleAppArguments { get; } = new();
 
-        public AppleRunOnlyCommand() : base("run-only", false, CommandHelp)
+        public AppleJustRunCommand() : base("just-run", false, CommandHelp)
         {
         }
 
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            var orchestrator = new AppJustRunOrchestrator(
+            var orchestrator = new JustRunOrchestrator(
                 processManager,
                 appBundleInformationParser,
                 deviceFinder,
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var args = AppleAppArguments;
 
-            return orchestrator.OrchestrateAppRun(
+            return orchestrator.OrchestrateRun(
                 target,
                 args.DeviceName,
                 args.AppPackagePath,

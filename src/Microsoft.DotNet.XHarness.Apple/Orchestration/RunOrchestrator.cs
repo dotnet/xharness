@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// In this flow we spawn the application and do not expect TestRunner inside.
     /// We only try to detect the exit code after the app run is finished.
     /// </summary>
-    public class AppRunOrchestrator : BaseOrchestrator
+    public class RunOrchestrator : BaseOrchestrator
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILogger _logger;
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
         private readonly AppRunner _appRunner;
 
-        public AppRunOrchestrator(
+        public RunOrchestrator(
             IMlaunchProcessManager processManager,
             IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 logCallback);
         }
 
-        public Task<ExitCode> OrchestrateAppRun(
+        public Task<ExitCode> OrchestrateRun(
             TestTargetOs target,
             string? deviceName,
             string appPackagePath,
