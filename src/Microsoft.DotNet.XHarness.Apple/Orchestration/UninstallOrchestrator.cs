@@ -18,9 +18,9 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// <summary>
     /// This orchestrator implements the `uninstall` command flow.
     /// </summary>
-    public class AppUninstallOrchestrator : BaseOrchestrator
+    public class UninstallOrchestrator : BaseOrchestrator
     {
-        public AppUninstallOrchestrator(
+        public UninstallOrchestrator(
             IMlaunchProcessManager processManager,
             IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,

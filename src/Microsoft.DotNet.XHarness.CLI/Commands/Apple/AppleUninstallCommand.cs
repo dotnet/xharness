@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 return Task.FromResult(ExitCode.PACKAGE_INSTALLATION_FAILURE);
             }
 
-            var orchestrator = new AppUninstallOrchestrator(
+            var orchestrator = new UninstallOrchestrator(
                 processManager,
                 appBundleInformationParser,
                 deviceFinder,
