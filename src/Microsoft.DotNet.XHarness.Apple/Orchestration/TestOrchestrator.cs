@@ -18,9 +18,9 @@ namespace Microsoft.DotNet.XHarness.Apple
 {
     /// <summary>
     /// This orchestrator implements the `test` command flow.
-    /// In this flow we need to connect to the running application over TCP and receive
-    /// the test results. We also need to watch timeouts better and parse the results
-    /// more comprehensively.
+    /// In this flow we install, run and uninstall the application.
+    /// We need to connect to the running application over TCP and receive the test results.
+    /// We also need to watch timeouts better and parse the results more comprehensively.
     /// </summary>
     public class TestOrchestrator : BaseTestOrchestrator
     {
