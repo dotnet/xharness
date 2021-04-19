@@ -2,11 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
@@ -24,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// the test results. We also need to watch timeouts better and parse the results
     /// more comprehensively.
     /// </summary>
-    public class JustTestOrchestrator : BaseTestOrchestrator
+    public class JustTestOrchestrator : TestOrchestrator
     {
         public JustTestOrchestrator(
             IMlaunchProcessManager processManager,
@@ -36,62 +33,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IErrorKnowledgeBase errorKnowledgeBase)
             : base(processManager, appBundleInformationParser, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase)
         {
-        }
-
-        public Task<ExitCode> OrchestrateTest(
-            TestTargetOs target,
-            string? deviceName,
-            string appPackagePath,
-            TimeSpan timeout,
-            TimeSpan launchTimeout,
-            CommunicationChannel communicationChannel,
-            XmlResultJargon xmlResultJargon,
-            IEnumerable<string> singleMethodFilters,
-            IEnumerable<string> classMethodFilters,
-            bool resetSimulator,
-            bool enableLldb,
-            IReadOnlyCollection<(string, string)> environmentalVariables,
-            IEnumerable<string> passthroughArguments,
-            CancellationToken cancellationToken)
-        {
-            Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo) =>
-                ExecuteMacCatalystApp(
-                    appBundleInfo,
-                    timeout,
-                    launchTimeout,
-                    communicationChannel,
-                    xmlResultJargon,
-                    singleMethodFilters,
-                    classMethodFilters,
-                    environmentalVariables,
-                    passthroughArguments,
-                    cancellationToken);
-
-            Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice) =>
-                ExecuteApp(
-                    appBundleInfo,
-                    target,
-                    device,
-                    companionDevice,
-                    timeout,
-                    launchTimeout,
-                    communicationChannel,
-                    xmlResultJargon,
-                    singleMethodFilters,
-                    classMethodFilters,
-                    environmentalVariables,
-                    passthroughArguments,
-                    cancellationToken);
-
-            return OrchestrateRun(
-                target,
-                deviceName,
-                appPackagePath,
-                resetSimulator,
-                enableLldb,
-                executeMacCatalystApp,
-                executeApp,
-                cancellationToken);
         }
 
         protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)

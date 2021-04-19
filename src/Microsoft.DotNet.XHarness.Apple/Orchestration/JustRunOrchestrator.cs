@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.CLI;
@@ -20,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// In this flow we spawn the application and do not expect TestRunner inside.
     /// We only try to detect the exit code after the app run is finished.
     /// </summary>
-    public class JustRunOrchestrator : BaseRunOrchestrator
+    public class JustRunOrchestrator : RunOrchestrator
     {
         public JustRunOrchestrator(
             IMlaunchProcessManager processManager,
