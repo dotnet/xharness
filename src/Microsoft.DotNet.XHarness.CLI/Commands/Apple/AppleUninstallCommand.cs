@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         private const string CommandHelp = "Uninstalls a given iOS/tvOS/watchOS/MacCatalyst application bundle from a target device/simulator";
 
         protected override AppleUninstallCommandArguments AppleAppArguments { get; } = new();
-        protected override string CommandUsage { get; } = "apple uninstall [OPTIONS]";
+        protected override string CommandUsage { get; } = "apple uninstall --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 
         public AppleUninstallCommand() : base("uninstall", false, CommandHelp)

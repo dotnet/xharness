@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 
         protected AppleAppRunArguments()
         {
-            string? pathFromEnv = Environment.GetEnvironmentVariable(Common.CLI.EnvironmentVariables.Names.MLAUNCH_PATH);
+            string? pathFromEnv = Environment.GetEnvironmentVariable(EnvironmentVariables.Names.MLAUNCH_PATH);
             if (!string.IsNullOrEmpty(pathFromEnv))
             {
                 MlaunchPath = pathFromEnv;

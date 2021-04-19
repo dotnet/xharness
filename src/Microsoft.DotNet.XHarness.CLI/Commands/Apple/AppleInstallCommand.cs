@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected override AppleInstallCommandArguments AppleAppArguments { get; } = new();
 
-        protected override string CommandUsage { get; } = "apple install [OPTIONS]";
+        protected override string CommandUsage { get; } = "apple install --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 
         public AppleInstallCommand() : base("install", false, CommandHelp)
