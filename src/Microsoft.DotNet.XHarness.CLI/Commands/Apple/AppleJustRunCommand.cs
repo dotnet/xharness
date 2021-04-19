@@ -14,14 +14,14 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal class AppleJustRunCommand : AppleAppCommand<AppleRunCommandArguments>
+    internal class AppleJustRunCommand : AppleAppCommand<AppleJustRunCommandArguments>
     {
         private const string CommandHelp = "Runs an already installed iOS/tvOS/watchOS/MacCatalyst test application containing a TestRunner " +
             "in a target device/simulator and tries to detect the exit code.";
 
         protected override string CommandUsage { get; } = "apple just-run --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
-        protected override AppleRunCommandArguments AppleAppArguments { get; } = new();
+        protected override AppleJustRunCommandArguments AppleAppArguments { get; } = new();
 
         public AppleJustRunCommand() : base("just-run", false, CommandHelp)
         {
@@ -53,11 +53,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 args.DeviceName,
                 args.AppPackagePath,
                 args.Timeout,
-                args.LaunchTimeout,
-                args.CommunicationChannel,
-                args.XmlResultJargon,
-                args.SingleMethodFilters,
-                args.ClassMethodFilters,
+                args.ExpectedExitCode,
                 args.ResetSimulator,
                 args.EnableLldb,
                 args.EnvironmentalVariables,

@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// <summary>
     /// Common ancestor for `test` and `just-test` orchestrators.
     /// </summary>
-    public abstract class TestOrchestrator : BaseOrchestrator
+    public class TestOrchestrator : BaseOrchestrator
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILogger _logger;
