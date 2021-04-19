@@ -11,13 +11,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
     {
         public AppleCommandSet() : base("apple")
         {
+            // Commands for full install/execute/uninstall flows
             Add(new AppleTestCommand());
             Add(new AppleRunCommand());
-            Add(new AppleGetDeviceCommand());
+
+            // Commands for more fine grained control over the separate operations
             Add(new AppleInstallCommand());
             Add(new AppleUninstallCommand());
-            Add(new AppleRunTestCommand());
+            Add(new AppleTestOnlyCommand());
+
+            // Commands for getting information
+            Add(new AppleGetDeviceCommand());
             Add(new AppleGetStateCommand());
+
+            // Commands for simulator management
             Add(new SimulatorsCommandSet());
         }
     }

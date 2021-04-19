@@ -14,15 +14,15 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal class AppleRunTestCommand : AppleAppCommand<AppleTestCommandArguments>
+    internal class AppleTestOnlyCommand : AppleAppCommand<AppleTestCommandArguments>
     {
-        private const string CommandHelp = "Runs a specific test inside of a given iOS/tvOS/watchOS/MacCatalyst test application bundle containing TestRunner already installed in a target device/simulator";
+        private const string CommandHelp = "Runs an already installed iOS/tvOS/watchOS/MacCatalyst test application containing a TestRunner in a target device/simulator.";
 
         protected override string CommandUsage { get; } = "apple run-test --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
         protected override AppleTestCommandArguments AppleAppArguments { get; } = new();
 
-        public AppleRunTestCommand() : base("run-test", false, CommandHelp)
+        public AppleTestOnlyCommand() : base("test-only", false, CommandHelp)
         {
         }
 
