@@ -290,17 +290,17 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         protected virtual async Task UninstallApp(AppBundleInformation appBundleInfo, IDevice device, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from '{device.Name}'");
+            _logger.LogInformation($"Uninstalling the application '{appBundleInfo.BundleIdentifier}' from '{device.Name}'");
 
             var appUninstaller = new AppUninstaller(_processManager, _mainLog);
             var uninstallResult = await appUninstaller.UninstallApp(device, appBundleInfo.BundleIdentifier, cancellationToken);
             if (!uninstallResult.Succeeded)
             {
-                _logger.LogError($"Failed to uninstall the app bundle with exit code: {uninstallResult.ExitCode}");
+                _logger.LogError($"Failed to uninstall the app bundle! Check logs for more details!");
             }
             else
             {
-                _logger.LogInformation($"Application '{appBundleInfo.AppName}' was uninstalled successfully");
+                _logger.LogInformation($"Application '{appBundleInfo.BundleIdentifier}' was uninstalled successfully");
             }
         }
 
