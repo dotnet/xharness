@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -11,7 +13,6 @@ using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
@@ -21,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         private const string CommandHelp = "Uninstalls a given iOS/tvOS/watchOS/MacCatalyst application bundle from a target device/simulator";
 
         protected override AppleUninstallCommandArguments AppleAppArguments { get; } = new();
-        protected override string CommandUsage { get; } = "apple uninstall [OPTIONS]";
+        protected override string CommandUsage { get; } = "apple uninstall --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 
         public AppleUninstallCommand() : base("uninstall", false, CommandHelp)
@@ -40,20 +41,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
             if (target.Platform.IsSimulator())
             {
-                logger.LogError($"Cannot uninstall application from {target.Platform.AsString()}");
-                return Task.FromResult(ExitCode.PACKAGE_INSTALLATION_FAILURE);
+                logger.LogWarning($"XHarness cannot uninstall application from a simulator");
+                return Task.FromResult(ExitCode.SUCCESS);
             }
 
-            var orchestrator = new AppUninstallOrchestrator(
+            var args = AppleAppArguments;
+
+            var orchestrator = new UninstallOrchestrator(
                 processManager,
-                appBundleInformationParser,
+                new FakeAppBundleInformationParser(args.BundleIdentifier),
                 deviceFinder,
                 new ConsoleLogger(logger),
                 logs,
                 mainLog,
                 ErrorKnowledgeBase);
-
-            var args = AppleAppArguments;
 
             return orchestrator.OrchestrateAppUninstall(
                 target,
@@ -63,6 +64,36 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 args.ResetSimulator,
                 args.EnableLldb,
                 cancellationToken);
+        }
+
+
+        private class FakeAppBundleInformationParser : IAppBundleInformationParser
+        {
+            private readonly string _bundleIdentifier;
+
+            public FakeAppBundleInformationParser(string bundleIdentifier)
+            {
+                _bundleIdentifier = bundleIdentifier ?? throw new ArgumentNullException(nameof(bundleIdentifier));
+            }
+
+            public Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default) =>
+                Task.FromResult(new AppBundleInformation(
+                    _bundleIdentifier,
+                    _bundleIdentifier,
+                    appPackagePath,
+                    appPackagePath,
+                    false));
+
+            public Task<AppBundleInformation> ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration)
+            {
+                var path = Path.GetDirectoryName(projectFilePath)!;
+                return Task.FromResult(new AppBundleInformation(
+                    _bundleIdentifier,
+                    _bundleIdentifier,
+                    path,
+                    path,
+                    false));
+            }
         }
     }
 }

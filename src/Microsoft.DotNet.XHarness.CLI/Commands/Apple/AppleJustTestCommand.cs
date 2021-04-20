@@ -11,20 +11,18 @@ using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal class AppleInstallCommand : AppleAppCommand<AppleInstallCommandArguments>
+    internal class AppleJustTestCommand : AppleAppCommand<AppleTestCommandArguments>
     {
-        private const string CommandHelp = "Installs a given iOS/tvOS/watchOS/MacCatalyst application bundle in a target device/simulator";
+        private const string CommandHelp = "Runs an already installed iOS/tvOS/watchOS/MacCatalyst test application containing a TestRunner in a target device/simulator.";
 
-        protected override AppleInstallCommandArguments AppleAppArguments { get; } = new();
-
-        protected override string CommandUsage { get; } = "apple install --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
+        protected override string CommandUsage { get; } = "apple just-test --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
+        protected override AppleTestCommandArguments AppleAppArguments { get; } = new();
 
-        public AppleInstallCommand() : base("install", false, CommandHelp)
+        public AppleJustTestCommand() : base("just-test", false, CommandHelp)
         {
         }
 
@@ -38,13 +36,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            if (target.Platform == TestTarget.MacCatalyst)
-            {
-                logger.LogError("Cannot install application on MacCatalyst");
-                return Task.FromResult(ExitCode.PACKAGE_INSTALLATION_FAILURE);
-            }
-
-            var orchestrator = new InstallOrchestrator(
+            var orchestrator = new JustTestOrchestrator(
                 processManager,
                 appBundleInformationParser,
                 deviceFinder,
@@ -55,13 +47,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var args = AppleAppArguments;
 
-            return orchestrator.OrchestrateInstall(
+            return orchestrator.OrchestrateTest(
                 target,
                 args.DeviceName,
                 args.AppPackagePath,
                 args.Timeout,
+                args.LaunchTimeout,
+                args.CommunicationChannel,
+                args.XmlResultJargon,
+                args.SingleMethodFilters,
+                args.ClassMethodFilters,
                 args.ResetSimulator,
                 args.EnableLldb,
+                args.EnvironmentalVariables,
+                PassThroughArguments,
                 cancellationToken);
         }
     }

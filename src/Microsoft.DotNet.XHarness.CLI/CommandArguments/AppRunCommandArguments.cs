@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         /// <summary>
         /// Path to packaged app
         /// </summary>
-        public string AppPackagePath
+        public virtual string AppPackagePath
         {
             get => _appPackagePath ?? throw new ArgumentException("You must provide a path for the app that will be tested.");
             set => _appPackagePath = value;

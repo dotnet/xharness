@@ -19,10 +19,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
     /// </summary>
     internal class AppleRunCommand : AppleAppCommand<AppleRunCommandArguments>
     {
-        private const string CommandHelp = "Runs a given iOS/tvOS/watchOS/MacCatalyst application bundle in a target device/simulator and tries to detect exit code (might not work reliably across iOS versions)";
+        private const string CommandHelp = "Installs, runs and uninstalls a given iOS/tvOS/watchOS/MacCatalyst application bundle " +
+            "in a target device/simulator and tries to detect the exit code.";
 
         protected override AppleRunCommandArguments AppleAppArguments { get; } = new();
-        protected override string CommandUsage { get; } = "apple run [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
+        protected override string CommandUsage { get; } = "apple run --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 
         public AppleRunCommand() : base("run", false, CommandHelp)
@@ -39,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            var orchestrator = new AppRunOrchestrator(
+            var orchestrator = new RunOrchestrator(
                 processManager,
                 appBundleInformationParser,
                 deviceFinder,
@@ -50,7 +51,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var args = AppleAppArguments;
 
-            return orchestrator.OrchestrateAppRun(
+            return orchestrator.OrchestrateRun(
                 target,
                 args.DeviceName,
                 args.AppPackagePath,

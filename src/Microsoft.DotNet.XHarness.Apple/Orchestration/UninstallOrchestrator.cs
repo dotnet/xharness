@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.CLI;
@@ -18,9 +17,9 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// <summary>
     /// This orchestrator implements the `uninstall` command flow.
     /// </summary>
-    public class AppUninstallOrchestrator : BaseOrchestrator
+    public class UninstallOrchestrator : BaseOrchestrator
     {
-        public AppUninstallOrchestrator(
+        public UninstallOrchestrator(
             IMlaunchProcessManager processManager,
             IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
@@ -57,39 +56,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 cancellationToken);
         }
 
-        protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
-            => Task.CompletedTask; // no-op so that we don't remove the app after (reset will only clean it up before)
-
         protected override Task<ExitCode> InstallApp(AppBundleInformation appBundleInfo, IDevice device, TestTargetOs target, CancellationToken cancellationToken)
-            => Task.FromResult(ExitCode.SUCCESS); // no-op for obvious reasons
-
-        private class FakeAppBundleInformationParser : IAppBundleInformationParser
-        {
-            private readonly string _bundleIdentifier;
-
-            public FakeAppBundleInformationParser(string bundleIdentifier)
-            {
-                _bundleIdentifier = bundleIdentifier ?? throw new ArgumentNullException(nameof(bundleIdentifier));
-            }
-
-            public Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default) =>
-                Task.FromResult(new AppBundleInformation(
-                    _bundleIdentifier,
-                    _bundleIdentifier,
-                    appPackagePath,
-                    appPackagePath,
-                    false));
-
-            public Task<AppBundleInformation> ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration)
-            {
-                var path = Path.GetDirectoryName(projectFilePath)!;
-                return Task.FromResult(new AppBundleInformation(
-                    _bundleIdentifier,
-                    _bundleIdentifier,
-                    path,
-                    path,
-                    false));
-            }
-        }
+            => Task.FromResult(ExitCode.SUCCESS); // no-op - we only want to uninstall the app
     }
 }

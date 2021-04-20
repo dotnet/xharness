@@ -17,9 +17,9 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// <summary>
     /// This orchestrator implements the `install` command flow.
     /// </summary>
-    public class AppInstallOrchestrator : BaseOrchestrator
+    public class InstallOrchestrator : BaseOrchestrator
     {
-        public AppInstallOrchestrator(
+        public InstallOrchestrator(
             IMlaunchProcessManager processManager,
             IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         {
         }
 
-        public Task<ExitCode> OrchestrateAppInstall(
+        public Task<ExitCode> OrchestrateInstall(
             TestTargetOs target,
             string? deviceName,
             string appPackagePath,
@@ -60,6 +60,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             => Task.CompletedTask; // no-op so that we don't remove the app after (reset will only clean it up before)
 
         protected override Task UninstallApp(AppBundleInformation appBundleInfo, IDevice device, CancellationToken cancellationToken)
-            => Task.CompletedTask; // no-op for obvious reasons
+            => Task.CompletedTask; // no-op - we only want to install the app
     }
 }

@@ -19,9 +19,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
     /// </summary>
     internal class AppleTestCommand : AppleAppCommand<AppleTestCommandArguments>
     {
-        private const string CommandHelp = "Runs a given iOS/tvOS/watchOS/MacCatalyst test application bundle containing TestRunner in a target device/simulator";
+        private const string CommandHelp = "Installs, runs and uninstalls a given iOS/tvOS/watchOS/MacCatalyst test application bundle containing TestRunner " +
+            "in a target device/simulator.";
 
-        protected override string CommandUsage { get; } = "apple test [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
+        protected override string CommandUsage { get; } = "apple test --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
         protected override AppleTestCommandArguments AppleAppArguments { get; } = new();
 
@@ -39,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
-            var orchestrator = new AppTestOrchestrator(
+            var orchestrator = new TestOrchestrator(
                 processManager,
                 appBundleInformationParser,
                 deviceFinder,
@@ -50,7 +51,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var args = AppleAppArguments;
 
-            return orchestrator.OrchestrateAppTest(
+            return orchestrator.OrchestrateTest(
                 target,
                 args.DeviceName,
                 args.AppPackagePath,

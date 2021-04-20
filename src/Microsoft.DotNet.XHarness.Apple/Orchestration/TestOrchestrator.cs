@@ -21,12 +21,9 @@ using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 namespace Microsoft.DotNet.XHarness.Apple
 {
     /// <summary>
-    /// This orchestrator implements the `test` command flow.
-    /// In this flow we need to connect to the running application over TCP and receive
-    /// the test results. We also need to watch timeouts better and parse the results
-    /// more comprehensively.
+    /// Common ancestor for `test` and `just-test` orchestrators.
     /// </summary>
-    public class AppTestOrchestrator : BaseOrchestrator
+    public class TestOrchestrator : BaseOrchestrator
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILogger _logger;
@@ -34,14 +31,15 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IFileBackedLog _mainLog;
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
 
-        public AppTestOrchestrator(
+        public TestOrchestrator(
             IMlaunchProcessManager processManager,
             IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,
-            IErrorKnowledgeBase errorKnowledgeBase) : base(processManager, appBundleInformationParser, deviceFinder, consoleLogger, mainLog, errorKnowledgeBase)
+            IErrorKnowledgeBase errorKnowledgeBase)
+            : base(processManager, appBundleInformationParser, deviceFinder, consoleLogger, mainLog, errorKnowledgeBase)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
@@ -50,7 +48,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
         }
 
-        public Task<ExitCode> OrchestrateAppTest(
+        public Task<ExitCode> OrchestrateTest(
             TestTargetOs target,
             string? deviceName,
             string appPackagePath,

@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 logger.LogInformation($"Preparing run for {target.AsString()}{ (AppleAppArguments.DeviceName != null ? " targeting " + AppleAppArguments.DeviceName : null) }");
 
                 // Create main log file for the run
-                string logFileName = $"run-{target.AsString()}{(AppleAppArguments.DeviceName != null ? "-" + AppleAppArguments.DeviceName : null)}.log";
+                string logFileName = $"{Name}-{target.AsString()}{(AppleAppArguments.DeviceName != null ? "-" + AppleAppArguments.DeviceName : null)}.log";
 
                 IFileBackedLog mainLog = Log.CreateReadableAggregatedLog(
                     logs.Create(logFileName, LogType.ExecutionLog.ToString(), true),

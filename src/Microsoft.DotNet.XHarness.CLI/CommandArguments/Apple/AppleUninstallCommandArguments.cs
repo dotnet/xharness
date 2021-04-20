@@ -12,6 +12,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     {
         private string? _bundleIdentifier = null;
 
+        public override string AppPackagePath { get; set; } = string.Empty;
+
         /// <summary>
         /// Path to packaged app
         /// </summary>
@@ -25,7 +27,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         {
             // We are validating that it exists, so we just set the current one and don't use it later
             // It is replaced with the bundle identifier argument
-            AppPackagePath = ".";
             ResetSimulator = false;
             EnableLldb = false;
         }

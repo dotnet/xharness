@@ -13,6 +13,7 @@ using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
@@ -80,7 +81,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 }
             }
 
-            _logger.LogInformation("Getting app bundle information");
+            _logger.LogInformation($"Getting app bundle information from '{appPackagePath}'");
 
             AppBundleInformation appBundleInfo;
 
@@ -133,6 +134,8 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             try
             {
+                _logger.LogInformation($"Looking for available {target.AsString()} {(target.Platform.IsSimulator() ? "simulators" : "devices")}..");
+
                 (device, companionDevice) = await _deviceFinder.FindDevice(target, deviceName, _mainLog);
 
                 _logger.LogInformation($"Found {(target.Platform.IsSimulator() ? "simulator" : "physical")} device '{device.Name}'");
@@ -287,17 +290,17 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         protected virtual async Task UninstallApp(AppBundleInformation appBundleInfo, IDevice device, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Uninstalling the application '{appBundleInfo.AppName}' from '{device.Name}'");
+            _logger.LogInformation($"Uninstalling the application '{appBundleInfo.BundleIdentifier}' from '{device.Name}'");
 
             var appUninstaller = new AppUninstaller(_processManager, _mainLog);
             var uninstallResult = await appUninstaller.UninstallApp(device, appBundleInfo.BundleIdentifier, cancellationToken);
             if (!uninstallResult.Succeeded)
             {
-                _logger.LogError($"Failed to uninstall the app bundle with exit code: {uninstallResult.ExitCode}");
+                _logger.LogError($"Failed to uninstall the app bundle! Check logs for more details!");
             }
             else
             {
-                _logger.LogInformation($"Application '{appBundleInfo.AppName}' was uninstalled successfully");
+                _logger.LogInformation($"Application '{appBundleInfo.BundleIdentifier}' was uninstalled successfully");
             }
         }
 

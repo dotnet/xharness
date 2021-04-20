@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected override XHarnessCommandArguments Arguments => _arguments;
 
-        protected override string CommandUsage { get; } = "apple device [TARGET] [OPTIONS]";
+        protected override string CommandUsage { get; } = "apple device [OPTIONS] [TARGET]";
 
         private const string CommandHelp = "Finds the UDID of a device/simulator for given target";
         protected override string CommandDescription { get; } = @$"
