@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
@@ -21,22 +22,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// Path to the mlaunch binary.
         /// Default comes from the NuGet.
         /// </summary>
-        public string MlaunchPath { get; set; }
-
-        protected AppleCommandArguments()
-        {
-            string? pathFromEnv = Environment.GetEnvironmentVariable(EnvironmentVariables.Names.MLAUNCH_PATH);
-            if (!string.IsNullOrEmpty(pathFromEnv))
-            {
-                MlaunchPath = pathFromEnv;
-            }
-            else
-            {
-                // This path is where mlaunch is when the .NET tool is extracted
-                var assemblyPath = Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(AppleTestCommandArguments))?.Location);
-                MlaunchPath = Path.Join(assemblyPath, "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
-            }
-        }
+        public string MlaunchPath { get; set; } = MacOSProcessManager.DetectMlaunchPath();
 
         protected override OptionSet GetCommandOptions() => new()
         {
@@ -52,14 +38,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         {
             if (!File.Exists(MlaunchPath))
             {
-#if DEBUG
-                string message = $"Failed to find mlaunch at {MlaunchPath}. " +
+                throw new ArgumentException(
+                    $"Failed to find mlaunch at {MlaunchPath}. " +
                     $"Make sure you specify --mlaunch or set the {EnvironmentVariables.Names.MLAUNCH_PATH} env var. " +
-                    $"See README.md for more information";
-#else
-                string message = $"Failed to find mlaunch at {MlaunchPath}";
-#endif
-                throw new ArgumentException(message);
+                    $"See README.md for more information");
             }
 
             if (XcodeRoot != null && !Directory.Exists(XcodeRoot))
