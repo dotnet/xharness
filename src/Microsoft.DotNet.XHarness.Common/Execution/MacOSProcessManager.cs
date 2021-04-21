@@ -124,12 +124,10 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             {
                 return pathFromEnv;
             }
-            else
-            {
-                // This path is where mlaunch is when the .NET tool is extracted
-                var assemblyPath = Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(MacOSProcessManager))?.Location);
-               return Path.Combine(assemblyPath, "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
-            }
+
+            // This path is where mlaunch is when the .NET tool is extracted from the .nupkg
+            var assemblyPath = Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(MacOSProcessManager))?.Location)!;
+            return Path.Combine(assemblyPath, "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
         }
 
         #endregion
