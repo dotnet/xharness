@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Mono.Options;
 
@@ -24,6 +25,21 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public bool ShowDevicesUUID { get; set; } = true;
 
         public bool UseJson { get; set; } = false;
+
+        protected AppleGetStateCommandArguments()
+        {
+            string? pathFromEnv = Environment.GetEnvironmentVariable(EnvironmentVariables.Names.MLAUNCH_PATH);
+            if (!string.IsNullOrEmpty(pathFromEnv))
+            {
+                MlaunchPath = pathFromEnv;
+            }
+            else
+            {
+                // This path is where mlaunch is when the .NET tool is extracted
+                var assemblyPath = Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(AppleTestCommandArguments))?.Location);
+                MlaunchPath = Path.Join(assemblyPath, "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
+            }
+        }
 
         protected override OptionSet GetCommandOptions() => new()
         {
