@@ -37,8 +37,7 @@ stages:
             name: NetCoreInternal-Pool
             queue: BuildPool.Server.Amd64.VS2019
           ${{ if eq(variables._RunAsPublic, True) }}:
-            name: NetCorePublic-Pool
-            queue: BuildPool.Server.Amd64.VS2019.Open
+            vmImage: windows-2019
         strategy:
           matrix:
             Release:
