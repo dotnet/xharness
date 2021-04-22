@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
             _processManager
                 .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
-                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
                 {
                     passedArguments = args;
 
