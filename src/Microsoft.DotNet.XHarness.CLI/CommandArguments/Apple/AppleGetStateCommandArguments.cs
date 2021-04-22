@@ -4,7 +4,9 @@
 
 using System;
 using System.IO;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
@@ -13,11 +15,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     {
         /// <summary>
         /// Path to the mlaunch binary.
-        /// Default comes from the NuGet.
+        /// Default comes from env variable then from the NuGet package.
         /// </summary>
-        public string MlaunchPath { get; set; } = Path.Join(
-            Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(AppleTestCommandArguments))?.Location),
-            "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
+        public string MlaunchPath { get; set; } = MacOSProcessManager.DetectMlaunchPath();
 
         public bool ShowSimulatorsUUID { get; set; } = false;
 
@@ -37,7 +37,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         {
             if (!File.Exists(MlaunchPath))
             {
-                throw new ArgumentException($"Failed to find mlaunch at {MlaunchPath}");
+                throw new ArgumentException(
+                    $"Failed to find mlaunch at {MlaunchPath}. " +
+                    $"Make sure you specify --mlaunch or set the {EnvironmentVariables.Names.MLAUNCH_PATH} env var. " +
+                    $"See README.md for more information");
             }
         }
     }

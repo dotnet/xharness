@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.DotNet.XHarness.Common.CLI;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Mono.Options;
@@ -24,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// Path to the mlaunch binary.
         /// Default comes from the NuGet.
         /// </summary>
-        public string MlaunchPath { get; set; }
+        public string MlaunchPath { get; set; } = MacOSProcessManager.DetectMlaunchPath();
 
         /// <summary>
         /// Name of a specific device we want to target.
@@ -78,21 +79,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// Parsed strong-typed targets.
         /// </summary>
         public IReadOnlyCollection<TestTargetOs> RunTargets { get; private set; } = Array.Empty<TestTargetOs>();
-
-        protected AppleAppRunArguments()
-        {
-            string? pathFromEnv = Environment.GetEnvironmentVariable(Common.CLI.EnvironmentVariables.Names.MLAUNCH_PATH);
-            if (!string.IsNullOrEmpty(pathFromEnv))
-            {
-                MlaunchPath = pathFromEnv;
-            }
-            else
-            {
-                // This path is where mlaunch is when the .NET tool is extracted
-                var assemblyPath = Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(AppleTestCommandArguments))?.Location);
-                MlaunchPath = Path.Join(assemblyPath, "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
-            }
-        }
 
         protected override OptionSet GetCommandOptions()
         {
@@ -164,14 +150,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 
             if (!File.Exists(MlaunchPath))
             {
-#if DEBUG
-                string message = $"Failed to find mlaunch at {MlaunchPath}. " +
+                throw new ArgumentException(
+                    $"Failed to find mlaunch at {MlaunchPath}. " +
                     $"Make sure you specify --mlaunch or set the {EnvironmentVariables.Names.MLAUNCH_PATH} env var. " +
-                    $"See README.md for more information";
-#else
-                string message = $"Failed to find mlaunch at {MlaunchPath}";
-#endif
-                throw new ArgumentException(message);
+                    $"See README.md for more information");
             }
 
             if (XcodeRoot != null && !Directory.Exists(XcodeRoot))

@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 
 #nullable enable
@@ -114,6 +115,19 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             // We need /Applications/Xcode114.app only
             // should never be null, if it is return an ""
             return Path.GetDirectoryName(Path.GetDirectoryName(xcodeRoot)) ?? string.Empty;
+        }
+
+        public static string DetectMlaunchPath()
+        {
+            string? pathFromEnv = Environment.GetEnvironmentVariable(EnvironmentVariables.Names.MLAUNCH_PATH);
+            if (!string.IsNullOrEmpty(pathFromEnv))
+            {
+                return pathFromEnv;
+            }
+
+            // This path is where mlaunch is when the .NET tool is extracted from the .nupkg
+            var assemblyPath = Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(MacOSProcessManager))?.Location)!;
+            return Path.Combine(assemblyPath, "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
         }
 
         #endregion
