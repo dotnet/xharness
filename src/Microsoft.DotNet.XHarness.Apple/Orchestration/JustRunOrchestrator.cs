@@ -10,6 +10,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
@@ -24,11 +25,12 @@ namespace Microsoft.DotNet.XHarness.Apple
             IMlaunchProcessManager processManager,
             IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
-            ILogger logger,
+            ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,
-            IErrorKnowledgeBase errorKnowledgeBase)
-            : base(processManager, appBundleInformationParser, deviceFinder, logger, logs, mainLog, errorKnowledgeBase)
+            IErrorKnowledgeBase errorKnowledgeBase,
+            IHelpers helpers)
+            : base(processManager, appBundleInformationParser, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, helpers)
         {
         }
 
