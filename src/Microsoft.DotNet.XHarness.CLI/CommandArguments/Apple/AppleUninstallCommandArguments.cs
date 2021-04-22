@@ -12,7 +12,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     {
         private string? _bundleIdentifier = null;
 
-        public override string AppPackagePath { get; set; } = string.Empty;
+        // We don't really use this one but we still validate it exists.
+        // It is a hack around us re-using as much code as we can from AppleAppRunArguments.
+        // This and the optionsToRemove below should get resolved with https://github.com/dotnet/xharness/issues/431
+        public override string AppPackagePath { get; set; } = ".";
 
         /// <summary>
         /// Path to packaged app
@@ -39,7 +42,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             {
                 {
                     "app|a=", "Bundle identifier of the app that should be uninstalled",
-                    v => BundleIdentifier = RootPath(v)
+                    v => BundleIdentifier = v
                 },
             };
 
