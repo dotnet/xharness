@@ -38,8 +38,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,
-            IErrorKnowledgeBase errorKnowledgeBase)
-            : base(processManager, appBundleInformationParser, deviceFinder, consoleLogger, mainLog, errorKnowledgeBase)
+            IErrorKnowledgeBase errorKnowledgeBase,
+            IHelpers helpers)
+            : base(processManager, appBundleInformationParser, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, helpers)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));

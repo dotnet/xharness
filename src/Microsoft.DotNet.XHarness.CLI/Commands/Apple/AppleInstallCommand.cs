@@ -11,6 +11,7 @@ using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
@@ -51,7 +52,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 new ConsoleLogger(logger),
                 logs,
                 mainLog,
-                ErrorKnowledgeBase);
+                ErrorKnowledgeBase,
+                new Helpers());
 
             var args = AppleAppArguments;
 

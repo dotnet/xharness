@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
         }
 
-        public async Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(TestTargetOs target, string? deviceName, ILog mainLog)
+        public async Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(TestTargetOs target, string? deviceName, ILog log)
         {
             IDevice? device;
             IDevice? companionDevice = null;
@@ -36,11 +36,11 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 if (deviceName == null)
                 {
-                    (device, companionDevice) = await _simulatorLoader.FindSimulators(target, mainLog, 3);
+                    (device, companionDevice) = await _simulatorLoader.FindSimulators(target, log, 3);
                 }
                 else
                 {
-                    await _simulatorLoader.LoadDevices(mainLog, false);
+                    await _simulatorLoader.LoadDevices(log, false);
 
                     device = _simulatorLoader.AvailableDevices.FirstOrDefault(IsMatchingDevice)
                         ?? throw new NoDeviceFoundException($"Failed to find a simulator '{deviceName}'");
@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 // The DeviceLoader.FindDevice will return the fist device of the type, but we want to make sure that
                 // the device we use is of the correct arch, therefore, we will use the LoadDevices and handpick one
-                await _deviceLoader.LoadDevices(mainLog, false, false);
+                await _deviceLoader.LoadDevices(log, false, false);
 
                 if (deviceName == null)
                 {
@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                     if (target.Platform.IsWatchOSTarget() && hardwareDevice != null)
                     {
-                        companionDevice = await _deviceLoader.FindCompanionDevice(mainLog, hardwareDevice);
+                        companionDevice = await _deviceLoader.FindCompanionDevice(log, hardwareDevice);
                     }
 
                     device = hardwareDevice;

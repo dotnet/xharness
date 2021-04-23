@@ -40,8 +40,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             MlaunchArguments passedArguments = null;
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
-            _processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
-                .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, CancellationToken?, bool?>((p, args, log, t, env, token, d) =>
+            _processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
+                .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, int, CancellationToken?, bool?>((p, args, log, t, env, verbosity, token, d) =>
                 {
                     // we are going set the used args to validate them later, will always return an error from this method
                     processPath = p.StartInfo.FileName;
@@ -77,8 +77,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             MlaunchArguments passedArguments = null;
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
-            _processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
-                .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, CancellationToken?, bool?>((p, args, log, t, env, token, d) =>
+            _processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
+                .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, int, CancellationToken?, bool?>((p, args, log, t, env, verbosity, token, d) =>
                 {
                     processPath = p.StartInfo.FileName;
                     passedArguments = args;
@@ -130,8 +130,9 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             var calls = 0;
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
-            _processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
-                .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, CancellationToken?, bool?>((p, args, log, t, env, token, d) => {
+            _processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
+                .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, int, CancellationToken?, bool?>((p, args, log, t, env, verbosity, token, d) =>
+                {
                     calls++;
 
                     if (calls == 1)

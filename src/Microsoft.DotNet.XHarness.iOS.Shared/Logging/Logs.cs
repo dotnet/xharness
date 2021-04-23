@@ -21,13 +21,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             Directory = directory ?? throw new ArgumentNullException(nameof(directory));
         }
 
-        // Create a new log backed with a file
-        public IFileBackedLog Create(string filename, string name, bool? timestamp = null) => Create(Directory, filename, name, timestamp);
-
-        private LogFile Create(string directory, string filename, string name, bool? timestamp = null)
+        public IFileBackedLog Create(string filename, string name, bool? timestamp = null)
         {
-            System.IO.Directory.CreateDirectory(directory);
-            var rv = new LogFile(name, Path.GetFullPath(Path.Combine(directory, filename)));
+            System.IO.Directory.CreateDirectory(Directory);
+            var rv = new LogFile(name, Path.GetFullPath(Path.Combine(Directory, filename)));
             if (timestamp.HasValue)
             {
                 rv.Timestamp = timestamp.Value;

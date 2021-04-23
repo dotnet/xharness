@@ -140,6 +140,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        _mainLog.Object,
                        It.IsAny<TimeSpan>(),
                        It.IsAny<Dictionary<string, string>>(),
+                       It.IsAny<int>(),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -234,6 +235,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.Is<Dictionary<string, string>>(d => d["appArg1"] == "value1"),
+                       It.IsAny<int>(),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -329,6 +331,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.IsAny<Dictionary<string, string>>(),
+                       It.IsAny<int>(),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -415,6 +418,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.IsAny<Dictionary<string, string>>(),
+                       It.IsAny<int>(),
                        It.IsAny<CancellationToken>()),
                     Times.Once);
 

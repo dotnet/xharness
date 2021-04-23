@@ -36,13 +36,15 @@ namespace Microsoft.DotNet.XHarness.Apple
             IMlaunchProcessManager processManager,
             IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
-            ILogger logger,
+            ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,
-            IErrorKnowledgeBase errorKnowledgeBase) : base(processManager, appBundleInformationParser, deviceFinder, logger, mainLog, errorKnowledgeBase)
+            IErrorKnowledgeBase errorKnowledgeBase,
+            IHelpers helpers)
+            : base(processManager, appBundleInformationParser, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, helpers)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));

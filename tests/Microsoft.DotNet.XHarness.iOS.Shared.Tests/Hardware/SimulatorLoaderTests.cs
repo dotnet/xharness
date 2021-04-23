@@ -38,8 +38,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
             _processManager
-                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
-                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
                 {
                     // we are going set the used args to validate them later, will always return an error from this method
                     passedArguments = args;
@@ -92,8 +92,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             MlaunchArguments passedArguments = null;
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
-            _processManager.Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
-                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+            _processManager.Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
                 {
                     passedArguments = args;
 
@@ -131,8 +131,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
             _processManager
-                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
-                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
                 {
                     passedArguments = args;
 
@@ -170,8 +170,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
             _processManager
-                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
-                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
                 {
                     passedArguments = args;
 
@@ -199,8 +199,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
             _processManager
-                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
-                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
                 {
                     passedArguments = args;
 
@@ -227,8 +227,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         {
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
             _processManager
-                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
-                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
                 {
                     // We get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
                     var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
@@ -249,8 +249,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         {
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
             _processManager
-                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
-                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
                 {
                     // We get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
                     var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
@@ -281,8 +281,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
             _processManager
-                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
-                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
                 {
                     // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
                     var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
@@ -308,8 +308,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             var calls = 0;
 
             _processManager
-                .Setup(p => p.ExecuteCommandAsync(It.Is<MlaunchArguments>(args => args.Any(a => a is ListSimulatorsArgument)), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken?>()))
-                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, CancellationToken?>((args, log, t, env, token) =>
+                .Setup(p => p.ExecuteCommandAsync(It.Is<MlaunchArguments>(args => args.Any(a => a is ListSimulatorsArgument)), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
+                .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
                 {
                     calls++;
 

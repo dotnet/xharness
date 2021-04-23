@@ -13,6 +13,7 @@ using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple
@@ -33,9 +34,10 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IAppBundleInformationParser _appBundleInformationParser;
         private readonly DeviceFinder _deviceFinder;
         private readonly ILogger _logger;
+        private readonly ILogs _logs;
         private readonly IFileBackedLog _mainLog;
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
-
+        private readonly IHelpers _helpers;
         private bool _lldbFileCreated;
 
         protected BaseOrchestrator(
@@ -43,15 +45,19 @@ namespace Microsoft.DotNet.XHarness.Apple
             IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
             ILogger consoleLogger,
+            ILogs logs,
             IFileBackedLog mainLog,
-            IErrorKnowledgeBase errorKnowledgeBase)
+            IErrorKnowledgeBase errorKnowledgeBase,
+            IHelpers helpers)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _appBundleInformationParser = appBundleInformationParser ?? throw new ArgumentNullException(nameof(appBundleInformationParser));
             _deviceFinder = deviceFinder ?? throw new ArgumentNullException(nameof(deviceFinder));
             _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
+            _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
+            _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
         }
 
         protected async Task<ExitCode> OrchestrateRun(
@@ -136,7 +142,14 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 _logger.LogInformation($"Looking for available {target.AsString()} {(target.Platform.IsSimulator() ? "simulators" : "devices")}..");
 
-                (device, companionDevice) = await _deviceFinder.FindDevice(target, deviceName, _mainLog);
+                var finderLogName = $"list-{target.AsString()}-{_helpers.Timestamp}.log";
+                using var finderLog = _logs.Create(finderLogName, "DeviceList", true);
+
+                _mainLog.WriteLine(
+                    $"Looking for available {target.AsString()} {(target.Platform.IsSimulator() ? "simulators" : "devices")}. " +
+                    $"Storing logs into {finderLogName}");
+
+                (device, companionDevice) = await _deviceFinder.FindDevice(target, deviceName, finderLog);
 
                 _logger.LogInformation($"Found {(target.Platform.IsSimulator() ? "simulator" : "physical")} device '{device.Name}'");
 

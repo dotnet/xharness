@@ -102,6 +102,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                     _log.Object,
                     TimeSpan.FromMinutes(1),
                     null,
+                    It.IsAny<int>(),
                     null),
                 Times.Exactly(2));
 
@@ -116,6 +117,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                     _log.Object,
                     TimeSpan.FromMinutes(1),
                     null,
+                    It.IsAny<int>(),
                     null),
                 Times.Once);
 

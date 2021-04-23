@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             var totalSize = Directory.GetFiles(appBundleInformation.LaunchAppPath, "*", SearchOption.AllDirectories).Select((v) => new FileInfo(v).Length).Sum();
             _mainLog.WriteLine($"Installing '{appBundleInformation.LaunchAppPath}' to '{device.Name}' ({totalSize / 1024.0 / 1024.0:N2} MB)");
 
-            return await _processManager.ExecuteCommandAsync(args, _mainLog, TimeSpan.FromMinutes(15), cancellationToken: cancellationToken);
+            return await _processManager.ExecuteCommandAsync(args, _mainLog, TimeSpan.FromMinutes(15), verbosity: 2, cancellationToken: cancellationToken);
         }
     }
 }

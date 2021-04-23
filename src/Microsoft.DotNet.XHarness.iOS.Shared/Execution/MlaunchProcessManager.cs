@@ -19,7 +19,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         #region IMlaunchProcessManager implementation
         public string MlaunchPath { get; }
 
-        public MlaunchProcessManager(string? xcodeRoot = null, string mlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch") : base(xcodeRoot)
+        public MlaunchProcessManager(
+            string? xcodeRoot = null,
+            string mlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch")
+            : base(xcodeRoot)
         {
             MlaunchPath = mlaunchPath;
         }
@@ -29,10 +32,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             ILog log,
             TimeSpan timeout,
             Dictionary<string, string>? environmentVariables = null,
+            int verbosity = 5,
             CancellationToken? cancellationToken = null)
         {
             using var p = new Process();
-            return await RunAsync(p, args, log, log, log, timeout, environmentVariables, cancellationToken);
+            return await RunAsync(p, args, log, log, log, timeout, environmentVariables, verbosity, cancellationToken);
         }
 
         public async Task<ProcessExecutionResult> ExecuteCommandAsync(
@@ -42,10 +46,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             ILog stderr,
             TimeSpan timeout,
             Dictionary<string, string>? environmentVariables = null,
+            int verbosity = 5,
             CancellationToken? cancellationToken = null)
         {
             using var p = new Process();
-            return await RunAsync(p, args, log, stdout, stderr, timeout, environmentVariables, cancellationToken);
+            return await RunAsync(p, args, log, stdout, stderr, timeout, environmentVariables, verbosity, cancellationToken);
         }
 
         public Task<ProcessExecutionResult> RunAsync(
@@ -54,19 +59,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             ILog log,
             TimeSpan? timeout = null,
             Dictionary<string, string>? environmentVariables = null,
+            int verbosity = 5,
             CancellationToken? cancellationToken = null,
-            bool? diagnostics = null)
-        {
-            if (!args.Any(a => a is SdkRootArgument))
-            {
-                args = new MlaunchArguments(args.Prepend(new SdkRootArgument(XcodeRoot)).ToArray());
-            }
+            bool? diagnostics = null) =>
 
-            process.StartInfo.FileName = MlaunchPath;
-            process.StartInfo.Arguments = args.AsCommandLine();
-
-            return RunAsync(process, log, log, log, timeout, environmentVariables, cancellationToken, diagnostics);
-        }
+            RunAsync(process, args, log, log, log, timeout, environmentVariables, verbosity, cancellationToken, diagnostics);
 
         public Task<ProcessExecutionResult> RunAsync(
             Process process,
@@ -76,6 +73,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
             ILog stderr,
             TimeSpan? timeout = null,
             Dictionary<string, string>? environmentVariables = null,
+            int verbosity = 5,
             CancellationToken? cancellationToken = null,
             bool? diagnostics = null)
         {
@@ -84,8 +82,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
                 args = new MlaunchArguments(args.Prepend(new SdkRootArgument(XcodeRoot)).ToArray());
             }
 
-            // Set maximum verbosity for mlaunch (adds several '-v' args, each increasing the verbosity)
-            for (var i = 0; i < 5; i++)
+            // Set verbosity for mlaunch (adds several '-v' args, each increasing the verbosity)
+            for (var i = 0; i < verbosity; i++)
             {
                 args.Add(new VerbosityArgument());
             }
