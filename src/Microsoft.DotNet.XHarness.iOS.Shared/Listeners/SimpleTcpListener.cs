@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -14,8 +15,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
     public class SimpleTcpListener : SimpleListener, ITunnelListener
     {
-        private const int TimeOutInit = 100;
-        private const int TimeOutIncrement = 250;
+        private readonly TimeSpan _retryPeriod = TimeSpan.FromMilliseconds(100);
+        private readonly TimeSpan _retryPeriodIncreased = TimeSpan.FromMilliseconds(250);
+        private readonly TimeSpan _increaseAfter = TimeSpan.FromSeconds(20);
+        private readonly TimeSpan _timeoutAfter = TimeSpan.FromMinutes(2);
 
         private readonly bool _autoExit;
         private readonly bool _useTcpTunnel = true;
@@ -118,18 +121,22 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             { // do nothing until the tunnel is ready
                 throw new InvalidOperationException("Tcp tunnel could not be initialized.");
             }
+
             bool processed;
             try
             {
-                int timeout = TimeOutInit;
-                var watch = new System.Diagnostics.Stopwatch();
-                watch.Start();
+                var timeout = _retryPeriod;
+                int logCounter = 0;
+                var watch = Stopwatch.StartNew();
+                const string address = "127.0.0.1";
+
                 while (true)
                 {
                     try
                     {
-                        _client = new TcpClient("localhost", Port);
-                        Log.WriteLine("Test log server listening on: {0}:{1}", Address, Port);
+                        _client = new TcpClient(address, Port);
+                        Log.WriteLine($"Test log server listening on: {address}:{Port}");
+
                         // let the device know we are ready!
                         var stream = _client.GetStream();
                         var ping = Encoding.UTF8.GetBytes("ping");
@@ -139,16 +146,24 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     }
                     catch (SocketException ex)
                     {
-                        if (timeout == TimeOutInit && watch.ElapsedMilliseconds > 20000)
+                        if (timeout == _retryPeriod && watch.Elapsed > _increaseAfter)
                         {
-                            timeout = TimeOutIncrement; // Switch to a 250ms timeout after 20 seconds
+                            // Switch to a 250 ms timeout after 20 seconds
+                            timeout = _retryPeriodIncreased;
                         }
-                        else if (watch.ElapsedMilliseconds > 120000)
+                        else if (watch.Elapsed > _timeoutAfter)
                         {
                             // Give up after 2 minutes.
                             throw ex;
                         }
-                        Log.WriteLine($"Could not connect to TCP tunnel. Retrying in {timeout} milliseconds.");
+
+                        if ((++logCounter) % 5 == 0)
+                        {
+                            Log.WriteLine(
+                                $"Could not connect to the TCP tunnel on {address}:{Port}. " +
+                                $"Retrying in {(int)timeout.TotalMilliseconds} ms periods...");
+                        }
+
                         Thread.Sleep(timeout);
                     }
                 }

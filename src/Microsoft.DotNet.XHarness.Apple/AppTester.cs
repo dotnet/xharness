@@ -571,7 +571,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             // Using other interfaces than the default loopback addresses will end up in the "local network access" dialog
             // This is a new privacy feature in iOS 14 and needs to the user to confirm a dialog before any local network connection
-            args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "::1,127.0.0.1"));
+            args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"));
             args.Add(new DisableMemoryLimitsArgument());
             args.Add(new DeviceNameArgument(device));
 
