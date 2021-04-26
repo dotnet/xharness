@@ -137,27 +137,30 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                         _client = new TcpClient(address, Port);
                         Log.WriteLine($"Test log server listening on: {address}:{Port}");
 
-                        // let the device know we are ready!
                         var stream = _client.GetStream();
+
+                        // Let the device know we are ready!
                         var ping = Encoding.UTF8.GetBytes("ping");
                         stream.Write(ping, 0, ping.Length);
+
                         break;
 
                     }
                     catch (SocketException ex)
                     {
-                        if (timeout == _retryPeriod && watch.Elapsed > _increaseAfter)
+                        // Give up after 2 minutes.
+                        if (watch.Elapsed > _timeoutAfter)
                         {
-                            // Switch to a 250 ms timeout after 20 seconds
-                            timeout = _retryPeriodIncreased;
-                        }
-                        else if (watch.Elapsed > _timeoutAfter)
-                        {
-                            // Give up after 2 minutes.
                             throw ex;
                         }
 
-                        if ((++logCounter) % 5 == 0)
+                        // Switch to a 250 ms timeout after 20 seconds
+                        if (timeout == _retryPeriod && watch.Elapsed > _increaseAfter)
+                        {
+                            timeout = _retryPeriodIncreased;
+                        }
+
+                        if ((++logCounter) % 10 == 0)
                         {
                             Log.WriteLine(
                                 $"Could not connect to the TCP tunnel on {address}:{Port}. " +
@@ -178,7 +181,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             {
                 if (!(e is SocketException se) || se.SocketErrorCode != SocketError.Interrupted)
                 {
-                    Log.WriteLine("[{0}] : {1}", DateTime.Now, e);
+                    Log.WriteLine($"Failed to read TCP data: {e}");
                 }
             }
             finally
