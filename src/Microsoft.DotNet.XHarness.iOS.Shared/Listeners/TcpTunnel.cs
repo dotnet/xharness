@@ -85,7 +85,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                         startedCompletionSource.TrySetResult(true);
                         simpleListener.TunnelHoleThrough.TrySetResult(true);
                     }
-                });
+                })
+                {
+                    Timestamp = false
+                };
                 // do not await since we are going to be running the process in parallel
                 _tcpTunnelExecutionTask = _processManager.ExecuteCommandAsync(tcpArgs, tunnelbackLog, timeout, cancellationToken: _cancellationToken.Token);
                 _tcpTunnelExecutionTask.ContinueWith(delegate (Task<ProcessExecutionResult> task)
