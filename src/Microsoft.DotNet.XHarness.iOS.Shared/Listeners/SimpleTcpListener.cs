@@ -151,8 +151,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                         // Give up after 2 minutes.
                         if (watch.Elapsed > _timeoutAfter)
                         {
-                            Log.WriteLine(
-                                $"TCP connection hasn't started in time ({})...");
+                            Log.WriteLine($"TCP connection hasn't started in time ({_timeoutAfter:hh\\:mm\\:ss}). Stopped listening.");
                             throw ex;
                         }
 
@@ -164,9 +163,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
                         if ((++logCounter) % 10 == 0)
                         {
-                            Log.WriteLine(
-                                $"Could not connect to the TCP tunnel on {address}:{Port}. " +
-                                $"Retrying in {(int)timeout.TotalMilliseconds} ms periods...");
+                            Log.WriteLine($"TCP tunnel not connected yet, retrying every {(int)timeout.TotalMilliseconds} ms...");
                         }
 
                         Thread.Sleep(timeout);
