@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
                 IFileBackedLog mainLog = Log.CreateReadableAggregatedLog(
                     logs.Create(logFileName, LogType.ExecutionLog.ToString(), true),
-                    new CallbackLog(message => logger.LogDebug(message.Trim())) { Timestamp = false });
+                    new CallbackLog(message => logger.LogDebug(message.Trim())));
 
                 var exitCodeForRun = await InvokeInternal(processManager, appBundleInformationParser, deviceFinder, logger, target, logs, mainLog, cts.Token);
                 if (exitCodeForRun != ExitCode.SUCCESS)

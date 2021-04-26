@@ -151,6 +151,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                         // Give up after 2 minutes.
                         if (watch.Elapsed > _timeoutAfter)
                         {
+                            Log.WriteLine(
+                                $"TCP connection hasn't started in time ({})...");
                             throw ex;
                         }
 
