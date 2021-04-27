@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.Android
         {
             { "architecture", "shell getprop ro.product.cpu.abi"},
             { "app", "shell pm list packages -3"}
-        }; 
+        };
 
 
         public AdbRunner(ILogger log, string adbExePath = "") : this(log, new AdbProcessManager(log), adbExePath) { }
@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.XHarness.Android
             if (!File.Exists(_absoluteAdbExePath))
             {
                 _log.LogError($"Unable to find adb.exe");
-                throw new FileNotFoundException($"Could not find adb.exe. Either set it in the environment via {AdbEnvironmentVariableName} or call with valid path (provided:  '{adbExePath}')");
+                throw new FileNotFoundException($"Could not find adb.exe. Either set it in the environment via {AdbEnvironmentVariableName} or call with valid path (provided:  '{adbExePath}')", adbExePath);
             }
             if (!_absoluteAdbExePath.Equals(adbExePath))
             {
@@ -209,7 +209,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             if (!File.Exists(apkPath))
             {
-                throw new FileNotFoundException($"Could not find {apkPath}");
+                throw new FileNotFoundException($"Could not find {apkPath}", apkPath);
             }
 
             var result = RunAdbCommand($"install \"{apkPath}\"");
@@ -471,7 +471,7 @@ namespace Microsoft.DotNet.XHarness.Android
             var result = allDevicesAndTheirProperties
                 .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split().Contains(apkRequiredProperty))
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value) as Dictionary<string, string>;
-            
+
             if (result.Count == 0)
             {
                 // In this case, the enumeration worked, we found one or more devices, but nothing matched the APK's architecture; fail out.
@@ -532,7 +532,7 @@ namespace Microsoft.DotNet.XHarness.Android
         {
             if (!File.Exists(_absoluteAdbExePath))
             {
-                throw new FileNotFoundException($"Provided path for adb.exe was not valid ('{_absoluteAdbExePath}')");
+                throw new FileNotFoundException($"Provided path for adb.exe was not valid ('{_absoluteAdbExePath}')", _absoluteAdbExePath);
             }
 
             return _processManager.Run(_absoluteAdbExePath, command, timeOut);
