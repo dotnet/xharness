@@ -77,6 +77,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 evt.WaitOne();
             }
 
+            if (result == null)
+            {
+                throw new InvalidOperationException("Couldn't connect to any of the hostnames.");
+            }
+
             return result;
         }
 
