@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>CS8002;</NoWarn>
-    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <!-- Disable the nullable warnings when compiling for .NET Standard 2.0 -->

@@ -8,7 +8,6 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>xharness</ToolCommandName>
     <RollForward>Major</RollForward>
-    <LangVersion>9.0</LangVersion>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>CS8002;</NoWarn>
 

@@ -4,7 +4,6 @@
     <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <Nullable>disable</Nullable>
-    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
