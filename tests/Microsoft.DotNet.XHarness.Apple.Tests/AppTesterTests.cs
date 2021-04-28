@@ -517,7 +517,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "-setenv=NUNIT_XML_VERSION=xUnit " +
             skippedTests +
             extraArgs +
-            "-setenv=NUNIT_HOSTNAME=::1,127.0.0.1 " +
+            "-setenv=NUNIT_HOSTNAME=127.0.0.1,::1 " +
             "--disable-memory-limits " +
             $"--devname {s_mockDevice.DeviceIdentifier} " +
             (useTunnel ? "-setenv=USE_TCP_TUNNEL=true " : null) +
