@@ -313,7 +313,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     await tunnel.Started;
                 }
 
-                _mainLog.WriteLine("Starting test run");
+                _mainLog.WriteLine("Starting the application");
 
                 var envVars = new Dictionary<string, string>();
                 AddExtraEnvVars(envVars, extraEnvVariables);
@@ -344,7 +344,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             // Upload the system log
             if (File.Exists(deviceSystemLog.FullPath))
             {
-                _mainLog.WriteLine("A capture of the device log is: {0}", deviceSystemLog.FullPath);
+                _mainLog.WriteLine("Device log captured in {0}", deviceSystemLog.FullPath);
             }
         }
 
