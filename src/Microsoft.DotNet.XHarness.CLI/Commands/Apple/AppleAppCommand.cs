@@ -56,6 +56,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 // Pipe the execution log to the debug output of XHarness effectively making "-v" turn this on
                 CallbackLog debugLog = new(message => logger.LogDebug(message.Trim()));
                 mainLog = Log.CreateReadableAggregatedLog(mainLog, debugLog);
+                mainLog.Timestamp = true;
 
                 var exitCodeForRun = await InvokeInternal(processManager, appBundleInformationParser, deviceFinder, logger, target, logs, mainLog, cts.Token);
                 if (exitCodeForRun != ExitCode.SUCCESS)

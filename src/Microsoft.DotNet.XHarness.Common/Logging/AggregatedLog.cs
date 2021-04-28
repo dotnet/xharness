@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
             public AggregatedLog(params ILog[] logs)
             {
                 _logs.AddRange(logs);
+                Timestamp = false;
             }
 
             protected override void WriteImpl(string value)
@@ -67,6 +68,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
                 _defaultLog = defaultLog ?? throw new ArgumentNullException(nameof(defaultLog));
                 // make sure that we also write in the default log
                 _logs.Add(defaultLog);
+                Timestamp = false;
             }
 
             public StreamReader GetReader() => _defaultLog.GetReader();
