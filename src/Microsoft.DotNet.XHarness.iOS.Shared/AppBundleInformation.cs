@@ -33,5 +33,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
             Extension = extension;
             BundleExecutable = bundleExecutable;
         }
+
+        public static AppBundleInformation FromBundleId(string bundleIdentifier) =>
+            new(bundleIdentifier, bundleIdentifier, string.Empty, string.Empty, false);
     }
 }

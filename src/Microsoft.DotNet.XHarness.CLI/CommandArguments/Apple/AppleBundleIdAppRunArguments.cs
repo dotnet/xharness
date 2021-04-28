@@ -8,7 +8,7 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal class AppleJustTestCommandArguments : AppleTestCommandArguments
+    internal abstract class AppleBundleIdAppRunArguments : AppleAppRunArguments
     {
         private string? _bundleIdentifier = null;
 

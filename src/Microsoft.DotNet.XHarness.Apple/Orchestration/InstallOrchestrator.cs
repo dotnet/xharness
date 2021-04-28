@@ -20,6 +20,10 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// </summary>
     public class InstallOrchestrator : BaseOrchestrator
     {
+        private readonly IAppBundleInformationParser _appBundleInformationParser;
+        private readonly ILogger _consoleLogger;
+        private readonly IFileBackedLog _mainLog;
+
         public InstallOrchestrator(
             IMlaunchProcessManager processManager,
             IAppBundleInformationParser appBundleInformationParser,
@@ -29,11 +33,14 @@ namespace Microsoft.DotNet.XHarness.Apple
             IFileBackedLog mainLog,
             IErrorKnowledgeBase errorKnowledgeBase,
             IHelpers helpers)
-            : base(processManager, appBundleInformationParser, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, helpers)
+            : base(processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, helpers)
         {
+            _appBundleInformationParser = appBundleInformationParser ?? throw new ArgumentNullException(nameof(appBundleInformationParser));
+            _consoleLogger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
+            _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
         }
 
-        public Task<ExitCode> OrchestrateInstall(
+        public async Task<ExitCode> OrchestrateInstall(
             TestTargetOs target,
             string? deviceName,
             string appPackagePath,
@@ -42,27 +49,21 @@ namespace Microsoft.DotNet.XHarness.Apple
             bool enableLldb,
             CancellationToken cancellationToken)
         {
+            _consoleLogger.LogInformation($"Getting app bundle information from '{appPackagePath}'");
+            var appBundleInfo = await _appBundleInformationParser.ParseFromAppBundle(appPackagePath, target.Platform, _mainLog, cancellationToken);
+
             Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo)
                 => throw new InvalidOperationException("install command not available on maccatalyst");
 
             Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice)
                 => Task.FromResult(ExitCode.SUCCESS); // no-op
 
-            return OrchestrateRun(
-                target,
-                deviceName,
-                appPackagePath,
-                resetSimulator,
-                enableLldb,
-                executeMacCatalystApp,
-                executeApp,
-                cancellationToken);
+            return await OrchestrateRun(target, deviceName, resetSimulator, enableLldb, appBundleInfo, executeMacCatalystApp, executeApp, cancellationToken);
         }
 
         protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
             => Task.CompletedTask; // no-op so that we don't remove the app after (reset will only clean it up before)
-
-        protected override Task UninstallApp(AppBundleInformation appBundleInfo, IDevice device, CancellationToken cancellationToken)
+        protected override Task UninstallApp(string bundleIdentifier, IDevice device, CancellationToken cancellationToken)
             => Task.CompletedTask; // no-op - we only want to install the app
     }
 }

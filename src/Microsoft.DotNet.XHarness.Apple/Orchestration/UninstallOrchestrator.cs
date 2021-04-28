@@ -22,21 +22,20 @@ namespace Microsoft.DotNet.XHarness.Apple
     {
         public UninstallOrchestrator(
             IMlaunchProcessManager processManager,
-            IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,
             IErrorKnowledgeBase errorKnowledgeBase,
             IHelpers helpers)
-            : base(processManager, appBundleInformationParser, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, helpers)
+            : base(processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, helpers)
         {
         }
 
         public Task<ExitCode> OrchestrateAppUninstall(
+            string bundleIdentifier,
             TestTargetOs target,
             string? deviceName,
-            string appPackagePath,
             TimeSpan timeout,
             bool resetSimulator,
             bool enableLldb,
@@ -51,9 +50,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             return OrchestrateRun(
                 target,
                 deviceName,
-                appPackagePath,
                 resetSimulator,
                 enableLldb,
+                AppBundleInformation.FromBundleId(bundleIdentifier),
                 executeMacCatalystApp,
                 executeApp,
                 cancellationToken);

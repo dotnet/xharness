@@ -23,14 +23,13 @@ namespace Microsoft.DotNet.XHarness.Apple
     {
         public JustRunOrchestrator(
             IMlaunchProcessManager processManager,
-            IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,
             IErrorKnowledgeBase errorKnowledgeBase,
             IHelpers helpers)
-            : base(processManager, appBundleInformationParser, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, helpers)
+            : base(processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, helpers)
         {
         }
 
@@ -40,7 +39,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected override Task<ExitCode> InstallApp(AppBundleInformation appBundleInfo, IDevice device, TestTargetOs target, CancellationToken cancellationToken)
             => Task.FromResult(ExitCode.SUCCESS); // no-op - we only want to run the app
 
-        protected override Task UninstallApp(AppBundleInformation appBundleInfo, IDevice device, CancellationToken cancellationToken)
+        protected override Task UninstallApp(string bundleIdentifier, IDevice device, CancellationToken cancellationToken)
             => Task.CompletedTask; // no-op - we only want to run the app
     }
 }

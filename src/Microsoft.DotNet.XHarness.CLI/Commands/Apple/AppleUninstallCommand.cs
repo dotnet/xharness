@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -50,7 +48,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var orchestrator = new UninstallOrchestrator(
                 processManager,
-                new FakeAppBundleInformationParser(args.BundleIdentifier),
                 deviceFinder,
                 new ConsoleLogger(logger),
                 logs,
@@ -59,43 +56,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 new Helpers());
 
             return orchestrator.OrchestrateAppUninstall(
+                args.BundleIdentifier,
                 target,
                 args.DeviceName,
-                args.AppPackagePath,
                 args.Timeout,
                 args.ResetSimulator,
                 args.EnableLldb,
                 cancellationToken);
-        }
-
-
-        private class FakeAppBundleInformationParser : IAppBundleInformationParser
-        {
-            private readonly string _bundleIdentifier;
-
-            public FakeAppBundleInformationParser(string bundleIdentifier)
-            {
-                _bundleIdentifier = bundleIdentifier ?? throw new ArgumentNullException(nameof(bundleIdentifier));
-            }
-
-            public Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default) =>
-                Task.FromResult(new AppBundleInformation(
-                    _bundleIdentifier,
-                    _bundleIdentifier,
-                    appPackagePath,
-                    appPackagePath,
-                    false));
-
-            public Task<AppBundleInformation> ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration)
-            {
-                var path = Path.GetDirectoryName(projectFilePath)!;
-                return Task.FromResult(new AppBundleInformation(
-                    _bundleIdentifier,
-                    _bundleIdentifier,
-                    path,
-                    path,
-                    false));
-            }
         }
     }
 }

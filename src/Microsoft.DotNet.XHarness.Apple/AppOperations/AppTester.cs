@@ -594,7 +594,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             else
             {
-                args.Add(new LaunchDeviceArgument(appInformation));
+                args.Add(new LaunchDeviceBundleIdArgument(appInformation));
             }
 
             if (isWatchTarget)
