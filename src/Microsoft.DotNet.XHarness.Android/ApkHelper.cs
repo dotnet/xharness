@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             if (!File.Exists(apkPath))
             {
-                throw new FileNotFoundException($"Invalid APK Path: '{apkPath}'");
+                throw new FileNotFoundException($"Invalid APK Path: '{apkPath}'", apkPath);
             }
             if (!Path.GetExtension(apkPath).Equals(".apk", StringComparison.OrdinalIgnoreCase))
             {

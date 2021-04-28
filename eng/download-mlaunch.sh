@@ -29,14 +29,15 @@ source "$script_root/common/tools.sh"
 
 copy_mlaunch () {
   # Copy mlaunch to the target folder
-  cp -Rv "$1" "$2"
+  cp -R "$1" "$2"
 
   # Clean what we don't need
   rm -rf "$2/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch.dSYM"
 
+  # If DEBUG, remove symbols
   if [ "$3" = true ]; then
-    echo "Removing debug symbols"
-    rm -v "$2"/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.pdb
+    echo "Removing mlaunch symbols"
+    rm "$2"/lib/mlaunch/mlaunch.app/Contents/MonoBundle/*.pdb
   fi
 }
 
@@ -89,6 +90,9 @@ tag_file_in_repo="$binaries_repo/$commit.tag"
 if [ -d "$binaries_repo" ]; then
     if [ -f "$tag_file_in_repo" ]; then
         copy_mlaunch "$binaries_repo/mlaunch" "$target_dir" $remove_symbols
+
+        # Remove previous tags
+        rm "$binaries_repo"/*.tag
 
         # Tag the version of mlaunch we have
         touch "$tag_file"

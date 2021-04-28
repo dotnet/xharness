@@ -128,7 +128,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 var timeout = _retryPeriod;
                 int logCounter = 0;
                 var watch = Stopwatch.StartNew();
-                const string address = "127.0.0.1";
+                const string address = "localhost";
 
                 while (true)
                 {
