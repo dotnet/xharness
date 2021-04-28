@@ -82,6 +82,9 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             _helpers
                 .SetupGet(x => x.Timestamp)
                 .Returns("mocked_timestamp");
+            _helpers
+                .Setup(x => x.GetLocalIpAddresses())
+                .Returns(new[] { IPAddress.Loopback, IPAddress.IPv6Loopback });
 
             Directory.CreateDirectory(s_outputPath);
         }
