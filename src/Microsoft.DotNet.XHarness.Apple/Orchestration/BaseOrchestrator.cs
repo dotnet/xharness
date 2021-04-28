@@ -84,18 +84,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                 }
             }
 
-            /*AppBundleInformation appBundleInfo;
-
-            try
-            {
-                appBundleInfo = await parseAppBundle(cancellationToken);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError($"Failed to get bundle information: {e.Message}");
-                return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
-            }*/
-
             ExitCode exitCode;
             IDevice device;
             IDevice? companionDevice;
