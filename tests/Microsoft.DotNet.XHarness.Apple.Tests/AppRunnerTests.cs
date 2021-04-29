@@ -212,7 +212,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "-setenv=appArg1=value1 " +
             "--disable-memory-limits " +
             $"--devname {s_mockDevice.DeviceIdentifier} " +
-            $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
+            $"--launchdevbundleid {AppBundleIdentifier} " +
             "--wait-for-exit";
 
         private string GetExpectedSimulatorMlaunchArgs() =>
