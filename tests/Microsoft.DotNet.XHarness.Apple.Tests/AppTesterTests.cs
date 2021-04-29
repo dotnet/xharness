@@ -521,7 +521,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "--disable-memory-limits " +
             $"--devname {s_mockDevice.DeviceIdentifier} " +
             (useTunnel ? "-setenv=USE_TCP_TUNNEL=true " : null) +
-            $"--launchdev {StringUtils.FormatArguments(s_appPath)} " +
+            $"--launchdevbundleid {AppBundleIdentifier} " +
             "--wait-for-exit";
 
         private string GetExpectedSimulatorMlaunchArgs() =>

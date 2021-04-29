@@ -15,13 +15,13 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal class AppleJustTestCommand : AppleAppCommand<AppleTestCommandArguments>
+    internal class AppleJustTestCommand : AppleAppCommand<AppleJustTestCommandArguments>
     {
         private const string CommandHelp = "Runs an already installed iOS/tvOS/watchOS/MacCatalyst test application containing a TestRunner in a target device/simulator.";
 
         protected override string CommandUsage { get; } = "apple just-test --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
-        protected override AppleTestCommandArguments AppleAppArguments { get; } = new();
+        protected override AppleJustTestCommandArguments AppleAppArguments { get; } = new();
 
         public AppleJustTestCommand() : base("just-test", false, CommandHelp)
         {
@@ -37,9 +37,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
+            var args = AppleAppArguments;
+
             var orchestrator = new JustTestOrchestrator(
                 processManager,
-                appBundleInformationParser,
                 deviceFinder,
                 new ConsoleLogger(logger),
                 logs,
@@ -47,12 +48,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 ErrorKnowledgeBase,
                 new Helpers());
 
-            var args = AppleAppArguments;
-
             return orchestrator.OrchestrateTest(
+                AppBundleInformation.FromBundleId(args.BundleIdentifier),
                 target,
                 args.DeviceName,
-                args.AppPackagePath,
                 args.Timeout,
                 args.LaunchTimeout,
                 args.CommunicationChannel,

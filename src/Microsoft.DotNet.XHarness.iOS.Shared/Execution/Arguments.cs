@@ -73,11 +73,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
     /// </summary>
     public sealed class DeviceNameArgument : SingleValueArgument
     {
-        public DeviceNameArgument(string deviceName) : base("devname", deviceName, false)
+        private const string ArgName = "devname";
+
+        public DeviceNameArgument(string deviceName) : base(ArgName, deviceName, false)
         {
         }
 
-        public DeviceNameArgument(IDevice device) : base("devname", device.UDID, false)
+        public DeviceNameArgument(IDevice device) : base(ArgName, device.UDID, false)
         {
         }
     }
@@ -261,11 +263,29 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
     /// </summary>
     public sealed class LaunchDeviceArgument : SingleValueArgument
     {
-        public LaunchDeviceArgument(string launchAppPath) : base("launchdev", launchAppPath, false)
+        private const string ArgName = "launchdev";
+
+        public LaunchDeviceArgument(string launchAppPath) : base(ArgName, launchAppPath, false)
         {
         }
 
-        public LaunchDeviceArgument(AppBundleInformation appInfo) : base("launchdev", appInfo.AppPath, false)
+        public LaunchDeviceArgument(AppBundleInformation appInfo) : base(ArgName, appInfo.AppPath, false)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Launch an app that is installed on device, 
+    /// </summary>
+    public sealed class LaunchDeviceBundleIdArgument : SingleValueArgument
+    {
+        private const string ArgName = "launchdevbundleid";
+
+        public LaunchDeviceBundleIdArgument(string bundleId) : base(ArgName, bundleId, false)
+        {
+        }
+
+        public LaunchDeviceBundleIdArgument(AppBundleInformation appInfo) : base(ArgName, appInfo.BundleIdentifier, false)
         {
         }
     }
@@ -275,11 +295,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
     /// </summary>
     public sealed class LaunchSimulatorArgument : SingleValueArgument
     {
-        public LaunchSimulatorArgument(string launchAppPath) : base("launchsim", launchAppPath, false)
+        private const string ArgName = "launchsim";
+
+        public LaunchSimulatorArgument(string launchAppPath) : base(ArgName, launchAppPath, false)
         {
         }
 
-        public LaunchSimulatorArgument(AppBundleInformation appInfo) : base("launchsim", appInfo.AppPath, false)
+        public LaunchSimulatorArgument(AppBundleInformation appInfo) : base(ArgName, appInfo.AppPath, false)
         {
         }
     }
