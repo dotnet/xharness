@@ -8,34 +8,142 @@
 // https://github.com/spouliot/Touch.Unit/blob/master/NUnitLite/TouchRunner/TcpTextWriter.cs
 
 using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
     internal class TcpTextWriter : TextWriter
     {
-        private readonly TcpClient _client;
-        private readonly TcpListener _server;
-        private readonly StreamWriter _writer;
+        private static readonly TimeSpan s_connectionAwaitPeriod = TimeSpan.FromMinutes(1);
+
+        private TcpClient? _client = null;
+        private StreamWriter? _writer = null;
+
+        public void InitializeTunnelConnection(int port)
+        {
+            if ((port < 0) || (port > ushort.MaxValue))
+            {
+                throw new ArgumentOutOfRangeException(nameof(port), $"Port must be between 0 and {ushort.MaxValue}");
+            }
+
+            var server = new TcpListener(IPAddress.Any, port);
+            server.Server.ReceiveTimeout = 5000;
+            server.Start();
+            var watch = Stopwatch.StartNew();
+
+            while (!server.Pending())
+            {
+                if (watch.Elapsed > s_connectionAwaitPeriod)
+                {
+                    throw new Exception($"No inbound TCP connection after {(int) s_connectionAwaitPeriod.TotalSeconds} seconds");
+                }
+
+                Thread.Sleep(100);
+            }
+
+            _client = server.AcceptTcpClient();
+
+            // Block until we have the ping from the client side
+            byte[] buffer = new byte[16 * 1024];
+            var stream = _client.GetStream();
+            while ((_ = stream.Read(buffer, 0, buffer.Length)) != 0)
+            {
+                var message = Encoding.UTF8.GetString(buffer);
+                if (message.Contains("ping"))
+                {
+                    break;
+                }
+            }
+
+            _writer = new StreamWriter(_client.GetStream());
+        }
+
+        public void InitializeDirectConnection(string hostName, int port)
+        {
+            if (hostName is null)
+            {
+                throw new ArgumentNullException(nameof(hostName));
+            }
+
+            if ((port < 0) || (port > ushort.MaxValue))
+            {
+                throw new ArgumentOutOfRangeException(nameof(port), $"Port must be between 0 and {ushort.MaxValue}");
+            }
+
+            hostName = SelectHostName(hostName.Split(','), port);
+
+            _client = new TcpClient(hostName, port);
+            _writer = new StreamWriter(_client.GetStream());
+        }
+
+        // we override everything that StreamWriter overrides from TextWriter
+
+        public override Encoding Encoding => Encoding.UTF8;
+
+        public override void Close()
+        {
+            ValidateWriter();
+            _writer.Close();
+        }
+
+        protected override void Dispose(bool disposing) => _writer?.Dispose();
+
+        public override void Flush()
+        {
+            ValidateWriter();
+            _writer.Flush();
+        }
+
+        // minimum to override - see http://msdn.microsoft.com/en-us/library/system.io.textwriter.aspx
+        public override void Write(char value)
+        {
+            ValidateWriter();
+            _writer.Write(value);
+        }
+
+        public override void Write(char[]? buffer)
+        {
+            ValidateWriter();
+            _writer.Write(buffer);
+        }
+
+        public override void Write(char[] buffer, int index, int count)
+        {
+            ValidateWriter();
+            _writer.Write(buffer, index, count);
+        }
+
+        public override void Write(string? value)
+        {
+            ValidateWriter();
+            _writer.Write(value);
+        }
+
+        // special extra override to ensure we flush data regularly
+
+        public override void WriteLine()
+        {
+            ValidateWriter();
+            _writer.WriteLine();
+            _writer.Flush();
+        }
 
         private static string SelectHostName(string[] names, int port)
         {
-            if (names.Length == 0)
-            {
-                return null;
-            }
-
             if (names.Length == 1)
             {
                 return names[0];
             }
 
             object lock_obj = new object();
-            string result = null;
+            string? result = null;
             int failures = 0;
 
             using (var evt = new ManualResetEvent(false))
@@ -44,35 +152,35 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 {
                     var name = names[i];
                     ThreadPool.QueueUserWorkItem((v) =>
-                       {
-                           try
-                           {
-                               var client = new TcpClient(name, port);
-                               using (var writer = new StreamWriter(client.GetStream()))
-                               {
-                                   writer.WriteLine("ping");
-                               }
-                               lock (lock_obj)
-                               {
-                                   if (result == null)
-                                   {
-                                       result = name;
-                                   }
-                               }
-                               evt.Set();
-                           }
-                           catch (Exception)
-                           {
-                               lock (lock_obj)
-                               {
-                                   failures++;
-                                   if (failures == names.Length)
-                                   {
-                                       evt.Set();
-                                   }
-                               }
-                           }
-                       });
+                    {
+                        try
+                        {
+                            var client = new TcpClient(name, port);
+                            using (var writer = new StreamWriter(client.GetStream()))
+                            {
+                                writer.WriteLine("ping");
+                            }
+                            lock (lock_obj)
+                            {
+                                if (result == null)
+                                {
+                                    result = name;
+                                }
+                            }
+                            evt.Set();
+                        }
+                        catch (Exception)
+                        {
+                            lock (lock_obj)
+                            {
+                                failures++;
+                                if (failures == names.Length)
+                                {
+                                    evt.Set();
+                                }
+                            }
+                        }
+                    });
                 }
 
                 // Wait for 1 success or all failures
@@ -87,82 +195,13 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             return result;
         }
 
-        public TcpTextWriter(string hostName, int port, bool isTunnel = false)
+        [MemberNotNull(nameof(_writer))]
+        private void ValidateWriter()
         {
-            if ((port < 0) || (port > ushort.MaxValue))
+            if (_writer == null)
             {
-                throw new ArgumentOutOfRangeException(nameof(port), $"Port must be between 0 and {ushort.MaxValue}");
+                throw new InvalidOperationException("Please initialize the writer before usage by calling one of the Initialize*() methods.");
             }
-
-            if (!isTunnel && hostName == null)
-            {
-                throw new ArgumentNullException(nameof(hostName));
-            }
-
-            if (!isTunnel)
-            {
-                HostName = SelectHostName(hostName.Split(','), port);
-            }
-
-            Port = port;
-
-            if (isTunnel)
-            {
-                _server = new TcpListener(IPAddress.Any, Port);
-                _server.Server.ReceiveTimeout = 5000;
-                _server.Start();
-
-                _client = _server.AcceptTcpClient();
-
-                // Block until we have the ping from the client side
-                byte[] buffer = new byte[16 * 1024];
-                var stream = _client.GetStream();
-                while ((_ = stream.Read(buffer, 0, buffer.Length)) != 0)
-                {
-                    var message = Encoding.UTF8.GetString(buffer);
-                    if (message.Contains("ping"))
-                    {
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                _client = new TcpClient(HostName, port);
-            }
-
-            _writer = new StreamWriter(_client.GetStream());
-        }
-
-        public string HostName { get; private set; }
-
-        public int Port { get; private set; }
-
-        // we override everything that StreamWriter overrides from TextWriter
-
-        public override System.Text.Encoding Encoding => Encoding.UTF8;
-
-        public override void Close() => _writer.Close();
-
-        protected override void Dispose(bool disposing) => _writer.Dispose();
-
-        public override void Flush() => _writer.Flush();
-
-        // minimum to override - see http://msdn.microsoft.com/en-us/library/system.io.textwriter.aspx
-        public override void Write(char value) => _writer.Write(value);
-
-        public override void Write(char[] buffer) => _writer.Write(buffer);
-
-        public override void Write(char[] buffer, int index, int count) => _writer.Write(buffer, index, count);
-
-        public override void Write(string value) => _writer.Write(value);
-
-        // special extra override to ensure we flush data regularly
-
-        public override void WriteLine()
-        {
-            _writer.WriteLine();
-            _writer.Flush();
         }
     }
 }
