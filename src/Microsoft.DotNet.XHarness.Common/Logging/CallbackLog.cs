@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
             : base("Callback log")
         {
             _onWrite = onWrite;
+            Timestamp = false;
         }
 
         public override void Dispose()

@@ -51,10 +51,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
                 // Create main log file for the run
                 string logFileName = $"{Name}-{target.AsString()}{(AppleAppArguments.DeviceName != null ? "-" + AppleAppArguments.DeviceName : null)}.log";
+                IFileBackedLog mainLog = logs.Create(logFileName, LogType.ExecutionLog.ToString(), timestamp: true);
 
-                IFileBackedLog mainLog = Log.CreateReadableAggregatedLog(
-                    logs.Create(logFileName, LogType.ExecutionLog.ToString(), true),
-                    new CallbackLog(message => logger.LogDebug(message.Trim())) { Timestamp = false });
+                // Pipe the execution log to the debug output of XHarness effectively making "-v" turn this on
+                CallbackLog debugLog = new(message => logger.LogDebug(message.Trim()));
+                mainLog = Log.CreateReadableAggregatedLog(mainLog, debugLog);
+                mainLog.Timestamp = true;
 
                 var exitCodeForRun = await InvokeInternal(processManager, appBundleInformationParser, deviceFinder, logger, target, logs, mainLog, cts.Token);
                 if (exitCodeForRun != ExitCode.SUCCESS)

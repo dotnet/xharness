@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             {
                 try
                 {
-                    writer = new TcpTextWriter(options.HostName, options.HostPort);
+                    writer = new TcpTextWriter(options.HostName, options.HostPort, options.UseTunnel);
                 }
                 catch (Exception ex)
                 {

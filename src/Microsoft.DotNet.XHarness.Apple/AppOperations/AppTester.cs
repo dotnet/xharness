@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             var runMode = target.Platform.ToRunMode();
             var isSimulator = target.Platform.IsSimulator();
 
-            var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
+            var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
 
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 runMode,
@@ -294,6 +294,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             CancellationToken cancellationToken)
         {
             var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
+            deviceSystemLog.Timestamp = false;
+
             var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.Name);
             deviceLogCapturer.StartCapture();
 
@@ -311,7 +313,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     await tunnel.Started;
                 }
 
-                _mainLog.WriteLine("Starting test run");
+                _mainLog.WriteLine("Starting the application");
 
                 var envVars = new Dictionary<string, string>();
                 AddExtraEnvVars(envVars, extraEnvVariables);
@@ -342,7 +344,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             // Upload the system log
             if (File.Exists(deviceSystemLog.FullPath))
             {
-                _mainLog.WriteLine("A capture of the device log is: {0}", deviceSystemLog.FullPath);
+                _mainLog.WriteLine("Device log captured in {0}", deviceSystemLog.FullPath);
             }
         }
 
@@ -569,9 +571,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                 extraAppArguments,
                 extraEnvVariables);
 
-            // Using other interfaces than the default loopback addresses will end up in the "local network access" dialog
-            // This is a new privacy feature in iOS 14 and needs to the user to confirm a dialog before any local network connection
-            args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "::1,127.0.0.1"));
+            var ips = string.Join(",", _helpers.GetLocalIpAddresses().Select(ip => ip.ToString()));
+
+            args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, ips));
             args.Add(new DisableMemoryLimitsArgument());
             args.Add(new DeviceNameArgument(device));
 

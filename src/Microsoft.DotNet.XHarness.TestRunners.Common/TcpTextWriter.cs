@@ -9,6 +9,7 @@
 
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -18,6 +19,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
     internal class TcpTextWriter : TextWriter
     {
         private readonly TcpClient _client;
+        private readonly TcpListener _server;
         private readonly StreamWriter _writer;
 
         private static string SelectHostName(string[] names, int port)
@@ -85,22 +87,50 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             return result;
         }
 
-        public TcpTextWriter(string hostName, int port)
+        public TcpTextWriter(string hostName, int port, bool isTunnel = false)
         {
             if ((port < 0) || (port > ushort.MaxValue))
             {
                 throw new ArgumentOutOfRangeException(nameof(port), $"Port must be between 0 and {ushort.MaxValue}");
             }
 
-            if (hostName == null)
+            if (!isTunnel && hostName == null)
             {
                 throw new ArgumentNullException(nameof(hostName));
             }
 
-            HostName = SelectHostName(hostName.Split(','), port);
+            if (!isTunnel)
+            {
+                HostName = SelectHostName(hostName.Split(','), port);
+            }
+
             Port = port;
 
-            _client = new TcpClient(HostName, port);
+            if (isTunnel)
+            {
+                _server = new TcpListener(IPAddress.Any, Port);
+                _server.Server.ReceiveTimeout = 5000;
+                _server.Start();
+
+                _client = _server.AcceptTcpClient();
+
+                // Block until we have the ping from the client side
+                byte[] buffer = new byte[16 * 1024];
+                var stream = _client.GetStream();
+                while ((_ = stream.Read(buffer, 0, buffer.Length)) != 0)
+                {
+                    var message = Encoding.UTF8.GetString(buffer);
+                    if (message.Contains("ping"))
+                    {
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                _client = new TcpClient(HostName, port);
+            }
+
             _writer = new StreamWriter(_client.GetStream());
         }
 
