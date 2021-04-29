@@ -5,6 +5,8 @@
 using System.IO;
 using System.Xml;
 
+using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+
 #nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
 {
@@ -33,12 +35,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
         {
             writer.WriteStartElement("failure");
             writer.WriteStartElement("message");
-            writer.WriteCData(message);
+            writer.WriteCDataSafe(message);
             writer.WriteEndElement(); // message
             if (stderr != null)
             {
                 writer.WriteStartElement("stack-trace");
-                writer.WriteCData(stderr.ReadToEnd());
+                writer.WriteCDataSafe(stderr.ReadToEnd());
                 writer.WriteEndElement(); //stack trace
             }
             writer.WriteEndElement(); // failure

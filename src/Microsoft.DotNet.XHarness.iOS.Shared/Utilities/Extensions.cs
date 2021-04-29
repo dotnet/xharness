@@ -5,7 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 #nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
@@ -112,6 +114,21 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
         {
             var rv = System.Web.HttpUtility.HtmlEncode(inString);
             return rv.Replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;").Replace("\n", "<br/>\n");
+        }
+
+        // XmlWriter.WriteCData will throw for some characters. This method will catch that exception, and write a base64 encoded string instead (which should always be safe).
+        public static void WriteCDataSafe(this XmlWriter writer, string text)
+        {
+            try
+            {
+                writer.WriteCData(text);
+            }
+            catch (ArgumentException)
+            {
+                var utf8 = Encoding.UTF8.GetBytes(text);
+                var base64 = Convert.ToBase64String(utf8);
+                writer.WriteCData("Base64 encoded UTF8 string: " + base64);
+            }
         }
     }
 }
