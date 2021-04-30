@@ -147,31 +147,31 @@ stages:
   - template: eng/e2e-test.yml
     parameters:
       name: E2E_Android
-      displayName: Android E2E Tests
+      displayName: Android - Simulators
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.Helix.SDK.Tests.proj
 
   - template: eng/e2e-test.yml
     parameters:
       name: E2E_Android_Manual_Commands
-      displayName: Android E2E Tests - Manual Commands
+      displayName: Android - Manual Commands
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.CLI.Commands.Tests.proj
 
   - template: eng/e2e-test.yml
     parameters:
       name: E2E_Apple_Simulators
-      displayName: Apple E2E Simulator Tests
+      displayName: Apple - Simulators
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Tests.proj
 
   - template: eng/e2e-test.yml
     parameters:
       name: E2E_SimulatorInstaller
-      displayName: Apple E2E Tests - Simulator Commands
+      displayName: Apple - Simulator Commands
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/SimulatorInstaller.Tests.proj
 
   - template: eng/e2e-test.yml
     parameters:
       name: E2E_WASM
-      displayName: WASM E2E Tests
+      displayName: WASM
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/WASM/WASM.Helix.SDK.Tests.proj
 
 # NuGet publishing

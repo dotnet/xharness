@@ -24,7 +24,7 @@ stages:
           preSteps:
           - checkout: self
             clean: true
-          displayName: Submit Helix Job
+          displayName: E2E Tests
           steps:
           - task: DownloadPipelineArtifact@2
             inputs:
@@ -41,7 +41,7 @@ stages:
               --projects ${{ parameters.testProject }}
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/${{ parameters.name }}.binlog
               /p:RestoreUsingNuGetTargets=false
-            displayName: Run E2E Tests in Helix
+            displayName: Run tests in Helix
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
