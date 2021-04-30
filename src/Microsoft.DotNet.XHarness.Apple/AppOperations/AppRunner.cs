@@ -270,7 +270,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             return args;
         }
 
-        private static MlaunchArguments GetDeviceArguments(
+        private MlaunchArguments GetDeviceArguments(
             AppBundleInformation appInformation,
             IDevice device,
             bool isWatchTarget,
@@ -307,6 +307,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 args.Add(new WaitForExitArgument());
             }
+
+            string appOutputLog = _logs.CreateFile($"{appInformation.BundleIdentifier}-{_helpers.Timestamp}.log", LogType.ExecutionLog);
+            args.Add(new SetStdoutArgument(appOutputLog));
 
             return args;
         }
