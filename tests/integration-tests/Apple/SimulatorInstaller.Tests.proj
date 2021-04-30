@@ -1,55 +1,15 @@
 <Project DefaultTargets="Test">
-  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/>
-
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <!-- Workaround changes from newer MSBuild requiring additional properties, see https://github.com/dotnet/arcade/pull/5996 -->
-    <TargetFrameworkVersion>3.1</TargetFrameworkVersion>
-    <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
-    <HelixType>test/product/</HelixType>
-    <IncludeXHarnessCli>true</IncludeXHarnessCli>
-    <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-    <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
-    <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
-  </PropertyGroup>
-
-  <!-- For non-ci local runs -->
-  <PropertyGroup Condition=" '$(AGENT_JOBNAME)' == '' ">
-    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-dev</MicrosoftDotNetXHarnessCLIVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <XHarnessNupkgPath>$(ArtifactsShippingPackagesDir)\Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
-  </PropertyGroup>
+  <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>
+    <HelixTargetQueue Include="osx.1015.amd64.open"/>
+
     <HelixWorkItem Include="SimulatorInstaller.Tests">
       <PayloadDirectory>$(RepoRoot)\tests\integration-tests\Apple\helix-payloads</PayloadDirectory>
       <Command>./simulatorinstaller-integration-tests.sh</Command>
       <Timeout>00:05:00</Timeout>
     </HelixWorkItem>
   </ItemGroup>
-
-  <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="osx.1015.amd64"/>
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="osx.1015.amd64.open"/>
-  </ItemGroup>
-
-  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <IsExternal>true</IsExternal>
-    <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
-    <Creator Condition=" '$(Creator)' == '' ">anon</Creator>
-  </PropertyGroup>
-
-  <!-- Useless stuff to make Arcade SDK happy -->
-  <PropertyGroup>
-    <Language>msbuild</Language>
-  </PropertyGroup>
 
   <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
 </Project>
