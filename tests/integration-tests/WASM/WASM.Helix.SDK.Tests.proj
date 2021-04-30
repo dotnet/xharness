@@ -1,44 +1,12 @@
 <Project DefaultTargets="Test">
-  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/>
-
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <!-- Workaround changes from newer MSBuild requiring additional properties, see https://github.com/dotnet/arcade/pull/5996 -->
-    <TargetFrameworkVersion>3.1</TargetFrameworkVersion>
-    <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
-    <HelixType>test/product/</HelixType>
-    <IncludeXHarnessCli>true</IncludeXHarnessCli>
-    <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-    <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
-    <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
-    <!-- Pick up the nupkg from this repo for testing purposes -->
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
-    <TestPayloadUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/wasm/System.Reflection.Extensions.Tests.zip</TestPayloadUrl>
-  </PropertyGroup>
-
-  <!-- For non-ci local runs -->
-  <PropertyGroup Condition=" '$(AGENT_JOBNAME)' == '' ">
-    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-dev</MicrosoftDotNetXHarnessCLIVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <XHarnessNupkgPath>$(ArtifactsShippingPackagesDir)/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
-  </PropertyGroup>
+  <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>
     <HelixTargetQueue Include="ubuntu.2004.amd64.open"/>
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <IsExternal>true</IsExternal>
-    <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
-    <Creator Condition=" '$(Creator)' == '' ">anon</Creator>
-  </PropertyGroup>
-
-  <!-- Useless stuff to make Arcade SDK happy -->
   <PropertyGroup>
-    <Language>msbuild</Language>
+    <TestPayloadUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/wasm/System.Reflection.Extensions.Tests.zip</TestPayloadUrl>
   </PropertyGroup>
 
   <Target Name="TestWasm" BeforeTargets="CoreTest">

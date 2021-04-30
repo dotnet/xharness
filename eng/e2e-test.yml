@@ -1,0 +1,47 @@
+parameters:
+  # This template tests a given .proj file using the Helix SDK
+  name: ''
+  displayName: ''
+  testProject: ''
+
+stages:
+  - stage: ${{ parameters.name }}
+    displayName: E2E ${{ parameters.displayName }}
+    dependsOn: Build_OSX
+    jobs:
+    - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        workspace:
+          clean: all
+        jobs:
+        - job: Linux
+          pool:
+            vmimage: ubuntu-latest
+          strategy:
+            matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+          preSteps:
+          - checkout: self
+            clean: true
+          displayName: Helix Tests
+          steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              source: current
+              artifact: Microsoft.DotNet.XHarness.CLI.Debug
+              path: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/
+
+          - script: eng/common/build.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              --ci
+              --restore
+              --test
+              --projects ${{ parameters.testProject }}
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/${{ parameters.name }}.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: Run tests in Helix
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
