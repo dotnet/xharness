@@ -25,11 +25,15 @@
     <ItemGroup>
       <HelixWorkItem Include="$(TestAppBundleName)">
         <Command>
-          set -ex deviceId=`dotnet exec "$XHARNESS_CLI_PATH" apple device ios-device`
+          set -ex
+          deviceId=`dotnet exec "$XHARNESS_CLI_PATH" apple device ios-device`
           dotnet exec "$XHARNESS_CLI_PATH" apple install -t=ios-device --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="$HELIX_WORKITEM_PAYLOAD/$(TestAppBundleName).app" -v
-          set +e result=0
-          dotnet exec "$XHARNESS_CLI_PATH" apple just-run -t=ios-device --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(TestAppBundleName)" -v --expected-exit-code=200 ((result|=$?))
-          dotnet exec "$XHARNESS_CLI_PATH" apple uninstall -t=ios-device --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(TestAppBundleName)" -v ((result|=$?))
+          set +e
+          result=0
+          dotnet exec "$XHARNESS_CLI_PATH" apple just-run -t=ios-device --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(TestAppBundleName)" -v --expected-exit-code=200
+          ((result|=$?))
+          dotnet exec "$XHARNESS_CLI_PATH" apple uninstall -t=ios-device --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(TestAppBundleName)" -v
+          ((result|=$?))
           exit $result
         </Command>
         <Timeout>00:10:00</Timeout>
