@@ -23,6 +23,7 @@
   <!-- Currently no closed queues for Android testing; runtime team does all testing in public -->
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
     <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
+    <HelixTargetQueue Include="windows.10.amd64.android.open"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
