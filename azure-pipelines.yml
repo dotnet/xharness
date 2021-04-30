@@ -164,6 +164,12 @@ stages:
 
   - template: eng/e2e-test.yml
     parameters:
+      name: E2E_Apple_Devices
+      displayName: Apple - Devices
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Tests.proj
+
+  - template: eng/e2e-test.yml
+    parameters:
       name: E2E_SimulatorInstaller
       displayName: Apple - Simulator Commands
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/SimulatorInstaller.Tests.proj

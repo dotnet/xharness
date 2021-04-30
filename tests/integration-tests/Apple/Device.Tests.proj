@@ -4,6 +4,11 @@
   <ItemGroup>
     <HelixTargetQueue Include="osx.1015.amd64.iphone.open"/>
 
+    <!-- apple test / ios-device -->
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+      <AdditionalProperties>TestTarget=ios-device;TestAppBundleName=System.Buffers.Tests.app</AdditionalProperties>
+    </XHarnessAppleProject>
+
     <!-- apple run / ios-device -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
       <AdditionalProperties>TestTarget=ios-device;TestAppBundleName=HelloiOS.app;IncludesTestRunner=false;ExpectedExitCode=200</AdditionalProperties>
