@@ -24,7 +24,7 @@ stages:
           preSteps:
           - checkout: self
             clean: true
-          displayName: E2E Tests
+          displayName: Helix Tests
           steps:
           - task: DownloadPipelineArtifact@2
             inputs:
