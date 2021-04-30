@@ -9,7 +9,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
@@ -213,7 +212,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "--disable-memory-limits " +
             $"--devname {s_mockDevice.DeviceIdentifier} " +
             $"--launchdevbundleid {AppBundleIdentifier} " +
-            "--wait-for-exit";
+            "--wait-for-exit " +
+            $"--stdout=./{AppBundleIdentifier}-mocked_timestamp.log";
 
         private string GetExpectedSimulatorMlaunchArgs() =>
             "-argument=--foo=bar " +

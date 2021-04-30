@@ -608,6 +608,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                 args.Add(new WaitForExitArgument());
             }
 
+            string appOutputLog = _logs.CreateFile($"{appInformation.BundleIdentifier}-{_helpers.Timestamp}.log", LogType.ExecutionLog);
+            args.Add(new SetStdoutArgument(appOutputLog));
+
             return args;
         }
     }

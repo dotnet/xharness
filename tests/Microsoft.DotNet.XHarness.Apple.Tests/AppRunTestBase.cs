@@ -19,8 +19,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 {
     public abstract class AppRunTestBase : IDisposable
     {
-        protected const string AppName = "net.dot.System.Text.Json.Tests";
-        protected const string AppBundleIdentifier = AppName + ".ID";
+        protected const string AppName = "System.Text.Json.Tests.app";
+        protected const string AppBundleIdentifier = "net.dot.System.Text.Json.Tests";
         protected const string SimulatorDeviceName = "Test iPhone simulator";
         protected const string DeviceName = "Test iPhone";
 
@@ -60,7 +60,12 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             _snapshotReporter = new Mock<ICrashSnapshotReporter>();
 
             _logs = new Mock<ILogs>();
-            _logs.SetupGet(x => x.Directory).Returns(Path.Combine(s_outputPath, "logs"));
+            _logs
+                .SetupGet(x => x.Directory)
+                .Returns(Path.Combine(s_outputPath, "logs"));
+            _logs
+                .Setup(x => x.CreateFile($"{AppBundleIdentifier}-mocked_timestamp.log", It.IsAny<LogType>()))
+                .Returns($"./{AppBundleIdentifier}-mocked_timestamp.log");
 
             var factory2 = new Mock<ICrashSnapshotReporterFactory>();
             factory2.SetReturnsDefault(_snapshotReporter.Object);
