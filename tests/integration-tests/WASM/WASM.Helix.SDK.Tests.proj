@@ -5,6 +5,10 @@
     <HelixTargetQueue Include="ubuntu.2004.amd64.open"/>
   </ItemGroup>
 
+  <PropertyGroup>
+    <TestPayloadUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/wasm/System.Reflection.Extensions.Tests.zip</TestPayloadUrl>
+  </PropertyGroup>
+
   <Target Name="TestWasm" BeforeTargets="CoreTest">
     <DownloadFile SourceUrl="$(TestPayloadUrl)" DestinationFolder="$(ArtifactsTmpDir)wasm" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="TestPayloadArchive" />
