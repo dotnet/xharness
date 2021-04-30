@@ -6,7 +6,7 @@ parameters:
 
 stages:
   - stage: ${{ parameters.name }}
-    displayName: ${{ parameters.displayName }}
+    displayName: E2E ${{ parameters.displayName }}
     dependsOn: Build_OSX
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
