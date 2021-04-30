@@ -151,13 +151,11 @@ stages:
         jobs:
         - job: Linux
           pool:
-            vmimage: $(imageName)
+            vmimage: ubuntu-latest
           strategy:
             matrix:
-              Linux:
-                imageName: 'ubuntu-latest'
-              Windows:
-                imageName: 'windows-latest'
+              Build_Debug:
+                _BuildConfig: Debug
           preSteps:
           - checkout: self
             clean: true
@@ -178,23 +176,7 @@ stages:
               --projects $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.Helix.SDK.Tests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Android.Helix.SDK.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
-            displayName: Run Helix Tests on Linux
-            condition: eq(variables['Agent.OS'], 'Linux')
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
-
-          - powershell: eng\common\build.ps1
-              --configuration $(_BuildConfig)
-              --prepareMachine
-              --ci
-              --restore
-              --test
-              --projects $(Build.SourcesDirectory)\tests\integration-tests\Android\Android.Helix.SDK.Tests.proj
-              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Android.Helix.SDK.Tests.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: Run Helix Tests on Windows (Physical Devices)
-            condition: eq(variables['Agent.OS'], 'Windows_NT')
+            displayName: Run Helix Tests
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
