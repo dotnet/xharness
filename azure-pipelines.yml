@@ -17,6 +17,8 @@ pr:
     - main
     - xcode/*
 
+# Build
+
 stages:
 - stage: Build_Windows_NT
   displayName: Build Windows
@@ -140,210 +142,39 @@ stages:
                 testRunTitle: XHarness unit tests - $(Agent.JobName)
               condition: succeededOrFailed()
 
-  - stage: Test_CLI_Package_In_Helix_Android
-    displayName: 'CLI Android Integration tests (Helix SDK)'
-    dependsOn: Build_OSX
-    jobs:
-    - template: /eng/common/templates/jobs/jobs.yml
-      parameters:
-        workspace:
-          clean: all
-        jobs:
-        - job: Linux
-          pool:
-            vmimage: ubuntu-latest
-          strategy:
-            matrix:
-              Build_Debug:
-                _BuildConfig: Debug
-          preSteps:
-          - checkout: self
-            clean: true
-          displayName: Submit Helix Job
-          steps:
-          - task: DownloadPipelineArtifact@2
-            inputs:
-              source: current
-              artifact: Microsoft.DotNet.XHarness.CLI.Debug
-              path: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/
+# E2E tests
 
-          - script: eng/common/build.sh
-              --configuration $(_BuildConfig)
-              --prepareMachine
-              --ci
-              --restore
-              --test
-              --projects $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.Helix.SDK.Tests.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Android.Helix.SDK.Tests.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: Run Helix Tests
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
+  - template: eng/e2e-test.yml
+    parameters:
+      name: E2E_Android
+      displayName: Android - Simulators
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.Helix.SDK.Tests.proj
 
-  - stage: Test_CLI_Manual_Commands_In_Helix_Android
-    displayName: 'CLI Android Manual Commands Integration tests (Helix SDK)'
-    dependsOn: Build_OSX
-    jobs:
-    - template: /eng/common/templates/jobs/jobs.yml
-      parameters:
-        workspace:
-          clean: all
-        jobs:
-        - job: Linux
-          pool:
-            vmimage: ubuntu-latest
-          strategy:
-            matrix:
-              Build_Debug:
-                _BuildConfig: Debug
-          preSteps:
-          - checkout: self
-            clean: true
-          displayName: Submit Helix Job
-          steps:
-          - task: DownloadPipelineArtifact@2
-            inputs:
-              source: current
-              artifact: Microsoft.DotNet.XHarness.CLI.Debug
-              path: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/
+  - template: eng/e2e-test.yml
+    parameters:
+      name: E2E_Android_Manual_Commands
+      displayName: Android - Manual Commands
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.CLI.Commands.Tests.proj
 
-          - script: eng/common/build.sh
-              --configuration $(_BuildConfig)
-              --prepareMachine
-              --ci
-              --restore
-              --test
-              --projects $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.CLI.Commands.Tests.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Android.CLI.Commands.Tests.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: Run Helix Tests
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
+  - template: eng/e2e-test.yml
+    parameters:
+      name: E2E_Apple_Simulators
+      displayName: Apple - Simulators
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Tests.proj
 
-  - stage: Test_CLI_Package_In_Helix_Apple
-    displayName: 'CLI Apple Integration tests (Helix SDK)'
-    dependsOn: Build_OSX
-    jobs:
-    - template: /eng/common/templates/jobs/jobs.yml
-      parameters:
-        workspace:
-          clean: all
-        jobs:
-        - job: OSX
-          pool:
-            name: Hosted macOS
-          strategy:
-            matrix:
-              Build_Debug:
-                _BuildConfig: Debug
-          preSteps:
-          - checkout: self
-            clean: true
-          displayName: Submit Helix Job
-          steps:
-          - task: DownloadPipelineArtifact@2
-            inputs:
-              source: current
-              artifact: Microsoft.DotNet.XHarness.CLI.Debug
-              path: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/
+  - template: eng/e2e-test.yml
+    parameters:
+      name: E2E_SimulatorInstaller
+      displayName: Apple - Simulator Commands
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/SimulatorInstaller.Tests.proj
 
-          - script: eng/common/build.sh
-              --configuration $(_BuildConfig)
-              --prepareMachine
-              --ci
-              --restore
-              --test
-              --projects $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Tests.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Apple.Simulator.Tests.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: Run Helix Tests
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
+  - template: eng/e2e-test.yml
+    parameters:
+      name: E2E_WASM
+      displayName: WASM
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/WASM/WASM.Helix.SDK.Tests.proj
 
-  - stage: Test_CLI_Package_In_Helix_WASM
-    displayName: 'CLI WASM Integration tests (Helix SDK)'
-    dependsOn: Build_OSX
-    jobs:
-    - template: /eng/common/templates/jobs/jobs.yml
-      parameters:
-        workspace:
-          clean: all
-        jobs:
-        - job: OSX
-          pool:
-            name: Hosted macOS
-          strategy:
-            matrix:
-              Build_Debug:
-                _BuildConfig: Debug
-          preSteps:
-          - checkout: self
-            clean: true
-          displayName: Submit Helix Job
-          steps:
-          - task: DownloadPipelineArtifact@2
-            inputs:
-              source: current
-              artifact: Microsoft.DotNet.XHarness.CLI.Debug
-              path: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/
-
-          - script: eng/common/build.sh
-              --configuration $(_BuildConfig)
-              --prepareMachine
-              --ci
-              --restore
-              --test
-              --projects $(Build.SourcesDirectory)/tests/integration-tests/WASM/WASM.Helix.SDK.Tests.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/WASM.Helix.SDK.Tests.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: Run Helix Tests
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
-
-  - stage: Test_SimulatorInstaller
-    displayName: SimulatorInstaller Integration Tests
-    dependsOn: Build_OSX
-    jobs:
-    - template: /eng/common/templates/jobs/jobs.yml
-      parameters:
-        workspace:
-          clean: all
-        jobs:
-        - job: OSX
-          pool:
-            name: Hosted macOS
-          strategy:
-            matrix:
-              Build_Debug:
-                _BuildConfig: Debug
-          preSteps:
-          - checkout: self
-            clean: true
-          displayName: Submit Helix Job
-          steps:
-          - task: DownloadPipelineArtifact@2
-            inputs:
-              source: current
-              artifact: Microsoft.DotNet.XHarness.CLI.Debug
-              path: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/
-
-          - script: eng/common/build.sh
-              --configuration $(_BuildConfig)
-              --prepareMachine
-              --ci
-              --restore
-              --test
-              --projects $(Build.SourcesDirectory)/tests/integration-tests/Apple/SimulatorInstaller.Tests.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Apple.SimulatorInstaller.Tests.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: Run Helix Tests
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
+# NuGet publishing
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml

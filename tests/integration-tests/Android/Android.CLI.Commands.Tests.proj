@@ -1,49 +1,15 @@
 <Project DefaultTargets="Test">
-  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/>
+  <Import Project="../Helix.SDK.configuration.props"/>
 
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <!-- Workaround changes from newer MSBuild requiring additional properties, see https://github.com/dotnet/arcade/pull/5996 -->
-    <TargetFrameworkVersion>3.1</TargetFrameworkVersion>
-    <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
-    <HelixType>test/product/</HelixType>
-    <IncludeXHarnessCli>true</IncludeXHarnessCli>
-    <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-    <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
-    <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
-    <!-- Pick up the nupkg from this repo for testing purposes -->
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
-    <XHarnessNupkgPath>$(ArtifactsShippingPackagesDir)/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
-  </PropertyGroup>
-
-  <!-- For non-ci local runs -->
-  <PropertyGroup Condition=" '$(AGENT_JOBNAME)' == '' ">
-    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-dev</MicrosoftDotNetXHarnessCLIVersion>
-  </PropertyGroup>
-
-  <!-- Required: Configuration that is already needed for the Helix SDK -->
   <ItemGroup>
     <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
   </ItemGroup>
-
-  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <IsExternal>true</IsExternal>
-    <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
-    <Creator Condition=" '$(Creator)' == '' ">anon</Creator>
-  </PropertyGroup>
 
   <PropertyGroup>
     <XHarnessX86TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/x86/System.Numerics.Vectors.Tests-x86.zip</XHarnessX86TestApkUrl>
   </PropertyGroup>
 
-  <!-- Useless stuff to make Arcade SDK happy -->
-  <PropertyGroup>
-    <Language>msbuild</Language>
-  </PropertyGroup>
-
   <Target Name="TestAndroid" BeforeTargets="CoreTest">
-
     <DownloadFile SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)apk" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
