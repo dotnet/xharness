@@ -1,13 +1,33 @@
 #!/bin/bash
 
-### This script is a quick way to run the XHarness E2E tests
+### This script is a quick way to run the XHarness E2E tests.
+### These test are located in tests/integration-tests and require the Arcade and Helix SDK.
+### To run them, you need to invoke these through MSBuild which makes the process a bit cumbersome.
+### This script should make things easier.
+###
+### Usage: ./run-e2e-test.sh Apple/SimulatorInstaller.Tests.proj [--skip-build]
 
-set -ex
+set -e
 
 test_project="$1"
 
+COLOR_RED=$(tput setaf 1 2>/dev/null || true)
+COLOR_CYAN=$(tput setaf 6 2>/dev/null || true)
+COLOR_CLEAR=$(tput sgr0 2>/dev/null || true)
+COLOR_RESET=uniquesearchablestring
+FAILURE_PREFIX=
+if test -z "$COLOR_RED"; then FAILURE_PREFIX="** failure ** "; fi
+
+function fail () {
+  echo "$FAILURE_PREFIX${COLOR_RED}${1//${COLOR_RESET}/${COLOR_RED}}${COLOR_CLEAR}"
+}
+
+function highlight () {
+  echo "$FAILURE_PREFIX${COLOR_CYAN}${1//${COLOR_RESET}/${COLOR_CYAN}}${COLOR_CLEAR}"
+}
+
 if [ -z $test_project ] || [ "-h" == "$test_project" ] || [ "--help" == "$test_project" ]; then
-  echo "Usage: ./run-e2e-test.sh Apple/SimulatorInstaller.Tests.proj [--skip-build]"
+  fail "Usage: ./run-e2e-test.sh Apple/SimulatorInstaller.Tests.proj [--skip-build]"
   exit 2
 fi
 
@@ -30,7 +50,8 @@ if [ ! -f "$test_project" ]; then
 fi
 
 if [ ! -f "$test_project" ]; then
-  echo "$1 nor $test_project were found"
+  fail "File $1 not found"
+  fail "File $test_project not found"
   exit 1
 fi
 
@@ -50,7 +71,7 @@ while (($# > 0)); do
 done
 
 if [ "true" != "$skip_build" ]; then
-  echo "Building Microsoft.DotNet.XHarness.CLI.1.0.0-dev.nupkg"
+  highlight "> Building Microsoft.DotNet.XHarness.CLI.1.0.0-dev.nupkg"
   "$repo_root/build.sh" -build -pack --projects "$repo_root/src/Microsoft.DotNet.XHarness.CLI/Microsoft.DotNet.XHarness.CLI.csproj"
 fi
 
@@ -60,5 +81,5 @@ export BUILD_SOURCEBRANCH="master"
 export SYSTEM_TEAMPROJECT="dnceng"
 export SYSTEM_ACCESSTOKEN=""
 
-echo "Starting tests (logging to ./XHarness.binlog)"
+highlight "> Starting tests (logging to ./XHarness.binlog)"
 "$repo_root/build.sh" -configuration Debug -restore -test -projects "$test_project" /p:RestoreUsingNugetTargets=false /bl:./XHarness.binlog
