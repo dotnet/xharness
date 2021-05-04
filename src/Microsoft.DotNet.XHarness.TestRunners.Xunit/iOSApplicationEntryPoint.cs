@@ -22,18 +22,22 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public override async Task RunAsync()
         {
             var options = ApplicationOptions.Current;
-            TcpTextWriter writer = null;
-            if (!string.IsNullOrEmpty(options.HostName))
+            var writer = new TcpTextWriter();
+            try
             {
-                try
+                if (options.UseTunnel)
                 {
-                    writer = new TcpTextWriter(options.HostName, options.HostPort, options.UseTunnel);
+                    writer.InitializeTunnelConnection(options.HostPort);
                 }
-                catch (Exception ex)
+                else
                 {
-                    Console.WriteLine("Network error: Cannot connect to {0}:{1}: {2}. Continuing on console.", options.HostName, options.HostPort, ex);
-                    writer = null; // will default to the console
+                    writer.InitializeDirectConnection(options.HostName, options.HostPort);
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Cannot connect to {0}:{1}: {2}. Continuing on console.", options.HostName, options.HostPort, ex);
+                writer = null; // will default to the console
             }
 
             // we generate the logs in two different ways depending if the generate xml flag was
