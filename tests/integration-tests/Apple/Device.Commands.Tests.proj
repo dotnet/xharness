@@ -12,7 +12,6 @@
   </PropertyGroup>
 
   <Target Name="TestApple" BeforeTargets="CoreTest">
-
     <DownloadFile SourceUrl="$(XHarnessTestAppBundleUrl)" DestinationFolder="$(TestAppDestinationDir)" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle" />
     </DownloadFile>
@@ -30,7 +29,7 @@
           dotnet exec "$XHARNESS_CLI_PATH" apple install -t=ios-device --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="$HELIX_WORKITEM_PAYLOAD/$(TestAppBundleName).app" -v
           set +e
           result=0
-          dotnet exec "$XHARNESS_CLI_PATH" apple just-run -t=ios-device --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(TestAppBundleName)" -v --expected-exit-code=200
+          dotnet exec "$XHARNESS_CLI_PATH" apple just-run -t=ios-device --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(TestAppBundleName)" --expected-exit-code=200 --launch-timeout=00:05:00 --timeout=00:08:00 -v
           ((result|=$?))
           dotnet exec "$XHARNESS_CLI_PATH" apple uninstall -t=ios-device --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(TestAppBundleName)" -v
           ((result|=$?))
