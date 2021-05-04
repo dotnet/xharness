@@ -162,11 +162,12 @@ stages:
       displayName: Apple - Simulators
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Tests.proj
 
-  - template: eng/e2e-test.yml
-    parameters:
-      name: E2E_Apple_Devices
-      displayName: Apple - Devices
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Tests.proj
+# TODO - Enable when running on devices is unblocked (#574)
+#   - template: eng/e2e-test.yml
+#     parameters:
+#       name: E2E_Apple_Devices
+#       displayName: Apple - Devices
+#       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Tests.proj
 
   - template: eng/e2e-test.yml
     parameters:
@@ -174,11 +175,12 @@ stages:
       displayName: Apple - Simulator Commands
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Tests.proj
 
-  - template: eng/e2e-test.yml
-    parameters:
-      name: E2E_Apple_Device_Commands
-      displayName: Apple - Device Commands
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Tests.proj
+# TODO - Enable when running on devices is unblocked (#574)
+#   - template: eng/e2e-test.yml
+#     parameters:
+#       name: E2E_Apple_Device_Commands
+#       displayName: Apple - Device Commands
+#       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Tests.proj
 
   - template: eng/e2e-test.yml
     parameters:
