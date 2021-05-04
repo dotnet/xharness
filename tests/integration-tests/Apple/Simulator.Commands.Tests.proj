@@ -1,5 +1,5 @@
 <Project DefaultTargets="Test">
-  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/>
+  <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>
     <HelixTargetQueue Include="osx.1015.amd64.open"/>
