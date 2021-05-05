@@ -1,8 +1,13 @@
 <Project DefaultTargets="Test">
-  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/>
+  <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>
     <HelixTargetQueue Include="osx.1015.amd64.iphone.open"/>
+
+    <!-- apple test / ios-device -->
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+      <AdditionalProperties>TestTarget=ios-device;TestAppBundleName=System.Buffers.Tests.app</AdditionalProperties>
+    </XHarnessAppleProject>
 
     <!-- apple run / ios-device -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">

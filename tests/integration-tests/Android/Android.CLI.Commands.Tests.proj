@@ -22,8 +22,13 @@
           set -ex;
           deviceId=`dotnet exec "$XHARNESS_CLI_PATH" android device --app="$HELIX_WORKITEM_PAYLOAD/System.Numerics.Vectors.Tests-x86.apk"`;
           dotnet exec $XHARNESS_CLI_PATH android install --device-id="$deviceId" --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" --package-name="net.dot.System.Numerics.Vectors.Tests" --app="$HELIX_WORKITEM_PAYLOAD/System.Numerics.Vectors.Tests-x86.apk";
+          set +e
+          result=0
           dotnet exec "$XHARNESS_CLI_PATH" android run --device-id="$deviceId" --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" --package-name="net.dot.System.Numerics.Vectors.Tests";
+          ((result|=$?))
           dotnet exec "$XHARNESS_CLI_PATH" android uninstall --device-id="$deviceId" --package-name="net.dot.System.Numerics.Vectors.Tests"
+          ((result|=$?))
+          exit $result
         </Command>
         <PayloadArchive>@(DownloadedApkFile)</PayloadArchive>
       </HelixWorkItem>
