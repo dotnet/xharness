@@ -2,7 +2,6 @@
   <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>
-    <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
     <HelixTargetQueue Include="windows.10.amd64.android.open"/>
     <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)Android.TestApks.proj" />
   </ItemGroup>

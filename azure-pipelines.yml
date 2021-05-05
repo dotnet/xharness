@@ -147,8 +147,14 @@ stages:
   - template: eng/e2e-test.yml
     parameters:
       name: E2E_Android
-      displayName: Android - Simulators
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.Helix.SDK.Tests.proj
+      displayName: Android - Simulators (Linux)
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.Helix.SDK.Tests.LinuxQueues.proj
+
+  - template: eng/e2e-test.yml
+    parameters:
+      name: E2E_Android
+      displayName: Android - Simulators (Windows)
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.Helix.SDK.Tests.WindowsQueues.proj
 
   - template: eng/e2e-test.yml
     parameters:
