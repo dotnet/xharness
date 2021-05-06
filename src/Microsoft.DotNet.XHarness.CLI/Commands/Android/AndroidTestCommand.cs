@@ -58,7 +58,7 @@ Arguments:
             // Assumption: APKs we test will only have one arch for now
             IEnumerable<string> apkRequiredArchitecture;
 
-            if (_arguments.DeviceArchitecture.Count() != 0)
+            if (_arguments.DeviceArchitecture.Any())
             {
                 apkRequiredArchitecture = _arguments.DeviceArchitecture;
                 logger.LogInformation($"Will attempt to run device on specified architecture: '" + string.Join(", ", apkRequiredArchitecture) + "'");

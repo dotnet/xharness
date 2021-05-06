@@ -469,13 +469,15 @@ namespace Microsoft.DotNet.XHarness.Android
             }
 
             var result = allDevicesAndTheirProperties
-                .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split().Intersect(apkRequiredProperty).Count() != 0)
+                .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split().Intersect(apkRequiredProperty).Any())
+
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value) as Dictionary<string, string>;
 
             if (result.Count == 0)
             {
                 // In this case, the enumeration worked, we found one or more devices, but nothing matched the APK's architecture; fail out.
-                logger.LogError($"No devices with {propertyName} '" + string.Join(", ", apkRequiredProperty) + "' was found among attached devices.");
+                logger.LogError($"No devices with {propertyName} '{ string.Join("', '", apkRequiredProperty) }' was found among attached devices.");
+
             }
 
             return result;

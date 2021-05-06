@@ -49,7 +49,7 @@ Arguments:
             var runner = new AdbRunner(logger);
             IEnumerable<string> apkRequiredArchitecture;
 
-            if (_arguments.DeviceArchitecture.Count() != 0)
+            if (_arguments.DeviceArchitecture.Any())
             {
                 apkRequiredArchitecture = _arguments.DeviceArchitecture;
             }

@@ -50,7 +50,7 @@ Arguments:
             if (string.IsNullOrEmpty(_arguments.DeviceId))
             {
                 // trying to choose suitable device
-                if (_arguments.DeviceArchitecture.Count() != 0)
+                if (_arguments.DeviceArchitecture.Any())
                 {
                     apkRequiredArchitecture = _arguments.DeviceArchitecture.ToList();
                     logger.LogInformation("Will attempt to run device on specified architecture: '" + string.Join(", ", apkRequiredArchitecture) + "'");
@@ -84,7 +84,7 @@ Arguments:
 
                     // if call via install command device id must be set
                     // otherwise - from test command - apkRequiredArchitecture was set by user or .apk architecture
-                    deviceId ??= apkRequiredArchitecture.Count() != 0
+                    deviceId ??= apkRequiredArchitecture.Any()
                         ? runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture")
                         : throw new ArgumentException("Required architecture not specified");
 
