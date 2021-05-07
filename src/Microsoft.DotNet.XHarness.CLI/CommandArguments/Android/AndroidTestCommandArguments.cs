@@ -140,6 +140,20 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         {
             base.Validate();
 
+            foreach (var archName in _deviceArchitecture ?? throw new ArgumentException("architecture cannot be empty"))
+            {
+                try
+                {
+                    AndroidArchitectureHelper.ParseAsAndroidArchitecture(archName);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    throw new ArgumentException(
+                        $"Failed to parse architecture '{archName}'. Available architectures are:" +
+                        GetAllowedValues<AndroidArchitecture>(t => t.AsString()));
+                }
+            }
+
             // Validate this field
             _ = PackageName;
             _ = AppPackagePath;

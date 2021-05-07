@@ -61,12 +61,12 @@ Arguments:
             if (_arguments.DeviceArchitecture.Any())
             {
                 apkRequiredArchitecture = _arguments.DeviceArchitecture;
-                logger.LogInformation($"Will attempt to run device on specified architecture: '" + string.Join(", ", apkRequiredArchitecture) + "'");
+                logger.LogInformation($"Will attempt to run device on specified architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
             }
             else
             {
                 apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath);
-                logger.LogInformation($"Will attempt to run device on detected architecture: '" + string.Join(", ", apkRequiredArchitecture) + "'");
+                logger.LogInformation($"Will attempt to run device on detected architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
             }
 
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.

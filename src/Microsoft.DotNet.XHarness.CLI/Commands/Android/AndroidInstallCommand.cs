@@ -53,12 +53,12 @@ Arguments:
                 if (_arguments.DeviceArchitecture.Any())
                 {
                     apkRequiredArchitecture = _arguments.DeviceArchitecture.ToList();
-                    logger.LogInformation("Will attempt to run device on specified architecture: '" + string.Join(", ", apkRequiredArchitecture) + "'");
+                    logger.LogInformation($"Will attempt to run device on specified architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
                 }
                 else
                 {
                     apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath);
-                    logger.LogInformation($"Will attempt to run device on detected architecture: '" + string.Join(", ", apkRequiredArchitecture) + "'");
+                    logger.LogInformation($"Will attempt to run device on detected architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
                 }
             }
 
@@ -90,7 +90,7 @@ Arguments:
 
                     if (deviceId == null)
                     {
-                        throw new Exception($"Failed to find compatible device: {apkRequiredArchitecture}");
+                        throw new Exception($"Failed to find compatible device: {string.Join(", ", apkRequiredArchitecture)}");
                     }
 
                     runner.SetActiveDevice(deviceId);
