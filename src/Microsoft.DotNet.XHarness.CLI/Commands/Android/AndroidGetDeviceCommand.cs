@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -46,15 +47,15 @@ Arguments:
             }
 
             var runner = new AdbRunner(logger);
-            string apkRequiredArchitecture;
+            IEnumerable<string> apkRequiredArchitecture;
 
-            if (!string.IsNullOrEmpty(_arguments.DeviceArchitecture))
+            if (_arguments.DeviceArchitecture.Any())
             {
                 apkRequiredArchitecture = _arguments.DeviceArchitecture;
             }
             else
             {
-                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath).First();
+                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath);
             }
 
             try

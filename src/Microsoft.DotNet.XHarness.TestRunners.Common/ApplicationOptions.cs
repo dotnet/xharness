@@ -49,6 +49,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 EnableXml = b;
             }
 
+            if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.UseTcpTunnel), out b))
+            {
+                UseTunnel = b;
+            }
+
             var xml_version = Environment.GetEnvironmentVariable(EnviromentVariables.XmlVersion);
             if (!string.IsNullOrEmpty(xml_version))
             {
@@ -76,6 +81,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 { "autostart", "If the app should automatically start running the tests", v => AutoStart = true },
                 { "hostname=", "Comma-separated list of host names or IP address to (try to) connect to", v => HostName = v },
                 { "hostport=", "HTTP/TCP port to connect to", v => HostPort = int.Parse (v) },
+                { "tcp-tunnel", "Use a TCP tunnel for communication between the app and XHarness", v => UseTunnel = true },
                 { "enablexml", "Enable the xml reported", v => EnableXml = false },
                 { "xmlversion", "The XML format", v => XmlVersion = (XmlResultJargon) Enum.Parse (typeof (XmlResultJargon), v, false) },
                 { "run-all-tests:", "Run all the tests found in the assembly, defaults to true", v =>
@@ -127,6 +133,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// Return the test results as xml.
         /// </summary>
         public bool EnableXml { get; private set; } = true; // always true by default
+
+        /// <summary>
+        /// Use a TCP tunnel for communication between the app and XHarness.
+        /// </summary>
+        public bool UseTunnel { get; private set; }
 
         /// <summary>
         /// The name of the host that has the device plugged.

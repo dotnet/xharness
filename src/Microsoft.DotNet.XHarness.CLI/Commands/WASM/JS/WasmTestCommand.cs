@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     engineBinary,
                     engineArgs,
                     log: new CallbackLog(m => logger.LogInformation(m)),
-                    stdoutLog: new CallbackLog(logProcessor.Invoke) { Timestamp = false /* we need the plain XML string so disable timestamp */ },
+                    stdoutLog: new CallbackLog(logProcessor.Invoke),
                     stderrLog: new CallbackLog(m => logger.LogError(m)),
                     _arguments.Timeout);
                 if (result.ExitCode != _arguments.ExpectedExitCode)

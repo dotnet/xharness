@@ -33,14 +33,13 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         public TestOrchestrator(
             IMlaunchProcessManager processManager,
-            IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,
             IErrorKnowledgeBase errorKnowledgeBase,
             IHelpers helpers)
-            : base(processManager, appBundleInformationParser, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, helpers)
+            : base(processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, helpers)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
@@ -50,9 +49,9 @@ namespace Microsoft.DotNet.XHarness.Apple
         }
 
         public Task<ExitCode> OrchestrateTest(
+            AppBundleInformation appBundleInformation,
             TestTargetOs target,
             string? deviceName,
-            string appPackagePath,
             TimeSpan timeout,
             TimeSpan launchTimeout,
             CommunicationChannel communicationChannel,
@@ -97,9 +96,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             return OrchestrateRun(
                 target,
                 deviceName,
-                appPackagePath,
                 resetSimulator,
                 enableLldb,
+                appBundleInformation,
                 executeMacCatalystApp,
                 executeApp,
                 cancellationToken);

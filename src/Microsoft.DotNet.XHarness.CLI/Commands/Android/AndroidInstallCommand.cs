@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -44,20 +45,20 @@ Arguments:
 
             var runner = new AdbRunner(logger);
 
-            string? apkRequiredArchitecture = null;
+            List<string> apkRequiredArchitecture = new();
 
             if (string.IsNullOrEmpty(_arguments.DeviceId))
             {
                 // trying to choose suitable device
-                if (!string.IsNullOrEmpty(_arguments.DeviceArchitecture))
+                if (_arguments.DeviceArchitecture.Any())
                 {
-                    apkRequiredArchitecture = _arguments.DeviceArchitecture;
-                    logger.LogInformation($"Will attempt to run device on specified architecture: '{apkRequiredArchitecture}'");
+                    apkRequiredArchitecture = _arguments.DeviceArchitecture.ToList();
+                    logger.LogInformation($"Will attempt to run device on specified architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
                 }
                 else
                 {
-                    apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath).First();
-                    logger.LogInformation($"Will attempt to run device on detected architecture: '{apkRequiredArchitecture}'");
+                    apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath);
+                    logger.LogInformation($"Will attempt to run device on detected architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
                 }
             }
 
@@ -72,7 +73,7 @@ Arguments:
                 runner: runner));
         }
 
-        public static ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, string? apkRequiredArchitecture, string? deviceId, TimeSpan bootTimeoutSeconds, AdbRunner runner)
+        public static ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, IEnumerable<string> apkRequiredArchitecture, string? deviceId, TimeSpan bootTimeoutSeconds, AdbRunner runner)
         {
             try
             {
@@ -83,13 +84,13 @@ Arguments:
 
                     // if call via install command device id must be set
                     // otherwise - from test command - apkRequiredArchitecture was set by user or .apk architecture
-                    deviceId ??= apkRequiredArchitecture != null
+                    deviceId ??= apkRequiredArchitecture.Any()
                         ? runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture")
                         : throw new ArgumentException("Required architecture not specified");
 
                     if (deviceId == null)
                     {
-                        throw new Exception($"Failed to find compatible device: {apkRequiredArchitecture}");
+                        throw new Exception($"Failed to find compatible device: {string.Join(", ", apkRequiredArchitecture)}");
                     }
 
                     runner.SetActiveDevice(deviceId);

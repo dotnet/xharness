@@ -38,9 +38,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             IFileBackedLog mainLog,
             CancellationToken cancellationToken)
         {
+            var args = AppleAppArguments;
+
             var orchestrator = new JustRunOrchestrator(
                 processManager,
-                appBundleInformationParser,
                 deviceFinder,
                 new ConsoleLogger(logger),
                 logs,
@@ -48,12 +49,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 ErrorKnowledgeBase,
                 new Helpers());
 
-            var args = AppleAppArguments;
-
             return orchestrator.OrchestrateRun(
+                AppBundleInformation.FromBundleId(args.BundleIdentifier),
                 target,
                 args.DeviceName,
-                args.AppPackagePath,
                 args.Timeout,
                 args.ExpectedExitCode,
                 args.ResetSimulator,

@@ -12,6 +12,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
@@ -31,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected override Task<ExitCode> InvokeInternal(
+        protected override async Task<ExitCode> InvokeInternal(
             IMlaunchProcessManager processManager,
             IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
@@ -43,7 +44,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
             var orchestrator = new TestOrchestrator(
                 processManager,
-                appBundleInformationParser,
                 deviceFinder,
                 new ConsoleLogger(logger),
                 logs,
@@ -53,10 +53,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var args = AppleAppArguments;
 
-            return orchestrator.OrchestrateTest(
+            logger.LogInformation($"Getting app bundle information from '{args.AppPackagePath}'");
+            var appBundleInfo = await appBundleInformationParser.ParseFromAppBundle(args.AppPackagePath, target.Platform, mainLog, cancellationToken);
+
+            return await orchestrator.OrchestrateTest(
+                appBundleInfo,
                 target,
                 args.DeviceName,
-                args.AppPackagePath,
                 args.Timeout,
                 args.LaunchTimeout,
                 args.CommunicationChannel,

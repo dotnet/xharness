@@ -68,20 +68,20 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 // launch app, but do not await for the result, since we need to create the tunnel
                 var tcpArgs = new MlaunchArguments
                 {
-                    new TcpTunnelArgument (simpleListener.Port),
-                    new DeviceNameArgument (device),
+                    new TcpTunnelArgument(simpleListener.Port),
+                    new DeviceNameArgument(device),
                 };
 
                 // use a cancelation token, later will be used to kill the tcp tunnel process
                 _cancellationToken = new CancellationTokenSource();
-                mainLog.WriteLine($"Starting tcp tunnel between mac port: {simpleListener.Port} and devie port {simpleListener.Port}.");
+                mainLog.WriteLine($"Starting TCP tunnel between mac port: {simpleListener.Port} and device port {simpleListener.Port}");
                 Port = simpleListener.Port;
                 var tunnelbackLog = new CallbackLog((line) =>
                 {
-                    mainLog.WriteLine($"The tcp tunnel output is {line}");
+                    mainLog.WriteLine($"[TCP tunnel] {line}");
                     if (line.Contains("Tcp tunnel started on device"))
                     {
-                        mainLog.Write($"Tcp tunnel created on port {simpleListener.Port}");
+                        mainLog.Write($"TCP tunnel created on port {simpleListener.Port}");
                         startedCompletionSource.TrySetResult(true);
                         simpleListener.TunnelHoleThrough.TrySetResult(true);
                     }

@@ -159,10 +159,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
             );
             writer.WriteStartElement("failure");
             writer.WriteStartElement("message");
-            writer.WriteCData(message);
+            writer.WriteCDataSafe(message);
             writer.WriteEndElement(); // message
             writer.WriteStartElement("stack-trace");
-            writer.WriteCData(stderr.ReadToEnd());
+            writer.WriteCDataSafe(stderr.ReadToEnd());
             writer.WriteEndElement(); // stack-trace
             writer.WriteEndElement(); // failure
             writer.WriteEndElement(); // test-case

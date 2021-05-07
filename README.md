@@ -172,6 +172,14 @@ export XHARNESS_MLAUNCH_PATH='[xharness root]/artifacts/obj/Microsoft.DotNet.XHa
 ```
 and you won't have to specify the `--mlaunch` argument.
 
+### Running E2E tests
+In case you want to test your changes in XHarness, you can run E2E tests located in `/tests/integration-tests`. These usually download some pre-built application and send it to our "test cloud" called Helix together with an XHarness version built from your sources. There, XHarness executes the app on a device/simulator.
+
+To run the E2E tests, you can find a script in `tools/` that will build everything and create the cloud job for you:
+```
+./tools/run-e2e-test.sh Apple/Simulator.Tests.proj
+```
+
 ## Contribution
 
 We welcome contributions! Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).

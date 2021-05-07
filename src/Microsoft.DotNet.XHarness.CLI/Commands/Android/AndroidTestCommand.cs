@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -55,17 +56,17 @@ Arguments:
             var runner = new AdbRunner(logger);
 
             // Assumption: APKs we test will only have one arch for now
-            string apkRequiredArchitecture;
+            IEnumerable<string> apkRequiredArchitecture;
 
-            if (!string.IsNullOrEmpty(_arguments.DeviceArchitecture))
+            if (_arguments.DeviceArchitecture.Any())
             {
                 apkRequiredArchitecture = _arguments.DeviceArchitecture;
-                logger.LogInformation($"Will attempt to run device on specified architecture: '{apkRequiredArchitecture}'");
+                logger.LogInformation($"Will attempt to run device on specified architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
             }
             else
             {
-                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath).First();
-                logger.LogInformation($"Will attempt to run device on detected architecture: '{apkRequiredArchitecture}'");
+                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath);
+                logger.LogInformation($"Will attempt to run device on detected architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
             }
 
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.

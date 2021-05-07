@@ -1,0 +1,45 @@
+<Project DefaultTargets="Test">
+  <Import Project="../Helix.SDK.configuration.props"/>
+
+  <ItemGroup>
+    <HelixTargetQueue Include="osx.1015.amd64.open"/>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TestAppBundleName>HelloiOS</TestAppBundleName>
+    <XHarnessTestAppBundleUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/test-app/ios-device/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\ios-device</TestAppDestinationDir>
+  </PropertyGroup>
+
+  <Target Name="TestApple" BeforeTargets="CoreTest">
+    <DownloadFile SourceUrl="$(XHarnessTestAppBundleUrl)" DestinationFolder="$(TestAppDestinationDir)" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle" />
+    </DownloadFile>
+
+    <!-- Helix tells the archive type by extension, not by contents and it is actually gzipped tar.. -->
+    <Move SourceFiles="@(ZippedAppBundle)" DestinationFiles="$(TestAppDestinationDir)\$(TestAppBundleName).app.tar.gz" />
+
+    <Message Text="Downloaded $(XHarnessTestAppBundleUrl) for XHarness test purposes" Importance="High" />
+
+    <ItemGroup>
+      <HelixWorkItem Include="$(TestAppBundleName)">
+        <Command>
+          set -ex
+          deviceId=`dotnet exec "$XHARNESS_CLI_PATH" apple device ios-device`
+          dotnet exec "$XHARNESS_CLI_PATH" apple install -t=ios-device --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="$HELIX_WORKITEM_PAYLOAD/$(TestAppBundleName).app" -v
+          set +e
+          result=0
+          dotnet exec "$XHARNESS_CLI_PATH" apple just-run -t=ios-device --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(TestAppBundleName)" --expected-exit-code=200 --launch-timeout=00:05:00 --timeout=00:08:00 -v
+          ((result|=$?))
+          dotnet exec "$XHARNESS_CLI_PATH" apple uninstall -t=ios-device --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(TestAppBundleName)" -v
+          ((result|=$?))
+          exit $result
+        </Command>
+        <Timeout>00:10:00</Timeout>
+        <PayloadArchive>$(TestAppDestinationDir)\$(TestAppBundleName).app.tar.gz</PayloadArchive>
+      </HelixWorkItem>
+    </ItemGroup>
+  </Target>
+
+  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
+</Project>

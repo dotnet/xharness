@@ -31,7 +31,6 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
 
         private readonly IMlaunchProcessManager _processManager;
-        private readonly IAppBundleInformationParser _appBundleInformationParser;
         private readonly DeviceFinder _deviceFinder;
         private readonly ILogger _logger;
         private readonly ILogs _logs;
@@ -42,7 +41,6 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         protected BaseOrchestrator(
             IMlaunchProcessManager processManager,
-            IAppBundleInformationParser appBundleInformationParser,
             DeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
@@ -51,7 +49,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IHelpers helpers)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
-            _appBundleInformationParser = appBundleInformationParser ?? throw new ArgumentNullException(nameof(appBundleInformationParser));
             _deviceFinder = deviceFinder ?? throw new ArgumentNullException(nameof(deviceFinder));
             _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
@@ -63,9 +60,9 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected async Task<ExitCode> OrchestrateRun(
             TestTargetOs target,
             string? deviceName,
-            string appPackagePath,
             bool resetSimulator,
             bool enableLldb,
+            AppBundleInformation appBundleInfo,
             Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp,
             Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp,
             CancellationToken cancellationToken)
@@ -85,24 +82,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                     File.WriteAllText(s_mlaunchLldbConfigFile, string.Empty);
                     _lldbFileCreated = true;
                 }
-            }
-
-            _logger.LogInformation($"Getting app bundle information from '{appPackagePath}'");
-
-            AppBundleInformation appBundleInfo;
-
-            try
-            {
-                appBundleInfo = await _appBundleInformationParser.ParseFromAppBundle(
-                    appPackagePath,
-                    target.Platform,
-                    _mainLog,
-                    cancellationToken);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError($"Failed to get bundle information: {e.Message}");
-                return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
             }
 
             ExitCode exitCode;
@@ -188,7 +167,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 if (!target.Platform.IsSimulator())
                 {
                     _logger.LogInformation($"Cleaning up the failed installation from '{device.Name}'");
-                    await UninstallApp(appBundleInfo, device, new CancellationToken());
+                    await UninstallApp(appBundleInfo.BundleIdentifier, device, new CancellationToken());
                 }
 
                 return exitCode;
@@ -228,7 +207,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 if (!target.Platform.IsSimulator() && device != null)
                 {
-                    await UninstallApp(appBundleInfo, device, new CancellationToken());
+                    await UninstallApp(appBundleInfo.BundleIdentifier, device, new CancellationToken());
                 }
             }
 
@@ -301,19 +280,19 @@ namespace Microsoft.DotNet.XHarness.Apple
             return ExitCode.SUCCESS;
         }
 
-        protected virtual async Task UninstallApp(AppBundleInformation appBundleInfo, IDevice device, CancellationToken cancellationToken)
+        protected virtual async Task UninstallApp(string bundleIdentifier, IDevice device, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Uninstalling the application '{appBundleInfo.BundleIdentifier}' from '{device.Name}'");
+            _logger.LogInformation($"Uninstalling the application '{bundleIdentifier}' from '{device.Name}'");
 
             var appUninstaller = new AppUninstaller(_processManager, _mainLog);
-            var uninstallResult = await appUninstaller.UninstallApp(device, appBundleInfo.BundleIdentifier, cancellationToken);
+            var uninstallResult = await appUninstaller.UninstallApp(device, bundleIdentifier, cancellationToken);
             if (!uninstallResult.Succeeded)
             {
                 _logger.LogError($"Failed to uninstall the app bundle! Check logs for more details!");
             }
             else
             {
-                _logger.LogInformation($"Application '{appBundleInfo.BundleIdentifier}' was uninstalled successfully");
+                _logger.LogInformation($"Application '{bundleIdentifier}' was uninstalled successfully");
             }
         }
 
