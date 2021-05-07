@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
             var result = runner.GetAttachedDevicesWithProperties("architecture");
             _processManager.Verify(pm => pm.Run(s_adbPath, "devices -l", TimeSpan.FromSeconds(30)), Times.Once);
 
-            // Ensure it called, parsed the three random device names and found all three architectures
+            // Ensure it called, parsed the four random device names and found all four architectures
             foreach (var fakeDeviceInfo in _fakeDeviceList.Keys)
             {
                 _processManager.Verify(pm => pm.Run(s_adbPath, $"-s {fakeDeviceInfo.Item1} shell getprop ro.product.cpu.abi", TimeSpan.FromSeconds(30)), Times.Once);
@@ -179,7 +179,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         {
             var requiredArchitecture = "x86_64";
             var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
-            var result = runner.GetDeviceToUse(_mainLog.Object, requiredArchitecture, "architecture");
+            var result = runner.GetDeviceToUse(_mainLog.Object, new[] { requiredArchitecture }, "architecture");
             _processManager.Verify(pm => pm.Run(s_adbPath, "devices -l", TimeSpan.FromSeconds(30)), Times.Once);
             Assert.True(_fakeDeviceList.ContainsKey(new Tuple<string, string>(result, requiredArchitecture)));
         }

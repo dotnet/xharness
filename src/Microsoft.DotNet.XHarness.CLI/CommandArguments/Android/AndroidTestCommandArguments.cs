@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
     internal class AndroidTestCommandArguments : TestCommandArguments
     {
         private string? _packageName;
+        private readonly List<string> _deviceArchitecture = new();
 
         /// <summary>
         /// If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.
@@ -38,7 +39,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// If specified, attempt to run on a compatible attached device, failing if unavailable.
         /// If not specified, we will open the apk using Zip APIs and guess what's usable based off folders found in under /lib
         /// </summary>
-        public string? DeviceArchitecture { get; set; }
+        public IEnumerable<string> DeviceArchitecture => _deviceArchitecture;
 
         /// <summary>
         /// Folder to copy off for output of executing the specified APK
@@ -67,8 +68,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 
         protected override OptionSet GetTestCommandOptions() => new()
         {
-            { "device-arch=", "If specified, only run on a device with the listed architecture (x86, x86_64, arm64-v8a or armeabi-v7a).  Otherwise infer from supplied APK",
-                v => DeviceArchitecture = v
+            {
+                "device-arch=",
+                "If specified, forces running on a device with given architecture (x86, x86_64, arm64-v8a or armeabi-v7a). Otherwise inferred from supplied APK. " +
+                "Can be used more than once.",
+                v => _deviceArchitecture.Add(v)
             },
             { "device-out-folder=|dev-out=", "If specified, copy this folder recursively off the device to the path specified by the output directory",
                 v => DeviceOutputFolder = RootPath(v)
@@ -135,6 +139,20 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         public override void Validate()
         {
             base.Validate();
+
+            foreach (var archName in _deviceArchitecture ?? throw new ArgumentException("architecture cannot be empty"))
+            {
+                try
+                {
+                    AndroidArchitectureHelper.ParseAsAndroidArchitecture(archName);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    throw new ArgumentException(
+                        $"Failed to parse architecture '{archName}'. Available architectures are:" +
+                        GetAllowedValues<AndroidArchitecture>(t => t.AsString()));
+                }
+            }
 
             // Validate this field
             _ = PackageName;

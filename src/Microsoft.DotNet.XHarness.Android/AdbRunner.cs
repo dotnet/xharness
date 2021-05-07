@@ -420,7 +420,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
 
 
-        public string? GetDeviceToUse(ILogger logger, string apkRequiredProperty, string propertyName)
+        public string? GetDeviceToUse(ILogger logger, IEnumerable<string> apkRequiredProperty, string propertyName)
         {
             var allDevicesAndTheirProperties = GetAllDevicesToUse(logger, apkRequiredProperty, propertyName);
             if (allDevicesAndTheirProperties.Count > 0)
@@ -434,7 +434,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public string? GetUniqueDeviceToUse(ILogger logger, string apkRequiredProperty, string propertyName)
         {
-            var devices = GetAllDevicesToUse(logger, apkRequiredProperty, propertyName);
+            var devices = GetAllDevicesToUse(logger, new[]{ apkRequiredProperty}, propertyName);
             if (devices.Count == 0)
             {
                 logger.LogError($"Cannot find a device with {propertyName}={apkRequiredProperty}, please check that a device is attached");
@@ -448,7 +448,7 @@ namespace Microsoft.DotNet.XHarness.Android
             return devices.Keys.First();
         }
 
-        public Dictionary<string, string> GetAllDevicesToUse(ILogger logger, string apkRequiredProperty, string propertyName)
+        public Dictionary<string, string> GetAllDevicesToUse(ILogger logger, IEnumerable<string> apkRequiredProperty, string propertyName)
         {
 
             var allDevicesAndTheirProperties = new Dictionary<string, string?>();
@@ -469,13 +469,15 @@ namespace Microsoft.DotNet.XHarness.Android
             }
 
             var result = allDevicesAndTheirProperties
-                .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split().Contains(apkRequiredProperty))
+                .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split().Intersect(apkRequiredProperty).Any())
+
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value) as Dictionary<string, string>;
 
             if (result.Count == 0)
             {
                 // In this case, the enumeration worked, we found one or more devices, but nothing matched the APK's architecture; fail out.
-                logger.LogError($"No devices with {propertyName} '{apkRequiredProperty}' was found among attached devices.");
+                logger.LogError($"No devices with {propertyName} '{ string.Join("', '", apkRequiredProperty) }' was found among attached devices.");
+
             }
 
             return result;
