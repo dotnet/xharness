@@ -149,12 +149,14 @@ stages:
       name: E2E_Android_Linux
       displayName: Android - Simulators (Linux)
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.Helix.SDK.Tests.LinuxQueues.proj
+      extraParameters: /p:XharnessTestX86=true /p:XharnessTestX86_64=true
 
   - template: eng/e2e-test.yml
     parameters:
       name: E2E_Android_Windows
       displayName: Android - Simulators (Windows)
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.Helix.SDK.Tests.WindowsQueues.proj
+      extraParameters: /p:XharnessTestARM64_V8A=true
 
   - template: eng/e2e-test.yml
     parameters:
