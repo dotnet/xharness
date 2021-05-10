@@ -5,6 +5,7 @@
   <PropertyGroup>
     <XHarnessX86TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/x86/System.Numerics.Vectors.Tests-x86.apk</XHarnessX86TestApkUrl>
     <XHarnessX64TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/x86_64/System.Numerics.Vectors.Tests-x64.apk</XHarnessX64TestApkUrl>
+    <XHarnessARM64V8TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/arm64_v8a/System.Buffers.Tests-arm64-v8a.apk</XHarnessARM64V8TestApkUrl>
   </PropertyGroup>
 
   <Target Name="Build" Returns="@(XHarnessPackageToTest)" >
@@ -13,6 +14,10 @@
     </DownloadFile>
 
     <DownloadFile SourceUrl="$(XHarnessX64TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)apk/x86_64" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
+    </DownloadFile>
+
+    <DownloadFile SourceUrl="$(XHarnessARM64V8TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)apk/arm64_v8a" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
 
