@@ -205,6 +205,7 @@ Arguments:
                 if (instrumentationExitCode != expectedExitCode)
                 {
                     logger.LogError($"Non-success instrumentation exit code: {instrumentationExitCode}, expected: {expectedExitCode}");
+                    return ExitCode.TESTS_FAILED;
                 }
                 else if (failurePullingFiles)
                 {
