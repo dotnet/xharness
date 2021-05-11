@@ -1,18 +1,16 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+  <Import Project="../Storage.props"/>
 
   <PropertyGroup>
-    <XHarnessX86TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/x86/System.Numerics.Vectors.Tests-x86.apk</XHarnessX86TestApkUrl>
-    <XHarnessX64TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/x86_64/System.Numerics.Vectors.Tests-x64.apk</XHarnessX64TestApkUrl>
+    <XHarnessTestDirUrl>$(BaseUri)/android/test-apk/$(TestArch)</XHarnessTestDirUrl>
+    <XHarnessTestApkUrl>$(XHarnessTestDirUrl)/$(TestFileName).apk</XHarnessTestApkUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)apk/$(TestArch)</TestAppDestinationDir>
   </PropertyGroup>
 
   <Target Name="Build" Returns="@(XHarnessPackageToTest)" >
-    <DownloadFile SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)apk/x86" SkipUnchangedFiles="True" Retries="5">
-      <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
-    </DownloadFile>
-
-    <DownloadFile SourceUrl="$(XHarnessX64TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)apk/x86_64" SkipUnchangedFiles="True" Retries="5">
+    <DownloadFile SourceUrl="$(XHarnessTestApkUrl)" DestinationFolder="$(TestAppDestinationDir)" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
 
@@ -23,10 +21,10 @@
       <XHarnessPackageToTest Include="@(DownloadedApkFile)">
 
         <!-- Package name: this comes from metadata inside the apk itself -->
-        <AndroidPackageName>net.dot.System.Numerics.Vectors.Tests</AndroidPackageName>
+        <AndroidPackageName>$(TestPackageName)</AndroidPackageName>
 
         <!-- If there are > 1 instrumentation class inside the package, we need to know the name of which to use -->
-        <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
+        <AndroidInstrumentationName>$(TestInstrumentationName)</AndroidInstrumentationName>
 
       </XHarnessPackageToTest>
     </ItemGroup>

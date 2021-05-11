@@ -5,9 +5,10 @@
   -->
 
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+  <Import Project="../Storage.props"/>
 
   <PropertyGroup>
-    <AppStorageUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/test-app/$(TestTarget)</AppStorageUrl>
+    <AppStorageUrl>$(BaseUri)/ios/test-app/$(TestTarget)</AppStorageUrl>
     <XHarnessTestAppBundleUrl>$(AppStorageUrl)/$(TestAppBundleName).zip</XHarnessTestAppBundleUrl>
     <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\$(TestTarget)</TestAppDestinationDir>
   </PropertyGroup>
