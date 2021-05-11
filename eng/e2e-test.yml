@@ -3,7 +3,6 @@ parameters:
   name: ''
   displayName: ''
   testProject: ''
-  extraParameters: ''
 
 stages:
   - stage: ${{ parameters.name }}
@@ -42,7 +41,6 @@ stages:
               --projects ${{ parameters.testProject }}
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/${{ parameters.name }}.binlog
               /p:RestoreUsingNuGetTargets=false
-              ${{ parameters.extraParameters }}
             displayName: Run tests in Helix
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)

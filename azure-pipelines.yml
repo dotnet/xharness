@@ -146,23 +146,21 @@ stages:
 
   - template: eng/e2e-test.yml
     parameters:
-      name: E2E_Android_Linux
-      displayName: Android - Simulators (Linux)
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.Helix.SDK.Tests.LinuxQueues.proj
-      extraParameters: /p:XharnessTestX86=true /p:XharnessTestX86_64=true
+      name: E2E_Android_Simulators
+      displayName: Android - Simulators
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Simulator.Tests.proj
 
   - template: eng/e2e-test.yml
     parameters:
-      name: E2E_Android_Windows
-      displayName: Android - Simulators (Windows)
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.Helix.SDK.Tests.WindowsQueues.proj
-      extraParameters: /p:XharnessTestARM64_V8A=true
+      name: E2E_Android_Devices
+      displayName: Android - Devices
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Device.Tests.proj
 
   - template: eng/e2e-test.yml
     parameters:
       name: E2E_Android_Manual_Commands
       displayName: Android - Manual Commands
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Android.CLI.Commands.Tests.proj
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Commands.Tests.proj
 
   - template: eng/e2e-test.yml
     parameters:

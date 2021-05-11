@@ -1,0 +1,33 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+  <Import Project="../Storage.props"/>
+
+  <PropertyGroup>
+    <XHarnessTestDirUrl>$(BaseUri)/android/test-apk/$(TestArch)</XHarnessTestDirUrl>
+    <XHarnessTestApkUrl>$(XHarnessTestDirUrl)/$(TestFileName).apk</XHarnessTestApkUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)apk/$(TestArch)</TestAppDestinationDir>
+  </PropertyGroup>
+
+  <Target Name="Build" Returns="@(XHarnessPackageToTest)" >
+    <DownloadFile SourceUrl="$(XHarnessTestApkUrl)" DestinationFolder="$(TestAppDestinationDir)" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
+    </DownloadFile>
+
+    <Message Text="Downloaded @(DownloadedApkFile) for XHarness Test purposes" Importance="High" />
+
+    <ItemGroup>
+      <!-- We're not set up currently to build APK files as part of normal builds, so this downloads existing ones for now -->
+      <XHarnessPackageToTest Include="@(DownloadedApkFile)">
+
+        <!-- Package name: this comes from metadata inside the apk itself -->
+        <AndroidPackageName>$(TestPackageName)</AndroidPackageName>
+
+        <!-- If there are > 1 instrumentation class inside the package, we need to know the name of which to use -->
+        <AndroidInstrumentationName>$(TestInstrumentationName)</AndroidInstrumentationName>
+
+      </XHarnessPackageToTest>
+    </ItemGroup>
+  </Target>
+
+</Project>

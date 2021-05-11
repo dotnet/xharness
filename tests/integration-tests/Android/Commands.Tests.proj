@@ -1,12 +1,13 @@
 <Project DefaultTargets="Test">
   <Import Project="../Helix.SDK.configuration.props"/>
+    <Import Project="../Storage.props"/>
 
   <ItemGroup>
     <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
   </ItemGroup>
 
   <PropertyGroup>
-    <XHarnessX86TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/x86/System.Numerics.Vectors.Tests-x86.zip</XHarnessX86TestApkUrl>
+    <XHarnessX86TestApkUrl>$(BaseUri)/android/test-apk/x86/System.Numerics.Vectors.Tests-x86.zip</XHarnessX86TestApkUrl>
   </PropertyGroup>
 
   <Target Name="TestAndroid" BeforeTargets="CoreTest">
