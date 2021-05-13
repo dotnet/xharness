@@ -8,7 +8,7 @@
   <Import Project="../Storage.props"/>
 
   <PropertyGroup>
-    <AppStorageUrl>$(BaseUri)/ios/test-app/$(TestTarget)</AppStorageUrl>
+    <AppStorageUrl>$(AssetsBaseUri)/ios/test-app/$(TestTarget)</AppStorageUrl>
     <XHarnessTestAppBundleUrl>$(AppStorageUrl)/$(TestAppBundleName).zip</XHarnessTestAppBundleUrl>
     <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\$(TestTarget)</TestAppDestinationDir>
   </PropertyGroup>

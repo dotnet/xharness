@@ -4,7 +4,7 @@
   <Import Project="../Storage.props"/>
 
   <PropertyGroup>
-    <XHarnessTestDirUrl>$(BaseUri)/android/test-apk/$(TestArch)</XHarnessTestDirUrl>
+    <XHarnessTestDirUrl>$(AssetsBaseUri)/android/test-apk/$(TestArch)</XHarnessTestDirUrl>
     <XHarnessTestApkUrl>$(XHarnessTestDirUrl)/$(TestFileName).apk</XHarnessTestApkUrl>
     <TestAppDestinationDir>$(ArtifactsTmpDir)apk/$(TestArch)</TestAppDestinationDir>
   </PropertyGroup>

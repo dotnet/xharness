@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
-    <BaseUri>https://netcorenativeassets.blob.core.windows.net/resource-packages/external</BaseUri>
+    <AssetsBaseUri>https://netcorenativeassets.blob.core.windows.net/resource-packages/external</AssetsBaseUri>
   </PropertyGroup>
 
 </Project>

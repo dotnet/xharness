@@ -1,14 +1,13 @@
 <Project DefaultTargets="Test">
   <Import Project="../Helix.SDK.configuration.props"/>
-  <Import Project="../Storage.props"/>
 
   <ItemGroup>
     <HelixTargetQueue Include="osx.1015.amd64.open"/>
   </ItemGroup>
-  
+
   <PropertyGroup>
     <TestAppBundleName>System.Numerics.Vectors.Tests</TestAppBundleName>
-    <XHarnessTestAppBundleUrl>$(BaseUri)/ios/test-app/ios-simulator-64/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
+    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app/ios-simulator-64/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
     <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\ios-simulator-64</TestAppDestinationDir>
   </PropertyGroup>
 
@@ -17,28 +16,29 @@
       <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle" />
     </DownloadFile>
 
-    <!-- Helix tells the archive type by extension, not by contents and it is actually gzipped tar.. -->
-    <Move SourceFiles="@(ZippedAppBundle)" DestinationFiles="$(TestAppDestinationDir)\$(TestAppBundleName).app.tar.gz" />
-
-    <Message Text="Downloaded $(XHarnessTestAppBundleUrl) for XHarness test purposes" Importance="High" />
+    <Message Text="Downloaded $(TestAppBundleName) from @(ZippedAppBundle). Extracting..." Importance="High" />
+    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(TestAppDestinationDir)" />
+    <Message Text="Extracted to $(TestAppDestinationDir)" Importance="High" />
 
     <ItemGroup>
-      <HelixWorkItem Include="$(TestAppBundleName)">
-        <Command>
+      <XHarnessAppBundleToTest Include="$(TestAppDestinationDir)">
+        <Targets>ios-simulator-64</Targets>
+        <WorkItemTimeout>00:12:00</WorkItemTimeout>
+        <TestTimeout>00:05:00</TestTimeout>
+        <LaunchTimeout>00:05:00</LaunchTimeout>
+        <CustomCommands>
           set -ex
-          deviceId=`dotnet exec "$XHARNESS_CLI_PATH" apple device ios-simulator-64`
-          dotnet exec "$XHARNESS_CLI_PATH" apple install -t=ios-simulator-64 --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="$HELIX_WORKITEM_PAYLOAD/$(TestAppBundleName).app" -v
+          deviceId=`xharness apple device $targets`
+          xharness apple install -t=$targets --device="$deviceId" -o="$output_directory" --app="$app" -v
           set +e
           result=0
-          dotnet exec "$XHARNESS_CLI_PATH" apple just-test -t=ios-simulator-64 --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(TestAppBundleName)" --launch-timeout=00:05:00 --timeout=00:08:00 -v
+          xharness apple just-test -t=$targets --device="$deviceId" -o="$output_directory" --app="net.dot.$(XHarnessAppBundleName)" --launch-timeout=$launch_timeout --timeout=$timeout -v
           ((result|=$?))
-          dotnet exec "$XHARNESS_CLI_PATH" apple uninstall -t=ios-simulator-64 --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(TestAppBundleName)" -v
+          xharness apple uninstall -t=$targets --device="$deviceId" -o="$output_directory" --app="net.dot.$(XHarnessAppBundleName)" -v
           ((result|=$?))
           exit $result
-        </Command>
-        <Timeout>00:15:00</Timeout>
-        <PayloadArchive>$(TestAppDestinationDir)\$(TestAppBundleName).app.tar.gz</PayloadArchive>
-      </HelixWorkItem>
+        </CustomCommands>
+      </XHarnessAppBundleToTest>
     </ItemGroup>
   </Target>
 
