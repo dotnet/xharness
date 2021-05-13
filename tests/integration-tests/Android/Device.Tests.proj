@@ -3,11 +3,10 @@
 
   <ItemGroup>
     <HelixTargetQueue Include="windows.10.amd64.android.open"/>
-    
+
     <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)TestApks.proj">
       <AdditionalProperties>TestArch=arm64_v8a;TestPackageName=net.dot.System.Buffers.Tests;TestInstrumentationName=net.dot.MonoRunner;TestFileName=System.Buffers.Tests-arm64-v8a</AdditionalProperties>
     </XHarnessAndroidProject>
-    
   </ItemGroup>
 
   <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
