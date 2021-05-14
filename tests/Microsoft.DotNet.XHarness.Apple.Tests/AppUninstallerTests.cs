@@ -36,12 +36,33 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         }
 
         [Fact]
+        public async Task UninstallFromSimulatorTest()
+        {
+            var simulator = Mock.Of<IDevice>(x => x.Name == DeviceName && x.UDID == UDID);
+
+            // Act
+            var result = await _appUninstaller.UninstallApp(simulator, AppBundleId);
+
+            // Verify
+            Assert.Equal(0, result.ExitCode);
+
+            var expectedArgs = $"uninstall {UDID} {StringUtils.FormatArguments(AppBundleId)}";
+
+            _processManager.Verify(x => x.ExecuteXcodeCommandAsync(
+                "simctl",
+               It.Is<string[]>(args => string.Join(" ", args) == expectedArgs),
+               _mainLog.Object,
+               It.IsAny<TimeSpan>(),
+               It.IsAny<CancellationToken>()));
+        }
+
+        [Fact]
         public async Task UninstallFromDeviceTest()
         {
             var device = Mock.Of<IDevice>(x => x.Name == DeviceName && x.UDID == UDID);
 
             // Act
-            var result = await _appUninstaller.UninstallApp(device, AppBundleId);
+            var result = await _appUninstaller.UninstallDeviceApp(device, AppBundleId);
 
             // Verify
             Assert.Equal(0, result.ExitCode);

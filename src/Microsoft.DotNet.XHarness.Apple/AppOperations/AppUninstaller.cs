@@ -23,7 +23,15 @@ namespace Microsoft.DotNet.XHarness.Apple
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
         }
 
-        public async Task<ProcessExecutionResult> UninstallApp(IDevice device, string appBundleId, CancellationToken cancellationToken = default)
+        public Task<ProcessExecutionResult> UninstallApp(IDevice simulator, string appBundleId, CancellationToken cancellationToken = default)
+            => _processManager.ExecuteXcodeCommandAsync(
+                "simctl",
+                new[] { "uninstall", simulator.UDID, appBundleId },
+                _mainLog,
+                TimeSpan.FromMinutes(3),
+                cancellationToken: cancellationToken);
+
+        public Task<ProcessExecutionResult> UninstallDeviceApp(IDevice device, string appBundleId, CancellationToken cancellationToken = default)
         {
             var args = new MlaunchArguments
             {
@@ -31,7 +39,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 new DeviceNameArgument(device)
             };
 
-            return await _processManager.ExecuteCommandAsync(args, _mainLog, TimeSpan.FromMinutes(1), cancellationToken: cancellationToken);
+            return _processManager.ExecuteCommandAsync(args, _mainLog, TimeSpan.FromMinutes(3), cancellationToken: cancellationToken);
         }
     }
 }
