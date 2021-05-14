@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
 
             _logs
-                .Setup(x => x.Create("test-Simulator_tvOS-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
+                .Setup(x => x.Create("test-ios-simulator-64-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
                 .Returns(listenerLogFile);
 
             var captureLog = new Mock<ICaptureLog>();
@@ -171,7 +171,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
 
             _logs
-                .Setup(x => x.Create("test-Device_iOS-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
+                .Setup(x => x.Create("test-ios-device-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
                 .Returns(listenerLogFile);
 
             _logs
@@ -276,7 +276,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
 
             _logs
-                .Setup(x => x.Create("test-Device_iOS-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
+                .Setup(x => x.Create("test-ios-device-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
                 .Returns(listenerLogFile);
 
             _logs
@@ -365,7 +365,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
 
             _logs
-                .Setup(x => x.Create("test-Device_iOS-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
+                .Setup(x => x.Create("test-ios-device-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
                 .Returns(listenerLogFile);
 
             _logs
@@ -509,7 +509,9 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
         }
 
-        private static string GetExpectedDeviceMlaunchArgs(string skippedTests = null, bool useTunnel = false, string extraArgs = null) =>
+        private string GetExpectedDeviceMlaunchArgs(string skippedTests = null, bool useTunnel = false, string extraArgs = null) =>
+            $"--stdout={_stdoutLog.FullPath} " +
+            $"--stderr={_stderrLog.FullPath} " +
             "-setenv=NUNIT_AUTOEXIT=true " +
             $"-setenv=NUNIT_HOSTPORT={Port} " +
             "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
@@ -521,10 +523,11 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             $"--devname {s_mockDevice.DeviceIdentifier} " +
             (useTunnel ? "-setenv=USE_TCP_TUNNEL=true " : null) +
             $"--launchdevbundleid {AppBundleIdentifier} " +
-            "--wait-for-exit " +
-            $"--stdout=./{AppBundleIdentifier}-mocked_timestamp.log";
+            "--wait-for-exit";
 
         private string GetExpectedSimulatorMlaunchArgs() =>
+            $"--stdout={_stdoutLog.FullPath} " +
+            $"--stderr={_stderrLog.FullPath} " +
             "-setenv=NUNIT_AUTOEXIT=true " +
             $"-setenv=NUNIT_HOSTPORT={Port} " +
             "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +

@@ -18,5 +18,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         ExecutionLog,
         TrxLog,
         HtmlLog,
+        ApplicationLog,
     }
 }
