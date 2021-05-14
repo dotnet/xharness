@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.Android
         private readonly IAdbProcessManager _processManager;
         private readonly Dictionary<string, string> _commandList = new()
         {
-            { "architecture", "shell getprop ro.product.cpu.abi"},
+            { "architecture", "shell getprop ro.product.cpu.abilist"},
             { "app", "shell pm list packages -3"}
         };
 
@@ -469,7 +469,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
 
             var result = allDevicesAndTheirProperties
-                .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split().Intersect(apkRequiredProperty).Any())
+                .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split(new char[] { ',', '\r', '\n' }).Intersect(apkRequiredProperty).Any())
 
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value) as Dictionary<string, string>;
 
