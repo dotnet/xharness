@@ -227,11 +227,19 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
         }
 
-        private static MlaunchArguments GetExtraArguments(
+        private MlaunchArguments GetCommonArguments(
+            AppBundleInformation appInformation,
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables)
         {
-            var args = new MlaunchArguments();
+            string appOutputLog = _logs.CreateFile($"{appInformation.BundleIdentifier}.log", LogType.ApplicationLog);
+            string appErrorOutputLog = _logs.CreateFile($"{appInformation.BundleIdentifier}.err.log", LogType.ApplicationLog);
+
+            var args = new MlaunchArguments
+            {
+                new SetStdoutArgument(appOutputLog),
+                new SetStderrArgument(appErrorOutputLog),
+            };
 
             // Arguments passed to the iOS app bundle
             args.AddRange(extraAppArguments.Select(arg => new SetAppArgumentArgument(arg)));
@@ -240,13 +248,13 @@ namespace Microsoft.DotNet.XHarness.Apple
             return args;
         }
 
-        private static MlaunchArguments GetSimulatorArguments(
+        private MlaunchArguments GetSimulatorArguments(
             AppBundleInformation appInformation,
             ISimulatorDevice simulator,
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables)
         {
-            var args = GetExtraArguments(extraAppArguments, extraEnvVariables);
+            var args = GetCommonArguments(appInformation, extraAppArguments, extraEnvVariables);
 
             args.Add(new SimulatorUDIDArgument(simulator.UDID));
 
@@ -277,7 +285,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables)
         {
-            var args = GetExtraArguments(extraAppArguments, extraEnvVariables);
+            var args = GetCommonArguments(appInformation, extraAppArguments, extraEnvVariables);
 
             args.Add(new DisableMemoryLimitsArgument());
             args.Add(new DeviceNameArgument(device));
@@ -307,9 +315,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 args.Add(new WaitForExitArgument());
             }
-
-            string appOutputLog = _logs.CreateFile($"{appInformation.BundleIdentifier}-{_helpers.Timestamp}.log", LogType.ExecutionLog);
-            args.Add(new SetStdoutArgument(appOutputLog));
 
             return args;
         }
