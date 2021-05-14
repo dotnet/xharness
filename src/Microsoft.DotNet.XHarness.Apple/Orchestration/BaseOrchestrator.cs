@@ -164,11 +164,8 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             if (exitCode != ExitCode.SUCCESS)
             {
-                if (!target.Platform.IsSimulator())
-                {
-                    _logger.LogInformation($"Cleaning up the failed installation from '{device.Name}'");
-                    await UninstallApp(appBundleInfo.BundleIdentifier, device, new CancellationToken());
-                }
+                _logger.LogInformation($"Cleaning up the failed installation from '{device.Name}'");
+                await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, new CancellationToken());
 
                 return exitCode;
             }
@@ -205,9 +202,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                     await CleanUpSimulators(device, companionDevice);
                 }
 
-                if (!target.Platform.IsSimulator() && device != null)
+                if (device != null)
                 {
-                    await UninstallApp(appBundleInfo.BundleIdentifier, device, new CancellationToken());
+                    await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, new CancellationToken());
                 }
             }
 
@@ -280,12 +277,15 @@ namespace Microsoft.DotNet.XHarness.Apple
             return ExitCode.SUCCESS;
         }
 
-        protected virtual async Task UninstallApp(string bundleIdentifier, IDevice device, CancellationToken cancellationToken)
+        protected virtual async Task UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Uninstalling the application '{bundleIdentifier}' from '{device.Name}'");
 
             var appUninstaller = new AppUninstaller(_processManager, _mainLog);
-            var uninstallResult = await appUninstaller.UninstallApp(device, bundleIdentifier, cancellationToken);
+            ProcessExecutionResult uninstallResult = target.IsSimulator()
+                ? await appUninstaller.UninstallApp(device, bundleIdentifier, cancellationToken)
+                : await appUninstaller.UninstallDeviceApp(device, bundleIdentifier, cancellationToken);
+
             if (!uninstallResult.Succeeded)
             {
                 _logger.LogError($"Failed to uninstall the app bundle! Check logs for more details!");

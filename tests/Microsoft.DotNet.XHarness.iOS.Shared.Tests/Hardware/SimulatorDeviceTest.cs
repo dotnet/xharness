@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
@@ -53,10 +54,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         {
             // just call and verify the correct args are pass
             await _simulator.Erase(_executionLog.Object);
-            _processManager.Verify(h => h.ExecuteXcodeCommandAsync(It.Is<string>(s => s == "simctl"), It.Is<string[]>(args => args.Where(a => a == _simulator.UDID || a == "shutdown").Count() == 2), It.IsAny<ILog>(), It.IsAny<TimeSpan>()));
-            _processManager.Verify(h => h.ExecuteXcodeCommandAsync(It.Is<string>(s => s == "simctl"), It.Is<string[]>(args => args.Where(a => a == _simulator.UDID || a == "erase").Count() == 2), It.IsAny<ILog>(), It.IsAny<TimeSpan>()));
-            _processManager.Verify(h => h.ExecuteXcodeCommandAsync(It.Is<string>(s => s == "simctl"), It.Is<string[]>(args => args.Where(a => a == _simulator.UDID || a == "boot").Count() == 2), It.IsAny<ILog>(), It.IsAny<TimeSpan>()));
-            _processManager.Verify(h => h.ExecuteXcodeCommandAsync(It.Is<string>(s => s == "simctl"), It.Is<string[]>(args => args.Where(a => a == _simulator.UDID || a == "shutdown").Count() == 2), It.IsAny<ILog>(), It.IsAny<TimeSpan>()));
+            _processManager.Verify(h => h.ExecuteXcodeCommandAsync(It.Is<string>(s => s == "simctl"), It.Is<string[]>(args => args.Where(a => a == _simulator.UDID || a == "shutdown").Count() == 2), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()));
+            _processManager.Verify(h => h.ExecuteXcodeCommandAsync(It.Is<string>(s => s == "simctl"), It.Is<string[]>(args => args.Where(a => a == _simulator.UDID || a == "erase").Count() == 2), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()));
+            _processManager.Verify(h => h.ExecuteXcodeCommandAsync(It.Is<string>(s => s == "simctl"), It.Is<string[]>(args => args.Where(a => a == _simulator.UDID || a == "boot").Count() == 2), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()));
+            _processManager.Verify(h => h.ExecuteXcodeCommandAsync(It.Is<string>(s => s == "simctl"), It.Is<string[]>(args => args.Where(a => a == _simulator.UDID || a == "shutdown").Count() == 2), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()));
 
         }
 
@@ -65,7 +66,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         {
             await _simulator.Shutdown(_executionLog.Object);
             // just call and verify the correct args are pass
-            _processManager.Verify(h => h.ExecuteXcodeCommandAsync(It.Is<string>(s => s == "simctl"), It.Is<string[]>(args => args.Where(a => a == _simulator.UDID || a == "shutdown").Count() == 2), It.IsAny<ILog>(), It.IsAny<TimeSpan>()));
+            _processManager.Verify(h => h.ExecuteXcodeCommandAsync(It.Is<string>(s => s == "simctl"), It.Is<string[]>(args => args.Where(a => a == _simulator.UDID || a == "shutdown").Count() == 2), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()));
         }
 
         [Fact(Skip = "Running this test will actually kill simulators on the machine")]

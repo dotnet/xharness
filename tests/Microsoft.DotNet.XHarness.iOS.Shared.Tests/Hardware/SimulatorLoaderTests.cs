@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             MlaunchArguments passedArguments = null;
 
             _processManager
-                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1)))
+                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ProcessExecutionResult() { ExitCode = 0 });
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
@@ -165,7 +165,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             MlaunchArguments passedArguments = null;
 
             _processManager
-                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1)))
+                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ProcessExecutionResult() { ExitCode = 0 });
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
             MlaunchArguments passedArguments = null;
 
             _processManager
-                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1)))
+                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ProcessExecutionResult() { ExitCode = 0 });
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
@@ -276,7 +276,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware
         public async Task FindSimulatorsWithSucceedingMlaunchTest(int mlaunchExitCode, bool mlaunchTimedout)
         {
             _processManager
-                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1)))
+                .Setup(h => h.ExecuteXcodeCommandAsync("simctl", It.Is<string[]>(args => args[0] == "create"), _executionLog.Object, TimeSpan.FromMinutes(1), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ProcessExecutionResult() { ExitCode = 0 });
 
             // moq It.Is is not working as nicelly as we would like it, we capture data and use asserts
