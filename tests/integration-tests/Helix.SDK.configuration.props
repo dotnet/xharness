@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/>
+  <Import Project="Storage.props"/>
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
