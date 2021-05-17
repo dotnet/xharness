@@ -5,7 +5,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
+namespace Microsoft.DotNet.XHarness.Common.CLI
 {
     public class NoDeviceFoundException : Exception
     {

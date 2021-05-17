@@ -76,6 +76,11 @@ Arguments:
 
                 return Task.FromResult(ExitCode.SUCCESS);
             }
+            catch (NoDeviceFoundException noDevice)
+            {
+                logger.LogCritical(noDevice, $"Failure to find compatible device: {noDevice.Message}");
+                return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
+            }
             catch (Exception toLog)
             {
                 logger.LogCritical(toLog, $"Failure to find compatible device: {toLog.Message}");

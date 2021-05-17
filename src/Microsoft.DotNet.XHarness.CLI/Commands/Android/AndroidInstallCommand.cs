@@ -63,7 +63,9 @@ Arguments:
             }
 
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
-            return Task.FromResult(InvokeHelper(
+            try
+            {
+                return Task.FromResult(InvokeHelper(
                 logger: logger,
                 apkPackageName: _arguments.PackageName,
                 appPackagePath: _arguments.AppPackagePath,
@@ -71,55 +73,59 @@ Arguments:
                 deviceId: _arguments.DeviceId,
                 bootTimeoutSeconds: _arguments.LaunchTimeout,
                 runner: runner));
+            }
+            catch (NoDeviceFoundException noDevice)
+            {
+                logger.LogCritical(noDevice, noDevice.Message);
+                return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
+            }
+            catch (Exception toLog)
+            {
+                logger.LogCritical(toLog, toLog.Message);
+            }
+            return Task.FromResult(ExitCode.GENERAL_FAILURE);
         }
 
         public static ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, IEnumerable<string> apkRequiredArchitecture, string? deviceId, TimeSpan bootTimeoutSeconds, AdbRunner runner)
         {
-            try
+            using (logger.BeginScope("Initialization and setup of APK on device"))
             {
-                using (logger.BeginScope("Initialization and setup of APK on device"))
+                // Make sure the adb server is started
+                runner.StartAdbServer();
+
+                // if call via install command device id must be set
+                // otherwise - from test command - apkRequiredArchitecture was set by user or .apk architecture
+                deviceId ??= apkRequiredArchitecture.Any()
+                    ? runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture")
+                    : throw new ArgumentException("Required architecture not specified");
+
+                if (deviceId == null)
                 {
-                    // Make sure the adb server is started
-                    runner.StartAdbServer();
-
-                    // if call via install command device id must be set
-                    // otherwise - from test command - apkRequiredArchitecture was set by user or .apk architecture
-                    deviceId ??= apkRequiredArchitecture.Any()
-                        ? runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture")
-                        : throw new ArgumentException("Required architecture not specified");
-
-                    if (deviceId == null)
-                    {
-                        throw new Exception($"Failed to find compatible device: {string.Join(", ", apkRequiredArchitecture)}");
-                    }
-
-                    runner.SetActiveDevice(deviceId);
-
-                    runner.TimeToWaitForBootCompletion = bootTimeoutSeconds;
-
-                    // Wait till at least device(s) are ready
-                    runner.WaitForDevice();
-
-                    logger.LogDebug($"Working with {runner.GetAdbVersion()}");
-
-                    // If anything changed about the app, Install will fail; uninstall it first.
-                    // (we'll ignore if it's not present)
-                    // This is where mismatched architecture APKs fail.
-                    runner.UninstallApk(apkPackageName);
-                    if (runner.InstallApk(appPackagePath) != 0)
-                    {
-                        logger.LogCritical("Install failure: Test command cannot continue");
-                        runner.UninstallApk(apkPackageName);
-                        return ExitCode.PACKAGE_INSTALLATION_FAILURE;
-                    }
-                    runner.KillApk(apkPackageName);
+                    throw new NoDeviceFoundException($"Failed to find compatible device: {string.Join(", ", apkRequiredArchitecture)}");
                 }
-                return ExitCode.SUCCESS;
+
+                runner.SetActiveDevice(deviceId);
+
+                runner.TimeToWaitForBootCompletion = bootTimeoutSeconds;
+
+                // Wait till at least device(s) are ready
+                runner.WaitForDevice();
+
+                logger.LogDebug($"Working with {runner.GetAdbVersion()}");
+
+                // If anything changed about the app, Install will fail; uninstall it first.
+                // (we'll ignore if it's not present)
+                // This is where mismatched architecture APKs fail.
+                runner.UninstallApk(apkPackageName);
+                if (runner.InstallApk(appPackagePath) != 0)
+                {
+                    logger.LogCritical("Install failure: Test command cannot continue");
+                    runner.UninstallApk(apkPackageName);
+                    return ExitCode.PACKAGE_INSTALLATION_FAILURE;
+                }
+                runner.KillApk(apkPackageName);
             }
-            catch (Exception toLog)
-            {
-                throw new Exception($"Failed to run test package: {toLog.Message}");
-            }
+            return ExitCode.SUCCESS;
         }
     }
 }

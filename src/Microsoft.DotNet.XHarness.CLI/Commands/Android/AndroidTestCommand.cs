@@ -102,6 +102,11 @@ Arguments:
                 runner.UninstallApk(apkPackageName);
                 return Task.FromResult(exitCode);
             }
+            catch (NoDeviceFoundException noDevice)
+            {
+                logger.LogCritical(noDevice, noDevice.Message);
+                return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
+            }
             catch (Exception toLog)
             {
                 logger.LogCritical(toLog, toLog.Message);
