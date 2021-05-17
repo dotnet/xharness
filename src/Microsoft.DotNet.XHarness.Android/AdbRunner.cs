@@ -458,7 +458,8 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             catch (Exception toLog)
             {
-                logger.LogError(toLog, $"Exception thrown while trying to find compatible device with {propertyName} { string.Join("', '", apkRequiredProperty) }");
+                logger.LogError(toLog, $"Exception thrown while trying to find compatible device with {propertyName} '{ string.Join("', '", apkRequiredProperty) }'");
+
                 return new Dictionary<string, string>();
             }
 
