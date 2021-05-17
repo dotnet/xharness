@@ -412,8 +412,8 @@ namespace Microsoft.DotNet.XHarness.Android
             else
             {
                 // Abandon the run here, don't just guess.
-                _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}. Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, and unlocked.");
-                throw new Exception("One or more attached Android devices are offline");
+                _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}. Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, unlocked and authorized.");
+                throw new Exception("One or more attached Android devices are offline or without USB debug permission");
             }
             return devicesAndProperties;
         }
@@ -458,7 +458,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             catch (Exception toLog)
             {
-                logger.LogError(toLog, $"Exception thrown while trying to find compatible device with {propertyName} {apkRequiredProperty}");
+                logger.LogError(toLog, $"Exception thrown while trying to find compatible device with {propertyName} { string.Join("', '", apkRequiredProperty) }");
                 return new Dictionary<string, string>();
             }
 
@@ -476,7 +476,7 @@ namespace Microsoft.DotNet.XHarness.Android
             if (result.Count == 0)
             {
                 // In this case, the enumeration worked, we found one or more devices, but nothing matched the APK's architecture; fail out.
-                logger.LogError($"No devices with {propertyName} '{ string.Join("', '", apkRequiredProperty) }' was found among attached devices.");
+                logger.LogError($"No devices with {propertyName} '{ string.Join("', '", apkRequiredProperty) }' was found among attached and authorized devices.");
 
             }
 
