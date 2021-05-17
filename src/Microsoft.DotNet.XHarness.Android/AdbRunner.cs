@@ -420,9 +420,9 @@ namespace Microsoft.DotNet.XHarness.Android
 
 
 
-        public string? GetDeviceToUse(ILogger logger, IEnumerable<string> apkRequiredProperty, string propertyName)
+        public string? GetDeviceToUse(ILogger logger, IEnumerable<string> apkRequiredProperties, string propertyName)
         {
-            var allDevicesAndTheirProperties = GetAllDevicesToUse(logger, apkRequiredProperty, propertyName);
+            var allDevicesAndTheirProperties = GetAllDevicesToUse(logger, apkRequiredProperties, propertyName);
             if (allDevicesAndTheirProperties.Count > 0)
             {
                 var firstAvailableCompatible = allDevicesAndTheirProperties.First();
@@ -432,23 +432,23 @@ namespace Microsoft.DotNet.XHarness.Android
             return null;
         }
 
-        public string? GetUniqueDeviceToUse(ILogger logger, string apkRequiredProperty, string propertyName)
+        public string? GetUniqueDeviceToUse(ILogger logger, string apkRequiredProperties, string propertyName)
         {
-            var devices = GetAllDevicesToUse(logger, new[]{ apkRequiredProperty}, propertyName);
+            var devices = GetAllDevicesToUse(logger, new[]{ apkRequiredProperties}, propertyName);
             if (devices.Count == 0)
             {
-                logger.LogError($"Cannot find a device with {propertyName}={apkRequiredProperty}, please check that a device is attached");
+                logger.LogError($"Cannot find a device with {propertyName}={apkRequiredProperties}, please check that a device is attached");
                 return null;
             }
             else if (devices.Count > 1)
             {
-                logger.LogError($"There is more than one device with {propertyName}={apkRequiredProperty}, please provide --device-id to choose the required one");
+                logger.LogError($"There is more than one device with {propertyName}={apkRequiredProperties}, please provide --device-id to choose the required one");
                 return null;
             }
             return devices.Keys.First();
         }
 
-        public Dictionary<string, string> GetAllDevicesToUse(ILogger logger, IEnumerable<string> apkRequiredProperty, string propertyName)
+        public Dictionary<string, string> GetAllDevicesToUse(ILogger logger, IEnumerable<string> apkRequiredProperties, string propertyName)
         {
 
             var allDevicesAndTheirProperties = new Dictionary<string, string?>();
@@ -458,7 +458,7 @@ namespace Microsoft.DotNet.XHarness.Android
             }
             catch (Exception toLog)
             {
-                logger.LogError(toLog, $"Exception thrown while trying to find compatible device with {propertyName} '{ string.Join("', '", apkRequiredProperty) }'");
+                logger.LogError(toLog, $"Exception thrown while trying to find compatible device with {propertyName} '{ string.Join("', '", apkRequiredProperties) }'");
 
                 return new Dictionary<string, string>();
             }
@@ -470,14 +470,14 @@ namespace Microsoft.DotNet.XHarness.Android
             }
 
             var result = allDevicesAndTheirProperties
-                .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split().Intersect(apkRequiredProperty).Any())
+                .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split().Intersect(apkRequiredProperties).Any())
 
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value) as Dictionary<string, string>;
 
             if (result.Count == 0)
             {
                 // In this case, the enumeration worked, we found one or more devices, but nothing matched the APK's architecture; fail out.
-                logger.LogError($"No devices with {propertyName} '{ string.Join("', '", apkRequiredProperty) }' was found among attached and authorized devices.");
+                logger.LogError($"No devices with {propertyName} '{ string.Join("', '", apkRequiredProperties) }' was found among attached and authorized devices.");
 
             }
 
