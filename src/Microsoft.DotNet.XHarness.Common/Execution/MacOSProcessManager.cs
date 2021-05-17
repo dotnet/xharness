@@ -59,10 +59,10 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             }
         }
 
-        public Task<ProcessExecutionResult> ExecuteXcodeCommandAsync(string executable, IList<string> args, ILog log, TimeSpan timeout)
+        public Task<ProcessExecutionResult> ExecuteXcodeCommandAsync(string executable, IList<string> args, ILog log, TimeSpan timeout, CancellationToken cancellationToken = default)
         {
             var filename = Path.Combine(XcodeRoot, "Contents", "Developer", "usr", "bin", executable);
-            return ExecuteCommandAsync(filename, args, log, timeout: timeout);
+            return ExecuteCommandAsync(filename, args, log, timeout: timeout, cancellationToken: cancellationToken);
         }
 
         #endregion

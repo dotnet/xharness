@@ -49,6 +49,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         protected readonly Mock<IHelpers> _helpers;
 
         protected readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
+        protected readonly IFileBackedLog _stdoutLog;
+        protected readonly IFileBackedLog _stderrLog;
 
         protected AppRunTestBase()
         {
@@ -59,6 +61,11 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             _snapshotReporter = new Mock<ICrashSnapshotReporter>();
 
+            _stdoutLog = Mock.Of<IFileBackedLog>(
+                x => x.FullPath == $"./{AppBundleIdentifier}.log" && x.Description == LogType.ApplicationLog.ToString());
+            _stderrLog = Mock.Of<IFileBackedLog>(
+                x => x.FullPath == $"./{AppBundleIdentifier}.err.log" && x.Description == LogType.ApplicationLog.ToString());
+
             _logs = new Mock<ILogs>();
             _logs
                 .SetupGet(x => x.Directory)
@@ -66,6 +73,12 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             _logs
                 .Setup(x => x.CreateFile($"{AppBundleIdentifier}-mocked_timestamp.log", It.IsAny<LogType>()))
                 .Returns($"./{AppBundleIdentifier}-mocked_timestamp.log");
+            _logs
+                .Setup(x => x.CreateFile(AppBundleIdentifier + ".log", LogType.ApplicationLog))
+                .Returns(_stdoutLog.FullPath);
+            _logs
+                .Setup(x => x.CreateFile(AppBundleIdentifier + ".err.log", LogType.ApplicationLog))
+                .Returns(_stderrLog.FullPath);
 
             var factory2 = new Mock<ICrashSnapshotReporterFactory>();
             factory2.SetReturnsDefault(_snapshotReporter.Object);

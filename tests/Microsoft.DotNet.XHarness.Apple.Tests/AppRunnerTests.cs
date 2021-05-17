@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                    LogType.SystemLog))
                 .Returns(captureLog.Object);
 
-            SetupLogList(new[] { captureLog.Object });
+            SetupLogList(new[] { captureLog.Object, _stdoutLog, _stderrLog });
 
             var appInformation = GetMockedAppBundleInfo();
 
@@ -81,10 +81,11 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         public async Task RunOnDeviceTest()
         {
             var deviceSystemLog = new Mock<IFileBackedLog>();
-            deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
+            deviceSystemLog.SetupGet(x => x.FullPath).Returns(AppBundleIdentifier + "system.log");
             deviceSystemLog.SetupGet(x => x.Description).Returns(LogType.SystemLog.ToString());
 
-            SetupLogList(new[] { deviceSystemLog.Object });
+            SetupLogList(new[] { deviceSystemLog.Object, _stdoutLog, _stderrLog });
+
             _logs
                 .Setup(x => x.Create("device-" + DeviceName + "-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
                 .Returns(deviceSystemLog.Object);
@@ -205,17 +206,20 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 supports32b: false,
                 extension: null);
 
-        private static string GetExpectedDeviceMlaunchArgs() =>
+        private string GetExpectedDeviceMlaunchArgs() =>
+            $"--stdout={_stdoutLog.FullPath} " +
+            $"--stderr={_stderrLog.FullPath} " +
             "-argument=--foo=bar " +
             "-argument=--xyz " +
             "-setenv=appArg1=value1 " +
             "--disable-memory-limits " +
             $"--devname {s_mockDevice.DeviceIdentifier} " +
             $"--launchdevbundleid {AppBundleIdentifier} " +
-            "--wait-for-exit " +
-            $"--stdout=./{AppBundleIdentifier}-mocked_timestamp.log";
+            "--wait-for-exit";
 
         private string GetExpectedSimulatorMlaunchArgs() =>
+            $"--stdout={_stdoutLog.FullPath} " +
+            $"--stderr={_stderrLog.FullPath} " +
             "-argument=--foo=bar " +
             "-argument=--xyz " +
             "-setenv=appArg1=value1 " +

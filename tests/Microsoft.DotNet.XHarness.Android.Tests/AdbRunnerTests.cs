@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
             // Ensure it called, parsed the four random device names and found all four architectures
             foreach (var fakeDeviceInfo in _fakeDeviceList.Keys)
             {
-                _processManager.Verify(pm => pm.Run(s_adbPath, $"-s {fakeDeviceInfo.Item1} shell getprop ro.product.cpu.abi", TimeSpan.FromSeconds(30)), Times.Once);
+                _processManager.Verify(pm => pm.Run(s_adbPath, $"-s {fakeDeviceInfo.Item1} shell getprop ro.product.cpu.abilist", TimeSpan.FromSeconds(30)), Times.Once);
                 Assert.Equal(fakeDeviceInfo.Item2, result[fakeDeviceInfo.Item1]);
 
             }
@@ -284,7 +284,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
                     stdOut = s.ToString();
                     break;
                 case "shell":
-                    if ($"{allArgs[argStart + 1]} {allArgs[argStart + 2]}".Equals("getprop ro.product.cpu.abi"))
+                    if ($"{allArgs[argStart + 1]} {allArgs[argStart + 2]}".Equals("getprop ro.product.cpu.abilist"))
                     {
                         stdOut = _fakeDeviceList.Keys.Where(k => k.Item1 == s_currentDeviceSerial).Single().Item2;
                     }

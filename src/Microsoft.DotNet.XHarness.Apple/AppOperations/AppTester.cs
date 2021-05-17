@@ -473,6 +473,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         }
 
         private MlaunchArguments GetCommonArguments(
+            AppBundleInformation appInformation,
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
             string[]? skippedTestClasses,
@@ -482,7 +483,14 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables)
         {
-            var args = new MlaunchArguments();
+            string appOutputLog = _logs.CreateFile($"{appInformation.BundleIdentifier}.log", LogType.ApplicationLog);
+            string appErrorOutputLog = _logs.CreateFile($"{appInformation.BundleIdentifier}.err.log", LogType.ApplicationLog);
+
+            var args = new MlaunchArguments
+            {
+                new SetStdoutArgument(appOutputLog),
+                new SetStderrArgument(appErrorOutputLog),
+            };
 
             // Environment variables
             var envVariables = GetEnvVariables(
@@ -516,6 +524,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<(string, string)> extraEnvVariables)
         {
             var args = GetCommonArguments(
+                appInformation,
                 xmlResultJargon,
                 skippedMethods,
                 skippedTestClasses,
@@ -562,6 +571,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<(string, string)> extraEnvVariables)
         {
             var args = GetCommonArguments(
+                appInformation,
                 xmlResultJargon,
                 skippedMethods,
                 skippedTestClasses,
@@ -607,9 +617,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 args.Add(new WaitForExitArgument());
             }
-
-            string appOutputLog = _logs.CreateFile($"{appInformation.BundleIdentifier}-{_helpers.Timestamp}.log", LogType.ExecutionLog);
-            args.Add(new SetStdoutArgument(appOutputLog));
 
             return args;
         }
