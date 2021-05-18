@@ -8,20 +8,24 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 using System;
 using System.Threading.Tasks;
 using System.Net.WebSockets;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
     public class WasmTestWebServerStartup
     {
         private readonly IWebHostEnvironment _hostingEnvironment;
+        private readonly ILogger _logger;
 
-        public WasmTestWebServerStartup(IWebHostEnvironment hostingEnvironment)
+        public WasmTestWebServerStartup(IWebHostEnvironment hostingEnvironment, ILogger logger)
         {
             _hostingEnvironment = hostingEnvironment;
+            _logger = logger;
         }
 
         public void Configure(IApplicationBuilder app, IOptionsMonitor<WasmTestWebServerOptions> optionsAccessor)
@@ -62,11 +66,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     await options.OnConsoleConnected(socket);
                 });
             });
+            foreach(var middleware in options.EchoServerMiddlewares){
+                app.UseMiddleware(middleware);
+            }
         }
     }
 
     public class WasmTestWebServerOptions
     {
         public Func<WebSocket, Task>? OnConsoleConnected { get; set; }
+        public IList<Type> EchoServerMiddlewares { get; set; } = new List<Type>();
     }
 }
