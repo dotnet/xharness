@@ -48,9 +48,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public bool Incognito { get; set; } = true;
         public bool Headless { get; set; } = true;
         public bool QuitAppAtEnd { get; set; } = true;
-        public IList<string> WebServerMiddlewarePaths { get; set; } = new List<string>();
-        public bool SetWebServerEnvironmentVariables { get; set; } = false;
-
         protected override OptionSet GetTestCommandOptions() => new()
         {
             { "browser=|b=", "Specifies the browser to be used. Default is Chrome",
@@ -70,19 +67,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             },
             { "no-incognito", "Don't run in incognito mode.",
                 v => Incognito = false
-            },
-            { "web-server-middleware=", "Path to assembly which contains middleware for endpoints for local test server.",
-                v =>
-                {
-                    if (!File.Exists(v))
-                    {
-                        throw new ArgumentException($"Failed to find the middleware assembly at {v}");
-                    }
-                    WebServerMiddlewarePaths.Add(v);
-                }
-            },
-            { "set-web-server-env", "Set environment variables, so that unit test use xharness as test web server.",
-                v => SetWebServerEnvironmentVariables = true
             },
             { "no-headless", "Don't run in headless mode.",
                 v => Headless = false

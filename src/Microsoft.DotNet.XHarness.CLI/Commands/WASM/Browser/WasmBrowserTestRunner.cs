@@ -7,26 +7,20 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.WebSockets;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 
 using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
-using LogLevel = Microsoft.Extensions.Logging.LogLevel;
-using System.Runtime.Loader;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
@@ -63,12 +57,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             try
             {
                 var consolePumpTcs = new TaskCompletionSource<bool>();
-                var (webServerAddr, webServerAddrSecure) = await StartWebServer(
-                    _arguments.AppPackagePath,
+                ServerURLs serverURLs = await WebServer.Start(
+                    _arguments, _logger,
                     socket => RunConsoleMessagesPump(socket, consolePumpTcs, cts.Token),
                     cts.Token);
 
-                string testUrl = BuildUrl(webServerAddr, webServerAddrSecure);
+                string testUrl = BuildUrl(serverURLs);
 
                 var seleniumLogMessageTask = Task.Run(() => RunSeleniumLogMessagePump(driver, cts.Token), cts.Token);
                 cts.CancelAfter(_arguments.Timeout);
@@ -233,19 +227,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
         }
 
-        private string BuildUrl(string webServerAddr, string webServerAddrSecure)
+        private string BuildUrl(ServerURLs serverURLs)
         {
-            var uriBuilder = new UriBuilder($"{webServerAddr}/{_arguments.HTMLFile}");
+            var uriBuilder = new UriBuilder($"{serverURLs.Http}/{_arguments.HTMLFile}");
             var sb = new StringBuilder();
-
-            var hostAndPort = webServerAddr.Substring(webServerAddr.LastIndexOf('/') + 1);
-            var hostAndPortSecure = webServerAddrSecure.Substring(webServerAddrSecure.LastIndexOf('/') + 1);
 
             if (_arguments.DebuggerPort != null)
                 sb.Append($"arg=--debug");
 
             if (_arguments.SetWebServerEnvironmentVariables)
             {
+                var hostAndPort = serverURLs.Http.Substring(serverURLs.Http.LastIndexOf('/') + 1);
+                var hostAndPortSecure = serverURLs.Https.Substring(serverURLs.Https.LastIndexOf('/') + 1);
+
                 if (sb.Length > 0)
                     sb.Append('&');
                 // see runtime\src\libraries\Common\tests\System\Net\Configuration.WebSockets.cs
@@ -268,61 +262,5 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             return uriBuilder.ToString();
         }
 
-        private async Task<(string,string)> StartWebServer(string contentRoot, Func<WebSocket, Task> onConsoleConnected, CancellationToken token)
-        {
-            var host = new WebHostBuilder()
-                .UseKestrel()
-                .UseContentRoot(contentRoot)
-                .UseStartup<WasmTestWebServerStartup>()
-                .ConfigureLogging(logging =>
-                {
-                    logging.AddConsole().AddFilter(null, LogLevel.Warning);
-                })
-                .ConfigureServices((ctx, services) =>
-                {
-                    services.AddRouting();
-                    services.AddSingleton<ILogger>(_logger);
-                    services.Configure<WasmTestWebServerOptions>(ctx.Configuration);
-                    services.Configure<WasmTestWebServerOptions>(options =>
-                    {
-                        options.OnConsoleConnected = onConsoleConnected;
-                        foreach(var middlewarePath in _arguments.WebServerMiddlewarePaths)
-                        {
-                            var extensionAssembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(middlewarePath);
-                            var middlewareType = extensionAssembly?.GetTypes().Where(type => type.Name == "GenericHandler").FirstOrDefault();
-                            if (middlewareType == null)
-                            {
-                                var message = $"Can't find GenericHandler middleware in {middlewarePath}";
-                                _logger.LogError(message);
-                                throw new Exception(message);
-                            }
-                            _logger.LogInformation($"Loaded {middlewareType.FullName} middleware");
-                            options.EchoServerMiddlewares.Add(middlewareType);
-                        }
-                    });
-                })
-                .UseUrls("http://127.0.0.1:0", "https://127.0.0.1:0")
-                .Build();
-
-            await host.StartAsync(token);
-
-            var ipAddress = host.ServerFeatures
-                .Get<IServerAddressesFeature>()?
-                .Addresses
-                .Where(a=>a.StartsWith("http:"))
-                .FirstOrDefault();
-
-            var ipAddressSecure = host.ServerFeatures
-                .Get<IServerAddressesFeature>()?
-                .Addresses
-                .Where(a=>a.StartsWith("https:"))
-                .FirstOrDefault();
-
-            if (ipAddress == null || ipAddressSecure == null)
-            {
-                throw new InvalidOperationException("Failed to determine web server's IP address or port");
-            }
-            return (ipAddress,ipAddressSecure);
-        }
     }
 }
