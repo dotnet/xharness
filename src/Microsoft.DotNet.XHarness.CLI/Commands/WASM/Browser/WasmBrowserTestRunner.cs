@@ -254,7 +254,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 sb.Append($"&arg={HttpUtility.UrlEncode($"--setenv=DOTNET_TEST_SECUREWEBSOCKETHOST={hostAndPortSecure}")}");
                 sb.Append($"&arg={HttpUtility.UrlEncode($"--setenv=DOTNET_TEST_HTTPHOST={hostAndPort}")}");
                 sb.Append($"&arg={HttpUtility.UrlEncode($"--setenv=DOTNET_TEST_SECUREHTTPHOST={hostAndPortSecure}")}");
-                sb.Append($"&arg={HttpUtility.UrlEncode($"--setenv=DOTNET_TEST_NET_SECURITY_TLSSERVERURI={webServerAddrSecure}")}");
             }
 
             foreach (var arg in _passThroughArguments)
