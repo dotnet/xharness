@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             try
             {
                 ServerURLs? serverURLs = null;
-                if (_arguments.WebServerMiddlewarePathsAndTypes.Count > 0 || _arguments.SetWebServerEnvironmentVariablesHttp.Count > 0 || _arguments.SetWebServerEnvironmentVariablesHttps.Count > 0)
+                if (_arguments.WebServerMiddlewarePathsAndTypes.Count > 0)
                 {
                     serverURLs = await WebServer.Start(
                         _arguments, logger,
@@ -98,14 +98,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     engineArgs.Add("--");
                 }
 
-                foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttp)
+                if (_arguments.WebServerMiddlewarePathsAndTypes.Count > 0)
                 {
-                    engineArgs.Add($"--setenv={envVariable}={serverURLs!.Http}");
-                }
+                    foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttp)
+                    {
+                        engineArgs.Add($"--setenv={envVariable}={serverURLs!.Http}");
+                    }
 
-                foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
-                {
-                    engineArgs.Add($"--setenv={envVariable}={serverURLs!.Https}");
+                    foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
+                    {
+                        engineArgs.Add($"--setenv={envVariable}={serverURLs!.Https}");
+                    }
                 }
 
                 engineArgs.AddRange(PassThroughArguments);
