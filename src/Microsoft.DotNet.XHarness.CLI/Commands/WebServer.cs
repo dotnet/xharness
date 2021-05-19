@@ -64,12 +64,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 .Get<IServerAddressesFeature>()?
                 .Addresses
                 .Where(a => a.StartsWith("http:"))
+                .Select(a => new Uri(a))
+                .Select(uri => $"{uri.Host}:{uri.Port}")
                 .FirstOrDefault();
 
             var ipAddressSecure = host.ServerFeatures
                 .Get<IServerAddressesFeature>()?
                 .Addresses
                 .Where(a => a.StartsWith("https:"))
+                .Select(a => new Uri(a))
+                .Select(uri => $"{uri.Host}:{uri.Port}")
                 .FirstOrDefault();
 
             if (ipAddress == null || ipAddressSecure == null)
@@ -77,8 +81,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 throw new InvalidOperationException("Failed to determine web server's IP address or port");
             }
 
-            return new ServerURLs(ipAddress.Substring(ipAddress.LastIndexOf('/') + 1),
-                                  ipAddressSecure.Substring(ipAddressSecure.LastIndexOf('/') + 1));
+            return new ServerURLs(ipAddress, ipAddressSecure);
         }
 
         class TestWebServerStartup
