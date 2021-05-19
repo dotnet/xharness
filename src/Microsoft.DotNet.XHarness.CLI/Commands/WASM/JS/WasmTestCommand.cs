@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 engineBinary = FindEngineInPath(engineBinary + ".cmd");
 
-            var cts = new CancellationTokenSource();
+            var webServerCts = new CancellationTokenSource();
             try
             {
                 ServerURLs? serverURLs = null;
@@ -77,8 +77,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     serverURLs = await WebServer.Start(
                         _arguments, logger,
                         null,
-                        cts.Token);
-                    cts.CancelAfter(_arguments.Timeout);
+                        webServerCts.Token);
+                    webServerCts.CancelAfter(_arguments.Timeout);
                 }
 
                 var engineArgs = new List<string>();
@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     stderrLog: new CallbackLog(m => logger.LogError(m)),
                     _arguments.Timeout);
                 
-                if (cts.IsCancellationRequested)
+                if (webServerCts.IsCancellationRequested)
                 {
                     return ExitCode.TIMED_OUT;
                 }
@@ -148,9 +148,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
             finally
             {
-                if (!cts.IsCancellationRequested)
+                if (!webServerCts.IsCancellationRequested)
                 {
-                    cts.Cancel();
+                    webServerCts.Cancel();
                 }
             }
         }
