@@ -128,11 +128,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     stderrLog: new CallbackLog(m => logger.LogError(m)),
                     _arguments.Timeout);
                 
-                if (webServerCts.IsCancellationRequested)
-                {
-                    return ExitCode.TIMED_OUT;
-                }
-
                 if (result.ExitCode != _arguments.ExpectedExitCode)
                 {
                     logger.LogError($"Application has finished with exit code {result.ExitCode} but {_arguments.ExpectedExitCode} was expected");
