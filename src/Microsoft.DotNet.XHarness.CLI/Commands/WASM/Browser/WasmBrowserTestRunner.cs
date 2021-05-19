@@ -53,19 +53,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 return ExitCode.GENERAL_FAILURE;
             }
 
-            var webServerCts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource();
             try
             {
                 var consolePumpTcs = new TaskCompletionSource<bool>();
                 ServerURLs serverURLs = await WebServer.Start(
                     _arguments, _logger,
-                    socket => RunConsoleMessagesPump(socket, consolePumpTcs, webServerCts.Token),
-                    webServerCts.Token);
+                    socket => RunConsoleMessagesPump(socket, consolePumpTcs, cts.Token),
+                    cts.Token);
 
                 string testUrl = BuildUrl(serverURLs);
 
-                var seleniumLogMessageTask = Task.Run(() => RunSeleniumLogMessagePump(driver, webServerCts.Token), webServerCts.Token);
-                webServerCts.CancelAfter(_arguments.Timeout);
+                var seleniumLogMessageTask = Task.Run(() => RunSeleniumLogMessagePump(driver, cts.Token), cts.Token);
+                cts.CancelAfter(_arguments.Timeout);
 
                 _logger.LogTrace($"Opening in browser: {testUrl}");
                 driver.Navigate().GoToUrl(testUrl);
@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 };
 
                 var task = await Task.WhenAny(tasks).ConfigureAwait(false);
-                if (task == tasks[^1] || webServerCts.IsCancellationRequested)
+                if (task == tasks[^1] || cts.IsCancellationRequested)
                 {
                     if (driverService.IsRunning)
                     {
@@ -95,8 +95,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     }
 
                     // timed out
-                    if (!webServerCts.IsCancellationRequested)
-                        webServerCts.Cancel();
+                    if (!cts.IsCancellationRequested)
+                        cts.Cancel();
                     return ExitCode.TIMED_OUT;
                 }
 
@@ -124,9 +124,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
             finally
             {
-                if (!webServerCts.IsCancellationRequested)
+                if (!cts.IsCancellationRequested)
                 {
-                    webServerCts.Cancel();
+                    cts.Cancel();
                 }
             }
         }
