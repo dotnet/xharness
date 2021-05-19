@@ -7,25 +7,20 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.WebSockets;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 
 using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
-using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
@@ -62,12 +57,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             try
             {
                 var consolePumpTcs = new TaskCompletionSource<bool>();
-                string webServerAddr = await StartWebServer(
-                    _arguments.AppPackagePath,
+                ServerURLs serverURLs = await WebServer.Start(
+                    _arguments, _logger,
                     socket => RunConsoleMessagesPump(socket, consolePumpTcs, cts.Token),
                     cts.Token);
 
-                string testUrl = BuildUrl(webServerAddr);
+                string testUrl = BuildUrl(serverURLs);
 
                 var seleniumLogMessageTask = Task.Run(() => RunSeleniumLogMessagePump(driver, cts.Token), cts.Token);
                 cts.CancelAfter(_arguments.Timeout);
@@ -232,13 +227,28 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
         }
 
-        private string BuildUrl(string webServerAddr)
+        private string BuildUrl(ServerURLs serverURLs)
         {
-            var uriBuilder = new UriBuilder($"{webServerAddr}/{_arguments.HTMLFile}");
+            var uriBuilder = new UriBuilder($"{serverURLs.Http}/{_arguments.HTMLFile}");
             var sb = new StringBuilder();
 
             if (_arguments.DebuggerPort != null)
                 sb.Append($"arg=--debug");
+
+
+            foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttp)
+            {
+                if (sb.Length > 0)
+                    sb.Append('&');
+                sb.Append($"arg={HttpUtility.UrlEncode($"--setenv={envVariable}={serverURLs!.Http}")}");
+            }
+
+            foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
+            {
+                if (sb.Length > 0)
+                    sb.Append('&');
+                sb.Append($"arg={HttpUtility.UrlEncode($"--setenv={envVariable}={serverURLs!.Https}")}");
+            }
 
             foreach (var arg in _passThroughArguments)
             {
@@ -250,38 +260,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             uriBuilder.Query = sb.ToString();
             return uriBuilder.ToString();
-        }
-
-        private static async Task<string> StartWebServer(string contentRoot, Func<WebSocket, Task> onConsoleConnected, CancellationToken token)
-        {
-            var host = new WebHostBuilder()
-                .UseKestrel()
-                .UseContentRoot(contentRoot)
-                .UseStartup<WasmTestWebServerStartup>()
-                .ConfigureLogging(logging =>
-                {
-                    logging.AddConsole().AddFilter(null, LogLevel.Warning);
-                })
-                .ConfigureServices((ctx, services) =>
-                {
-                    services.AddRouting();
-                    services.Configure<WasmTestWebServerOptions>(ctx.Configuration);
-                    services.Configure<WasmTestWebServerOptions>(options =>
-                    {
-                        options.OnConsoleConnected = onConsoleConnected;
-                    });
-                })
-                .UseUrls("http://127.0.0.1:0")
-                .Build();
-
-            await host.StartAsync(token);
-
-            var ipAddress = host.ServerFeatures
-                .Get<IServerAddressesFeature>()?
-                .Addresses
-                .FirstOrDefault();
-
-            return ipAddress ?? throw new InvalidOperationException("Failed to determine web server's IP address");
         }
     }
 }

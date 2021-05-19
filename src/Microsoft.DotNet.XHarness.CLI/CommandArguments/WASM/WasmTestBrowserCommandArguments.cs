@@ -48,7 +48,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public bool Incognito { get; set; } = true;
         public bool Headless { get; set; } = true;
         public bool QuitAppAtEnd { get; set; } = true;
-
         protected override OptionSet GetTestCommandOptions() => new()
         {
             { "browser=|b=", "Specifies the browser to be used. Default is Chrome",

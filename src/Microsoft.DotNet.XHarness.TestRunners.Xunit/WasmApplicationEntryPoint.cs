@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             var parts = argument.Split('=');
             if (parts.Length != 2 || string.IsNullOrEmpty(parts[0]) || string.IsNullOrEmpty(parts[1]))
             {
-                throw new ArgumentException("Invalid argument value '{argument}'.", nameof(argument));
+                throw new ArgumentException($"Invalid argument value '{argument}'.", nameof(argument));
             }
 
             var name = parts[0];

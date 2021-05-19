@@ -15,6 +15,7 @@ using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
@@ -34,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         private static string FindEngineInPath(string engineBinary)
         {
-            if (File.Exists (engineBinary) || Path.IsPathRooted(engineBinary))
+            if (File.Exists(engineBinary) || Path.IsPathRooted(engineBinary))
                 return engineBinary;
 
             var path = Environment.GetEnvironmentVariable("PATH");
@@ -67,33 +68,57 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 engineBinary = FindEngineInPath(engineBinary + ".cmd");
 
-            var engineArgs = new List<string>();
-
-            if (_arguments.Engine == JavaScriptEngine.V8)
-            {
-                // v8 needs this flag to enable WASM support
-                engineArgs.Add("--expose_wasm");
-            }
-
-            engineArgs.AddRange(_arguments.EngineArgs);
-            engineArgs.Add(_arguments.JSFile);
-
-            if (_arguments.Engine == JavaScriptEngine.V8 || _arguments.Engine == JavaScriptEngine.JavaScriptCore)
-            {
-                // v8/jsc want arguments to the script separated by "--", others don't
-                engineArgs.Add("--");
-            }
-
-            engineArgs.AddRange(PassThroughArguments);
-
-            var xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
-            File.Delete(xmlResultsFilePath);
-
-            var stdoutFilePath = Path.Combine(_arguments.OutputDirectory, "wasm-console.log");
-            File.Delete(stdoutFilePath);
-
+            var webServerCts = new CancellationTokenSource();
             try
             {
+                ServerURLs? serverURLs = null;
+                if (_arguments.WebServerMiddlewarePathsAndTypes.Count > 0)
+                {
+                    serverURLs = await WebServer.Start(
+                        _arguments, logger,
+                        null,
+                        webServerCts.Token);
+                    webServerCts.CancelAfter(_arguments.Timeout);
+                }
+
+                var engineArgs = new List<string>();
+
+                if (_arguments.Engine == JavaScriptEngine.V8)
+                {
+                    // v8 needs this flag to enable WASM support
+                    engineArgs.Add("--expose_wasm");
+                }
+
+                engineArgs.AddRange(_arguments.EngineArgs);
+                engineArgs.Add(_arguments.JSFile);
+
+                if (_arguments.Engine == JavaScriptEngine.V8 || _arguments.Engine == JavaScriptEngine.JavaScriptCore)
+                {
+                    // v8/jsc want arguments to the script separated by "--", others don't
+                    engineArgs.Add("--");
+                }
+
+                if (_arguments.WebServerMiddlewarePathsAndTypes.Count > 0)
+                {
+                    foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttp)
+                    {
+                        engineArgs.Add($"--setenv={envVariable}={serverURLs!.Http}");
+                    }
+
+                    foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
+                    {
+                        engineArgs.Add($"--setenv={envVariable}={serverURLs!.Https}");
+                    }
+                }
+
+                engineArgs.AddRange(PassThroughArguments);
+
+                var xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
+                File.Delete(xmlResultsFilePath);
+
+                var stdoutFilePath = Path.Combine(_arguments.OutputDirectory, "wasm-console.log");
+                File.Delete(stdoutFilePath);
+
                 var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath, stdoutFilePath, logger);
                 var result = await processManager.ExecuteCommandAsync(
                     engineBinary,
@@ -102,11 +127,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     stdoutLog: new CallbackLog(logProcessor.Invoke),
                     stderrLog: new CallbackLog(m => logger.LogError(m)),
                     _arguments.Timeout);
+                
                 if (result.ExitCode != _arguments.ExpectedExitCode)
                 {
                     logger.LogError($"Application has finished with exit code {result.ExitCode} but {_arguments.ExpectedExitCode} was expected");
-                        return ExitCode.GENERAL_FAILURE;
-                    
+                    return ExitCode.GENERAL_FAILURE;
                 }
                 else
                 {
@@ -118,6 +143,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             {
                 logger.LogCritical($"The engine binary `{engineBinary}` was not found");
                 return ExitCode.APP_LAUNCH_FAILURE;
+            }
+            finally
+            {
+                if (!webServerCts.IsCancellationRequested)
+                {
+                    webServerCts.Cancel();
+                }
             }
         }
     }

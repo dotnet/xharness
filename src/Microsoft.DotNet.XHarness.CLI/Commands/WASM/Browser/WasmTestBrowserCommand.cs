@@ -175,6 +175,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             {
                 // added based on https://github.com/puppeteer/puppeteer/blob/main/src/node/Launcher.ts#L159-L181
                 "--enable-features=NetworkService,NetworkServiceInProcess",
+                "--allow-insecure-localhost",
                 "--disable-background-timer-throttling",
                 "--disable-backgrounding-occluded-windows",
                 "--disable-breakpad",
