@@ -235,19 +235,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             if (_arguments.DebuggerPort != null)
                 sb.Append($"arg=--debug");
 
-            if (_arguments.SetWebServerEnvironmentVariables)
-            {
-                var hostAndPort = serverURLs.Http.Substring(serverURLs.Http.LastIndexOf('/') + 1);
-                var hostAndPortSecure = serverURLs.Https.Substring(serverURLs.Https.LastIndexOf('/') + 1);
 
+            foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttp)
+            {
                 if (sb.Length > 0)
                     sb.Append('&');
-                // see runtime\src\libraries\Common\tests\System\Net\Configuration.WebSockets.cs
-                // see runtime\src\libraries\Common\tests\System\Net\Configuration.Http.cs
-                sb.Append($"arg={HttpUtility.UrlEncode($"--setenv=DOTNET_TEST_WEBSOCKETHOST={hostAndPort}")}");
-                sb.Append($"&arg={HttpUtility.UrlEncode($"--setenv=DOTNET_TEST_SECUREWEBSOCKETHOST={hostAndPortSecure}")}");
-                sb.Append($"&arg={HttpUtility.UrlEncode($"--setenv=DOTNET_TEST_HTTPHOST={hostAndPort}")}");
-                sb.Append($"&arg={HttpUtility.UrlEncode($"--setenv=DOTNET_TEST_SECUREHTTPHOST={hostAndPortSecure}")}");
+                sb.Append($"arg={HttpUtility.UrlEncode($"--setenv={envVariable}={serverURLs!.Http}")}");
+            }
+
+            foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
+            {
+                if (sb.Length > 0)
+                    sb.Append('&');
+                sb.Append($"arg={HttpUtility.UrlEncode($"--setenv={envVariable}={serverURLs!.Https}")}");
             }
 
             foreach (var arg in _passThroughArguments)
@@ -261,6 +261,5 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             uriBuilder.Query = sb.ToString();
             return uriBuilder.ToString();
         }
-
     }
 }

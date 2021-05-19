@@ -55,7 +55,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
-
             var processManager = ProcessManagerFactory.CreateProcessManager();
 
             var engineBinary = _arguments.Engine switch
@@ -72,10 +71,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var cts = new CancellationTokenSource();
             try
             {
-                var serverURLs = await WebServer.Start(
-                    _arguments, logger,
-                    null,
-                    cts.Token);
+                ServerURLs? serverURLs = null;
+                if (_arguments.WebServerMiddlewarePathsAndTypes.Count > 0 || _arguments.SetWebServerEnvironmentVariablesHttp.Count > 0 || _arguments.SetWebServerEnvironmentVariablesHttps.Count > 0)
+                {
+                    serverURLs = await WebServer.Start(
+                        _arguments, logger,
+                        null,
+                        cts.Token);
+                }
 
                 cts.CancelAfter(_arguments.Timeout);
 
@@ -96,16 +99,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     engineArgs.Add("--");
                 }
 
-                if (_arguments.SetWebServerEnvironmentVariables)
+                foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttp)
                 {
-                    var hostAndPort = serverURLs.Http.Substring(serverURLs.Http.LastIndexOf('/') + 1);
-                    var hostAndPortSecure = serverURLs.Https.Substring(serverURLs.Https.LastIndexOf('/') + 1);
-
-                    engineArgs.Add($"--setenv=DOTNET_TEST_WEBSOCKETHOST={hostAndPort}");
-                    engineArgs.Add($"--setenv=DOTNET_TEST_SECUREWEBSOCKETHOST={hostAndPortSecure}");
-                    engineArgs.Add($"--setenv=DOTNET_TEST_HTTPHOST={hostAndPort}");
-                    engineArgs.Add($"--setenv=DOTNET_TEST_SECUREHTTPHOST={hostAndPortSecure}");
+                    engineArgs.Add($"--setenv={envVariable}={serverURLs!.Http}");
                 }
+
+                foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
+                {
+                    engineArgs.Add($"--setenv={envVariable}={serverURLs!.Https}");
+                }
+
                 engineArgs.AddRange(PassThroughArguments);
 
                 var xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
@@ -122,10 +125,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     stdoutLog: new CallbackLog(logProcessor.Invoke),
                     stderrLog: new CallbackLog(m => logger.LogError(m)),
                     _arguments.Timeout);
+                
                 if (cts.IsCancellationRequested)
                 {
                     return ExitCode.TIMED_OUT;
                 }
+
                 if (result.ExitCode != _arguments.ExpectedExitCode)
                 {
                     logger.LogError($"Application has finished with exit code {result.ExitCode} but {_arguments.ExpectedExitCode} was expected");

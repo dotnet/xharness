@@ -23,8 +23,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         /// Tests classes to be included in the run while all others are ignored.
         /// </summary>
         public IEnumerable<string> ClassMethodFilters => _classMethodFilters;
-        public IList<string> WebServerMiddlewarePaths { get; set; } = new List<string>();
-        public bool SetWebServerEnvironmentVariables { get; set; } = false;
+        public IList<(string path, string type)> WebServerMiddlewarePathsAndTypes { get; set; } = new List<(string, string)>();
+        public IList<string> SetWebServerEnvironmentVariablesHttp { get; set; } = new List<string>();
+        public IList<string> SetWebServerEnvironmentVariablesHttps { get; set; } = new List<string>();
 
         protected override OptionSet GetCommandOptions()
         {
@@ -44,18 +45,26 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                     "ignored. Can be used more than once.",
                     v => _classMethodFilters.Add(v)
                 },
-                { "web-server-middleware=", "Path to assembly which contains middleware for endpoints for local test server.",
+                { "web-server-middleware=", "<Path>,<typeName> to assembly and type which contains Kestrel middleware for local test server. Could be used multiple times to load multiple middlewares.",
                     v =>
                     {
-                        if (!File.Exists(v))
+                        var split = v.Split(',');
+                        var file = split[0];
+                        var type = split.Length > 1
+                                    ? split[1]
+                                    : "GenericHandler";
+                        if (!File.Exists(file))
                         {
                             throw new ArgumentException($"Failed to find the middleware assembly at {v}");
                         }
-                        WebServerMiddlewarePaths.Add(v);
+                        WebServerMiddlewarePathsAndTypes.Add((file,type));
                     }
                 },
-                { "set-web-server-env", "Set environment variables, so that unit test use xharness as test web server.",
-                    v => SetWebServerEnvironmentVariables = true
+                { "set-web-server-http-env=", "Comma separated list of environment variable names, which should be set to HTTP host and port, for the unit test, which use xharness as test web server.",
+                    v => SetWebServerEnvironmentVariablesHttp = v.Split(',')
+                },
+                { "set-web-server-https-env=", "Comma separated list of environment variable names, which should be set to HTTPS host and port, for the unit test, which use xharness as test web server.",
+                    v => SetWebServerEnvironmentVariablesHttps = v.Split(',')
                 },
             };
 
