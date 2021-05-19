@@ -78,9 +78,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                         _arguments, logger,
                         null,
                         cts.Token);
+                    cts.CancelAfter(_arguments.Timeout);
                 }
-
-                cts.CancelAfter(_arguments.Timeout);
 
                 var engineArgs = new List<string>();
 
