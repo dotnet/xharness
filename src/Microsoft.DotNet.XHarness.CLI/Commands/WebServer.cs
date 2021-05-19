@@ -145,15 +145,5 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
         }
     }
 
-    public record ServerURLs
-    {
-        public ServerURLs(string http, string https)
-        {
-            this.Http = http;
-            this.Https = https;
-        }
-
-        public string Http { get; init; }
-        public string Https { get; init; }
-    }
+    public record ServerURLs(string Http, string Https);
 }
