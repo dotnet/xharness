@@ -129,6 +129,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                         });
                     });
                 }
+
                 foreach (var middleware in options.EchoServerMiddlewares)
                 {
                     app.UseMiddleware(middleware);
@@ -151,7 +152,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
             this.Http = http;
             this.Https = https;
         }
-        
+
         public string Http { get; init; }
         public string Https { get; init; }
     }
