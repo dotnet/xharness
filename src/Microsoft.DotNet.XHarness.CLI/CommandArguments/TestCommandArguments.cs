@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                                     : "GenericHandler";
                         if (!File.Exists(file))
                         {
-                            throw new ArgumentException($"Failed to find the middleware assembly at {v}");
+                            throw new ArgumentException($"Failed to find the middleware assembly at {file}");
                         }
                         WebServerMiddlewarePathsAndTypes.Add((file,type));
                     }
