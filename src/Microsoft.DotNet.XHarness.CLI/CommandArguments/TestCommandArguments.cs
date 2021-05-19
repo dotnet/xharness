@@ -50,9 +50,13 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                     {
                         var split = v.Split(',');
                         var file = split[0];
-                        var type = split.Length > 1
+                        var type = split.Length > 1 && !string.IsNullOrWhiteSpace(split[1])
                                     ? split[1]
                                     : "GenericHandler";
+                        if (string.IsNullOrWhiteSpace(file))
+                        {
+                            throw new ArgumentException($"Empty path to middleware assembly");
+                        }
                         if (!File.Exists(file))
                         {
                             throw new ArgumentException($"Failed to find the middleware assembly at {file}");
