@@ -39,6 +39,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 })
                 .ConfigureServices((ctx, services) =>
                 {
+                    services.AddCors(o => o.AddPolicy("AnyCors", builder =>
+                        {
+                            builder.AllowAnyOrigin()
+                                .AllowAnyMethod()
+                                .AllowAnyHeader();
+                        }));
                     services.AddRouting();
                     services.AddSingleton<ILogger>(logger);
                     services.Configure<TestWebServerOptions>(ctx.Configuration);
@@ -118,6 +124,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 
                 var options = optionsAccessor.CurrentValue;
 
+                app.UseCors("AnyCors");
                 app.UseWebSockets();
                 if (options.OnConsoleConnected != null)
                 {
