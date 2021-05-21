@@ -160,6 +160,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                 return ExitCode.DEVICE_NOT_FOUND;
             }
 
+            // Uninstall the app first to get a clean state
+            await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, cancellationToken);
+
             exitCode = await InstallApp(appBundleInfo, device, target, cancellationToken);
 
             if (exitCode != ExitCode.SUCCESS)
