@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public override void Close()
         {
             ValidateWriter();
-            _writer.Close();
+            _writer?.Close();
         }
 
         protected override void Dispose(bool disposing) => _writer?.Dispose();
@@ -98,32 +98,32 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public override void Flush()
         {
             ValidateWriter();
-            _writer.Flush();
+            _writer?.Flush();
         }
 
         // minimum to override - see http://msdn.microsoft.com/en-us/library/system.io.textwriter.aspx
         public override void Write(char value)
         {
             ValidateWriter();
-            _writer.Write(value);
+            _writer?.Write(value);
         }
 
         public override void Write(char[]? buffer)
         {
             ValidateWriter();
-            _writer.Write(buffer);
+            _writer?.Write(buffer);
         }
 
         public override void Write(char[] buffer, int index, int count)
         {
             ValidateWriter();
-            _writer.Write(buffer, index, count);
+            _writer?.Write(buffer, index, count);
         }
 
         public override void Write(string? value)
         {
             ValidateWriter();
-            _writer.Write(value);
+            _writer?.Write(value);
         }
 
         // special extra override to ensure we flush data regularly
@@ -131,8 +131,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         public override void WriteLine()
         {
             ValidateWriter();
-            _writer.WriteLine();
-            _writer.Flush();
+            _writer?.WriteLine();
+            _writer?.Flush();
         }
 
         private static string SelectHostName(string[] names, int port)
@@ -194,8 +194,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
             return result;
         }
-
+#if NET6_0
         [MemberNotNull(nameof(_writer))]
+#endif
         private void ValidateWriter()
         {
             if (_writer == null)
