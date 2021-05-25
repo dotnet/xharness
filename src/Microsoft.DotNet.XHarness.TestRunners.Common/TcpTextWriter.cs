@@ -2,14 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-// this is an adaptation of NUnitLite's TcpWriter.cs with a additional
-// overrides and with network-activity UI enhancement
-// This code is a small modification of
-// https://github.com/spouliot/Touch.Unit/blob/master/NUnitLite/TouchRunner/TcpTextWriter.cs
-
 using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -19,19 +13,25 @@ using System.Threading;
 #nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Common
 {
+    /// <summary>
+    /// Class that writes output into a TCP connection.
+    /// It is an adaptation of NUnitLite's TcpWriter.cs with additional overrides and with network-activity UI enhancement
+    /// This code is a small modification of https://github.com/spouliot/Touch.Unit/blob/master/NUnitLite/TouchRunner/TcpTextWriter.cs
+    /// </summary>
     internal class TcpTextWriter : TextWriter
     {
         private static readonly TimeSpan s_connectionAwaitPeriod = TimeSpan.FromMinutes(1);
 
-        private TcpClient? _client = null;
-        private StreamWriter? _writer = null;
+        private StreamWriter _writer;
 
-        public void InitializeTunnelConnection(int port)
+        private TcpTextWriter(StreamWriter writer)
         {
-            if ((port < 0) || (port > ushort.MaxValue))
-            {
-                throw new ArgumentOutOfRangeException(nameof(port), $"Port must be between 0 and {ushort.MaxValue}");
-            }
+            _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+        }
+
+        public static TcpTextWriter InitializeWithTunnelConnection(int port)
+        {
+            ValidatePort(port);
 
             var server = new TcpListener(IPAddress.Any, port);
             server.Server.ReceiveTimeout = 5000;
@@ -48,11 +48,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 Thread.Sleep(100);
             }
 
-            _client = server.AcceptTcpClient();
+            var client = server.AcceptTcpClient();
 
             // Block until we have the ping from the client side
             byte[] buffer = new byte[16 * 1024];
-            var stream = _client.GetStream();
+            var stream = client.GetStream();
             while ((_ = stream.Read(buffer, 0, buffer.Length)) != 0)
             {
                 var message = Encoding.UTF8.GetString(buffer);
@@ -62,25 +62,26 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 }
             }
 
-            _writer = new StreamWriter(_client.GetStream());
+            var writer = new StreamWriter(client.GetStream());
+
+            return new TcpTextWriter(writer);
         }
 
-        public void InitializeDirectConnection(string hostName, int port)
+        public static TcpTextWriter InitializeWithDirectConnection(string hostName, int port)
         {
             if (hostName is null)
             {
                 throw new ArgumentNullException(nameof(hostName));
             }
 
-            if ((port < 0) || (port > ushort.MaxValue))
-            {
-                throw new ArgumentOutOfRangeException(nameof(port), $"Port must be between 0 and {ushort.MaxValue}");
-            }
+            ValidatePort(port);
 
             hostName = SelectHostName(hostName.Split(','), port);
 
-            _client = new TcpClient(hostName, port);
-            _writer = new StreamWriter(_client.GetStream());
+            var client = new TcpClient(hostName, port);
+            var writer = new StreamWriter(client.GetStream());
+
+            return new TcpTextWriter(writer);
         }
 
         // we override everything that StreamWriter overrides from TextWriter
@@ -89,7 +90,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         public override void Close()
         {
-            ValidateWriter();
             _writer.Close();
         }
 
@@ -97,32 +97,27 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         public override void Flush()
         {
-            ValidateWriter();
             _writer.Flush();
         }
 
         // minimum to override - see http://msdn.microsoft.com/en-us/library/system.io.textwriter.aspx
         public override void Write(char value)
         {
-            ValidateWriter();
             _writer.Write(value);
         }
 
         public override void Write(char[]? buffer)
         {
-            ValidateWriter();
             _writer.Write(buffer);
         }
 
         public override void Write(char[] buffer, int index, int count)
         {
-            ValidateWriter();
             _writer.Write(buffer, index, count);
         }
 
         public override void Write(string? value)
         {
-            ValidateWriter();
             _writer.Write(value);
         }
 
@@ -130,7 +125,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
 
         public override void WriteLine()
         {
-            ValidateWriter();
             _writer.WriteLine();
             _writer.Flush();
         }
@@ -195,12 +189,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
             return result;
         }
 
-        [MemberNotNull(nameof(_writer))]
-        private void ValidateWriter()
+        private static void ValidatePort(int port)
         {
-            if (_writer == null)
+            if (port < 0 || port > ushort.MaxValue)
             {
-                throw new InvalidOperationException("Please initialize the writer before usage by calling one of the Initialize*() methods.");
+                throw new ArgumentOutOfRangeException(nameof(port), $"Port must be between 0 and {ushort.MaxValue}");
             }
         }
     }

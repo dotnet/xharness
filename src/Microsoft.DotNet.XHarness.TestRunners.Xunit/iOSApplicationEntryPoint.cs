@@ -6,6 +6,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 {
     public abstract class iOSApplicationEntryPoint : ApplicationEntryPoint
@@ -22,42 +23,40 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
         public override async Task RunAsync()
         {
             var options = ApplicationOptions.Current;
-            var writer = new TcpTextWriter();
+            TcpTextWriter? writer;
+
             try
             {
-                if (options.UseTunnel)
-                {
-                    writer.InitializeTunnelConnection(options.HostPort);
-                }
-                else
-                {
-                    writer.InitializeDirectConnection(options.HostName, options.HostPort);
-                }
+                writer = options.UseTunnel
+                    ? TcpTextWriter.InitializeWithTunnelConnection(options.HostPort)
+                    : TcpTextWriter.InitializeWithDirectConnection(options.HostName, options.HostPort);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Cannot connect to {0}:{1}: {2}. Continuing on console.", options.HostName, options.HostPort, ex);
-                writer = null; // will default to the console
+                Console.WriteLine("Failed to initialize TCP writer. Continuing on console." + Environment.NewLine + ex);
+                writer = null; // null means we will fall back to console output
             }
 
             // we generate the logs in two different ways depending if the generate xml flag was
             // provided. If it was, we will write the xml file to the tcp writer if present, else
             // we will write the normal console output using the LogWriter
-            var logger = (writer == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, writer);
-            logger.MinimumLogLevel = MinimumLogLevel.Info;
-
-            // if we have ignore files, ignore those tests
-            var runner = await InternalRunAsync(logger);
-
-            WriteResults(runner, options, logger, writer ?? Console.Out);
-
-            logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests + runner.SkippedTests}");
-
-            if (options.TerminateAfterExecution)
+            using (writer)
             {
-                TerminateWithSuccess();
+                var logger = (writer == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, writer);
+                logger.MinimumLogLevel = MinimumLogLevel.Info;
+
+                // if we have ignore files, ignore those tests
+                var runner = await InternalRunAsync(logger);
+
+                WriteResults(runner, options, logger, writer ?? Console.Out);
+
+                logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests + runner.SkippedTests}");
+
+                if (options.TerminateAfterExecution)
+                {
+                    TerminateWithSuccess();
+                }
             }
         }
-
     }
 }
