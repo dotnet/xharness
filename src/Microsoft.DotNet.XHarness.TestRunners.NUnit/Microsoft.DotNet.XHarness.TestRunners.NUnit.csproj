@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>CS8002;</NoWarn>
