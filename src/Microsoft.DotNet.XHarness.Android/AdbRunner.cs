@@ -234,6 +234,15 @@ namespace Microsoft.DotNet.XHarness.Android
                 result = RunAdbCommand($"install \"{apkPath}\"");
             }
 
+            // 3. Installation timed out; restarting the ADB server helps
+            if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
+            {
+                _log.LogWarning($"Installation timed out; Will make one attempt to restart ADB server, then retry the install");
+                KillAdbServer();
+                StartAdbServer();
+                result = RunAdbCommand($"install \"{apkPath}\"");
+            }
+
             if (result.ExitCode != 0)
             {
                 _log.LogError($"Error:{Environment.NewLine}{result}");
