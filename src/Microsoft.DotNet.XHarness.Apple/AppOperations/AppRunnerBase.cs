@@ -65,6 +65,12 @@ namespace Microsoft.DotNet.XHarness.Apple
                 await _processManager.ExecuteCommandAsync("chmod", new[] { "+x", binaryPath }, _mainLog, TimeSpan.FromSeconds(10), cancellationToken: cancellationToken);
             }
 
+            // On Big Sur it seems like the launch services database is not updated fast enough after we do some I/O with the app bundle.
+            // Force registration for the app by running
+            // /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /path/to/app.app
+            var lsRegisterPath = @"/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister";
+            await _processManager.ExecuteCommandAsync(lsRegisterPath, new[] {"-f", appInfo.LaunchAppPath }, _mainLog, TimeSpan.FromSeconds(10), cancellationToken: cancellationToken);
+
             var arguments = new List<string>
             {
                 "-W",
