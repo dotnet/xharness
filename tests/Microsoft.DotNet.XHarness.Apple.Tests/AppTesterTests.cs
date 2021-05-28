@@ -145,7 +145,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             _listener.Verify(x => x.InitializeAndGetPort(), Times.AtLeastOnce);
             _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
-            _listener.Verify(x => x.Cancel(), Times.AtLeastOnce);
             _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
 
             captureLog.Verify(x => x.StartCapture(), Times.AtLeastOnce);
@@ -240,7 +239,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             _listener.Verify(x => x.InitializeAndGetPort(), Times.AtLeastOnce);
             _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
-            _listener.Verify(x => x.Cancel(), Times.AtLeastOnce);
             _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
 
             // verify that we do close the tunnel when it was used
@@ -336,7 +334,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             _listener.Verify(x => x.InitializeAndGetPort(), Times.AtLeastOnce);
             _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
-            _listener.Verify(x => x.Cancel(), Times.AtLeastOnce);
             _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
 
             _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
@@ -423,7 +420,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             _listener.Verify(x => x.InitializeAndGetPort(), Times.AtLeastOnce);
             _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
-            _listener.Verify(x => x.Cancel(), Times.AtLeastOnce);
             _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
 
             _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
@@ -505,7 +501,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             _listener.Verify(x => x.InitializeAndGetPort(), Times.AtLeastOnce);
             _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
-            _listener.Verify(x => x.Cancel(), Times.AtLeastOnce);
             _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
         }
 
