@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             var simulatorLoader = new SimulatorLoader(processManager);
             var deviceFinder = new DeviceFinder(deviceLoader, simulatorLoader);
 
-            var logs = new Logs(AppleAppArguments.OutputDirectory);
+            using var logs = new Logs(AppleAppArguments.OutputDirectory);
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(AppleAppArguments.Timeout);

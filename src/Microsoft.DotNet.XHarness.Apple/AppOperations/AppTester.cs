@@ -139,10 +139,10 @@ namespace Microsoft.DotNet.XHarness.Apple
             var deviceListenerPort = deviceListener.InitializeAndGetPort();
             deviceListener.StartAsync();
 
-            var crashLogs = new Logs(_logs.Directory);
+            using var crashLogs = new Logs(_logs.Directory);
 
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, device.Name);
-            ITestReporter testReporter = _testReporterFactory.Create(_mainLog,
+            using ITestReporter testReporter = _testReporterFactory.Create(_mainLog,
                 _mainLog,
                 _logs,
                 crashReporter,
@@ -368,10 +368,10 @@ namespace Microsoft.DotNet.XHarness.Apple
             var deviceListenerPort = deviceListener.InitializeAndGetPort();
             deviceListener.StartAsync();
 
-            var crashLogs = new Logs(_logs.Directory);
+            using var crashLogs = new Logs(_logs.Directory);
 
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: false, null);
-            ITestReporter testReporter = _testReporterFactory.Create(
+            using ITestReporter testReporter = _testReporterFactory.Create(
                 _mainLog,
                 _mainLog,
                 _logs,

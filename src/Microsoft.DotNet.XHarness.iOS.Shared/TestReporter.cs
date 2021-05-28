@@ -689,5 +689,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
             return result;
         }
+
+        public void Dispose()
+        {
+            _crashLogs.Dispose();
+            GC.SuppressFinalize(this);
+        }
     }
 }

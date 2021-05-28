@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             ISimulatorDevice? companionSimulator;
 
             var isSimulator = target.Platform.IsSimulator();
-            var crashLogs = new Logs(_logs.Directory);
+            using var crashLogs = new Logs(_logs.Directory);
 
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(
                 _mainLog,
