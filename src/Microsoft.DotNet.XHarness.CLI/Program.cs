@@ -28,13 +28,6 @@ namespace Microsoft.DotNet.XHarness.CLI
 
             if (args.Length > 0)
             {
-                // TODO (#502): We can remove this after some time when users get used to the new commands
-                if (args[0] == "ios")
-                {
-                    DisplayRenameWarning();
-                    args[0] = "apple";
-                }
-
 #if !DEBUG
                 if (args[0] == "apple" && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
@@ -63,15 +56,6 @@ namespace Microsoft.DotNet.XHarness.CLI
             }
 
             return result;
-        }
-
-        // TODO (#502): We can remove this after some time when users get used to the new commands
-        public static void DisplayRenameWarning()
-        {
-            var color = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Warning: The 'ios' command has been renamed to 'apple' and will soon be deprecated!");
-            Console.ForegroundColor = color;
         }
 
         public static CommandSet GetXHarnessCommandSet()
