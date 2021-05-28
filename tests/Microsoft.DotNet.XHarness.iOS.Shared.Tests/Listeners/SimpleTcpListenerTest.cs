@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
         }
 
         [Fact(Skip = "Test is flaky - https://github.com/dotnet/xharness/issues/52")]
-        public void ProcessTest()
+        public void ContentIsSentOverTcp()
         {
             var tempResult = Path.GetTempFileName();
             // create a stream to be used and write the data there

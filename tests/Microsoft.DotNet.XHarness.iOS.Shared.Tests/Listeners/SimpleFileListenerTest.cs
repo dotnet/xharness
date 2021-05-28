@@ -40,38 +40,33 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
         [Theory]
         [InlineData("Tests run: ", false)]
         [InlineData("<!-- the end -->", true)]
-        public void TestProcess(string endLine, bool isXml)
+        public void FileContentIsCopied(string endLine, bool isXml)
         {
             var lines = new[] { "first line", "second line", "last line" };
-            // set mock expectations
-            _testLog.Setup(l => l.WriteLine("Tests have started executing"));
-            _testLog.Setup(l => l.WriteLine("Tests have finished executing"));
-            foreach (var line in lines)
-            {
-                _testLog.Setup(l => l.WriteLine(line));
-            }
-            // create a listener, set the writer and ensure that what we write in the file is present in the final path
+
+            // Create a listener, set the writer and ensure that what we write in the file is present in the final path
             using (var sourceWriter = new StreamWriter(_path))
             {
-                var listener = new SimpleFileListener(_path, _log.Object, _testLog.Object, isXml);
+                using var listener = new SimpleFileListener(_path, _log.Object, _testLog.Object, isXml);
                 listener.InitializeAndGetPort();
                 listener.StartAsync();
-                // write a number of lines and ensure that those are called in the mock
+
+                // Write a number of lines and ensure that those are called in the mock
                 sourceWriter.WriteLine("[Runner executing:");
                 foreach (var line in lines)
                 {
                     sourceWriter.WriteLine(line);
                     sourceWriter.Flush();
                 }
+
                 sourceWriter.WriteLine(endLine);
-                listener.Cancel();
             }
-            // verify that the expected lines were added
+
+            // Verify that the expected lines were added
             foreach (var line in lines)
             {
                 _testLog.Verify(l => l.WriteLine(line), Times.Once);
             }
         }
-
     }
 }
