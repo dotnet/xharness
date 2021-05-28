@@ -225,52 +225,43 @@ namespace Microsoft.DotNet.XHarness.Apple
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
-            var systemLogs = new List<ICaptureLog>();
+            _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
 
-            try
+            using var simulatorLog = _captureLogFactory.Create(
+                path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
+                systemLogPath: simulator.SystemLog,
+                entireFile: false,
+                LogType.SystemLog);
+
+            simulatorLog.StartCapture();
+            _logs.Add(simulatorLog);
+
+            using var systemLogs = new DisposableList<ICaptureLog>
             {
-                _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
+                simulatorLog
+            };
 
-                var simulatorLog = _captureLogFactory.Create(
-                    path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
-                    systemLogPath: simulator.SystemLog,
+            if (companionSimulator != null)
+            {
+                _mainLog.WriteLine("System log for the '{1}' companion simulator is: {0}", companionSimulator.SystemLog, companionSimulator.Name);
+
+                var companionLog = _captureLogFactory.Create(
+                    path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
+                    systemLogPath: companionSimulator.SystemLog,
                     entireFile: false,
-                    LogType.SystemLog);
+                    LogType.CompanionSystemLog);
 
-                simulatorLog.StartCapture();
-                _logs.Add(simulatorLog);
-                systemLogs.Add(simulatorLog);
-
-                if (companionSimulator != null)
-                {
-                    _mainLog.WriteLine("System log for the '{1}' companion simulator is: {0}", companionSimulator.SystemLog, companionSimulator.Name);
-
-                    var companionLog = _captureLogFactory.Create(
-                        path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
-                        systemLogPath: companionSimulator.SystemLog,
-                        entireFile: false,
-                        LogType.CompanionSystemLog);
-
-                    companionLog.StartCapture();
-                    _logs.Add(companionLog);
-                    systemLogs.Add(companionLog);
-                }
-
-                await crashReporter.StartCaptureAsync();
-
-                _mainLog.WriteLine("Starting test run");
-
-                var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
-                await testReporter.CollectSimulatorResult(result);
+                companionLog.StartCapture();
+                _logs.Add(companionLog);
+                systemLogs.Add(companionLog);
             }
-            finally
-            {
-                foreach (ICaptureLog? log in systemLogs)
-                {
-                    log.StopCapture();
-                    log.Dispose();
-                }
-            }
+
+            await crashReporter.StartCaptureAsync();
+
+            _mainLog.WriteLine("Starting test run");
+
+            var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+            await testReporter.CollectSimulatorResult(result);
         }
 
         private async Task RunDeviceTests(
