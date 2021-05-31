@@ -119,6 +119,18 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
         {
+            // iOS 14+ devices doesn't allow local network access and won't work unless the user confirms a dialog on the screen
+            // https://developer.apple.com/forums/thread/663858
+            if (communicationChannel == CommunicationChannel.Network &&
+                target.Platform.ToRunMode() == RunMode.iOS &&
+                Version.TryParse(device.OSVersion, out var version) && version.Major >= 14)
+            {
+                _logger.LogWarning(
+                    "Applications need user permission for communication over local network on iOS 14 and newer." + Environment.NewLine +
+                    "Either confirm a dialog on the device after the application launches or use the USB tunnel communication channel." + Environment.NewLine +
+                    "Test run might fail if permission is not granted. Permission is valid until app is uninstalled.");
+            }
+
             AppTester appTester = GetAppTester(communicationChannel, target.Platform.IsSimulator());
 
             (TestExecutingResult testResult, string resultMessage) = await appTester.TestApp(
