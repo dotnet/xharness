@@ -45,24 +45,23 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var exitCode = ExitCode.SUCCESS;
 
-            foreach (var target in AppleAppArguments.RunTargets)
+            var targetName = AppleAppArguments.Target.AsString();
+
+            logger.LogInformation($"Preparing run for {targetName}{ (AppleAppArguments.DeviceName != null ? " targeting " + AppleAppArguments.DeviceName : null) }");
+
+            // Create main log file for the run
+            string logFileName = $"{Name}-{targetName}{(AppleAppArguments.DeviceName != null ? "-" + AppleAppArguments.DeviceName : null)}.log";
+            IFileBackedLog mainLog = logs.Create(logFileName, LogType.ExecutionLog.ToString(), timestamp: true);
+
+            // Pipe the execution log to the debug output of XHarness effectively making "-v" turn this on
+            CallbackLog debugLog = new(message => logger.LogDebug(message.Trim()));
+            mainLog = Log.CreateReadableAggregatedLog(mainLog, debugLog);
+            mainLog.Timestamp = true;
+
+            var exitCodeForRun = await InvokeInternal(processManager, appBundleInformationParser, deviceFinder, logger, AppleAppArguments.Target, logs, mainLog, cts.Token);
+            if (exitCodeForRun != ExitCode.SUCCESS)
             {
-                logger.LogInformation($"Preparing run for {target.AsString()}{ (AppleAppArguments.DeviceName != null ? " targeting " + AppleAppArguments.DeviceName : null) }");
-
-                // Create main log file for the run
-                string logFileName = $"{Name}-{target.AsString()}{(AppleAppArguments.DeviceName != null ? "-" + AppleAppArguments.DeviceName : null)}.log";
-                IFileBackedLog mainLog = logs.Create(logFileName, LogType.ExecutionLog.ToString(), timestamp: true);
-
-                // Pipe the execution log to the debug output of XHarness effectively making "-v" turn this on
-                CallbackLog debugLog = new(message => logger.LogDebug(message.Trim()));
-                mainLog = Log.CreateReadableAggregatedLog(mainLog, debugLog);
-                mainLog.Timestamp = true;
-
-                var exitCodeForRun = await InvokeInternal(processManager, appBundleInformationParser, deviceFinder, logger, target, logs, mainLog, cts.Token);
-                if (exitCodeForRun != ExitCode.SUCCESS)
-                {
-                    exitCode = exitCodeForRun;
-                }
+                exitCode = exitCodeForRun;
             }
 
             return exitCode;
