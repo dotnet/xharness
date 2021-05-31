@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             // Verify that the expected lines were added
             foreach (var line in lines)
             {
-                _testLog.Verify(l => l.WriteLine(line), Times.Once);
+                _testLog.Verify(l => l.WriteLine(It.Is<string>(ll => ll == line)), Times.Once);
             }
         }
     }
