@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Moq;
@@ -76,10 +77,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
                 sourceWriter.Flush();
             }
 
+            Thread.Sleep(200);
+
             // Verify that the expected lines were added
             foreach (var line in lines)
             {
-                _testLog.Verify(l => l.WriteLine(It.Is<string>(ll => ll == line)), Times.AtLeastOnce);
+                _testLog.Verify(l => l.WriteLine(It.Is<string>(ll => ll.Trim() == line.Trim())), Times.AtLeastOnce);
             }
 
             _log.Verify(l => l.WriteLine(It.Is<string>(ll => ll == "Tests have finished executing")), Times.AtLeastOnce);
