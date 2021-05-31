@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.Apple
     {
         public JustTestOrchestrator(
             IMlaunchProcessManager processManager,
-            DeviceFinder deviceFinder,
+            IDeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,

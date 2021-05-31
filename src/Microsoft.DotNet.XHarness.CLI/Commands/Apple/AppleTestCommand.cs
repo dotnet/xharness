@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected override async Task<ExitCode> InvokeInternal(
             IMlaunchProcessManager processManager,
             IAppBundleInformationParser appBundleInformationParser,
-            DeviceFinder deviceFinder,
+            IDeviceFinder deviceFinder,
             Extensions.Logging.ILogger logger,
             TestTargetOs target,
             ILogs logs,

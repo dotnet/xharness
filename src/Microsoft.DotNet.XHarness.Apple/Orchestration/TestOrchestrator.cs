@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         public TestOrchestrator(
             IMlaunchProcessManager processManager,
-            DeviceFinder deviceFinder,
+            IDeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,

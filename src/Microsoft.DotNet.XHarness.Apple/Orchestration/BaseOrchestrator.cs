@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         protected BaseOrchestrator(
             IMlaunchProcessManager processManager,
-            DeviceFinder deviceFinder,
+            IDeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,

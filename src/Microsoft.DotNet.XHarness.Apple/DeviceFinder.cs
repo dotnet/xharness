@@ -13,7 +13,12 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
-    public class DeviceFinder
+    public interface IDeviceFinder
+    {
+        Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(TestTargetOs target, string? deviceName, ILog log);
+    }
+
+    public class DeviceFinder : IDeviceFinder
     {
         private readonly IHardwareDeviceLoader _deviceLoader;
         private readonly ISimulatorLoader _simulatorLoader;
