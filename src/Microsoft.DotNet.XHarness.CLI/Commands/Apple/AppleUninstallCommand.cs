@@ -2,16 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
@@ -27,35 +24,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected override Task<ExitCode> InvokeInternal(
-            IMlaunchProcessManager processManager,
-            IAppBundleInformationParser appBundleInformationParser,
-            IDeviceFinder deviceFinder,
-            Extensions.Logging.ILogger logger,
-            TestTargetOs target,
-            ILogs logs,
-            IFileBackedLog mainLog,
-            CancellationToken cancellationToken)
-        {
-            var args = AppleAppArguments;
-
-            var orchestrator = new UninstallOrchestrator(
-                processManager,
-                deviceFinder,
-                new ConsoleLogger(logger),
-                logs,
-                mainLog,
-                ErrorKnowledgeBase,
-                new Helpers());
-
-            return orchestrator.OrchestrateAppUninstall(
-                args.BundleIdentifier,
-                target,
-                args.DeviceName,
-                args.Timeout,
-                args.ResetSimulator,
-                args.EnableLldb,
+        protected override Task<ExitCode> InvokeInternal(IServiceProvider serviceProvider, CancellationToken cancellationToken) =>
+            serviceProvider.GetRequiredService<IUninstallOrchestrator>().OrchestrateAppUninstall(
+                AppleAppArguments.BundleIdentifier,
+                AppleAppArguments.Target,
+                AppleAppArguments.DeviceName,
+                AppleAppArguments.Timeout,
+                AppleAppArguments.ResetSimulator,
+                AppleAppArguments.EnableLldb,
                 cancellationToken);
-        }
     }
 }
