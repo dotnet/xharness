@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         private const string CommandHelp = "Runs an already installed iOS/tvOS/watchOS/MacCatalyst test application containing a TestRunner " +
             "in a target device/simulator and tries to detect the exit code.";
 
-        protected override string CommandUsage { get; } = "apple just-run --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
+        protected override string CommandUsage { get; } = "apple just-run --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
         protected override AppleJustRunCommandArguments AppleAppArguments { get; } = new();
 

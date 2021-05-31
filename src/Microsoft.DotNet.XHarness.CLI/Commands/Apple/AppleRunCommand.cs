@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             "in a target device/simulator and tries to detect the exit code.";
 
         protected override AppleRunCommandArguments AppleAppArguments { get; } = new();
-        protected override string CommandUsage { get; } = "apple run --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
+        protected override string CommandUsage { get; } = "apple run --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 
         public AppleRunCommand() : base("run", false, CommandHelp)

@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             var runOptions = new OptionSet
             {
                 {
-                    "target=|t=", "Test target (device/simulator and OS)",
+                    "target=|targets=|t=", "Test target (device/simulator and OS)",
                     v =>
                     {
                         try

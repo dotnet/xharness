@@ -104,7 +104,7 @@ To run an iOS/tvOS app bundle on a 64bit iPhone Simulator:
 xharness apple test           \
     --app=/path/to/an.app     \
     --output-directory=out    \
-    --targets=ios-simulator-64
+    --target=ios-simulator-64
 ```
 
 or the same can be achieved via the shorthand versions of the same options:

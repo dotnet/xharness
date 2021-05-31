@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
     {
         private const string CommandHelp = "Runs an already installed iOS/tvOS/watchOS/MacCatalyst test application containing a TestRunner in a target device/simulator.";
 
-        protected override string CommandUsage { get; } = "apple just-test --app=... --output-directory=... --targets=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
+        protected override string CommandUsage { get; } = "apple just-test --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
         protected override AppleJustTestCommandArguments AppleAppArguments { get; } = new();
 
