@@ -14,12 +14,16 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
+    public interface IJustRunOrchestrator : IRunOrchestrator
+    {
+    }
+
     /// <summary>
     /// This orchestrator implements the `just-run` command flow.
     /// In this flow we spawn the application and do not expect TestRunner inside.
     /// We only try to detect the exit code after the app run is finished.
     /// </summary>
-    public class JustRunOrchestrator : RunOrchestrator
+    public class JustRunOrchestrator : RunOrchestrator, IJustRunOrchestrator
     {
         public JustRunOrchestrator(
             IMlaunchProcessManager processManager,

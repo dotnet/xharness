@@ -15,10 +15,22 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
+    public interface IInstallOrchestrator
+    {
+        Task<ExitCode> OrchestrateInstall(
+            TestTargetOs target,
+            string? deviceName,
+            string appPackagePath,
+            TimeSpan timeout,
+            bool resetSimulator,
+            bool enableLldb,
+            CancellationToken cancellationToken);
+    }
+
     /// <summary>
     /// This orchestrator implements the `install` command flow.
     /// </summary>
-    public class InstallOrchestrator : BaseOrchestrator
+    public class InstallOrchestrator : BaseOrchestrator, IInstallOrchestrator
     {
         private readonly IAppBundleInformationParser _appBundleInformationParser;
         private readonly ILogger _consoleLogger;
