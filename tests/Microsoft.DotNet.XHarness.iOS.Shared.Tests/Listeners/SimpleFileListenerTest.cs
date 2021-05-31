@@ -22,15 +22,29 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             _path = Path.GetTempFileName();
             _testLog = new Mock<IFileBackedLog>();
             _log = new Mock<ILog>();
-            File.Delete(_path);
+
+            try
+            {
+                File.Delete(_path);
+            }
+            finally
+            {
+            }
         }
 
         public void Dispose()
         {
             if (File.Exists(_path))
             {
-                File.Delete(_path);
+                try
+                {
+                    File.Delete(_path);
+                }
+                finally
+                {
+                }
             }
+
             GC.SuppressFinalize(this);
         }
 
@@ -56,17 +70,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
                 foreach (var line in lines)
                 {
                     sourceWriter.WriteLine(line);
-                    sourceWriter.Flush();
                 }
 
                 sourceWriter.WriteLine(endLine);
+                sourceWriter.Flush();
             }
 
             // Verify that the expected lines were added
             foreach (var line in lines)
             {
-                _testLog.Verify(l => l.WriteLine(It.Is<string>(ll => ll == line)), Times.Once);
+                _testLog.Verify(l => l.WriteLine(It.Is<string>(ll => ll == line)), Times.AtLeastOnce);
             }
+
+            _log.Verify(l => l.WriteLine(It.Is<string>(ll => ll == "Tests have finished executing")), Times.AtLeastOnce);
         }
     }
 }
