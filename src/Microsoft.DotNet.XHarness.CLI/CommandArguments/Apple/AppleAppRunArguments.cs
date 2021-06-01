@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// <summary>
         /// Test target.
         /// </summary>
-        public TestTargetOs Target { get; private set; } = null!;
+        public TestTargetOs Target { get; private set; } = TestTargetOs.None;
 
         protected override OptionSet GetCommandOptions()
         {
@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
                 throw new ArgumentException($"Failed to find the app bundle at {AppPackagePath}");
             }
 
-            if (Target == null)
+            if (Target == TestTargetOs.None)
             {
                 throw new ArgumentException("No test target specified");
             }
