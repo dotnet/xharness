@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -12,7 +11,6 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
@@ -29,8 +27,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected override XHarnessCommandArguments Arguments => AppleAppArguments;
         protected abstract TArguments AppleAppArguments { get; }
 
-        protected AppleAppCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, allowsExtraArgs, help)
+        protected AppleAppCommand(string name, bool allowsExtraArgs, IServiceCollection services, string? help = null) : base(name, allowsExtraArgs, help)
         {
+            Services = services;
         }
 
         protected sealed override async Task<ExitCode> InvokeInternal(Extensions.Logging.ILogger logger)
@@ -53,30 +52,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var processManager = new MlaunchProcessManager(AppleAppArguments.XcodeRoot, AppleAppArguments.MlaunchPath);
 
-            ServiceCollection.TryAddSingleton(logger);
-            ServiceCollection.TryAddSingleton(mainLog);
-            ServiceCollection.TryAddSingleton(logs);
-            ServiceCollection.TryAddSingleton<IMlaunchProcessManager>(processManager);
-            ServiceCollection.TryAddSingleton<IMacOSProcessManager>(processManager);
-            ServiceCollection.TryAddSingleton<IProcessManager>(processManager);
-            ServiceCollection.TryAddSingleton<IAppBundleInformationParser, AppBundleInformationParser>();
-            ServiceCollection.TryAddSingleton<ISimulatorLoader, SimulatorLoader>();
-            ServiceCollection.TryAddSingleton<IHardwareDeviceLoader, HardwareDeviceLoader>();
-            ServiceCollection.TryAddSingleton<IDeviceFinder, DeviceFinder>();
-            ServiceCollection.TryAddSingleton<IHelpers, Helpers>();
-
-            ServiceCollection.TryAddTransient<XHarness.Apple.ILogger, ConsoleLogger>();
-            ServiceCollection.TryAddTransient<IErrorKnowledgeBase, ErrorKnowledgeBase>();
-            ServiceCollection.TryAddTransient<ICaptureLogFactory, CaptureLogFactory>();
-            ServiceCollection.TryAddTransient<IDeviceLogCapturerFactory, DeviceLogCapturerFactory>();
-            ServiceCollection.TryAddTransient<ICrashSnapshotReporterFactory, CrashSnapshotReporterFactory>();
-
-            ServiceCollection.TryAddTransient<IInstallOrchestrator, InstallOrchestrator>();
-            ServiceCollection.TryAddTransient<IJustRunOrchestrator, JustRunOrchestrator>();
-            ServiceCollection.TryAddTransient<IJustTestOrchestrator, JustTestOrchestrator>();
-            ServiceCollection.TryAddTransient<IRunOrchestrator, RunOrchestrator>();
-            ServiceCollection.TryAddTransient<ITestOrchestrator, TestOrchestrator>();
-            ServiceCollection.TryAddTransient<IUninstallOrchestrator, UninstallOrchestrator>();
+            Services.TryAddSingleton(mainLog);
+            Services.TryAddSingleton(logs);
+            Services.TryAddSingleton<IMlaunchProcessManager>(processManager);
+            Services.TryAddSingleton<IMacOSProcessManager>(processManager);
+            Services.TryAddSingleton<IProcessManager>(processManager);
+            Services.TryAddTransient<XHarness.Apple.ILogger, ConsoleLogger>();
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(AppleAppArguments.Timeout);

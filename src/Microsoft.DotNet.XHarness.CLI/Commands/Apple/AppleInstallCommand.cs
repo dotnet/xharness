@@ -22,13 +22,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected override string CommandUsage { get; } = "apple install --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 
-        public AppleInstallCommand() : base("install", false, CommandHelp)
+        public AppleInstallCommand(IServiceCollection services) : base("install", false, services, CommandHelp)
         {
         }
 
         protected override Task<ExitCode> InvokeInternal(CancellationToken cancellationToken)
         {
-            var serviceProvider = ServiceCollection.BuildServiceProvider();
+            var serviceProvider = Services.BuildServiceProvider();
 
             if (AppleAppArguments.Target.Platform == TestTarget.MacCatalyst)
             {
@@ -37,7 +37,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 return Task.FromResult(ExitCode.PACKAGE_INSTALLATION_FAILURE);
             }
 
-            return serviceProvider.GetRequiredService<IInstallOrchestrator>().OrchestrateInstall(
+            var installOrchestrator = serviceProvider.GetRequiredService<IInstallOrchestrator>();
+            return installOrchestrator.OrchestrateInstall(
                 AppleAppArguments.Target,
                 AppleAppArguments.DeviceName,
                 AppleAppArguments.AppPackagePath,

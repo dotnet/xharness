@@ -20,12 +20,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected override string CommandDescription { get; } = CommandHelp;
         protected override AppleJustTestCommandArguments AppleAppArguments { get; } = new();
 
-        public AppleJustTestCommand() : base("just-test", false, CommandHelp)
+        public AppleJustTestCommand(IServiceCollection services) : base("just-test", false, services, CommandHelp)
         {
         }
 
         protected override Task<ExitCode> InvokeInternal(CancellationToken cancellationToken) =>
-            ServiceCollection
+            Services
                 .BuildServiceProvider()
                 .GetRequiredService<IJustTestOrchestrator>()
                 .OrchestrateTest(

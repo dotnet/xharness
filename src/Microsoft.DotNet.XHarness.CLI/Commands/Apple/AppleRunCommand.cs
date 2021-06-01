@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected override string CommandUsage { get; } = "apple run --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 
-        public AppleRunCommand() : base("run", false, CommandHelp)
+        public AppleRunCommand(IServiceCollection services) : base("run", false, services, CommandHelp)
         {
         }
 
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
             var args = AppleAppArguments;
 
-            var serviceProvider = ServiceCollection.BuildServiceProvider();
+            var serviceProvider = Services.BuildServiceProvider();
             var logger = serviceProvider.GetRequiredService<Extensions.Logging.ILogger>();
             logger.LogInformation($"Getting app bundle information from '{args.AppPackagePath}'");
 

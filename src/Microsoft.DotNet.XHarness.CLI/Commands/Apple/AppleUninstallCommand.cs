@@ -19,12 +19,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected override string CommandUsage { get; } = "apple uninstall --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 
-        public AppleUninstallCommand() : base("uninstall", false, CommandHelp)
+        public AppleUninstallCommand(IServiceCollection services) : base("uninstall", false, services, CommandHelp)
         {
         }
 
         protected override Task<ExitCode> InvokeInternal(CancellationToken cancellationToken) =>
-            ServiceCollection
+            Services
                 .BuildServiceProvider()
                 .GetRequiredService<IUninstallOrchestrator>()
                 .OrchestrateAppUninstall(

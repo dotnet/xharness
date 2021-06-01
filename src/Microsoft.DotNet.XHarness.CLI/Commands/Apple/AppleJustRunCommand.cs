@@ -21,14 +21,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected override string CommandDescription { get; } = CommandHelp;
         protected override AppleJustRunCommandArguments AppleAppArguments { get; } = new();
 
-        public AppleJustRunCommand() : base("just-run", false, CommandHelp)
+        public AppleJustRunCommand(IServiceCollection services) : base("just-run", false, services, CommandHelp)
         {
         }
 
         protected override Task<ExitCode> InvokeInternal(CancellationToken cancellationToken) =>
-            ServiceCollection
+            Services
                 .BuildServiceProvider()
-                .GetRequiredService<IJustRunOrchestrator>().OrchestrateRun(
+                .GetRequiredService<IJustRunOrchestrator>()
+                .OrchestrateRun(
                     AppBundleInformation.FromBundleId(AppleAppArguments.BundleIdentifier),
                     AppleAppArguments.Target,
                     AppleAppArguments.DeviceName,

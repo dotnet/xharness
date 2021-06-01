@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected override string CommandDescription { get; } = CommandHelp;
         protected override AppleTestCommandArguments AppleAppArguments { get; } = new();
 
-        public AppleTestCommand() : base("test", false, CommandHelp)
+        public AppleTestCommand(IServiceCollection services) : base("test", false, services, CommandHelp)
         {
         }
 
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
             var args = AppleAppArguments;
 
-            var serviceProvider = ServiceCollection.BuildServiceProvider();
+            var serviceProvider = Services.BuildServiceProvider();
             var logger = serviceProvider.GetRequiredService<Extensions.Logging.ILogger>();
             logger.LogInformation($"Getting app bundle information from '{args.AppPackagePath}'");
 
