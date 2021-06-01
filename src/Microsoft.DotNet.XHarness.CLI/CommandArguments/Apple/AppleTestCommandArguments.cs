@@ -107,13 +107,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
                 throw new ArgumentException($"Failed to find the app bundle at {AppPackagePath}");
             }
 
-            if (RunTargets.Count == 0)
+            if (Target == null)
             {
-                throw new ArgumentException(
-                    "No targets specified. At least one target must be provided. Available targets are:" +
-                    GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None) +
-                    Environment.NewLine + Environment.NewLine +
-                    "You can also specify desired iOS/tvOS/WatchOS version. Example: ios-simulator-64_13.4");
+                throw new ArgumentException("No test target specified");
             }
 
             if (!File.Exists(MlaunchPath))

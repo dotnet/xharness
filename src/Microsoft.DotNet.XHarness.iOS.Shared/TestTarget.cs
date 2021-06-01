@@ -26,6 +26,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
 
     public class TestTargetOs
     {
+        public static readonly TestTargetOs None = new(TestTarget.None, null);
+
         /// <summary>
         /// Platform, i.e. Simulator iOS x64
         /// </summary>

@@ -34,11 +34,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         }
 
         /// <summary>
-        /// List of targets where the app will be run
-        /// </summary>
-        public virtual IReadOnlyCollection<string> Targets { get; protected set; } = Array.Empty<string>();
-
-        /// <summary>
         /// How long XHarness should wait until a test execution completes before clean up (kill running apps, uninstall, etc)
         /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(15);
@@ -52,10 +47,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
             {
                 "output-directory=|o=", "Directory where logs and results will be saved",
                 v => OutputDirectory = RootPath(v)
-            },
-            {
-                "targets=|t=", "Comma-delimited list of targets to test for",
-                v => Targets = v.Split(',')
             },
             {
                 "timeout=", "Time span in the form of \"00:00:00\" or number of seconds to wait for instrumentation to complete",

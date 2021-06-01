@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared;
@@ -48,37 +47,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// </summary>
         public bool ResetSimulator { get; set; }
 
-        public override IReadOnlyCollection<string> Targets
-        {
-            get => RunTargets.Select(t => t.AsString()).ToArray();
-            protected set
-            {
-                var testTargets = new List<TestTargetOs>();
-
-                foreach (var targetName in value ?? throw new ArgumentException("Targets cannot be empty"))
-                {
-                    try
-                    {
-                        testTargets.Add(targetName.ParseAsAppRunnerTargetOs());
-                    }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        throw new ArgumentException(
-                            $"Failed to parse test target '{targetName}'. Available targets are:" +
-                            GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None) +
-                            Environment.NewLine + Environment.NewLine +
-                            "You can also specify desired iOS/tvOS/WatchOS version. Example: ios-simulator-64_13.4");
-                    }
-                }
-
-                RunTargets = testTargets;
-            }
-        }
-
         /// <summary>
-        /// Parsed strong-typed targets.
+        /// Test target.
         /// </summary>
-        public IReadOnlyCollection<TestTargetOs> RunTargets { get; private set; } = Array.Empty<TestTargetOs>();
+        public TestTargetOs Target { get; private set; } = TestTargetOs.None;
 
         protected override OptionSet GetCommandOptions()
         {
@@ -86,6 +58,24 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 
             var runOptions = new OptionSet
             {
+                {
+                    "target=|targets=|t=", "Test target (device/simulator and OS)",
+                    v =>
+                    {
+                        try
+                        {
+                            Target = v.ParseAsAppRunnerTargetOs();
+                        }
+                        catch (ArgumentOutOfRangeException)
+                        {
+                            throw new ArgumentException(
+                                $"Failed to parse test target '{v}'. Available targets are:" +
+                                GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None) +
+                                Environment.NewLine + Environment.NewLine +
+                                "You can also specify desired OS version, e.g. ios-simulator-64_13.4");
+                        }
+                    }
+                },
                 {
                     "xcode=", "Path where Xcode is installed",
                     v => XcodeRoot = RootPath(v)
@@ -108,7 +98,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
                 },
                 {
                     "set-env=", "Environmental variable to set for the application in format key=value. Can be used multiple times",
-                    v => {
+                    v =>
+                    {
                         var position = v.IndexOf('=');
                         if (position == -1)
                         {
@@ -139,13 +130,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
                 throw new ArgumentException($"Failed to find the app bundle at {AppPackagePath}");
             }
 
-            if (RunTargets.Count == 0)
+            if (Target == TestTargetOs.None)
             {
-                throw new ArgumentException(
-                    "No targets specified. At least one target must be provided. Available targets are:" +
-                    GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None) +
-                    Environment.NewLine + Environment.NewLine +
-                    "You can also specify desired iOS/tvOS/WatchOS version. Example: ios-simulator-64_13.4");
+                throw new ArgumentException("No test target specified");
             }
 
             if (!File.Exists(MlaunchPath))
