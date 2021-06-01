@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -24,14 +23,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected override Task<ExitCode> InvokeInternal(IServiceProvider serviceProvider, CancellationToken cancellationToken) =>
-            serviceProvider.GetRequiredService<IUninstallOrchestrator>().OrchestrateAppUninstall(
-                AppleAppArguments.BundleIdentifier,
-                AppleAppArguments.Target,
-                AppleAppArguments.DeviceName,
-                AppleAppArguments.Timeout,
-                AppleAppArguments.ResetSimulator,
-                AppleAppArguments.EnableLldb,
-                cancellationToken);
+        protected override Task<ExitCode> InvokeInternal(CancellationToken cancellationToken) =>
+            ServiceCollection
+                .BuildServiceProvider()
+                .GetRequiredService<IUninstallOrchestrator>()
+                .OrchestrateAppUninstall(
+                    AppleAppArguments.BundleIdentifier,
+                    AppleAppArguments.Target,
+                    AppleAppArguments.DeviceName,
+                    AppleAppArguments.Timeout,
+                    AppleAppArguments.ResetSimulator,
+                    AppleAppArguments.EnableLldb,
+                    cancellationToken);
     }
 }

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Mono.Options;
@@ -50,6 +51,11 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         /// Extra arguments parsed to the command (if the command allows it).
         /// </summary>
         protected IEnumerable<string> ExtraArguments { get; private set; } = Enumerable.Empty<string>();
+
+        /// <summary>
+        /// Service collection used to create dependencies.
+        /// </summary>
+        protected IServiceCollection ServiceCollection { get; set; } = new ServiceCollection();
 
         protected XHarnessCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, help)
         {

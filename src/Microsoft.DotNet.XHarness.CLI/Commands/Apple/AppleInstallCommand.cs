@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -27,8 +26,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected override Task<ExitCode> InvokeInternal(IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        protected override Task<ExitCode> InvokeInternal(CancellationToken cancellationToken)
         {
+            var serviceProvider = ServiceCollection.BuildServiceProvider();
+
             if (AppleAppArguments.Target.Platform == TestTarget.MacCatalyst)
             {
                 var logger = serviceProvider.GetRequiredService<Extensions.Logging.ILogger>();

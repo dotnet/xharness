@@ -18,6 +18,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
@@ -45,43 +46,42 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             string logFileName = $"{Name}-{targetName}{(AppleAppArguments.DeviceName != null ? "-" + AppleAppArguments.DeviceName : null)}.log";
             IFileBackedLog mainLog = logs.Create(logFileName, LogType.ExecutionLog.ToString(), timestamp: true);
 
-            var processManager = new MlaunchProcessManager(AppleAppArguments.XcodeRoot, AppleAppArguments.MlaunchPath);
-
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.AddSingleton(logger);
-            serviceCollection.AddSingleton(mainLog);
-            serviceCollection.AddSingleton(logs);
-            serviceCollection.AddSingleton<IMlaunchProcessManager>(processManager);
-            serviceCollection.AddSingleton<IMacOSProcessManager>(processManager);
-            serviceCollection.AddSingleton<IProcessManager>(processManager);
-            serviceCollection.AddSingleton<IAppBundleInformationParser, AppBundleInformationParser>();
-            serviceCollection.AddSingleton<ISimulatorLoader, SimulatorLoader>();
-            serviceCollection.AddSingleton<IHardwareDeviceLoader, HardwareDeviceLoader>();
-            serviceCollection.AddSingleton<IDeviceFinder, DeviceFinder>();
-            serviceCollection.AddSingleton<IHelpers, Helpers>();
-
-            serviceCollection.AddTransient<XHarness.Apple.ILogger, ConsoleLogger>();
-            serviceCollection.AddTransient<IErrorKnowledgeBase, ErrorKnowledgeBase>();
-            serviceCollection.AddTransient<ICaptureLogFactory, CaptureLogFactory>();
-            serviceCollection.AddTransient<IDeviceLogCapturerFactory, DeviceLogCapturerFactory>();
-            serviceCollection.AddTransient<ICrashSnapshotReporterFactory, CrashSnapshotReporterFactory>();
-
-            serviceCollection.AddTransient<IInstallOrchestrator, InstallOrchestrator>();
-            serviceCollection.AddTransient<IJustRunOrchestrator, JustRunOrchestrator>();
-            serviceCollection.AddTransient<IJustTestOrchestrator, JustTestOrchestrator>();
-            serviceCollection.AddTransient<IRunOrchestrator, RunOrchestrator>();
-            serviceCollection.AddTransient<ITestOrchestrator, TestOrchestrator>();
-            serviceCollection.AddTransient<IUninstallOrchestrator, UninstallOrchestrator>();
-
             // Pipe the execution log to the debug output of XHarness effectively making "-v" turn this on
             CallbackLog debugLog = new(message => logger.LogDebug(message.Trim()));
             mainLog = Log.CreateReadableAggregatedLog(mainLog, debugLog);
             mainLog.Timestamp = true;
 
+            var processManager = new MlaunchProcessManager(AppleAppArguments.XcodeRoot, AppleAppArguments.MlaunchPath);
+
+            ServiceCollection.TryAddSingleton(logger);
+            ServiceCollection.TryAddSingleton(mainLog);
+            ServiceCollection.TryAddSingleton(logs);
+            ServiceCollection.TryAddSingleton<IMlaunchProcessManager>(processManager);
+            ServiceCollection.TryAddSingleton<IMacOSProcessManager>(processManager);
+            ServiceCollection.TryAddSingleton<IProcessManager>(processManager);
+            ServiceCollection.TryAddSingleton<IAppBundleInformationParser, AppBundleInformationParser>();
+            ServiceCollection.TryAddSingleton<ISimulatorLoader, SimulatorLoader>();
+            ServiceCollection.TryAddSingleton<IHardwareDeviceLoader, HardwareDeviceLoader>();
+            ServiceCollection.TryAddSingleton<IDeviceFinder, DeviceFinder>();
+            ServiceCollection.TryAddSingleton<IHelpers, Helpers>();
+
+            ServiceCollection.TryAddTransient<XHarness.Apple.ILogger, ConsoleLogger>();
+            ServiceCollection.TryAddTransient<IErrorKnowledgeBase, ErrorKnowledgeBase>();
+            ServiceCollection.TryAddTransient<ICaptureLogFactory, CaptureLogFactory>();
+            ServiceCollection.TryAddTransient<IDeviceLogCapturerFactory, DeviceLogCapturerFactory>();
+            ServiceCollection.TryAddTransient<ICrashSnapshotReporterFactory, CrashSnapshotReporterFactory>();
+
+            ServiceCollection.TryAddTransient<IInstallOrchestrator, InstallOrchestrator>();
+            ServiceCollection.TryAddTransient<IJustRunOrchestrator, JustRunOrchestrator>();
+            ServiceCollection.TryAddTransient<IJustTestOrchestrator, JustTestOrchestrator>();
+            ServiceCollection.TryAddTransient<IRunOrchestrator, RunOrchestrator>();
+            ServiceCollection.TryAddTransient<ITestOrchestrator, TestOrchestrator>();
+            ServiceCollection.TryAddTransient<IUninstallOrchestrator, UninstallOrchestrator>();
+
             var cts = new CancellationTokenSource();
             cts.CancelAfter(AppleAppArguments.Timeout);
 
-            var exitCodeForRun = await InvokeInternal(serviceCollection.BuildServiceProvider(), cts.Token);
+            var exitCodeForRun = await InvokeInternal(cts.Token);
             if (exitCodeForRun != ExitCode.SUCCESS)
             {
                 exitCode = exitCodeForRun;
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             return exitCode;
         }
 
-        protected abstract Task<ExitCode> InvokeInternal(IServiceProvider serviceProvider, CancellationToken cancellationToken);
+        protected abstract Task<ExitCode> InvokeInternal(CancellationToken cancellationToken);
 
         protected class ConsoleLogger : XHarness.Apple.ILogger
         {

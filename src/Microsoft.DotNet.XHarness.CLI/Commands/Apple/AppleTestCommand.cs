@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -31,10 +30,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected override async Task<ExitCode> InvokeInternal(IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        protected override async Task<ExitCode> InvokeInternal(CancellationToken cancellationToken)
         {
             var args = AppleAppArguments;
 
+            var serviceProvider = ServiceCollection.BuildServiceProvider();
             var logger = serviceProvider.GetRequiredService<Extensions.Logging.ILogger>();
             logger.LogInformation($"Getting app bundle information from '{args.AppPackagePath}'");
 
