@@ -2,7 +2,7 @@
   <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.1015.amd64.iphone.open"/>
+    <HelixTargetQueue Include="osx.1015.amd64.appletv.open"/>
 
     <!-- apple test / ios-device -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
@@ -10,9 +10,9 @@
     </XHarnessAppleProject>
 
     <!-- apple run / ios-device -->
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+    <!-- <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
       <AdditionalProperties>TestTarget=ios-device;TestAppBundleName=HelloiOS.app;IncludesTestRunner=false;ExpectedExitCode=200</AdditionalProperties>
-    </XHarnessAppleProject>
+    </XHarnessAppleProject> -->
   </ItemGroup>
 
   <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
