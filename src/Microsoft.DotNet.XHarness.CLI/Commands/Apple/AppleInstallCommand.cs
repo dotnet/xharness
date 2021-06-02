@@ -7,11 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
@@ -25,45 +22,29 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected override string CommandUsage { get; } = "apple install --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 
-        public AppleInstallCommand() : base("install", false, CommandHelp)
+        public AppleInstallCommand(IServiceCollection services) : base("install", false, services, CommandHelp)
         {
         }
 
-        protected override Task<ExitCode> InvokeInternal(
-            IMlaunchProcessManager processManager,
-            IAppBundleInformationParser appBundleInformationParser,
-            DeviceFinder deviceFinder,
-            Extensions.Logging.ILogger logger,
-            TestTargetOs target,
-            ILogs logs,
-            IFileBackedLog mainLog,
-            CancellationToken cancellationToken)
+        protected override Task<ExitCode> InvokeInternal(CancellationToken cancellationToken)
         {
-            if (target.Platform == TestTarget.MacCatalyst)
+            var serviceProvider = Services.BuildServiceProvider();
+
+            if (AppleAppArguments.Target.Platform == TestTarget.MacCatalyst)
             {
+                var logger = serviceProvider.GetRequiredService<Extensions.Logging.ILogger>();
                 logger.LogError("Cannot install application on MacCatalyst");
                 return Task.FromResult(ExitCode.PACKAGE_INSTALLATION_FAILURE);
             }
 
-            var orchestrator = new InstallOrchestrator(
-                processManager,
-                appBundleInformationParser,
-                deviceFinder,
-                new ConsoleLogger(logger),
-                logs,
-                mainLog,
-                ErrorKnowledgeBase,
-                new Helpers());
-
-            var args = AppleAppArguments;
-
-            return orchestrator.OrchestrateInstall(
-                target,
-                args.DeviceName,
-                args.AppPackagePath,
-                args.Timeout,
-                args.ResetSimulator,
-                args.EnableLldb,
+            var installOrchestrator = serviceProvider.GetRequiredService<IInstallOrchestrator>();
+            return installOrchestrator.OrchestrateInstall(
+                AppleAppArguments.Target,
+                AppleAppArguments.DeviceName,
+                AppleAppArguments.AppPackagePath,
+                AppleAppArguments.Timeout,
+                AppleAppArguments.ResetSimulator,
+                AppleAppArguments.EnableLldb,
                 cancellationToken);
         }
     }

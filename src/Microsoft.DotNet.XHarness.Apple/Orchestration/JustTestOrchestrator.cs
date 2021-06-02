@@ -14,6 +14,10 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
+    public interface IJustTestOrchestrator : ITestOrchestrator
+    {
+    }
+
     /// <summary>
     /// This orchestrator implements the `just-test` command flow.
     /// This is the same as `test` except we only run an already installed application and
@@ -22,11 +26,11 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// the test results. We also need to watch timeouts better and parse the results
     /// more comprehensively.
     /// </summary>
-    public class JustTestOrchestrator : TestOrchestrator
+    public class JustTestOrchestrator : TestOrchestrator, IJustTestOrchestrator
     {
         public JustTestOrchestrator(
             IMlaunchProcessManager processManager,
-            DeviceFinder deviceFinder,
+            IDeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,

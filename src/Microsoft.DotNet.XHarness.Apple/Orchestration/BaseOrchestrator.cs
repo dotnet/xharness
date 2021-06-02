@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
 
         private readonly IMlaunchProcessManager _processManager;
-        private readonly DeviceFinder _deviceFinder;
+        private readonly IDeviceFinder _deviceFinder;
         private readonly ILogger _logger;
         private readonly ILogs _logs;
         private readonly IFileBackedLog _mainLog;
@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         protected BaseOrchestrator(
             IMlaunchProcessManager processManager,
-            DeviceFinder deviceFinder,
+            IDeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,

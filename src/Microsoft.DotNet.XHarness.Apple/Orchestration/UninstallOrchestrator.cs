@@ -15,14 +15,26 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
+    public interface IUninstallOrchestrator
+    {
+        Task<ExitCode> OrchestrateAppUninstall(
+            string bundleIdentifier,
+            TestTargetOs target,
+            string? deviceName,
+            TimeSpan timeout,
+            bool resetSimulator,
+            bool enableLldb,
+            CancellationToken cancellationToken);
+    }
+
     /// <summary>
     /// This orchestrator implements the `uninstall` command flow.
     /// </summary>
-    public class UninstallOrchestrator : BaseOrchestrator
+    public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
     {
         public UninstallOrchestrator(
             IMlaunchProcessManager processManager,
-            DeviceFinder deviceFinder,
+            IDeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,

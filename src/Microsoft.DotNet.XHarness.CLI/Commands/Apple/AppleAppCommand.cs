@@ -9,12 +9,14 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
@@ -25,24 +27,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected override XHarnessCommandArguments Arguments => AppleAppArguments;
         protected abstract TArguments AppleAppArguments { get; }
 
-        protected AppleAppCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, allowsExtraArgs, help)
+        protected AppleAppCommand(string name, bool allowsExtraArgs, IServiceCollection services, string? help = null) : base(name, allowsExtraArgs, help)
         {
+            Services = services;
         }
 
         protected sealed override async Task<ExitCode> InvokeInternal(Extensions.Logging.ILogger logger)
         {
-            // We have to set these here because command arguments are not initialized in the ctor yet
-            var processManager = new MlaunchProcessManager(AppleAppArguments.XcodeRoot, AppleAppArguments.MlaunchPath);
-            var appBundleInformationParser = new AppBundleInformationParser(processManager);
-            var deviceLoader = new HardwareDeviceLoader(processManager);
-            var simulatorLoader = new SimulatorLoader(processManager);
-            var deviceFinder = new DeviceFinder(deviceLoader, simulatorLoader);
-
-            using var logs = new Logs(AppleAppArguments.OutputDirectory);
-
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(AppleAppArguments.Timeout);
-
             var exitCode = ExitCode.SUCCESS;
 
             var targetName = AppleAppArguments.Target.AsString();
@@ -50,15 +41,28 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             logger.LogInformation($"Preparing run for {targetName}{ (AppleAppArguments.DeviceName != null ? " targeting " + AppleAppArguments.DeviceName : null) }");
 
             // Create main log file for the run
+            using ILogs logs = new Logs(AppleAppArguments.OutputDirectory);
             string logFileName = $"{Name}-{targetName}{(AppleAppArguments.DeviceName != null ? "-" + AppleAppArguments.DeviceName : null)}.log";
-            IFileBackedLog mainLog = logs.Create(logFileName, LogType.ExecutionLog.ToString(), timestamp: true);
+            IFileBackedLog runLog = logs.Create(logFileName, LogType.ExecutionLog.ToString(), timestamp: true);
 
             // Pipe the execution log to the debug output of XHarness effectively making "-v" turn this on
             CallbackLog debugLog = new(message => logger.LogDebug(message.Trim()));
-            mainLog = Log.CreateReadableAggregatedLog(mainLog, debugLog);
+            using var mainLog = Log.CreateReadableAggregatedLog(runLog, debugLog);
             mainLog.Timestamp = true;
 
-            var exitCodeForRun = await InvokeInternal(processManager, appBundleInformationParser, deviceFinder, logger, AppleAppArguments.Target, logs, mainLog, cts.Token);
+            var processManager = new MlaunchProcessManager(AppleAppArguments.XcodeRoot, AppleAppArguments.MlaunchPath);
+
+            Services.TryAddSingleton(mainLog);
+            Services.TryAddSingleton(logs);
+            Services.TryAddSingleton<IMlaunchProcessManager>(processManager);
+            Services.TryAddSingleton<IMacOSProcessManager>(processManager);
+            Services.TryAddSingleton<IProcessManager>(processManager);
+            Services.TryAddTransient<XHarness.Apple.ILogger, ConsoleLogger>();
+
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(AppleAppArguments.Timeout);
+
+            var exitCodeForRun = await InvokeInternal(cts.Token);
             if (exitCodeForRun != ExitCode.SUCCESS)
             {
                 exitCode = exitCodeForRun;
@@ -67,15 +71,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             return exitCode;
         }
 
-        protected abstract Task<ExitCode> InvokeInternal(
-            IMlaunchProcessManager processManager,
-            IAppBundleInformationParser appBundleInformationParser,
-            DeviceFinder deviceFinder,
-            Extensions.Logging.ILogger logger,
-            TestTargetOs target,
-            ILogs logs,
-            IFileBackedLog mainLog,
-            CancellationToken cancellationToken);
+        protected abstract Task<ExitCode> InvokeInternal(CancellationToken cancellationToken);
 
         protected class ConsoleLogger : XHarness.Apple.ILogger
         {

@@ -9,9 +9,7 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
@@ -28,37 +26,27 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected override string CommandDescription { get; } = CommandHelp;
         protected override AppleTestCommandArguments AppleAppArguments { get; } = new();
 
-        public AppleTestCommand() : base("test", false, CommandHelp)
+        public AppleTestCommand(IServiceCollection services) : base("test", false, services, CommandHelp)
         {
         }
 
-        protected override async Task<ExitCode> InvokeInternal(
-            IMlaunchProcessManager processManager,
-            IAppBundleInformationParser appBundleInformationParser,
-            DeviceFinder deviceFinder,
-            Extensions.Logging.ILogger logger,
-            TestTargetOs target,
-            ILogs logs,
-            IFileBackedLog mainLog,
-            CancellationToken cancellationToken)
+        protected override async Task<ExitCode> InvokeInternal(CancellationToken cancellationToken)
         {
-            var orchestrator = new TestOrchestrator(
-                processManager,
-                deviceFinder,
-                new ConsoleLogger(logger),
-                logs,
-                mainLog,
-                ErrorKnowledgeBase,
-                new Helpers());
-
             var args = AppleAppArguments;
 
+            var serviceProvider = Services.BuildServiceProvider();
+            var logger = serviceProvider.GetRequiredService<Extensions.Logging.ILogger>();
             logger.LogInformation($"Getting app bundle information from '{args.AppPackagePath}'");
-            var appBundleInfo = await appBundleInformationParser.ParseFromAppBundle(args.AppPackagePath, target.Platform, mainLog, cancellationToken);
+
+            var mainLog = serviceProvider.GetRequiredService<IFileBackedLog>();
+            var appBundleInformationParser = serviceProvider.GetRequiredService<IAppBundleInformationParser>();
+            var appBundleInfo = await appBundleInformationParser.ParseFromAppBundle(args.AppPackagePath, args.Target.Platform, mainLog, cancellationToken);
+
+            var orchestrator = serviceProvider.GetRequiredService<ITestOrchestrator>();
 
             return await orchestrator.OrchestrateTest(
                 appBundleInfo,
-                target,
+                args.Target,
                 args.DeviceName,
                 args.Timeout,
                 args.LaunchTimeout,

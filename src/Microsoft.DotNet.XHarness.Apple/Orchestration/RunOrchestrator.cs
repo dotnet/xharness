@@ -18,12 +18,27 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
+    public interface IRunOrchestrator
+    {
+        Task<ExitCode> OrchestrateRun(
+            AppBundleInformation appBundleInformation,
+            TestTargetOs target,
+            string? deviceName,
+            TimeSpan timeout,
+            int expectedExitCode,
+            bool resetSimulator,
+            bool enableLldb,
+            IReadOnlyCollection<(string, string)> environmentalVariables,
+            IEnumerable<string> passthroughArguments,
+            CancellationToken cancellationToken);
+    }
+
     /// <summary>
     /// This orchestrator implements the `run` command flow.
     /// In this flow we spawn the application and do not expect TestRunner inside.
     /// We only try to detect the exit code after the app run is finished.
     /// </summary>
-    public class RunOrchestrator : BaseOrchestrator
+    public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILogger _logger;
@@ -34,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         public RunOrchestrator(
             IMlaunchProcessManager processManager,
-            DeviceFinder deviceFinder,
+            IDeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,

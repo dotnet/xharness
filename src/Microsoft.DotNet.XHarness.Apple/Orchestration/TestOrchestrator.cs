@@ -20,10 +20,29 @@ using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
+    public interface ITestOrchestrator
+    {
+        Task<ExitCode> OrchestrateTest(
+            AppBundleInformation appBundleInformation,
+            TestTargetOs target,
+            string? deviceName,
+            TimeSpan timeout,
+            TimeSpan launchTimeout,
+            CommunicationChannel communicationChannel,
+            XmlResultJargon xmlResultJargon,
+            IEnumerable<string> singleMethodFilters,
+            IEnumerable<string> classMethodFilters,
+            bool resetSimulator,
+            bool enableLldb,
+            IReadOnlyCollection<(string, string)> environmentalVariables,
+            IEnumerable<string> passthroughArguments,
+            CancellationToken cancellationToken);
+    }
+
     /// <summary>
     /// Common ancestor for `test` and `just-test` orchestrators.
     /// </summary>
-    public class TestOrchestrator : BaseOrchestrator
+    public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILogger _logger;
@@ -33,7 +52,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         public TestOrchestrator(
             IMlaunchProcessManager processManager,
-            DeviceFinder deviceFinder,
+            IDeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,

@@ -7,11 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
@@ -23,39 +19,21 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         protected override string CommandUsage { get; } = "apple uninstall --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 
-        public AppleUninstallCommand() : base("uninstall", false, CommandHelp)
+        public AppleUninstallCommand(IServiceCollection services) : base("uninstall", false, services, CommandHelp)
         {
         }
 
-        protected override Task<ExitCode> InvokeInternal(
-            IMlaunchProcessManager processManager,
-            IAppBundleInformationParser appBundleInformationParser,
-            DeviceFinder deviceFinder,
-            Extensions.Logging.ILogger logger,
-            TestTargetOs target,
-            ILogs logs,
-            IFileBackedLog mainLog,
-            CancellationToken cancellationToken)
-        {
-            var args = AppleAppArguments;
-
-            var orchestrator = new UninstallOrchestrator(
-                processManager,
-                deviceFinder,
-                new ConsoleLogger(logger),
-                logs,
-                mainLog,
-                ErrorKnowledgeBase,
-                new Helpers());
-
-            return orchestrator.OrchestrateAppUninstall(
-                args.BundleIdentifier,
-                target,
-                args.DeviceName,
-                args.Timeout,
-                args.ResetSimulator,
-                args.EnableLldb,
-                cancellationToken);
-        }
+        protected override Task<ExitCode> InvokeInternal(CancellationToken cancellationToken) =>
+            Services
+                .BuildServiceProvider()
+                .GetRequiredService<IUninstallOrchestrator>()
+                .OrchestrateAppUninstall(
+                    AppleAppArguments.BundleIdentifier,
+                    AppleAppArguments.Target,
+                    AppleAppArguments.DeviceName,
+                    AppleAppArguments.Timeout,
+                    AppleAppArguments.ResetSimulator,
+                    AppleAppArguments.EnableLldb,
+                    cancellationToken);
     }
 }
