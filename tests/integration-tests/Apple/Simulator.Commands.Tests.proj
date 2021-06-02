@@ -21,7 +21,7 @@
     <Message Text="Extracted to $(TestAppDestinationDir)" Importance="High" />
 
     <ItemGroup>
-      <XHarnessAppBundleToTest Include="$(TestAppDestinationDir)">
+      <XHarnessAppBundleToTest Include="$(TestAppDestinationDir)\$(TestAppBundleName).app">
         <Targets>ios-simulator-64</Targets>
         <WorkItemTimeout>00:12:00</WorkItemTimeout>
         <TestTimeout>00:05:00</TestTimeout>
