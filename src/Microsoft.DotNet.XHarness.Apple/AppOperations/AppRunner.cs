@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
@@ -82,7 +83,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             ISimulatorDevice? companionSimulator;
 
             var isSimulator = target.Platform.IsSimulator();
-            var crashLogs = new Logs(_logs.Directory);
+            using var crashLogs = new Logs(_logs.Directory);
 
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(
                 _mainLog,
@@ -146,51 +147,42 @@ namespace Microsoft.DotNet.XHarness.Apple
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
-            var systemLogs = new List<ICaptureLog>();
+            _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
 
-            try
+            var simulatorLog = _captureLogFactory.Create(
+                path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
+                systemLogPath: simulator.SystemLog,
+                entireFile: false,
+                LogType.SystemLog);
+
+            simulatorLog.StartCapture();
+            _logs.Add(simulatorLog);
+
+            using var systemLogs = new DisposableList<ICaptureLog>
             {
-                _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
+                simulatorLog
+            };
 
-                var simulatorLog = _captureLogFactory.Create(
-                    path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
-                    systemLogPath: simulator.SystemLog,
+            if (companionSimulator != null)
+            {
+                _mainLog.WriteLine("System log for the '{1}' companion simulator is: {0}", companionSimulator.SystemLog, companionSimulator.Name);
+
+                var companionLog = _captureLogFactory.Create(
+                    path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
+                    systemLogPath: companionSimulator.SystemLog,
                     entireFile: false,
-                    LogType.SystemLog);
+                    LogType.CompanionSystemLog);
 
-                simulatorLog.StartCapture();
-                _logs.Add(simulatorLog);
-                systemLogs.Add(simulatorLog);
-
-                if (companionSimulator != null)
-                {
-                    _mainLog.WriteLine("System log for the '{1}' companion simulator is: {0}", companionSimulator.SystemLog, companionSimulator.Name);
-
-                    var companionLog = _captureLogFactory.Create(
-                        path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
-                        systemLogPath: companionSimulator.SystemLog,
-                        entireFile: false,
-                        LogType.CompanionSystemLog);
-
-                    companionLog.StartCapture();
-                    _logs.Add(companionLog);
-                    systemLogs.Add(companionLog);
-                }
-
-                await crashReporter.StartCaptureAsync();
-
-                _mainLog.WriteLine("Starting test run");
-
-                return await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+                companionLog.StartCapture();
+                _logs.Add(companionLog);
+                systemLogs.Add(companionLog);
             }
-            finally
-            {
-                foreach (ICaptureLog? log in systemLogs)
-                {
-                    log.StopCapture();
-                    log.Dispose();
-                }
-            }
+
+            await crashReporter.StartCaptureAsync();
+
+            _mainLog.WriteLine("Starting test run");
+
+            return await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
         }
 
         private async Task<ProcessExecutionResult> RunDeviceApp(

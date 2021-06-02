@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         private void Processing()
         {
             Connected("N/A");
-            using (var fs = new BlockingFileStream(Path) { Listener = this })
+            using (var fs = new BlockingFileStream(Path, this))
             {
                 using (var reader = new StreamReader(fs))
                 {
@@ -73,17 +73,18 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         private class BlockingFileStream : FileStream
         {
-            public SimpleFileListener Listener;
+            private readonly SimpleFileListener _listener;
             private long _lastPosition;
 
-            public BlockingFileStream(string path)
+            public BlockingFileStream(string path, SimpleFileListener listener)
                 : base(path, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite)
             {
+                _listener = listener;
             }
 
             public override int Read(byte[] array, int offset, int count)
             {
-                while (_lastPosition == base.Length && !Listener._cancel)
+                while (_lastPosition == base.Length && !_listener._cancel)
                 {
                     Thread.Sleep(25);
                 }

@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Moq;
@@ -22,15 +23,29 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
             _path = Path.GetTempFileName();
             _testLog = new Mock<IFileBackedLog>();
             _log = new Mock<ILog>();
-            File.Delete(_path);
+
+            try
+            {
+                File.Delete(_path);
+            }
+            finally
+            {
+            }
         }
 
         public void Dispose()
         {
             if (File.Exists(_path))
             {
-                File.Delete(_path);
+                try
+                {
+                    File.Delete(_path);
+                }
+                finally
+                {
+                }
             }
+
             GC.SuppressFinalize(this);
         }
 
@@ -40,38 +55,37 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Listeners
         [Theory]
         [InlineData("Tests run: ", false)]
         [InlineData("<!-- the end -->", true)]
-        public void TestProcess(string endLine, bool isXml)
+        public void FileContentIsCopied(string endLine, bool isXml)
         {
             var lines = new[] { "first line", "second line", "last line" };
-            // set mock expectations
-            _testLog.Setup(l => l.WriteLine("Tests have started executing"));
-            _testLog.Setup(l => l.WriteLine("Tests have finished executing"));
-            foreach (var line in lines)
-            {
-                _testLog.Setup(l => l.WriteLine(line));
-            }
-            // create a listener, set the writer and ensure that what we write in the file is present in the final path
+
+            // Create a listener, set the writer and ensure that what we write in the file is present in the final path
             using (var sourceWriter = new StreamWriter(_path))
             {
-                var listener = new SimpleFileListener(_path, _log.Object, _testLog.Object, isXml);
+                using var listener = new SimpleFileListener(_path, _log.Object, _testLog.Object, isXml);
                 listener.InitializeAndGetPort();
                 listener.StartAsync();
-                // write a number of lines and ensure that those are called in the mock
+
+                // Write a number of lines and ensure that those are called in the mock
                 sourceWriter.WriteLine("[Runner executing:");
                 foreach (var line in lines)
                 {
                     sourceWriter.WriteLine(line);
-                    sourceWriter.Flush();
                 }
+
                 sourceWriter.WriteLine(endLine);
-                listener.Cancel();
+                sourceWriter.Flush();
             }
-            // verify that the expected lines were added
+
+            Thread.Sleep(200);
+
+            // Verify that the expected lines were added
             foreach (var line in lines)
             {
-                _testLog.Verify(l => l.WriteLine(line), Times.Once);
+                _testLog.Verify(l => l.WriteLine(It.Is<string>(ll => ll.Trim() == line.Trim())), Times.AtLeastOnce);
             }
-        }
 
+            _log.Verify(l => l.WriteLine(It.Is<string>(ll => ll == "Tests have finished executing")), Times.AtLeastOnce);
+        }
     }
 }
