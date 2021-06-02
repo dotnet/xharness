@@ -88,10 +88,17 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public void Cancel()
         {
-            _connected.TrySetCanceled();
+            lock (_connected)
+            {
+                if (!_connected.TrySetCanceled())
+                {
+                    return;
+                }
+            }
+
             try
             {
-                // wait a second just in case more data arrives.
+                // Wait a second just in case more data arrives
                 if (!_stopped.Task.Wait(TimeSpan.FromSeconds(1)))
                 {
                     Stop();
@@ -105,7 +112,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         public virtual void Dispose()
         {
-            TestLog.Dispose();
+            Cancel();
             GC.SuppressFinalize(this);
         }
     }

@@ -37,11 +37,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             _useTcpTunnel = tunnel;
         }
 
-        public SimpleTcpListener(int port, ILog log, IFileBackedLog testLog, bool autoExit, bool tunnel = false) : this(log, testLog, autoExit, tunnel)
-        {
-            Port = port;
-        }
-
         protected override void Stop()
         {
             _client?.Close();

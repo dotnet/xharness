@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             string[]? skippedTestClasses = null,
             CancellationToken cancellationToken = default)
         {
-            var deviceListenerLog = _logs.Create($"test-maccatalyst-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
+            using var deviceListenerLog = _logs.Create($"test-maccatalyst-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: true);
 
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 RunMode.MacOS,
@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 autoExit: true,
                 xmlOutput: true);
 
-            try
+            using(deviceListener)
             {
                 var (catalystTestResult, catalystResultMessage) = await RunMacCatalystTests(
                     deviceListenerTransport,
@@ -101,11 +101,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                     cancellationToken);
 
                 return (catalystTestResult, catalystResultMessage);
-            }
-            finally
-            {
-                deviceListener.Cancel();
-                deviceListener.Dispose();
             }
         }
 
@@ -126,7 +121,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             var runMode = target.Platform.ToRunMode();
             var isSimulator = target.Platform.IsSimulator();
 
-            var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
+            using var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
 
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 runMode,
@@ -136,35 +131,35 @@ namespace Microsoft.DotNet.XHarness.Apple
                 autoExit: true,
                 xmlOutput: true); // cli always uses xml
 
-            var deviceListenerPort = deviceListener.InitializeAndGetPort();
-            deviceListener.StartAsync();
-
-            var crashLogs = new Logs(_logs.Directory);
-
-            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, device.Name);
-            ITestReporter testReporter = _testReporterFactory.Create(_mainLog,
-                _mainLog,
-                _logs,
-                crashReporter,
-                deviceListener,
-                _resultParser,
-                appInformation,
-                runMode,
-                xmlResultJargon,
-                device.Name,
-                timeout,
-                null,
-                (level, message) => _mainLog.WriteLine(message));
-
-            deviceListener.ConnectedTask
-                .TimeoutAfter(testLaunchTimeout)
-                .ContinueWith(testReporter.LaunchCallback)
-                .DoNotAwait();
-
-            _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{device.Name}' ***");
-
-            try
+            using (deviceListener)
             {
+                var deviceListenerPort = deviceListener.InitializeAndGetPort();
+                deviceListener.StartAsync();
+
+                using var crashLogs = new Logs(_logs.Directory);
+
+                ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, device.Name);
+                using ITestReporter testReporter = _testReporterFactory.Create(_mainLog,
+                    _mainLog,
+                    _logs,
+                    crashReporter,
+                    deviceListener,
+                    _resultParser,
+                    appInformation,
+                    runMode,
+                    xmlResultJargon,
+                    device.Name,
+                    timeout,
+                    null,
+                    (level, message) => _mainLog.WriteLine(message));
+
+                deviceListener.ConnectedTask
+                    .TimeoutAfter(testLaunchTimeout)
+                    .ContinueWith(testReporter.LaunchCallback, cancellationToken)
+                    .DoNotAwait();
+
+                _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{device.Name}' ***");
+
                 using var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken);
 
                 if (isSimulator)
@@ -215,15 +210,10 @@ namespace Microsoft.DotNet.XHarness.Apple
                         extraEnvVariables,
                         combinedCancellationToken.Token);
                 }
-            }
-            finally
-            {
-                deviceListener.Cancel();
-                deviceListener.Dispose();
-            }
 
-            // Check the final status, copy all the required data
-            return await testReporter.ParseResult();
+                // Check the final status, copy all the required data
+                return await testReporter.ParseResult();
+            }
         }
 
         private async Task RunSimulatorTests(
@@ -235,52 +225,43 @@ namespace Microsoft.DotNet.XHarness.Apple
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
-            var systemLogs = new List<ICaptureLog>();
+            _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
 
-            try
+            using var simulatorLog = _captureLogFactory.Create(
+                path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
+                systemLogPath: simulator.SystemLog,
+                entireFile: false,
+                LogType.SystemLog);
+
+            simulatorLog.StartCapture();
+            _logs.Add(simulatorLog);
+
+            using var systemLogs = new DisposableList<ICaptureLog>
             {
-                _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
+                simulatorLog
+            };
 
-                var simulatorLog = _captureLogFactory.Create(
-                    path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
-                    systemLogPath: simulator.SystemLog,
+            if (companionSimulator != null)
+            {
+                _mainLog.WriteLine("System log for the '{1}' companion simulator is: {0}", companionSimulator.SystemLog, companionSimulator.Name);
+
+                var companionLog = _captureLogFactory.Create(
+                    path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
+                    systemLogPath: companionSimulator.SystemLog,
                     entireFile: false,
-                    LogType.SystemLog);
+                    LogType.CompanionSystemLog);
 
-                simulatorLog.StartCapture();
-                _logs.Add(simulatorLog);
-                systemLogs.Add(simulatorLog);
-
-                if (companionSimulator != null)
-                {
-                    _mainLog.WriteLine("System log for the '{1}' companion simulator is: {0}", companionSimulator.SystemLog, companionSimulator.Name);
-
-                    var companionLog = _captureLogFactory.Create(
-                        path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
-                        systemLogPath: companionSimulator.SystemLog,
-                        entireFile: false,
-                        LogType.CompanionSystemLog);
-
-                    companionLog.StartCapture();
-                    _logs.Add(companionLog);
-                    systemLogs.Add(companionLog);
-                }
-
-                await crashReporter.StartCaptureAsync();
-
-                _mainLog.WriteLine("Starting test run");
-
-                var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
-                await testReporter.CollectSimulatorResult(result);
+                companionLog.StartCapture();
+                _logs.Add(companionLog);
+                systemLogs.Add(companionLog);
             }
-            finally
-            {
-                foreach (ICaptureLog? log in systemLogs)
-                {
-                    log.StopCapture();
-                    log.Dispose();
-                }
-            }
+
+            await crashReporter.StartCaptureAsync();
+
+            _mainLog.WriteLine("Starting test run");
+
+            var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+            await testReporter.CollectSimulatorResult(result);
         }
 
         private async Task RunDeviceTests(
@@ -368,10 +349,10 @@ namespace Microsoft.DotNet.XHarness.Apple
             var deviceListenerPort = deviceListener.InitializeAndGetPort();
             deviceListener.StartAsync();
 
-            var crashLogs = new Logs(_logs.Directory);
+            using var crashLogs = new Logs(_logs.Directory);
 
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: false, null);
-            ITestReporter testReporter = _testReporterFactory.Create(
+            using ITestReporter testReporter = _testReporterFactory.Create(
                 _mainLog,
                 _mainLog,
                 _logs,
@@ -418,7 +399,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             finally
             {
                 deviceListener.Cancel();
-                deviceListener.Dispose();
             }
 
             return await testReporter.ParseResult();

@@ -41,6 +41,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         private long _startPosition;
         private long _endPosition;
         private bool _started;
+        private bool _stopped;
 
         public string CapturePath { get; }
         public override string FullPath { get; }
@@ -69,6 +70,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         public void StopCapture(TimeSpan? waitIfEmpty = null)
         {
+            lock(CapturePath)
+            {
+                if (_stopped)
+                {
+                    return;
+                }
+
+                _stopped = true;
+            }
+
             if (!_started && !_entireFile)
             {
                 throw new InvalidOperationException("StartCapture() must be called before StopCature() on when the entire file is being captured.");
@@ -187,6 +198,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         public override void Dispose()
         {
+            StopCapture();
             GC.SuppressFinalize(this);
         }
     }

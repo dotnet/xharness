@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Collections
     // delayed until later).
     public class BlockingEnumerableCollection<T> : IEnumerable<T> where T : class
     {
-        private readonly List<T> _list = new List<T>();
+        private readonly List<T> _list = new();
         private TaskCompletionSource<bool> _completed = new TaskCompletionSource<bool>();
 
         public int Count
@@ -30,11 +30,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Collections
 
         public void Add(T device)
         {
-            if (_completed.Task.IsCompleted)
-            {
-                Console.WriteLine("Adding to completed collection!");
-            }
-
             _list.Add(device);
         }
 

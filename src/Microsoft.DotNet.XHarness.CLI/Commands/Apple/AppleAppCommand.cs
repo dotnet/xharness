@@ -41,13 +41,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             logger.LogInformation($"Preparing run for {targetName}{ (AppleAppArguments.DeviceName != null ? " targeting " + AppleAppArguments.DeviceName : null) }");
 
             // Create main log file for the run
-            ILogs logs = new Logs(AppleAppArguments.OutputDirectory);
+            using ILogs logs = new Logs(AppleAppArguments.OutputDirectory);
             string logFileName = $"{Name}-{targetName}{(AppleAppArguments.DeviceName != null ? "-" + AppleAppArguments.DeviceName : null)}.log";
-            IFileBackedLog mainLog = logs.Create(logFileName, LogType.ExecutionLog.ToString(), timestamp: true);
+            IFileBackedLog runLog = logs.Create(logFileName, LogType.ExecutionLog.ToString(), timestamp: true);
 
             // Pipe the execution log to the debug output of XHarness effectively making "-v" turn this on
             CallbackLog debugLog = new(message => logger.LogDebug(message.Trim()));
-            mainLog = Log.CreateReadableAggregatedLog(mainLog, debugLog);
+            using var mainLog = Log.CreateReadableAggregatedLog(runLog, debugLog);
             mainLog.Timestamp = true;
 
             var processManager = new MlaunchProcessManager(AppleAppArguments.XcodeRoot, AppleAppArguments.MlaunchPath);
