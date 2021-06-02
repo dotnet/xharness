@@ -22,8 +22,8 @@
 
     <ItemGroup>
       <XHarnessAppBundleToTest Include="$(TestAppDestinationDir)\$(TestAppBundleName).app">
-        <Targets>ios-simulator-64</Targets>
-        <WorkItemTimeout>00:16:00</WorkItemTimeout>
+        <Targets>ios-device</Targets>
+        <WorkItemTimeout>00:20:00</WorkItemTimeout>
         <TestTimeout>00:10:00</TestTimeout>
         <LaunchTimeout>00:07:00</LaunchTimeout>
         <CustomCommands>
@@ -32,9 +32,9 @@
           xharness apple install -t=$targets --device="$deviceId" -o="$output_directory" --app="$app" -v;
           set +e;
           result=0;
-          xharness apple just-test -t=$targets --device="$deviceId" -o="$output_directory" --app="net.dot.$(XHarnessAppBundleName)" --launch-timeout=$launch_timeout --timeout=$timeout -v;
+          xharness apple just-test -t=$targets --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" --launch-timeout=$launch_timeout --timeout=$timeout -v;
           ((result|=$?));
-          xharness apple uninstall -t=$targets --device="$deviceId" -o="$output_directory" --app="net.dot.$(XHarnessAppBundleName)" -v;
+          xharness apple uninstall -t=$targets --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" -v;
           ((result|=$?));
           exit $result;
         </CustomCommands>
