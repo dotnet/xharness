@@ -168,26 +168,29 @@ stages:
       displayName: Apple - Simulators
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Tests.proj
 
-# TODO - Enable when running on devices is unblocked (#574)
-#   - template: eng/e2e-test.yml
-#     parameters:
-#       name: E2E_Apple_Devices
-#       displayName: Apple - Devices
-#       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Tests.proj
+  - template: eng/e2e-test.yml
+    parameters:
+      name: E2E_iOS_Devices
+      displayName: Apple - iOS devices
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.iOS.Tests.proj
 
-# TODO - Enable when Helix SDK supports custom Apple payloads (#590)
-#   - template: eng/e2e-test.yml
-#     parameters:
-#       name: E2E_Apple_Simulator_Commands
-#       displayName: Apple - Simulator Commands
-#       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Commands.Tests.proj
+  - template: eng/e2e-test.yml
+    parameters:
+      name: E2E_tvOS_Devices
+      displayName: Apple - tvOS devices
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.tvOS.Tests.proj
 
-# TODO - Enable when running on devices is unblocked (#574) and Helix SDK supports custom Apple payloads (#590)
-#   - template: eng/e2e-test.yml
-#     parameters:
-#       name: E2E_Apple_Device_Commands
-#       displayName: Apple - Device Commands
-#       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Commands.Tests.proj
+  - template: eng/e2e-test.yml
+    parameters:
+      name: E2E_Apple_Simulator_Commands
+      displayName: Apple - Simulator Commands
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Commands.Tests.proj
+
+  - template: eng/e2e-test.yml
+    parameters:
+      name: E2E_Apple_Device_Commands
+      displayName: Apple - Device Commands
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Commands.Tests.proj
 
   - template: eng/e2e-test.yml
     parameters:
@@ -208,8 +211,7 @@ stages:
     parameters:
       publishingInfraVersion: 3
       enableSymbolValidation: true
-      # Reenable once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
-      enableSourceLinkValidation: false
+      enableSourceLinkValidation: true
       validateDependsOn:
       - Build_Windows_NT
       publishDependsOn:

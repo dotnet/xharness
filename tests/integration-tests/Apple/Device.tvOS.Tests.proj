@@ -1,0 +1,14 @@
+<Project DefaultTargets="Test">
+    <Import Project="../Helix.SDK.configuration.props"/>
+
+    <ItemGroup>
+        <HelixTargetQueue Include="osx.1015.amd64.appletv.open"/>
+
+        <!-- apple test / tvos-device -->
+        <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+            <AdditionalProperties>TestTarget=tvos-device;TestAppBundleName=System.Buffers.Tests.app</AdditionalProperties>
+        </XHarnessAppleProject>
+    </ItemGroup>
+
+    <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
+</Project>

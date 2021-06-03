@@ -2,11 +2,11 @@
   <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.1015.amd64.open"/>
+    <HelixTargetQueue Include="osx.1015.amd64.iphone.open"/>
   </ItemGroup>
 
   <PropertyGroup>
-    <TestAppBundleName>HelloiOS</TestAppBundleName>
+    <TestAppBundleName>System.Buffers.Tests</TestAppBundleName>
     <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app/ios-device/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
     <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\ios-device</TestAppDestinationDir>
   </PropertyGroup>
@@ -21,20 +21,20 @@
     <Message Text="Extracted to $(TestAppDestinationDir)" Importance="High" />
 
     <ItemGroup>
-      <XHarnessAppBundleToTest Include="$(TestAppDestinationDir)">
-        <Targets>ios-simulator-64</Targets>
-        <WorkItemTimeout>00:16:00</WorkItemTimeout>
-        <TestTimeout>00:10:00</TestTimeout>
-        <LaunchTimeout>00:07:00</LaunchTimeout>
+      <XHarnessAppBundleToTest Include="$(TestAppDestinationDir)\$(TestAppBundleName).app">
+        <Targets>ios-device</Targets>
+        <WorkItemTimeout>00:15:00</WorkItemTimeout>
+        <TestTimeout>00:05:00</TestTimeout>
+        <LaunchTimeout>00:04:30</LaunchTimeout>
         <CustomCommands>
           set -ex;
           deviceId=`xharness apple device $targets`;
           xharness apple install -t=$targets --device="$deviceId" -o="$output_directory" --app="$app" -v;
           set +e;
           result=0;
-          xharness apple just-test -t=$targets --device="$deviceId" -o="$output_directory" --app="net.dot.$(XHarnessAppBundleName)" --launch-timeout=$launch_timeout --timeout=$timeout -v;
+          xharness apple just-test -t=$targets --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" --launch-timeout=$launch_timeout --timeout=$timeout -v;
           ((result|=$?));
-          xharness apple uninstall -t=$targets --device="$deviceId" -o="$output_directory" --app="net.dot.$(XHarnessAppBundleName)" -v;
+          xharness apple uninstall -t=$targets --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" -v;
           ((result|=$?));
           exit $result;
         </CustomCommands>
