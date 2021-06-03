@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
@@ -69,6 +70,7 @@ Arguments:
             string apkPackageName = Arguments.PackageName;
             string appPackagePath = Arguments.AppPackagePath;
 
+            var webServerCts = new CancellationTokenSource();
             try
             {
                 var exitCode = AndroidInstallCommand.InvokeHelper(
@@ -82,6 +84,25 @@ Arguments:
 
                 if (exitCode == ExitCode.SUCCESS)
                 {
+                    ServerURLs? serverURLs = null;
+                    if (_arguments.WebServerMiddlewarePathsAndTypes.Count > 0)
+                    {
+                        serverURLs = await WebServer.Start(
+                            _arguments, logger,
+                            null,
+                            webServerCts.Token);
+                        webServerCts.CancelAfter(_arguments.Timeout);
+
+                        foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttp)
+                        {
+                            _arguments.InstrumentationArguments.Add(envVariable, serverURLs!.Http);
+                        }
+
+                        foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
+                        {
+                            _arguments.InstrumentationArguments.Add(envVariable, serverURLs!.Https);
+                        }
+                    }
                     exitCode = AndroidRunCommand.InvokeHelper(
                         logger: logger,
                         apkPackageName: apkPackageName,
@@ -106,6 +127,13 @@ Arguments:
             catch (Exception toLog)
             {
                 logger.LogCritical(toLog, toLog.Message);
+            }
+            finally
+            {
+                if (!webServerCts.IsCancellationRequested)
+                {
+                    webServerCts.Cancel();
+                }
             }
 
             return Task.FromResult(ExitCode.GENERAL_FAILURE);
