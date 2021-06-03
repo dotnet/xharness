@@ -43,7 +43,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                         {
                             builder.AllowAnyOrigin()
                                 .AllowAnyMethod()
-                                .AllowAnyHeader();
+                                .AllowAnyHeader()
+                                .WithExposedHeaders("*");
                         }));
                     services.AddRouting();
                     services.AddSingleton<ILogger>(logger);
