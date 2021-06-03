@@ -10,7 +10,8 @@
     </XHarnessAppleProject>
 
     <!-- apple run / ios-device -->
-    <!-- <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+    <!-- TODO: Needs protocol between device and XHarness: https://github.com/dotnet/xharness/issues/574
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
       <AdditionalProperties>TestTarget=ios-device;TestAppBundleName=HelloiOS.app;IncludesTestRunner=false;ExpectedExitCode=200</AdditionalProperties>
     </XHarnessAppleProject> -->
   </ItemGroup>
