@@ -40,6 +40,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
     {
         public Browser Browser { get; set; } = Browser.Chrome;
         public string? BrowserLocation { get; set; } = null;
+        public string? ErrorPatternsFile { get; set; }
 
         public List<string> BrowserArgs { get; set; } = new List<string>();
         public string HTMLFile { get; set; } = "index.html";
@@ -64,6 +65,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             },
             { "debugger=|d=", "Run browser in debug mode, with a port to listen on. Default port number is 9222",
                 v => DebuggerPort = ParseAsIntOrThrow(v, "debugger")
+            },
+            { "error-patterns=|p=", "File containing error patterns. Each line prefixed with '@', or '%' for a simple string, or a .net regex, respectively.",
+                v => ErrorPatternsFile = v
             },
             { "no-incognito", "Don't run in incognito mode.",
                 v => Incognito = false
@@ -96,6 +100,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             if (Path.IsPathRooted (HTMLFile))
             {
                 throw new ArgumentException("--html-file argument must be a relative path");
+            }
+
+            if (ErrorPatternsFile != null && !File.Exists(ErrorPatternsFile))
+            {
+                throw new ArgumentException($"Cannot find error patterns file {ErrorPatternsFile}");
             }
 
             if (!string.IsNullOrEmpty(BrowserLocation))

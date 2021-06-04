@@ -119,13 +119,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 var stdoutFilePath = Path.Combine(_arguments.OutputDirectory, "wasm-console.log");
                 File.Delete(stdoutFilePath);
 
-                var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath, stdoutFilePath, logger);
+                var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath, stdoutFilePath, logger, _arguments.ErrorPatternsFile);
                 var result = await processManager.ExecuteCommandAsync(
                     engineBinary,
                     engineArgs,
                     log: new CallbackLog(m => logger.LogInformation(m)),
                     stdoutLog: new CallbackLog(logProcessor.Invoke),
-                    stderrLog: new CallbackLog(m => logger.LogError(m)),
+                    stderrLog: new CallbackLog(logProcessor.ProcessErrorMessage),
                     _arguments.Timeout);
                 
                 if (result.ExitCode != _arguments.ExpectedExitCode)
@@ -135,6 +135,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 }
                 else
                 {
+                    if (logProcessor.LineThatMatchedErrorPattern != null)
+                    {
+                        logger.LogError("Application exited with the expected exit code: {result.ExitCode}."
+                                        + $" But found a line matching an error pattern: {logProcessor.LineThatMatchedErrorPattern}");
+                        return ExitCode.APP_CRASH;
+                    }
+
                     logger.LogInformation("Application has finished with exit code: " + result.ExitCode);
                     return ExitCode.SUCCESS;
                 }

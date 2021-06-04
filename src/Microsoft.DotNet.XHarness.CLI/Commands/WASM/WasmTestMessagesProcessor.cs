@@ -8,6 +8,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
+#nullable enable
+
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
     public class WasmTestMessagesProcessor
@@ -17,15 +19,26 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         private readonly string _xmlResultsFilePath;
 
         private readonly ILogger _logger;
+        private readonly Lazy<ErrorPatternScanner>? _errorScanner;
+
+        public string? LineThatMatchedErrorPattern { get; private set; }
 
         public TaskCompletionSource<bool> WasmExitReceivedTcs { get; } = new TaskCompletionSource<bool>();
 
-        public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger)
+        public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger, string? errorPatternsFile)
         {
             _xmlResultsFilePath = xmlResultsFilePath;
             _stdoutFileWriter = File.CreateText(stdoutFilePath);
             _stdoutFileWriter.AutoFlush = true;
             _logger = logger;
+
+            if (errorPatternsFile != null)
+            {
+                if (!File.Exists(errorPatternsFile))
+                    throw new ArgumentException($"Cannot find error patterns file {errorPatternsFile}");
+
+                _errorScanner = new Lazy<ErrorPatternScanner>(() => new ErrorPatternScanner(errorPatternsFile, logger));
+            }
         }
 
         public void Invoke(string message)
@@ -80,6 +93,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 }
                 else
                 {
+                    ScanMessage(line);
+
                     switch (logMessage?.method?.ToLowerInvariant())
                     {
                         case "console.debug": _logger.LogDebug(line); break;
@@ -116,6 +131,21 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             {
                 WasmExitReceivedTcs.SetResult(true);
             }
+        }
+
+        private void ScanMessage(string message)
+        {
+            if (LineThatMatchedErrorPattern != null || _errorScanner == null)
+                return;
+
+            if (_errorScanner.Value.IsError(message, out string? _))
+                LineThatMatchedErrorPattern = message;
+        }
+
+        public void ProcessErrorMessage(string message)
+        {
+            _logger.LogError(message);
+            ScanMessage(message);
         }
     }
 }

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
@@ -37,6 +38,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             set => _engine = value;
         }
 
+        public string? ErrorPatternsFile { get; set; }
+
         public List<string> EngineArgs { get; set; } = new List<string>();
 
         public string JSFile { get; set; } = "runtime.js";
@@ -50,6 +53,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             },
             { "engine-arg=", "Argument to pass to the JavaScript engine. Can be used more than once.",
                 v => EngineArgs.Add(v)
+            },
+            { "error-patterns=|p=", "File containing error patterns. Each line prefixed with '@', or '%' for a simple string, or a .net regex, respectively.",
+                v => ErrorPatternsFile = v
             },
             { "js-file=", "Main JavaScript file to be run on the JavaScript engine. Default is runtime.js",
                 v => JSFile = v
@@ -71,6 +77,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         {
             base.Validate();
             _ = Engine;
+
+            if (ErrorPatternsFile != null && !File.Exists(ErrorPatternsFile))
+            {
+                throw new ArgumentException($"Cannot find error patterns file {ErrorPatternsFile}");
+            }
         }
     }
 }
