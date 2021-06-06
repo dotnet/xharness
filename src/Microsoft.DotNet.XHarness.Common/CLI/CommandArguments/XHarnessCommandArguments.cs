@@ -17,6 +17,10 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 
         public bool ShowHelp { get; set; } = false;
 
+        private readonly OptionSet _options = new();
+
+        private readonly ArgumentDefinitions _argumentDefinitions = new();
+
         /// <summary>
         /// Collects together all options from this class and from GetCommandOptions()
         /// Options from this class are appended to the bottom of the list.
@@ -27,7 +31,14 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         /// </remarks>
         public OptionSet GetOptions()
         {
-            var options = GetCommandOptions();
+            var arguments = new ArgumentDefinitions();
+            var options = new OptionSet();
+            var methodInfo = typeof();
+
+            foreach (var option in GetCommandOptions().SelectMany(t => arguments.BindOptions(t)))
+            {
+                options.Add(option);
+            }
 
             options.Add("verbosity:|v:", "Verbosity level - defaults to 'Information' if not specified. If passed without value, 'Debug' is assumed (highest)",
                 v => Verbosity = string.IsNullOrEmpty(v) ? LogLevel.Debug : ParseArgument<LogLevel>("verbosity", v));
@@ -42,6 +53,17 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         /// Should throw an ArgumentException if validation fails.
         /// </summary>
         public abstract void Validate();
+
+        /// <summary>
+        /// Adds options from the database into the option set
+        /// </summary>
+        protected void RegisterOptions<T>() where T : class
+        {
+            foreach (var options in _argumentDefinitions.BindOptions<T>(this as T))
+            {
+                _options.Add(options);
+            }
+        }
 
         /// <summary>
         /// Returns additional option for your specific command.
