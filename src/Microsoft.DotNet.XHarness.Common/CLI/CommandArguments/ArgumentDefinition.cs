@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 
 namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 {
@@ -69,25 +68,25 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         public override void Action(string argumentValue) => Value = argumentValue;
     }
 
-    public abstract class TimeoutArgument : ArgumentDefinition
+    public abstract class TimeSpanArgument : ArgumentDefinition
     {
-        protected TimeoutArgument(string prototype, string description) : base(prototype, description)
+        protected TimeSpanArgument(string prototype, string description) : base(prototype, description)
         {
         }
 
-        public TimeSpan? Timeout { get; set; }
+        public TimeSpan? TimeSpan { get; set; }
 
         public override void Action(string argumentValue)
         {
             if (int.TryParse(argumentValue, out var timeout))
             {
-                Timeout = TimeSpan.FromSeconds(timeout);
+                TimeSpan = System.TimeSpan.FromSeconds(timeout);
                 return;
             }
 
-            if (TimeSpan.TryParse(argumentValue, out var timespan))
+            if (System.TimeSpan.TryParse(argumentValue, out var timespan))
             {
-                Timeout = timespan;
+                TimeSpan = timespan;
                 return;
             }
 

@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Mono.Options;
@@ -15,44 +15,15 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
     internal abstract class AppleAppRunArguments : AppRunCommandArguments
     {
-        /// <summary>
-        /// Path to where Xcode is located.
-        /// </summary>
-        public string? XcodeRoot { get; set; }
+        public XcodeArgument XcodeRoot { get; } = new();
+        public MlaunchArgument Mlaunch { get; } = new();
+        public DeviceNameArgument DeviceName { get; } = new();
+        public EnableLldbArgument EnableLldb { get; } = new();
+        public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
+        public ResetSimulatorArgument ResetSimulator { get; } = new();
+        public TargetArgument Target { get; } = new();
 
-        /// <summary>
-        /// Path to the mlaunch binary.
-        /// Default comes from the NuGet.
-        /// </summary>
-        public string MlaunchPath { get; set; } = MacOSProcessManager.DetectMlaunchPath();
-
-        /// <summary>
-        /// Name of a specific device we want to target.
-        /// </summary>
-        public string? DeviceName { get; set; }
-
-        /// <summary>
-        /// Enable the lldb debugger to be used with the launched application.
-        /// </summary>
-        public bool EnableLldb { get; set; }
-
-        /// <summary>
-        /// Environmental variables set when executing the application.
-        /// </summary>
-        public IReadOnlyCollection<(string, string)> EnvironmentalVariables => _environmentalVariables;
-        private readonly List<(string, string)> _environmentalVariables = new();
-
-        /// <summary>
-        /// Kills running simulator processes and removes any previous data before running.
-        /// </summary>
-        public bool ResetSimulator { get; set; }
-
-        /// <summary>
-        /// Test target.
-        /// </summary>
-        public TestTargetOs Target { get; private set; } = TestTargetOs.None;
-
-        protected override OptionSet GetCommandOptions()
+        protected override IEnumerable<ArgumentDefinition> GetCommandOptions()
         {
             var options = base.GetCommandOptions();
 
