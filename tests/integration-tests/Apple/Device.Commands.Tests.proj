@@ -22,7 +22,7 @@
 
     <ItemGroup>
       <XHarnessAppBundleToTest Include="$(TestAppDestinationDir)\$(TestAppBundleName).app">
-        <Targets>ios-device</Targets>
+        <TestTarget>ios-device</TestTarget>
         <WorkItemTimeout>00:15:00</WorkItemTimeout>
         <TestTimeout>00:05:00</TestTimeout>
         <LaunchTimeout>00:04:30</LaunchTimeout>
