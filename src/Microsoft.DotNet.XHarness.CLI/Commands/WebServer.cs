@@ -29,6 +29,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
     {
         internal static async Task<ServerURLs> Start(TestCommandArguments arguments, ILogger logger, Func<WebSocket, Task>? onConsoleConnected, CancellationToken token)
         {
+            var urls = arguments.WebServerUseHttps
+                    ? new string[] { "http://127.0.0.1:0", "https://127.0.0.1:0" }
+                    : new string[] { "http://127.0.0.1:0" };
+
             var host = new WebHostBuilder()
                 .UseKestrel()
                 .UseContentRoot(arguments.AppPackagePath)
@@ -39,18 +43,22 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 })
                 .ConfigureServices((ctx, services) =>
                 {
-                    services.AddCors(o => o.AddPolicy("AnyCors", builder =>
-                        {
-                            builder.AllowAnyOrigin()
-                                .AllowAnyMethod()
-                                .AllowAnyHeader()
-                                .WithExposedHeaders("*");
-                        }));
+                    if (arguments.WebServerUseCors)
+                    {
+                        services.AddCors(o => o.AddPolicy("AnyCors", builder =>
+                            {
+                                builder.AllowAnyOrigin()
+                                    .AllowAnyMethod()
+                                    .AllowAnyHeader()
+                                    .WithExposedHeaders("*");
+                            }));
+                    }
                     services.AddRouting();
                     services.AddSingleton<ILogger>(logger);
                     services.Configure<TestWebServerOptions>(ctx.Configuration);
                     services.Configure<TestWebServerOptions>(options =>
                     {
+                        options.WebServerUseCors = arguments.WebServerUseCors;
                         options.OnConsoleConnected = onConsoleConnected;
                         foreach (var (middlewarePath, middlewareTypeName) in arguments.WebServerMiddlewarePathsAndTypes)
                         {
@@ -66,7 +74,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                         }
                     });
                 })
-                .UseUrls("http://127.0.0.1:0", "https://127.0.0.1:0")
+                .UseUrls(urls)
                 .Build();
 
             await host.StartAsync(token);
@@ -79,15 +87,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 .Select(uri => $"{uri.Host}:{uri.Port}")
                 .FirstOrDefault();
 
-            var ipAddressSecure = host.ServerFeatures
-                .Get<IServerAddressesFeature>()?
-                .Addresses
-                .Where(a => a.StartsWith("https:"))
-                .Select(a => new Uri(a))
-                .Select(uri => $"{uri.Host}:{uri.Port}")
-                .FirstOrDefault();
+            var ipAddressSecure = arguments.WebServerUseHttps
+                ? host.ServerFeatures
+                    .Get<IServerAddressesFeature>()?
+                    .Addresses
+                    .Where(a => a.StartsWith("https:"))
+                    .Select(a => new Uri(a))
+                    .Select(uri => $"{uri.Host}:{uri.Port}")
+                    .FirstOrDefault()
+                : null;
 
-            if (ipAddress == null || ipAddressSecure == null)
+            if (ipAddress == null || (arguments.WebServerUseHttps && ipAddressSecure == null))
             {
                 throw new InvalidOperationException("Failed to determine web server's IP address or port");
             }
@@ -125,7 +135,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 
                 var options = optionsAccessor.CurrentValue;
 
-                app.UseCors("AnyCors");
+                if (options.WebServerUseCors)
+                {
+                    app.UseCors("AnyCors");
+                }
                 app.UseWebSockets();
                 if (options.OnConsoleConnected != null)
                 {
@@ -157,8 +170,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
         {
             public Func<WebSocket, Task>? OnConsoleConnected { get; set; }
             public IList<Type> EchoServerMiddlewares { get; set; } = new List<Type>();
+            public bool WebServerUseCors { get; set; }
         }
     }
 
-    public record ServerURLs(string Http, string Https);
+    public record ServerURLs(string Http, string? Https);
 }
