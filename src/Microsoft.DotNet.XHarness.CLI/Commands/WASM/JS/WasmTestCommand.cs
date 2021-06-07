@@ -104,10 +104,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     {
                         engineArgs.Add($"--setenv={envVariable}={serverURLs!.Http}");
                     }
-
-                    foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
+                    if (_arguments.WebServerUseHttps)
                     {
-                        engineArgs.Add($"--setenv={envVariable}={serverURLs!.Https}");
+                        foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
+                        {
+                            engineArgs.Add($"--setenv={envVariable}={serverURLs!.Https}");
+                        }
                     }
                 }
 

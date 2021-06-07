@@ -23,6 +23,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         /// Tests classes to be included in the run while all others are ignored.
         /// </summary>
         public IEnumerable<string> ClassMethodFilters => _classMethodFilters;
+        public bool WebServerUseHttps { get; set; }
+        public bool WebServerUseCors { get; set; }
         public IList<(string path, string type)> WebServerMiddlewarePathsAndTypes { get; set; } = new List<(string, string)>();
         public IList<string> SetWebServerEnvironmentVariablesHttp { get; set; } = new List<string>();
         public IList<string> SetWebServerEnvironmentVariablesHttps { get; set; } = new List<string>();
@@ -44,6 +46,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                     "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
                     "ignored. Can be used more than once.",
                     v => _classMethodFilters.Add(v)
+                },
+                { "web-server-use-https", "Bind HTTPS port too",
+                    v => WebServerUseHttps = true
+                },
+                { "web-server-use-cors", "Enable any CORS headers",
+                    v => WebServerUseCors = true
                 },
                 { "web-server-middleware=", "<Path>,<typeName> to assembly and type which contains Kestrel middleware for local test server. Could be used multiple times to load multiple middlewares.",
                     v =>

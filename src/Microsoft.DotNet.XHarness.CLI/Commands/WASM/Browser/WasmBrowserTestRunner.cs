@@ -243,11 +243,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 sb.Append($"arg={HttpUtility.UrlEncode($"--setenv={envVariable}={serverURLs!.Http}")}");
             }
 
-            foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
+            if (_arguments.WebServerUseHttps)
             {
-                if (sb.Length > 0)
-                    sb.Append('&');
-                sb.Append($"arg={HttpUtility.UrlEncode($"--setenv={envVariable}={serverURLs!.Https}")}");
+                foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
+                {
+                    if (sb.Length > 0)
+                        sb.Append('&');
+                    sb.Append($"arg={HttpUtility.UrlEncode($"--setenv={envVariable}={serverURLs!.Https}")}");
+                }
             }
 
             foreach (var arg in _passThroughArguments)
