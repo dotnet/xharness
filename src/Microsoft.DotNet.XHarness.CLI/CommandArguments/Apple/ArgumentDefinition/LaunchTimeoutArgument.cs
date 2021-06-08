@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// </summary>
     internal class LaunchTimeoutArgument : TimeSpanArgument
     {
-        public LaunchTimeoutArgument(TimeSpan? defaultValue)
+        public LaunchTimeoutArgument(TimeSpan defaultValue)
             : base("launch-timeout=|lt=", "Time span in the form of \"00:00:00\" or number of seconds to wait for the iOS app to start", defaultValue)
         {
         }

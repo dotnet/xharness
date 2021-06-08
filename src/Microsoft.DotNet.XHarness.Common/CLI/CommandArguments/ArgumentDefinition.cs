@@ -120,10 +120,21 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         }
     }
 
-    public abstract class IntArgument : ArgumentDefinition
+    public abstract class ArgumentDefinition<T> : ArgumentDefinition
     {
-        public int Value { get; private set; }
+        public virtual T Value { get; protected set; }
 
+        protected ArgumentDefinition(string prototype, string description, T defaultValue = default!)
+            : base(prototype, description)
+        {
+            Value = defaultValue;
+        }
+
+        public static implicit operator T(ArgumentDefinition<T> arg) => arg.Value;
+    }
+
+    public abstract class IntArgument : ArgumentDefinition<int>
+    {
         public IntArgument(string prototype, string description, int defaultValue = 0)
             : base(prototype, description)
         {
@@ -140,33 +151,25 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 
             throw new ArgumentException($"{Prototype} must be an integer");
         }
-
-        public static implicit operator int(IntArgument arg) => arg.Value;
     }
 
-    public abstract class StringArgument : ArgumentDefinition
+    public abstract class StringArgument : ArgumentDefinition<string?>
     {
-        public string? Value { get; private set; }
-
         public StringArgument(string prototype, string description)
             : base(prototype, description)
         {
         }
 
         public override void Action(string argumentValue) => Value = argumentValue;
-
-        public static implicit operator string?(StringArgument arg) => arg.Value;
     }
 
-    public abstract class TimeSpanArgument : ArgumentDefinition
+    public abstract class TimeSpanArgument : ArgumentDefinition<TimeSpan>
     {
-        protected TimeSpanArgument(string prototype, string description, TimeSpan? defaultValue)
+        protected TimeSpanArgument(string prototype, string description, TimeSpan defaultValue)
             : base(prototype, description)
         {
             Value = defaultValue;
         }
-
-        public TimeSpan? Value { get; set; }
 
         public override void Action(string argumentValue)
         {
@@ -186,23 +189,19 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         }
     }
 
-    public abstract class PathArgument : ArgumentDefinition
+    public abstract class PathArgument : StringArgument
     {
         protected PathArgument(string prototype, string description) : base(prototype, description)
         {
         }
 
-        public string? Path { get; set; }
+        public override void Action(string argumentValue) => Value = RootPath(argumentValue);
 
-        public override void Action(string argumentValue) => Path = RootPath(argumentValue);
-
-        public static implicit operator string?(PathArgument arg) => arg.Path;
+        public static implicit operator string?(PathArgument arg) => arg.Value;
     }
 
-    public abstract class SwitchArgument : ArgumentDefinition
+    public abstract class SwitchArgument : ArgumentDefinition<bool>
     {
-        public bool Value { get; private set; }
-
         public SwitchArgument(string prototype, string description, bool defaultValue)
             : base(prototype, description)
         {
@@ -215,7 +214,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         public static implicit operator bool(SwitchArgument arg) => arg.Value;
     }
 
-    public abstract class RepetableArgument : ArgumentDefinition
+    public abstract class RepetableArgument : ArgumentDefinition<IEnumerable<string>>
     {
         private readonly List<string> _values = new();
 
@@ -223,7 +222,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         {
         }
 
-        public IEnumerable<string> Values => _values;
+        public override IEnumerable<string> Value => _values;
 
         public override void Action(string argumentValue) => _values.Add(argumentValue);
     }

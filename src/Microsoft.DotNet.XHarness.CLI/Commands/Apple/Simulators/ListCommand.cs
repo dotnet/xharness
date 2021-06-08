@@ -20,8 +20,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
         protected override string CommandDescription => CommandHelp;
 
-        private readonly ListCommandArguments _arguments = new();
-        protected override SimulatorsCommandArguments SimulatorsArguments => _arguments;
+        protected override ListCommandArguments Arguments { get; } = new();
 
         public ListCommand() : base(CommandName, false, CommandHelp)
         {
@@ -43,7 +42,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
                 var installedVersion = await IsInstalled(simulator.Identifier);
                 if (installedVersion == null)
                 {
-                    if (_arguments.ListInstalledOnly)
+                    if (Arguments.ListInstalledOnly)
                     {
                         Logger.LogDebug($"The simulator '{simulator.Name}' is not installed");
                         continue;
@@ -55,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
                 {
                     if (installedVersion >= Version.Parse(simulator.Version))
                     {
-                        if (!_arguments.ListInstalledOnly)
+                        if (!Arguments.ListInstalledOnly)
                         {
                             installStatus = "installed";
                         }

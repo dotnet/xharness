@@ -8,14 +8,14 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal class AppleInstallCommandArguments : XHarnessCommandArguments
+    internal class AppleInstallCommandArguments : XHarnessCommandArguments, IAppleAppRunArguments
     {
         public AppPathArgument AppBundlePath { get; } = new();
         public TargetArgument Target { get; } = new();
         public OutputDirectoryArgument OutputDirectory { get; } = new();
         public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
         public XcodeArgument XcodeRoot { get; } = new();
-        public MlaunchArgument Mlaunch { get; } = new();
+        public MlaunchArgument MlaunchPath { get; } = new();
         public DeviceNameArgument DeviceName { get; } = new();
         public ResetSimulatorArgument ResetSimulator { get; } = new();
 
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             DeviceName,
             Timeout,
             XcodeRoot,
-            Mlaunch,
+            MlaunchPath,
             ResetSimulator,
         };
     }

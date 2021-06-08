@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// </summary>
     internal class EnableLldbArgument : SwitchArgument
     {
-        public EnableLldbArgument() : base("enable-lldb", "Allow to debug the launched application using lldb")
+        public EnableLldbArgument() : base("enable-lldb", "Allow to debug the launched application using lldb", false)
         {
         }
     }

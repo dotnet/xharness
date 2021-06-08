@@ -12,19 +12,18 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// <summary>
     /// Test target (device, simulator, OS version...).
     /// </summary>
-    internal class TargetArgument : ArgumentDefinition
+    internal class TargetArgument : ArgumentDefinition<TestTargetOs>
     {
-        public TestTargetOs Target { get; private set; } = TestTargetOs.None;
-
         public TargetArgument() : base("target=|targets=|t=", "Test target (device/simulator and OS)")
         {
+            Value = TestTargetOs.None;
         }
 
         public override void Action(string argumentValue)
         {
             try
             {
-                Target = argumentValue.ParseAsAppRunnerTargetOs();
+                Value = argumentValue.ParseAsAppRunnerTargetOs();
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -38,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 
         public override void Validate()
         {
-            if (Target == TestTargetOs.None)
+            if (Value == TestTargetOs.None)
             {
                 throw new ArgumentException("No test target specified");
             }

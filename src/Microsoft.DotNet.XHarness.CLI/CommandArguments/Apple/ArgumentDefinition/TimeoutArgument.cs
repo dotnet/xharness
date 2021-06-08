@@ -12,12 +12,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// </summary>
     internal class TimeoutArgument : TimeSpanArgument
     {
-        public TimeoutArgument(TimeSpan? defaultTimeout = null) : base("timeout=", "Time span in the form of \"00:00:00\" or number of seconds to wait for instrumentation to complete")
+        public TimeoutArgument(TimeSpan defaultTimeout)
+            : base("timeout=", "Time span in the form of \"00:00:00\" or number of seconds to wait for instrumentation to complete", defaultTimeout)
         {
-            if (defaultTimeout.HasValue)
-            {
-                Value = defaultTimeout;
-            }
         }
     }
 }

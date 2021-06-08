@@ -14,19 +14,21 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// Path to the mlaunch binary.
     /// Default comes from the NuGet.
     /// </summary>
-    internal class MlaunchArgument : PathArgument
+    internal class MlaunchArgument : ArgumentDefinition<string>
     {
         public MlaunchArgument() : base("mlaunch=", "Path to the mlaunch binary")
         {
-            Path = MacOSProcessManager.DetectMlaunchPath();
+            Value = MacOSProcessManager.DetectMlaunchPath();
         }
+
+        public override void Action(string argumentValue) => Value = RootPath(argumentValue);
 
         public override void Validate()
         {
-            if (!File.Exists(Path))
+            if (!File.Exists(Value))
             {
                 throw new ArgumentException(
-                    $"Failed to find mlaunch at {Path}. " +
+                    $"Failed to find mlaunch at {Value}. " +
                     $"Make sure you specify --mlaunch or set the {EnvironmentVariables.Names.MLAUNCH_PATH} env var. " +
                     $"See README.md for more information");
             }

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.DotNet.XHarness.Apple;
-using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
@@ -11,12 +10,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// <summary>
     /// The way the simulator/device talks back to XHarness.
     /// </summary>
-    internal class CommunicationChannelArgument : ArgumentDefinition
+    internal class CommunicationChannelArgument : ArgumentDefinition<CommunicationChannel>
     {
-        public CommunicationChannel Value { get; private set; } = CommunicationChannel.UsbTunnel;
-
         public CommunicationChannelArgument()
-            : base("communication-channel=", $"The communication channel to use to communicate with the default. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.")
+            : base("communication-channel=", "The communication channel to use to communicate with the default", CommunicationChannel.UsbTunnel)
         {
         }
 

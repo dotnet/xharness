@@ -19,9 +19,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 
         public override void Validate()
         {
-            if (Path != null && !Directory.Exists(Path))
+            if (Value != null && !Directory.Exists(Value))
             {
-                throw new ArgumentException($"Failed to find Xcode root at {Path}");
+                throw new ArgumentException($"Failed to find Xcode root at {Value}");
             }
         }
     }

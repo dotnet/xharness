@@ -25,8 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
         protected override string CommandDescription => CommandHelp + Environment.NewLine + Environment.NewLine + SimulatorHelpString;
 
-        private readonly InstallCommandArguments _arguments = new();
-        protected override SimulatorsCommandArguments SimulatorsArguments => _arguments;
+        protected override InstallCommandArguments Arguments { get; } = new();
 
         public InstallCommand() : base(CommandName, true, CommandHelp)
         {
@@ -76,7 +75,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
                 {
                     if (installedVersion >= Version.Parse(simulator.Version))
                     {
-                        if (_arguments.Force)
+                        if (Arguments.Force)
                         {
                             Logger.LogInformation($"The simulator '{simulator.Name}' is installed but --force was supplied so reinstalling");
                             shouldInstall = true;

@@ -15,15 +15,13 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 {
-    public abstract class XHarnessCommand<T> : Command where T : IXHarnessCommandArguments
+    public abstract class XHarnessCommand : Command
     {
         /// <summary>
         /// The verbatim "--" argument used for pass-through args is removed by Mono.Options when parsing CommandSets,
         /// so in Program.cs, we temporarily replace it with this string and then recognize it back here.
         /// </summary>
         public const string VerbatimArgumentPlaceholder = "[[%verbatim_argument%]]";
-
-        private readonly bool _allowsExtraArgs;
 
         /// <summary>
         /// Will be printed in the header when help is invoked.
@@ -37,7 +35,26 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         /// </summary>
         protected abstract string CommandDescription { get; }
 
+        /// <summary>
+        /// Service collection used to create dependencies.
+        /// </summary>
+        protected IServiceCollection Services { get; set; } = new ServiceCollection();
+
+        protected XHarnessCommand(string name, string? help = null) : base(name, help)
+        {
+        }
+    }
+
+    public abstract class XHarnessCommand<T> : XHarnessCommand where T : IXHarnessCommandArguments
+    {
+        private readonly bool _allowsExtraArgs;
+
         protected abstract T Arguments { get; }
+
+        protected XHarnessCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, help)
+        {
+            _allowsExtraArgs = allowsExtraArgs;
+        }
 
         /// <summary>
         /// Contains all arguments after the verbatim "--" argument.
@@ -52,16 +69,6 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         /// Extra arguments parsed to the command (if the command allows it).
         /// </summary>
         protected IEnumerable<string> ExtraArguments { get; private set; } = Enumerable.Empty<string>();
-
-        /// <summary>
-        /// Service collection used to create dependencies.
-        /// </summary>
-        protected IServiceCollection Services { get; set; } = new ServiceCollection();
-
-        protected XHarnessCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, help)
-        {
-            _allowsExtraArgs = allowsExtraArgs;
-        }
 
         public sealed override int Invoke(IEnumerable<string> arguments)
         {

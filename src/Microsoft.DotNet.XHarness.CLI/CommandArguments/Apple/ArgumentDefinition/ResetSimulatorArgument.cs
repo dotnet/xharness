@@ -11,7 +11,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// </summary>
     internal class ResetSimulatorArgument : SwitchArgument
     {
-        public ResetSimulatorArgument() : base("reset-simulator", "Shuts down the simulator and clears all data before running. Shuts it down after the run too")
+        public ResetSimulatorArgument()
+            : base("reset-simulator", "Shuts down the simulator and clears all data before running. Shuts it down after the run too", false)
         {
         }
     }

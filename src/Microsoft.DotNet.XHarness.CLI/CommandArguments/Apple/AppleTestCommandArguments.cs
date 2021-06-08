@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
         public LaunchTimeoutArgument LaunchTimeout { get; set; } = new(TimeSpan.FromMinutes(5));
         public XcodeArgument XcodeRoot { get; } = new();
-        public MlaunchArgument Mlaunch { get; } = new();
+        public MlaunchArgument MlaunchPath { get; } = new();
         public DeviceNameArgument DeviceName { get; } = new();
         public CommunicationChannelArgument CommunicationChannel { get; set; } = new();
         public XmlResultJargonArgument XmlResultJargon { get; set; } = new();
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             Timeout,
             LaunchTimeout,
             XcodeRoot,
-            Mlaunch,
+            MlaunchPath,
             DeviceName,
             CommunicationChannel,
             XmlResultJargon,

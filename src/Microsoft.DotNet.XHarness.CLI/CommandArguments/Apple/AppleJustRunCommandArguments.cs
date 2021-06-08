@@ -15,11 +15,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public OutputDirectoryArgument OutputDirectory { get; } = new();
         public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
         public XcodeArgument XcodeRoot { get; } = new();
-        public MlaunchArgument Mlaunch { get; } = new();
+        public MlaunchArgument MlaunchPath { get; } = new();
         public DeviceNameArgument DeviceName { get; } = new();
         public EnableLldbArgument EnableLldb { get; } = new();
         public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
         public ResetSimulatorArgument ResetSimulator { get; } = new();
+        public ExpectedExitCodeArgument ExpectedExitCode { get; } = new();
 
         protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
         {
@@ -28,8 +29,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             OutputDirectory,
             DeviceName,
             Timeout,
+            ExpectedExitCode,
             XcodeRoot,
-            Mlaunch,
+            MlaunchPath,
             EnableLldb,
             EnvironmentalVariables,
             ResetSimulator,

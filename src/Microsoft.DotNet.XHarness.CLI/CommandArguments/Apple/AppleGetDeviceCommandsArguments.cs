@@ -10,12 +10,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     internal class AppleGetDeviceCommandsArguments : XHarnessCommandArguments
     {
         public XcodeArgument XcodeRoot { get; } = new();
-        public MlaunchArgument Mlaunch { get; } = new();
+        public MlaunchArgument MlaunchPath { get; } = new();
 
         protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
         {
             XcodeRoot,
-            Mlaunch,
+            MlaunchPath,
         };
     }
 }

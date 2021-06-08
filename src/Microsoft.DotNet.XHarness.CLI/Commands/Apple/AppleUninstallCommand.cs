@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -15,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
     {
         private const string CommandHelp = "Uninstalls a given iOS/tvOS/watchOS/MacCatalyst application bundle from a target device/simulator";
 
-        protected override AppleUninstallCommandArguments AppleAppArguments { get; } = new();
+        protected override AppleUninstallCommandArguments Arguments { get; } = new();
         protected override string CommandUsage { get; } = "apple uninstall --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
 
@@ -28,12 +29,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 .BuildServiceProvider()
                 .GetRequiredService<IUninstallOrchestrator>()
                 .OrchestrateAppUninstall(
-                    AppleAppArguments.BundleIdentifier,
-                    AppleAppArguments.Target,
-                    AppleAppArguments.DeviceName,
-                    AppleAppArguments.Timeout,
-                    AppleAppArguments.ResetSimulator,
-                    AppleAppArguments.EnableLldb,
+                    (Arguments.BundleIdentifier ?? throw new ArgumentNullException(nameof(Arguments.BundleIdentifier)))!,
+                    Arguments.Target,
+                    Arguments.DeviceName,
+                    Arguments.Timeout,
+                    false,
+                    false,
                     cancellationToken);
     }
 }

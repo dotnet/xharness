@@ -19,5 +19,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         {
             Value = string.IsNullOrEmpty(argumentValue) ? LogLevel.Debug : ParseArgument<LogLevel>("verbosity", argumentValue);
         }
+
+        public static implicit operator LogLevel(VerbosityArgument arg) => arg.Value;
     }
 }

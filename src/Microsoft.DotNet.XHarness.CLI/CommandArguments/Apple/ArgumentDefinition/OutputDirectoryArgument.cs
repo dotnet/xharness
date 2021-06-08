@@ -19,9 +19,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 
         public override void Validate()
         {
-            if (!Directory.Exists(Path ?? throw new ArgumentNullException("You must provide an output directory where results will be stored")))
+            if (!Directory.Exists(Value ?? throw new ArgumentNullException("You must provide an output directory where results will be stored")))
             {
-                Directory.CreateDirectory(Path);
+                Directory.CreateDirectory(Value);
             }
         }
     }

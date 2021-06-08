@@ -9,14 +9,14 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
     internal class AppleGetStateCommandArguments : XHarnessCommandArguments
     {
-        public MlaunchArgument Mlaunch { get; set; } = new();
+        public MlaunchArgument MlaunchPath { get; set; } = new();
         public ShowSimulatorsUUIDArgument ShowSimulatorsUUID { get; set; } = new();
         public ShowDevicesUUIDArgument ShowDevicesUUID { get; set; } = new();
         public UseJsonArgument UseJson { get; set; } = new();
 
         protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
         {
-            Mlaunch,
+            MlaunchPath,
             ShowSimulatorsUUID,
             ShowDevicesUUID,
             UseJson,

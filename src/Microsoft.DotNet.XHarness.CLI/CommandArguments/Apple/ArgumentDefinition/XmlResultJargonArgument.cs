@@ -10,12 +10,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// <summary>
     /// Allows to specify the xml format to be used in the result files.
     /// </summary>
-    internal class XmlResultJargonArgument : ArgumentDefinition
+    internal class XmlResultJargonArgument : ArgumentDefinition<XmlResultJargon>
     {
-        public XmlResultJargon Value { get; private set; } = XmlResultJargon.xUnit;
-
         public XmlResultJargonArgument()
-            : base("xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.")
+            : base("xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.", XmlResultJargon.xUnit)
         {
         }
 

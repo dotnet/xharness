@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 
         public override void Validate()
         {
-            if (string.IsNullOrEmpty(Path))
+            if (string.IsNullOrEmpty(Value))
             {
                 throw new ArgumentException("You must provide a path to the application");
             }

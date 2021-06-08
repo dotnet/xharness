@@ -12,10 +12,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public OutputDirectoryArgument OutputDirectory { get; }
         public TimeoutArgument Timeout { get; }
         public XcodeArgument XcodeRoot { get; }
-        public MlaunchArgument Mlaunch { get; }
+        public MlaunchArgument MlaunchPath { get; }
         public DeviceNameArgument DeviceName { get; }
-        public EnableLldbArgument EnableLldb { get; }
-        public EnvironmentalVariablesArgument EnvironmentalVariables { get; }
-        public ResetSimulatorArgument ResetSimulator { get; }
     }
 }
