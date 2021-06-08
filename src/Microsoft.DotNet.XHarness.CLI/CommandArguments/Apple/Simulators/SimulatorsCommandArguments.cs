@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
             set => _xcodeRoot = value;
         }
 
-        protected sealed override OptionSet GetCommandOptions()
+        protected sealed override OptionSet GetArguments()
         {
             var options = GetAdditionalOptions();
 

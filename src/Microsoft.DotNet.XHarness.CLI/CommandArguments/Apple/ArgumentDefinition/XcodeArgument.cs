@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.IO;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
@@ -13,6 +15,14 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     {
         public XcodeArgument() : base("xcode=", "Path where Xcode is installed")
         {
+        }
+
+        public override void Validate()
+        {
+            if (Path != null && !Directory.Exists(Path))
+            {
+                throw new ArgumentException($"Failed to find Xcode root at {Path}");
+            }
         }
     }
 }

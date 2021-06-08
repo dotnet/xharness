@@ -258,7 +258,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
                 }
             }
 
-            protected override OptionSet GetCommandOptions() => new OptionSet
+            protected override OptionSet GetArguments() => new OptionSet
             {
                 { "number=|n=", "Sets the number, should be less than 100", v => Number = int.Parse(v) },
                 { "enum=|e=", "Sets the enum", v => Enum = ParseArgument("enum", v, SampleEnum.ForbiddenValue) },

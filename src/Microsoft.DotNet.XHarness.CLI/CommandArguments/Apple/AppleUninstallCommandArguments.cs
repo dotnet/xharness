@@ -34,9 +34,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             EnableLldb = false;
         }
 
-        protected override OptionSet GetCommandOptions()
+        protected override OptionSet GetArguments()
         {
-            var options = base.GetCommandOptions();
+            var options = base.GetArguments();
 
             var uninstallOptions = new OptionSet
             {

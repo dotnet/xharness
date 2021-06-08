@@ -26,9 +26,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             set => _bundleIdentifier = value;
         }
 
-        protected override OptionSet GetCommandOptions()
+        protected override OptionSet GetArguments()
         {
-            var options = base.GetCommandOptions();
+            var options = base.GetArguments();
 
             var newOptions = new OptionSet
             {

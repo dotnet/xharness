@@ -14,9 +14,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// </summary>
         public int ExpectedExitCode { get; set; } = 0;
 
-        protected override OptionSet GetCommandOptions()
+        protected override OptionSet GetArguments()
         {
-            var options = base.GetCommandOptions();
+            var options = base.GetArguments();
 
             var runOptions = new OptionSet
             {

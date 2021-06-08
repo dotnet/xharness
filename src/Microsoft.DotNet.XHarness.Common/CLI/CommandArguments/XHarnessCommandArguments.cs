@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         {
             var options = new OptionSet();
 
-            foreach (var option in GetCommandOptions())
+            foreach (var option in GetArguments())
             {
                 options.Add(option.Prototype, option.Description, option.Action);
             }
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         /// <summary>
         /// Returns additional option for your specific command.
         /// </summary>
-        protected abstract IEnumerable<ArgumentDefinition> GetCommandOptions();
+        protected abstract IEnumerable<ArgumentDefinition> GetArguments();
 
         protected static string RootPath(string path)
         {
@@ -123,7 +123,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         /// <param name="display">How to print each enum value. Default is ToString()</param>
         /// <param name="invalidValues">List of values that should not be available to set and are not listed then</param>
         /// <returns>Print-ready list of allowed values</returns>
-        public static string GetAllowedValues<TEnum>(Func<TEnum, string>? display = null, params TEnum[]? invalidValues) where TEnum : struct, IConvertible
+        protected static string GetAllowedValues<TEnum>(Func<TEnum, string>? display = null, params TEnum[]? invalidValues) where TEnum : struct, IConvertible
         {
             var values = Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
 

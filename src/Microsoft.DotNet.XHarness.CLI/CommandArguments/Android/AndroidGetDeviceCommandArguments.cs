@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         /// </summary>
         public IEnumerable<string> DeviceArchitecture => _deviceArchitecture;
 
-        protected override OptionSet GetCommandOptions() => new()
+        protected override OptionSet GetArguments() => new()
         {
             { "app|a=", "Path to already-packaged app",
                 v => AppPackagePath = RootPath(v)

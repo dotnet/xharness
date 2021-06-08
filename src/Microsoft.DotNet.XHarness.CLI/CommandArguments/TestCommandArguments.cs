@@ -27,9 +27,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         public IList<string> SetWebServerEnvironmentVariablesHttp { get; set; } = new List<string>();
         public IList<string> SetWebServerEnvironmentVariablesHttps { get; set; } = new List<string>();
 
-        protected override OptionSet GetCommandOptions()
+        protected override OptionSet GetArguments()
         {
-            var options = base.GetCommandOptions();
+            var options = base.GetArguments();
 
             var testOptions = new OptionSet
             {

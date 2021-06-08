@@ -43,9 +43,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         /// </summary>
         public CommunicationChannel CommunicationChannel { get; set; } = CommunicationChannel.UsbTunnel;
 
-        protected override OptionSet GetCommandOptions()
+        protected override OptionSet GetArguments()
         {
-            var options = base.GetCommandOptions();
+            var options = base.GetArguments();
 
             var testOptions = new OptionSet
             {

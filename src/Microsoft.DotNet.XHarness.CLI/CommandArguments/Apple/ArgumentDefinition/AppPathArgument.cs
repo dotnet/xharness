@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
@@ -13,6 +14,14 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     {
         public AppPathArgument() : base("app|a=", "Path to already-packaged app")
         {
+        }
+
+        public override void Validate()
+        {
+            if (string.IsNullOrEmpty(Path))
+            {
+                throw new ArgumentException("You must provide a path to the application");
+            }
         }
     }
 }

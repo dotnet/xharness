@@ -23,6 +23,10 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 
         public abstract void Action(string argumentValue);
 
+        public virtual void Validate()
+        {
+        }
+
         protected string RootPath(string path)
         {
             if (!Path.IsPathRooted(path))

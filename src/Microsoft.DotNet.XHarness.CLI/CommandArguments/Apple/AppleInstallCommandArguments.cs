@@ -9,9 +9,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
     internal class AppleInstallCommandArguments : AppleAppRunArguments
     {
-        protected override OptionSet GetCommandOptions()
+        protected override OptionSet GetArguments()
         {
-            OptionSet options = base.GetCommandOptions();
+            OptionSet options = base.GetArguments();
 
             var optionsToRemove = new[]
             {

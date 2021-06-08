@@ -2,6 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.IO;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.Execution;
 
@@ -16,6 +19,17 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public MlaunchArgument() : base("mlaunch=", "Path to the mlaunch binary")
         {
             Path = MacOSProcessManager.DetectMlaunchPath();
+        }
+
+        public override void Validate()
+        {
+            if (!File.Exists(Path))
+            {
+                throw new ArgumentException(
+                    $"Failed to find mlaunch at {Path}. " +
+                    $"Make sure you specify --mlaunch or set the {EnvironmentVariables.Names.MLAUNCH_PATH} env var. " +
+                    $"See README.md for more information");
+            }
         }
     }
 }

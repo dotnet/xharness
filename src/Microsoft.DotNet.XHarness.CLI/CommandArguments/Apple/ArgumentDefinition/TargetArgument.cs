@@ -5,6 +5,7 @@
 using System;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
@@ -23,15 +24,23 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         {
             try
             {
-                Target = v.ParseAsAppRunnerTargetOs();
+                Target = argumentValue.ParseAsAppRunnerTargetOs();
             }
             catch (ArgumentOutOfRangeException)
             {
                 throw new ArgumentException(
-                    $"Failed to parse test target '{v}'. Available targets are:" +
+                    $"Failed to parse test target '{argumentValue}'. Available targets are:" +
                     GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None) +
                     Environment.NewLine + Environment.NewLine +
                     "You can also specify desired OS version, e.g. ios-simulator-64_13.4");
+            }
+        }
+
+        public override void Validate()
+        {
+            if (Target == TestTargetOs.None)
+            {
+                throw new ArgumentException("No test target specified");
             }
         }
     }
