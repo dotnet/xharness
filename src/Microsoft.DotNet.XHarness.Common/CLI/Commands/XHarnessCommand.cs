@@ -15,7 +15,7 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 {
-    public abstract class XHarnessCommand : Command
+    public abstract class XHarnessCommand<T> : Command where T : IXHarnessCommandArguments
     {
         /// <summary>
         /// The verbatim "--" argument used for pass-through args is removed by Mono.Options when parsing CommandSets,
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         /// </summary>
         protected abstract string CommandDescription { get; }
 
-        protected abstract XHarnessCommandArguments Arguments { get; }
+        protected abstract T Arguments { get; }
 
         /// <summary>
         /// Contains all arguments after the verbatim "--" argument.
@@ -65,7 +65,13 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
         public sealed override int Invoke(IEnumerable<string> arguments)
         {
-            OptionSet options = Arguments.GetOptions();
+            var commandArguments = Arguments.GetCommandArguments();
+            var options = new OptionSet();
+
+            foreach (var arg in commandArguments)
+            {
+                options.Add(arg.Prototype, arg.Description, arg.Action);
+            }
 
             using var parseFactory = CreateLoggerFactory(Arguments.Verbosity);
             var parseLogger = parseFactory.CreateLogger(Name);
@@ -100,7 +106,10 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
                     return (int)ExitCode.HELP_SHOWN;
                 }
 
-                Arguments.Validate();
+                foreach (var arg in commandArguments)
+                {
+                    arg.Validate();
+                }
             }
             catch (ArgumentException e)
             {

@@ -140,6 +140,8 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 
             throw new ArgumentException($"{Prototype} must be an integer");
         }
+
+        public static implicit operator int(IntArgument arg) => arg.Value;
     }
 
     public abstract class StringArgument : ArgumentDefinition
@@ -152,6 +154,8 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         }
 
         public override void Action(string argumentValue) => Value = argumentValue;
+
+        public static implicit operator string?(StringArgument arg) => arg.Value;
     }
 
     public abstract class TimeSpanArgument : ArgumentDefinition
@@ -191,6 +195,8 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         public string? Path { get; set; }
 
         public override void Action(string argumentValue) => Path = RootPath(argumentValue);
+
+        public static implicit operator string?(PathArgument arg) => arg.Path;
     }
 
     public abstract class SwitchArgument : ArgumentDefinition
@@ -205,6 +211,8 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 
         public override void Action(string argumentValue)
             => Value = string.IsNullOrEmpty(argumentValue) || argumentValue.Equals("false", StringComparison.InvariantCultureIgnoreCase);
+
+        public static implicit operator bool(SwitchArgument arg) => arg.Value;
     }
 
     public abstract class RepetableArgument : ArgumentDefinition
