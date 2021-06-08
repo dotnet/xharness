@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         {
             if (defaultTimeout.HasValue)
             {
-                TimeSpan = defaultTimeout;
+                Value = defaultTimeout;
             }
         }
     }

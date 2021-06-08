@@ -21,7 +21,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal abstract class AppleAppCommand<TArguments> : XHarnessCommand where TArguments : AppleAppRunArguments
+    internal abstract class AppleAppCommand<TArguments> : XHarnessCommand where TArguments : IAppleAppRunArguments
     {
         protected readonly ErrorKnowledgeBase ErrorKnowledgeBase = new();
         protected override XHarnessCommandArguments Arguments => AppleAppArguments;
@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
             var exitCode = ExitCode.SUCCESS;
 
-            var targetName = AppleAppArguments.Target.AsString();
+            var targetName = AppleAppArguments.Target.Target.AsString();
 
             logger.LogInformation($"Preparing run for {targetName}{ (AppleAppArguments.DeviceName != null ? " targeting " + AppleAppArguments.DeviceName : null) }");
 

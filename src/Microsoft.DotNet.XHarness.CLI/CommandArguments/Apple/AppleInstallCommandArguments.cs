@@ -2,34 +2,33 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Linq;
-using Mono.Options;
+using System;
+using System.Collections.Generic;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal class AppleInstallCommandArguments : AppleAppRunArguments
+    internal class AppleInstallCommandArguments : XHarnessCommandArguments
     {
-        protected override OptionSet GetArguments()
+        public AppPathArgument AppBundlePath { get; } = new();
+        public TargetArgument Target { get; } = new();
+        public OutputDirectoryArgument OutputDirectory { get; } = new();
+        public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
+        public XcodeArgument XcodeRoot { get; } = new();
+        public MlaunchArgument Mlaunch { get; } = new();
+        public DeviceNameArgument DeviceName { get; } = new();
+        public ResetSimulatorArgument ResetSimulator { get; } = new();
+
+        protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
         {
-            OptionSet options = base.GetArguments();
-
-            var optionsToRemove = new[]
-            {
-                "enable-lldb",
-                "set-env=",
-            };
-
-            var installOptions = new OptionSet();
-            foreach (var option in options)
-            {
-                // Replaced by ours
-                if (!optionsToRemove.Contains(option.Prototype))
-                {
-                    installOptions.Add(option);
-                }
-            }
-
-            return installOptions;
-        }
+            AppBundlePath,
+            Target,
+            OutputDirectory,
+            DeviceName,
+            Timeout,
+            XcodeRoot,
+            Mlaunch,
+            ResetSimulator,
+        };
     }
 }

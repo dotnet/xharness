@@ -8,20 +8,13 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
     /// <summary>
-    /// Path to the app bundle.
+    /// How long we wait before app starts and first test should start running
     /// </summary>
-    internal class AppPathArgument : PathArgument
+    internal class LaunchTimeoutArgument : TimeSpanArgument
     {
-        public AppPathArgument() : base("app|a=", "Path to an already-packaged app")
+        public LaunchTimeoutArgument(TimeSpan? defaultValue)
+            : base("launch-timeout=|lt=", "Time span in the form of \"00:00:00\" or number of seconds to wait for the iOS app to start", defaultValue)
         {
-        }
-
-        public override void Validate()
-        {
-            if (string.IsNullOrEmpty(Path))
-            {
-                throw new ArgumentException("You must provide a path to the application");
-            }
         }
     }
 }

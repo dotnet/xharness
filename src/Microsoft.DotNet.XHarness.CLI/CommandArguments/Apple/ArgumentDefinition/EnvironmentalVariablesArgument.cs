@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             var position = argumentValue.IndexOf('=');
             if (position == -1)
             {
-                throw new ArgumentException($"The set-env argument {v} must be in the key=value format");
+                throw new ArgumentException($"The set-env argument {argumentValue} must be in the key=value format");
             }
 
             var key = argumentValue.Substring(0, position);

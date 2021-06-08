@@ -7,20 +7,17 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    /// <summary>
-    /// Path to the app bundle.
-    /// </summary>
-    internal class AppPathArgument : PathArgument
+    internal class BundleIdentifierArgument : StringArgument
     {
-        public AppPathArgument() : base("app|a=", "Path to an already-packaged app")
+        public BundleIdentifierArgument() : base("app|a=", "Bundle identifier of the app that should be uninstalled")
         {
         }
 
         public override void Validate()
         {
-            if (string.IsNullOrEmpty(Path))
+            if (string.IsNullOrEmpty(Value))
             {
-                throw new ArgumentException("You must provide a path to the application");
+                throw new ArgumentNullException("You must provide bundle identifier of the app");
             }
         }
     }

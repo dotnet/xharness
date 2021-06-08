@@ -3,61 +3,36 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Linq;
-using Mono.Options;
+using System.Collections.Generic;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal class AppleJustRunCommandArguments : AppleRunCommandArguments
+    internal class AppleJustRunCommandArguments : XHarnessCommandArguments, IAppleAppRunArguments
     {
-        private string? _bundleIdentifier = null;
+        public BundleIdentifierArgument BundleIdentifier { get; } = new();
+        public TargetArgument Target { get; } = new();
+        public OutputDirectoryArgument OutputDirectory { get; } = new();
+        public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
+        public XcodeArgument XcodeRoot { get; } = new();
+        public MlaunchArgument Mlaunch { get; } = new();
+        public DeviceNameArgument DeviceName { get; } = new();
+        public EnableLldbArgument EnableLldb { get; } = new();
+        public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
+        public ResetSimulatorArgument ResetSimulator { get; } = new();
 
-        // We don't really use this one but we still validate it exists.
-        // It is a hack around us re-using as much code as we can from AppleAppRunArguments.
-        // This and the optionsToRemove below should get resolved with https://github.com/dotnet/xharness/issues/431
-        public override string AppPackagePath { get; set; } = ".";
-
-        /// <summary>
-        /// Path to packaged app
-        /// </summary>
-        public string BundleIdentifier
+        protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
         {
-            get => _bundleIdentifier ?? throw new ArgumentException("You must provide ID of the app that will be uninstalled");
-            set => _bundleIdentifier = value;
-        }
-
-        protected override OptionSet GetArguments()
-        {
-            var options = base.GetArguments();
-
-            var newOptions = new OptionSet
-            {
-                {
-                    "app|a=", "Bundle identifier of the app that should be uninstalled",
-                    v => BundleIdentifier = v
-                },
-            };
-
-            var optionsToRemove = new[]
-            {
-                "app|a=",
-            };
-
-            foreach (var option in options)
-            {
-                if (!optionsToRemove.Contains(option.Prototype))
-                {
-                    newOptions.Add(option);
-                }
-            }
-
-            return newOptions;
-        }
-
-        public override void Validate()
-        {
-            base.Validate();
-            BundleIdentifier = BundleIdentifier;
-        }
+            BundleIdentifier,
+            Target,
+            OutputDirectory,
+            DeviceName,
+            Timeout,
+            XcodeRoot,
+            Mlaunch,
+            EnableLldb,
+            EnvironmentalVariables,
+            ResetSimulator,
+        };
     }
 }

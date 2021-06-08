@@ -2,26 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
     /// <summary>
-    /// Path to the app bundle.
+    /// Expected result code the app should return. Defaults to 0.
     /// </summary>
-    internal class AppPathArgument : PathArgument
+    internal class ExpectedExitCodeArgument : IntArgument
     {
-        public AppPathArgument() : base("app|a=", "Path to an already-packaged app")
+        public ExpectedExitCodeArgument() : base("expected-exit-code=", "If specified, sets the expected exit code of the app that is being run.", 0)
         {
-        }
-
-        public override void Validate()
-        {
-            if (string.IsNullOrEmpty(Path))
-            {
-                throw new ArgumentException("You must provide a path to the application");
-            }
         }
     }
 }
