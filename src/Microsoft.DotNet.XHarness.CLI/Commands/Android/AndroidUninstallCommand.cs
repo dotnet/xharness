@@ -7,17 +7,14 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidUninstallCommand : XHarnessCommand
+    internal class AndroidUninstallCommand : XHarnessCommand<AndroidUninstallCommandArguments>
     {
-        private readonly AndroidUninstallCommandArguments _arguments = new();
-
-        protected override XHarnessCommandArguments Arguments => _arguments;
+        protected override AndroidUninstallCommandArguments Arguments { get; } = new();
 
         protected override string CommandUsage { get; } = "android uninstall --package-name=... [OPTIONS]";
 
@@ -34,11 +31,10 @@ Arguments:
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            logger.LogDebug($"Android Uninstall command called: App = {_arguments.PackageName}{Environment.NewLine}");
-
+            logger.LogDebug($"Android Uninstall command called: App = {Arguments.PackageName}{Environment.NewLine}");
 
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
-            string apkPackageName = _arguments.PackageName;
+            string apkPackageName = Arguments.PackageName;
 
             var runner = new AdbRunner(logger);
 
@@ -49,7 +45,7 @@ Arguments:
                     // Make sure the adb server is started
                     runner.StartAdbServer();
 
-                    var deviceId = _arguments.DeviceId;
+                    string? deviceId = Arguments.DeviceId;
 
                     if (string.IsNullOrEmpty(deviceId))
                     {

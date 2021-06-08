@@ -4,16 +4,16 @@
 
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
     /// <summary>
-    /// Tests classes to be included in the run while all others are ignored.
+    /// Methods to be included in the test run while all others are ignored.
     /// </summary>
-    internal class ClassMethodFilters : RepetableArgument
+    internal class SingleMethodFilters : RepetableArgument
     {
-        public ClassMethodFilters()
-            : base("class|c=",
-                  "Test class to be ran in the test application. When this parameter is used only the " +
+        public SingleMethodFilters()
+            : base("method|m=",
+                  "Method to be ran in the test application. When this parameter is used only the " +
                   "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
                   "ignored. Can be used more than once.")
         {

@@ -5,7 +5,7 @@
 using System;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
     /// <summary>
     /// Path to the app bundle.

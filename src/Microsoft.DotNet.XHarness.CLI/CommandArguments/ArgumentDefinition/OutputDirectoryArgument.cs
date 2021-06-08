@@ -6,7 +6,7 @@ using System;
 using System.IO;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
     /// <summary>
     /// Path where the outputs of execution will be stored
