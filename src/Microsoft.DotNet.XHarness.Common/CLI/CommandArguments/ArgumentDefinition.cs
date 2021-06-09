@@ -163,6 +163,24 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         public override void Action(string argumentValue) => Value = argumentValue;
     }
 
+    public abstract class RequiredStringArgument : ArgumentDefinition<string>
+    {
+        public RequiredStringArgument(string prototype, string description)
+            : base(prototype, description)
+        {
+        }
+
+        public override void Action(string argumentValue) => Value = argumentValue;
+
+        public override void Validate()
+        {
+            if (string.IsNullOrEmpty(Value))
+            {
+                throw new ArgumentException($"Required argument {Prototype} was not supplied");
+            }
+        }
+    }
+
     public abstract class TimeSpanArgument : ArgumentDefinition<TimeSpan>
     {
         protected TimeSpanArgument(string prototype, string description, TimeSpan defaultValue)
@@ -191,7 +209,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 
     public abstract class PathArgument : StringArgument
     {
-        protected PathArgument(string prototype, string description) : base(prototype, description)
+        protected PathArgument(string prototype, string description, bool isRequired) : base(prototype, description, isRequired)
         {
         }
 

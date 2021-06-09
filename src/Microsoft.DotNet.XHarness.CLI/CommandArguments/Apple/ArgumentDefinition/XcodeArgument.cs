@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// </summary>
     internal class XcodeArgument : PathArgument
     {
-        public XcodeArgument() : base("xcode=", "Path where Xcode is installed")
+        public XcodeArgument() : base("xcode=", "Path where Xcode is installed", false)
         {
         }
 

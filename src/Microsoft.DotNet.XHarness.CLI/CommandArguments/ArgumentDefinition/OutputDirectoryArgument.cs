@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
     /// </summary>
     internal class OutputDirectoryArgument : PathArgument
     {
-        public OutputDirectoryArgument() : base("output-directory=|o=", "Directory where logs and results will be saved")
+        public OutputDirectoryArgument() : base("output-directory=|o=", "Directory where logs and results will be saved", true)
         {
         }
 

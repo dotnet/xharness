@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -30,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 .BuildServiceProvider()
                 .GetRequiredService<IJustTestOrchestrator>()
                 .OrchestrateTest(
-                    AppBundleInformation.FromBundleId(Arguments.BundleIdentifier.Value ?? throw new ArgumentException("Please provide app bundle identifier")),
+                    AppBundleInformation.FromBundleId(Arguments.BundleIdentifier.Value),
                     Arguments.Target,
                     Arguments.DeviceName,
                     Arguments.Timeout,

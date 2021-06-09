@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -29,7 +28,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 .BuildServiceProvider()
                 .GetRequiredService<IUninstallOrchestrator>()
                 .OrchestrateAppUninstall(
-                    (Arguments.BundleIdentifier ?? throw new ArgumentNullException(nameof(Arguments.BundleIdentifier)))!,
+                    Arguments.BundleIdentifier,
                     Arguments.Target,
                     Arguments.DeviceName,
                     Arguments.Timeout,
