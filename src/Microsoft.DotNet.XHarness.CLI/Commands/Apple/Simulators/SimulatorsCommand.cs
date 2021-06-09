@@ -264,7 +264,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
         private async Task<(string XcodeVersion, string XcodeUuid)> GetXcodeInformation()
         {
-            var plistPath = Path.Combine(Arguments.XcodeRoot, "Contents", "Info.plist");
+            string xcodeRoot = Arguments.XcodeRoot.Value ?? new MacOSProcessManager().XcodeRoot;
+            var plistPath = Path.Combine(xcodeRoot, "Contents", "Info.plist");
 
             var (succeeded, xcodeVersion) = await ExecuteCommand("/usr/libexec/PlistBuddy", TimeSpan.FromSeconds(5), "-c", "Print :DTXcode", plistPath);
             if (!succeeded)

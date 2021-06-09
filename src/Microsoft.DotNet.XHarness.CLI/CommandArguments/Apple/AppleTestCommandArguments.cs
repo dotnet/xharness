@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments.ArgumentDefinition;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
