@@ -10,7 +10,6 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -19,13 +18,11 @@ using System.Threading;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
-    internal class WasmTestCommand : XHarnessCommand
+    internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
     {
         private const string CommandHelp = "Executes tests on WASM using a selected JavaScript engine";
 
-        private readonly WasmTestCommandArguments _arguments = new();
-
-        protected override XHarnessCommandArguments Arguments => _arguments;
+        protected override WasmTestCommandArguments Arguments { get; } = new();
         protected override string CommandUsage { get; } = "wasm test [OPTIONS] -- [ENGINE OPTIONS]";
         protected override string CommandDescription { get; } = CommandHelp;
 
@@ -57,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         {
             var processManager = ProcessManagerFactory.CreateProcessManager();
 
-            var engineBinary = _arguments.Engine switch
+            var engineBinary = Arguments.Engine.Value switch
             {
                 JavaScriptEngine.V8 => "v8",
                 JavaScriptEngine.JavaScriptCore => "jsc",
@@ -72,40 +69,42 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             try
             {
                 ServerURLs? serverURLs = null;
-                if (_arguments.WebServerMiddlewarePathsAndTypes.Count > 0)
+                if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
                 {
                     serverURLs = await WebServer.Start(
-                        _arguments, logger,
+                        Arguments.AppPackagePath,
+                        Arguments.WebServerMiddlewarePathsAndTypes.Value,
+                        logger,
                         null,
                         webServerCts.Token);
-                    webServerCts.CancelAfter(_arguments.Timeout);
+                    webServerCts.CancelAfter(Arguments.Timeout);
                 }
 
                 var engineArgs = new List<string>();
 
-                if (_arguments.Engine == JavaScriptEngine.V8)
+                if (Arguments.Engine == JavaScriptEngine.V8)
                 {
                     // v8 needs this flag to enable WASM support
                     engineArgs.Add("--expose_wasm");
                 }
 
-                engineArgs.AddRange(_arguments.EngineArgs);
-                engineArgs.Add(_arguments.JSFile);
+                engineArgs.AddRange(Arguments.EngineArgs.Value);
+                engineArgs.Add(Arguments.JSFile);
 
-                if (_arguments.Engine == JavaScriptEngine.V8 || _arguments.Engine == JavaScriptEngine.JavaScriptCore)
+                if (Arguments.Engine == JavaScriptEngine.V8 || Arguments.Engine == JavaScriptEngine.JavaScriptCore)
                 {
                     // v8/jsc want arguments to the script separated by "--", others don't
                     engineArgs.Add("--");
                 }
 
-                if (_arguments.WebServerMiddlewarePathsAndTypes.Count > 0)
+                if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
                 {
-                    foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttp)
+                    foreach (var envVariable in Arguments.HttpWebServerEnvironmentVariables.Value)
                     {
                         engineArgs.Add($"--setenv={envVariable}={serverURLs!.Http}");
                     }
 
-                    foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
+                    foreach (var envVariable in Arguments.HttpsWebServerEnvironmentVariables.Value)
                     {
                         engineArgs.Add($"--setenv={envVariable}={serverURLs!.Https}");
                     }
@@ -113,10 +112,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
                 engineArgs.AddRange(PassThroughArguments);
 
-                var xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
+                var xmlResultsFilePath = Path.Combine(Arguments.OutputDirectory, "testResults.xml");
                 File.Delete(xmlResultsFilePath);
 
-                var stdoutFilePath = Path.Combine(_arguments.OutputDirectory, "wasm-console.log");
+                var stdoutFilePath = Path.Combine(Arguments.OutputDirectory, "wasm-console.log");
                 File.Delete(stdoutFilePath);
 
                 var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath, stdoutFilePath, logger);
@@ -126,11 +125,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     log: new CallbackLog(m => logger.LogInformation(m)),
                     stdoutLog: new CallbackLog(logProcessor.Invoke),
                     stderrLog: new CallbackLog(m => logger.LogError(m)),
-                    _arguments.Timeout);
+                    Arguments.Timeout);
                 
-                if (result.ExitCode != _arguments.ExpectedExitCode)
+                if (result.ExitCode != Arguments.ExpectedExitCode)
                 {
-                    logger.LogError($"Application has finished with exit code {result.ExitCode} but {_arguments.ExpectedExitCode} was expected");
+                    logger.LogError($"Application has finished with exit code {result.ExitCode} but {Arguments.ExpectedExitCode} was expected");
                     return ExitCode.GENERAL_FAILURE;
                 }
                 else

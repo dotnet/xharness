@@ -165,8 +165,8 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 
     public abstract class RequiredStringArgument : ArgumentDefinition<string>
     {
-        public RequiredStringArgument(string prototype, string description)
-            : base(prototype, description)
+        public RequiredStringArgument(string prototype, string description, string defaultValue = null!)
+            : base(prototype, description, defaultValue)
         {
         }
 

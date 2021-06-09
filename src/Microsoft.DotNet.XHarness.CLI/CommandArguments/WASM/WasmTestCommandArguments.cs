@@ -4,73 +4,35 @@
 
 using System;
 using System.Collections.Generic;
-using Mono.Options;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {
-    /// <summary>
-    /// Specifies a name of a JavaScript engine used to run WASM application.
-    /// </summary>
-    internal enum JavaScriptEngine
+    internal class WasmTestCommandArguments : XHarnessCommandArguments
     {
-        /// <summary>
-        /// V8
-        /// </summary>
-        V8,
-        /// <summary>
-        /// JavaScriptCore
-        /// </summary>
-        JavaScriptCore,
-        /// <summary>
-        /// SpiderMonkey
-        /// </summary>
-        SpiderMonkey,
-    }
+        public AppPathArgument AppPackagePath { get; } = new();
+        public JavaScriptEngineArgument Engine { get; } = new();
+        public JavaScriptEngineArguments EngineArgs { get; } = new();
+        public JavaScriptFileArgument JSFile { get; } = new("runtime.js");
+        public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
+        public OutputDirectoryArgument OutputDirectory { get; } = new();
+        public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
+        public WebServerMiddlewarePathsAndTypes WebServerMiddlewarePathsAndTypes { get; } = new();
+        public HttpWebServerEnvironmentVariables HttpWebServerEnvironmentVariables { get; } = new();
+        public HttpsWebServerEnvironmentVariables HttpsWebServerEnvironmentVariables { get; } = new();
 
-    internal class WasmTestCommandArguments : TestCommandArguments
-    {
-        private JavaScriptEngine? _engine;
-
-        public JavaScriptEngine Engine
+        protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
         {
-            get => _engine ?? throw new ArgumentException("Engine not specified");
-            set => _engine = value;
-        }
-
-        public List<string> EngineArgs { get; set; } = new List<string>();
-
-        public string JSFile { get; set; } = "runtime.js";
-
-        public int ExpectedExitCode { get; set; } = (int)Common.CLI.ExitCode.SUCCESS;
-
-        protected override OptionSet GetTestCommandOptions() => new()
-        {
-            { "engine=|e=", "Specifies the JavaScript engine to be used",
-                v => Engine = ParseArgument<JavaScriptEngine>("engine", v)
-            },
-            { "engine-arg=", "Argument to pass to the JavaScript engine. Can be used more than once.",
-                v => EngineArgs.Add(v)
-            },
-            { "js-file=", "Main JavaScript file to be run on the JavaScript engine. Default is runtime.js",
-                v => JSFile = v
-            },
-            { "expected-exit-code=", "If specified, sets the expected exit code for a successful instrumentation run.",
-                v => {
-                    if (int.TryParse(v, out var number))
-                    {
-                        ExpectedExitCode = number;
-                        return;
-                    }
-
-                    throw new ArgumentException("expected-exit-code must be an integer");
-                }
-            },
+            AppPackagePath,
+            Engine,
+            EngineArgs,
+            JSFile,
+            OutputDirectory,
+            Timeout,
+            ExpectedExitCode,
+            WebServerMiddlewarePathsAndTypes,
+            HttpWebServerEnvironmentVariables,
+            HttpsWebServerEnvironmentVariables,
         };
-
-        public override void Validate()
-        {
-            base.Validate();
-            _ = Engine;
-        }
     }
 }

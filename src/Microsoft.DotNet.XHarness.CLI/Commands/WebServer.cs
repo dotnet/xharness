@@ -3,35 +3,32 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Net.WebSockets;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
+using System.Runtime.Loader;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-
-using LogLevel = Microsoft.Extensions.Logging.LogLevel;
-using System.Runtime.Loader;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands
 {
     public class WebServer
     {
-        internal static async Task<ServerURLs> Start(TestCommandArguments arguments, ILogger logger, Func<WebSocket, Task>? onConsoleConnected, CancellationToken token)
+        internal static async Task<ServerURLs> Start(string appPackagePath, IEnumerable<(string path, string type)> middlewares, ILogger logger, Func<WebSocket, Task>? onConsoleConnected, CancellationToken token)
         {
             var host = new WebHostBuilder()
                 .UseKestrel()
-                .UseContentRoot(arguments.AppPackagePath)
+                .UseContentRoot(appPackagePath)
                 .UseStartup<TestWebServerStartup>()
                 .ConfigureLogging(logging =>
                 {
@@ -52,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                     services.Configure<TestWebServerOptions>(options =>
                     {
                         options.OnConsoleConnected = onConsoleConnected;
-                        foreach (var (middlewarePath, middlewareTypeName) in arguments.WebServerMiddlewarePathsAndTypes)
+                        foreach (var (middlewarePath, middlewareTypeName) in middlewares)
                         {
                             var extensionAssembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(middlewarePath);
                             var middlewareType = extensionAssembly?.GetTypes().Where(type => type.Name == middlewareTypeName).FirstOrDefault();
@@ -95,7 +92,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
             return new ServerURLs(ipAddress, ipAddressSecure);
         }
 
-        class TestWebServerStartup
+        private class TestWebServerStartup
         {
             private readonly IWebHostEnvironment _hostingEnvironment;
             private readonly ILogger _logger;
@@ -153,7 +150,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
             }
         }
 
-        class TestWebServerOptions
+        private class TestWebServerOptions
         {
             public Func<WebSocket, Task>? OnConsoleConnected { get; set; }
             public IList<Type> EchoServerMiddlewares { get; set; } = new List<Type>();

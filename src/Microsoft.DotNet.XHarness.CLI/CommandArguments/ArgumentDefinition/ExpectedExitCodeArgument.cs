@@ -4,7 +4,7 @@
 
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
     /// <summary>
     /// Exit code returned by the instrumentation for a successful run. Defaults to 0.
@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
     internal class ExpectedExitCodeArgument : IntArgument
     {
         public ExpectedExitCodeArgument(int defaultValue)
-            : base("expected-exit-code=", "If specified, sets the expected exit code for a successful instrumentation run", defaultValue)
+            : base("expected-exit-code=", "If specified, sets the expected exit code for a successful run", defaultValue)
         {
         }
     }
