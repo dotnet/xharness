@@ -73,6 +73,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 {
                     serverURLs = await WebServer.Start(
                         Arguments,
+                        null,
                         logger,
                         null,
                         webServerCts.Token);

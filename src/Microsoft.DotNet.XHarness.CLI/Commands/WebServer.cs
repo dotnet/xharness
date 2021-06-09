@@ -25,15 +25,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 {
     public class WebServer
     {
-        internal static async Task<ServerURLs> Start(IWebServerArguments arguments, ILogger logger, Func<WebSocket, Task>? onConsoleConnected, CancellationToken token)
+        internal static async Task<ServerURLs> Start(IWebServerArguments arguments, string? contentRoot, ILogger logger, Func<WebSocket, Task>? onConsoleConnected, CancellationToken token)
         {
             var urls = arguments.WebServerUseHttps
                     ? new string[] { "http://127.0.0.1:0", "https://127.0.0.1:0" }
                     : new string[] { "http://127.0.0.1:0" };
 
-            var host = new WebHostBuilder()
+            var builder = new WebHostBuilder()
                 .UseKestrel()
-                .UseContentRoot(arguments.AppPackagePath)
                 .UseStartup<TestWebServerStartup>()
                 .ConfigureLogging(logging =>
                 {
@@ -72,8 +71,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                         }
                     });
                 })
-                .UseUrls(urls)
-                .Build();
+                .UseUrls(urls);
+
+            if (contentRoot != null)
+            {
+                builder.UseContentRoot(contentRoot);
+            }
+
+            var host = builder.Build();
 
             await host.StartAsync(token);
 

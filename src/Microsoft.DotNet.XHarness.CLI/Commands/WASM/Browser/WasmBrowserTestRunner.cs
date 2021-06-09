@@ -59,6 +59,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 var consolePumpTcs = new TaskCompletionSource<bool>();
                 ServerURLs serverURLs = await WebServer.Start(
                     _arguments,
+                    _arguments.AppPackagePath,
                     _logger,
                     socket => RunConsoleMessagesPump(socket, consolePumpTcs, cts.Token),
                     cts.Token);
