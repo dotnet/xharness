@@ -248,13 +248,15 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         {
             if (string.IsNullOrEmpty(argumentValue))
             {
-                Value = true;
+                Value = !Value;
             }
-
-            Value = !argumentValue.Equals("false", StringComparison.InvariantCultureIgnoreCase) &&
-                !argumentValue.Equals("no", StringComparison.InvariantCultureIgnoreCase) &&
-                !argumentValue.Equals("off", StringComparison.InvariantCultureIgnoreCase) &&
-                !argumentValue.Equals("0", StringComparison.InvariantCultureIgnoreCase);
+            else
+            {
+                Value = !argumentValue.Equals("false", StringComparison.InvariantCultureIgnoreCase) &&
+                    !argumentValue.Equals("no", StringComparison.InvariantCultureIgnoreCase) &&
+                    !argumentValue.Equals("off", StringComparison.InvariantCultureIgnoreCase) &&
+                    !argumentValue.Equals("0", StringComparison.InvariantCultureIgnoreCase);
+            }
         }
     }
 
