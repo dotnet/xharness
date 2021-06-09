@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
@@ -16,17 +17,38 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public BrowserArguments BrowserArgs { get; } = new();
         public HTMLFileArgument HTMLFile { get; } = new("index.html");
         public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
+        public OutputDirectoryArgument OutputDirectory { get; } = new();
+        public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
         public DebuggerPortArgument DebuggerPort { get; set; } = new();
         public NoIncognitoArgument Incognito { get; } = new();
         public NoHeadlessArgument Headless { get; } = new();
         public QuitAppAtEndArgument QuitAppAtEnd { get; } = new();
 
+        protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
+        {
+            Browser,
+            BrowserLocation,
+            BrowserArgs,
+            HTMLFile,
+            ExpectedExitCode,
+            OutputDirectory,
+            Timeout,
+            DebuggerPort,
+            Incognito,
+            Headless,
+            QuitAppAtEnd,
+        };
+
         public override void Validate()
         {
+            base.Validate();
+
             if (!string.IsNullOrEmpty(BrowserLocation))
             {
-                if (Browser == Browser.Safari)
+                if (Browser == Wasm.Browser.Safari)
+                {
                     throw new ArgumentException("Safari driver doesn't support custom browser path");
+                }
 
                 if (!File.Exists(BrowserLocation))
                 {
@@ -35,15 +57,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             }
 
             if (DebuggerPort != null || !QuitAppAtEnd)
-                Headless = false;
-        }
-
-        private static int ParseAsIntOrThrow(string value, string name)
-        {
-            if (int.TryParse(value, out var number))
-                return number;
-
-            throw new ArgumentException($"{name} must be an integer");
+            {
+                Headless.Set(false);
+            }
         }
     }
 }

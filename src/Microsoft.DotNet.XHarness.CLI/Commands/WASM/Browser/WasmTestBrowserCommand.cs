@@ -4,39 +4,32 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
-
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Safari;
-using OpenQA.Selenium.Firefox;
-using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 using OpenQA.Selenium;
-using System.Linq;
-using OpenQA.Selenium.Edge;
+using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Chromium;
+using OpenQA.Selenium.Edge;
+using OpenQA.Selenium.Firefox;
+using OpenQA.Selenium.Safari;
+using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
-    internal class WasmTestBrowserCommand : XHarnessCommand
+    internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandArguments>
     {
         private const string CommandHelp = "Executes tests on WASM using a browser";
 
-        private readonly WasmTestBrowserCommandArguments Arguments = new();
-
-        protected TestCommandArguments TestArguments => Arguments;
         protected override string CommandUsage { get; } = "wasm test-browser [OPTIONS] -- [BROWSER OPTIONS]";
         protected override string CommandDescription { get; } = CommandHelp;
 
-        protected override XHarnessCommandArguments Arguments => TestArguments;
+        protected override WasmTestBrowserCommandArguments Arguments { get; } = new();
 
         public WasmTestBrowserCommand() : base("test-browser", allowsExtraArgs: true, CommandHelp)
         {
@@ -57,7 +50,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                                 logProcessor,
                                 logger);
 
-            (DriverService driverService, IWebDriver driver) = Arguments.Browser switch
+            (DriverService driverService, IWebDriver driver) = Arguments.Browser.Value switch
             {
                 Browser.Chrome => GetChromeDriver(logger),
                 Browser.Safari => GetSafariDriver(logger),
@@ -65,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 Browser.Edge => GetEdgeDriver(logger),
 
                 // shouldn't reach here
-                _              => throw new ArgumentException($"Unknown browser : {Arguments.Browser}")
+                _ => throw new ArgumentException($"Unknown browser : {Arguments.Browser}")
             };
 
             try
@@ -117,7 +110,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 logger.LogInformation($"Using Firefox from {Arguments.BrowserLocation}");
             }
 
-            options.AddArguments(Arguments.BrowserArgs);
+            options.AddArguments(Arguments.BrowserArgs.Value);
             if (Arguments.Headless)
                 options.AddArguments("--headless");
 
@@ -161,12 +154,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 logger.LogInformation($"Using Chrome from {Arguments.BrowserLocation}");
             }
 
-            options.AddArguments(Arguments.BrowserArgs);
+            options.AddArguments(Arguments.BrowserArgs.Value);
             if (Arguments.Headless)
                 options.AddArguments("--headless");
 
-            if (Arguments.DebuggerPort.HasValue)
-                options.AddArguments($"--remote-debugging-port={Arguments.DebuggerPort.Value}");
+            options.AddArguments($"--remote-debugging-port={Arguments.DebuggerPort.Value}");
 
             if (Arguments.Incognito)
                 options.AddArguments("--incognito");
@@ -226,7 +218,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     driverService.EnableVerboseLogging = true;
                     driverService.LogPath = Path.Combine(Arguments.OutputDirectory, $"{driverName}-{retry_num}.log");
 
-                    if (Activator.CreateInstance(typeof(TDriver), driverService, options, Arguments.Timeout) is not TDriver driver)
+                    if (Activator.CreateInstance(typeof(TDriver), driverService, options, Arguments.Timeout.Value) is not TDriver driver)
                     {
                         throw new ArgumentException($"Failed to create instance of {typeof(TDriver)}");
                     }

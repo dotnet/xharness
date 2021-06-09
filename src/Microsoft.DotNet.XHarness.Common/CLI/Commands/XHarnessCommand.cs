@@ -113,10 +113,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
                     return (int)ExitCode.HELP_SHOWN;
                 }
 
-                foreach (var arg in commandArguments)
-                {
-                    arg.Validate();
-                }
+                Arguments.Validate();
             }
             catch (ArgumentException e)
             {

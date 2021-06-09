@@ -12,5 +12,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             : base("no-headless", "Don't run in headless mode", true)
         {
         }
+
+        public void Set(bool value) => Value = value;
     }
 }

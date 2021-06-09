@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
     internal class DebuggerPortArgument : IntArgument
     {
         public DebuggerPortArgument()
-            : base("debugger=|d=", "Run browser in debug mode, with a port to listen on. Default port number is 9222")
+            : base("debugger=|d=", "Run browser in debug mode, with a port to listen on. Default port number is 9222", 9222)
         {
         }
     }

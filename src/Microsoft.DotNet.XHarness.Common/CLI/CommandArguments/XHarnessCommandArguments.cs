@@ -13,6 +13,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         VerbosityArgument Verbosity { get; set; }
         HelpArgument ShowHelp { get; }
         IEnumerable<ArgumentDefinition> GetCommandArguments();
+        void Validate();
     }
 
     public abstract class XHarnessCommandArguments : IXHarnessCommandArguments
@@ -25,6 +26,14 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
             Verbosity,
             ShowHelp,
         });
+
+        public virtual void Validate()
+        {
+            foreach (var arg in GetCommandArguments())
+            {
+                arg.Validate();
+            }
+        }
 
         /// <summary>
         /// Returns additional option for your specific command.

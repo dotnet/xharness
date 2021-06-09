@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
@@ -20,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public EnableLldbArgument EnableLldb { get; } = new();
         public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
         public ResetSimulatorArgument ResetSimulator { get; } = new();
-        public ExpectedExitCodeArgument ExpectedExitCode { get; } = new();
+        public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
 
         protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
         {
