@@ -12,6 +12,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {
     internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments
     {
+        public AppPathArgument AppPackagePath { get; } = new();
         public BrowserArgument Browser { get; } = new();
         public BrowserLocationArgument BrowserLocation { get; } = new();
         public BrowserArguments BrowserArgs { get; } = new();
@@ -23,9 +24,13 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public NoIncognitoArgument Incognito { get; } = new();
         public NoHeadlessArgument Headless { get; } = new();
         public QuitAppAtEndArgument QuitAppAtEnd { get; } = new();
+        public WebServerMiddlewarePathsAndTypes WebServerMiddlewarePathsAndTypes { get; } = new();
+        public HttpWebServerEnvironmentVariables HttpWebServerEnvironmentVariables { get; } = new();
+        public HttpsWebServerEnvironmentVariables HttpsWebServerEnvironmentVariables { get; } = new();
 
         protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
         {
+            AppPackagePath,
             Browser,
             BrowserLocation,
             BrowserArgs,
@@ -37,6 +42,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             Incognito,
             Headless,
             QuitAppAtEnd,
+            WebServerMiddlewarePathsAndTypes,
+            HttpWebServerEnvironmentVariables,
+            HttpsWebServerEnvironmentVariables,
         };
 
         public override void Validate()

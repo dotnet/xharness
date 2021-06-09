@@ -245,7 +245,17 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         }
 
         public override void Action(string argumentValue)
-            => Value = string.IsNullOrEmpty(argumentValue) || argumentValue.Equals("false", StringComparison.InvariantCultureIgnoreCase);
+        {
+            if (string.IsNullOrEmpty(argumentValue))
+            {
+                Value = true;
+            }
+
+            Value = !argumentValue.Equals("false", StringComparison.InvariantCultureIgnoreCase) &&
+                !argumentValue.Equals("no", StringComparison.InvariantCultureIgnoreCase) &&
+                !argumentValue.Equals("off", StringComparison.InvariantCultureIgnoreCase) &&
+                !argumentValue.Equals("0", StringComparison.InvariantCultureIgnoreCase);
+        }
     }
 
     public abstract class RepetableArgument : ArgumentDefinition<IEnumerable<string>>
