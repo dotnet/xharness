@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     internal class UseJsonArgument : SwitchArgument
     {
         public UseJsonArgument()
-            : base("json", "Use json as the output format.", false)
+            : base("json", "Use json as the output format", false)
         {
         }
     }

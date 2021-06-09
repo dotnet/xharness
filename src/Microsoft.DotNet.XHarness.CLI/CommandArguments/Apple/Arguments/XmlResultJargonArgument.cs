@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     internal class XmlResultJargonArgument : Argument<XmlResultJargon>
     {
         public XmlResultJargonArgument()
-            : base("xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.", XmlResultJargon.xUnit)
+            : base("xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}", XmlResultJargon.xUnit)
         {
         }
 

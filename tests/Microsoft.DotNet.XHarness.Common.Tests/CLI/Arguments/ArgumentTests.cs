@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
 {
     public class ArgumentTests
     {
-        private class SampleRepeatableArgument : RepetableArgument
+        private class SampleRepeatableArgument : RepeatableArgument
         {
             public SampleRepeatableArgument()
                 : base("a=", string.Empty)

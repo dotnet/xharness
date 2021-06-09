@@ -6,10 +6,10 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {
-    internal class BrowserArguments : RepetableArgument
+    internal class BrowserArguments : RepeatableArgument
     {
         public BrowserArguments()
-            : base("browser-arg=", "Argument to pass to the browser. Can be used more than once.")
+            : base("browser-arg=", "Argument to pass to the browser")
         {
         }
     }

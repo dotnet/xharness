@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     internal class ShowSimulatorsUUIDArgument : SwitchArgument
     {
         public ShowSimulatorsUUIDArgument()
-            : base("include-simulator-uuid", "Include the simulators UUID. Defaults to false.", false)
+            : base("include-simulator-uuid", "Include the simulators UUID. Defaults to false", false)
         {
         }
     }

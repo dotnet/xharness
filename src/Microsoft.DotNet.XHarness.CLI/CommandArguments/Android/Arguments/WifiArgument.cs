@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
     internal class WifiArgument : Argument<WifiStatus>
     {
         public WifiArgument()
-            : base("wifi:", "Enable/disable WiFi. WiFi state is ignored by default. If passed without value, 'enable' is assumed.", WifiStatus.Unknown)
+            : base("wifi:", "Enable/disable WiFi. WiFi state is ignored by default. If passed without value, 'enable' is assumed", WifiStatus.Unknown)
         {
         }
 

@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     internal class ShowDevicesUUIDArgument : SwitchArgument
     {
         public ShowDevicesUUIDArgument()
-            : base("include-devices-uuid", "Include the devices UUID. Defaults to false.", true)
+            : base("include-devices-uuid", "Include the devices UUID. Defaults to false", true)
         {
         }
     }

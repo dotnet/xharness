@@ -7,12 +7,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
     /// If specified, attempt to run on a compatible attached device, failing if unavailable.
     /// If not specified, we will open the apk using Zip APIs and guess what's usable based off folders found in under /lib
     /// </summary>
-    internal class DeviceArchitectureArgument : RepetableArgument
+    internal class DeviceArchitectureArgument : RepeatableArgument
     {
         public DeviceArchitectureArgument()
             : base("device-arch=",
-                "If specified, forces running on a device with given architecture (x86, x86_64, arm64-v8a or armeabi-v7a). Otherwise inferred from supplied APK. " +
-                "Can be used more than once.")
+                "If specified, forces running on a device with given architecture (x86, x86_64, arm64-v8a or armeabi-v7a). Otherwise inferred from supplied APK")
         {
         }
 

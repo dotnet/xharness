@@ -6,10 +6,10 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {
-    internal class JavaScriptEngineArguments : RepetableArgument
+    internal class JavaScriptEngineArguments : RepeatableArgument
     {
         public JavaScriptEngineArguments()
-            : base("engine-arg=", "Argument to pass to the JavaScript engine. Can be used more than once.")
+            : base("engine-arg=", "Argument to pass to the JavaScript engine")
         {
         }
     }

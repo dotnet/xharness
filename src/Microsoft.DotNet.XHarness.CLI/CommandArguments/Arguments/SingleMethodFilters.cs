@@ -9,13 +9,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
     /// <summary>
     /// Methods to be included in the test run while all others are ignored.
     /// </summary>
-    internal class SingleMethodFilters : RepetableArgument
+    internal class SingleMethodFilters : RepeatableArgument
     {
         public SingleMethodFilters()
             : base("method|m=",
                   "Method to be ran in the test application. When this parameter is used only the " +
-                  "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
-                  "ignored. Can be used more than once.")
+                  "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be ignored")
         {
         }
     }

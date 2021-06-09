@@ -260,11 +260,11 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         }
     }
 
-    public abstract class RepetableArgument : Argument<IEnumerable<string>>
+    public abstract class RepeatableArgument : Argument<IEnumerable<string>>
     {
         private readonly List<string> _values = new();
 
-        protected RepetableArgument(string prototype, string description) : base(prototype, description)
+        protected RepeatableArgument(string prototype, string description) : base(prototype, description + ". Can be used more than once")
         {
         }
 
