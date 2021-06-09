@@ -2,18 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
     /// <summary>
-    /// If specified, attempt to run APK on that device.
-    /// If there is more than one device with required architecture, failing to specify this may cause execution failure.
+    /// Time to wait for boot completion. Defaults to 5 minutes.
     /// </summary>
-    internal class DeviceIdArgument : StringArgument
+    internal class LaunchTimeoutArgument : TimeSpanArgument
     {
-        public DeviceIdArgument()
-            : base("device-id=", "Device where APK should be installed")
+        public LaunchTimeoutArgument(TimeSpan defaultValue)
+            : base("launch-timeout=|lt=", "Time span in the form of \"00:00:00\" or number of seconds to wait for the device to boot to complete", defaultValue)
         {
         }
     }

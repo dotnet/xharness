@@ -7,13 +7,12 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
     /// <summary>
-    /// If specified, attempt to run APK on that device.
-    /// If there is more than one device with required architecture, failing to specify this may cause execution failure.
+    /// Exit code returned by the instrumentation for a successful run. Defaults to 0.
     /// </summary>
-    internal class DeviceIdArgument : StringArgument
+    internal class ExpectedExitCodeArgument : IntArgument
     {
-        public DeviceIdArgument()
-            : base("device-id=", "Device where APK should be installed")
+        public ExpectedExitCodeArgument(int defaultValue)
+            : base("expected-exit-code=", "If specified, sets the expected exit code for a successful instrumentation run", defaultValue)
         {
         }
     }

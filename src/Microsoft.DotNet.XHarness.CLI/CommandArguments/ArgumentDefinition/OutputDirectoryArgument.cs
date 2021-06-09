@@ -11,9 +11,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
     /// <summary>
     /// Path where the outputs of execution will be stored
     /// </summary>
-    internal class OutputDirectoryArgument : PathArgument
+    internal class OutputDirectoryArgument : RequiredPathArgument
     {
-        public OutputDirectoryArgument() : base("output-directory=|o=", "Directory where logs and results will be saved", true)
+        public OutputDirectoryArgument() : base("output-directory=|o=", "Directory where logs and results will be saved")
         {
         }
 

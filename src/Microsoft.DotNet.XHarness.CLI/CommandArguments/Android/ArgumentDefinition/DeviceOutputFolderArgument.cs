@@ -7,13 +7,12 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
     /// <summary>
-    /// If specified, attempt to run APK on that device.
-    /// If there is more than one device with required architecture, failing to specify this may cause execution failure.
+    /// Folder to copy off for output of executing the specified APK
     /// </summary>
-    internal class DeviceIdArgument : StringArgument
+    internal class DeviceOutputFolderArgument : PathArgument
     {
-        public DeviceIdArgument()
-            : base("device-id=", "Device where APK should be installed")
+        public DeviceOutputFolderArgument()
+            : base("device-out-folder=|dev-out=", "If specified, copy this folder recursively off the device to the path specified by the output directory", false)
         {
         }
     }

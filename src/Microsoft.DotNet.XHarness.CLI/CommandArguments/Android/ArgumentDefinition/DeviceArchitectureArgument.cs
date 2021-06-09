@@ -4,7 +4,8 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
     /// <summary>
-    /// Tests classes to be included in the run while all others are ignored.
+    /// If specified, attempt to run on a compatible attached device, failing if unavailable.
+    /// If not specified, we will open the apk using Zip APIs and guess what's usable based off folders found in under /lib
     /// </summary>
     internal class DeviceArchitectureArgument : RepetableArgument
     {

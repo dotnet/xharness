@@ -209,13 +209,31 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 
     public abstract class PathArgument : StringArgument
     {
-        protected PathArgument(string prototype, string description, bool isRequired) : base(prototype, description, isRequired)
+        private readonly bool _isRequired;
+
+        protected PathArgument(string prototype, string description, bool isRequired) : base(prototype, description)
         {
+            _isRequired = isRequired;
         }
 
         public override void Action(string argumentValue) => Value = RootPath(argumentValue);
 
-        public static implicit operator string?(PathArgument arg) => arg.Value;
+        public override void Validate()
+        {
+            if (_isRequired && string.IsNullOrEmpty(Value))
+            {
+                throw new ArgumentException($"Required argument {Prototype} was not supplied");
+            }
+        }
+    }
+
+    public abstract class RequiredPathArgument : RequiredStringArgument
+    {
+        protected RequiredPathArgument(string prototype, string description) : base(prototype, description)
+        {
+        }
+
+        public override void Action(string argumentValue) => Value = RootPath(argumentValue);
     }
 
     public abstract class SwitchArgument : ArgumentDefinition<bool>
@@ -228,8 +246,6 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 
         public override void Action(string argumentValue)
             => Value = string.IsNullOrEmpty(argumentValue) || argumentValue.Equals("false", StringComparison.InvariantCultureIgnoreCase);
-
-        public static implicit operator bool(SwitchArgument arg) => arg.Value;
     }
 
     public abstract class RepetableArgument : ArgumentDefinition<IEnumerable<string>>

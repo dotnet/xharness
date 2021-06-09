@@ -6,13 +6,12 @@ using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.Android.Execution;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidRunCommand : XHarnessCommand
+    internal class AndroidRunCommand : XHarnessCommand<AndroidRunCommandArguments>
     {
         // nunit2 one should go away eventually
         private static readonly string[] s_xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
@@ -21,9 +20,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
         private const string ReturnCodeVariableName = "return-code";
         private const string ProcessCrashedShortMessage = "Process crashed";
 
-        private readonly AndroidRunCommandArguments _arguments = new();
-
-        protected override XHarnessCommandArguments Arguments => _arguments;
+        protected override AndroidRunCommandArguments Arguments { get; } = new();
 
         protected override string CommandUsage { get; } = "android run --output-directory=... --package-name=... [OPTIONS]";
 
@@ -45,18 +42,18 @@ Arguments:
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            logger.LogDebug($"Android Run command called: App = {_arguments.PackageName}{Environment.NewLine}");
-            logger.LogDebug($"Timeout = {_arguments.Timeout.TotalSeconds} seconds.");
+            logger.LogDebug($"Android Run command called: App = {Arguments.PackageName}{Environment.NewLine}");
+            logger.LogDebug($"Timeout = {Arguments.Timeout.Value.TotalSeconds} seconds.");
 
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
-            string apkPackageName = _arguments.PackageName;
+            string apkPackageName = Arguments.PackageName;
 
             var runner = new AdbRunner(logger);
 
             // Make sure the adb server is started
             runner.StartAdbServer();
 
-            var deviceId = _arguments.DeviceId;
+            string? deviceId = Arguments.DeviceId;
 
             if (string.IsNullOrEmpty(deviceId))
             {
@@ -70,7 +67,7 @@ Arguments:
 
             runner.SetActiveDevice(deviceId);
 
-            runner.TimeToWaitForBootCompletion = _arguments.LaunchTimeout;
+            runner.TimeToWaitForBootCompletion = Arguments.LaunchTimeout;
 
             // Wait til at least device(s) are ready
             runner.WaitForDevice();
@@ -78,13 +75,13 @@ Arguments:
             return Task.FromResult(InvokeHelper(
                 logger,
                 apkPackageName,
-                _arguments.InstrumentationName,
-                _arguments.InstrumentationArguments,
-                _arguments.OutputDirectory,
-                _arguments.DeviceOutputFolder,
-                _arguments.Timeout,
-                _arguments.ExpectedExitCode,
-                _arguments.Wifi,
+                Arguments.InstrumentationName,
+                Arguments.InstrumentationArguments,
+                Arguments.OutputDirectory,
+                Arguments.DeviceOutputFolder,
+                Arguments.Timeout,
+                Arguments.ExpectedExitCode,
+                Arguments.Wifi,
                 runner));
         }
 

@@ -10,9 +10,10 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
     {
         public LogLevel Value { get; private set; } = LogLevel.Information;
 
-        public VerbosityArgument()
+        public VerbosityArgument(LogLevel level)
             : base("verbosity:|v:", "Verbosity level - defaults to 'Information' if not specified. If passed without value, 'Debug' is assumed (highest)")
         {
+            Value = level;
         }
 
         public override void Action(string argumentValue)

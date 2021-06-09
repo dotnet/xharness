@@ -4,19 +4,20 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 {
     public interface IXHarnessCommandArguments
     {
-        VerbosityArgument Verbosity { get; }
+        VerbosityArgument Verbosity { get; set; }
         HelpArgument ShowHelp { get; }
         IEnumerable<ArgumentDefinition> GetCommandArguments();
     }
 
     public abstract class XHarnessCommandArguments : IXHarnessCommandArguments
     {
-        public VerbosityArgument Verbosity { get; } = new();
+        public VerbosityArgument Verbosity { get; set; } = new(LogLevel.Information);
         public HelpArgument ShowHelp { get; } = new();
 
         public IEnumerable<ArgumentDefinition> GetCommandArguments() => GetArguments().Concat(new ArgumentDefinition[]

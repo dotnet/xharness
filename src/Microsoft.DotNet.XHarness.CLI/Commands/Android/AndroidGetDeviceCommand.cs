@@ -16,14 +16,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidGetDeviceCommand : XHarnessCommand
+    internal class AndroidGetDeviceCommand : XHarnessCommand<AndroidGetDeviceCommandArguments>
     {
-        private readonly AndroidGetDeviceCommandArguments _arguments = new()
+        protected override AndroidGetDeviceCommandArguments Arguments { get; } = new()
         {
-            Verbosity = LogLevel.Error
+            Verbosity = new VerbosityArgument(LogLevel.Error)
         };
-
-        protected override XHarnessCommandArguments Arguments => _arguments;
 
         protected override string CommandUsage { get; } = "android device --app=... [OPTIONS]";
 
@@ -40,22 +38,22 @@ Arguments:
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            if (!File.Exists(_arguments.AppPackagePath))
+            if (!File.Exists(Arguments.AppPackagePath))
             {
-                logger.LogCritical($"Couldn't find {_arguments.AppPackagePath}!");
+                logger.LogCritical($"Couldn't find {Arguments.AppPackagePath}!");
                 return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
             }
 
             var runner = new AdbRunner(logger);
             IEnumerable<string> apkRequiredArchitecture;
 
-            if (_arguments.DeviceArchitecture.Any())
+            if (Arguments.DeviceArchitecture.Value.Any())
             {
-                apkRequiredArchitecture = _arguments.DeviceArchitecture;
+                apkRequiredArchitecture = Arguments.DeviceArchitecture.Value;
             }
             else
             {
-                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath);
+                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(Arguments.AppPackagePath);
             }
 
             try

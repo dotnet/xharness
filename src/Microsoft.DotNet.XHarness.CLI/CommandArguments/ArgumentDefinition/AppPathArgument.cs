@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
     /// <summary>
     /// Path to the app bundle.
     /// </summary>
-    internal class AppPathArgument : RequiredStringArgument
+    internal class AppPathArgument : RequiredPathArgument
     {
         public AppPathArgument() : base("app|a=", "Path to an already-packaged app")
         {

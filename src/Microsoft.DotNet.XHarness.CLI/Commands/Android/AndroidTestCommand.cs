@@ -10,19 +10,16 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidTestCommand : XHarnessCommand
+    internal class AndroidTestCommand : XHarnessCommand<AndroidTestCommandArguments>
     {
         private const string ReturnCodeVariableName = "return-code";
 
-        private readonly AndroidTestCommandArguments _arguments = new();
-
-        protected override XHarnessCommandArguments Arguments => _arguments;
+        protected override AndroidTestCommandArguments Arguments { get; } = new();
 
         protected override string CommandUsage { get; } = "android test --output-directory=... --package-name=... --app=... [OPTIONS]";
 
@@ -44,13 +41,13 @@ Arguments:
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            logger.LogDebug($"Android Test command called: App = {_arguments.AppPackagePath}{Environment.NewLine}Instrumentation Name = {_arguments.InstrumentationName}");
-            logger.LogDebug($"Output Directory:{_arguments.OutputDirectory}{Environment.NewLine}Timeout = {_arguments.Timeout.TotalSeconds} seconds.");
+            logger.LogDebug($"Android Test command called: App = {Arguments.AppPackagePath}{Environment.NewLine}Instrumentation Name = {Arguments.InstrumentationName}");
+            logger.LogDebug($"Output Directory:{Arguments.OutputDirectory}{Environment.NewLine}Timeout = {Arguments.Timeout.Value.TotalSeconds} seconds.");
             logger.LogDebug("Arguments to instrumentation:");
 
-            if (!File.Exists(_arguments.AppPackagePath))
+            if (!File.Exists(Arguments.AppPackagePath))
             {
-                logger.LogCritical($"Couldn't find {_arguments.AppPackagePath}!");
+                logger.LogCritical($"Couldn't find {Arguments.AppPackagePath}!");
                 return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
             }
             var runner = new AdbRunner(logger);
@@ -58,20 +55,20 @@ Arguments:
             // Assumption: APKs we test will only have one arch for now
             IEnumerable<string> apkRequiredArchitecture;
 
-            if (_arguments.DeviceArchitecture.Any())
+            if (Arguments.DeviceArchitecture.Value.Any())
             {
-                apkRequiredArchitecture = _arguments.DeviceArchitecture;
+                apkRequiredArchitecture = Arguments.DeviceArchitecture.Value;
                 logger.LogInformation($"Will attempt to run device on specified architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
             }
             else
             {
-                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath);
+                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(Arguments.AppPackagePath);
                 logger.LogInformation($"Will attempt to run device on detected architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
             }
 
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
-            string apkPackageName = _arguments.PackageName;
-            string appPackagePath = _arguments.AppPackagePath;
+            string apkPackageName = Arguments.PackageName;
+            string appPackagePath = Arguments.AppPackagePath;
 
             try
             {
@@ -81,7 +78,7 @@ Arguments:
                     appPackagePath: appPackagePath,
                     apkRequiredArchitecture: apkRequiredArchitecture,
                     deviceId: null,
-                    bootTimeoutSeconds: _arguments.LaunchTimeout,
+                    bootTimeoutSeconds: Arguments.LaunchTimeout,
                     runner: runner);
 
                 if (exitCode == ExitCode.SUCCESS)
@@ -89,13 +86,13 @@ Arguments:
                     exitCode = AndroidRunCommand.InvokeHelper(
                         logger: logger,
                         apkPackageName: apkPackageName,
-                        instrumentationName: _arguments.InstrumentationName,
-                        instrumentationArguments: _arguments.InstrumentationArguments,
-                        outputDirectory: _arguments.OutputDirectory,
-                        deviceOutputFolder: _arguments.DeviceOutputFolder,
-                        timeout: _arguments.Timeout,
-                        expectedExitCode: _arguments.ExpectedExitCode,
-                        wifi: _arguments.Wifi,
+                        instrumentationName: Arguments.InstrumentationName,
+                        instrumentationArguments: Arguments.InstrumentationArguments,
+                        outputDirectory: Arguments.OutputDirectory,
+                        deviceOutputFolder: Arguments.DeviceOutputFolder,
+                        timeout: Arguments.Timeout,
+                        expectedExitCode: Arguments.ExpectedExitCode,
+                        wifi: Arguments.Wifi,
                         runner: runner);
                 } 
 
