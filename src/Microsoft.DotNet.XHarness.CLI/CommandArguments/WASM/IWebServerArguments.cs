@@ -6,7 +6,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {
     internal interface IWebServerArguments
     {
-        AppPathArgument AppPackagePath { get; }
         WebServerMiddlewarePathsAndTypes WebServerMiddlewarePathsAndTypes { get; }
         WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; }
         WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; }

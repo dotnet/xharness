@@ -10,7 +10,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {
     internal class WasmTestCommandArguments : XHarnessCommandArguments, IWebServerArguments
     {
-        public AppPathArgument AppPackagePath { get; } = new();
         public JavaScriptEngineArgument Engine { get; } = new();
         public JavaScriptEngineArguments EngineArgs { get; } = new();
         public JavaScriptFileArgument JSFile { get; } = new("runtime.js");
@@ -27,7 +26,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 
         protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
-            AppPackagePath,
             Engine,
             EngineArgs,
             JSFile,
