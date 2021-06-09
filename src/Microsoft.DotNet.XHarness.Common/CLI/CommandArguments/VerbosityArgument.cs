@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 {
-    public class VerbosityArgument : ArgumentDefinition
+    public class VerbosityArgument : Argument
     {
         public LogLevel Value { get; private set; } = LogLevel.Information;
 

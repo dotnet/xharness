@@ -12,12 +12,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
     {
         public XcodeArgument XcodeRoot { get; } = new();
 
-        protected sealed override IEnumerable<ArgumentDefinition> GetArguments() =>
-            GetAdditionalArguments().Concat(new ArgumentDefinition[]
+        protected sealed override IEnumerable<Argument> GetArguments() =>
+            GetAdditionalArguments().Concat(new Argument[]
             {
                 XcodeRoot
             });
 
-        protected abstract IEnumerable<ArgumentDefinition> GetAdditionalArguments();
+        protected abstract IEnumerable<Argument> GetAdditionalArguments();
     }
 }

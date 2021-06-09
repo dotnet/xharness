@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// <summary>
     /// The way the simulator/device talks back to XHarness.
     /// </summary>
-    internal class CommunicationChannelArgument : ArgumentDefinition<CommunicationChannel>
+    internal class CommunicationChannelArgument : Argument<CommunicationChannel>
     {
         public CommunicationChannelArgument()
             : base("communication-channel=", "The communication channel to use to communicate with the default", CommunicationChannel.UsbTunnel)

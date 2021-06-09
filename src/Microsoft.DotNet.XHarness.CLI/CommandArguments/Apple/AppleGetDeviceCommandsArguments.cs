@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public XcodeArgument XcodeRoot { get; } = new();
         public MlaunchArgument MlaunchPath { get; } = new();
 
-        protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
+        protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
             XcodeRoot,
             MlaunchPath,

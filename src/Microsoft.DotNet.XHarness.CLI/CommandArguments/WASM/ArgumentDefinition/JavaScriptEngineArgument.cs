@@ -7,7 +7,7 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {
-    internal class JavaScriptEngineArgument : ArgumentDefinition<JavaScriptEngine?>
+    internal class JavaScriptEngineArgument : Argument<JavaScriptEngine?>
     {
         public JavaScriptEngineArgument()
             : base("engine=|e=", "Specifies the JavaScript engine to be used", null)

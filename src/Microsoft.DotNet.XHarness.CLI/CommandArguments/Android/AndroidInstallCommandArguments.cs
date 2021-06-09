@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(5));
         public DeviceArchitectureArgument DeviceArchitecture { get; } = new();
 
-        protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
+        protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
             AppPackagePath,
             PackageName,

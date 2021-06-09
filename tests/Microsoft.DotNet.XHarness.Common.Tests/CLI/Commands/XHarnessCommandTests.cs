@@ -249,7 +249,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
             public SampleEnumArgument Enum { get; } = new();
             public SampleStringArgument String { get; } = new();
 
-            protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
+            protected override IEnumerable<Argument> GetArguments() => new Argument[]
             {
                 Number,
                 Enum,
@@ -282,7 +282,7 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
             }
         }
 
-        private class SampleEnumArgument : ArgumentDefinition<SampleEnum>
+        private class SampleEnumArgument : Argument<SampleEnum>
         {
             public SampleEnumArgument()
                 : base("enum=|e=", "Sets the enum", SampleEnum.Value1)

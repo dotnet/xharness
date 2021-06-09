@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public ResetSimulatorArgument ResetSimulator { get; } = new();
         public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
 
-        protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
+        protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
             BundleIdentifier,
             Target,

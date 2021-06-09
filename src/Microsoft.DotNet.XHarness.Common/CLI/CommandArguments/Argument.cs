@@ -9,13 +9,13 @@ using System.Linq;
 
 namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 {
-    public abstract class ArgumentDefinition
+    public abstract class Argument
     {
         public string Prototype { get; }
 
         public string Description { get; }
 
-        protected ArgumentDefinition(string prototype, string description)
+        protected Argument(string prototype, string description)
         {
             Prototype = prototype;
             Description = description;
@@ -120,20 +120,20 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         }
     }
 
-    public abstract class ArgumentDefinition<T> : ArgumentDefinition
+    public abstract class Argument<T> : Argument
     {
         public virtual T Value { get; protected set; }
 
-        protected ArgumentDefinition(string prototype, string description, T defaultValue = default!)
+        protected Argument(string prototype, string description, T defaultValue = default!)
             : base(prototype, description)
         {
             Value = defaultValue;
         }
 
-        public static implicit operator T(ArgumentDefinition<T> arg) => arg.Value;
+        public static implicit operator T(Argument<T> arg) => arg.Value;
     }
 
-    public abstract class IntArgument : ArgumentDefinition<int>
+    public abstract class IntArgument : Argument<int>
     {
         public IntArgument(string prototype, string description, int defaultValue = 0)
             : base(prototype, description)
@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         }
     }
 
-    public abstract class StringArgument : ArgumentDefinition<string?>
+    public abstract class StringArgument : Argument<string?>
     {
         public StringArgument(string prototype, string description)
             : base(prototype, description)
@@ -163,7 +163,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         public override void Action(string argumentValue) => Value = argumentValue;
     }
 
-    public abstract class RequiredStringArgument : ArgumentDefinition<string>
+    public abstract class RequiredStringArgument : Argument<string>
     {
         public RequiredStringArgument(string prototype, string description, string defaultValue = null!)
             : base(prototype, description, defaultValue)
@@ -181,7 +181,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         }
     }
 
-    public abstract class TimeSpanArgument : ArgumentDefinition<TimeSpan>
+    public abstract class TimeSpanArgument : Argument<TimeSpan>
     {
         protected TimeSpanArgument(string prototype, string description, TimeSpan defaultValue)
             : base(prototype, description)
@@ -236,7 +236,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         public override void Action(string argumentValue) => Value = RootPath(argumentValue);
     }
 
-    public abstract class SwitchArgument : ArgumentDefinition<bool>
+    public abstract class SwitchArgument : Argument<bool>
     {
         public SwitchArgument(string prototype, string description, bool defaultValue)
             : base(prototype, description)
@@ -258,7 +258,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         }
     }
 
-    public abstract class RepetableArgument : ArgumentDefinition<IEnumerable<string>>
+    public abstract class RepetableArgument : Argument<IEnumerable<string>>
     {
         private readonly List<string> _values = new();
 

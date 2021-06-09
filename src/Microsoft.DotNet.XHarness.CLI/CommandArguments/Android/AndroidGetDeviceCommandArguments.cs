@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         public AppPathArgument AppPackagePath { get; } = new();
         public DeviceArchitectureArgument DeviceArchitecture { get; } = new();
 
-        protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
+        protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
             AppPackagePath,
             DeviceArchitecture,

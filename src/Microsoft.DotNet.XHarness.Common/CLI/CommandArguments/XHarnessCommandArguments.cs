@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
     {
         VerbosityArgument Verbosity { get; set; }
         HelpArgument ShowHelp { get; }
-        IEnumerable<ArgumentDefinition> GetCommandArguments();
+        IEnumerable<Argument> GetCommandArguments();
         void Validate();
     }
 
@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         public VerbosityArgument Verbosity { get; set; } = new(LogLevel.Information);
         public HelpArgument ShowHelp { get; } = new();
 
-        public IEnumerable<ArgumentDefinition> GetCommandArguments() => GetArguments().Concat(new ArgumentDefinition[]
+        public IEnumerable<Argument> GetCommandArguments() => GetArguments().Concat(new Argument[]
         {
             Verbosity,
             ShowHelp,
@@ -38,6 +38,6 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
         /// <summary>
         /// Returns additional option for your specific command.
         /// </summary>
-        protected abstract IEnumerable<ArgumentDefinition> GetArguments();
+        protected abstract IEnumerable<Argument> GetArguments();
     }
 }

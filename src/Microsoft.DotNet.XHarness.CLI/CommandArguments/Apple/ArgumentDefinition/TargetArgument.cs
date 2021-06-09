@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// <summary>
     /// Test target (device, simulator, OS version...).
     /// </summary>
-    internal class TargetArgument : ArgumentDefinition<TestTargetOs>
+    internal class TargetArgument : Argument<TestTargetOs>
     {
         public TargetArgument() : base("target=|targets=|t=", "Test target (device/simulator and OS)")
         {

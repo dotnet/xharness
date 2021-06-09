@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
     {
         public ListInstalledArgument ListInstalledOnly { get; } = new();
 
-        protected override IEnumerable<ArgumentDefinition> GetAdditionalArguments() => new ArgumentDefinition[]
+        protected override IEnumerable<Argument> GetAdditionalArguments() => new Argument[]
         {
             ListInstalledOnly,
         };

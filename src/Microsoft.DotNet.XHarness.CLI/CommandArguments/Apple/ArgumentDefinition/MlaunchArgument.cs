@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// Path to the mlaunch binary.
     /// Default comes from the NuGet.
     /// </summary>
-    internal class MlaunchArgument : ArgumentDefinition<string>
+    internal class MlaunchArgument : Argument<string>
     {
         public MlaunchArgument() : base("mlaunch=", "Path to the mlaunch binary")
         {

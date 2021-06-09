@@ -9,7 +9,7 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
-    internal class WebServerMiddlewarePathsAndTypes : ArgumentDefinition<List<(string path, string type)>>
+    internal class WebServerMiddlewarePathsAndTypes : Argument<List<(string path, string type)>>
     {
         public WebServerMiddlewarePathsAndTypes()
             : base("web-server-middleware=", "<Path>,<typeName> to assembly and type which contains Kestrel middleware for local test server. Could be used multiple times to load multiple middlewares", new List<(string path, string type)>())

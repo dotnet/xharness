@@ -10,6 +10,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
     internal class AndroidGetStateCommandArguments : XHarnessCommandArguments
     {
-        protected override IEnumerable<ArgumentDefinition> GetArguments() => Enumerable.Empty<ArgumentDefinition>();
+        protected override IEnumerable<Argument> GetArguments() => Enumerable.Empty<Argument>();
     }
 }

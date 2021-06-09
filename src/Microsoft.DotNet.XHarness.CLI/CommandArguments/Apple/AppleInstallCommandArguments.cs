@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public DeviceNameArgument DeviceName { get; } = new();
         public ResetSimulatorArgument ResetSimulator { get; } = new();
 
-        protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
+        protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
             AppBundlePath,
             Target,

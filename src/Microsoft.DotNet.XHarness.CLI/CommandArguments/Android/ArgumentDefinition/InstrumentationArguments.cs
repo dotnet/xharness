@@ -11,12 +11,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
     /// <summary>
     /// Passing these arguments as testing options to a test runner
     /// </summary>
-    internal class InstrumentationArguments : ArgumentDefinition<Dictionary<string, string>>
+    internal class InstrumentationArguments : Argument<Dictionary<string, string>>
     {
         public InstrumentationArguments()
             : base("arg=", "Argument to pass to the instrumentation, in form key=value", new Dictionary<string, string>())
         {
-
         }
 
         public override void Action(string argumentValue)

@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public ShowDevicesUUIDArgument ShowDevicesUUID { get; set; } = new();
         public UseJsonArgument UseJson { get; set; } = new();
 
-        protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
+        protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
             MlaunchPath,
             ShowSimulatorsUUID,

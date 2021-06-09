@@ -7,7 +7,7 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
-    internal class HttpsWebServerEnvironmentVariables : ArgumentDefinition<IEnumerable<string>>
+    internal class HttpsWebServerEnvironmentVariables : Argument<IEnumerable<string>>
     {
         public HttpsWebServerEnvironmentVariables()
             : base("set-web-server-https-env=", "Comma separated list of environment variable names, which should be set to HTTPS host and port, for the unit test, which use xharness as test web server")

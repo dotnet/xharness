@@ -10,6 +10,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
 {
     internal class FindCommandArguments : SimulatorsCommandArguments
     {
-        protected override IEnumerable<ArgumentDefinition> GetAdditionalArguments() => Enumerable.Empty<ArgumentDefinition>();
+        protected override IEnumerable<Argument> GetAdditionalArguments() => Enumerable.Empty<Argument>();
     }
 }

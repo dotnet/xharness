@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public HttpWebServerEnvironmentVariables HttpWebServerEnvironmentVariables { get; } = new();
         public HttpsWebServerEnvironmentVariables HttpsWebServerEnvironmentVariables { get; } = new();
 
-        protected override IEnumerable<ArgumentDefinition> GetArguments() => new ArgumentDefinition[]
+        protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
             AppPackagePath,
             Engine,

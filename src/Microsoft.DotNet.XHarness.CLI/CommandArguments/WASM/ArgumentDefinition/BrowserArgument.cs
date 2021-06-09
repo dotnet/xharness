@@ -8,7 +8,7 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {
-    internal class BrowserArgument : ArgumentDefinition<Browser>
+    internal class BrowserArgument : Argument<Browser>
     {
         public BrowserArgument()
             : base("browser=|b=", "Specifies the browser to be used. Default is Chrome", Browser.Chrome)
