@@ -72,8 +72,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
                 {
                     serverURLs = await WebServer.Start(
-                        Arguments.AppPackagePath,
-                        Arguments.WebServerMiddlewarePathsAndTypes.Value,
+                        Arguments,
                         logger,
                         null,
                         webServerCts.Token);
@@ -99,14 +98,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
                 if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
                 {
-                    foreach (var envVariable in Arguments.HttpWebServerEnvironmentVariables.Value)
+                    foreach (var envVariable in Arguments.WebServerHttpEnvironmentVariables.Value)
                     {
                         engineArgs.Add($"--setenv={envVariable}={serverURLs!.Http}");
                     }
-
-                    foreach (var envVariable in Arguments.HttpsWebServerEnvironmentVariables.Value)
+                    if (Arguments.WebServerUseHttps)
                     {
-                        engineArgs.Add($"--setenv={envVariable}={serverURLs!.Https}");
+                        foreach (var envVariable in Arguments.WebServerHttpsEnvironmentVariables.Value)
+                        {
+                            engineArgs.Add($"--setenv={envVariable}={serverURLs!.Https}");
+                        }
                     }
                 }
 
@@ -118,13 +119,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 var stdoutFilePath = Path.Combine(Arguments.OutputDirectory, "wasm-console.log");
                 File.Delete(stdoutFilePath);
 
-                var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath, stdoutFilePath, logger);
+                var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath, stdoutFilePath, logger, Arguments.ErrorPatternsFile);
                 var result = await processManager.ExecuteCommandAsync(
                     engineBinary,
                     engineArgs,
                     log: new CallbackLog(m => logger.LogInformation(m)),
                     stdoutLog: new CallbackLog(logProcessor.Invoke),
-                    stderrLog: new CallbackLog(m => logger.LogError(m)),
+                    stderrLog: new CallbackLog(logProcessor.ProcessErrorMessage),
                     Arguments.Timeout);
                 
                 if (result.ExitCode != Arguments.ExpectedExitCode)
@@ -134,6 +135,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 }
                 else
                 {
+                    if (logProcessor.LineThatMatchedErrorPattern != null)
+                    {
+                        logger.LogError("Application exited with the expected exit code: {result.ExitCode}."
+                                        + $" But found a line matching an error pattern: {logProcessor.LineThatMatchedErrorPattern}");
+                        return ExitCode.APP_CRASH;
+                    }
+
                     logger.LogInformation("Application has finished with exit code: " + result.ExitCode);
                     return ExitCode.SUCCESS;
                 }

@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var stdoutFilePath = Path.Combine(Arguments.OutputDirectory, "wasm-console.log");
             File.Delete(stdoutFilePath);
 
-            var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath, stdoutFilePath, logger);
+            var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath, stdoutFilePath, logger, Arguments.ErrorPatternsFile);
             var runner = new WasmBrowserTestRunner(
                                 Arguments,
                                 PassThroughArguments,
@@ -68,6 +68,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 {
                     logger.LogError($"Application has finished with exit code {exitCode} but {Arguments.ExpectedExitCode} was expected");
                     return ExitCode.GENERAL_FAILURE;
+                }
+
+                if (logProcessor.LineThatMatchedErrorPattern != null)
+                {
+                    logger.LogError("Application exited with the expected exit code: {exitCode}."
+                                    + $" But found a line matching an error pattern: {logProcessor.LineThatMatchedErrorPattern}");
+                    return ExitCode.APP_CRASH;
                 }
 
                 return ExitCode.SUCCESS;

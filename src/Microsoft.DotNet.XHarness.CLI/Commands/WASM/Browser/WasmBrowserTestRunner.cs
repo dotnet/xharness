@@ -58,8 +58,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             {
                 var consolePumpTcs = new TaskCompletionSource<bool>();
                 ServerURLs serverURLs = await WebServer.Start(
-                    _arguments.AppPackagePath,
-                    _arguments.WebServerMiddlewarePathsAndTypes.Value,
+                    _arguments,
                     _logger,
                     socket => RunConsoleMessagesPump(socket, consolePumpTcs, cts.Token),
                     cts.Token);
@@ -238,18 +237,21 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 sb.Append($"arg=--debug");
 
 
-            foreach (var envVariable in _arguments.HttpWebServerEnvironmentVariables.Value)
+            foreach (var envVariable in _arguments.WebServerHttpEnvironmentVariables.Value)
             {
                 if (sb.Length > 0)
                     sb.Append('&');
                 sb.Append($"arg={HttpUtility.UrlEncode($"--setenv={envVariable}={serverURLs!.Http}")}");
             }
 
-            foreach (var envVariable in _arguments.HttpsWebServerEnvironmentVariables.Value)
+            if (_arguments.WebServerUseHttps)
             {
-                if (sb.Length > 0)
-                    sb.Append('&');
-                sb.Append($"arg={HttpUtility.UrlEncode($"--setenv={envVariable}={serverURLs!.Https}")}");
+                foreach (var envVariable in _arguments.WebServerHttpsEnvironmentVariables.Value)
+                {
+                    if (sb.Length > 0)
+                        sb.Append('&');
+                    sb.Append($"arg={HttpUtility.UrlEncode($"--setenv={envVariable}={serverURLs!.Https}")}");
+                }
             }
 
             foreach (var arg in _passThroughArguments)

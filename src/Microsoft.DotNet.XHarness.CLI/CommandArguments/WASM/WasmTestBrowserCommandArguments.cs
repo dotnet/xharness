@@ -10,13 +10,14 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {
-    internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments
+    internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebServerArguments
     {
         public AppPathArgument AppPackagePath { get; } = new();
         public BrowserArgument Browser { get; } = new();
         public BrowserLocationArgument BrowserLocation { get; } = new();
         public BrowserArguments BrowserArgs { get; } = new();
         public HTMLFileArgument HTMLFile { get; } = new("index.html");
+        public ErrorPatternsFileArgument ErrorPatternsFile { get; } = new();
         public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
         public OutputDirectoryArgument OutputDirectory { get; } = new();
         public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
@@ -24,9 +25,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public NoIncognitoArgument Incognito { get; } = new();
         public NoHeadlessArgument Headless { get; } = new();
         public QuitAppAtEndArgument QuitAppAtEnd { get; } = new();
+
         public WebServerMiddlewarePathsAndTypes WebServerMiddlewarePathsAndTypes { get; } = new();
-        public HttpWebServerEnvironmentVariables HttpWebServerEnvironmentVariables { get; } = new();
-        public HttpsWebServerEnvironmentVariables HttpsWebServerEnvironmentVariables { get; } = new();
+        public WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; } = new();
+        public WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; } = new();
+        public WebServerUseHttpsArguments WebServerUseHttps { get; } = new();
+        public WebServerUseCorsArguments WebServerUseCors { get; } = new();
 
         protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
@@ -35,6 +39,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             BrowserLocation,
             BrowserArgs,
             HTMLFile,
+            ErrorPatternsFile,
             ExpectedExitCode,
             OutputDirectory,
             Timeout,
@@ -43,8 +48,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             Headless,
             QuitAppAtEnd,
             WebServerMiddlewarePathsAndTypes,
-            HttpWebServerEnvironmentVariables,
-            HttpsWebServerEnvironmentVariables,
+            WebServerHttpEnvironmentVariables,
+            WebServerHttpsEnvironmentVariables,
+            WebServerUseHttps,
+            WebServerUseCors,
         };
 
         public override void Validate()
