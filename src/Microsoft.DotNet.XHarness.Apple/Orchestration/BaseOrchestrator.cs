@@ -60,6 +60,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected async Task<ExitCode> OrchestrateRun(
             TestTargetOs target,
             string? deviceName,
+            bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
             AppBundleInformation appBundleInfo,
@@ -128,7 +129,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     $"Looking for available {target.AsString()} {(target.Platform.IsSimulator() ? "simulators" : "devices")}. " +
                     $"Storing logs into {finderLogName}");
 
-                (device, companionDevice) = await _deviceFinder.FindDevice(target, deviceName, finderLog);
+                (device, companionDevice) = await _deviceFinder.FindDevice(target, deviceName, finderLog, includeWirelessDevices);
 
                 _logger.LogInformation($"Found {(target.Platform.IsSimulator() ? "simulator" : "physical")} device '{device.Name}'");
 

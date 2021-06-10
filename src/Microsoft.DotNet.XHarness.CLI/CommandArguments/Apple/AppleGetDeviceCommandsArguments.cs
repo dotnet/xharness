@@ -9,11 +9,15 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
     internal class AppleGetDeviceCommandsArguments : XHarnessCommandArguments
     {
+        public DeviceNameArgument DeviceName { get; } = new();
+        public IncludeWirelessArgument IncludeWireless { get; } = new();
         public XcodeArgument XcodeRoot { get; } = new();
         public MlaunchArgument MlaunchPath { get; } = new();
 
         protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
+            DeviceName,
+            IncludeWireless,
             XcodeRoot,
             MlaunchPath,
         };

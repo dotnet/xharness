@@ -9,6 +9,6 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 {
     public interface IDeviceLoader
     {
-        Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false);
+        Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false, bool includeWirelessDevices = true);
     }
 }

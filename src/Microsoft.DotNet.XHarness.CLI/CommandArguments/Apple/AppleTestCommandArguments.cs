@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public XcodeArgument XcodeRoot { get; } = new();
         public MlaunchArgument MlaunchPath { get; } = new();
         public DeviceNameArgument DeviceName { get; } = new();
+        public IncludeWirelessArgument IncludeWireless { get; } = new();
         public CommunicationChannelArgument CommunicationChannel { get; set; } = new();
         public XmlResultJargonArgument XmlResultJargon { get; set; } = new();
         public SingleMethodFilters SingleMethodFilters { get; } = new();
@@ -36,6 +37,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             XcodeRoot,
             MlaunchPath,
             DeviceName,
+            IncludeWireless,
             CommunicationChannel,
             XmlResultJargon,
             SingleMethodFilters,

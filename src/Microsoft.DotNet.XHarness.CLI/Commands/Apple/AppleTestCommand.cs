@@ -53,6 +53,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 Arguments.XmlResultJargon,
                 Arguments.SingleMethodFilters.Value,
                 Arguments.ClassMethodFilters.Value,
+                Arguments.IncludeWireless,
                 Arguments.ResetSimulator,
                 Arguments.EnableLldb,
                 Arguments.EnvironmentalVariables.Value,

@@ -17,6 +17,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public XcodeArgument XcodeRoot { get; } = new();
         public MlaunchArgument MlaunchPath { get; } = new();
         public DeviceNameArgument DeviceName { get; } = new();
+        public IncludeWirelessArgument IncludeWireless { get; } = new();
         public ResetSimulatorArgument ResetSimulator { get; } = new();
 
         protected override IEnumerable<Argument> GetArguments() => new Argument[]
@@ -25,6 +26,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             Target,
             OutputDirectory,
             DeviceName,
+            IncludeWireless,
             Timeout,
             XcodeRoot,
             MlaunchPath,
