@@ -40,7 +40,7 @@ Arguments:
         {
         }
 
-        protected override Task<ExitCode> InvokeInternal(ILogger logger)
+        protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
             logger.LogDebug($"Android Test command called: App = {Arguments.AppPackagePath}{Environment.NewLine}Instrumentation Name = {Arguments.InstrumentationName}");
             logger.LogDebug($"Output Directory:{Arguments.OutputDirectory}{Environment.NewLine}Timeout = {Arguments.Timeout.Value.TotalSeconds} seconds.");
@@ -49,7 +49,7 @@ Arguments:
             if (!File.Exists(Arguments.AppPackagePath))
             {
                 logger.LogCritical($"Couldn't find {Arguments.AppPackagePath}!");
-                return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
+                return ExitCode.PACKAGE_NOT_FOUND;
             }
             var runner = new AdbRunner(logger);
 
@@ -117,12 +117,12 @@ Arguments:
                 } 
 
                 runner.UninstallApk(apkPackageName);
-                return Task.FromResult(exitCode);
+                return exitCode;
             }
             catch (NoDeviceFoundException noDevice)
             {
                 logger.LogCritical(noDevice, noDevice.Message);
-                return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
+                return ExitCode.ADB_DEVICE_ENUMERATION_FAILURE;
             }
             catch (Exception toLog)
             {
@@ -136,7 +136,7 @@ Arguments:
                 }
             }
 
-            return Task.FromResult(ExitCode.GENERAL_FAILURE);
+            return ExitCode.GENERAL_FAILURE;
         }
     }
 }
