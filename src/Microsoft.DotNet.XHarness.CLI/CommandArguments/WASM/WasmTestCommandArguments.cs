@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public OutputDirectoryArgument OutputDirectory { get; } = new();
         public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
 
-        public WebServerMiddlewarePathsAndTypes WebServerMiddlewarePathsAndTypes { get; } = new();
+        public WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; } = new();
         public WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; } = new();
         public WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; } = new();
         public WebServerUseHttpsArguments WebServerUseHttps { get; } = new();

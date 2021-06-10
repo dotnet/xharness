@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public NoHeadlessArgument Headless { get; } = new();
         public QuitAppAtEndArgument QuitAppAtEnd { get; } = new();
 
-        public WebServerMiddlewarePathsAndTypes WebServerMiddlewarePathsAndTypes { get; } = new();
+        public WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; } = new();
         public WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; } = new();
         public WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; } = new();
         public WebServerUseHttpsArguments WebServerUseHttps { get; } = new();
