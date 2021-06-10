@@ -24,7 +24,7 @@
 
     <ItemGroup>
       <XHarnessAppFoldersToTest Include="$(TestAppDestinationDir)\$(TestAppBundleName)">
-        <TestTarget>$(TestTarget)</TestTarget>
+        <Targets>$(TestTarget)</Targets>
         <WorkItemTimeout>00:07:00</WorkItemTimeout>
         <TestTimeout>00:03:00</TestTimeout>
         <IncludesTestRunner>$(IncludesTestRunner)</IncludesTestRunner>
