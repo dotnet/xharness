@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.XHarness.Android
         private const string AdbEnvironmentVariableName = "ADB_EXE_PATH";
         private const string AdbDeviceFullInstallFailureMessage = "INSTALL_FAILED_INSUFFICIENT_STORAGE";
         private const string AdbInstallBrokenPipeError = "Failure calling service package: Broken pipe";
+        private const string AdbInstallException = "Exception occurred while executing 'install':";
         private const string AdbShellPropertyForBootCompletion = "sys.boot_completed";
         private readonly string _absoluteAdbExePath;
         private readonly ILogger _log;
@@ -213,6 +214,18 @@ namespace Microsoft.DotNet.XHarness.Android
             }
 
             var result = RunAdbCommand($"install \"{apkPath}\"");
+            result.ExitCode = 1;
+            result.StandardError = @"adb: failed to install C:\h\w\B67409AF\w\A8C9091E\e\System.Xml.Linq.Misc.Tests.apk: 
+                 Exception occurred while executing 'install':
+                 java.lang.NullPointerException: Attempt to invoke virtual method 'void android.content.pm.PackageManagerInternal.freeStorage(java.lang.String, long, int)' on a null object reference
+
+                     at com.android.server.StorageManagerService.allocateBytes(StorageManagerService.java:3901)
+
+                     at android.os.storage.StorageManager.allocateBytes(StorageManager.java:2278)
+
+                     at android.os.storage.StorageManager.allocateBytes(StorageManager.java:2335)
+
+                     at com.android.server.pm.PackageI";
 
             // Two possible retry scenarios, theoretically both can happen on the same run:
 
@@ -234,13 +247,16 @@ namespace Microsoft.DotNet.XHarness.Android
                 result = RunAdbCommand($"install \"{apkPath}\"");
             }
 
-            // 3. Installation timed out; restarting the ADB server helps
-            if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
+            // 3. Installation timed out; restarting the ADB server, reboot the device and give more time for installation
+            // installer might hang up so we need to clean it up and free memory
+            if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT || (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbInstallException)))
             {
-                _log.LogWarning($"Installation timed out; Will make one attempt to restart ADB server, then retry the install");
+                _log.LogWarning($"Installation timed out; Will make one attempt to restart ADB server and the device, then retry the install");
                 KillAdbServer();
                 StartAdbServer();
-                result = RunAdbCommand($"install \"{apkPath}\"");
+                RebootAndroidDevice();
+                WaitForDevice();
+                result = RunAdbCommand($"install \"{apkPath}\"", TimeSpan.FromMinutes(10));
             }
 
             if (result.ExitCode != 0)
