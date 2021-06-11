@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
     public class SimpleTcpListener : SimpleListener, ITunnelListener
@@ -24,8 +25,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         private readonly bool _useTcpTunnel = true;
         private readonly byte[] _buffer = new byte[16 * 1024];
 
-        private TcpListener _server;
-        private TcpClient _client;
+        private TcpListener? _server;
+        private TcpClient? _client;
 
         public TaskCompletionSource<bool> TunnelHoleThrough { get; } = new TaskCompletionSource<bool>();
 
@@ -76,6 +77,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         private void StartNetworkTcp()
         {
+            if (_server == null)
+            {
+                throw new InvalidOperationException("Initialize the listener first via " + nameof(this.InitializeAndGetPort));
+            }
+
             bool processed;
 
             try
@@ -86,13 +92,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     using (_client = _server.AcceptTcpClient())
                     {
                         _client.ReceiveBufferSize = _buffer.Length;
-                        processed = Processing();
+                        processed = Processing(_client);
                     }
                 } while (!_autoExit || !processed);
             }
             catch (Exception e)
             {
-                if (!(e is SocketException se) || se.SocketErrorCode != SocketError.Interrupted)
+                if (e is not SocketException se || se.SocketErrorCode != SocketError.Interrupted)
                 {
                     Log.WriteLine("[{0}] : {1}", DateTime.Now, e);
                 }
@@ -113,8 +119,13 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         private void StartTcpTunnel()
         {
             if (!TunnelHoleThrough.Task.Result)
-            { // do nothing until the tunnel is ready
+            {
                 throw new InvalidOperationException("Tcp tunnel could not be initialized.");
+            }
+
+            if (_server == null)
+            {
+                throw new InvalidOperationException("Initialize the listener first via " + nameof(this.InitializeAndGetPort));
             }
 
             bool processed;
@@ -159,7 +170,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                                 $"Increasing retry period from {(int)_retryPeriod.TotalMilliseconds} ms " +
                                 $"to {(int)_retryPeriodIncreased.TotalMilliseconds} ms");
 
-                        } else if ((++logCounter) % 100 == 0)
+                        }
+                        else if ((++logCounter) % 100 == 0)
                         {
                             Log.WriteLine($"TCP tunnel still has not connected");
                         }
@@ -171,12 +183,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 do
                 {
                     _client.ReceiveBufferSize = _buffer.Length;
-                    processed = Processing();
+                    processed = Processing(_client);
                 } while (!_autoExit || !processed);
             }
             catch (Exception e)
             {
-                if (!(e is SocketException se) || se.SocketErrorCode != SocketError.Interrupted)
+                if (e is not SocketException se || se.SocketErrorCode != SocketError.Interrupted)
                 {
                     Log.WriteLine($"Failed to read TCP data: {e}");
                 }
@@ -199,14 +211,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
         }
 
-        private bool Processing()
+        private bool Processing(TcpClient client)
         {
-            Connected(_client.Client.RemoteEndPoint.ToString());
+            Connected(client.Client.RemoteEndPoint.ToString());
 
             // now simply copy what we receive
             int i;
             int total = 0;
-            NetworkStream stream = _client.GetStream();
+            NetworkStream stream = client.GetStream();
             while ((i = stream.Read(_buffer, 0, _buffer.Length)) != 0)
             {
                 TestLog.Write(_buffer, 0, i);

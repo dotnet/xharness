@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 {
     public interface ISimpleListener : IDisposable
