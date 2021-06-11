@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
     {
         public virtual Encoding Encoding => Encoding.UTF8;
         public string? Description { get; set; }
-        public bool Timestamp { get; set; } = true;
+        public virtual bool Timestamp { get; set; } = true;
 
         protected Log(string? description = null)
         {
