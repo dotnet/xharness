@@ -34,6 +34,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> classMethodFilters,
             bool resetSimulator,
             bool enableLldb,
+            bool signalTestEnd,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken);
@@ -79,6 +80,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> classMethodFilters,
             bool resetSimulator,
             bool enableLldb,
+            bool signalTestEnd,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
@@ -94,6 +96,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     classMethodFilters,
                     environmentalVariables,
                     passthroughArguments,
+                    signalTestEnd,
                     cancellationToken);
 
             Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice) =>
@@ -110,6 +113,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     classMethodFilters,
                     environmentalVariables,
                     passthroughArguments,
+                    signalTestEnd,
                     cancellationToken);
 
             return OrchestrateRun(
@@ -136,18 +140,25 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> classMethodFilters,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
+            bool signalTestEnd,
             CancellationToken cancellationToken)
         {
-            // iOS 14+ devices doesn't allow local network access and won't work unless the user confirms a dialog on the screen
-            // https://developer.apple.com/forums/thread/663858
-            if (communicationChannel == CommunicationChannel.Network &&
-                target.Platform.ToRunMode() == RunMode.iOS &&
-                Version.TryParse(device.OSVersion, out var version) && version.Major >= 14)
+            if (target.Platform.ToRunMode() == RunMode.iOS && Version.TryParse(device.OSVersion, out var version) && version.Major >= 14)
             {
-                _logger.LogWarning(
-                    "Applications need user permission for communication over local network on iOS 14 and newer." + Environment.NewLine +
-                    "Either confirm a dialog on the device after the application launches or use the USB tunnel communication channel." + Environment.NewLine +
-                    "Test run might fail if permission is not granted. Permission is valid until app is uninstalled.");
+                // iOS 14+ devices do not allow local network access and won't work unless the user confirms a dialog on the screen
+                // https://developer.apple.com/forums/thread/663858
+                if (communicationChannel == CommunicationChannel.Network)
+                {
+                    _logger.LogWarning(
+                        "Applications need user permission for communication over local network on iOS 14 and newer." + Environment.NewLine +
+                        "Either confirm a dialog on the device after the application launches or use the USB tunnel communication channel." + Environment.NewLine +
+                        "Test run might fail if permission is not granted. Permission is valid until app is uninstalled.");
+                }
+
+                if (!signalTestEnd)
+                {
+                    _logger.LogWarning("XHarness cannot reliably detect when app quits on iOS 14 and newer. Consider using --signal-test-end");
+                }
             }
 
             AppTester appTester = GetAppTester(communicationChannel, target.Platform.IsSimulator());
@@ -164,6 +175,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 xmlResultJargon,
                 skippedMethods: singleMethodFilters?.ToArray(),
                 skippedTestClasses: classMethodFilters?.ToArray(),
+                signalTestEnd,
                 cancellationToken: cancellationToken);
 
             return ParseResult(testResult, resultMessage);
@@ -179,6 +191,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> classMethodFilters,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
+            bool signalTestEnd,
             CancellationToken cancellationToken)
         {
             AppTester appTester = GetAppTester(communicationChannel, TestTarget.MacCatalyst.IsSimulator());
@@ -192,6 +205,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 xmlResultJargon,
                 skippedMethods: singleMethodFilters?.ToArray(),
                 skippedTestClasses: classMethodFilters?.ToArray(),
+                signalTestEnd,
                 cancellationToken: cancellationToken);
 
             return ParseResult(testResult, resultMessage);
