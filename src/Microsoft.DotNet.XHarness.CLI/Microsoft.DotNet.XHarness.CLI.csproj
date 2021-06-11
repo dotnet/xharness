@@ -29,7 +29,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.Mlaunch" Version="13.0.0-21311.1.9acbbed1f6" />
+    <PackageReference Include="Microsoft.DotNet.Mlaunch" Version="13.0.0-21311.1.9acbbed1f6">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0-rc.1.20451.14" />
@@ -48,20 +50,20 @@
   </ItemGroup>
 
   <Target Name="DownloadAdb">
-    <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="true" />
-    <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />
-    <DownloadFile SourceUrl="$(MacOsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(MacOsAndroidSdkFileName)" SkipUnchangedFiles="True" />
-    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
-    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(LinuxAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/linux" OverwriteReadOnlyFiles="true" />
-    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(MacOsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/macos" OverwriteReadOnlyFiles="true" />
-    <RemoveDir Directories="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/systrace;$(IntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/systrace;$(IntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/systrace" />
+    <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="true" />
+    <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />
+    <DownloadFile SourceUrl="$(MacOsAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(MacOsAndroidSdkFileName)" SkipUnchangedFiles="True" />
+    <Unzip SourceFiles="$(BaseIntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
+    <Unzip SourceFiles="$(BaseIntermediateOutputPath)/android-tools/$(LinuxAndroidSdkFileName)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools-unzipped/linux" OverwriteReadOnlyFiles="true" />
+    <Unzip SourceFiles="$(BaseIntermediateOutputPath)/android-tools/$(MacOsAndroidSdkFileName)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools-unzipped/macos" OverwriteReadOnlyFiles="true" />
+    <RemoveDir Directories="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/systrace" />
   </Target>
 
   <Target Name="IncludeAdb" BeforeTargets="Build" DependsOnTargets="DownloadAdb">
     <ItemGroup>
-      <WindowsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
-      <LinuxAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />
-      <MacOsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/adb" />
+      <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
+      <LinuxAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />
+      <MacOsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/adb" />
       <Content Include="@(WindowsAdbFiles)">
         <Pack>true</Pack>
         <PackagePath>runtimes/any/native/adb/windows</PackagePath>
