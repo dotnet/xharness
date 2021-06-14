@@ -7,22 +7,13 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidGetStateCommand : XHarnessCommand<AndroidGetStateCommandArguments>
+    internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandArguments>
     {
         protected override string CommandUsage { get; } = "android state";
-
-        private const string CommandHelp = "Print information about the current machine, such as host machine info and device status";
-
-        public AndroidGetStateCommand() : base("state", false, CommandHelp)
-        {
-        }
-
-        protected override string CommandDescription { get; } = CommandHelp;
 
         protected override AndroidGetStateCommandArguments Arguments { get; } = new();
 
