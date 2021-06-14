@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     internal class CommunicationChannelArgument : Argument<CommunicationChannel>
     {
         public CommunicationChannelArgument()
-            : base("communication-channel=", "The communication channel to use to communicate with the default", CommunicationChannel.UsbTunnel)
+            : base("communication-channel=", "The communication channel to use to communicate with the device. Default set to USB tunnel", CommunicationChannel.UsbTunnel)
         {
         }
 
