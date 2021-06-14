@@ -35,11 +35,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var targetName = Arguments.Target.Value.AsString();
 
-            logger.LogInformation($"Preparing run for {targetName}{ (Arguments.DeviceName != null ? " targeting " + Arguments.DeviceName : null) }");
+            logger.LogInformation($"Preparing run for {targetName}{ (!string.IsNullOrEmpty(Arguments.DeviceName.Value) ? " targeting " + Arguments.DeviceName.Value : null) }");
 
             // Create main log file for the run
             using ILogs logs = new Logs(Arguments.OutputDirectory);
-            string logFileName = $"{Name}-{targetName}{(Arguments.DeviceName != null ? "-" + Arguments.DeviceName : null)}.log";
+            string logFileName = $"{Name}-{targetName}{(!string.IsNullOrEmpty(Arguments.DeviceName.Value) ? "-" + Arguments.DeviceName.Value : null)}.log";
             IFileBackedLog runLog = logs.Create(logFileName, LogType.ExecutionLog.ToString(), timestamp: true);
 
             // Pipe the execution log to the debug output of XHarness effectively making "-v" turn this on
