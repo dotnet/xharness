@@ -281,7 +281,17 @@ namespace Microsoft.DotNet.XHarness.Apple
                 systemLogs.Add(companionLog);
             }
 
-            // TODO: Utilize the testEngTag
+            IFileBackedLog testLog = _mainLog;
+            IFileBackedLog appOutputLog = testLog;
+            if (testEngTag != null)
+            {
+                var testEndDetected = new CancellationTokenSource();
+                var testEndScanner = new ScanLog(testEngTag, () => testEndDetected.Cancel());
+
+                // We need to check for test end tag since iOS 14+ doesn't send the pidDiedCallback event to mlaunch
+                appOutputLog = Log.CreateReadableAggregatedLog(appOutputLog, testEndScanner);
+                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, testEndDetected.Token).Token;
+            }
 
             await crashReporter.StartCaptureAsync();
 

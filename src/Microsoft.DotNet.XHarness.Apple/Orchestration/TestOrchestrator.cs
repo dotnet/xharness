@@ -146,21 +146,30 @@ namespace Microsoft.DotNet.XHarness.Apple
             bool signalTestEnd,
             CancellationToken cancellationToken)
         {
-            if (target.Platform.ToRunMode() == RunMode.iOS && Version.TryParse(device.OSVersion, out var version) && version.Major >= 14)
+            if (Version.TryParse(device.OSVersion, out var version) && version.Major >= 14)
             {
-                // iOS 14+ devices do not allow local network access and won't work unless the user confirms a dialog on the screen
-                // https://developer.apple.com/forums/thread/663858
-                if (communicationChannel == CommunicationChannel.Network)
+                var runMode = target.Platform.ToRunMode();
+                if (runMode == RunMode.iOS)
                 {
-                    _logger.LogWarning(
-                        "Applications need user permission for communication over local network on iOS 14 and newer." + Environment.NewLine +
-                        "Either confirm a dialog on the device after the application launches or use the USB tunnel communication channel." + Environment.NewLine +
-                        "Test run might fail if permission is not granted. Permission is valid until app is uninstalled.");
+                    // iOS 14+ devices do not allow local network access and won't work unless the user confirms a dialog on the screen
+                    // https://developer.apple.com/forums/thread/663858
+                    if (communicationChannel == CommunicationChannel.Network)
+                    {
+                        _logger.LogWarning(
+                            "Applications need user permission for communication over local network on iOS 14 and newer." + Environment.NewLine +
+                            "Either confirm a dialog on the device after the application launches or use the USB tunnel communication channel." + Environment.NewLine +
+                            "Test run might fail if permission is not granted. Permission is valid until app is uninstalled.");
+                    }
+
+                    if (!signalTestEnd)
+                    {
+                        _logger.LogWarning("XHarness cannot reliably detect when app quits on iOS 14 and newer. Consider using --signal-test-end");
+                    }
                 }
 
-                if (!signalTestEnd)
+                if (signalTestEnd && (runMode == RunMode.Sim64 || runMode == RunMode.Sim32))
                 {
-                    _logger.LogWarning("XHarness cannot reliably detect when app quits on iOS 14 and newer. Consider using --signal-test-end");
+                    _logger.LogWarning("The --signal-test-end option is recommended for device tests and is not required for simulators.");
                 }
             }
 
