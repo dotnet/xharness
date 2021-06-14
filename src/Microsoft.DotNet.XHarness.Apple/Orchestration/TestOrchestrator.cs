@@ -161,6 +161,8 @@ namespace Microsoft.DotNet.XHarness.Apple
                 }
             }
 
+            _logger.LogInformation("Starting test run for " + appBundleInfo.BundleIdentifier + "..");
+
             AppTester appTester = GetAppTester(communicationChannel, target.Platform.IsSimulator());
 
             (TestExecutingResult testResult, string resultMessage) = await appTester.TestApp(
