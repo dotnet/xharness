@@ -85,6 +85,8 @@ Arguments:
                 if (exitCode == ExitCode.SUCCESS)
                 {
                     ServerURLs? serverURLs = null;
+                    Dictionary<string, string> instrumentationArgs = _arguments.InstrumentationArguments;
+                    // logger.LogInformation($"Set up instrumentationArgs");
                     if (_arguments.WebServerMiddlewarePathsAndTypes.Count > 0)
                     {
                         serverURLs = await WebServer.Start(
@@ -95,19 +97,19 @@ Arguments:
 
                         foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttp)
                         {
-                            _arguments.InstrumentationArguments.Add(envVariable, serverURLs!.Http);
+                            instrumentationArgs.Add(envVariable, serverURLs!.Http);
                         }
 
                         foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
                         {
-                            _arguments.InstrumentationArguments.Add(envVariable, serverURLs!.Https);
+                            instrumentationArgs.Add(envVariable, serverURLs!.Https);
                         }
                     }
                     exitCode = AndroidRunCommand.InvokeHelper(
                         logger: logger,
                         apkPackageName: apkPackageName,
                         instrumentationName: Arguments.InstrumentationName,
-                        instrumentationArguments: Arguments.InstrumentationArguments,
+                        instrumentationArguments: instrumentationArgs,
                         outputDirectory: Arguments.OutputDirectory,
                         deviceOutputFolder: Arguments.DeviceOutputFolder,
                         timeout: Arguments.Timeout,
