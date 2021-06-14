@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
     internal class BundleIdentifierArgument : RequiredStringArgument
     {
-        public BundleIdentifierArgument() : base("app|a=", "Bundle identifier of the app that should be uninstalled")
+        public BundleIdentifierArgument() : base("app|a=", "Bundle identifier of the installed application")
         {
         }
     }
