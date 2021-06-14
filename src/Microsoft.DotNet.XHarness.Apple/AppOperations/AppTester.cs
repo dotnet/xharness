@@ -135,17 +135,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             var runMode = target.Platform.ToRunMode();
             var isSimulator = target.Platform.IsSimulator();
 
-            var testLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
-            var testCompleted = new CancellationTokenSource();
-
-            string? testEngTag = null;
-            if (signalTestEnd)
-            {
-                testEngTag = _helpers.GenerateGuid().ToString();
-                testLog = Log.CreateReadableAggregatedLog(testLog, new ScanLog(testEngTag, () => testCompleted.Cancel()));
-            }
-
-            using IFileBackedLog deviceListenerLog = testLog;
+            using var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
 
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 runMode,
@@ -154,6 +144,12 @@ namespace Microsoft.DotNet.XHarness.Apple
                 isSimulator: isSimulator,
                 autoExit: true,
                 xmlOutput: true); // cli always uses xml
+
+            string? testEngTag = null;
+            if (signalTestEnd)
+            {
+                testEngTag = _helpers.GenerateGuid().ToString();
+            }
 
             using (deviceListener)
             {
@@ -184,7 +180,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{device.Name}' ***");
 
-                using var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken, testCompleted.Token);
+                using var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken);
 
                 if (isSimulator)
                 {
@@ -208,6 +204,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                         (ISimulatorDevice)device,
                         companionDevice as ISimulatorDevice,
                         timeout,
+                        testEngTag,
                         combinedCancellationToken.Token);
                 }
                 else
@@ -233,6 +230,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                         deviceListener,
                         device,
                         timeout,
+                        testEngTag,
                         extraEnvVariables,
                         combinedCancellationToken.Token);
                 }
@@ -249,6 +247,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             ISimulatorDevice simulator,
             ISimulatorDevice? companionSimulator,
             TimeSpan timeout,
+            string? testEngTag,
             CancellationToken cancellationToken)
         {
             _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
@@ -282,6 +281,8 @@ namespace Microsoft.DotNet.XHarness.Apple
                 systemLogs.Add(companionLog);
             }
 
+            // TODO: Utilize the testEngTag
+
             await crashReporter.StartCaptureAsync();
 
             _mainLog.WriteLine("Starting test run");
@@ -297,6 +298,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             ISimpleListener deviceListener,
             IDevice device,
             TimeSpan timeout,
+            string? testEngTag,
             IEnumerable<(string, string)> extraEnvVariables,
             CancellationToken cancellationToken)
         {
@@ -325,8 +327,23 @@ namespace Microsoft.DotNet.XHarness.Apple
                 var envVars = new Dictionary<string, string>();
                 AddExtraEnvVars(envVars, extraEnvVariables);
 
-                // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit).
-                var aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
+                IFileBackedLog aggregatedLog;
+                if (testEngTag != null)
+                {
+                    var testEndDetected = new CancellationTokenSource();
+                    var testEndScanner = new ScanLog(testEngTag, () => testEndDetected.Cancel());
+
+                    // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit)
+                    // We need to check for test end tag since iOS 14+ doesn't send the pidDiedCallback event to mlaunch
+                    aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog, testEndScanner);
+                    cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, testEndDetected.Token).Token;
+                }
+                else
+                {
+                    // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit)
+                    aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
+                }
+
                 var result = await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     aggregatedLog,
