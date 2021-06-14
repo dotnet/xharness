@@ -327,26 +327,24 @@ namespace Microsoft.DotNet.XHarness.Apple
                 var envVars = new Dictionary<string, string>();
                 AddExtraEnvVars(envVars, extraEnvVariables);
 
-                IFileBackedLog aggregatedLog;
+                // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit)
+                IFileBackedLog aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
+                IFileBackedLog appOutputLog = aggregatedLog;
                 if (testEngTag != null)
                 {
                     var testEndDetected = new CancellationTokenSource();
                     var testEndScanner = new ScanLog(testEngTag, () => testEndDetected.Cancel());
 
-                    // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit)
                     // We need to check for test end tag since iOS 14+ doesn't send the pidDiedCallback event to mlaunch
-                    aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog, testEndScanner);
+                    appOutputLog = Log.CreateReadableAggregatedLog(appOutputLog, testEndScanner);
                     cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, testEndDetected.Token).Token;
-                }
-                else
-                {
-                    // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit)
-                    aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
                 }
 
                 var result = await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     aggregatedLog,
+                    appOutputLog,
+                    appOutputLog,
                     timeout,
                     envVars,
                     cancellationToken: cancellationToken);
