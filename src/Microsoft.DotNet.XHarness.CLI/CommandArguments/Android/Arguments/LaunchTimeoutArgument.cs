@@ -8,7 +8,7 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
     /// <summary>
-    /// Time to wait for boot completion. Defaults to 5 minutes.
+    /// Time to wait for boot completion.
     /// </summary>
     internal class LaunchTimeoutArgument : TimeSpanArgument
     {
