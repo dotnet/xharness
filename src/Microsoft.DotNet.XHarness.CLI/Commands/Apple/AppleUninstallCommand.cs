@@ -32,8 +32,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                     Arguments.Target,
                     Arguments.DeviceName,
                     Arguments.Timeout,
-                    false,
-                    false,
+                    resetSimulator: false,
+                    enableLldb: false,
                     cancellationToken);
     }
 }

@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 Arguments.AppBundlePath,
                 Arguments.Timeout,
                 Arguments.ResetSimulator,
-                false,
+                enableLldb: false,
                 cancellationToken);
         }
     }
