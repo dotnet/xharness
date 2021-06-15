@@ -82,6 +82,7 @@
     </ItemGroup>
   </Target>
 
+  <!-- The ExtractMlaunch target comes from the Mlaunch NuGet package and places files in the obj/ dir -->
   <Target Name="IncludeMlaunch" BeforeTargets="Build" DependsOnTargets="ExtractMlaunch">
     <ItemGroup>
       <Content Include="$(BaseIntermediateOutputPath)/mlaunch/**/*.*">
