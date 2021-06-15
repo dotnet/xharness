@@ -85,6 +85,11 @@ namespace Microsoft.DotNet.XHarness.Apple
                 }
             }
 
+            if (includeWirelessDevices && target.Platform.IsSimulator())
+            {
+                _logger.LogWarning("Including wireless devices while targeting a simulator has no effect");
+            }
+
             ExitCode exitCode;
             IDevice device;
             IDevice? companionDevice;
