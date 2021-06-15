@@ -238,17 +238,20 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 
     public abstract class SwitchArgument : Argument<bool>
     {
+        private readonly bool _defaultValue;
+
         public SwitchArgument(string prototype, string description, bool defaultValue)
             : base(prototype, description)
         {
             Value = defaultValue;
+            _defaultValue = defaultValue;
         }
 
         public override void Action(string argumentValue)
         {
             if (string.IsNullOrEmpty(argumentValue))
             {
-                Value = !Value;
+                Value = !_defaultValue;
             }
             else
             {
