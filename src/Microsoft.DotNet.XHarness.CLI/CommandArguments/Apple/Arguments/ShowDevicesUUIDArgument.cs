@@ -4,9 +4,13 @@
 
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal abstract class GetStateCommandArguments : XHarnessCommandArguments
+    internal class ShowDevicesUUIDArgument : SwitchArgument
     {
+        public ShowDevicesUUIDArgument()
+            : base("include-devices-uuid", "Include the devices UUID. Defaults to true", true)
+        {
+        }
     }
 }

@@ -3,44 +3,39 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using Mono.Options;
+using System.Collections.Generic;
+using Microsoft.DotNet.XHarness.Common.CLI;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal class AppleRunCommandArguments : AppleAppRunArguments
+    internal class AppleRunCommandArguments : XHarnessCommandArguments, IAppleAppRunArguments
     {
-        /// <summary>
-        /// Expected result code the app should return. Defaults to 0.
-        /// </summary>
-        public int ExpectedExitCode { get; set; } = 0;
+        public AppPathArgument AppBundlePath { get; } = new();
+        public TargetArgument Target { get; } = new();
+        public OutputDirectoryArgument OutputDirectory { get; } = new();
+        public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
+        public XcodeArgument XcodeRoot { get; } = new();
+        public MlaunchArgument MlaunchPath { get; } = new();
+        public DeviceNameArgument DeviceName { get; } = new();
+        public EnableLldbArgument EnableLldb { get; } = new();
+        public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
+        public ResetSimulatorArgument ResetSimulator { get; } = new();
+        public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
 
-        protected override OptionSet GetCommandOptions()
+        protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
-            var options = base.GetCommandOptions();
-
-            var runOptions = new OptionSet
-            {
-                {
-                    "expected-exit-code=", "If specified, sets the expected exit code of the app that is being run.",
-                    v =>
-                    {
-                        if (int.TryParse(v, out var number))
-                        {
-                            ExpectedExitCode = number;
-                            return;
-                        }
-
-                        throw new ArgumentException("expected-exit-code must be an integer");
-                    }
-                },
-            };
-
-            foreach (var option in runOptions)
-            {
-                options.Add(option);
-            }
-
-            return options;
-        }
+            AppBundlePath,
+            Target,
+            OutputDirectory,
+            DeviceName,
+            Timeout,
+            ExpectedExitCode,
+            XcodeRoot,
+            MlaunchPath,
+            EnableLldb,
+            EnvironmentalVariables,
+            ResetSimulator,
+        };
     }
 }

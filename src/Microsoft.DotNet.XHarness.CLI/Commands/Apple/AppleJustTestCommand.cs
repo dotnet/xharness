@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected override string CommandUsage { get; } = "apple just-test --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
-        protected override AppleJustTestCommandArguments AppleAppArguments { get; } = new();
+        protected override AppleJustTestCommandArguments Arguments { get; } = new();
 
         public AppleJustTestCommand(IServiceCollection services) : base("just-test", false, services, CommandHelp)
         {
@@ -29,18 +29,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 .BuildServiceProvider()
                 .GetRequiredService<IJustTestOrchestrator>()
                 .OrchestrateTest(
-                    AppBundleInformation.FromBundleId(AppleAppArguments.BundleIdentifier),
-                    AppleAppArguments.Target,
-                    AppleAppArguments.DeviceName,
-                    AppleAppArguments.Timeout,
-                    AppleAppArguments.LaunchTimeout,
-                    AppleAppArguments.CommunicationChannel,
-                    AppleAppArguments.XmlResultJargon,
-                    AppleAppArguments.SingleMethodFilters,
-                    AppleAppArguments.ClassMethodFilters,
-                    AppleAppArguments.ResetSimulator,
-                    AppleAppArguments.EnableLldb,
-                    AppleAppArguments.EnvironmentalVariables,
+                    AppBundleInformation.FromBundleId(Arguments.BundleIdentifier.Value),
+                    Arguments.Target,
+                    Arguments.DeviceName,
+                    Arguments.Timeout,
+                    Arguments.LaunchTimeout,
+                    Arguments.CommunicationChannel,
+                    Arguments.XmlResultJargon,
+                    Arguments.SingleMethodFilters.Value,
+                    Arguments.ClassMethodFilters.Value,
+                    Arguments.ResetSimulator,
+                    Arguments.EnableLldb,
+                    Arguments.EnvironmentalVariables.Value,
                     PassThroughArguments,
                     cancellationToken);
     }

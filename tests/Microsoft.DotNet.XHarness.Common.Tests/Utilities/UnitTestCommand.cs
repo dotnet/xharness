@@ -12,7 +12,15 @@ using Microsoft.Extensions.Logging;
 #nullable enable
 namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
 {
-    internal class UnitTestCommand<TArguments> : XHarnessCommand where TArguments : XHarnessCommandArguments
+    internal class UnitTestCommand
+    {
+        public static UnitTestCommand<UnitTestArguments<TArgument>> FromArgument<TArgument>(TArgument arg) where TArgument : Argument
+        {
+            return new UnitTestCommand<UnitTestArguments<TArgument>>(new UnitTestArguments<TArgument>(arg));
+        }
+    }
+
+    internal class UnitTestCommand<TArguments> : XHarnessCommand<TArguments> where TArguments : XHarnessCommandArguments
     {
         protected override string CommandUsage => "test";
 
@@ -25,9 +33,9 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
         public IEnumerable<string> ExtraArgs => ExtraArguments;
 
         private readonly TArguments _arguments;
-        protected override XHarnessCommandArguments Arguments => _arguments;
+        protected override TArguments Arguments => _arguments;
 
-        public UnitTestCommand(TArguments arguments, bool allowExtraArgs) : base("unit-test", allowExtraArgs)
+        public UnitTestCommand(TArguments arguments, bool allowExtraArgs = false) : base("unit-test", allowExtraArgs)
         {
             _arguments = arguments;
         }

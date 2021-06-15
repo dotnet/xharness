@@ -4,159 +4,37 @@
 
 using System;
 using System.Collections.Generic;
-using Mono.Options;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
-
-    internal enum WifiStatus
+    internal class AndroidTestCommandArguments : XHarnessCommandArguments
     {
-        /// <summary>
-        /// Not checked by default.
-        /// </summary>
-        Unknown,
-        Enable,
-        Disable,
-    }
-    internal class AndroidTestCommandArguments : TestCommandArguments
-    {
-        private string? _packageName;
-        private readonly List<string> _deviceArchitecture = new();
+        public AppPathArgument AppPackagePath { get; } = new();
+        public PackageNameArgument PackageName { get; } = new();
+        public OutputDirectoryArgument OutputDirectory { get; } = new();
+        public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
+        public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(5));
+        public DeviceArchitectureArgument DeviceArchitecture { get; } = new();
+        public InstrumentationNameArgument InstrumentationName { get; } = new();
+        public InstrumentationArguments InstrumentationArguments { get; } = new();
+        public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
+        public DeviceOutputFolderArgument DeviceOutputFolder { get; } = new();
+        public WifiArgument Wifi { get; } = new();
 
-        /// <summary>
-        /// If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.
-        /// If a given package has multiple instrumentations, failing to specify this may cause execution failure.
-        /// </summary>
-        public string? InstrumentationName { get; set; }
-
-        public string PackageName
+        protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
-            get => _packageName ?? throw new ArgumentException("Package name not specified");
-            set => _packageName = value;
-        }
-
-        /// <summary>
-        /// If specified, attempt to run on a compatible attached device, failing if unavailable.
-        /// If not specified, we will open the apk using Zip APIs and guess what's usable based off folders found in under /lib
-        /// </summary>
-        public IEnumerable<string> DeviceArchitecture => _deviceArchitecture;
-
-        /// <summary>
-        /// Folder to copy off for output of executing the specified APK
-        /// </summary>
-        public string? DeviceOutputFolder { get; set; }
-
-        /// <summary>
-        /// Passing these arguments as testing options to a test runner
-        /// </summary>
-        public Dictionary<string, string> InstrumentationArguments { get; } = new Dictionary<string, string>();
-
-        /// <summary>
-        /// Exit code returned by the instrumentation for a successful run. Defaults to 0.
-        /// </summary>
-        public int ExpectedExitCode { get; set; } = (int)Common.CLI.ExitCode.SUCCESS;
-
-        /// <summary>
-        /// Time to wait for boot completion. Defaults to 5 minutes.
-        /// </summary>
-        public TimeSpan LaunchTimeout { get; set; } = TimeSpan.FromMinutes(5);
-
-        /// <summary>
-        /// Switch on/off wifi on the device.
-        /// </summary>
-        public WifiStatus Wifi { get; set; } = WifiStatus.Unknown;
-
-        protected override OptionSet GetTestCommandOptions() => new()
-        {
-            {
-                "device-arch=",
-                "If specified, forces running on a device with given architecture (x86, x86_64, arm64-v8a or armeabi-v7a). Otherwise inferred from supplied APK. " +
-                "Can be used more than once.",
-                v => _deviceArchitecture.Add(v)
-            },
-            { "device-out-folder=|dev-out=", "If specified, copy this folder recursively off the device to the path specified by the output directory",
-                v => DeviceOutputFolder = RootPath(v)
-            },
-            { "instrumentation:|i:", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK.",
-                v => InstrumentationName = v
-            },
-            { "expected-exit-code=", "If specified, sets the expected exit code for a successful instrumentation run.",
-                v => {
-                    if (int.TryParse(v, out var number))
-                    {
-                        ExpectedExitCode = number;
-                        return;
-                    }
-
-                    throw new ArgumentException("expected-exit-code must be an integer");
-                }
-            },
-            {
-                "launch-timeout=|lt=", "Time span in the form of \"00:00:00\" or number of seconds to wait for the device to boot to complete",
-                v =>
-                {
-                    if (int.TryParse(v, out var timeout))
-                    {
-                        LaunchTimeout = TimeSpan.FromSeconds(timeout);
-                        return;
-                    }
-
-                    if (TimeSpan.TryParse(v, out var timespan))
-                    {
-                        LaunchTimeout = timespan;
-                        return;
-                    }
-
-                    throw new ArgumentException("launch-timeout must be an integer - a number of seconds, or a timespan (00:30:00)");
-                }
-            },
-            { "package-name=|p=", "Package name contained within the supplied APK",
-                v => PackageName = v
-            },
-            {
-                "wifi:", "Enable/disable WiFi. WiFi state is ignored by default. If passed without value, 'enable' is assumed.",
-                v => Wifi = string.IsNullOrEmpty(v) ? WifiStatus.Enable : ParseArgument<WifiStatus>("wifi", v, invalidValues: WifiStatus.Unknown)
-            },
-            { "arg=", "Argument to pass to the instrumentation, in form key=value", v =>
-                {
-                    var argPair = v.Split('=');
-
-                    if (argPair.Length != 2)
-                    {
-                        throw new ArgumentException($"The --arg argument expects 'key=value' format. Invalid format found in '{v}'");
-                    }
-
-                    if (InstrumentationArguments.ContainsKey(argPair[0]))
-                    {
-                        throw new ArgumentException($"Duplicate arg name '{argPair[0]}' found");
-                    }
-
-                    InstrumentationArguments.Add(argPair[0].Trim(), argPair[1].Trim());
-                }
-            },
+            AppPackagePath,
+            PackageName,
+            OutputDirectory,
+            Timeout,
+            LaunchTimeout,
+            DeviceArchitecture,
+            InstrumentationName,
+            InstrumentationArguments,
+            ExpectedExitCode,
+            DeviceOutputFolder,
+            Wifi,
         };
-
-        public override void Validate()
-        {
-            base.Validate();
-
-            foreach (var archName in _deviceArchitecture ?? throw new ArgumentException("architecture cannot be empty"))
-            {
-                try
-                {
-                    AndroidArchitectureHelper.ParseAsAndroidArchitecture(archName);
-                }
-                catch (ArgumentOutOfRangeException)
-                {
-                    throw new ArgumentException(
-                        $"Failed to parse architecture '{archName}'. Available architectures are:" +
-                        GetAllowedValues<AndroidArchitecture>(t => t.AsString()));
-                }
-            }
-
-            // Validate this field
-            _ = PackageName;
-            _ = AppPackagePath;
-        }
     }
 }

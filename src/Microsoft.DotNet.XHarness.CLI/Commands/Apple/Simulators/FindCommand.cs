@@ -20,8 +20,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
         protected override string CommandDescription => CommandHelp + Environment.NewLine + Environment.NewLine + SimulatorHelpString;
 
-        private readonly FindCommandArguments _arguments = new();
-        protected override SimulatorsCommandArguments SimulatorsArguments => _arguments;
+        protected override FindCommandArguments Arguments { get; } = new();
 
         public FindCommand() : base(CommandName, true, CommandHelp)
         {
@@ -44,7 +43,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
                 // This output is actually matched in some tools, so please don't change
                 var message = "Unknown simulators: " + string.Join(", ", unknownSimulators);
 
-                if (_arguments.Verbosity == LogLevel.Debug)
+                if (Arguments.Verbosity == LogLevel.Debug)
                 {
                     Logger.LogDebug(message);
 
@@ -64,7 +63,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
                 if (installedVersion == null && searchedSimulators.Any(identifier => simulator.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
                 {
-                    if (_arguments.Verbosity == LogLevel.Debug)
+                    if (Arguments.Verbosity == LogLevel.Debug)
                     {
                         Logger.LogDebug($"The simulator '{simulator.Name}' is not installed");
 

@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
     {
         private const string CommandHelp = "Installs a given iOS/tvOS/watchOS/MacCatalyst application bundle in a target device/simulator";
 
-        protected override AppleInstallCommandArguments AppleAppArguments { get; } = new();
+        protected override AppleInstallCommandArguments Arguments { get; } = new();
 
         protected override string CommandUsage { get; } = "apple install --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
             var serviceProvider = Services.BuildServiceProvider();
 
-            if (AppleAppArguments.Target.Platform == TestTarget.MacCatalyst)
+            if (Arguments.Target.Value.Platform == TestTarget.MacCatalyst)
             {
                 var logger = serviceProvider.GetRequiredService<Extensions.Logging.ILogger>();
                 logger.LogError("Cannot install application on MacCatalyst");
@@ -39,12 +39,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var installOrchestrator = serviceProvider.GetRequiredService<IInstallOrchestrator>();
             return installOrchestrator.OrchestrateInstall(
-                AppleAppArguments.Target,
-                AppleAppArguments.DeviceName,
-                AppleAppArguments.AppPackagePath,
-                AppleAppArguments.Timeout,
-                AppleAppArguments.ResetSimulator,
-                AppleAppArguments.EnableLldb,
+                Arguments.Target,
+                Arguments.DeviceName,
+                Arguments.AppBundlePath,
+                Arguments.Timeout,
+                Arguments.ResetSimulator,
+                enableLldb: false,
                 cancellationToken);
         }
     }

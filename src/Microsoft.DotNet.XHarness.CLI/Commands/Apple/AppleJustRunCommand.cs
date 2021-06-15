@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected override string CommandUsage { get; } = "apple just-run --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
         protected override string CommandDescription { get; } = CommandHelp;
-        protected override AppleJustRunCommandArguments AppleAppArguments { get; } = new();
+        protected override AppleJustRunCommandArguments Arguments { get; } = new();
 
         public AppleJustRunCommand(IServiceCollection services) : base("just-run", false, services, CommandHelp)
         {
@@ -30,14 +30,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 .BuildServiceProvider()
                 .GetRequiredService<IJustRunOrchestrator>()
                 .OrchestrateRun(
-                    AppBundleInformation.FromBundleId(AppleAppArguments.BundleIdentifier),
-                    AppleAppArguments.Target,
-                    AppleAppArguments.DeviceName,
-                    AppleAppArguments.Timeout,
-                    AppleAppArguments.ExpectedExitCode,
-                    AppleAppArguments.ResetSimulator,
-                    AppleAppArguments.EnableLldb,
-                    AppleAppArguments.EnvironmentalVariables,
+                    AppBundleInformation.FromBundleId(Arguments.BundleIdentifier),
+                    Arguments.Target,
+                    Arguments.DeviceName,
+                    Arguments.Timeout,
+                    Arguments.ExpectedExitCode,
+                    Arguments.ResetSimulator,
+                    Arguments.EnableLldb,
+                    Arguments.EnvironmentalVariables.Value,
                     PassThroughArguments,
                     cancellationToken);
     }

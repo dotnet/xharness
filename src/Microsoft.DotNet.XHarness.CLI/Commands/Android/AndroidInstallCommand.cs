@@ -6,18 +6,14 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidInstallCommand : XHarnessCommand
+    internal class AndroidInstallCommand : XHarnessCommand<AndroidInstallCommandArguments>
     {
-
-        private readonly AndroidInstallCommandArguments _arguments = new();
-
-        protected override XHarnessCommandArguments Arguments => _arguments;
+        protected override AndroidInstallCommandArguments Arguments { get; } = new();
 
         protected override string CommandUsage { get; } = "android install --package-name=... --app=... [OPTIONS]";
 
@@ -34,12 +30,12 @@ Arguments:
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            logger.LogDebug($"Android Install command called: App = {_arguments.AppPackagePath}");
-            logger.LogDebug($"Timeout = {_arguments.Timeout.TotalSeconds} seconds.");
+            logger.LogDebug($"Android Install command called: App = {Arguments.AppPackagePath}");
+            logger.LogDebug($"Timeout = {Arguments.Timeout.Value.TotalSeconds} seconds.");
 
-            if (!File.Exists(_arguments.AppPackagePath))
+            if (!File.Exists(Arguments.AppPackagePath))
             {
-                logger.LogCritical($"Couldn't find {_arguments.AppPackagePath}!");
+                logger.LogCritical($"Couldn't find {Arguments.AppPackagePath}!");
                 return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
             }
 
@@ -47,17 +43,17 @@ Arguments:
 
             List<string> apkRequiredArchitecture = new();
 
-            if (string.IsNullOrEmpty(_arguments.DeviceId))
+            if (string.IsNullOrEmpty(Arguments.DeviceId))
             {
                 // trying to choose suitable device
-                if (_arguments.DeviceArchitecture.Any())
+                if (Arguments.DeviceArchitecture.Value.Any())
                 {
-                    apkRequiredArchitecture = _arguments.DeviceArchitecture.ToList();
+                    apkRequiredArchitecture = Arguments.DeviceArchitecture.Value.ToList();
                     logger.LogInformation($"Will attempt to run device on specified architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
                 }
                 else
                 {
-                    apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(_arguments.AppPackagePath);
+                    apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(Arguments.AppPackagePath);
                     logger.LogInformation($"Will attempt to run device on detected architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
                 }
             }
@@ -67,11 +63,11 @@ Arguments:
             {
                 return Task.FromResult(InvokeHelper(
                 logger: logger,
-                apkPackageName: _arguments.PackageName,
-                appPackagePath: _arguments.AppPackagePath,
+                apkPackageName: Arguments.PackageName,
+                appPackagePath: Arguments.AppPackagePath,
                 apkRequiredArchitecture: apkRequiredArchitecture,
-                deviceId: _arguments.DeviceId,
-                bootTimeoutSeconds: _arguments.LaunchTimeout,
+                deviceId: Arguments.DeviceId,
+                bootTimeoutSeconds: Arguments.LaunchTimeout,
                 runner: runner));
             }
             catch (NoDeviceFoundException noDevice)

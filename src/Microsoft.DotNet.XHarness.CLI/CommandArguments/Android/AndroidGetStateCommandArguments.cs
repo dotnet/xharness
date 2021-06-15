@@ -2,16 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Mono.Options;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
-    internal class AndroidGetStateCommandArguments : GetStateCommandArguments
+    internal class AndroidGetStateCommandArguments : XHarnessCommandArguments
     {
-        protected override OptionSet GetCommandOptions() => new();
-
-        public override void Validate()
-        {
-        }
+        protected override IEnumerable<Argument> GetArguments() => Enumerable.Empty<Argument>();
     }
 }

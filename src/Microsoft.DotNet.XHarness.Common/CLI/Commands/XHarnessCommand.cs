@@ -23,8 +23,6 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         /// </summary>
         public const string VerbatimArgumentPlaceholder = "[[%verbatim_argument%]]";
 
-        private readonly bool _allowsExtraArgs;
-
         /// <summary>
         /// Will be printed in the header when help is invoked.
         /// Example: 'ios package [OPTIONS]'
@@ -37,7 +35,26 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         /// </summary>
         protected abstract string CommandDescription { get; }
 
-        protected abstract XHarnessCommandArguments Arguments { get; }
+        /// <summary>
+        /// Service collection used to create dependencies.
+        /// </summary>
+        protected IServiceCollection Services { get; set; } = new ServiceCollection();
+
+        protected XHarnessCommand(string name, string? help = null) : base(name, help)
+        {
+        }
+    }
+
+    public abstract class XHarnessCommand<T> : XHarnessCommand where T : IXHarnessCommandArguments
+    {
+        private readonly bool _allowsExtraArgs;
+
+        protected abstract T Arguments { get; }
+
+        protected XHarnessCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, help)
+        {
+            _allowsExtraArgs = allowsExtraArgs;
+        }
 
         /// <summary>
         /// Contains all arguments after the verbatim "--" argument.
@@ -53,19 +70,15 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         /// </summary>
         protected IEnumerable<string> ExtraArguments { get; private set; } = Enumerable.Empty<string>();
 
-        /// <summary>
-        /// Service collection used to create dependencies.
-        /// </summary>
-        protected IServiceCollection Services { get; set; } = new ServiceCollection();
-
-        protected XHarnessCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, help)
-        {
-            _allowsExtraArgs = allowsExtraArgs;
-        }
-
         public sealed override int Invoke(IEnumerable<string> arguments)
         {
-            OptionSet options = Arguments.GetOptions();
+            var commandArguments = Arguments.GetCommandArguments();
+            var options = new OptionSet();
+
+            foreach (var arg in commandArguments)
+            {
+                options.Add(arg.Prototype, arg.Description, arg.Action);
+            }
 
             using var parseFactory = CreateLoggerFactory(Arguments.Verbosity);
             var parseLogger = parseFactory.CreateLogger(Name);

@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 #nullable enable
-
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
     public class WasmTestMessagesProcessor

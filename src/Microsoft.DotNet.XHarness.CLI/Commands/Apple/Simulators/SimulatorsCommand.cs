@@ -12,7 +12,6 @@ using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -22,7 +21,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 {
-    internal abstract class SimulatorsCommand : XHarnessCommand
+    internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArguments>
     {
         private const string MAJOR_VERSION_PLACEHOLDER = "DOWNLOADABLE_VERSION_MAJOR";
         private const string MINOR_VERSION_PLACEHOLDER = "DOWNLOADABLE_VERSION_MINOR";
@@ -40,10 +39,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
         private readonly MacOSProcessManager _processManager = new();
 
         protected ILogger Logger { get; set; } = null!;
-
-        protected override XHarnessCommandArguments Arguments => SimulatorsArguments;
-
-        protected abstract SimulatorsCommandArguments SimulatorsArguments { get; }
 
         protected SimulatorsCommand(string name, bool allowsExtraArgs, string help) : base(name, allowsExtraArgs, help)
         {
@@ -269,7 +264,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
         private async Task<(string XcodeVersion, string XcodeUuid)> GetXcodeInformation()
         {
-            var plistPath = Path.Combine(SimulatorsArguments.XcodeRoot, "Contents", "Info.plist");
+            string xcodeRoot = Arguments.XcodeRoot.Value ?? new MacOSProcessManager().XcodeRoot;
+            var plistPath = Path.Combine(xcodeRoot, "Contents", "Info.plist");
 
             var (succeeded, xcodeVersion) = await ExecuteCommand("/usr/libexec/PlistBuddy", TimeSpan.FromSeconds(5), "-c", "Print :DTXcode", plistPath);
             if (!succeeded)

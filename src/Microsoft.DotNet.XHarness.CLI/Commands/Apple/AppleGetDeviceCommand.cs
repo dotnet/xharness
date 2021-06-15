@@ -7,22 +7,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal class AppleGetDeviceCommand : XHarnessCommand
+    internal class AppleGetDeviceCommand : XHarnessCommand<AppleGetDeviceCommandsArguments>
     {
-        private readonly AppleGetDeviceCommandsArguments _arguments = new();
-
-        protected override XHarnessCommandArguments Arguments => _arguments;
+        protected override AppleGetDeviceCommandsArguments Arguments { get; } = new();
 
         protected override string CommandUsage { get; } = "apple device [OPTIONS] [TARGET]";
 
@@ -39,7 +35,7 @@ Arguments:
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            var processManager = new MlaunchProcessManager(_arguments.XcodeRoot, _arguments.MlaunchPath);
+            var processManager = new MlaunchProcessManager(Arguments.XcodeRoot, Arguments.MlaunchPath);
 
             var log = new CallbackLog(m => logger.LogDebug(m));
             TestTargetOs target;
@@ -84,33 +80,19 @@ Arguments:
         {
             if (ExtraArguments.Count() != 1)
             {
-                throw CreateException("You have to specify one target platform");
+                throw new ArgumentException("You have to specify one target platform");
             }
 
-            string targetName = ExtraArguments.First();
-            TestTargetOs target;
+            var target = new TargetArgument();
+            target.Action(ExtraArguments.First());
+            target.Validate();
 
-            try
+            if (target.Value.Platform == TestTarget.MacCatalyst)
             {
-                target = targetName.ParseAsAppRunnerTargetOs();
-            }
-            catch (Exception)
-            {
-                throw CreateException($"Failed to parse test target '{targetName}'");
+                throw new ArgumentException("Target maccatalyst is not supported for this command");
             }
 
-            if (target.Platform == TestTarget.MacCatalyst)
-            {
-                throw CreateException("Target maccatalyst is not supported for this command");
-            }
-
-            return target;
+            return target.Value;
         }
-
-        private static Exception CreateException(string message) => new ArgumentException(
-            $"{message}. Available targets are:" +
-            XHarnessCommandArguments.GetAllowedValues(t => t.AsString(), TestTarget.None, TestTarget.MacCatalyst) +
-            Environment.NewLine + Environment.NewLine +
-            "You can also specify desired iOS/tvOS/WatchOS version. Example: ios-simulator-64_13.4");
     }
 }

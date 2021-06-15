@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -21,11 +20,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal abstract class AppleAppCommand<TArguments> : XHarnessCommand where TArguments : AppleAppRunArguments
+    internal abstract class AppleAppCommand<TArguments> : XHarnessCommand<TArguments> where TArguments : IAppleAppRunArguments
     {
         protected readonly ErrorKnowledgeBase ErrorKnowledgeBase = new();
-        protected override XHarnessCommandArguments Arguments => AppleAppArguments;
-        protected abstract TArguments AppleAppArguments { get; }
 
         protected AppleAppCommand(string name, bool allowsExtraArgs, IServiceCollection services, string? help = null) : base(name, allowsExtraArgs, help)
         {
@@ -36,13 +33,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
             var exitCode = ExitCode.SUCCESS;
 
-            var targetName = AppleAppArguments.Target.AsString();
+            var targetName = Arguments.Target.Value.AsString();
 
-            logger.LogInformation($"Preparing run for {targetName}{ (AppleAppArguments.DeviceName != null ? " targeting " + AppleAppArguments.DeviceName : null) }");
+            logger.LogInformation($"Preparing run for {targetName}{ (!string.IsNullOrEmpty(Arguments.DeviceName.Value) ? " targeting " + Arguments.DeviceName.Value : null) }");
 
             // Create main log file for the run
-            using ILogs logs = new Logs(AppleAppArguments.OutputDirectory);
-            string logFileName = $"{Name}-{targetName}{(AppleAppArguments.DeviceName != null ? "-" + AppleAppArguments.DeviceName : null)}.log";
+            using ILogs logs = new Logs(Arguments.OutputDirectory);
+            string logFileName = $"{Name}-{targetName}{(!string.IsNullOrEmpty(Arguments.DeviceName.Value) ? "-" + Arguments.DeviceName.Value : null)}.log";
             IFileBackedLog runLog = logs.Create(logFileName, LogType.ExecutionLog.ToString(), timestamp: true);
 
             // Pipe the execution log to the debug output of XHarness effectively making "-v" turn this on
@@ -50,7 +47,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             using var mainLog = Log.CreateReadableAggregatedLog(runLog, debugLog);
             mainLog.Timestamp = true;
 
-            var processManager = new MlaunchProcessManager(AppleAppArguments.XcodeRoot, AppleAppArguments.MlaunchPath);
+            var processManager = new MlaunchProcessManager(Arguments.XcodeRoot, Arguments.MlaunchPath);
 
             Services.TryAddSingleton(mainLog);
             Services.TryAddSingleton(logs);
@@ -60,7 +57,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             Services.TryAddTransient<XHarness.Apple.ILogger, ConsoleLogger>();
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(AppleAppArguments.Timeout);
+            cts.CancelAfter(Arguments.Timeout);
 
             var exitCodeForRun = await InvokeInternal(cts.Token);
             if (exitCodeForRun != ExitCode.SUCCESS)

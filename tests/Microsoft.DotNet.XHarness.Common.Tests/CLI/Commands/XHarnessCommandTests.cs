@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
@@ -244,25 +245,15 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
 
         private class SampleUnitTestArguments : XHarnessCommandArguments
         {
-            public int Number { get; private set; } = 0;
+            public SampleNumberArgument Number { get; } = new();
+            public SampleEnumArgument Enum { get; } = new();
+            public SampleStringArgument String { get; } = new();
 
-            public SampleEnum Enum { get; private set; } = SampleEnum.Value1;
-
-            public string? String { get; private set; }
-
-            public override void Validate()
+            protected override IEnumerable<Argument> GetArguments() => new Argument[]
             {
-                if (Number > 100)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(Number));
-                }
-            }
-
-            protected override OptionSet GetCommandOptions() => new OptionSet
-            {
-                { "number=|n=", "Sets the number, should be less than 100", v => Number = int.Parse(v) },
-                { "enum=|e=", "Sets the enum", v => Enum = ParseArgument("enum", v, SampleEnum.ForbiddenValue) },
-                { "string=|s=", "Sets the string", v => String = v },
+                Number,
+                Enum,
+                String,
             };
         }
 
@@ -271,6 +262,42 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
             Value1,
             Value2,
             ForbiddenValue,
+        }
+
+        private class SampleNumberArgument : IntArgument
+        {
+            public SampleNumberArgument()
+                : base("number=|n=", "Sets the number, should be less than 100")
+            {
+            }
+
+            public override void Validate()
+            {
+                base.Validate();
+
+                if (Value > 100)
+                {
+                    throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        private class SampleEnumArgument : Argument<SampleEnum>
+        {
+            public SampleEnumArgument()
+                : base("enum=|e=", "Sets the enum", SampleEnum.Value1)
+            {
+            }
+
+            public override void Action(string argumentValue) => Value = ParseArgument("enum", argumentValue, SampleEnum.ForbiddenValue);
+        }
+
+        private class SampleStringArgument : StringArgument
+        {
+            public SampleStringArgument()
+                : base("string=|s=", "Sets the string")
+            {
+            }
         }
     }
 }

@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
@@ -19,7 +18,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal class AppleGetStateCommand : GetStateCommand
+    internal class AppleGetStateCommand : GetStateCommand<AppleGetStateCommandArguments>
     {
         protected override string CommandUsage { get; } = "ios state [OPTIONS]";
 
@@ -67,9 +66,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         private const string SimulatorPrefix = "com.apple.CoreSimulator.SimDeviceType.";
 
-        private readonly AppleGetStateCommandArguments _arguments = new();
-
-        protected override XHarnessCommandArguments Arguments => _arguments;
+        protected override AppleGetStateCommandArguments Arguments { get; } = new();
 
         private static async Task AsJson(SystemInfo info)
         {
@@ -106,7 +103,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
                 foreach (var sim in info.Simulators)
                 {
-                    var uuid = _arguments.ShowSimulatorsUUID ? $" {sim.UDID}   " : "";
+                    var uuid = Arguments.ShowSimulatorsUUID ? $" {sim.UDID}   " : "";
                     Console.WriteLine($"  {sim.Name.PadRight(maxLength)}{uuid} {sim.OSVersion,-13} {sim.Type}");
                 }
             }
@@ -125,7 +122,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
                 foreach (var dev in info.Devices)
                 {
-                    var uuid = _arguments.ShowDevicesUUID ? $" {dev.UDID}   " : "";
+                    var uuid = Arguments.ShowDevicesUUID ? $" {dev.UDID}   " : "";
                     Console.WriteLine($"  {dev.Name.PadRight(maxLength)}{uuid} {dev.OSVersion,-13} {dev.Type}");
                 }
             }
@@ -137,7 +134,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected override async Task<ExitCode> InvokeInternal(Extensions.Logging.ILogger logger)
         {
-            var processManager = new MlaunchProcessManager(mlaunchPath: _arguments.MlaunchPath);
+            var processManager = new MlaunchProcessManager(mlaunchPath: Arguments.MlaunchPath);
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
             var log = new MemoryLog(); // do we really want to log this?
@@ -213,7 +210,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                     oSVersion: dev.OSVersion));
             }
 
-            if (_arguments.UseJson)
+            if (Arguments.UseJson)
             {
                 await AsJson(info);
             }

@@ -2,17 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Mono.Options;
+using System.Collections.Generic;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
 {
     internal class ListCommandArguments : SimulatorsCommandArguments
     {
-        public bool ListInstalledOnly { get; private set; } = false;
+        public ListInstalledArgument ListInstalledOnly { get; } = new();
 
-        protected override OptionSet GetAdditionalOptions() => new()
+        protected override IEnumerable<Argument> GetAdditionalArguments() => new Argument[]
         {
-            { "installed", "Lists installed simulators only", v => ListInstalledOnly = true },
+            ListInstalledOnly,
         };
     }
 }

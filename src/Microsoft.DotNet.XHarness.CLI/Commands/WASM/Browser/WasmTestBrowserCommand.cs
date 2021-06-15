@@ -4,39 +4,32 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
-
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Safari;
-using OpenQA.Selenium.Firefox;
-using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 using OpenQA.Selenium;
-using System.Linq;
-using OpenQA.Selenium.Edge;
+using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Chromium;
+using OpenQA.Selenium.Edge;
+using OpenQA.Selenium.Firefox;
+using OpenQA.Selenium.Safari;
+using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
-    internal class WasmTestBrowserCommand : XHarnessCommand
+    internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandArguments>
     {
         private const string CommandHelp = "Executes tests on WASM using a browser";
 
-        private readonly WasmTestBrowserCommandArguments _arguments = new();
-
-        protected TestCommandArguments TestArguments => _arguments;
         protected override string CommandUsage { get; } = "wasm test-browser [OPTIONS] -- [BROWSER OPTIONS]";
         protected override string CommandDescription { get; } = CommandHelp;
 
-        protected override XHarnessCommandArguments Arguments => TestArguments;
+        protected override WasmTestBrowserCommandArguments Arguments { get; } = new();
 
         public WasmTestBrowserCommand() : base("test-browser", allowsExtraArgs: true, CommandHelp)
         {
@@ -44,20 +37,20 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
-            var xmlResultsFilePath = Path.Combine(_arguments.OutputDirectory, "testResults.xml");
+            var xmlResultsFilePath = Path.Combine(Arguments.OutputDirectory, "testResults.xml");
             File.Delete(xmlResultsFilePath);
 
-            var stdoutFilePath = Path.Combine(_arguments.OutputDirectory, "wasm-console.log");
+            var stdoutFilePath = Path.Combine(Arguments.OutputDirectory, "wasm-console.log");
             File.Delete(stdoutFilePath);
 
-            var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath, stdoutFilePath, logger, _arguments.ErrorPatternsFile);
+            var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath, stdoutFilePath, logger, Arguments.ErrorPatternsFile);
             var runner = new WasmBrowserTestRunner(
-                                _arguments,
+                                Arguments,
                                 PassThroughArguments,
                                 logProcessor,
                                 logger);
 
-            (DriverService driverService, IWebDriver driver) = _arguments.Browser switch
+            (DriverService driverService, IWebDriver driver) = Arguments.Browser.Value switch
             {
                 Browser.Chrome => GetChromeDriver(logger),
                 Browser.Safari => GetSafariDriver(logger),
@@ -65,15 +58,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 Browser.Edge => GetEdgeDriver(logger),
 
                 // shouldn't reach here
-                _              => throw new ArgumentException($"Unknown browser : {_arguments.Browser}")
+                _ => throw new ArgumentException($"Unknown browser : {Arguments.Browser}")
             };
 
             try
             {
                 var exitCode = await runner.RunTestsWithWebDriver(driverService, driver);
-                if ((int)exitCode != _arguments.ExpectedExitCode)
+                if ((int)exitCode != Arguments.ExpectedExitCode)
                 {
-                    logger.LogError($"Application has finished with exit code {exitCode} but {_arguments.ExpectedExitCode} was expected");
+                    logger.LogError($"Application has finished with exit code {exitCode} but {Arguments.ExpectedExitCode} was expected");
                     return ExitCode.GENERAL_FAILURE;
                 }
 
@@ -88,7 +81,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
             finally
             {
-                if (!_arguments.QuitAppAtEnd)
+                if (!Arguments.QuitAppAtEnd)
                 {
                     logger.LogInformation("Tests are done. Press Ctrl+C to exit");
                     var token = new CancellationToken(false);
@@ -110,7 +103,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             return CreateWebDriver(
                         () => SafariDriverService.CreateDefaultService(),
-                        driverService => new SafariDriver(driverService, options, _arguments.Timeout));
+                        driverService => new SafariDriver(driverService, options, Arguments.Timeout));
         }
 
         private (DriverService, IWebDriver) GetFirefoxDriver(ILogger logger)
@@ -118,24 +111,24 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var options = new FirefoxOptions();
             options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
 
-            if (!string.IsNullOrEmpty(_arguments.BrowserLocation))
+            if (!string.IsNullOrEmpty(Arguments.BrowserLocation))
             {
-                options.BrowserExecutableLocation = _arguments.BrowserLocation;
-                logger.LogInformation($"Using Firefox from {_arguments.BrowserLocation}");
+                options.BrowserExecutableLocation = Arguments.BrowserLocation;
+                logger.LogInformation($"Using Firefox from {Arguments.BrowserLocation}");
             }
 
-            options.AddArguments(_arguments.BrowserArgs);
-            if (_arguments.Headless)
+            options.AddArguments(Arguments.BrowserArgs.Value);
+            if (Arguments.Headless)
                 options.AddArguments("--headless");
 
-            if (_arguments.Incognito)
+            if (Arguments.Incognito)
                 options.AddArguments("--incognito");
 
             logger.LogInformation($"Starting Firefox with args: {string.Join(' ', options.ToCapabilities())}");
 
             return CreateWebDriver(
                         () => FirefoxDriverService.CreateDefaultService(),
-                        (driverService) => new FirefoxDriver(driverService, options, _arguments.Timeout));
+                        (driverService) => new FirefoxDriver(driverService, options, Arguments.Timeout));
         }
 
         private (DriverService, IWebDriver) GetChromeDriver(ILogger logger)
@@ -162,20 +155,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var options = Activator.CreateInstance<TDriverOptions>();
             options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
 
-            if (!string.IsNullOrEmpty(_arguments.BrowserLocation))
+            if (!string.IsNullOrEmpty(Arguments.BrowserLocation))
             {
-                options.BinaryLocation = _arguments.BrowserLocation;
-                logger.LogInformation($"Using Chrome from {_arguments.BrowserLocation}");
+                options.BinaryLocation = Arguments.BrowserLocation;
+                logger.LogInformation($"Using Chrome from {Arguments.BrowserLocation}");
             }
 
-            options.AddArguments(_arguments.BrowserArgs);
-            if (_arguments.Headless)
+            options.AddArguments(Arguments.BrowserArgs.Value);
+            if (Arguments.Headless)
                 options.AddArguments("--headless");
 
-            if (_arguments.DebuggerPort.HasValue)
-                options.AddArguments($"--remote-debugging-port={_arguments.DebuggerPort.Value}");
+            options.AddArguments($"--remote-debugging-port={Arguments.DebuggerPort.Value}");
 
-            if (_arguments.Incognito)
+            if (Arguments.Incognito)
                 options.AddArguments("--incognito");
 
             options.AddArguments(new []
@@ -196,7 +188,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 "--metrics-recording-only"
             });
 
-            if (!_arguments.QuitAppAtEnd)
+            if (!Arguments.QuitAppAtEnd)
                 options.LeaveBrowserRunning = true;
 
             logger.LogInformation($"Starting {driverName} with args: {string.Join(' ', options.Arguments)}");
@@ -217,7 +209,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 "Cannot start the driver service"
             };
 
-            foreach (var file in Directory.EnumerateFiles(_arguments.OutputDirectory, $"{driverName}-*.log"))
+            foreach (var file in Directory.EnumerateFiles(Arguments.OutputDirectory, $"{driverName}-*.log"))
                 File.Delete(file);
 
             int max_retries = 3;
@@ -231,9 +223,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
                     driverService.EnableAppendLog = false;
                     driverService.EnableVerboseLogging = true;
-                    driverService.LogPath = Path.Combine(_arguments.OutputDirectory, $"{driverName}-{retry_num}.log");
+                    driverService.LogPath = Path.Combine(Arguments.OutputDirectory, $"{driverName}-{retry_num}.log");
 
-                    if (Activator.CreateInstance(typeof(TDriver), driverService, options, _arguments.Timeout) is not TDriver driver)
+                    if (Activator.CreateInstance(typeof(TDriver), driverService, options, Arguments.Timeout.Value) is not TDriver driver)
                     {
                         throw new ArgumentException($"Failed to create instance of {typeof(TDriver)}");
                     }

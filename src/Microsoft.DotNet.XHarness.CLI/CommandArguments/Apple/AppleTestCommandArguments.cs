@@ -4,123 +4,45 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using Microsoft.DotNet.XHarness.Apple;
-using Microsoft.DotNet.XHarness.Common;
-using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
-using Mono.Options;
+using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal class AppleTestCommandArguments : AppleAppRunArguments
+    internal class AppleTestCommandArguments : XHarnessCommandArguments, IAppleAppRunArguments
     {
-        private readonly List<string> _singleMethodFilters = new();
-        private readonly List<string> _classMethodFilters = new();
+        public AppPathArgument AppBundlePath { get; } = new();
+        public TargetArgument Target { get; } = new();
+        public OutputDirectoryArgument OutputDirectory { get; } = new();
+        public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
+        public LaunchTimeoutArgument LaunchTimeout { get; set; } = new(TimeSpan.FromMinutes(5));
+        public XcodeArgument XcodeRoot { get; } = new();
+        public MlaunchArgument MlaunchPath { get; } = new();
+        public DeviceNameArgument DeviceName { get; } = new();
+        public CommunicationChannelArgument CommunicationChannel { get; set; } = new();
+        public XmlResultJargonArgument XmlResultJargon { get; set; } = new();
+        public SingleMethodFilters SingleMethodFilters { get; } = new();
+        public ClassMethodFilters ClassMethodFilters { get; } = new();
+        public EnableLldbArgument EnableLldb { get; } = new();
+        public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
+        public ResetSimulatorArgument ResetSimulator { get; } = new();
 
-        /// <summary>
-        /// Methods to be included in the test run while all others are ignored.
-        /// </summary>
-        public IEnumerable<string> SingleMethodFilters => _singleMethodFilters;
-
-        /// <summary>
-        /// Tests classes to be included in the run while all others are ignored.
-        /// </summary>
-        public IEnumerable<string> ClassMethodFilters => _classMethodFilters;
-
-        /// <summary>
-        /// How long we wait before app starts and first test should start running.
-        /// </summary>
-        public TimeSpan LaunchTimeout { get; set; } = TimeSpan.FromMinutes(5);
-
-        /// <summary>
-        /// Allows to specify the xml format to be used in the result files.
-        /// </summary>
-        public XmlResultJargon XmlResultJargon { get; set; } = XmlResultJargon.xUnit; // default by mono
-
-        /// <summary>
-        /// The way the simulator/device talks back to XHarness.
-        /// </summary>
-        public CommunicationChannel CommunicationChannel { get; set; } = CommunicationChannel.UsbTunnel;
-
-        protected override OptionSet GetCommandOptions()
+        protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
-            var options = base.GetCommandOptions();
-
-            var testOptions = new OptionSet
-            {
-                {
-                    "launch-timeout=|lt=", "Time span in the form of \"00:00:00\" or number of seconds to wait for the iOS app to start",
-                    v =>
-                    {
-                        if (int.TryParse(v, out var timeout))
-                        {
-                            LaunchTimeout = TimeSpan.FromSeconds(timeout);
-                            return;
-                        }
-
-                        if (TimeSpan.TryParse(v, out var timespan))
-                        {
-                            LaunchTimeout = timespan;
-                            return;
-                        }
-
-                        throw new ArgumentException("launch-timeout must be an integer - a number of seconds, or a timespan (00:30:00)");
-                    }
-                },
-                {
-                    "xml-jargon=|xj=", $"The xml format to be used in the unit test results. Can be {XmlResultJargon.TouchUnit}, {XmlResultJargon.NUnitV2}, {XmlResultJargon.NUnitV3} or {XmlResultJargon.xUnit}.",
-                    v => XmlResultJargon = ParseArgument("xml-jargon", v, invalidValues: XmlResultJargon.Missing)
-                },
-                {
-                    "communication-channel=", $"The communication channel to use to communicate with the default. Can be {CommunicationChannel.Network} and {CommunicationChannel.UsbTunnel}. Default is {CommunicationChannel.UsbTunnel}",
-                    v => CommunicationChannel = ParseArgument<CommunicationChannel>("communication-channel", v)
-                },
-                {
-                    "method|m=", "Method to be ran in the test application. When this parameter is used only the " +
-                    "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
-                    "ignored. Can be used more than once.",
-                    v => _singleMethodFilters.Add(v)
-                },
-                {
-                    "class|c=", "Test class to be ran in the test application. When this parameter is used only the " +
-                    "tests that have been provided by the '--method' and '--class' arguments will be ran. All other test will be " +
-                    "ignored. Can be used more than once.",
-                    v => _classMethodFilters.Add(v)
-                },
-            };
-
-            foreach (var option in testOptions)
-            {
-                options.Add(option);
-            }
-
-            return options;
-        }
-
-        public override void Validate()
-        {
-            base.Validate();
-
-            if (!Directory.Exists(AppPackagePath))
-            {
-                throw new ArgumentException($"Failed to find the app bundle at {AppPackagePath}");
-            }
-
-            if (Target == null)
-            {
-                throw new ArgumentException("No test target specified");
-            }
-
-            if (!File.Exists(MlaunchPath))
-            {
-                throw new ArgumentException($"Failed to find mlaunch at {MlaunchPath}");
-            }
-
-            if (XcodeRoot != null && !Directory.Exists(XcodeRoot))
-            {
-                throw new ArgumentException($"Failed to find Xcode root at {XcodeRoot}");
-            }
-        }
+            AppBundlePath,
+            Target,
+            OutputDirectory,
+            Timeout,
+            LaunchTimeout,
+            XcodeRoot,
+            MlaunchPath,
+            DeviceName,
+            CommunicationChannel,
+            XmlResultJargon,
+            SingleMethodFilters,
+            ClassMethodFilters,
+            EnableLldb,
+            EnvironmentalVariables,
+            ResetSimulator,
+        };
     }
 }

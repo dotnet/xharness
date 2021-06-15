@@ -7,16 +7,15 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidGetStateCommand : GetStateCommand
+    internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandArguments>
     {
         protected override string CommandUsage { get; } = "android state";
 
-        protected override XHarnessCommandArguments Arguments { get; } = new AndroidGetStateCommandArguments();
+        protected override AndroidGetStateCommandArguments Arguments { get; } = new();
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {

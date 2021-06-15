@@ -2,60 +2,22 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
-using Microsoft.DotNet.XHarness.Common.Execution;
-using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
 {
     internal abstract class SimulatorsCommandArguments : XHarnessCommandArguments
     {
-        private string? _xcodeRoot;
+        public XcodeArgument XcodeRoot { get; } = new();
 
-        /// <summary>
-        /// Path to where Xcode is located.
-        /// </summary>
-        public string XcodeRoot
-        {
-            get
+        protected sealed override IEnumerable<Argument> GetArguments() =>
+            GetAdditionalArguments().Concat(new Argument[]
             {
-                if (_xcodeRoot == null)
-                {
-                    // Determine it automatically from xcode-select
-                    _xcodeRoot = MacOSProcessManager.DetectXcodePath();
-                }
+                XcodeRoot
+            });
 
-                return _xcodeRoot;
-            }
-            set => _xcodeRoot = value;
-        }
-
-        protected sealed override OptionSet GetCommandOptions()
-        {
-            var options = GetAdditionalOptions();
-
-            options.Add("xcode=", "Path to where Xcode is located, e.g. /Application/Xcode114.app. If not set, xcode-select is used to determine the location",
-                v => XcodeRoot = RootPath(v));
-
-            return options;
-        }
-
-        protected abstract OptionSet GetAdditionalOptions();
-
-        public override void Validate()
-        {
-            if (!Directory.Exists(XcodeRoot))
-            {
-                throw new ArgumentException("Invalid Xcode path supplied");
-            }
-
-            var plistPath = Path.Combine(XcodeRoot, "Contents", "Info.plist");
-            if (!File.Exists(plistPath))
-            {
-                throw new ArgumentException($"Cannot find Xcode. The path '{plistPath}' does not exist.");
-            }
-        }
+        protected abstract IEnumerable<Argument> GetAdditionalArguments();
     }
 }
