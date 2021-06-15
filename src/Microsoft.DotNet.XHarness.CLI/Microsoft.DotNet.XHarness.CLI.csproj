@@ -10,10 +10,8 @@
     <RollForward>Major</RollForward>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>CS8002;</NoWarn>
-
-    <!-- This is a git revision of the xamarin/macios-binaries repo where we get the mlaunch tool from
-         If you change the version, please run /eng/download-mlaunch.sh to get this version into your environment -->
-    <MlaunchVersion>cbc5781c84ea4d71117d67370876eb2e5cc38781</MlaunchVersion>
+    
+    <MlaunchDestinationDir>$(BaseIntermediateOutputPath)/mlaunch</MlaunchDestinationDir>
 
     <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
     <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-windows.zip</WindowsAndroidSdkUrl>
@@ -31,6 +29,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Mlaunch" Version="13.0.0-21311.1.9acbbed1f6">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0-rc.1.20451.14" />
@@ -50,32 +51,20 @@
   </ItemGroup>
 
   <Target Name="DownloadAdb">
-    <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="true" />
-    <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />
-    <DownloadFile SourceUrl="$(MacOsAndroidSdkUrl)" DestinationFolder="$(IntermediateOutputPath)/android-tools/" DestinationFileName="$(MacOsAndroidSdkFileName)" SkipUnchangedFiles="True" />
-    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
-    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(LinuxAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/linux" OverwriteReadOnlyFiles="true" />
-    <Unzip SourceFiles="$(IntermediateOutputPath)/android-tools/$(MacOsAndroidSdkFileName)" DestinationFolder="$(IntermediateOutputPath)/android-tools-unzipped/macos" OverwriteReadOnlyFiles="true" />
-    <RemoveDir Directories="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/systrace;$(IntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/systrace;$(IntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/systrace" />
-  </Target>
-
-  <Target Name="DownloadMlaunch">
-    <PropertyGroup>
-      <RemoveSymbols></RemoveSymbols>
-      <RemoveSymbols Condition=" '$(Configuration)|$(OS)' == 'Release|Windows_NT' ">-RemoveSymbols</RemoveSymbols>
-      <RemoveSymbols Condition=" '$(Configuration)' == 'Release' AND '$(OS)' != 'Windows_NT' ">--remove-symbols</RemoveSymbols>
-    </PropertyGroup>
-
-    <Exec Condition=" '$(OS)' != 'Windows_NT' " Command="chmod 0755 ../../eng/download-mlaunch.sh &amp;&amp; ../../eng/download-mlaunch.sh --commit $(MlaunchVersion) --target-dir $(IntermediateOutputPath)mlaunch $(RemoveSymbols)" />
-
-    <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { .\..\..\eng\download-mlaunch.ps1 -Commit '$(MlaunchVersion)' -TargetDir '$(IntermediateOutputPath)mlaunch' $(RemoveSymbols) } &quot;" />
+    <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="true" />
+    <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />
+    <DownloadFile SourceUrl="$(MacOsAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(MacOsAndroidSdkFileName)" SkipUnchangedFiles="True" />
+    <Unzip SourceFiles="$(BaseIntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
+    <Unzip SourceFiles="$(BaseIntermediateOutputPath)/android-tools/$(LinuxAndroidSdkFileName)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools-unzipped/linux" OverwriteReadOnlyFiles="true" />
+    <Unzip SourceFiles="$(BaseIntermediateOutputPath)/android-tools/$(MacOsAndroidSdkFileName)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools-unzipped/macos" OverwriteReadOnlyFiles="true" />
+    <RemoveDir Directories="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/systrace" />
   </Target>
 
   <Target Name="IncludeAdb" BeforeTargets="Build" DependsOnTargets="DownloadAdb">
     <ItemGroup>
-      <WindowsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
-      <LinuxAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />
-      <MacOsAdbFiles Include="$(IntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/adb" />
+      <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
+      <LinuxAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />
+      <MacOsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/adb" />
       <Content Include="@(WindowsAdbFiles)">
         <Pack>true</Pack>
         <PackagePath>runtimes/any/native/adb/windows</PackagePath>
@@ -94,13 +83,15 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="IncludeMlaunch" BeforeTargets="Build" DependsOnTargets="DownloadMlaunch">
+  <!-- The ExtractMlaunch target comes from the Mlaunch NuGet package and places files in the obj/ dir -->
+  <Target Name="IncludeMlaunch" BeforeTargets="Build" DependsOnTargets="ExtractMlaunch">
     <ItemGroup>
-      <Content Include="$(IntermediateOutputPath)/mlaunch/**/*.*">
+      <Content Include="$(BaseIntermediateOutputPath)/mlaunch/**/*.*">
         <Pack>true</Pack>
         <PackagePath>runtimes/any/native/mlaunch</PackagePath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
   </Target>
+
 </Project>
