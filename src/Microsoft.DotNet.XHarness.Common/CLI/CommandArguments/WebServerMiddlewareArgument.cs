@@ -1,15 +1,14 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
+namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
 {
-    internal class WebServerMiddlewareArgument : Argument<List<(string path, string type)>>
+    public class WebServerMiddlewareArgument : Argument<List<(string path, string type)>>
     {
         public WebServerMiddlewareArgument()
             : base("web-server-middleware=", "<path>,<typeName> to assembly and type which contains Kestrel middleware for local test server. Could be used multiple times to load multiple middlewares", new List<(string path, string type)>())

@@ -85,21 +85,23 @@ Arguments:
                 if (exitCode == ExitCode.SUCCESS)
                 {
                     ServerURLs? serverURLs = null;
-                    Dictionary<string, string> instrumentationArgs = _arguments.InstrumentationArguments;
-                    if (_arguments.WebServerMiddlewarePathsAndTypes.Count > 0)
+                    Dictionary<string, string> instrumentationArgs = Arguments.InstrumentationArguments;
+                    if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
                     {
                         serverURLs = await WebServer.Start(
-                            _arguments, logger,
+                            Arguments,
+                            null,
+                            logger,
                             null,
                             webServerCts.Token);
-                        webServerCts.CancelAfter(_arguments.Timeout);
+                        webServerCts.CancelAfter(Arguments.Timeout);
 
-                        foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttp)
+                        foreach (var envVariable in Arguments.WebServerHttpEnvironmentVariables.Value)
                         {
                             instrumentationArgs.Add($"env:{envVariable}", serverURLs!.Http);
                         }
 
-                        foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
+                        foreach (var envVariable in Arguments.WebServerHttpsEnvironmentVariables.Value)
                         {
                             instrumentationArgs.Add($"env:{envVariable}", serverURLs!.Https);
                         }
