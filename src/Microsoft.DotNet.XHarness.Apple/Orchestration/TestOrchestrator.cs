@@ -146,9 +146,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             bool signalTestEnd,
             CancellationToken cancellationToken)
         {
+            var runMode = target.Platform.ToRunMode();
             if (Version.TryParse(device.OSVersion, out var version) && version.Major >= 14)
             {
-                var runMode = target.Platform.ToRunMode();
                 if (runMode == RunMode.iOS)
                 {
                     // iOS 14+ devices do not allow local network access and won't work unless the user confirms a dialog on the screen
@@ -166,11 +166,11 @@ namespace Microsoft.DotNet.XHarness.Apple
                         _logger.LogWarning("XHarness cannot reliably detect when app quits on iOS 14 and newer. Consider using --signal-test-end");
                     }
                 }
+            }
 
-                if (signalTestEnd && (runMode == RunMode.Sim64 || runMode == RunMode.Sim32))
-                {
-                    _logger.LogWarning("The --signal-test-end option is recommended for device tests and is not required for simulators.");
-                }
+            if (signalTestEnd && (runMode == RunMode.Sim64 || runMode == RunMode.Sim32))
+            {
+                _logger.LogWarning("The --signal-test-end option is recommended for device tests and is not required for simulators");
             }
 
             _logger.LogInformation("Starting test run for " + appBundleInfo.BundleIdentifier + "..");

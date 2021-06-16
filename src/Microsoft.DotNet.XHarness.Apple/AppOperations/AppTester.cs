@@ -509,7 +509,6 @@ namespace Microsoft.DotNet.XHarness.Apple
         }
 
         private MlaunchArguments GetCommonArguments(
-            AppBundleInformation appInformation,
             XmlResultJargon xmlResultJargon,
             string[]? skippedMethods,
             string[]? skippedTestClasses,
@@ -556,7 +555,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             string? testEngTag)
         {
             var args = GetCommonArguments(
-                appInformation,
                 xmlResultJargon,
                 skippedMethods,
                 skippedTestClasses,
@@ -605,7 +603,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             string? testEngTag)
         {
             var args = GetCommonArguments(
-                appInformation,
                 xmlResultJargon,
                 skippedMethods,
                 skippedTestClasses,
