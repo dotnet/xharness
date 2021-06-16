@@ -167,14 +167,14 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             // Uninstall the app first to get a clean state
-            await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, cancellationToken);
+            await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, true, cancellationToken);
 
             exitCode = await InstallApp(appBundleInfo, device, target, cancellationToken);
 
             if (exitCode != ExitCode.SUCCESS)
             {
                 _logger.LogInformation($"Cleaning up the failed installation from '{device.Name}'");
-                await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, new CancellationToken());
+                await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, false, new CancellationToken());
 
                 return exitCode;
             }
@@ -213,7 +213,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 if (device != null)
                 {
-                    await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, new CancellationToken());
+                    await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, false, new CancellationToken());
                 }
             }
 
@@ -286,22 +286,34 @@ namespace Microsoft.DotNet.XHarness.Apple
             return ExitCode.SUCCESS;
         }
 
-        protected virtual async Task UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, CancellationToken cancellationToken)
+        protected virtual async Task UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Uninstalling the application '{bundleIdentifier}' from '{device.Name}'");
+            if (isPreparation)
+            {
+                _logger.LogInformation($"Uninstalling any previous instance of '{bundleIdentifier}' from '{device.Name}'");
+            }
+            else
+            {
+                _logger.LogInformation($"Uninstalling the application '{bundleIdentifier}' from '{device.Name}'");
+            }
 
             var appUninstaller = new AppUninstaller(_processManager, _mainLog);
             ProcessExecutionResult uninstallResult = target.IsSimulator()
                 ? await appUninstaller.UninstallApp(device, bundleIdentifier, cancellationToken)
                 : await appUninstaller.UninstallDeviceApp(device, bundleIdentifier, cancellationToken);
 
-            if (!uninstallResult.Succeeded)
+            // We try to uninstall app before each run to clear it from the device
+            // For those cases, we don't care about the result
+            if (!isPreparation)
             {
-                _logger.LogError($"Failed to uninstall the app bundle! Check logs for more details!");
-            }
-            else
-            {
-                _logger.LogInformation($"Application '{bundleIdentifier}' was uninstalled successfully");
+                if (!uninstallResult.Succeeded)
+                {
+                    _logger.LogError($"Failed to uninstall the app bundle! Check logs for more details!");
+                }
+                else
+                {
+                    _logger.LogInformation($"Application '{bundleIdentifier}' was uninstalled successfully");
+                }
             }
         }
 
