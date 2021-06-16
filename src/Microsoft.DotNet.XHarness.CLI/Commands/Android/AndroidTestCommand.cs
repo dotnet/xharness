@@ -103,7 +103,10 @@ Arguments:
 
                         foreach (var envVariable in Arguments.WebServerHttpsEnvironmentVariables.Value)
                         {
-                            instrumentationArgs.Add($"env:{envVariable}", serverURLs!.Https);
+                            if (!string.IsNullOrEmpty(serverURLs.Https))
+                            {
+                                instrumentationArgs.Add($"env:{envVariable}", serverURLs!.Https);
+                            }
                         }
                     }
                     exitCode = AndroidRunCommand.InvokeHelper(
