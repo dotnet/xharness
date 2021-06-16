@@ -86,7 +86,6 @@ Arguments:
                 {
                     ServerURLs? serverURLs = null;
                     Dictionary<string, string> instrumentationArgs = _arguments.InstrumentationArguments;
-                    // logger.LogInformation($"Set up instrumentationArgs");
                     if (_arguments.WebServerMiddlewarePathsAndTypes.Count > 0)
                     {
                         serverURLs = await WebServer.Start(
@@ -97,12 +96,12 @@ Arguments:
 
                         foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttp)
                         {
-                            instrumentationArgs.Add(envVariable, serverURLs!.Http);
+                            instrumentationArgs.Add($"env:{envVariable}", serverURLs!.Http);
                         }
 
                         foreach (var envVariable in _arguments.SetWebServerEnvironmentVariablesHttps)
                         {
-                            instrumentationArgs.Add(envVariable, serverURLs!.Https);
+                            instrumentationArgs.Add($"env:{envVariable}", serverURLs!.Https);
                         }
                     }
                     exitCode = AndroidRunCommand.InvokeHelper(
