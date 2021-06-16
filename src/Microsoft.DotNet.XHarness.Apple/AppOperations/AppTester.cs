@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 xmlOutput: true);
 
             string? testEndTag = null;
-            if (testEndTag != null)
+            if (signalTestEnd)
             {
                 testEndTag = _helpers.GenerateGuid().ToString();
                 WatchForTestEndTag(testEndTag, ref appOutputLog, ref cancellationToken);
@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 xmlOutput: true); // cli always uses xml
 
             string? testEndTag = null;
-            if (testEndTag != null)
+            if (signalTestEnd)
             {
                 testEndTag = _helpers.GenerateGuid().ToString();
                 WatchForTestEndTag(testEndTag, ref appOutputLog, ref cancellationToken);
