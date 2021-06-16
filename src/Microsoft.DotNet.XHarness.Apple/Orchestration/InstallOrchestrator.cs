@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         protected override Task UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
         {
-            // For the uninstallation, we want to uninstall during preparation only
+            // For the installation, we want to uninstall during preparation only
             if (isPreparation)
             {
                 return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
