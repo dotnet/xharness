@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
     {
         public DeviceArchitectureArgument()
             : base("device-arch=",
-                "If specified, forces running on a device with given architecture (x86, x86_64, arm64-v8a or armeabi-v7a). Otherwise inferred from supplied APK")
+                "If specified, forces running on a device with given or compatible architecture (x86, x86_64, arm64-v8a or armeabi-v7a). Otherwise inferred from supplied APK")
         {
         }
 

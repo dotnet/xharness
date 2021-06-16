@@ -62,7 +62,9 @@
 
   <Target Name="IncludeAdb" BeforeTargets="Build" DependsOnTargets="DownloadAdb">
     <ItemGroup>
-      <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb*" />
+      <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb.exe" />
+      <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/AdbWinApi.dll" />
+      <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/AdbWinUsbApi.dll" />
       <LinuxAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />
       <MacOsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/adb" />
       <Content Include="@(WindowsAdbFiles)">
