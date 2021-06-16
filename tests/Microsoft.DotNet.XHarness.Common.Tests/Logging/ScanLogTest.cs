@@ -10,7 +10,6 @@ namespace Microsoft.DotNet.XHarness.Common.Tests.Logging
     public class ScanLogTest
     {
         [Theory]
-        [InlineData("lo", "lo", true)]
         [InlineData("This is a log message", "log", true)]
         [InlineData("emessag", "message", false)]
         [InlineData("This is a log message", "This is a log message", true)]

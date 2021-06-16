@@ -17,6 +17,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         Guid GenerateStableGuid(string seed = null);
 
+        Guid GenerateGuid();
+
         string Timestamp { get; }
 
         IEnumerable<IPAddress> GetLocalIpAddresses();
@@ -48,6 +50,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
             }
             return new Guid(bytes);
         }
+
+        public Guid GenerateGuid() => Guid.NewGuid();
 
         public string Timestamp => $"{DateTime.Now:yyyyMMdd_HHmmss}";
 

@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             string? testEngTag = null;
             if (signalTestEnd)
             {
-                testEngTag = Guid.NewGuid().ToString();
+                testEngTag = _helpers.GenerateGuid().ToString();
                 testLog = Log.CreateReadableAggregatedLog(testLog, new ScanLog(testEngTag, () => testCompleted.Cancel()));
             }
 
@@ -141,7 +141,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             string? testEngTag = null;
             if (signalTestEnd)
             {
-                testEngTag = Guid.NewGuid().ToString();
+                testEngTag = _helpers.GenerateGuid().ToString();
                 testLog = Log.CreateReadableAggregatedLog(testLog, new ScanLog(testEngTag, () => testCompleted.Cancel()));
             }
 
@@ -639,6 +639,23 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             return args;
+        }
+
+        private void WatchForTestEndTag(
+            string tag,
+            ref IFileBackedLog appLog,
+            ref CancellationToken cancellationToken)
+        {
+            var testEndDetected = new CancellationTokenSource();
+            var testEndScanner = new ScanLog(tag, () =>
+            {
+                _mainLog.WriteLine("Detected test end tag in application's output");
+                testEndDetected.Cancel();
+            });
+
+            // We need to check for test end tag since iOS 14+ doesn't send the pidDiedCallback event to mlaunch
+            appLog = Log.CreateReadableAggregatedLog(appLog, testEndScanner);
+            cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, testEndDetected.Token).Token;
         }
     }
 }
