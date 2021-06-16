@@ -76,28 +76,24 @@ namespace Microsoft.DotNet.XHarness.Apple
             CancellationToken cancellationToken = default)
         {
             var testLog = _logs.Create($"test-{TestTarget.MacCatalyst.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
-            var testCompleted = new CancellationTokenSource();
-
-            string? testEngTag = null;
-            if (signalTestEnd)
-            {
-                testEngTag = _helpers.GenerateGuid().ToString();
-                testLog = Log.CreateReadableAggregatedLog(testLog, new ScanLog(testEngTag, () => testCompleted.Cancel()));
-            }
-
-            using IFileBackedLog deviceListenerLog = testLog;
 
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 RunMode.MacOS,
                 log: _mainLog,
-                testLog: deviceListenerLog,
+                testLog: testLog,
                 isSimulator: true,
                 autoExit: true,
                 xmlOutput: true);
 
+            string? testEngTag = null;
+            if (signalTestEnd)
+            {
+                testEngTag = WatchForTestEndTag(ref testLog, ref cancellationToken);
+            }
+
+            using (testLog)
             using (deviceListener)
             {
-                using var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, testCompleted.Token);
                 var (catalystTestResult, catalystResultMessage) = await RunMacCatalystTests(
                     deviceListenerTransport,
                     deviceListener,
@@ -111,7 +107,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     extraAppArguments,
                     extraEnvVariables,
                     testEngTag,
-                    combinedCancellationToken.Token);
+                    cancellationToken);
 
                 return (catalystTestResult, catalystResultMessage);
             }
@@ -135,12 +131,12 @@ namespace Microsoft.DotNet.XHarness.Apple
             var runMode = target.Platform.ToRunMode();
             var isSimulator = target.Platform.IsSimulator();
 
-            using var deviceListenerLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
+            var testLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
 
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 runMode,
                 log: _mainLog,
-                testLog: deviceListenerLog,
+                testLog: testLog,
                 isSimulator: isSimulator,
                 autoExit: true,
                 xmlOutput: true); // cli always uses xml
@@ -148,9 +144,10 @@ namespace Microsoft.DotNet.XHarness.Apple
             string? testEngTag = null;
             if (signalTestEnd)
             {
-                testEngTag = _helpers.GenerateGuid().ToString();
+                testEngTag = WatchForTestEndTag(ref testLog, ref cancellationToken);
             }
 
+            using (testLog)
             using (deviceListener)
             {
                 var deviceListenerPort = deviceListener.InitializeAndGetPort();
@@ -523,14 +520,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<(string, string)> extraEnvVariables,
             string? testEngTag)
         {
-            string appOutputLog = _logs.CreateFile($"{appInformation.BundleIdentifier}.log", LogType.ApplicationLog);
-            string appErrorOutputLog = _logs.CreateFile($"{appInformation.BundleIdentifier}.err.log", LogType.ApplicationLog);
-
-            var args = new MlaunchArguments
-            {
-                new SetStdoutArgument(appOutputLog),
-                new SetStderrArgument(appErrorOutputLog),
-            };
+            var args = new MlaunchArguments();
 
             // Environment variables
             var envVariables = GetEnvVariables(
@@ -666,11 +656,11 @@ namespace Microsoft.DotNet.XHarness.Apple
             return args;
         }
 
-        private void WatchForTestEndTag(
-            string tag,
+        private string WatchForTestEndTag(
             ref IFileBackedLog appLog,
             ref CancellationToken cancellationToken)
         {
+            var tag = _helpers.GenerateGuid().ToString();
             var testEndDetected = new CancellationTokenSource();
             var testEndScanner = new ScanLog(tag, () =>
             {
@@ -681,6 +671,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             // We need to check for test end tag since iOS 14+ doesn't send the pidDiedCallback event to mlaunch
             appLog = Log.CreateReadableAggregatedLog(appLog, testEndScanner);
             cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, testEndDetected.Token).Token;
+
+            return tag;
         }
     }
 }
