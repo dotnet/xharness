@@ -29,15 +29,15 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         Task<IHardwareDevice> FindCompanionDevice(ILog log, IHardwareDevice device);
 
-        Task<IHardwareDevice> FindDevice(RunMode runMode, ILog log, bool includeLocked);
+        Task<IHardwareDevice> FindDevice(RunMode runMode, ILog log, bool includeLocked, bool includeWirelessDevices = true);
     }
 
     public class HardwareDeviceLoader : IHardwareDeviceLoader
     {
         private readonly IMlaunchProcessManager _processManager;
         private bool _loaded;
-        private readonly BlockingEnumerableCollection<IHardwareDevice> _connectedDevices = new BlockingEnumerableCollection<IHardwareDevice>();
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
+        private readonly BlockingEnumerableCollection<IHardwareDevice> _connectedDevices = new();
+        private readonly SemaphoreSlim _semaphore = new(1);
 
         public IEnumerable<IHardwareDevice> ConnectedDevices => _connectedDevices;
         public IEnumerable<IHardwareDevice> Connected64BitIOS => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.iOS && x.Supports64Bit);
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
-        public async Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false)
+        public async Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false, bool includeWirelessDevices = true)
         {
             await _semaphore.WaitAsync();
 
@@ -73,6 +73,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 {
                     var arguments = new MlaunchArguments(
                         new ListDevicesArgument(tmpfile),
+                        new ListWirelessDevicesArgument(includeWirelessDevices),
                         new XmlOutputFormatArgument());
 
                     if (listExtraData)
@@ -143,7 +144,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             }
         }
 
-        public async Task<IHardwareDevice> FindDevice(RunMode runMode, ILog log, bool includeLocked)
+        public async Task<IHardwareDevice> FindDevice(RunMode runMode, ILog log, bool includeLocked, bool includeWirelessDevices = true)
         {
             DeviceClass[] deviceClasses = runMode switch
             {
@@ -153,7 +154,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                 _ => throw new ArgumentException(nameof(runMode)),
             };
 
-            await LoadDevices(log, false, false);
+            await LoadDevices(log, includeLocked: false, forceRefresh: false, includeWirelessDevices: includeWirelessDevices);
 
             IEnumerable<IHardwareDevice> compatibleDevices = ConnectedDevices.Where(v => deviceClasses.Contains(v.DeviceClass) && v.IsUsableForDebugging != false);
             IHardwareDevice device;

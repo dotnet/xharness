@@ -29,6 +29,16 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
     }
 
     /// <summary>
+    /// When listing devices, should mlaunch also scan for wireless devices.
+    /// </summary>
+    public sealed class ListWirelessDevicesArgument : SingleValueArgument
+    {
+        public ListWirelessDevicesArgument(bool wirelessEnabled) : base("list-wireless-devices", wirelessEnabled ? "true" : "false", true)
+        {
+        }
+    }
+
+    /// <summary>
     /// Write the syslog from the device to the console.
     /// </summary>
     public sealed class LogDevArgument : OptionArgument

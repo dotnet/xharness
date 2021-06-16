@@ -22,12 +22,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 {
     public class SimulatorLoader : ISimulatorLoader
     {
-        private readonly BlockingEnumerableCollection<SimRuntime> _supportedRuntimes = new BlockingEnumerableCollection<SimRuntime>();
-        private readonly BlockingEnumerableCollection<SimDeviceType> _supportedDeviceTypes = new BlockingEnumerableCollection<SimDeviceType>();
-        private readonly BlockingEnumerableCollection<SimulatorDevice> _availableDevices = new BlockingEnumerableCollection<SimulatorDevice>();
-        private readonly BlockingEnumerableCollection<SimDevicePair> _availableDevicePairs = new BlockingEnumerableCollection<SimDevicePair>();
+        private readonly BlockingEnumerableCollection<SimRuntime> _supportedRuntimes = new();
+        private readonly BlockingEnumerableCollection<SimDeviceType> _supportedDeviceTypes = new();
+        private readonly BlockingEnumerableCollection<SimulatorDevice> _availableDevices = new();
+        private readonly BlockingEnumerableCollection<SimDevicePair> _availableDevicePairs = new();
 
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim _semaphore = new(1);
         private readonly IMlaunchProcessManager _processManager;
         private bool _loaded;
 
@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         }
 
-        public async Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false)
+        public async Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false, bool _ = true)
         {
             await _semaphore.WaitAsync();
 

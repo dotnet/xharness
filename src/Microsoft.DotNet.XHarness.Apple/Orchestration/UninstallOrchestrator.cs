@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             TestTargetOs target,
             string? deviceName,
             TimeSpan timeout,
+            bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
             CancellationToken cancellationToken);
@@ -49,6 +50,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             TestTargetOs target,
             string? deviceName,
             TimeSpan timeout,
+            bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
             CancellationToken cancellationToken)
@@ -62,6 +64,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             return OrchestrateRun(
                 target,
                 deviceName,
+                includeWirelessDevices,
                 resetSimulator,
                 enableLldb,
                 AppBundleInformation.FromBundleId(bundleIdentifier),

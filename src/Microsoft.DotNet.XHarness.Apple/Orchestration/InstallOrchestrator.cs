@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             string? deviceName,
             string appPackagePath,
             TimeSpan timeout,
+            bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
             CancellationToken cancellationToken);
@@ -57,6 +58,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             string? deviceName,
             string appPackagePath,
             TimeSpan timeout,
+            bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
             CancellationToken cancellationToken)
@@ -70,7 +72,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice)
                 => Task.FromResult(ExitCode.SUCCESS); // no-op
 
-            return await OrchestrateRun(target, deviceName, resetSimulator, enableLldb, appBundleInfo, executeMacCatalystApp, executeApp, cancellationToken);
+            return await OrchestrateRun(target, deviceName, includeWirelessDevices, resetSimulator, enableLldb, appBundleInfo, executeMacCatalystApp, executeApp, cancellationToken);
         }
 
         protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)

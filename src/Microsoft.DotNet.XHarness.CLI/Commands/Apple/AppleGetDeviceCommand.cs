@@ -5,6 +5,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.CLI.Commands;
@@ -33,7 +34,7 @@ Arguments:
         {
         }
 
-        protected override async Task<ExitCode> InvokeInternal(ILogger logger)
+        protected override async Task<ExitCode> InvokeInternal(Extensions.Logging.ILogger logger)
         {
             var processManager = new MlaunchProcessManager(Arguments.XcodeRoot, Arguments.MlaunchPath);
 
@@ -52,20 +53,9 @@ Arguments:
 
             try
             {
-                if (target.Platform.IsSimulator())
-                {
-                    var simulatorLoader = new SimulatorLoader(processManager);
-
-                    // TODO: Handle companion mode
-                    var (simulator, _) = await simulatorLoader.FindSimulators(target, log, 3, true);
-                    Console.WriteLine(simulator.UDID);
-                }
-                else
-                {
-                    var hardwareDeviceLoader = new HardwareDeviceLoader(processManager);
-                    var device = await hardwareDeviceLoader.FindDevice(target.Platform.ToRunMode(), log, false);
-                    Console.WriteLine(device.UDID);
-                }
+                var deviceFinder = new DeviceFinder(new HardwareDeviceLoader(processManager), new SimulatorLoader(processManager));
+                var device = await deviceFinder.FindDevice(target, Arguments.DeviceName, log, Arguments.IncludeWireless);
+                Console.WriteLine(device.Device.UDID);
             }
             catch (Exception e)
             {

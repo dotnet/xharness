@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 {
     public interface IDeviceFinder
     {
-        Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(TestTargetOs target, string? deviceName, ILog log);
+        Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(TestTargetOs target, string? deviceName, ILog log, bool includeWirelessDevices = true);
     }
 
     public class DeviceFinder : IDeviceFinder
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
         }
 
-        public async Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(TestTargetOs target, string? deviceName, ILog log)
+        public async Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(TestTargetOs target, string? deviceName, ILog log, bool includeWirelessDevices = true)
         {
             IDevice? device;
             IDevice? companionDevice = null;
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 }
                 else
                 {
-                    await _simulatorLoader.LoadDevices(log, false);
+                    await _simulatorLoader.LoadDevices(log, includeLocked: false);
 
                     device = _simulatorLoader.AvailableDevices.FirstOrDefault(IsMatchingDevice)
                         ?? throw new NoDeviceFoundException($"Failed to find a simulator '{deviceName}'");
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 // The DeviceLoader.FindDevice will return the fist device of the type, but we want to make sure that
                 // the device we use is of the correct arch, therefore, we will use the LoadDevices and handpick one
-                await _deviceLoader.LoadDevices(log, false, false);
+                await _deviceLoader.LoadDevices(log, includeLocked: false, forceRefresh: false, includeWirelessDevices: includeWirelessDevices);
 
                 if (deviceName == null)
                 {

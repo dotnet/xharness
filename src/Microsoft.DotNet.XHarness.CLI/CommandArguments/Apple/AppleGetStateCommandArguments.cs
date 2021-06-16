@@ -12,6 +12,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public MlaunchArgument MlaunchPath { get; set; } = new();
         public ShowSimulatorsUUIDArgument ShowSimulatorsUUID { get; set; } = new();
         public ShowDevicesUUIDArgument ShowDevicesUUID { get; set; } = new();
+        public IncludeWirelessArgument IncludeWireless { get; } = new();
         public UseJsonArgument UseJson { get; set; } = new();
 
         protected override IEnumerable<Argument> GetArguments() => new Argument[]
@@ -19,6 +20,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             MlaunchPath,
             ShowSimulatorsUUID,
             ShowDevicesUUID,
+            IncludeWireless,
             UseJson,
         };
     }
