@@ -87,11 +87,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 autoExit: true,
                 xmlOutput: true);
 
-            string? testEndTag = null;
-            if (signalTestEnd)
-            {
-                testEndTag = WatchForTestEndTag(ref testLog, ref cancellationToken);
-            }
+            string? testEndTag = signalTestEnd ? _helpers.GenerateGuid().ToString() : null;
 
             using (testLog)
             using (deviceListener)
@@ -662,8 +658,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             var testEndScanner = new ScanLog(tag, () =>
             {
                 _mainLog.WriteLine("Detected test end tag in application's output");
-                testEndDetected.Cancel();
                 _testEndSignalDetected = true;
+                testEndDetected.Cancel();
             });
 
             // We need to check for test end tag since iOS 14+ doesn't send the pidDiedCallback event to mlaunch
