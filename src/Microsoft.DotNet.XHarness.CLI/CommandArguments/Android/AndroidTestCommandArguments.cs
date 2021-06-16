@@ -8,7 +8,7 @@ using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {
-    internal class AndroidTestCommandArguments : XHarnessCommandArguments
+    internal class AndroidTestCommandArguments : XHarnessCommandArguments, IWebServerArguments
     {
         public AppPathArgument AppPackagePath { get; } = new();
         public PackageNameArgument PackageName { get; } = new();
@@ -21,6 +21,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
         public DeviceOutputFolderArgument DeviceOutputFolder { get; } = new();
         public WifiArgument Wifi { get; } = new();
+
+        public WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; } = new();
+        public WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; } = new();
+        public WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; } = new();
+        public WebServerUseHttpsArguments WebServerUseHttps { get; } = new();
+        public WebServerUseCorsArguments WebServerUseCors { get; } = new();
 
         protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
@@ -35,6 +41,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             ExpectedExitCode,
             DeviceOutputFolder,
             Wifi,
+            WebServerMiddlewarePathsAndTypes,
+            WebServerHttpEnvironmentVariables,
+            WebServerHttpsEnvironmentVariables,
+            WebServerUseHttps,
+            WebServerUseCors,
         };
     }
 }

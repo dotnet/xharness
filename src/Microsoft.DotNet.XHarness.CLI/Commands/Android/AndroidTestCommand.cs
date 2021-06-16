@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
@@ -39,7 +40,7 @@ Arguments:
         {
         }
 
-        protected override Task<ExitCode> InvokeInternal(ILogger logger)
+        protected override async Task<ExitCode> InvokeInternal(ILogger logger)
         {
             logger.LogDebug($"Android Test command called: App = {Arguments.AppPackagePath}{Environment.NewLine}Instrumentation Name = {Arguments.InstrumentationName}");
             logger.LogDebug($"Output Directory:{Arguments.OutputDirectory}{Environment.NewLine}Timeout = {Arguments.Timeout.Value.TotalSeconds} seconds.");
@@ -48,7 +49,7 @@ Arguments:
             if (!File.Exists(Arguments.AppPackagePath))
             {
                 logger.LogCritical($"Couldn't find {Arguments.AppPackagePath}!");
-                return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
+                return ExitCode.PACKAGE_NOT_FOUND;
             }
             var runner = new AdbRunner(logger);
 
@@ -69,6 +70,7 @@ Arguments:
             string apkPackageName = Arguments.PackageName;
             string appPackagePath = Arguments.AppPackagePath;
 
+            var webServerCts = new CancellationTokenSource();
             try
             {
                 var exitCode = AndroidInstallCommand.InvokeHelper(
@@ -82,11 +84,36 @@ Arguments:
 
                 if (exitCode == ExitCode.SUCCESS)
                 {
+                    ServerURLs? serverURLs = null;
+                    Dictionary<string, string> instrumentationArgs = Arguments.InstrumentationArguments;
+                    if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
+                    {
+                        serverURLs = await WebServer.Start(
+                            Arguments,
+                            null,
+                            logger,
+                            null,
+                            webServerCts.Token);
+                        webServerCts.CancelAfter(Arguments.Timeout);
+
+                        foreach (var envVariable in Arguments.WebServerHttpEnvironmentVariables.Value)
+                        {
+                            instrumentationArgs.Add($"env:{envVariable}", serverURLs!.Http);
+                        }
+
+                        foreach (var envVariable in Arguments.WebServerHttpsEnvironmentVariables.Value)
+                        {
+                            if (!string.IsNullOrEmpty(serverURLs.Https))
+                            {
+                                instrumentationArgs.Add($"env:{envVariable}", serverURLs!.Https);
+                            }
+                        }
+                    }
                     exitCode = AndroidRunCommand.InvokeHelper(
                         logger: logger,
                         apkPackageName: apkPackageName,
                         instrumentationName: Arguments.InstrumentationName,
-                        instrumentationArguments: Arguments.InstrumentationArguments,
+                        instrumentationArguments: instrumentationArgs,
                         outputDirectory: Arguments.OutputDirectory,
                         deviceOutputFolder: Arguments.DeviceOutputFolder,
                         timeout: Arguments.Timeout,
@@ -96,19 +123,26 @@ Arguments:
                 } 
 
                 runner.UninstallApk(apkPackageName);
-                return Task.FromResult(exitCode);
+                return exitCode;
             }
             catch (NoDeviceFoundException noDevice)
             {
                 logger.LogCritical(noDevice, noDevice.Message);
-                return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
+                return ExitCode.ADB_DEVICE_ENUMERATION_FAILURE;
             }
             catch (Exception toLog)
             {
                 logger.LogCritical(toLog, toLog.Message);
             }
+            finally
+            {
+                if (!webServerCts.IsCancellationRequested)
+                {
+                    webServerCts.Cancel();
+                }
+            }
 
-            return Task.FromResult(ExitCode.GENERAL_FAILURE);
+            return ExitCode.GENERAL_FAILURE;
         }
     }
 }
