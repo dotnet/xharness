@@ -32,6 +32,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             XmlResultJargon xmlResultJargon,
             IEnumerable<string> singleMethodFilters,
             IEnumerable<string> classMethodFilters,
+            bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
             bool signalTestEnd,
@@ -78,6 +79,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             XmlResultJargon xmlResultJargon,
             IEnumerable<string> singleMethodFilters,
             IEnumerable<string> classMethodFilters,
+            bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
             bool signalTestEnd,
@@ -119,6 +121,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             return OrchestrateRun(
                 target,
                 deviceName,
+                includeWirelessDevices,
                 resetSimulator,
                 enableLldb,
                 appBundleInformation,

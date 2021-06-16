@@ -52,7 +52,6 @@ Arguments:
             }
             var runner = new AdbRunner(logger);
 
-            // Assumption: APKs we test will only have one arch for now
             IEnumerable<string> apkRequiredArchitecture;
 
             if (Arguments.DeviceArchitecture.Value.Any())

@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             TestTargetOs target,
             string? deviceName,
             TimeSpan timeout,
+            bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
             CancellationToken cancellationToken);
@@ -49,6 +50,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             TestTargetOs target,
             string? deviceName,
             TimeSpan timeout,
+            bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
             CancellationToken cancellationToken)
@@ -62,6 +64,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             return OrchestrateRun(
                 target,
                 deviceName,
+                includeWirelessDevices,
                 resetSimulator,
                 enableLldb,
                 AppBundleInformation.FromBundleId(bundleIdentifier),
@@ -72,5 +75,16 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         protected override Task<ExitCode> InstallApp(AppBundleInformation appBundleInfo, IDevice device, TestTargetOs target, CancellationToken cancellationToken)
             => Task.FromResult(ExitCode.SUCCESS); // no-op - we only want to uninstall the app
+
+        protected override Task UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
+        {
+            // For the uninstallation, we don't want to uninstall twice so we skip the preparation one
+            if (isPreparation)
+            {
+                return Task.CompletedTask;
+            }
+
+            return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
+        }
     }
 }

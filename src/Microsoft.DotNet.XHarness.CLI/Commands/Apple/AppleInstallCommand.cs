@@ -43,6 +43,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 Arguments.DeviceName,
                 Arguments.AppBundlePath,
                 Arguments.Timeout,
+                Arguments.IncludeWireless,
                 Arguments.ResetSimulator,
                 enableLldb: false,
                 cancellationToken);

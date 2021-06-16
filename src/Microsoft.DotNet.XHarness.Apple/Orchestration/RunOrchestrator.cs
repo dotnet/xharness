@@ -26,6 +26,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             string? deviceName,
             TimeSpan timeout,
             int expectedExitCode,
+            bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
             IReadOnlyCollection<(string, string)> environmentalVariables,
@@ -83,6 +84,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             string? deviceName,
             TimeSpan timeout,
             int expectedExitCode,
+            bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
             IReadOnlyCollection<(string, string)> environmentalVariables,
@@ -113,6 +115,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             return OrchestrateRun(
                 target,
                 deviceName,
+                includeWirelessDevices,
                 resetSimulator,
                 enableLldb,
                 appBundleInformation,

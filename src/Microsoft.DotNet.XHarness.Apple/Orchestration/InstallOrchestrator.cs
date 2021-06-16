@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             string? deviceName,
             string appPackagePath,
             TimeSpan timeout,
+            bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
             CancellationToken cancellationToken);
@@ -57,6 +58,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             string? deviceName,
             string appPackagePath,
             TimeSpan timeout,
+            bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
             CancellationToken cancellationToken)
@@ -70,12 +72,21 @@ namespace Microsoft.DotNet.XHarness.Apple
             Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice)
                 => Task.FromResult(ExitCode.SUCCESS); // no-op
 
-            return await OrchestrateRun(target, deviceName, resetSimulator, enableLldb, appBundleInfo, executeMacCatalystApp, executeApp, cancellationToken);
+            return await OrchestrateRun(target, deviceName, includeWirelessDevices, resetSimulator, enableLldb, appBundleInfo, executeMacCatalystApp, executeApp, cancellationToken);
         }
 
         protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
             => Task.CompletedTask; // no-op so that we don't remove the app after (reset will only clean it up before)
-        protected override Task UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, CancellationToken cancellationToken)
-            => Task.CompletedTask; // no-op - we only want to install the app
+
+        protected override Task UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
+        {
+            // For the installation, we want to uninstall during preparation only
+            if (isPreparation)
+            {
+                return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
+            }
+
+            return Task.CompletedTask;
+        }
     }
 }

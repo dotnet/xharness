@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public XcodeArgument XcodeRoot { get; } = new();
         public MlaunchArgument MlaunchPath { get; } = new();
         public DeviceNameArgument DeviceName { get; } = new();
+        public IncludeWirelessArgument IncludeWireless { get; } = new();
         public EnableLldbArgument EnableLldb { get; } = new();
         public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
         public ResetSimulatorArgument ResetSimulator { get; } = new();
@@ -29,6 +30,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             Target,
             OutputDirectory,
             DeviceName,
+            IncludeWireless,
             Timeout,
             ExpectedExitCode,
             XcodeRoot,
