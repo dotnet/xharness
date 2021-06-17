@@ -554,19 +554,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 .Setup(x => x.GenerateGuid())
                 .Returns(testEndSignal);
 
-            // Act
-            var appTester = new AppTester(
-                _processManager.Object,
-                _listenerFactory.Object,
-                _snapshotReporterFactory,
-                Mock.Of<ICaptureLogFactory>(),
-                deviceLogCapturerFactory.Object,
-                _testReporterFactory,
-                new XmlResultParser(),
-                _mainLog.Object,
-                _logs.Object,
-                _helpers.Object);
-
             List<MlaunchArguments> mlaunchArguments = new();
             List<IFileBackedLog> appOutputLogs = new();
             List<CancellationToken> cancellationTokens = new();
@@ -605,6 +592,19 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 launchAppPath: s_appPath,
                 supports32b: false,
                 extension: null);
+
+            // Act
+            var appTester = new AppTester(
+                _processManager.Object,
+                _listenerFactory.Object,
+                _snapshotReporterFactory,
+                Mock.Of<ICaptureLogFactory>(),
+                deviceLogCapturerFactory.Object,
+                _testReporterFactory,
+                new XmlResultParser(),
+                _mainLog.Object,
+                _logs.Object,
+                _helpers.Object);
 
             var testTask = appTester.TestApp(
                 appInformation,
