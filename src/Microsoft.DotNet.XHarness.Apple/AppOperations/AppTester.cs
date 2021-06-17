@@ -37,8 +37,6 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly ILogs _logs;
         private readonly IHelpers _helpers;
 
-        private bool _appEndSignalDetected = false;
-
         public AppTester(
             IMlaunchProcessManager processManager,
             ISimpleListenerFactory simpleListenerFactory,
@@ -51,7 +49,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             ILogs logs,
             IHelpers helpers,
             Action<string>? logCallback = null)
-            : base(processManager, captureLogFactory, logs, mainLog, logCallback)
+            : base(processManager, captureLogFactory, logs, mainLog, helpers, logCallback)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _listenerFactory = simpleListenerFactory ?? throw new ArgumentNullException(nameof(simpleListenerFactory));
@@ -69,12 +67,12 @@ namespace Microsoft.DotNet.XHarness.Apple
             AppBundleInformation appInformation,
             TimeSpan timeout,
             TimeSpan testLaunchTimeout,
+            bool signalAppEnd,
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables,
             XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
             string[]? skippedMethods = null,
             string[]? skippedTestClasses = null,
-            bool signalAppEnd = false,
             CancellationToken cancellationToken = default)
         {
             var testLog = _logs.Create($"test-{TestTarget.MacCatalyst.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
@@ -91,8 +89,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             string? appEndTag = null;
             if (signalAppEnd)
             {
-                appEndTag = _helpers.GenerateGuid().ToString();
-                WatchForAppEndTag(appEndTag, ref appOutputLog, ref cancellationToken);
+                WatchForAppEndTag(out appEndTag, ref appOutputLog, ref cancellationToken);
             }
 
             using (testLog)
@@ -125,12 +122,12 @@ namespace Microsoft.DotNet.XHarness.Apple
             IDevice? companionDevice,
             TimeSpan timeout,
             TimeSpan testLaunchTimeout,
+            bool signalAppEnd,
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables,
             XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
             string[]? skippedMethods = null,
             string[]? skippedTestClasses = null,
-            bool signalAppEnd = false,
             CancellationToken cancellationToken = default)
         {
             var runMode = target.Platform.ToRunMode();
@@ -150,8 +147,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             string? appEndTag = null;
             if (signalAppEnd)
             {
-                appEndTag = _helpers.GenerateGuid().ToString();
-                WatchForAppEndTag(appEndTag, ref appOutputLog, ref cancellationToken);
+                WatchForAppEndTag(out appEndTag , ref appOutputLog, ref cancellationToken);
             }
 
             using (testLog)
@@ -451,7 +447,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 await crashReporter.StartCaptureAsync();
 
-                var result = await RunMacCatalystApp(appInformation, timeout, extraAppArguments, envVariables, combinedCancellationToken.Token);
+                var result = await RunMacCatalystApp(appInformation, appOutputLog, timeout, extraAppArguments, envVariables, combinedCancellationToken.Token);
                 await testReporter.CollectSimulatorResult(result);
             }
             finally
@@ -659,26 +655,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             return args;
-        }
-
-        private string WatchForAppEndTag(
-            string tag,
-            ref IFileBackedLog appLog,
-            ref CancellationToken cancellationToken)
-        {
-            var appEndDetected = new CancellationTokenSource();
-            var appEndScanner = new ScanLog(tag, () =>
-            {
-                _mainLog.WriteLine("Detected test end tag in application's output");
-                _appEndSignalDetected = true;
-                appEndDetected.Cancel();
-            });
-
-            // We need to check for test end tag since iOS 14+ doesn't send the pidDiedCallback event to mlaunch
-            appLog = Log.CreateReadableAggregatedLog(appLog, appEndScanner);
-            cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, appEndDetected.Token).Token;
-
-            return tag;
         }
     }
 }

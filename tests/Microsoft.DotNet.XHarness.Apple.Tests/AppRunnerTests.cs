@@ -55,6 +55,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 _mockSimulator,
                 null,
                 timeout: TimeSpan.FromSeconds(30),
+                false,
                 extraAppArguments: new[] { "--foo=bar", "--xyz" },
                 extraEnvVariables: new[] { ("appArg1", "value1") });
 
@@ -117,6 +118,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 s_mockDevice,
                 null,
                 timeout: TimeSpan.FromSeconds(30),
+                false,
                 extraAppArguments: new[] { "--foo=bar", "--xyz" },
                 extraEnvVariables: new[] { ("appArg1", "value1") });
 
@@ -175,6 +177,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             var result = await appRunner.RunMacCatalystApp(
                 appInformation,
                 timeout: TimeSpan.FromSeconds(30),
+                false,
                 extraAppArguments: new[] { "--foo=bar", "--xyz" },
                 extraEnvVariables: new[] { ("appArg1", "value1") });
 
@@ -189,6 +192,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        "open",
                        It.Is<IList<string>>(args => args[0] == "-W" && args[1] == s_appPath),
                        _mainLog.Object,
+                       It.IsAny<ILog>(),
+                       It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<CancellationToken>()),
@@ -207,8 +212,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 extension: null);
 
         private string GetExpectedDeviceMlaunchArgs() =>
-            $"--stdout={_stdoutLog.FullPath} " +
-            $"--stderr={_stderrLog.FullPath} " +
             "-argument=--foo=bar " +
             "-argument=--xyz " +
             "-setenv=appArg1=value1 " +
@@ -218,8 +221,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "--wait-for-exit";
 
         private string GetExpectedSimulatorMlaunchArgs() =>
-            $"--stdout={_stdoutLog.FullPath} " +
-            $"--stderr={_stderrLog.FullPath} " +
             "-argument=--foo=bar " +
             "-argument=--xyz " +
             "-setenv=appArg1=value1 " +

@@ -184,12 +184,12 @@ namespace Microsoft.DotNet.XHarness.Apple
                 companionDevice,
                 timeout,
                 launchTimeout,
+                signalAppEnd,
                 passthroughArguments,
                 environmentalVariables,
                 xmlResultJargon,
                 skippedMethods: singleMethodFilters?.ToArray(),
                 skippedTestClasses: classMethodFilters?.ToArray(),
-                signalAppEnd,
                 cancellationToken: cancellationToken);
 
             return ParseResult(testResult, resultMessage);
@@ -214,12 +214,12 @@ namespace Microsoft.DotNet.XHarness.Apple
                 appBundleInfo,
                 timeout,
                 launchTimeout,
+                signalAppEnd,
                 passthroughArguments,
                 environmentalVariables,
                 xmlResultJargon,
                 skippedMethods: singleMethodFilters?.ToArray(),
                 skippedTestClasses: classMethodFilters?.ToArray(),
-                signalAppEnd,
                 cancellationToken: cancellationToken);
 
             return ParseResult(testResult, resultMessage);

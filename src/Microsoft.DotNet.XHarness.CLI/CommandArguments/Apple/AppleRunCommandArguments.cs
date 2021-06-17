@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
         public ResetSimulatorArgument ResetSimulator { get; } = new();
         public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
+        public SignalAppEndArgument SignalAppEnd { get; } = new();
 
         protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
@@ -36,6 +37,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             XcodeRoot,
             MlaunchPath,
             EnableLldb,
+            SignalAppEnd,
             EnvironmentalVariables,
             ResetSimulator,
         };

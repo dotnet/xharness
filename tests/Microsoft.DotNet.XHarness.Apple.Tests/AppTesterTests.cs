@@ -123,8 +123,9 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 null,
                 TimeSpan.FromSeconds(30),
                 TimeSpan.FromSeconds(30),
-                new string[] { "--foo=bar", "--xyz" },
-                new[] { ("appArg1", "value1") });
+                signalAppEnd: false,
+                extraAppArguments: new string[] { "--foo=bar", "--xyz" },
+                extraEnvVariables: new[] { ("appArg1", "value1") });
 
             // Verify
             Assert.Equal(TestExecutingResult.Succeeded, result);
@@ -217,6 +218,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 null,
                 timeout: TimeSpan.FromSeconds(30),
                 testLaunchTimeout: TimeSpan.FromSeconds(30),
+                signalAppEnd: false,
                 extraAppArguments: new[] { "--foo=bar", "--xyz" },
                 extraEnvVariables: new[] { ("appArg1", "value1") });
 
@@ -312,9 +314,10 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 s_mockDevice,
                 null,
                 timeout: TimeSpan.FromSeconds(30),
+                testLaunchTimeout: TimeSpan.FromSeconds(30),
+                signalAppEnd: false,
                 extraAppArguments: new[] { "--foo=bar", "--xyz" },
                 extraEnvVariables: new[] { ("appArg1", "value1") },
-                testLaunchTimeout: TimeSpan.FromSeconds(30),
                 skippedMethods: skippedTests);
 
             // Verify
@@ -404,6 +407,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 extraEnvVariables: new[] { ("appArg1", "value1") },
                 timeout: TimeSpan.FromSeconds(30),
                 testLaunchTimeout: TimeSpan.FromSeconds(30),
+                signalAppEnd: false,
                 skippedTestClasses: skippedClasses);
 
             // Verify
@@ -484,6 +488,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 appInformation,
                 timeout: TimeSpan.FromSeconds(30),
                 testLaunchTimeout: TimeSpan.FromSeconds(30),
+                signalAppEnd: false,
                 extraAppArguments: new[] { "--foo=bar", "--xyz" },
                 extraEnvVariables: new[] { ("appArg1", "value1") });
 
@@ -497,6 +502,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        "open",
                        It.Is<IList<string>>(args => args.Contains(s_appPath) && args.Contains("--foo=bar") && args.Contains("--foo=bar")),
                        _mainLog.Object,
+                       It.IsAny<ILog>(),
+                       It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.Is<Dictionary<string, string>>(envVars =>
                             envVars["NUNIT_HOSTNAME"] == "127.0.0.1" &&
