@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public EnableLldbArgument EnableLldb { get; } = new();
         public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
         public ResetSimulatorArgument ResetSimulator { get; } = new();
-        public SignalTestEndArgument SignalTestEnd { get; } = new();
+        public SignalAppEndArgument SignalAppEnd { get; } = new();
 
         protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             SingleMethodFilters,
             ClassMethodFilters,
             EnableLldb,
-            SignalTestEnd,
+            SignalAppEnd,
             EnvironmentalVariables,
             ResetSimulator,
         };

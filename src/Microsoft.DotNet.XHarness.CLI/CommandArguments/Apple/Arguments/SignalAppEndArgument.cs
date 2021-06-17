@@ -9,9 +9,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// <summary>
     /// Enables extra signaling between the TestRunner application and XHarness to work around problems in newer iOS.
     /// </summary>
-    internal class SignalTestEndArgument : SwitchArgument
+    internal class SignalAppEndArgument : SwitchArgument
     {
-        public SignalTestEndArgument() : base("signal-test-end", "Tells the TestRunner inside of the test application to signal back when tests have finished (iOS 14+ cannot detect this reliably otherwise)", false)
+        public SignalAppEndArgument() : base("signal-app-end", "Tells the test application to signal back when tests have finished (iOS 14+ cannot detect this reliably otherwise)", false)
         {
         }
     }

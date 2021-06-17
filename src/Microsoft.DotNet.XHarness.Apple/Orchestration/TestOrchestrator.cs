@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
-            bool signalTestEnd,
+            bool signalAppEnd,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken);
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
-            bool signalTestEnd,
+            bool signalAppEnd,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     classMethodFilters,
                     environmentalVariables,
                     passthroughArguments,
-                    signalTestEnd,
+                    signalAppEnd,
                     cancellationToken);
 
             Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice) =>
@@ -115,7 +115,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     classMethodFilters,
                     environmentalVariables,
                     passthroughArguments,
-                    signalTestEnd,
+                    signalAppEnd,
                     cancellationToken);
 
             return OrchestrateRun(
@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> classMethodFilters,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
-            bool signalTestEnd,
+            bool signalAppEnd,
             CancellationToken cancellationToken)
         {
             var runMode = target.Platform.ToRunMode();
@@ -161,16 +161,16 @@ namespace Microsoft.DotNet.XHarness.Apple
                             "Test run might fail if permission is not granted. Permission is valid until app is uninstalled.");
                     }
 
-                    if (!signalTestEnd)
+                    if (!signalAppEnd)
                     {
-                        _logger.LogWarning("XHarness cannot reliably detect when app quits on iOS 14 and newer. Consider using --signal-test-end");
+                        _logger.LogWarning("XHarness cannot reliably detect when app quits on iOS 14 and newer. Consider using --signal-app-end");
                     }
                 }
             }
 
-            if (signalTestEnd && (runMode == RunMode.Sim64 || runMode == RunMode.Sim32))
+            if (signalAppEnd && (runMode == RunMode.Sim64 || runMode == RunMode.Sim32))
             {
-                _logger.LogWarning("The --signal-test-end option is recommended for device tests and is not required for simulators");
+                _logger.LogWarning("The --signal-app-end option is recommended for device tests and is not required for simulators");
             }
 
             _logger.LogInformation("Starting test run for " + appBundleInfo.BundleIdentifier + "..");
@@ -189,7 +189,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 xmlResultJargon,
                 skippedMethods: singleMethodFilters?.ToArray(),
                 skippedTestClasses: classMethodFilters?.ToArray(),
-                signalTestEnd,
+                signalAppEnd,
                 cancellationToken: cancellationToken);
 
             return ParseResult(testResult, resultMessage);
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> classMethodFilters,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
-            bool signalTestEnd,
+            bool signalAppEnd,
             CancellationToken cancellationToken)
         {
             AppTester appTester = GetAppTester(communicationChannel, TestTarget.MacCatalyst.IsSimulator());
@@ -219,7 +219,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 xmlResultJargon,
                 skippedMethods: singleMethodFilters?.ToArray(),
                 skippedTestClasses: classMethodFilters?.ToArray(),
-                signalTestEnd,
+                signalAppEnd,
                 cancellationToken: cancellationToken);
 
             return ParseResult(testResult, resultMessage);

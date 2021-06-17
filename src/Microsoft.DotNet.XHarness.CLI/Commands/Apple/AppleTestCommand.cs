@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 includeWirelessDevices: Arguments.IncludeWireless,
                 resetSimulator: Arguments.ResetSimulator,
                 enableLldb: Arguments.EnableLldb,
-                signalTestEnd: Arguments.SignalTestEnd,
+                signalAppEnd: Arguments.SignalAppEnd,
                 Arguments.EnvironmentalVariables.Value,
                 PassThroughArguments,
                 cancellationToken);
