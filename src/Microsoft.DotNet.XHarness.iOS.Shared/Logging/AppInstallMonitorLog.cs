@@ -25,8 +25,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
         public bool CopyingWatchApp;
         public TimeSpan AppCopyDuration;
         public TimeSpan WatchAppCopyDuration;
-        public Stopwatch AppCopyStart = new Stopwatch();
-        public Stopwatch WatchAppCopyStart = new Stopwatch();
+        public Stopwatch AppCopyStart = new();
+        public Stopwatch WatchAppCopyStart = new();
         public int AppPercentComplete;
         public int WatchAppPercentComplete;
         public long AppBytes;

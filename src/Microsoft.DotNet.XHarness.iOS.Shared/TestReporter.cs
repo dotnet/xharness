@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
         /// </summary>
         private readonly string? _additionalLogsDirectory;
 
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
 
         /// <summary>
         /// Callback needed for the Xamarin.Xharness project that does extra logging in case of a crash.

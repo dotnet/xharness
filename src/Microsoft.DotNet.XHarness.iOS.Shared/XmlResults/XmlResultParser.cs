@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
     public class XmlResultParser : IResultParser
     {
         private static readonly IHelpers s_helpers = new Helpers();
-        private readonly Dictionary<XmlResultJargon, (IXmlResultParser Parser, ITestReportGenerator Generator)> _xmlFormatters = new Dictionary<XmlResultJargon, (IXmlResultParser Parser, ITestReportGenerator Generator)>
+        private readonly Dictionary<XmlResultJargon, (IXmlResultParser Parser, ITestReportGenerator Generator)> _xmlFormatters = new()
         {
             { XmlResultJargon.TouchUnit, (new TouchUnitResultParser(), new TouchUnitTestReportGenerator()) },
             { XmlResultJargon.NUnitV2, (new NUnitV2ResultParser(), new NUnitV2TestReportGenerator()) },

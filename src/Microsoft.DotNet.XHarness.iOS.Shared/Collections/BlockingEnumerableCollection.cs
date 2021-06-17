@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Collections
     public class BlockingEnumerableCollection<T> : IEnumerable<T> where T : class
     {
         private readonly List<T> _list = new();
-        private TaskCompletionSource<bool> _completed = new TaskCompletionSource<bool>();
+        private TaskCompletionSource<bool> _completed = new();
 
         public int Count
         {

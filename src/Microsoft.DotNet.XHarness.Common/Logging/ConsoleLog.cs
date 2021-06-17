@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
     /// </summary>
     public class ConsoleLog : ReadableLog
     {
-        readonly StringBuilder _captured = new StringBuilder();
+        readonly StringBuilder _captured = new();
 
         protected override void WriteImpl(string value)
         {

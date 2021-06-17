@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 {
     public static class PListExtensions
     {
-        private static readonly ConditionalWeakTable<XmlDocument, string> s_filenames = new ConditionalWeakTable<XmlDocument, string>();
+        private static readonly ConditionalWeakTable<XmlDocument, string> s_filenames = new();
 
         public const string BundleExecutablePropertyName = "CFBundleExecutable";
         public const string BundleIdentifierPropertyName = "CFBundleIdentifier";
