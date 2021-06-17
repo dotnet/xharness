@@ -137,6 +137,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                     x => x.ExecuteCommandAsync(
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        _mainLog.Object,
+                       It.IsAny<ILog>(),
+                       It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<int>(),
@@ -230,6 +232,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 .Verify(
                     x => x.ExecuteCommandAsync(
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
+                       It.IsAny<ILog>(),
+                       It.IsAny<ILog>(),
                        It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.Is<Dictionary<string, string>>(d => d["appArg1"] == "value1"),
@@ -326,6 +330,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                     x => x.ExecuteCommandAsync(
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        It.IsAny<ILog>(),
+                       It.IsAny<ILog>(),
+                       It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<int>(),
@@ -411,6 +417,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 .Verify(
                     x => x.ExecuteCommandAsync(
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
+                       It.IsAny<ILog>(),
+                       It.IsAny<ILog>(),
                        It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.IsAny<Dictionary<string, string>>(),
@@ -505,8 +513,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         }
 
         private string GetExpectedDeviceMlaunchArgs(string skippedTests = null, bool useTunnel = false, string extraArgs = null) =>
-            $"--stdout={_stdoutLog.FullPath} " +
-            $"--stderr={_stderrLog.FullPath} " +
             "-setenv=NUNIT_AUTOEXIT=true " +
             $"-setenv=NUNIT_HOSTPORT={Port} " +
             "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
@@ -521,8 +527,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "--wait-for-exit";
 
         private string GetExpectedSimulatorMlaunchArgs() =>
-            $"--stdout={_stdoutLog.FullPath} " +
-            $"--stderr={_stderrLog.FullPath} " +
             "-setenv=NUNIT_AUTOEXIT=true " +
             $"-setenv=NUNIT_HOSTPORT={Port} " +
             "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
