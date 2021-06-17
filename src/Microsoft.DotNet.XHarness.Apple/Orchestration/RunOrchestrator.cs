@@ -212,9 +212,12 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 _logger.LogError($"Application has finished with exit code {exitCode} but {expectedExitCode} was expected");
 
-                if (_errorKnowledgeBase.IsKnownTestIssue(_mainLog, out var failureMessage))
+                foreach (var log in _logs)
                 {
-                    _logger.LogError(failureMessage.Value.HumanMessage);
+                    if (_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage))
+                    {
+                        _logger.LogError(failureMessage.Value.HumanMessage);
+                    }
                 }
 
                 return ExitCode.GENERAL_FAILURE;

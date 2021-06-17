@@ -255,20 +255,22 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             void LogProblem(string message)
             {
-                if (_errorKnowledgeBase.IsKnownTestIssue(_mainLog, out var issue))
+                foreach (var log in _logs)
                 {
-                    _logger.LogError(message + newLine + issue.Value.HumanMessage);
+                    if (_errorKnowledgeBase.IsKnownTestIssue(log, out var issue))
+                    {
+                        _logger.LogError(message + newLine + issue.Value.HumanMessage);
+                        return;
+                    }
+                }
+
+                if (resultMessage != null)
+                {
+                    _logger.LogError(message + newLine + resultMessage + newLine + newLine + checkLogsMessage);
                 }
                 else
                 {
-                    if (resultMessage != null)
-                    {
-                        _logger.LogError(message + newLine + resultMessage + newLine + newLine + checkLogsMessage);
-                    }
-                    else
-                    {
-                        _logger.LogError(message + newLine + checkLogsMessage);
-                    }
+                    _logger.LogError(message + newLine + checkLogsMessage);
                 }
             }
 
@@ -289,7 +291,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     return ExitCode.APP_LAUNCH_FAILURE;
 
                 case TestExecutingResult.Crashed:
-                    LogProblem("Application run crashed");
+                    LogProblem("Application test run crashed");
                     return ExitCode.APP_CRASH;
 
                 case TestExecutingResult.TimedOut:
