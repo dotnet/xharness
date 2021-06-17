@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             CancellationToken cancellationToken = default)
         {
             _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
-            var appOutputLog = _logs.Create(appInformation + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
+            var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
 
             var envVariables = new Dictionary<string, string>();
             AddExtraEnvVars(envVariables, extraEnvVariables);
@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             var isSimulator = target.Platform.IsSimulator();
             using var crashLogs = new Logs(_logs.Directory);
-            var appOutputLog = _logs.Create(appInformation + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
+            var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
 
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(
                 _mainLog,

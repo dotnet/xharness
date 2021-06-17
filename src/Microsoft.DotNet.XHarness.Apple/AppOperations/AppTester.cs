@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             CancellationToken cancellationToken = default)
         {
             var testLog = _logs.Create($"test-{TestTarget.MacCatalyst.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
-            var appOutputLog = _logs.Create(appInformation + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
+            var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
 
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 RunMode.MacOS,
@@ -134,7 +134,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             var isSimulator = target.Platform.IsSimulator();
 
             var testLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
-            var appOutputLog = _logs.Create(appInformation + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
+            var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
 
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 runMode,

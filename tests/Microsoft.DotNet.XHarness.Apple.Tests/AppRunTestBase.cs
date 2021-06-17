@@ -74,11 +74,11 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 .Setup(x => x.CreateFile($"{AppBundleIdentifier}-mocked_timestamp.log", It.IsAny<LogType>()))
                 .Returns($"./{AppBundleIdentifier}-mocked_timestamp.log");
             _logs
-                .Setup(x => x.CreateFile(AppBundleIdentifier + ".log", LogType.ApplicationLog))
-                .Returns(_stdoutLog.FullPath);
+                .Setup(x => x.Create(AppBundleIdentifier + ".log", LogType.ApplicationLog.ToString(), It.IsAny<bool?>()))
+                .Returns(_stdoutLog);
             _logs
-                .Setup(x => x.CreateFile(AppBundleIdentifier + ".err.log", LogType.ApplicationLog))
-                .Returns(_stderrLog.FullPath);
+                .Setup(x => x.Create(AppBundleIdentifier + ".err.log", LogType.ApplicationLog.ToString(), It.IsAny<bool?>()))
+                .Returns(_stderrLog);
 
             var factory2 = new Mock<ICrashSnapshotReporterFactory>();
             factory2.SetReturnsDefault(_snapshotReporter.Object);

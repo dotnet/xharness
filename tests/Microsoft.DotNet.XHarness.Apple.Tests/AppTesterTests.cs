@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
@@ -17,6 +18,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 using Moq;
 using Xunit;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.Apple.Tests
 {
     public class AppTesterTests : AppRunTestBase
@@ -32,8 +34,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
         public AppTesterTests()
         {
-            _processManager.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult() { ExitCode = 0 }));
-
             _listener = new Mock<ISimpleListener>();
             _listener
                 .SetupGet(x => x.ConnectedTask)
@@ -519,7 +519,147 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
         }
 
-        private string GetExpectedDeviceMlaunchArgs(string skippedTests = null, bool useTunnel = false, string extraArgs = null) =>
+        [Fact]
+        public async Task TestOnDeviceWithAppEndSignalTest()
+        {
+            var deviceSystemLog = new Mock<IFileBackedLog>();
+            deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
+
+            var deviceLogCapturer = new Mock<IDeviceLogCapturer>();
+
+            var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
+            deviceLogCapturerFactory
+                .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, DeviceName))
+                .Returns(deviceLogCapturer.Object);
+
+            var testResultFilePath = Path.GetTempFileName();
+            var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
+            File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
+
+            _logs
+                .Setup(x => x.Create("test-ios-device-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
+                .Returns(listenerLogFile);
+
+            _logs
+                .Setup(x => x.Create($"device-{DeviceName}-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
+                .Returns(deviceSystemLog.Object);
+
+            _tunnelBore.Setup(t => t.Create(DeviceName, It.IsAny<ILog>()));
+            _listenerFactory
+                .Setup(f => f.UseTunnel)
+                .Returns(true);
+
+            var testEndSignal = Guid.NewGuid();
+            _helpers
+                .Setup(x => x.GenerateGuid())
+                .Returns(testEndSignal);
+
+            // Act
+            var appTester = new AppTester(
+                _processManager.Object,
+                _listenerFactory.Object,
+                _snapshotReporterFactory,
+                Mock.Of<ICaptureLogFactory>(),
+                deviceLogCapturerFactory.Object,
+                _testReporterFactory,
+                new XmlResultParser(),
+                _mainLog.Object,
+                _logs.Object,
+                _helpers.Object);
+
+            List<MlaunchArguments> mlaunchArguments = new();
+            List<IFileBackedLog> appOutputLogs = new();
+            List<CancellationToken> cancellationTokens = new();
+
+            // Endlessly running mlaunch until it gets cancelled by the signal
+            var mlaunchCompleted = new TaskCompletionSource<ProcessExecutionResult>();
+            var appStarted = new TaskCompletionSource();
+
+            _processManager
+                .Setup(x => x.ExecuteCommandAsync(
+                       Capture.In(mlaunchArguments),
+                       It.IsAny<ILog>(),
+                       Capture.In(appOutputLogs),
+                       Capture.In(appOutputLogs),
+                       It.IsAny<TimeSpan>(),
+                       It.IsAny<Dictionary<string, string>?>(),
+                       It.IsAny<int>(),
+                       Capture.In(cancellationTokens)))
+                .Callback(() =>
+                {
+                    // Signal we have started mlaunch
+                    appStarted.SetResult();
+
+                    // When mlaunch gets signalled to shut down, shut down even our fake mlaunch
+                    cancellationTokens.Last().Register(() => mlaunchCompleted.SetResult(new ProcessExecutionResult
+                    {
+                        TimedOut = true,
+                    }));
+                })
+                .Returns(mlaunchCompleted.Task);
+
+            var appInformation = new AppBundleInformation(
+                appName: AppName,
+                bundleIdentifier: AppBundleIdentifier,
+                appPath: s_appPath,
+                launchAppPath: s_appPath,
+                supports32b: false,
+                extension: null);
+
+            var testTask = appTester.TestApp(
+                appInformation,
+                new TestTargetOs(TestTarget.Device_iOS, null),
+                s_mockDevice,
+                null,
+                timeout: TimeSpan.FromMinutes(30),
+                testLaunchTimeout: TimeSpan.FromMinutes(30),
+                signalAppEnd: true,
+                Array.Empty<string>(),
+                Array.Empty<(string, string)>());
+
+            // Everything should hang now since we mimicked mlaunch not being able to tell the app quits
+            // We will wait for XHarness to kick off the mlaunch (the app)
+            Assert.False(testTask.IsCompleted);
+            await Task.WhenAny(appStarted.Task, Task.Delay(1000));
+
+            // XHarness should still be running
+            Assert.False(testTask.IsCompleted);
+
+            // mlaunch should be started
+            Assert.True(appStarted.Task.IsCompleted);
+
+            // We will mimick the app writing the end signal
+            var appLog = appOutputLogs.First();
+            appLog.WriteLine(testEndSignal.ToString());
+
+            // AppTester should now complete fine
+            var (result, resultMessage) = await testTask;
+
+            // Verify
+            Assert.Equal(TestExecutingResult.Succeeded, result);
+            Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
+
+            var expectedArgs = GetExpectedDeviceMlaunchArgs(
+                useTunnel: true,
+                extraArgs: $"-setenv=RUN_END_TAG={testEndSignal} ");
+
+            Assert.Equal(mlaunchArguments.Last().AsCommandLine(), expectedArgs);
+
+            _listener.Verify(x => x.InitializeAndGetPort(), Times.AtLeastOnce);
+            _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
+            _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
+
+            // verify that we do close the tunnel when it was used
+            // we dont want to leak a process
+            _tunnelBore.Verify(t => t.Close(s_mockDevice.DeviceIdentifier));
+
+            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
+            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
+
+            deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
+        }
+
+        private string GetExpectedDeviceMlaunchArgs(string? skippedTests = null, bool useTunnel = false, string? extraArgs = null) =>
             "-setenv=NUNIT_AUTOEXIT=true " +
             $"-setenv=NUNIT_HOSTPORT={Port} " +
             "-setenv=NUNIT_ENABLE_XML_OUTPUT=true " +
