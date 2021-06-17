@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             if (signalAppEnd)
             {
                 appEndTag = _helpers.GenerateGuid().ToString();
-                WatchForTestEndTag(appEndTag, ref appOutputLog, ref cancellationToken);
+                WatchForAppEndTag(appEndTag, ref appOutputLog, ref cancellationToken);
             }
 
             using (testLog)
@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             if (signalAppEnd)
             {
                 appEndTag = _helpers.GenerateGuid().ToString();
-                WatchForTestEndTag(appEndTag, ref appOutputLog, ref cancellationToken);
+                WatchForAppEndTag(appEndTag, ref appOutputLog, ref cancellationToken);
             }
 
             using (testLog)
@@ -508,7 +508,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             if (appEndTag != null)
             {
-                variables.Add(EnviromentVariables.TestEndTag, appEndTag);
+                variables.Add(EnviromentVariables.AppEndTag, appEndTag);
             }
 
             AddExtraEnvVars(variables, extraEnvVariables);
@@ -661,7 +661,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             return args;
         }
 
-        private string WatchForTestEndTag(
+        private string WatchForAppEndTag(
             string tag,
             ref IFileBackedLog appLog,
             ref CancellationToken cancellationToken)

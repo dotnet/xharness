@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         /// <summary>
         /// Env var containing a tag that the test application will output once tests are finished to signalize it.
         /// </summary>
-        public const string TestEndTag = "TEST_END_TAG";
+        public const string AppEndTag = "TEST_END_TAG";
 
         /// <summary>
         /// Env var used to notify the test application that the output is expected to be xml.

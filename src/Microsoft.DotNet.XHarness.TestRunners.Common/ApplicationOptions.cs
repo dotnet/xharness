@@ -76,9 +76,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 _classMethodFilters.AddRange(classes.Split(','));
             }
 
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.TestEndTag)))
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.AppEndTag)))
             {
-                TestEndTag = Environment.GetEnvironmentVariable(EnviromentVariables.TestEndTag);
+                AppEndTag = Environment.GetEnvironmentVariable(EnviromentVariables.AppEndTag);
             }
 
             var os = new OptionSet() {
@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                     "All other test will be ignored. Can be used more than once.",
                     v => _classMethodFilters.Add(v)
                 },
-                { "test-end-tag=", "String that will be outputted when test run has finished", v => TestEndTag = v },
+                { "test-end-tag=", "String that will be outputted when test run has finished", v => AppEndTag = v },
             };
 
             try
@@ -178,6 +178,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// <summary>
         /// String that will be outputted when test run has finished.
         /// </summary>
-        public string TestEndTag { get; private set; }
+        public string AppEndTag { get; private set; }
     }
 }

@@ -65,9 +65,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
             logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests}");
 
-            if (options.TestEndTag != null)
+            if (options.AppEndTag != null)
             {
-                logger.Info(options.TestEndTag);
+                logger.Info(options.AppEndTag);
             }
 
             if (options.TerminateAfterExecution)
