@@ -75,13 +75,22 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             using (appOutputLog)
             {
-                return await RunMacCatalystApp(
+                var result = await RunMacCatalystApp(
                     appInformation,
                     appOutputLog,
                     timeout,
                     extraAppArguments ?? Enumerable.Empty<string>(),
                     envVariables,
                     cancellationToken);
+
+                // When signal is detected, we cancel the call above via the cancellation token so we need to fix the result
+                if (_appEndSignalDetected)
+                {
+                    result.TimedOut = false;
+                    result.ExitCode = 0;
+                }
+
+                return result;
             }
         }
 
@@ -143,6 +152,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                         crashReporter,
                         simulator,
                         companionSimulator,
+                        appOutputLog,
                         timeout,
                         cancellationToken);
                 }
@@ -175,6 +185,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             ICrashSnapshotReporter crashReporter,
             ISimulatorDevice simulator,
             ISimulatorDevice? companionSimulator,
+            ILog appOutputLog,
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
@@ -213,7 +224,22 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             _mainLog.WriteLine("Starting test run");
 
-            return await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+            var result = await _processManager.ExecuteCommandAsync(
+                mlaunchArguments,
+                _mainLog,
+                appOutputLog,
+                appOutputLog,
+                timeout,
+                cancellationToken: cancellationToken);
+
+            // When signal is detected, we cancel the call above via the cancellation token so we need to fix the result
+            if (_appEndSignalDetected)
+            {
+                result.TimedOut = false;
+                result.ExitCode = 0;
+            }
+
+            return result;
         }
 
         private async Task<ProcessExecutionResult> RunDeviceApp(
@@ -238,7 +264,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 var envVars = new Dictionary<string, string>();
                 AddExtraEnvVars(envVars, extraEnvVariables);
 
-                return await _processManager.ExecuteCommandAsync(
+                var result = await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     _mainLog,
                     appOutputLog,
@@ -246,6 +272,15 @@ namespace Microsoft.DotNet.XHarness.Apple
                     timeout,
                     envVars,
                     cancellationToken: cancellationToken);
+
+                // When signal is detected, we cancel the call above via the cancellation token so we need to fix the result
+                if (_appEndSignalDetected)
+                {
+                    result.TimedOut = false;
+                    result.ExitCode = 0;
+                }
+
+                return result;
             }
             finally
             {
