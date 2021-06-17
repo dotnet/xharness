@@ -6,14 +6,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
+namespace Microsoft.DotNet.XHarness.CLI.Commands
 {
     public abstract class XHarnessCommand : Command
     {
@@ -152,7 +153,8 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
         private static ILoggerFactory CreateLoggerFactory(LogLevel verbosity) => LoggerFactory.Create(builder =>
         {
             builder
-                .AddConsoleFormatter<XHarnessConsoleLoggerFormatter, SimpleConsoleFormatterOptions>(options => {
+                .AddConsoleFormatter<XHarnessConsoleLoggerFormatter, SimpleConsoleFormatterOptions>(options =>
+                {
                     options.ColorBehavior = EnvironmentVariables.IsTrue(EnvironmentVariables.Names.DISABLE_COLOR_OUTPUT) ? LoggerColorBehavior.Disabled : LoggerColorBehavior.Default;
                     options.TimestampFormat = EnvironmentVariables.IsTrue(EnvironmentVariables.Names.LOG_TIMESTAMPS) ? "[HH:mm:ss] " : null!;
                 })

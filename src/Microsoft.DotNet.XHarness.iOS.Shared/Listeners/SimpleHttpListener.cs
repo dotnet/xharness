@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
             catch (Exception e)
             {
-                if (!(e is SocketException se) || se.SocketErrorCode != SocketError.Interrupted)
+                if (e is not SocketException se || se.SocketErrorCode != SocketError.Interrupted)
                 {
                     Console.WriteLine("[{0}] : {1}", DateTime.Now, e);
                 }

@@ -23,8 +23,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
     public abstract class SimpleListener : ISimpleListener
     {
-        private readonly TaskCompletionSource<bool> _stopped = new TaskCompletionSource<bool>();
-        private readonly TaskCompletionSource<bool> _connected = new TaskCompletionSource<bool>();
+        private readonly TaskCompletionSource<bool> _stopped = new();
+        private readonly TaskCompletionSource<bool> _connected = new();
 
         public IFileBackedLog TestLog { get; private set; }
 

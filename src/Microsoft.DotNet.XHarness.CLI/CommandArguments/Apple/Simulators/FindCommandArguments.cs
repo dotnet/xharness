@@ -4,7 +4,6 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
 {

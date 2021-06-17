@@ -3,10 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
+namespace Microsoft.DotNet.XHarness.CLI.Tests
 {
     internal class UnitTestArguments<TArgument> : XHarnessCommandArguments where TArgument : Argument
     {

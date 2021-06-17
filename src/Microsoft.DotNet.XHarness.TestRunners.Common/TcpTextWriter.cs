@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
     {
         private static readonly TimeSpan s_connectionAwaitPeriod = TimeSpan.FromMinutes(1);
 
-        private StreamWriter _writer;
+        private readonly StreamWriter _writer;
 
         private TcpTextWriter(StreamWriter writer)
         {

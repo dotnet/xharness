@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
     public class CallbackLog : Log
     {
         private readonly Action<string> _onWrite;
-        private readonly StringBuilder _captured = new StringBuilder();
+        private readonly StringBuilder _captured = new();
 
         public CallbackLog(Action<string> onWrite)
             : base("Callback log")

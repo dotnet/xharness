@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
             catch (Exception e)
             {
-                if (!(e is SocketException se) || se.SocketErrorCode != SocketError.Interrupted)
+                if (e is not SocketException se || se.SocketErrorCode != SocketError.Interrupted)
                 {
                     Log.WriteLine("[{0}] : {1}", DateTime.Now, e);
                 }
@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
             }
             catch (Exception e)
             {
-                if (!(e is SocketException se) || se.SocketErrorCode != SocketError.Interrupted)
+                if (e is not SocketException se || se.SocketErrorCode != SocketError.Interrupted)
                 {
                     Log.WriteLine($"Failed to read TCP data: {e}");
                 }

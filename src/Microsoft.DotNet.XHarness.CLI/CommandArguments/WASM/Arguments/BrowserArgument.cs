@@ -4,7 +4,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {

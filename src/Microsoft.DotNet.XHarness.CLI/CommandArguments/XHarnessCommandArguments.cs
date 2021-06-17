@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
     public interface IXHarnessCommandArguments
     {

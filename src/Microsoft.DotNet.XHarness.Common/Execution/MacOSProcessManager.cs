@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
     {
         #region Private variables
 
-        private static readonly Lazy<string> s_autoDetectedXcodeRoot = new Lazy<string>(DetectXcodePath, LazyThreadSafetyMode.PublicationOnly);
+        private static readonly Lazy<string> s_autoDetectedXcodeRoot = new(DetectXcodePath, LazyThreadSafetyMode.PublicationOnly);
         private readonly string? _xcodeRoot;
         private Version? _xcode_version;
 

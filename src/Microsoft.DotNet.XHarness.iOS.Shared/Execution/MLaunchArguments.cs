@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 
     public class MlaunchArguments : IEnumerable<MlaunchArgument>
     {
-        private readonly List<MlaunchArgument> _arguments = new List<MlaunchArgument>();
+        private readonly List<MlaunchArgument> _arguments = new();
 
         public MlaunchArguments(params MlaunchArgument[] args)
         {

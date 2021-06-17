@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
         // Log that will duplicate log output to multiple other logs.
         private class AggregatedLog : Log
         {
-            protected readonly List<ILog> _logs = new List<ILog>();
+            protected readonly List<ILog> _logs = new();
 
             public AggregatedLog(params ILog[] logs)
             {

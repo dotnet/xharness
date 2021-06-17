@@ -10,7 +10,6 @@ using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI

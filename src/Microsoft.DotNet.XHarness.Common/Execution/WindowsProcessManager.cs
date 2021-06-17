@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
     {
         // We cannot enumerate processes well on Windows but we will use the CLI as .NET Core 3.1 and will kill the whole process tree
         // (this library is only used under netstandard 2.1 in Xamarin where it runs on OSX only)
-        protected override List<int> GetChildProcessIds(ILog log, int pid) => new List<int> { pid };
+        protected override List<int> GetChildProcessIds(ILog log, int pid) => new() { pid };
 
         protected override int Kill(int pid, int sig)
         {

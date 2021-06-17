@@ -4,7 +4,7 @@
 
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
     public class VerbosityArgument : Argument
     {

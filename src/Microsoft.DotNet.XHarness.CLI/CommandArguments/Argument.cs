@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Microsoft.DotNet.XHarness.Common.CLI.CommandArguments
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
     public abstract class Argument
     {

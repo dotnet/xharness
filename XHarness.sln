@@ -40,6 +40,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit", "src\Microsoft.DotNet.XHarness.InstrumentationBase.Xunit\Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit.csproj", "{FBDF39C0-1096-4088-B057-2FF8CCDFB32D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XHarness.CLI.Tests", "tests\Microsoft.DotNet.XHarness.CLI.Tests\Microsoft.DotNet.XHarness.CLI.Tests.csproj", "{B81EF83E-F2C5-4DFA-82ED-2761C2BC25CA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -102,6 +104,10 @@ Global
 		{FBDF39C0-1096-4088-B057-2FF8CCDFB32D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBDF39C0-1096-4088-B057-2FF8CCDFB32D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FBDF39C0-1096-4088-B057-2FF8CCDFB32D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B81EF83E-F2C5-4DFA-82ED-2761C2BC25CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B81EF83E-F2C5-4DFA-82ED-2761C2BC25CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B81EF83E-F2C5-4DFA-82ED-2761C2BC25CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B81EF83E-F2C5-4DFA-82ED-2761C2BC25CA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -121,6 +127,7 @@ Global
 		{C1CB4AA8-A96C-4C06-BD39-4D8D09A15D86} = {1018BF4C-BD8F-49D7-9797-758E68B9FC9D}
 		{D51E7536-E698-42F4-939A-F259D543D1E1} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
 		{FBDF39C0-1096-4088-B057-2FF8CCDFB32D} = {713ACDCF-301D-4C96-8B75-5BF2A35A326D}
+		{B81EF83E-F2C5-4DFA-82ED-2761C2BC25CA} = {1018BF4C-BD8F-49D7-9797-758E68B9FC9D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {56D5F4DA-F710-4026-8F49-4A903BCAA9B5}
