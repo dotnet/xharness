@@ -5,11 +5,11 @@
     /// </summary>
 	public static class SdkVersions
     {
-        public static string Xcode { get; private set; } = "11.5";
-        public static string OSX { get; private set; } = "10.15";
-        public static string iOS { get; private set; } = "13.5";
-        public static string WatchOS { get; private set; } = "6.2";
-        public static string TVOS { get; private set; } = "13.4";
+        public static string Xcode { get; private set; } = "13.0";
+        public static string OSX { get; private set; } = "11.3";
+        public static string iOS { get; private set; } = "15.0";
+        public static string WatchOS { get; private set; } = "8.0";
+        public static string TVOS { get; private set; } = "15.0";
 
         public static string MinOSX { get; private set; } = "10.9";
         public static string MiniOS { get; private set; } = "7.0";
