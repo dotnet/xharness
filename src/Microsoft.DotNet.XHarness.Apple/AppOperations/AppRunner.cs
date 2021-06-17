@@ -160,6 +160,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                         mlaunchArguments,
                         crashReporter,
                         device,
+                        appOutputLog,
                         extraEnvVariables,
                         timeout,
                         cancellationToken);
@@ -219,6 +220,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             MlaunchArguments mlaunchArguments,
             ICrashSnapshotReporter crashReporter,
             IDevice device,
+            ILog appOutputLog,
             IEnumerable<(string, string)> extraEnvVariables,
             TimeSpan timeout,
             CancellationToken cancellationToken)
@@ -239,6 +241,8 @@ namespace Microsoft.DotNet.XHarness.Apple
                 return await _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     _mainLog,
+                    appOutputLog,
+                    appOutputLog,
                     timeout,
                     envVars,
                     cancellationToken: cancellationToken);
