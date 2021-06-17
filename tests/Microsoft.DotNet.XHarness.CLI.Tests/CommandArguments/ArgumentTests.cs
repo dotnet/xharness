@@ -3,12 +3,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 using Xunit;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
+namespace Microsoft.DotNet.XHarness.CLI.Tests.Arguments
 {
     public class ArgumentTests
     {

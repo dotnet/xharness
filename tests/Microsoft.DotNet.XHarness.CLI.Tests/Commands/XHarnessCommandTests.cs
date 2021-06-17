@@ -5,15 +5,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
-using Microsoft.DotNet.XHarness.Common.CLI.Commands;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
 using Xunit;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.Common.Tests.Utilities
+namespace Microsoft.DotNet.XHarness.CLI.Tests.CommandArguments
 {
     public class XHarnessCommandTests
     {
