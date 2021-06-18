@@ -185,9 +185,9 @@ To run the E2E tests, you can find a script in `tools/` that will build everythi
 Some XHarness commands only work in some scenarios and it's good to know what to expect from the tool.
 Some Android/Apple versions also require some workarounds and those are also good to know about.
 
-### My unit tests are not running
+### My Apple unit tests are not running
 
-For the `test` command, XHarness expects the application to contain a `TestRunner` which is a library you can find in this repository.
+For the `apple test` command, XHarness expects the application to contain a `TestRunner` which is a library you can find in this repository.
 This library executes unit tests similarly how you would execute them on other platforms.
 However, the `TestRunner` from this repository contains more mechanisms that help to work around some issues (mostly in Apple platforms).
 
@@ -195,7 +195,7 @@ The way it works is that XHarness usually sets some [environmental variables](ht
 
 The workarounds we talk about are for example some TCP connections between the app and XHarness so that we can stream back the test results.
 
-For these reasons, the `test` command won't just work with any app. For those scenarios, use the `run` commands.
+For these reasons, the `test` command won't just work with any app. For those scenarios, use the `apple run` commands.
 
 ### iOS/tvOS device runs are timing out
 
