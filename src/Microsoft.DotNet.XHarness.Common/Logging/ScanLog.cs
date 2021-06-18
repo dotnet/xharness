@@ -22,6 +22,11 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
 
         public ScanLog(string tag, Action tagFoundNotify)
         {
+            if (string.IsNullOrEmpty(tag))
+            {
+                throw new ArgumentException($"'{nameof(tag)}' cannot be null or empty.", nameof(tag));
+            }
+
             _tag = tag;
             _tagFoundNotify = tagFoundNotify;
             _buffer = new char[_tag.Length];
