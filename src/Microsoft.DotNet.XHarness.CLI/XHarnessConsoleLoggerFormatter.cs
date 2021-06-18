@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 
-namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
+namespace Microsoft.DotNet.XHarness.CLI
 {
     /// <summary>
     /// Copied over from SimpleConsoleFormatter. Leaves out the logger name and new line, turning
@@ -48,7 +48,12 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
         public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider scopeProvider, TextWriter textWriter)
         {
-            string message = logEntry.Formatter(logEntry.State, logEntry.Exception);
+            if (logEntry.Formatter == null)
+            {
+                return;
+            }
+
+            var message = logEntry.Formatter(logEntry.State, logEntry.Exception);
             if (logEntry.Exception == null && message == null)
             {
                 return;
@@ -56,11 +61,11 @@ namespace Microsoft.DotNet.XHarness.Common.CLI.Commands
 
             LogLevel logLevel = logEntry.LogLevel;
             var logLevelColors = GetLogLevelConsoleColors(logLevel);
-            string logLevelString = GetLogLevelString(logLevel);
+            var logLevelString = GetLogLevelString(logLevel);
 
             if (_options.TimestampFormat != null)
             {
-                string timestamp = DateTimeOffset.Now.ToString(_options.TimestampFormat);
+                var timestamp = DateTimeOffset.Now.ToString(_options.TimestampFormat);
                 textWriter.Write(timestamp);
             }
 

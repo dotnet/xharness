@@ -1,5 +1,4 @@
 ﻿using System;
-using Microsoft.DotNet.XHarness.Common.CLI.CommandArguments;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
 {

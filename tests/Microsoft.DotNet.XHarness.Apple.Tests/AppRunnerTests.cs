@@ -322,7 +322,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
         }
 
         private static AppBundleInformation GetMockedAppBundleInfo() =>
-            new AppBundleInformation(
+            new(
                 appName: AppName,
                 bundleIdentifier: AppBundleIdentifier,
                 appPath: s_appPath,

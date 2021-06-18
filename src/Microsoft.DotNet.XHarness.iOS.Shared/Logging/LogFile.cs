@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
     public class LogFile : FileBackedLog
     {
-        private readonly object _lockObj = new object();
+        private readonly object _lockObj = new();
 
         public override string FullPath { get; }
 
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             Write(bytes, 0, bytes.Length);
         }
 
-        public override StreamReader GetReader() => new StreamReader(new FileStream(FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+        public override StreamReader GetReader() => new(new FileStream(FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
 
         public override void Dispose()
         {

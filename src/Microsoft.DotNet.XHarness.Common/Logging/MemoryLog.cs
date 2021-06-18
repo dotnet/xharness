@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
     /// </summary>
     public class MemoryLog : ReadableLog
     {
-        private readonly StringBuilder _captured = new StringBuilder();
+        private readonly StringBuilder _captured = new();
 
         protected override void WriteImpl(string value) => _captured.Append(value);
 
