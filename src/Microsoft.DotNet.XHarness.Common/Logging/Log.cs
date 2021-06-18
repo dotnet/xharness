@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.Common.Logging
         {
             if (Timestamp)
             {
-                value = DateTime.Now.ToString("HH:mm:ss.fffffff") + " " + value;
+                value = "[" + DateTime.Now.ToString("HH:mm:ss.fffffff") + "] " + value;
             }
 
             WriteImpl(value);
