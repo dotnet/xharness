@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         public const string AutoStart = "NUNIT_AUTOSTART";
 
         /// <summary>
-        /// Env car that will tell the test application to exit once all the test have been ran.
+        /// Env var that will tell the test application to exit once all the test have been ran.
         /// </summary>
         public const string AutoExit = "NUNIT_AUTOEXIT";
 
@@ -49,6 +49,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
         /// over the usb cable.
         /// </summary>
         public const string UseTcpTunnel = "USE_TCP_TUNNEL";
+
+        /// <summary>
+        /// Env var containing a tag that the test application will output once tests are finished to signalize it.
+        /// </summary>
+        public const string AppEndTag = "RUN_END_TAG";
 
         /// <summary>
         /// Env var used to notify the test application that the output is expected to be xml.

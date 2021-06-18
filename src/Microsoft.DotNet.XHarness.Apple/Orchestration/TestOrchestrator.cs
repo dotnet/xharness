@@ -35,6 +35,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
+            bool signalAppEnd,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken);
@@ -81,6 +82,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
+            bool signalAppEnd,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
@@ -96,6 +98,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     classMethodFilters,
                     environmentalVariables,
                     passthroughArguments,
+                    signalAppEnd,
                     cancellationToken);
 
             Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice) =>
@@ -112,6 +115,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     classMethodFilters,
                     environmentalVariables,
                     passthroughArguments,
+                    signalAppEnd,
                     cancellationToken);
 
             return OrchestrateRun(
@@ -139,19 +143,37 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> classMethodFilters,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
+            bool signalAppEnd,
             CancellationToken cancellationToken)
         {
-            // iOS 14+ devices doesn't allow local network access and won't work unless the user confirms a dialog on the screen
-            // https://developer.apple.com/forums/thread/663858
-            if (communicationChannel == CommunicationChannel.Network &&
-                target.Platform.ToRunMode() == RunMode.iOS &&
-                Version.TryParse(device.OSVersion, out var version) && version.Major >= 14)
+            var runMode = target.Platform.ToRunMode();
+            if (Version.TryParse(device.OSVersion, out var version) && version.Major >= 14)
             {
-                _logger.LogWarning(
-                    "Applications need user permission for communication over local network on iOS 14 and newer." + Environment.NewLine +
-                    "Either confirm a dialog on the device after the application launches or use the USB tunnel communication channel." + Environment.NewLine +
-                    "Test run might fail if permission is not granted. Permission is valid until app is uninstalled.");
+                if (runMode == RunMode.iOS)
+                {
+                    // iOS 14+ devices do not allow local network access and won't work unless the user confirms a dialog on the screen
+                    // https://developer.apple.com/forums/thread/663858
+                    if (communicationChannel == CommunicationChannel.Network)
+                    {
+                        _logger.LogWarning(
+                            "Applications need user permission for communication over local network on iOS 14 and newer." + Environment.NewLine +
+                            "Either confirm a dialog on the device after the application launches or use the USB tunnel communication channel." + Environment.NewLine +
+                            "Test run might fail if permission is not granted. Permission is valid until app is uninstalled.");
+                    }
+
+                    if (!signalAppEnd)
+                    {
+                        _logger.LogWarning("XHarness cannot reliably detect when app quits on iOS 14 and newer. Consider using --signal-app-end");
+                    }
+                }
             }
+
+            if (signalAppEnd && (runMode == RunMode.Sim64 || runMode == RunMode.Sim32))
+            {
+                _logger.LogWarning("The --signal-app-end option is recommended for device tests and is not required for simulators");
+            }
+
+            _logger.LogInformation("Starting test run for " + appBundleInfo.BundleIdentifier + "..");
 
             AppTester appTester = GetAppTester(communicationChannel, target.Platform.IsSimulator());
 
@@ -162,6 +184,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 companionDevice,
                 timeout,
                 launchTimeout,
+                signalAppEnd,
                 passthroughArguments,
                 environmentalVariables,
                 xmlResultJargon,
@@ -182,6 +205,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> classMethodFilters,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
+            bool signalAppEnd,
             CancellationToken cancellationToken)
         {
             AppTester appTester = GetAppTester(communicationChannel, TestTarget.MacCatalyst.IsSimulator());
@@ -190,6 +214,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 appBundleInfo,
                 timeout,
                 launchTimeout,
+                signalAppEnd,
                 passthroughArguments,
                 environmentalVariables,
                 xmlResultJargon,
@@ -230,20 +255,22 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             void LogProblem(string message)
             {
-                if (_errorKnowledgeBase.IsKnownTestIssue(_mainLog, out var issue))
+                foreach (var log in _logs)
                 {
-                    _logger.LogError(message + newLine + issue.Value.HumanMessage);
+                    if (_errorKnowledgeBase.IsKnownTestIssue(log, out var issue))
+                    {
+                        _logger.LogError(message + newLine + issue.Value.HumanMessage);
+                        return;
+                    }
+                }
+
+                if (resultMessage != null)
+                {
+                    _logger.LogError(message + newLine + resultMessage + newLine + newLine + checkLogsMessage);
                 }
                 else
                 {
-                    if (resultMessage != null)
-                    {
-                        _logger.LogError(message + newLine + resultMessage + newLine + newLine + checkLogsMessage);
-                    }
-                    else
-                    {
-                        _logger.LogError(message + newLine + checkLogsMessage);
-                    }
+                    _logger.LogError(message + newLine + checkLogsMessage);
                 }
             }
 
@@ -264,7 +291,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     return ExitCode.APP_LAUNCH_FAILURE;
 
                 case TestExecutingResult.Crashed:
-                    LogProblem("Application run crashed");
+                    LogProblem("Application test run crashed");
                     return ExitCode.APP_CRASH;
 
                 case TestExecutingResult.TimedOut:

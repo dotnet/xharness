@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
@@ -15,6 +16,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Moq;
 using Xunit;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.Apple.Tests
 {
     public class AppRunnerTests : AppRunTestBase
@@ -55,6 +57,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 _mockSimulator,
                 null,
                 timeout: TimeSpan.FromSeconds(30),
+                signalAppEnd: false,
                 extraAppArguments: new[] { "--foo=bar", "--xyz" },
                 extraEnvVariables: new[] { ("appArg1", "value1") });
 
@@ -67,7 +70,9 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 .Verify(
                     x => x.ExecuteCommandAsync(
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
-                       _mainLog.Object,
+                       It.IsAny<ILog>(),
+                       It.IsAny<ILog>(),
+                       It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<int>(),
@@ -117,6 +122,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 s_mockDevice,
                 null,
                 timeout: TimeSpan.FromSeconds(30),
+                signalAppEnd: false,
                 extraAppArguments: new[] { "--foo=bar", "--xyz" },
                 extraEnvVariables: new[] { ("appArg1", "value1") });
 
@@ -130,6 +136,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                     x => x.ExecuteCommandAsync(
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        It.IsAny<ILog>(),
+                       It.IsAny<ILog>(),
+                       It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<int>(),
@@ -137,6 +145,117 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                     Times.Once);
 
             _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
+
+            deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public async Task RunOnDeviceWithAppEndSignalTest()
+        {
+            var deviceSystemLog = new Mock<IFileBackedLog>();
+            deviceSystemLog.SetupGet(x => x.FullPath).Returns(AppBundleIdentifier + "system.log");
+            deviceSystemLog.SetupGet(x => x.Description).Returns(LogType.SystemLog.ToString());
+
+            SetupLogList(new[] { deviceSystemLog.Object, _stdoutLog, _stderrLog });
+
+            _logs
+                .Setup(x => x.Create("device-" + DeviceName + "-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
+                .Returns(deviceSystemLog.Object);
+
+            var deviceLogCapturer = new Mock<IDeviceLogCapturer>();
+
+            var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
+            deviceLogCapturerFactory
+                .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, DeviceName))
+                .Returns(deviceLogCapturer.Object);
+
+            var testEndSignal = Guid.NewGuid();
+            _helpers
+                .Setup(x => x.GenerateGuid())
+                .Returns(testEndSignal);
+
+            var appInformation = GetMockedAppBundleInfo();
+
+            List<MlaunchArguments> mlaunchArguments = new();
+            List<IFileBackedLog> appOutputLogs = new();
+            List<CancellationToken> cancellationTokens = new();
+
+            // Endlessly running mlaunch until it gets cancelled by the signal
+            var mlaunchCompleted = new TaskCompletionSource<ProcessExecutionResult>();
+            var appStarted = new TaskCompletionSource();
+
+            _processManager
+                .Setup(x => x.ExecuteCommandAsync(
+                       Capture.In(mlaunchArguments),
+                       It.IsAny<ILog>(),
+                       Capture.In(appOutputLogs),
+                       Capture.In(appOutputLogs),
+                       It.IsAny<TimeSpan>(),
+                       It.IsAny<Dictionary<string, string>?>(),
+                       It.IsAny<int>(),
+                       Capture.In(cancellationTokens)))
+                .Callback(() =>
+                {
+                    // Signal we have started mlaunch
+                    appStarted.SetResult();
+
+                    // When mlaunch gets signalled to shut down, shut down even our fake mlaunch
+                    cancellationTokens.Last().Register(() => mlaunchCompleted.SetResult(new ProcessExecutionResult
+                    {
+                        TimedOut = true,
+                    }));
+                })
+                .Returns(mlaunchCompleted.Task);
+
+            // Act
+            var appRunner = new AppRunner(
+                _processManager.Object,
+                _snapshotReporterFactory,
+                Mock.Of<ICaptureLogFactory>(),
+                deviceLogCapturerFactory.Object,
+                _mainLog.Object,
+                _logs.Object,
+                _helpers.Object);
+
+            var runTask = appRunner.RunApp(
+                appInformation,
+                new TestTargetOs(TestTarget.Device_iOS, null),
+                s_mockDevice,
+                null,
+                timeout: TimeSpan.FromSeconds(30),
+                signalAppEnd: true,
+                Array.Empty<string>(),
+                Array.Empty<(string, string)>());
+
+            // Everything should hang now since we mimicked mlaunch not being able to tell the app quits
+            // We will wait for XHarness to kick off the mlaunch (the app)
+            Assert.False(runTask.IsCompleted);
+            await Task.WhenAny(appStarted.Task, Task.Delay(1000));
+
+            // XHarness should still be running
+            Assert.False(runTask.IsCompleted);
+
+            // mlaunch should be started
+            Assert.True(appStarted.Task.IsCompleted);
+
+            // We will mimick the app writing the end signal
+            var appLog = appOutputLogs.First();
+            appLog.WriteLine(testEndSignal.ToString());
+
+            // AppTester should now complete fine
+            var result = await runTask;
+
+            // Verify
+            Assert.True(result.Succeeded);
+
+            var expectedArgs = $"-setenv=RUN_END_TAG={testEndSignal} " +
+                "--disable-memory-limits " +
+                $"--devname {s_mockDevice.DeviceIdentifier} " +
+                $"--launchdevbundleid {AppBundleIdentifier} " +
+                "--wait-for-exit";
+
+            Assert.Equal(mlaunchArguments.Last().AsCommandLine(), expectedArgs);
+
             _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
 
             deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
@@ -175,6 +294,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             var result = await appRunner.RunMacCatalystApp(
                 appInformation,
                 timeout: TimeSpan.FromSeconds(30),
+                signalAppEnd: false,
                 extraAppArguments: new[] { "--foo=bar", "--xyz" },
                 extraEnvVariables: new[] { ("appArg1", "value1") });
 
@@ -189,6 +309,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                        "open",
                        It.Is<IList<string>>(args => args[0] == "-W" && args[1] == s_appPath),
                        _mainLog.Object,
+                       It.IsAny<ILog>(),
+                       It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<CancellationToken>()),
@@ -207,8 +329,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 extension: null);
 
         private string GetExpectedDeviceMlaunchArgs() =>
-            $"--stdout={_stdoutLog.FullPath} " +
-            $"--stderr={_stderrLog.FullPath} " +
             "-argument=--foo=bar " +
             "-argument=--xyz " +
             "-setenv=appArg1=value1 " +
@@ -218,8 +338,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "--wait-for-exit";
 
         private string GetExpectedSimulatorMlaunchArgs() =>
-            $"--stdout={_stdoutLog.FullPath} " +
-            $"--stderr={_stderrLog.FullPath} " +
             "-argument=--foo=bar " +
             "-argument=--xyz " +
             "-setenv=appArg1=value1 " +

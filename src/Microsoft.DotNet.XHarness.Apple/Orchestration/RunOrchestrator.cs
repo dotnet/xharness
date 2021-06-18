@@ -29,6 +29,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
+            bool signalAppEnd,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken);
@@ -87,6 +88,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             bool includeWirelessDevices,
             bool resetSimulator,
             bool enableLldb,
+            bool signalAppEnd,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
@@ -96,6 +98,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     appBundleInfo,
                     timeout,
                     expectedExitCode,
+                    signalAppEnd,
                     environmentalVariables,
                     passthroughArguments,
                     cancellationToken);
@@ -108,6 +111,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     companionDevice,
                     timeout,
                     expectedExitCode,
+                    signalAppEnd,
                     environmentalVariables,
                     passthroughArguments,
                     cancellationToken);
@@ -131,6 +135,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IDevice? companionDevice,
             TimeSpan timeout,
             int expectedExitCode,
+            bool signalAppEnd,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
@@ -143,6 +148,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 device,
                 companionDevice,
                 timeout,
+                signalAppEnd,
                 passthroughArguments,
                 environmentalVariables,
                 cancellationToken);
@@ -160,6 +166,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             AppBundleInformation appBundleInfo,
             TimeSpan timeout,
             int expectedExitCode,
+            bool signalAppEnd,
             IReadOnlyCollection<(string, string)> environmentalVariables,
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
@@ -169,6 +176,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             ProcessExecutionResult result = await _appRunner.RunMacCatalystApp(
                 appBundleInfo,
                 timeout,
+                signalAppEnd,
                 passthroughArguments,
                 environmentalVariables,
                 cancellationToken: cancellationToken);
@@ -204,9 +212,12 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 _logger.LogError($"Application has finished with exit code {exitCode} but {expectedExitCode} was expected");
 
-                if (_errorKnowledgeBase.IsKnownTestIssue(_mainLog, out var failureMessage))
+                foreach (var log in _logs)
                 {
-                    _logger.LogError(failureMessage.Value.HumanMessage);
+                    if (_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage))
+                    {
+                        _logger.LogError(failureMessage.Value.HumanMessage);
+                    }
                 }
 
                 return ExitCode.GENERAL_FAILURE;

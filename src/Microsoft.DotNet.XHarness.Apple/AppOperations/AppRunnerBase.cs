@@ -11,6 +11,7 @@ using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
@@ -21,18 +22,23 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IProcessManager _processManager;
         private readonly ICaptureLogFactory _captureLogFactory;
         private readonly ILogs _logs;
+        private readonly IHelpers _helpers;
         private readonly IFileBackedLog _mainLog;
+
+        private bool _appEndSignalDetected = false;
 
         protected AppRunnerBase(
             IProcessManager processManager,
             ICaptureLogFactory captureLogFactory,
             ILogs logs,
             IFileBackedLog mainLog,
+            IHelpers helpers,
             Action<string>? logCallback = null)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _captureLogFactory = captureLogFactory ?? throw new ArgumentNullException(nameof(captureLogFactory));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
+            _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
 
             if (logCallback == null)
             {
@@ -47,6 +53,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
         protected async Task<ProcessExecutionResult> RunMacCatalystApp(
             AppBundleInformation appInfo,
+            ILog appOutputLog,
             TimeSpan timeout,
             IEnumerable<string> extraArguments,
             Dictionary<string, string> environmentVariables,
@@ -87,6 +94,8 @@ namespace Microsoft.DotNet.XHarness.Apple
                     "open",
                     arguments,
                     _mainLog,
+                    appOutputLog,
+                    appOutputLog,
                     timeout,
                     environmentVariables,
                     cancellationToken);
@@ -116,6 +125,41 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 envVariables[name] = value;
             }
+        }
+
+        protected string WatchForAppEndTag(
+            out string tag,
+            ref IFileBackedLog appLog,
+            ref CancellationToken cancellationToken)
+        {
+            tag = _helpers.GenerateGuid().ToString();
+            var appEndDetected = new CancellationTokenSource();
+            var appEndScanner = new ScanLog(tag, () =>
+            {
+                _mainLog.WriteLine("Detected test end tag in application's output");
+                _appEndSignalDetected = true;
+                appEndDetected.Cancel();
+            });
+
+            // We need to check for test end tag since iOS 14+ doesn't send the pidDiedCallback event to mlaunch
+            appLog = Log.CreateReadableAggregatedLog(appLog, appEndScanner);
+            cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, appEndDetected.Token).Token;
+
+            return tag;
+        }
+
+        protected async Task<ProcessExecutionResult> RunAndWatchForAppSignal(Func<Task<ProcessExecutionResult>> action)
+        {
+            var result = await action();
+
+            // When signal is detected, we cancel the call above via the cancellation token so we need to fix the result
+            if (_appEndSignalDetected)
+            {
+                result.TimedOut = false;
+                result.ExitCode = 0;
+            }
+
+            return result;
         }
     }
 }

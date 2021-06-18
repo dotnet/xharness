@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             ILogs logs,
             IHelpers helpers,
             Action<string>? logCallback = null)
-            : base(processManager, captureLogFactory, logs, mainLog, logCallback)
+            : base(processManager, captureLogFactory, logs, mainLog, helpers, logCallback)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _snapshotReporterFactory = snapshotReporterFactory ?? throw new ArgumentNullException(nameof(snapshotReporterFactory));
@@ -56,16 +56,33 @@ namespace Microsoft.DotNet.XHarness.Apple
         public async Task<ProcessExecutionResult> RunMacCatalystApp(
             AppBundleInformation appInformation,
             TimeSpan timeout,
+            bool signalAppEnd,
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables,
             CancellationToken cancellationToken = default)
         {
             _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
+            var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
 
             var envVariables = new Dictionary<string, string>();
             AddExtraEnvVars(envVariables, extraEnvVariables);
 
-            return await RunMacCatalystApp(appInformation, timeout, extraAppArguments ?? Enumerable.Empty<string>(), envVariables, cancellationToken);
+            if (signalAppEnd)
+            {
+                WatchForAppEndTag(out var appEndTag, ref appOutputLog, ref cancellationToken);
+                envVariables.Add(EnviromentVariables.AppEndTag, appEndTag);
+            }
+
+            using (appOutputLog)
+            {
+                return await RunAndWatchForAppSignal(() => RunMacCatalystApp(
+                    appInformation,
+                    appOutputLog,
+                    timeout,
+                    extraAppArguments ?? Enumerable.Empty<string>(),
+                    envVariables,
+                    cancellationToken));
+            }
         }
 
         public async Task<ProcessExecutionResult> RunApp(
@@ -74,6 +91,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IDevice device,
             IDevice? companionDevice,
             TimeSpan timeout,
+            bool signalAppEnd,
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables,
             CancellationToken cancellationToken = default)
@@ -84,6 +102,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             var isSimulator = target.Platform.IsSimulator();
             using var crashLogs = new Logs(_logs.Directory);
+            var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
 
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(
                 _mainLog,
@@ -93,50 +112,63 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{device.Name}' ***");
 
-            if (isSimulator)
+            string? appEndTag = null;
+            if (signalAppEnd)
             {
-                simulator = device as ISimulatorDevice;
-                companionSimulator = companionDevice as ISimulatorDevice;
+                WatchForAppEndTag(out appEndTag, ref appOutputLog, ref cancellationToken);
+            }
 
-                if (simulator == null)
+            using (appOutputLog)
+            {
+                if (isSimulator)
                 {
-                    _mainLog.WriteLine("Didn't find any suitable simulator");
-                    throw new NoDeviceFoundException();
+                    simulator = device as ISimulatorDevice;
+                    companionSimulator = companionDevice as ISimulatorDevice;
+
+                    if (simulator == null)
+                    {
+                        _mainLog.WriteLine("Didn't find any suitable simulator");
+                        throw new NoDeviceFoundException();
+                    }
+
+                    var mlaunchArguments = GetSimulatorArguments(
+                        appInformation,
+                        simulator,
+                        extraAppArguments,
+                        extraEnvVariables,
+                        appEndTag);
+
+                    result = await RunSimulatorApp(
+                        mlaunchArguments,
+                        crashReporter,
+                        simulator,
+                        companionSimulator,
+                        appOutputLog,
+                        timeout,
+                        cancellationToken);
+                }
+                else
+                {
+                    var mlaunchArguments = GetDeviceArguments(
+                        appInformation,
+                        device,
+                        target.Platform.IsWatchOSTarget(),
+                        extraAppArguments,
+                        extraEnvVariables,
+                        appEndTag);
+
+                    result = await RunDeviceApp(
+                        mlaunchArguments,
+                        crashReporter,
+                        device,
+                        appOutputLog,
+                        extraEnvVariables,
+                        timeout,
+                        cancellationToken);
                 }
 
-                var mlaunchArguments = GetSimulatorArguments(
-                    appInformation,
-                    simulator,
-                    extraAppArguments,
-                    extraEnvVariables);
-
-                result = await RunSimulatorApp(
-                    mlaunchArguments,
-                    crashReporter,
-                    simulator,
-                    companionSimulator,
-                    timeout,
-                    cancellationToken);
+                return result;
             }
-            else
-            {
-                var mlaunchArguments = GetDeviceArguments(
-                    appInformation,
-                    device,
-                    target.Platform.IsWatchOSTarget(),
-                    extraAppArguments,
-                    extraEnvVariables);
-
-                result = await RunDeviceApp(
-                    mlaunchArguments,
-                    crashReporter,
-                    device,
-                    extraEnvVariables,
-                    timeout,
-                    cancellationToken);
-            }
-
-            return result;
         }
 
         private async Task<ProcessExecutionResult> RunSimulatorApp(
@@ -144,6 +176,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             ICrashSnapshotReporter crashReporter,
             ISimulatorDevice simulator,
             ISimulatorDevice? companionSimulator,
+            ILog appOutputLog,
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
@@ -182,72 +215,72 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             _mainLog.WriteLine("Starting test run");
 
-            return await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+            return await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
+                mlaunchArguments,
+                _mainLog,
+                appOutputLog,
+                appOutputLog,
+                timeout,
+                cancellationToken: cancellationToken));
         }
 
         private async Task<ProcessExecutionResult> RunDeviceApp(
             MlaunchArguments mlaunchArguments,
             ICrashSnapshotReporter crashReporter,
             IDevice device,
+            ILog appOutputLog,
             IEnumerable<(string, string)> extraEnvVariables,
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
-            var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
-            var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.Name);
+            using var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
+            using var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.Name);
             deviceLogCapturer.StartCapture();
 
-            try
-            {
-                await crashReporter.StartCaptureAsync();
+            await crashReporter.StartCaptureAsync();
 
-                _mainLog.WriteLine("Starting the app");
+            _mainLog.WriteLine("Starting the app");
 
-                var envVars = new Dictionary<string, string>();
-                AddExtraEnvVars(envVars, extraEnvVariables);
+            var envVars = new Dictionary<string, string>();
+            AddExtraEnvVars(envVars, extraEnvVariables);
 
-                return await _processManager.ExecuteCommandAsync(
-                    mlaunchArguments,
-                    _mainLog,
-                    timeout,
-                    envVars,
-                    cancellationToken: cancellationToken);
-            }
-            finally
-            {
-                deviceLogCapturer.StopCapture();
-                deviceSystemLog.Dispose();
-            }
+            return await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
+                mlaunchArguments,
+                _mainLog,
+                appOutputLog,
+                appOutputLog,
+                timeout,
+                envVars,
+                cancellationToken: cancellationToken));
         }
 
-        private MlaunchArguments GetCommonArguments(
-            AppBundleInformation appInformation,
+        private static MlaunchArguments GetCommonArguments(
             IEnumerable<string> extraAppArguments,
-            IEnumerable<(string, string)> extraEnvVariables)
+            IEnumerable<(string, string)> extraEnvVariables,
+            string? appEndTag)
         {
-            string appOutputLog = _logs.CreateFile($"{appInformation.BundleIdentifier}.log", LogType.ApplicationLog);
-            string appErrorOutputLog = _logs.CreateFile($"{appInformation.BundleIdentifier}.err.log", LogType.ApplicationLog);
-
-            var args = new MlaunchArguments
-            {
-                new SetStdoutArgument(appOutputLog),
-                new SetStderrArgument(appErrorOutputLog),
-            };
+            var args = new MlaunchArguments();
 
             // Arguments passed to the iOS app bundle
             args.AddRange(extraAppArguments.Select(arg => new SetAppArgumentArgument(arg)));
             args.AddRange(extraEnvVariables.Select(v => new SetEnvVariableArgument(v.Item1, v.Item2)));
 
+            if (appEndTag != null)
+            {
+                args.Add(new SetEnvVariableArgument(EnviromentVariables.AppEndTag, appEndTag));
+            }
+
             return args;
         }
 
-        private MlaunchArguments GetSimulatorArguments(
+        private static MlaunchArguments GetSimulatorArguments(
             AppBundleInformation appInformation,
             ISimulatorDevice simulator,
             IEnumerable<string> extraAppArguments,
-            IEnumerable<(string, string)> extraEnvVariables)
+            IEnumerable<(string, string)> extraEnvVariables,
+            string? appEndTag)
         {
-            var args = GetCommonArguments(appInformation, extraAppArguments, extraEnvVariables);
+            var args = GetCommonArguments(extraAppArguments, extraEnvVariables, appEndTag);
 
             args.Add(new SimulatorUDIDArgument(simulator.UDID));
 
@@ -271,14 +304,15 @@ namespace Microsoft.DotNet.XHarness.Apple
             return args;
         }
 
-        private MlaunchArguments GetDeviceArguments(
+        private static MlaunchArguments GetDeviceArguments(
             AppBundleInformation appInformation,
             IDevice device,
             bool isWatchTarget,
             IEnumerable<string> extraAppArguments,
-            IEnumerable<(string, string)> extraEnvVariables)
+            IEnumerable<(string, string)> extraEnvVariables,
+            string? appEndTag)
         {
-            var args = GetCommonArguments(appInformation, extraAppArguments, extraEnvVariables);
+            var args = GetCommonArguments(extraAppArguments, extraEnvVariables, appEndTag);
 
             args.Add(new DisableMemoryLimitsArgument());
             args.Add(new DeviceNameArgument(device));

@@ -180,6 +180,31 @@ To run the E2E tests, you can find a script in `tools/` that will build everythi
 ./tools/run-e2e-test.sh Apple/Simulator.Tests.proj
 ```
 
+## Troubleshooting
+
+Some XHarness commands only work in some scenarios and it's good to know what to expect from the tool.
+Some Android/Apple versions also require some workarounds and those are also good to know about.
+
+### My Apple unit tests are not running
+
+For the `apple test` command, XHarness expects the application to contain a `TestRunner` which is a library you can find in this repository.
+This library executes unit tests similarly how you would execute them on other platforms.
+However, the `TestRunner` from this repository contains more mechanisms that help to work around some issues (mostly in Apple platforms).
+
+The way it works is that XHarness usually sets some [environmental variables](https://github.com/dotnet/xharness/blob/main/src/Microsoft.DotNet.XHarness.iOS.Shared/Execution/EnviromentVariables.cs) for the application and the [`TestRunner` recognizes them](https://github.com/dotnet/xharness/blob/main/src/Microsoft.DotNet.XHarness.TestRunners.Common/ApplicationOptions.cs) and acts upon them.
+
+The workarounds we talk about are for example some TCP connections between the app and XHarness so that we can stream back the test results.
+
+For these reasons, the `test` command won't just work with any app. For those scenarios, use the `apple run` commands.
+
+### iOS/tvOS device runs are timing out
+
+For iOS/tvOS 14+, we have problems detecting when the application exits on the real device (simulators work fine).
+The workaround we went with lies in sharing a random string with the application using an [environmental variable `APP_END_TAG`](https://github.com/dotnet/xharness/blob/main/src/Microsoft.DotNet.XHarness.iOS.Shared/Execution/EnviromentVariables.cs) and expecting the app to output this string at the end of its run.
+
+To turn this workaround on, run XHarness with `--signal-app-end` and make sure your application logs the string it reads from the env variable.
+Using the `TestRunner` from this repository will automatically give you this functionality.
+
 ## Contribution
 
 We welcome contributions! Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).

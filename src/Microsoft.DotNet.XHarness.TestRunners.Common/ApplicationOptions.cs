@@ -76,6 +76,11 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                 _classMethodFilters.AddRange(classes.Split(','));
             }
 
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.AppEndTag)))
+            {
+                AppEndTag = Environment.GetEnvironmentVariable(EnviromentVariables.AppEndTag);
+            }
+
             var os = new OptionSet() {
                 { "autoexit", "Exit application once the test run has completed", v => TerminateAfterExecution = true },
                 { "autostart", "If the app should automatically start running the tests", v => AutoStart = true },
@@ -106,7 +111,8 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
                     "tests that have been provided by the '--method' and '--class' arguments will be ran. " +
                     "All other test will be ignored. Can be used more than once.",
                     v => _classMethodFilters.Add(v)
-                }
+                },
+                { "test-end-tag=", "String that will be outputted when test run has finished", v => AppEndTag = v },
             };
 
             try
@@ -168,5 +174,10 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common
         /// Specify the test classes to be ran in the app.
         /// </summary>
         public ICollection<string> ClassMethodFilters => _classMethodFilters;
+
+        /// <summary>
+        /// String that will be outputted when test run has finished.
+        /// </summary>
+        public string AppEndTag { get; private set; }
     }
 }
