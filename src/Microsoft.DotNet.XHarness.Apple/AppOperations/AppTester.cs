@@ -286,20 +286,13 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             _mainLog.WriteLine("Starting test run");
 
-            var result = await _processManager.ExecuteCommandAsync(
+            var result = await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
                 mlaunchArguments,
                 _mainLog,
                 appOutputLog,
                 appOutputLog,
                 timeout,
-                cancellationToken: cancellationToken);
-
-            // When signal is detected, we cancel the call above via the cancellation token so we need to fix the result
-            if (_appEndSignalDetected)
-            {
-                result.TimedOut = false;
-                result.ExitCode = 0;
-            }
+                cancellationToken: cancellationToken));
 
             await testReporter.CollectSimulatorResult(result);
         }
@@ -343,21 +336,14 @@ namespace Microsoft.DotNet.XHarness.Apple
                 // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit)
                 IFileBackedLog aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
 
-                var result = await _processManager.ExecuteCommandAsync(
+                var result = await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
                     mlaunchArguments,
                     aggregatedLog,
                     appOutputLog,
                     appOutputLog,
                     timeout,
                     envVars,
-                    cancellationToken: cancellationToken);
-
-                // When signal is detected, we cancel the call above via the cancellation token so we need to fix the result
-                if (_appEndSignalDetected)
-                {
-                    result.TimedOut = false;
-                    result.ExitCode = 0;
-                }
+                    cancellationToken: cancellationToken));
 
                 await testReporter.CollectDeviceResult(result);
             }

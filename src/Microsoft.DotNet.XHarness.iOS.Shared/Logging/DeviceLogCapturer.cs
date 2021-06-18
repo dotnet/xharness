@@ -9,7 +9,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 {
-    public interface IDeviceLogCapturer
+    public interface IDeviceLogCapturer : IDisposable
     {
         void StartCapture();
         void StopCapture();
@@ -97,6 +97,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
             _processManager.KillTreeAsync(_process, _mainLog, diagnostics: false).Wait();
             _process.Dispose();
         }
+
+        public void Dispose() => StopCapture();
     }
 }
 

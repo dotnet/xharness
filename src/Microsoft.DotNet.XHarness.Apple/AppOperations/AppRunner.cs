@@ -75,22 +75,13 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             using (appOutputLog)
             {
-                var result = await RunMacCatalystApp(
+                return await RunAndWatchForAppSignal(() => RunMacCatalystApp(
                     appInformation,
                     appOutputLog,
                     timeout,
                     extraAppArguments ?? Enumerable.Empty<string>(),
                     envVariables,
-                    cancellationToken);
-
-                // When signal is detected, we cancel the call above via the cancellation token so we need to fix the result
-                if (_appEndSignalDetected)
-                {
-                    result.TimedOut = false;
-                    result.ExitCode = 0;
-                }
-
-                return result;
+                    cancellationToken));
             }
         }
 
@@ -224,22 +215,13 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             _mainLog.WriteLine("Starting test run");
 
-            var result = await _processManager.ExecuteCommandAsync(
+            return await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
                 mlaunchArguments,
                 _mainLog,
                 appOutputLog,
                 appOutputLog,
                 timeout,
-                cancellationToken: cancellationToken);
-
-            // When signal is detected, we cancel the call above via the cancellation token so we need to fix the result
-            if (_appEndSignalDetected)
-            {
-                result.TimedOut = false;
-                result.ExitCode = 0;
-            }
-
-            return result;
+                cancellationToken: cancellationToken));
         }
 
         private async Task<ProcessExecutionResult> RunDeviceApp(
@@ -251,42 +233,25 @@ namespace Microsoft.DotNet.XHarness.Apple
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
-            var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
-            var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.Name);
+            using var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
+            using var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.Name);
             deviceLogCapturer.StartCapture();
 
-            try
-            {
-                await crashReporter.StartCaptureAsync();
+            await crashReporter.StartCaptureAsync();
 
-                _mainLog.WriteLine("Starting the app");
+            _mainLog.WriteLine("Starting the app");
 
-                var envVars = new Dictionary<string, string>();
-                AddExtraEnvVars(envVars, extraEnvVariables);
+            var envVars = new Dictionary<string, string>();
+            AddExtraEnvVars(envVars, extraEnvVariables);
 
-                var result = await _processManager.ExecuteCommandAsync(
-                    mlaunchArguments,
-                    _mainLog,
-                    appOutputLog,
-                    appOutputLog,
-                    timeout,
-                    envVars,
-                    cancellationToken: cancellationToken);
-
-                // When signal is detected, we cancel the call above via the cancellation token so we need to fix the result
-                if (_appEndSignalDetected)
-                {
-                    result.TimedOut = false;
-                    result.ExitCode = 0;
-                }
-
-                return result;
-            }
-            finally
-            {
-                deviceLogCapturer.StopCapture();
-                deviceSystemLog.Dispose();
-            }
+            return await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
+                mlaunchArguments,
+                _mainLog,
+                appOutputLog,
+                appOutputLog,
+                timeout,
+                envVars,
+                cancellationToken: cancellationToken));
         }
 
         private static MlaunchArguments GetCommonArguments(

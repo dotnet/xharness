@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IHelpers _helpers;
         private readonly IFileBackedLog _mainLog;
 
-        protected bool _appEndSignalDetected = false;
+        private bool _appEndSignalDetected = false;
 
         protected AppRunnerBase(
             IProcessManager processManager,
@@ -146,6 +146,20 @@ namespace Microsoft.DotNet.XHarness.Apple
             cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, appEndDetected.Token).Token;
 
             return tag;
+        }
+
+        protected async Task<ProcessExecutionResult> RunAndWatchForAppSignal(Func<Task<ProcessExecutionResult>> action)
+        {
+            var result = await action();
+
+            // When signal is detected, we cancel the call above via the cancellation token so we need to fix the result
+            if (_appEndSignalDetected)
+            {
+                result.TimedOut = false;
+                result.ExitCode = 0;
+            }
+
+            return result;
         }
     }
 }
