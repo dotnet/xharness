@@ -255,7 +255,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             }
 
             _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
-            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
 
             deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
         }
@@ -346,7 +345,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
 
             _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
-            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
 
             deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
         }
@@ -434,7 +432,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
             _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
 
-            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
             _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
 
             deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
@@ -653,7 +650,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             // we dont want to leak a process
             _tunnelBore.Verify(t => t.Close(s_mockDevice.DeviceIdentifier));
 
-            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
             _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
 
             deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);

@@ -145,7 +145,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                     Times.Once);
 
             _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
-            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
 
             deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
         }
@@ -257,7 +256,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             Assert.Equal(mlaunchArguments.Last().AsCommandLine(), expectedArgs);
 
-            _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
             _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
 
             deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
