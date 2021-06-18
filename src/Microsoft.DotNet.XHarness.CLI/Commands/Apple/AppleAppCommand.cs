@@ -44,7 +44,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             // Pipe the execution log to the debug output of XHarness effectively making "-v" turn this on
             CallbackLog debugLog = new(message => logger.LogDebug(message.Trim()));
             using var mainLog = Log.CreateReadableAggregatedLog(runLog, debugLog);
-            mainLog.Timestamp = true;
 
             var processManager = new MlaunchProcessManager(Arguments.XcodeRoot, Arguments.MlaunchPath);
 
