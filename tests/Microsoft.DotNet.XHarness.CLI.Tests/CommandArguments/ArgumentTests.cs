@@ -183,5 +183,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Tests.Arguments
             Assert.True(command.CommandRun);
             Assert.Equal(TimeSpan.FromSeconds(150), arg.Value);
         }
+
+        [Fact]
+        public void ArgumentsAreInterpolatedWell()
+        {
+            var timespanArg = new SampleTimeSpanArgument(TimeSpan.FromSeconds(5));
+            var switchArg = new SampleSwitchArgument(true);
+            var stringArg = new SampleStringArgument();
+            stringArg.Action("string-value");
+
+            Assert.Equal("time is 00:00:05", $"time is {timespanArg}");
+            Assert.Equal("switch is true", $"switch is {switchArg}");
+            Assert.Equal("string is string-value", $"string is {stringArg}");
+        }
     }
 }
