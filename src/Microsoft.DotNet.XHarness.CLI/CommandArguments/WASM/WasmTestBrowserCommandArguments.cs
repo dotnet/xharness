@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public OutputDirectoryArgument OutputDirectory { get; } = new();
         public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
         public DebuggerPortArgument DebuggerPort { get; set; } = new();
-        public NoIncognitoArgument Incognito { get; } = new();
+        public NoIncognitoArgument NoIncognito { get; } = new();
         public NoHeadlessArgument NoHeadless { get; } = new();
         public NoQuitAppAtEndArgument NoQuitAppAtEnd { get; } = new();
 
@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             OutputDirectory,
             Timeout,
             DebuggerPort,
-            Incognito,
+            NoIncognito,
             NoHeadless,
             NoQuitAppAtEnd,
             WebServerMiddlewarePathsAndTypes,

@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 var exitCode = await runner.RunTestsWithWebDriver(driverService, driver);
                 if ((int)exitCode != Arguments.ExpectedExitCode)
                 {
-                    logger.LogError($"Application has finished with exit code {exitCode} but {Arguments.ExpectedExitCode.Value} was expected");
+                    logger.LogError($"Application has finished with exit code {exitCode} but {Arguments.ExpectedExitCode} was expected");
                     return ExitCode.GENERAL_FAILURE;
                 }
 
@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             if (!Arguments.NoHeadless)
                 options.AddArguments("--headless");
 
-            if (Arguments.Incognito)
+            if (!Arguments.NoIncognito)
                 options.AddArguments("--incognito");
 
             logger.LogInformation($"Starting Firefox with args: {string.Join(' ', options.ToCapabilities())}");
@@ -161,13 +161,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
 
             options.AddArguments(Arguments.BrowserArgs.Value);
+
             if (!Arguments.NoHeadless)
                 options.AddArguments("--headless");
 
             if (Arguments.DebuggerPort.Value != null)
-                options.AddArguments($"--remote-debugging-port={Arguments.DebuggerPort.Value}");
+                options.AddArguments($"--remote-debugging-port={Arguments.DebuggerPort}");
 
-            if (Arguments.Incognito)
+            if (!Arguments.NoIncognito)
                 options.AddArguments("--incognito");
 
             options.AddArguments(new[]

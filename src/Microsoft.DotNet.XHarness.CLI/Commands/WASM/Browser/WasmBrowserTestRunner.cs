@@ -231,7 +231,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         private string BuildUrl(ServerURLs serverURLs)
         {
-            var uriBuilder = new UriBuilder($"{serverURLs.Http}/{_arguments.HTMLFile.Value}");
+            var uriBuilder = new UriBuilder($"{serverURLs.Http}/{_arguments.HTMLFile}");
             var sb = new StringBuilder();
 
             if (_arguments.DebuggerPort.Value != null)
