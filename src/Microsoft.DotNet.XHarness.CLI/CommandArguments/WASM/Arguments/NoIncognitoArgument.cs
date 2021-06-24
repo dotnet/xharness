@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
     internal class NoIncognitoArgument : SwitchArgument
     {
         public NoIncognitoArgument()
-            : base("no-incognito", "Don't run in incognito mode", true)
+            : base("no-incognito", "Don't run in incognito mode", false)
         {
         }
     }

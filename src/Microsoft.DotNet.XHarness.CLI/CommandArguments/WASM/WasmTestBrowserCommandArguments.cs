@@ -21,9 +21,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public OutputDirectoryArgument OutputDirectory { get; } = new();
         public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
         public DebuggerPortArgument DebuggerPort { get; set; } = new();
-        public NoIncognitoArgument Incognito { get; } = new();
-        public NoHeadlessArgument Headless { get; } = new();
-        public QuitAppAtEndArgument QuitAppAtEnd { get; } = new();
+        public NoIncognitoArgument NoIncognito { get; } = new();
+        public NoHeadlessArgument NoHeadless { get; } = new();
+        public NoQuitArgument NoQuit { get; } = new();
 
         public WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; } = new();
         public WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; } = new();
@@ -43,9 +43,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             OutputDirectory,
             Timeout,
             DebuggerPort,
-            Incognito,
-            Headless,
-            QuitAppAtEnd,
+            NoIncognito,
+            NoHeadless,
+            NoQuit,
             WebServerMiddlewarePathsAndTypes,
             WebServerHttpEnvironmentVariables,
             WebServerHttpsEnvironmentVariables,
@@ -70,9 +70,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
                 }
             }
 
-            if (DebuggerPort != null || !QuitAppAtEnd)
+            if (DebuggerPort.Value != null || NoQuit)
             {
-                Headless.Set(false);
+                NoHeadless.Set(true);
             }
         }
     }

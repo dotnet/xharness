@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
             finally
             {
-                if (!Arguments.QuitAppAtEnd)
+                if (Arguments.NoQuit)
                 {
                     logger.LogInformation("Tests are done. Press Ctrl+C to exit");
                     var token = new CancellationToken(false);
@@ -117,10 +117,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
 
             options.AddArguments(Arguments.BrowserArgs.Value);
-            if (Arguments.Headless)
+            if (!Arguments.NoHeadless)
                 options.AddArguments("--headless");
 
-            if (Arguments.Incognito)
+            if (!Arguments.NoIncognito)
                 options.AddArguments("--incognito");
 
             logger.LogInformation($"Starting Firefox with args: {string.Join(' ', options.ToCapabilities())}");
@@ -147,9 +147,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         private (DriverService, IWebDriver) GetChromiumDriver<TDriverOptions, TDriver, TDriverService>(
             string driverName, Func<TDriverOptions, TDriverService> getDriverService, ILogger logger)
-            where TDriver: ChromiumDriver
-            where TDriverOptions: ChromiumOptions
-            where TDriverService: ChromiumDriverService
+            where TDriver : ChromiumDriver
+            where TDriverOptions : ChromiumOptions
+            where TDriverService : ChromiumDriverService
         {
             var options = Activator.CreateInstance<TDriverOptions>();
             options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
@@ -161,15 +161,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
 
             options.AddArguments(Arguments.BrowserArgs.Value);
-            if (Arguments.Headless)
+
+            if (!Arguments.NoHeadless)
                 options.AddArguments("--headless");
 
-            options.AddArguments($"--remote-debugging-port={Arguments.DebuggerPort.Value}");
+            if (Arguments.DebuggerPort.Value != null)
+                options.AddArguments($"--remote-debugging-port={Arguments.DebuggerPort}");
 
-            if (Arguments.Incognito)
+            if (!Arguments.NoIncognito)
                 options.AddArguments("--incognito");
 
-            options.AddArguments(new []
+            options.AddArguments(new[]
             {
                 // added based on https://github.com/puppeteer/puppeteer/blob/main/src/node/Launcher.ts#L159-L181
                 "--enable-features=NetworkService,NetworkServiceInProcess",
@@ -187,7 +189,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 "--metrics-recording-only"
             });
 
-            if (!Arguments.QuitAppAtEnd)
+            if (Arguments.NoQuit)
                 options.LeaveBrowserRunning = true;
 
             logger.LogInformation($"Starting {driverName} with args: {string.Join(' ', options.Arguments)}");
@@ -202,7 +204,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             //
             // So -> use a larger timeout!
 
-            string[] err_snippets = new []
+            string[] err_snippets = new[]
             {
                 "exited abnormally",
                 "Cannot start the driver service"
@@ -213,7 +215,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             int max_retries = 3;
             int retry_num = 0;
-            while(true)
+            while (true)
             {
                 TDriverService? driverService = null;
                 try
@@ -257,7 +259,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         }
 
         private static (DriverService, IWebDriver) CreateWebDriver<TDriverService>(Func<TDriverService> getDriverService, Func<TDriverService, IWebDriver> getDriver)
-            where TDriverService: DriverService
+            where TDriverService : DriverService
         {
             var driverService = getDriverService();
             try

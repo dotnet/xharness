@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
     internal class NoHeadlessArgument : SwitchArgument
     {
         public NoHeadlessArgument()
-            : base("no-headless", "Don't run in headless mode", true)
+            : base("no-headless", "Don't run in headless mode", false)
         {
         }
 

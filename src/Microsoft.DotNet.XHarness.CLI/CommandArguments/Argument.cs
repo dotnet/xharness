@@ -131,6 +131,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         }
 
         public static implicit operator T(Argument<T> arg) => arg.Value;
+
+        public override string ToString() => Value?.ToString() ?? base.ToString()!;
     }
 
     public abstract class IntArgument : Argument<int>
@@ -261,6 +263,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
                     !argumentValue.Equals("0", StringComparison.InvariantCultureIgnoreCase);
             }
         }
+
+        public override string ToString() => Value ? "true" : "false";
     }
 
     public abstract class RepeatableArgument : Argument<IEnumerable<string>>
