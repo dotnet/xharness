@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         public async Task<ExitCode> RunTestsWithWebDriver(DriverService driverService, IWebDriver driver)
         {
-            var htmlFilePath = Path.Combine(_arguments.AppPackagePath, _arguments.HTMLFile);
+            var htmlFilePath = Path.Combine(_arguments.AppPackagePath, _arguments.HTMLFile.Value);
             if (!File.Exists(htmlFilePath))
             {
                 _logger.LogError($"Could not find html file {htmlFilePath}");
@@ -231,10 +231,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         private string BuildUrl(ServerURLs serverURLs)
         {
-            var uriBuilder = new UriBuilder($"{serverURLs.Http}/{_arguments.HTMLFile}");
+            var uriBuilder = new UriBuilder($"{serverURLs.Http}/{_arguments.HTMLFile.Value}");
             var sb = new StringBuilder();
 
-            if (_arguments.DebuggerPort != null)
+            if (_arguments.DebuggerPort.Value != null)
                 sb.Append($"arg=--debug");
 
 
