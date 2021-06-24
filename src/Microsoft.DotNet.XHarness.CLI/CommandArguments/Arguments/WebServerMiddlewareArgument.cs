@@ -11,7 +11,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
     internal class WebServerMiddlewareArgument : Argument<List<(string path, string type)>>
     {
         public WebServerMiddlewareArgument()
-            : base("web-server-middleware=", "<path>,<typeName> to assembly and type which contains Kestrel middleware for local test server. Could be used multiple times to load multiple middlewares", new List<(string path, string type)>())
+            : base(
+                  "web-server-middleware=",
+                  "<path>,<typeName> to assembly and type which contains Kestrel middleware for local test server. Could be used multiple times to load multiple middlewares",
+                  new List<(string path, string type)>())
         {
         }
 

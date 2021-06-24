@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
     {
         public virtual T Value { get; protected set; }
 
-        protected Argument(string prototype, string description, T defaultValue = default!)
+        protected Argument(string prototype, string description, T defaultValue)
             : base(prototype, description)
         {
             Value = defaultValue;
@@ -138,9 +138,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
     public abstract class IntArgument : Argument<int>
     {
         public IntArgument(string prototype, string description, int defaultValue = 0)
-            : base(prototype, description)
+            : base(prototype, description, defaultValue)
         {
-            Value = defaultValue;
         }
 
         public override void Action(string argumentValue)
@@ -158,7 +157,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
     public abstract class StringArgument : Argument<string?>
     {
         public StringArgument(string prototype, string description)
-            : base(prototype, description)
+            : base(prototype, description, null)
         {
         }
 
@@ -186,9 +185,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
     public abstract class TimeSpanArgument : Argument<TimeSpan>
     {
         protected TimeSpanArgument(string prototype, string description, TimeSpan defaultValue)
-            : base(prototype, description)
+            : base(prototype, description, defaultValue)
         {
-            Value = defaultValue;
         }
 
         public override void Action(string argumentValue)
@@ -243,9 +241,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
         private readonly bool _defaultValue;
 
         public SwitchArgument(string prototype, string description, bool defaultValue)
-            : base(prototype, description)
+            : base(prototype, description, defaultValue)
         {
-            Value = defaultValue;
             _defaultValue = defaultValue;
         }
 
@@ -271,7 +268,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
     {
         private readonly List<string> _values = new();
 
-        protected RepeatableArgument(string prototype, string description) : base(prototype, description + ". Can be used more than once")
+        protected RepeatableArgument(string prototype, string description) : base(prototype, description + ". Can be used more than once", Array.Empty<string>())
         {
         }
 
