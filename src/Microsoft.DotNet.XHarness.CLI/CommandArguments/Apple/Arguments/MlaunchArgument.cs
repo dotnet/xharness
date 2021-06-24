@@ -15,9 +15,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// </summary>
     internal class MlaunchArgument : Argument<string>
     {
-        public MlaunchArgument() : base("mlaunch=", "Path to the mlaunch binary")
+        public MlaunchArgument() : base("mlaunch=", "Path to the mlaunch binary", MacOSProcessManager.DetectMlaunchPath())
         {
-            Value = MacOSProcessManager.DetectMlaunchPath();
         }
 
         public override void Action(string argumentValue) => Value = RootPath(argumentValue);

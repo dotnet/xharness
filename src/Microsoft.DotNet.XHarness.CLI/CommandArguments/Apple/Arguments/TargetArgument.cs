@@ -13,9 +13,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// </summary>
     internal class TargetArgument : Argument<TestTargetOs>
     {
-        public TargetArgument() : base("target=|targets=|t=", "Test target (device/simulator and OS)")
+        public TargetArgument() : base("target=|targets=|t=", "Test target (device/simulator and OS)", TestTargetOs.None)
         {
-            Value = TestTargetOs.None;
         }
 
         public override void Action(string argumentValue)
