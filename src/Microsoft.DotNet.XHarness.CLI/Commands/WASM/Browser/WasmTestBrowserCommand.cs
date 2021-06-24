@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
             finally
             {
-                if (Arguments.NoQuitAppAtEnd)
+                if (Arguments.NoQuit)
                 {
                     logger.LogInformation("Tests are done. Press Ctrl+C to exit");
                     var token = new CancellationToken(false);
@@ -189,7 +189,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 "--metrics-recording-only"
             });
 
-            if (Arguments.NoQuitAppAtEnd)
+            if (Arguments.NoQuit)
                 options.LeaveBrowserRunning = true;
 
             logger.LogInformation($"Starting {driverName} with args: {string.Join(' ', options.Arguments)}");

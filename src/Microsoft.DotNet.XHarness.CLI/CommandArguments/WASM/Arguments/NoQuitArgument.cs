@@ -4,9 +4,9 @@
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
 {
-    internal class NoQuitAppAtEndArgument : SwitchArgument
+    internal class NoQuitArgument : SwitchArgument
     {
-        public NoQuitAppAtEndArgument()
+        public NoQuitArgument()
             : base("no-quit", "Don't quit the xharness process after the tests are done running. Implies --no-headless", false)
         {
         }

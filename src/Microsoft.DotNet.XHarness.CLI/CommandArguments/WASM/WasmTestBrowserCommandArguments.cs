@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public DebuggerPortArgument DebuggerPort { get; set; } = new();
         public NoIncognitoArgument NoIncognito { get; } = new();
         public NoHeadlessArgument NoHeadless { get; } = new();
-        public NoQuitAppAtEndArgument NoQuitAppAtEnd { get; } = new();
+        public NoQuitArgument NoQuit { get; } = new();
 
         public WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; } = new();
         public WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; } = new();
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             DebuggerPort,
             NoIncognito,
             NoHeadless,
-            NoQuitAppAtEnd,
+            NoQuit,
             WebServerMiddlewarePathsAndTypes,
             WebServerHttpEnvironmentVariables,
             WebServerHttpsEnvironmentVariables,
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
                 }
             }
 
-            if (DebuggerPort.Value != null || NoQuitAppAtEnd)
+            if (DebuggerPort.Value != null || NoQuit)
             {
                 NoHeadless.Set(true);
             }
