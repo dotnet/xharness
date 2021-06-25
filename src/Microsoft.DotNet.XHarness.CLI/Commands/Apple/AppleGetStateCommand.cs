@@ -192,7 +192,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             try
             {
-                await deviceLoader.LoadDevices(log);
+                await deviceLoader.LoadDevices(log, includeWirelessDevices: Arguments.IncludeWireless);
             }
             catch (Exception e)
             {
