@@ -207,7 +207,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             string[] err_snippets = new[]
             {
                 "exited abnormally",
-                "Cannot start the driver service"
+                "Cannot start the driver service",
+                "failed to start"
             };
 
             foreach (var file in Directory.EnumerateFiles(Arguments.OutputDirectory, $"{driverName}-*.log"))
