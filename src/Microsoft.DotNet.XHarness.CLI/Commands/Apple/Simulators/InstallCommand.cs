@@ -145,10 +145,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
             {
                 var watch = Stopwatch.StartNew();
 
-                using (var response = await s_client.GetAsync(simulator.Source))
-                using (var fileStream = File.Create(downloadPath))
+                using (var response = await s_client.GetAsync(simulator.Source, HttpCompletionOption.ResponseHeadersRead))
                 {
-                    await response.Content.CopyToAsync(fileStream);
+                    response.EnsureSuccessStatusCode();
+
+                    using (var fileStream = File.Create(downloadPath))
+                    {
+                        await response.Content.CopyToAsync(fileStream);
+                    }
                 }
 
                 watch.Stop();
