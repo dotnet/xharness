@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
                             var bytesRead = await responseStream.ReadAsync(buffer);
                             if (bytesRead == 0)
                             {
-                                ShowProgress(totalBytesDownloaded);
+                                Console.Write("\r" + " ".PadRight(progressMessage.Length) + "\r");
                                 break;
                             }
 
