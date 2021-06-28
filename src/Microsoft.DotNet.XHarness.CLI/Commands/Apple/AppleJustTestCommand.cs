@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                     Arguments.SingleMethodFilters.Value,
                     Arguments.ClassMethodFilters.Value,
                     includeWirelessDevices: Arguments.IncludeWireless,
-                    resetSimulator: Arguments.ResetSimulator,
+                    resetSimulator: false,
                     enableLldb: Arguments.EnableLldb,
                     signalAppEnd: Arguments.SignalAppEnd,
                     Arguments.EnvironmentalVariables.Value,

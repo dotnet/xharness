@@ -20,7 +20,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public IncludeWirelessArgument IncludeWireless { get; } = new();
         public EnableLldbArgument EnableLldb { get; } = new();
         public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
-        public ResetSimulatorArgument ResetSimulator { get; } = new();
         public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
         public SignalAppEndArgument SignalAppEnd { get; } = new();
 
@@ -38,7 +37,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             EnableLldb,
             SignalAppEnd,
             EnvironmentalVariables,
-            ResetSimulator,
         };
     }
 }
