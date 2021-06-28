@@ -271,14 +271,13 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables)
         {
-            var appLog = _logs.CreateFile(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog);
-            var appErrorLog = _logs.CreateFile(appInformation.BundleIdentifier + ".err.log", LogType.ApplicationLog);
-
             var args = GetCommonArguments(extraAppArguments, extraEnvVariables, appEndTag: null);
 
             args.Add(new SimulatorUDIDArgument(simulator.UDID));
+
+            var appLog = _logs.CreateFile(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog);
             args.Add(new SetStdoutArgument(appLog));
-            args.Add(new SetStderrArgument(appErrorLog));
+            args.Add(new SetStderrArgument(appLog)); // Seems like mlaunch only redirects stderr, stdout doesn't produce any data
 
             if (appInformation.Extension.HasValue)
             {

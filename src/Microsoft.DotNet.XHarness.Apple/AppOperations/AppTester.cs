@@ -536,9 +536,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables)
         {
-            var appLog = _logs.CreateFile(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog);
-            var appErrorLog = _logs.CreateFile(appInformation.BundleIdentifier + ".err.log", LogType.ApplicationLog);
-
             var args = GetCommonArguments(
                 xmlResultJargon,
                 skippedMethods,
@@ -552,8 +549,10 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"));
             args.Add(new SimulatorUDIDArgument(simulator));
+
+            var appLog = _logs.CreateFile(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog);
             args.Add(new SetStdoutArgument(appLog));
-            args.Add(new SetStderrArgument(appErrorLog));
+            args.Add(new SetStderrArgument(appLog)); // Seems like mlaunch only redirects stderr, stdout doesn't produce any data
 
             if (appInformation.Extension.HasValue)
             {
