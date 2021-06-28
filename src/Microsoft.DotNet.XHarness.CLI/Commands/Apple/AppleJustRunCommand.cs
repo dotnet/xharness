@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                     Arguments.Timeout,
                     Arguments.ExpectedExitCode,
                     Arguments.IncludeWireless,
-                    Arguments.ResetSimulator,
+                    resetSimulator: false,
                     Arguments.EnableLldb,
                     Arguments.SignalAppEnd,
                     Arguments.EnvironmentalVariables.Value,
