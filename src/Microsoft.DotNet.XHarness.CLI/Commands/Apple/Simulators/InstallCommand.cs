@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
                 watch.Stop();
 
                 var size = new FileInfo(downloadPath).Length;
-                Logger.LogInformation($"Downloaded {size / 1024.0 / 1024.0:N1} MB in {watch.Elapsed}s");
+                Logger.LogInformation($"Downloaded {size / 1024.0 / 1024.0:N1} MB in {watch.Elapsed:hh\\:mm\\:ss}");
             }
 
             var mount_point = Path.Combine(TempDirectory, filename + "-mount");
