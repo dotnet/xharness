@@ -273,6 +273,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         {
             var appLog = _logs.CreateFile(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog);
             var appErrorLog = _logs.CreateFile(appInformation.BundleIdentifier + ".err.log", LogType.ApplicationLog);
+
             var args = GetCommonArguments(extraAppArguments, extraEnvVariables, appEndTag: null);
 
             args.Add(new SimulatorUDIDArgument(simulator.UDID));

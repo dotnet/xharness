@@ -140,6 +140,12 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
         {
+            var runMode = target.Platform.ToRunMode();
+            if (signalAppEnd && (runMode == RunMode.Sim64 || runMode == RunMode.Sim32))
+            {
+                _logger.LogWarning("The --signal-app-end option is used for device tests and has no effect on simulators");
+            }
+
             _logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on '{device.Name}'");
 
             ProcessExecutionResult result = await _appRunner.RunApp(
