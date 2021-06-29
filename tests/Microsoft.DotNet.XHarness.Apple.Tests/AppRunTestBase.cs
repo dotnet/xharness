@@ -74,6 +74,9 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 .Setup(x => x.CreateFile($"{AppBundleIdentifier}-mocked_timestamp.log", It.IsAny<LogType>()))
                 .Returns($"./{AppBundleIdentifier}-mocked_timestamp.log");
             _logs
+                .Setup(x => x.CreateFile(AppBundleIdentifier + ".log", LogType.ApplicationLog))
+                .Returns(_stdoutLog.FullPath);
+            _logs
                 .Setup(x => x.Create(AppBundleIdentifier + ".log", LogType.ApplicationLog.ToString(), It.IsAny<bool?>()))
                 .Returns(_stdoutLog);
             _logs

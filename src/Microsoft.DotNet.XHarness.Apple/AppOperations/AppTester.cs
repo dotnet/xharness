@@ -173,7 +173,10 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{device.Name}' ***");
 
-                using var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken);
+                using var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
+                    testReporter.CancellationToken,
+                    cancellationToken);
+                cancellationToken = combinedCancellationToken.Token;
 
                 if (isSimulator)
                 {
@@ -196,7 +199,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                         (ISimulatorDevice)device,
                         companionDevice as ISimulatorDevice,
                         timeout,
-                        combinedCancellationToken.Token);
+                        cancellationToken);
                 }
                 else
                 {
@@ -232,7 +235,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                             appOutputLog,
                             timeout,
                             extraEnvVariables,
-                            combinedCancellationToken.Token);
+                            cancellationToken);
                     }
                 }
 

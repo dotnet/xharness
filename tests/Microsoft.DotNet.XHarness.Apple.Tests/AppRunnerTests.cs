@@ -71,8 +71,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                     x => x.ExecuteCommandAsync(
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        It.IsAny<ILog>(),
-                       It.IsAny<ILog>(),
-                       It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<int>(),
@@ -342,6 +340,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "-argument=--xyz " +
             "-setenv=appArg1=value1 " +
             $"--device=:v2:udid={_mockSimulator.UDID} " +
+            $"--stdout=./{AppBundleIdentifier}.log " +
+            $"--stderr=./{AppBundleIdentifier}.log " +
             $"--launchsimbundleid={AppBundleIdentifier}";
 
         private void SetupLogList(IEnumerable<IFileBackedLog> logs)
