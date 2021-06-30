@@ -56,17 +56,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var engineBinary = Arguments.Engine.Value switch
             {
                 JavaScriptEngine.V8 => "v8",
-                JavaScriptEngine.NodeJS => "node",
                 JavaScriptEngine.JavaScriptCore => "jsc",
                 JavaScriptEngine.SpiderMonkey => "sm",
+                JavaScriptEngine.NodeJS => "node",
                 _ => throw new ArgumentException("Engine not set")
             };
 
-            if (engineBinary.Equals("node"))
-                engineBinary = FindEngineInPath(engineBinary + ".exe"); // NodeJS ships as .exe rather than .cmd
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                if (engineBinary.Equals("node"))
+                    engineBinary = FindEngineInPath(engineBinary + ".exe"); // NodeJS ships as .exe rather than .cmd
 
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                engineBinary = FindEngineInPath(engineBinary + ".cmd");
+                else
+                    engineBinary = FindEngineInPath(engineBinary + ".cmd");
+            }
 
             var webServerCts = new CancellationTokenSource();
             try
