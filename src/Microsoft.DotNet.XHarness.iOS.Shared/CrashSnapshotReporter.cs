@@ -100,7 +100,29 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared
                     crashReports = new List<IFileBackedLog>(newCrashFiles.Count);
                     foreach (var path in newCrashFiles)
                     {
-                        _logs.AddFile(path, $"Crash report: {Path.GetFileName(path)}");
+                        // It can happen that the crash log is still being written to so we have to retry
+                        int retry = 0;
+                        while (true)
+                        {
+                            try
+                            {
+                                _logs.AddFile(path, $"Crash report: {Path.GetFileName(path)}");
+                                break;
+                            }
+                            catch (Exception e)
+                            {
+                                _log.WriteLine($"Failed to copy a crash report {path}: {e.Message}");
+                            }
+
+                            if (retry == 3)
+                            {
+                                _log.WriteLine($"Failed to copy a crash report after {retry} retries, skipping {path}");
+                                break;
+                            }
+
+                            ++retry;
+                            Thread.Sleep(TimeSpan.FromSeconds(2 * retry));
+                        }
                     }
                 }
                 else
