@@ -42,5 +42,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         /// SpiderMonkey
         /// </summary>
         SpiderMonkey,
+        /// <summary>
+        /// NodeJS
+        /// </summary>
+        NodeJS,
     }
 }
