@@ -555,7 +555,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             var appLog = _logs.CreateFile(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog);
             args.Add(new SetStdoutArgument(appLog));
-            args.Add(new SetStderrArgument(appLog)); // Seems like mlaunch only redirects stderr, stdout doesn't produce any data
+            args.Add(new SetStderrArgument(appLog)); // Seems like mlaunch only redirects stderr, stdout doesn't produce any data, however stderr captures stdout of the app too
 
             if (appInformation.Extension.HasValue)
             {
