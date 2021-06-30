@@ -102,7 +102,6 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             var isSimulator = target.Platform.IsSimulator();
             using var crashLogs = new Logs(_logs.Directory);
-            var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
 
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(
                 _mainLog,
@@ -112,50 +111,50 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{device.Name}' ***");
 
-            string? appEndTag = null;
-            if (signalAppEnd)
-            {
-                WatchForAppEndTag(out appEndTag, ref appOutputLog, ref cancellationToken);
-            }
 
-            using (appOutputLog)
+            if (isSimulator)
             {
-                if (isSimulator)
+                simulator = device as ISimulatorDevice;
+                companionSimulator = companionDevice as ISimulatorDevice;
+
+                if (simulator == null)
                 {
-                    simulator = device as ISimulatorDevice;
-                    companionSimulator = companionDevice as ISimulatorDevice;
-
-                    if (simulator == null)
-                    {
-                        _mainLog.WriteLine("Didn't find any suitable simulator");
-                        throw new NoDeviceFoundException();
-                    }
-
-                    var mlaunchArguments = GetSimulatorArguments(
-                        appInformation,
-                        simulator,
-                        extraAppArguments,
-                        extraEnvVariables,
-                        appEndTag);
-
-                    result = await RunSimulatorApp(
-                        mlaunchArguments,
-                        crashReporter,
-                        simulator,
-                        companionSimulator,
-                        appOutputLog,
-                        timeout,
-                        cancellationToken);
+                    _mainLog.WriteLine("Didn't find any suitable simulator");
+                    throw new NoDeviceFoundException();
                 }
-                else
+
+                var mlaunchArguments = GetSimulatorArguments(
+                    appInformation,
+                    simulator,
+                    extraAppArguments,
+                    extraEnvVariables);
+
+                result = await RunSimulatorApp(
+                    mlaunchArguments,
+                    crashReporter,
+                    simulator,
+                    companionSimulator,
+                    timeout,
+                    cancellationToken);
+            }
+            else
+            {
+                var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
+                string? appEndTag = null;
+                if (signalAppEnd)
+                {
+                    WatchForAppEndTag(out appEndTag, ref appOutputLog, ref cancellationToken);
+                }
+
+                using (appOutputLog)
                 {
                     var mlaunchArguments = GetDeviceArguments(
-                        appInformation,
-                        device,
-                        target.Platform.IsWatchOSTarget(),
-                        extraAppArguments,
-                        extraEnvVariables,
-                        appEndTag);
+                    appInformation,
+                    device,
+                    target.Platform.IsWatchOSTarget(),
+                    extraAppArguments,
+                    extraEnvVariables,
+                    appEndTag);
 
                     result = await RunDeviceApp(
                         mlaunchArguments,
@@ -166,9 +165,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                         timeout,
                         cancellationToken);
                 }
-
-                return result;
             }
+
+            return result;
         }
 
         private async Task<ProcessExecutionResult> RunSimulatorApp(
@@ -176,7 +175,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             ICrashSnapshotReporter crashReporter,
             ISimulatorDevice simulator,
             ISimulatorDevice? companionSimulator,
-            ILog appOutputLog,
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
@@ -215,13 +213,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             _mainLog.WriteLine("Starting test run");
 
-            return await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
-                mlaunchArguments,
-                _mainLog,
-                appOutputLog,
-                appOutputLog,
-                timeout,
-                cancellationToken: cancellationToken));
+            return await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
         }
 
         private async Task<ProcessExecutionResult> RunDeviceApp(
@@ -254,7 +246,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 cancellationToken: cancellationToken));
         }
 
-        private static MlaunchArguments GetCommonArguments(
+        private MlaunchArguments GetCommonArguments(
             IEnumerable<string> extraAppArguments,
             IEnumerable<(string, string)> extraEnvVariables,
             string? appEndTag)
@@ -273,16 +265,19 @@ namespace Microsoft.DotNet.XHarness.Apple
             return args;
         }
 
-        private static MlaunchArguments GetSimulatorArguments(
+        private MlaunchArguments GetSimulatorArguments(
             AppBundleInformation appInformation,
             ISimulatorDevice simulator,
             IEnumerable<string> extraAppArguments,
-            IEnumerable<(string, string)> extraEnvVariables,
-            string? appEndTag)
+            IEnumerable<(string, string)> extraEnvVariables)
         {
-            var args = GetCommonArguments(extraAppArguments, extraEnvVariables, appEndTag);
+            var args = GetCommonArguments(extraAppArguments, extraEnvVariables, appEndTag: null);
 
             args.Add(new SimulatorUDIDArgument(simulator.UDID));
+
+            var appLog = _logs.CreateFile(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog);
+            args.Add(new SetStdoutArgument(appLog));
+            args.Add(new SetStderrArgument(appLog)); // Seems like mlaunch only redirects stderr, stdout doesn't produce any data, however stderr captures stdout of the app too
 
             if (appInformation.Extension.HasValue)
             {
@@ -304,7 +299,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             return args;
         }
 
-        private static MlaunchArguments GetDeviceArguments(
+        private MlaunchArguments GetDeviceArguments(
             AppBundleInformation appInformation,
             IDevice device,
             bool isWatchTarget,

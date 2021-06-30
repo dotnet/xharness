@@ -134,8 +134,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             var isSimulator = target.Platform.IsSimulator();
 
             var testLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
-            var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
-
+            
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 runMode,
                 log: _mainLog,
@@ -144,14 +143,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 autoExit: true,
                 xmlOutput: true); // cli always uses xml
 
-            string? appEndTag = null;
-            if (signalAppEnd)
-            {
-                WatchForAppEndTag(out appEndTag , ref appOutputLog, ref cancellationToken);
-            }
-
             using (testLog)
-            using (appOutputLog)
             using (deviceListener)
             {
                 var deviceListenerPort = deviceListener.InitializeAndGetPort();
@@ -181,7 +173,10 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                 _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{device.Name}' ***");
 
-                using var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(testReporter.CancellationToken, cancellationToken);
+                using var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
+                    testReporter.CancellationToken,
+                    cancellationToken);
+                cancellationToken = combinedCancellationToken.Token;
 
                 if (isSimulator)
                 {
@@ -195,8 +190,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                         deviceListenerPort,
                         deviceListenerTmpFile,
                         extraAppArguments,
-                        extraEnvVariables,
-                        appEndTag);
+                        extraEnvVariables);
 
                     await RunSimulatorTests(
                         mlaunchArguments,
@@ -204,36 +198,45 @@ namespace Microsoft.DotNet.XHarness.Apple
                         testReporter,
                         (ISimulatorDevice)device,
                         companionDevice as ISimulatorDevice,
-                        appOutputLog,
                         timeout,
-                        combinedCancellationToken.Token);
+                        cancellationToken);
                 }
                 else
                 {
-                    var mlaunchArguments = GetDeviceArguments(
-                        appInformation,
-                        device,
-                        target.Platform.IsWatchOSTarget(),
-                        xmlResultJargon,
-                        skippedMethods,
-                        skippedTestClasses,
-                        deviceListenerTransport,
-                        deviceListenerPort,
-                        deviceListenerTmpFile,
-                        extraAppArguments,
-                        extraEnvVariables,
-                        appEndTag);
+                    var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
+                    string? appEndTag = null;
+                    if (signalAppEnd)
+                    {
+                        WatchForAppEndTag(out appEndTag, ref appOutputLog, ref cancellationToken);
+                    }
 
-                    await RunDeviceTests(
-                        mlaunchArguments,
-                        crashReporter,
-                        testReporter,
-                        deviceListener,
-                        device,
-                        appOutputLog,
-                        timeout,
-                        extraEnvVariables,
-                        combinedCancellationToken.Token);
+                    using (appOutputLog)
+                    {
+                        var mlaunchArguments = GetDeviceArguments(
+                            appInformation,
+                            device,
+                            target.Platform.IsWatchOSTarget(),
+                            xmlResultJargon,
+                            skippedMethods,
+                            skippedTestClasses,
+                            deviceListenerTransport,
+                            deviceListenerPort,
+                            deviceListenerTmpFile,
+                            extraAppArguments,
+                            extraEnvVariables,
+                            appEndTag);
+
+                        await RunDeviceTests(
+                            mlaunchArguments,
+                            crashReporter,
+                            testReporter,
+                            deviceListener,
+                            device,
+                            appOutputLog,
+                            timeout,
+                            extraEnvVariables,
+                            cancellationToken);
+                    }
                 }
 
                 // Check the final status, copy all the required data
@@ -247,7 +250,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             ITestReporter testReporter,
             ISimulatorDevice simulator,
             ISimulatorDevice? companionSimulator,
-            ILog appOutputLog,
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
@@ -286,13 +288,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             _mainLog.WriteLine("Starting test run");
 
-            var result = await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
-                mlaunchArguments,
-                _mainLog,
-                appOutputLog,
-                appOutputLog,
-                timeout,
-                cancellationToken: cancellationToken));
+            var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
 
             await testReporter.CollectSimulatorResult(result);
         }
@@ -541,8 +537,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             int deviceListenerPort,
             string deviceListenerTmpFile,
             IEnumerable<string> extraAppArguments,
-            IEnumerable<(string, string)> extraEnvVariables,
-            string? appEndTag)
+            IEnumerable<(string, string)> extraEnvVariables)
         {
             var args = GetCommonArguments(
                 xmlResultJargon,
@@ -553,10 +548,14 @@ namespace Microsoft.DotNet.XHarness.Apple
                 deviceListenerTmpFile,
                 extraAppArguments,
                 extraEnvVariables,
-                appEndTag);
+                appEndTag: null);
 
             args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"));
             args.Add(new SimulatorUDIDArgument(simulator));
+
+            var appLog = _logs.CreateFile(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog);
+            args.Add(new SetStdoutArgument(appLog));
+            args.Add(new SetStderrArgument(appLog)); // Seems like mlaunch only redirects stderr, stdout doesn't produce any data, however stderr captures stdout of the app too
 
             if (appInformation.Extension.HasValue)
             {

@@ -170,7 +170,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             if (signalAppEnd && (runMode == RunMode.Sim64 || runMode == RunMode.Sim32))
             {
-                _logger.LogWarning("The --signal-app-end option is recommended for device tests and is not required for simulators");
+                _logger.LogWarning("The --signal-app-end option is used for device tests and has no effect on simulators");
             }
 
             _logger.LogInformation("Starting test run for " + appBundleInfo.BundleIdentifier + "..");

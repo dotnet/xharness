@@ -138,8 +138,6 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                     x => x.ExecuteCommandAsync(
                        It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                        _mainLog.Object,
-                       It.IsAny<ILog>(),
-                       It.IsAny<ILog>(),
                        It.IsAny<TimeSpan>(),
                        It.IsAny<Dictionary<string, string>>(),
                        It.IsAny<int>(),
@@ -629,8 +627,12 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             var appLog = appOutputLogs.First();
             appLog.WriteLine(testEndSignal.ToString());
 
-            // AppTester should now complete fine
-            var (result, resultMessage) = await testTask;
+            // AppTester should now complete fine but we safe guard it to be sure
+            await Task.WhenAny(testTask, Task.Delay(10000));
+
+            Assert.True(testTask.IsCompleted, "Test tag wasn't detected");
+
+            var (result, resultMessage) = testTask.Result;
 
             // Verify
             Assert.Equal(TestExecutingResult.Succeeded, result);
@@ -679,6 +681,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             "-argument=--xyz " +
             "-setenv=NUNIT_HOSTNAME=127.0.0.1 " +
             $"--device=:v2:udid={_mockSimulator.UDID} " +
+            $"--stdout=./{AppBundleIdentifier}.log " +
+            $"--stderr=./{AppBundleIdentifier}.log " +
             $"--launchsimbundleid={AppBundleIdentifier}";
     }
 }
