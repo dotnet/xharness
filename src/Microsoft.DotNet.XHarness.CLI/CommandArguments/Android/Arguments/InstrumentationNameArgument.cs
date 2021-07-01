@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
     internal class InstrumentationNameArgument : StringArgument
     {
         public InstrumentationNameArgument()
-            : base("instrumentation:|i:", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK")
+            : base("instrumentation=|i=", "If specified, attempt to run instrumentation with this name instead of the default for the supplied APK")
         {
         }
     }
