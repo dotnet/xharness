@@ -4,7 +4,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -60,6 +63,28 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Utilities
 
         public string GetTerminalName(int filedescriptor) => Marshal.PtrToStringAuto(ttyname(filedescriptor));
 
-        public IEnumerable<IPAddress> GetLocalIpAddresses() => Dns.GetHostEntry(Dns.GetHostName()).AddressList;
+        public IEnumerable<IPAddress> GetLocalIpAddresses()
+        {
+            var ipv4Addresses = new List<IPAddress>();
+            var otherAddresses = new List<IPAddress>();
+
+            foreach (var networkInterface in NetworkInterface.GetAllNetworkInterfaces().Where(adapter => adapter.OperationalStatus == OperationalStatus.Up))
+            {
+                var interfaceInfos = networkInterface.GetIPProperties().UnicastAddresses.Where(info => !IPAddress.IsLoopback(info.Address));
+                foreach (UnicastIPAddressInformation info in interfaceInfos)
+                {
+                    if (info.Address.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        ipv4Addresses.Add(info.Address);
+                    }
+                    else
+                    {
+                        otherAddresses.Add(info.Address);
+                    }
+                }
+            }
+
+            return ipv4Addresses.Concat(otherAddresses);
+        }
     }
 }
