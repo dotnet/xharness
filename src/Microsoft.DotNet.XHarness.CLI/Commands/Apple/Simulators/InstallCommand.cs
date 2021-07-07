@@ -145,16 +145,60 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
             {
                 var watch = Stopwatch.StartNew();
 
-                using (var response = await s_client.GetAsync(simulator.Source))
-                using (var fileStream = File.Create(downloadPath))
+                using (var response = await s_client.GetAsync(simulator.Source, HttpCompletionOption.ResponseHeadersRead))
                 {
-                    await response.Content.CopyToAsync(fileStream);
+                    response.EnsureSuccessStatusCode();
+
+                    using var fileStream = File.Create(downloadPath);
+
+                    if (Arguments.HideProgress)
+                    {
+                        await response.Content.CopyToAsync(fileStream);
+                    }
+                    else
+                    {
+                        var progressMessage = $"Starting the download..";
+                        Console.Write(progressMessage);
+
+                        void ShowProgress(long totalBytesDownloaded)
+                        {
+                            var previousLength = progressMessage.Length;
+                            progressMessage = $"[{watch.Elapsed:hh\\:mm\\:ss}] {totalBytesDownloaded / 1024.0 / 1024.0:N2} / {simulator.FileSize / 1024.0 / 1024.0:N2} MB\t\t{(int)(100 * totalBytesDownloaded / simulator.FileSize),3}%";
+                            Console.Write("\r" + progressMessage.PadRight(previousLength));
+                        }
+
+                        var totalBytesDownloaded = 0L;
+                        var buffer = new byte[8192];
+                        var lastUpdate = DateTime.Now;
+                        var updateFrequency = TimeSpan.FromMilliseconds(400);
+
+                        using var responseStream = await response.Content.ReadAsStreamAsync();
+                        while (true)
+                        {
+                            var bytesRead = await responseStream.ReadAsync(buffer);
+                            if (bytesRead == 0)
+                            {
+                                Console.Write("\r" + " ".PadRight(progressMessage.Length) + "\r");
+                                break;
+                            }
+
+                            await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead));
+
+                            totalBytesDownloaded += bytesRead;
+
+                            if (DateTime.Now - lastUpdate > updateFrequency)
+                            {
+                                ShowProgress(totalBytesDownloaded);
+                                lastUpdate = DateTime.Now;
+                            }
+                        }
+                    }
                 }
 
                 watch.Stop();
 
                 var size = new FileInfo(downloadPath).Length;
-                Logger.LogInformation($"Downloaded {size / 1024.0 / 1024.0:N1} MB in {(int)watch.Elapsed.TotalSeconds}s");
+                Logger.LogInformation($"Downloaded {size / 1024.0 / 1024.0:N1} MB in {watch.Elapsed:hh\\:mm\\:ss}");
             }
 
             var mount_point = Path.Combine(TempDirectory, filename + "-mount");

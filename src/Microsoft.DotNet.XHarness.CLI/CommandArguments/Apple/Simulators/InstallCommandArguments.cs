@@ -10,9 +10,12 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
     {
         public ForceInstallationArgument Force { get; } = new();
 
+        public HideProgressArgument HideProgress { get; } = new();
+
         protected override IEnumerable<Argument> GetAdditionalArguments() => new Argument[]
         {
             Force,
+            HideProgress,
         };
     }
 }
