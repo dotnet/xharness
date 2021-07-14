@@ -1081,7 +1081,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             {
                 using (var discoverySink = new TestDiscoverySink())
                 {
-                    var configuration = GetConfiguration(assembly) ?? new TestAssemblyConfiguration();
+                    var configuration = GetConfiguration(assembly) ?? new TestAssemblyConfiguration() { PreEnumerateTheories = false };
                     ITestFrameworkDiscoveryOptions discoveryOptions = GetFrameworkOptionsForDiscovery(configuration);
                     discoveryOptions.SetSynchronousMessageReporting(true);
                     Logger.OnDebug($"Starting test discovery in the '{assembly}' assembly");
