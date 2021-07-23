@@ -36,7 +36,7 @@ chmod u+x "$dotnet_install"
 dotnet_dir="$here/.dotnet"
 
 printf "Installing .NET SDK locally to \033[0;33m%s\033[0m..\n" "$dotnet_dir"
-$dotnet_install --install-dir "$dotnet_dir" --version "6.0.100-preview.4.21255.9"
+$dotnet_install --install-dir "$dotnet_dir" --version "6.0.100-preview.6.21355.2"
 echo 'dotnet installed'
 
 export DOTNET_ROOT="$here/.dotnet"
