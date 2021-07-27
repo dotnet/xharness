@@ -74,7 +74,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
                     var arguments = new MlaunchArguments(
                         new ListDevicesArgument(tmpfile),
                         new ListWirelessDevicesArgument(includeWirelessDevices),
-                        new XmlOutputFormatArgument());
+                        new XmlOutputFormatArgument(),
+                        new TimeoutArgument(0.5));
 
                     if (listExtraData)
                     {

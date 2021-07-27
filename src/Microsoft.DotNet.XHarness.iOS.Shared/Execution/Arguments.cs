@@ -415,4 +415,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
 
         public override string AsCommandLineArgument() => $"--tcp-tunnel={_port}:{_port}";
     }
+
+    /// <summary>
+    /// Specify a timeout (in seconds) for the commands that doesn't have fixed duration.
+    /// </summary>
+    public sealed class TimeoutArgument : SingleValueArgument
+    {
+        public TimeoutArgument(double timeoutInSeconds) : base("timeout", timeoutInSeconds.ToString())
+        {
+        }
+    }
 }
