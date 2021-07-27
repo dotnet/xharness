@@ -194,7 +194,7 @@ Arguments:
 
                     if (processCrashed)
                     {
-                        runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{apkPackageName}.zip"));
+                        runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{apkPackageName}"));
                     }
                 }
 
