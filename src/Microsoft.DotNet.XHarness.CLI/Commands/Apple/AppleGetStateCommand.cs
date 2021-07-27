@@ -103,8 +103,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
                 foreach (var sim in info.Simulators)
                 {
-                    var uuid = Arguments.ShowSimulatorsUUID ? $" {sim.UDID}   " : "";
-                    Console.WriteLine($"  {sim.Name.PadRight(maxLength)}{uuid} {sim.OSVersion,-13} {sim.Type}");
+                    var uuid = Arguments.ShowSimulatorsUUID ? $"{sim.UDID} " : string.Empty;
+                    Console.WriteLine($"  {uuid}{sim.Name.PadRight(maxLength)} {sim.OSVersion,-13} {sim.Type}");
                 }
             }
             else
@@ -134,7 +134,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected override async Task<ExitCode> InvokeInternal(Extensions.Logging.ILogger logger)
         {
-            var processManager = new MlaunchProcessManager(mlaunchPath: Arguments.MlaunchPath);
+            var processManager = new MlaunchProcessManager(xcodeRoot: Arguments.XcodeRoot, mlaunchPath: Arguments.MlaunchPath);
             var deviceLoader = new HardwareDeviceLoader(processManager);
             var simulatorLoader = new SimulatorLoader(processManager);
             var log = new MemoryLog(); // do we really want to log this?
