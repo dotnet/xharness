@@ -417,7 +417,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Execution
     }
 
     /// <summary>
-    /// Specify a timeout (in seconds) for the commands that dosn't have fixed duration.
+    /// Specify a timeout (in seconds) for the commands that doesn't have fixed duration.
     /// </summary>
     public sealed class TimeoutArgument : SingleValueArgument
     {
