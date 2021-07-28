@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         {
             var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
             runner.SetActiveDevice(string.Empty);
-            string pathToDumpBugReport = Path.Join(s_scratchAndOutputPath, $"{Path.GetRandomFileName()}");
+            string pathToDumpBugReport = Path.Join(s_scratchAndOutputPath, Path.GetRandomFileName());
             runner.DumpBugReport(pathToDumpBugReport);
             _processManager.Verify(pm => pm.Run(s_adbPath, $"bugreport {pathToDumpBugReport}.zip", TimeSpan.FromMinutes(5)), Times.Once);
 
@@ -299,7 +299,7 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
                         }
                         else
                         {
-                            stdOut = $"{Environment.NewLine}";
+                            stdOut = Environment.NewLine;
                         }
                         s_bootCompleteCheckTimes++;
                     }
