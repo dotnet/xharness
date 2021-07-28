@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.XHarness.Android
         private const string AdbInstallBrokenPipeError = "Failure calling service package: Broken pipe";
         private const string AdbInstallException = "Exception occurred while executing 'install':";
         private const string AdbShellPropertyForBootCompletion = "sys.boot_completed";
-        private int _api;
+        private int? _api;
         private readonly string _absoluteAdbExePath;
         private readonly ILogger _log;
         private readonly IAdbProcessManager _processManager;
@@ -71,10 +71,15 @@ namespace Microsoft.DotNet.XHarness.Android
         {
             _processManager.DeviceSerial = deviceSerialNumber ?? string.Empty;
 
-            var output = RunAdbCommand("shell getprop ro.build.version.sdk");
-            _api = int.Parse(output.StandardOutput);
+            _api = GetAPIVersion();
 
             _log.LogInformation($"Active Android device set to serial '{deviceSerialNumber}'");
+        }
+
+        private int GetAPIVersion()
+        {
+            var output = RunAdbCommand("shell getprop ro.build.version.sdk");
+            return int.Parse(output.StandardOutput);
         }
 
         private static string GetCliAdbExePath()
@@ -132,7 +137,7 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public void DumpBugReport(string outputFilePath)
         {
-            var reportManager = AdbReportFactory.CreateReportManager(_log, _api);
+            var reportManager = AdbReportFactory.CreateReportManager(_log, _api ?? GetAPIVersion());
             reportManager.DumpBugReport(this, outputFilePath);
         }
 

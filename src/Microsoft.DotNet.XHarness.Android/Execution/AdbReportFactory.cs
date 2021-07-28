@@ -8,10 +8,12 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
 {
     internal class AdbReportFactory
     {
-        internal static BaseReportManager CreateReportManager(ILogger log, int api)
+        // This method return proper ReportManager based on API number of current device
+        // It allows to apply different logic for bugreport generation on API 21-23 and above
+        internal static IReportManager CreateReportManager(ILogger log, int api)
         {
-            if (api > 23) return new BaseReportManager(log);
-            else return new OldReportManager(log);
+            if (api > 23) return new NewReportManager(log);
+            else return new Api23AndOlderReportManager(log);
         }
     }
 }

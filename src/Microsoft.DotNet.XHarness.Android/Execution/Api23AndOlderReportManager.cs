@@ -9,13 +9,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Android.Execution
 {
-    internal class OldReportManager : BaseReportManager
+    internal class Api23AndOlderReportManager : IReportManager
     {
-        public OldReportManager(ILogger log) : base(log)
+        private readonly ILogger _log;
+
+        public Api23AndOlderReportManager(ILogger log)
         {
+            _log = log;
         }
 
-        public override void DumpBugReport(AdbRunner runner, string outputFilePath)
+        public void DumpBugReport(AdbRunner runner, string outputFilePath)
         {
             // give some time for bug report to be available
             Thread.Sleep(3000);
@@ -25,12 +28,12 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
             if (result.ExitCode != 0)
             {
                 // Could throw here, but it would tear down a possibly otherwise acceptable execution.
-                Logger.LogError($"Error getting ADB bugreport:{Environment.NewLine}{result}");
+                _log.LogError($"Error getting ADB bugreport:{Environment.NewLine}{result}");
             }
             else
             {
                 File.WriteAllText($"{outputFilePath}.txt", result.StandardOutput);
-                Logger.LogInformation($"Wrote ADB bugreport to {outputFilePath}.txt");
+                _log.LogInformation($"Wrote ADB bugreport to {outputFilePath}.txt");
             }
         }
     }
