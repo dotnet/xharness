@@ -135,10 +135,10 @@ namespace Microsoft.DotNet.XHarness.Android
             }
         }
 
-        public void DumpBugReport(string outputFilePath)
+        public string DumpBugReport(string outputFilePathWithoutFormat)
         {
             var reportManager = AdbReportFactory.CreateReportManager(_log, _api ?? GetAPIVersion());
-            reportManager.DumpBugReport(this, outputFilePath);
+            return reportManager.DumpBugReport(this, outputFilePathWithoutFormat);
         }
 
         public void WaitForDevice()

@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
             _log = log;
         }
 
-        public void DumpBugReport(AdbRunner runner, string outputFilePath)
+        public string DumpBugReport(AdbRunner runner, string outputFilePathWithoutFormat)
         {
             // give some time for bug report to be available
             Thread.Sleep(3000);
@@ -29,11 +29,13 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
             {
                 // Could throw here, but it would tear down a possibly otherwise acceptable execution.
                 _log.LogError($"Error getting ADB bugreport:{Environment.NewLine}{result}");
+                return string.Empty;
             }
             else
             {
-                File.WriteAllText($"{outputFilePath}.txt", result.StandardOutput);
-                _log.LogInformation($"Wrote ADB bugreport to {outputFilePath}.txt");
+                File.WriteAllText($"{outputFilePathWithoutFormat}.txt", result.StandardOutput);
+                _log.LogInformation($"Wrote ADB bugreport to {outputFilePathWithoutFormat}.txt");
+                return $"{outputFilePathWithoutFormat}.txt";
             }
         }
     }

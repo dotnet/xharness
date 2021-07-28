@@ -16,21 +16,23 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
             _log = log;
         }
 
-        public void DumpBugReport(AdbRunner runner, string outputFilePath)
+        public string DumpBugReport(AdbRunner runner, string outputFilePathWithoutFormat)
         {
             // give some time for bug report to be available
             Thread.Sleep(3000);
 
-            var result = runner.RunAdbCommand($"bugreport {outputFilePath}.zip", TimeSpan.FromMinutes(5));
+            var result = runner.RunAdbCommand($"bugreport {outputFilePathWithoutFormat}.zip", TimeSpan.FromMinutes(5));
 
             if (result.ExitCode != 0)
             {
                 // Could throw here, but it would tear down a possibly otherwise acceptable execution.
                 _log.LogError($"Error getting ADB bugreport:{Environment.NewLine}{result}");
+                return string.Empty;
             }
             else
             {
-                _log.LogInformation($"Wrote ADB bugreport to {outputFilePath}.zip");
+                _log.LogInformation($"Wrote ADB bugreport to {outputFilePathWithoutFormat}.zip");
+                return $"{outputFilePathWithoutFormat}.zip";
             }
         }
     }
