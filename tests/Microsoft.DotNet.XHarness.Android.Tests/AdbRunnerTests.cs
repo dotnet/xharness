@@ -87,11 +87,12 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
         public void DumpBugReport()
         {
             var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
-            string pathToDumpBugReport = Path.Join(s_scratchAndOutputPath, $"{Path.GetRandomFileName()}.zip");
+            runner.SetActiveDevice(string.Empty);
+            string pathToDumpBugReport = Path.Join(s_scratchAndOutputPath, Path.GetRandomFileName());
             runner.DumpBugReport(pathToDumpBugReport);
-            _processManager.Verify(pm => pm.Run(s_adbPath, $"bugreport {pathToDumpBugReport}", TimeSpan.FromMinutes(5)), Times.Once);
+            _processManager.Verify(pm => pm.Run(s_adbPath, $"bugreport {pathToDumpBugReport}.zip", TimeSpan.FromMinutes(5)), Times.Once);
 
-            Assert.Equal("Sample BugReport Output", File.ReadAllText(pathToDumpBugReport));
+            Assert.Equal("Sample BugReport Output", File.ReadAllText($"{pathToDumpBugReport}.zip"));
         }
 
         [Fact]
@@ -294,13 +295,17 @@ namespace Microsoft.DotNet.XHarness.Android.Tests
                         if (s_bootCompleteCheckTimes > 0)
                         {
                             // Tell it we've booted.
-                            stdOut = "1{Environment.NewLine}";
+                            stdOut = $"1{Environment.NewLine}";
                         }
                         else
                         {
-                            stdOut = $"{Environment.NewLine}";
+                            stdOut = Environment.NewLine;
                         }
                         s_bootCompleteCheckTimes++;
+                    }
+                    if ($"{allArgs[argStart + 1]} {allArgs[argStart + 2]}".Equals("getprop ro.build.version.sdk"))
+                    {
+                        stdOut = $"29{Environment.NewLine}";
                     }
                     exitCode = 0;
                     break;

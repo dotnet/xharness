@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.XHarness.Android
         private const string AdbInstallBrokenPipeError = "Failure calling service package: Broken pipe";
         private const string AdbInstallException = "Exception occurred while executing 'install':";
         private const string AdbShellPropertyForBootCompletion = "sys.boot_completed";
+        private int? _api;
         private readonly string _absoluteAdbExePath;
         private readonly ILogger _log;
         private readonly IAdbProcessManager _processManager;
@@ -31,7 +32,6 @@ namespace Microsoft.DotNet.XHarness.Android
             { "architecture", "shell getprop ro.product.cpu.abilist"},
             { "app", "shell pm list packages -3"}
         };
-
 
         public AdbRunner(ILogger log, string adbExePath = "") : this(log, new AdbProcessManager(log), adbExePath) { }
 
@@ -71,7 +71,15 @@ namespace Microsoft.DotNet.XHarness.Android
         {
             _processManager.DeviceSerial = deviceSerialNumber ?? string.Empty;
 
+            _api = GetAPIVersion();
+
             _log.LogInformation($"Active Android device set to serial '{deviceSerialNumber}'");
+        }
+
+        private int GetAPIVersion()
+        {
+            var output = RunAdbCommand("shell getprop ro.build.version.sdk");
+            return int.Parse(output.StandardOutput);
         }
 
         private static string GetCliAdbExePath()
@@ -127,21 +135,10 @@ namespace Microsoft.DotNet.XHarness.Android
             }
         }
 
-        public void DumpBugReport(string outputFilePath)
+        public string DumpBugReport(string outputFilePathWithoutFormat)
         {
-            // give some time for bug report to be available
-            Thread.Sleep(3000);
-
-            var result = RunAdbCommand($"bugreport {outputFilePath}", TimeSpan.FromMinutes(5));
-            if (result.ExitCode != 0)
-            {
-                // Could throw here, but it would tear down a possibly otherwise acceptable execution.
-                _log.LogError($"Error getting ADB bugreport:{Environment.NewLine}{result}");
-            }
-            else
-            {
-                _log.LogInformation($"Wrote ADB bugreport to {outputFilePath}");
-            }
+            var reportManager = AdbReportFactory.CreateReportManager(_log, _api ?? GetAPIVersion());
+            return reportManager.DumpBugReport(this, outputFilePathWithoutFormat);
         }
 
         public void WaitForDevice()
