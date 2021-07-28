@@ -6,6 +6,6 @@ namespace Microsoft.DotNet.XHarness.Android.Execution
 {
     internal interface IReportManager
     {
-        public string DumpBugReport(AdbRunner runner, string outputFilePathWithoutFormat);
+        string DumpBugReport(AdbRunner runner, string outputFilePathWithoutFormat);
     }
 }
