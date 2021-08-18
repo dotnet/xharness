@@ -26,6 +26,9 @@ function highlight () {
 
 if [ -z $test_project ] || [ "-h" == "$test_project" ] || [ "--help" == "$test_project" ]; then
   fail "Usage: ./run-e2e-test.sh Apple/SimulatorInstaller.Tests.proj [--skip-build]"
+  echo "Possible options:"
+  prefix=$(echo "$repo_root/tests/integration-tests/" | sed "s/\//\\\\\//g")
+  find "$repo_root/tests/integration-tests" -type f -name "*.proj" | sed "s/$prefix/  - /"
   exit 2
 fi
 
