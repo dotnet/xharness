@@ -7,8 +7,6 @@
 ###
 ### Usage: ./run-e2e-test.sh Apple/SimulatorInstaller.Tests.proj [--skip-build]
 
-set -e
-
 test_project="$1"
 
 COLOR_RED=$(tput setaf 1 2>/dev/null || true)
@@ -69,6 +67,8 @@ while (($# > 0)); do
   esac
   shift
 done
+
+set -e
 
 if [ "true" != "$skip_build" ]; then
   highlight "> Building Microsoft.DotNet.XHarness.CLI.1.0.0-dev.nupkg"
