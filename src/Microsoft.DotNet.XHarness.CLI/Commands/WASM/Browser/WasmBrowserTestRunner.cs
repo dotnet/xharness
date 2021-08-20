@@ -81,6 +81,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     Task.Delay(_arguments.Timeout)
                 };
 
+                if (_arguments.BackgroundThrottling)
+                {
+                    // throttling only happens when the page is not visible
+                    driver.Manage().Window.Minimize();
+                }
+
                 var task = await Task.WhenAny(tasks).ConfigureAwait(false);
                 if (task == tasks[^1] || cts.IsCancellationRequested)
                 {
