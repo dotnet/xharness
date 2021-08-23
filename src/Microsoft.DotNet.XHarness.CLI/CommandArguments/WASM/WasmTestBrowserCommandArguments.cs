@@ -24,6 +24,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public NoIncognitoArgument NoIncognito { get; } = new();
         public NoHeadlessArgument NoHeadless { get; } = new();
         public NoQuitArgument NoQuit { get; } = new();
+        public BackgroundThrottlingArgument BackgroundThrottling { get; } = new();
 
         public WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; } = new();
         public WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; } = new();
@@ -46,6 +47,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             NoIncognito,
             NoHeadless,
             NoQuit,
+            BackgroundThrottling,
             WebServerMiddlewarePathsAndTypes,
             WebServerHttpEnvironmentVariables,
             WebServerHttpsEnvironmentVariables,
