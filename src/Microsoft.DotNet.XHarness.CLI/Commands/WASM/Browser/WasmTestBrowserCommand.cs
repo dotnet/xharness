@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             options.AddArguments(Arguments.BrowserArgs.Value);
 
-            if (!Arguments.NoHeadless)
+            if (!Arguments.NoHeadless && !Arguments.BackgroundThrottling)
                 options.AddArguments("--headless");
 
             if (Arguments.DebuggerPort.Value != null)
