@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
             options.AddArguments(Arguments.BrowserArgs.Value);
 
-            if (!Arguments.NoHeadless)
+            if (!Arguments.NoHeadless && !Arguments.BackgroundThrottling)
                 options.AddArguments("--headless");
 
             if (Arguments.DebuggerPort.Value != null)
@@ -171,20 +171,31 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             if (!Arguments.NoIncognito)
                 options.AddArguments("--incognito");
 
+            if (!Arguments.BackgroundThrottling)
+            {
+                options.AddArguments(new[]
+                {
+                    "--disable-background-timer-throttling",
+                    "--disable-backgrounding-occluded-windows",
+                    "--disable-renderer-backgrounding",
+                    "--enable-features=NetworkService,NetworkServiceInProcess",
+                });
+            }
+            else
+            {
+                options.AddArguments(@"--enable-features=IntensiveWakeUpThrottling:grace_period_seconds/1");
+            }
+
             options.AddArguments(new[]
             {
                 // added based on https://github.com/puppeteer/puppeteer/blob/main/src/node/Launcher.ts#L159-L181
-                "--enable-features=NetworkService,NetworkServiceInProcess",
                 "--allow-insecure-localhost",
-                "--disable-background-timer-throttling",
-                "--disable-backgrounding-occluded-windows",
                 "--disable-breakpad",
                 "--disable-component-extensions-with-background-pages",
                 "--disable-dev-shm-usage",
                 "--disable-extensions",
                 "--disable-features=TranslateUI",
                 "--disable-ipc-flooding-protection",
-                "--disable-renderer-backgrounding",
                 "--force-color-profile=srgb",
                 "--metrics-recording-only"
             });

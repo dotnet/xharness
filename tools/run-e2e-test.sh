@@ -7,8 +7,6 @@
 ###
 ### Usage: ./run-e2e-test.sh Apple/SimulatorInstaller.Tests.proj [--skip-build]
 
-set -e
-
 test_project="$1"
 
 COLOR_RED=$(tput setaf 1 2>/dev/null || true)
@@ -26,10 +24,11 @@ function highlight () {
   echo "$FAILURE_PREFIX${COLOR_CYAN}${1//${COLOR_RESET}/${COLOR_CYAN}}${COLOR_CLEAR}"
 }
 
-if [ -z $test_project ] || [ "-h" == "$test_project" ] || [ "--help" == "$test_project" ]; then
-  fail "Usage: ./run-e2e-test.sh Apple/SimulatorInstaller.Tests.proj [--skip-build]"
-  exit 2
-fi
+function print_projects() {
+  echo "Possible options:"
+  prefix=$(echo "$repo_root/tests/integration-tests/" | sed "s/\//\\\\\//g")
+  find "$repo_root/tests/integration-tests" -type f -name "*.proj" | sed "s/$prefix/  - /"
+}
 
 # Get current path
 source="${BASH_SOURCE[0]}"
@@ -45,6 +44,12 @@ done
 here="$( cd -P "$( dirname "$source" )" && pwd )"
 repo_root="$( cd -P "$( dirname "$here" )" && pwd )"
 
+if [ -z $test_project ] || [ "-h" == "$test_project" ] || [ "--help" == "$test_project" ]; then
+  fail "Usage: ./run-e2e-test.sh Apple/SimulatorInstaller.Tests.proj [--skip-build]"
+  print_projects
+  exit 2
+fi
+
 if [ ! -f "$test_project" ]; then
   test_project="$repo_root/tests/integration-tests/$test_project"
 fi
@@ -52,6 +57,7 @@ fi
 if [ ! -f "$test_project" ]; then
   fail "File $1 not found"
   fail "File $test_project not found"
+  print_projects
   exit 1
 fi
 
@@ -70,8 +76,11 @@ while (($# > 0)); do
   shift
 done
 
+set -e
+
 if [ "true" != "$skip_build" ]; then
   highlight "> Building Microsoft.DotNet.XHarness.CLI.1.0.0-dev.nupkg"
+  rm -rf "$repo_root/artifacts/tmp/Debug/Microsoft.DotNet.XHarness.CLI" "$repo_root/artifacts/packages"
   "$repo_root/build.sh" -build -pack --projects "$repo_root/src/Microsoft.DotNet.XHarness.CLI/Microsoft.DotNet.XHarness.CLI.csproj"
 fi
 
