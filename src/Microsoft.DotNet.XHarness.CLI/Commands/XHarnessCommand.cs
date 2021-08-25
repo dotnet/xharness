@@ -136,6 +136,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 
                 var result = InvokeInternal(logger).GetAwaiter().GetResult();
 
+                diagnostics.ExitCode = result;
+
                 // Save diagnostic data into a file
                 if (result != ExitCode.HELP_SHOWN && !string.IsNullOrEmpty(diagnosticsPath))
                 {
