@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Tests
         private readonly TArguments _arguments;
         protected override TArguments Arguments => _arguments;
 
-        public UnitTestCommand(TArguments arguments, bool allowExtraArgs = false) : base("unit-test", allowExtraArgs)
+        public UnitTestCommand(TArguments arguments, bool allowExtraArgs = false) : base(TargetPlatform.Apple, "unit-test", allowExtraArgs)
         {
             _arguments = arguments;
         }

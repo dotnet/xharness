@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
         protected ILogger Logger { get; set; } = null!;
 
-        protected SimulatorsCommand(string name, bool allowsExtraArgs, string help) : base(name, allowsExtraArgs, help)
+        protected SimulatorsCommand(string name, bool allowsExtraArgs, string help) : base(TargetPlatform.Apple, name, allowsExtraArgs, help)
         {
         }
 

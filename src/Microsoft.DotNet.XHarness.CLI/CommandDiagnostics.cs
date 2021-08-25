@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Diagnostics;
+using Microsoft.DotNet.XHarness.CLI.Commands;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI
 {
@@ -10,47 +12,32 @@ namespace Microsoft.DotNet.XHarness.CLI
     /// </summary>
     internal class CommandDiagnostics
     {
-        private readonly List<DiagnosticData> _data = new();
+        private readonly ILogger _logger;
+        private readonly Stopwatch _timer = Stopwatch.StartNew();
 
-        public DiagnosticData Current => _data.LastOrDefault() ?? throw new InvalidOperationException("You must start a new record first");
+        public TargetPlatform Platform { get; }
 
-        public DiagnosticData CreateRecord(DiagnosticData.TargetPlatform platform, string command)
+        public string Command { get; }
+
+        public int Duration => (int)_timer.Elapsed.TotalSeconds;
+
+        public CommandDiagnostics(ILogger logger, TargetPlatform platform, string command)
         {
-            var data = new DiagnosticData
-            {
-                Platform = platform,
-                Command = command,
-            };
-
-            _data.Add(data);
-
-            return data;
+            _logger = logger;
+            Platform = platform;
+            Command = command;
         }
 
         public void SaveData(string targetFile)
         {
-        }
-    }
+            try
+            {
 
-    internal class DiagnosticData
-    {
-        private readonly Stopwatch _timer;
-
-        public TargetPlatform? Platform { get; set; }
-
-        public string? Command { get; set; }
-
-        public int Duration => (int)_timer.Elapsed.TotalSeconds;
-
-        public DiagnosticData()
-        {
-            _timer = Stopwatch.StartNew();
-        }
-
-        internal enum TargetPlatform
-        {
-            Android,
-            Apple,
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Failed to save diagnostics data into '{pathToFile}': {error}", targetFile, e);
+            }
         }
     }
 }

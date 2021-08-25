@@ -13,6 +13,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI
             public const string DISABLE_COLOR_OUTPUT = "XHARNESS_DISABLE_COLORED_OUTPUT";
             public const string LOG_TIMESTAMPS = "XHARNESS_LOG_WITH_TIMESTAMPS";
             public const string MLAUNCH_PATH = "XHARNESS_MLAUNCH_PATH";
+            public const string DIAGNOSTICS_PATH = "XHARNESS_DIAGNOSTICS_PATH";
         }
 
         public static bool IsTrue(string varName) =>

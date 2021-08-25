@@ -10,6 +10,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
     public interface IXHarnessCommandArguments
     {
+        DiagnosticsArgument Diagnostics { get; }
         VerbosityArgument Verbosity { get; set; }
         HelpArgument ShowHelp { get; }
         IEnumerable<Argument> GetCommandArguments();

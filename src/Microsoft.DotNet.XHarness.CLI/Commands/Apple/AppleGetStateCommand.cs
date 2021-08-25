@@ -66,6 +66,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         private const string SimulatorPrefix = "com.apple.CoreSimulator.SimDeviceType.";
 
+        public AppleGetStateCommand() : base(TargetPlatform.Apple)
+        {
+        }
+
         protected override AppleGetStateCommandArguments Arguments { get; } = new();
 
         private static async Task AsJson(SystemInfo info)

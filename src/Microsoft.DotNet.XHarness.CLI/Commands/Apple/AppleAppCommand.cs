@@ -19,7 +19,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal abstract class AppleAppCommand<TArguments> : XHarnessCommand<TArguments> where TArguments : IAppleAppRunArguments
+    internal abstract class AppleAppCommand<TArguments> : AppleXHarnessCommand<TArguments> where TArguments : IAppleAppRunArguments
     {
         protected readonly ErrorKnowledgeBase ErrorKnowledgeBase = new();
 

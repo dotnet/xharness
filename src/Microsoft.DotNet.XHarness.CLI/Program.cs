@@ -16,6 +16,12 @@ namespace Microsoft.DotNet.XHarness.CLI
 {
     public static class Program
     {
+        /// <summary>
+        /// The verbatim "--" argument used for pass-through args is removed by Mono.Options when parsing CommandSets,
+        /// so in Program.cs, we temporarily replace it with this string and then recognize it back here.
+        /// </summary>
+        public const string VerbatimArgumentPlaceholder = "[[%verbatim_argument%]]";
+
         public static int Main(string[] args)
         {
             bool shouldOutput = !IsOutputSensitive(args);
@@ -37,7 +43,7 @@ namespace Microsoft.DotNet.XHarness.CLI
 #endif
 
                 // Mono.Options wouldn't allow "--" so we will temporarily rename it and parse it ourselves later
-                args = args.Select(a => a == "--" ? XHarnessCommand.VerbatimArgumentPlaceholder : a).ToArray();
+                args = args.Select(a => a == "--" ? VerbatimArgumentPlaceholder : a).ToArray();
             }
 
             var commands = GetXHarnessCommandSet();

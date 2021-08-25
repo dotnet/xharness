@@ -17,6 +17,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
         protected override AndroidGetStateCommandArguments Arguments { get; } = new();
 
+        public AndroidGetStateCommand() : base(TargetPlatform.Android)
+        {
+        }
+
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
             logger.LogInformation("Getting state of ADB and attached Android device(s)");

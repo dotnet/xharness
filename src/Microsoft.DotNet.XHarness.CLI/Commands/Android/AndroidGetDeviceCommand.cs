@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
+using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
@@ -15,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidGetDeviceCommand : XHarnessCommand<AndroidGetDeviceCommandArguments>
+    internal class AndroidGetDeviceCommand : AndroidXHarnessCommand<AndroidGetDeviceCommandArguments>
     {
         protected override AndroidGetDeviceCommandArguments Arguments { get; } = new()
         {

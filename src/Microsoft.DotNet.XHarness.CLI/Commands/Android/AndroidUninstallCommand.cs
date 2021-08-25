@@ -5,13 +5,14 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
+using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidUninstallCommand : XHarnessCommand<AndroidUninstallCommandArguments>
+    internal class AndroidUninstallCommand : AndroidXHarnessCommand<AndroidUninstallCommandArguments>
     {
         protected override AndroidUninstallCommandArguments Arguments { get; } = new();
 

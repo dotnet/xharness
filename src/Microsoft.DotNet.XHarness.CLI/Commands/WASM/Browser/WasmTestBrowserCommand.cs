@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         protected override WasmTestBrowserCommandArguments Arguments { get; } = new();
 
-        public WasmTestBrowserCommand() : base("test-browser", allowsExtraArgs: true, CommandHelp)
+        public WasmTestBrowserCommand() : base(TargetPlatform.WASM, "test-browser", allowsExtraArgs: true, CommandHelp)
         {
         }
 

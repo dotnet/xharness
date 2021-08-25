@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal class AppleGetDeviceCommand : XHarnessCommand<AppleGetDeviceCommandsArguments>
+    internal class AppleGetDeviceCommand : AppleXHarnessCommand<AppleGetDeviceCommandsArguments>
     {
         protected override AppleGetDeviceCommandsArguments Arguments { get; } = new();
 
