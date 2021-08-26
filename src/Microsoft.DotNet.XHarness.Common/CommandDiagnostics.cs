@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.XHarness.Common
         private readonly ILogger _logger;
         private readonly Stopwatch _timer = Stopwatch.StartNew();
 
-        public TargetPlatform Platform { get; }
+        public string Platform { get; }
 
         public string Command { get; }
 
@@ -50,8 +50,14 @@ namespace Microsoft.DotNet.XHarness.Common
         public CommandDiagnostics(ILogger logger, TargetPlatform platform, string command)
         {
             _logger = logger;
-            Platform = platform;
             Command = command;
+            Platform = platform switch
+            {
+                TargetPlatform.Android => "android",
+                TargetPlatform.Apple => "apple",
+                TargetPlatform.WASM => "wasm",
+                _ => throw new ArgumentOutOfRangeException(nameof(platform)),
+            };
         }
 
         public void SaveData(string targetFile)
@@ -68,6 +74,8 @@ namespace Microsoft.DotNet.XHarness.Common
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
 
+            _logger.LogDebug("Saving diagnostics data to '{path}'", targetFile);
+
             try
             {
                 // Either append current data to the JSON array or create a new file
@@ -75,8 +83,13 @@ namespace Microsoft.DotNet.XHarness.Common
                 {
                     var data = JsonDocument.Parse(File.ReadAllText(targetFile));
 
+                    var writerOptions = new JsonWriterOptions
+                    {
+                        Indented = options.WriteIndented,
+                    };
+
                     using var fileStream = new FileStream(targetFile, FileMode.Create, FileAccess.Write);
-                    using var jsonWriter = new Utf8JsonWriter(fileStream);
+                    using var jsonWriter = new Utf8JsonWriter(fileStream, writerOptions);
 
                     jsonWriter.WriteStartArray();
 
