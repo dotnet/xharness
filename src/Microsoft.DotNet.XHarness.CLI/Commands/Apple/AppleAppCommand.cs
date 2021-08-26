@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -35,7 +36,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var targetName = Arguments.Target.Value.AsString();
 
-            logger.LogInformation($"Preparing run for {targetName}{ (!string.IsNullOrEmpty(Arguments.DeviceName.Value) ? " targeting " + Arguments.DeviceName.Value : null) }");
+            logger.LogInformation("Preparing run for {target}", targetName + (!string.IsNullOrEmpty(Arguments.DeviceName.Value) ? " targeting " + Arguments.DeviceName.Value : null));
 
             // Create main log file for the run
             using ILogs logs = new Logs(Arguments.OutputDirectory);
@@ -56,8 +57,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             Services.TryAddTransient<XHarness.Apple.ILogger, ConsoleLogger>();
 
             var serviceProvider = Services.BuildServiceProvider();
-            var diagnosticsData = serviceProvider.GetRequiredService<IDiagnosticsData>();
 
+            var diagnosticsData = serviceProvider.GetRequiredService<IDiagnosticsData>();
             diagnosticsData.Target = Arguments.Target.Value.AsString();
 
             var cts = new CancellationTokenSource();
@@ -74,6 +75,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected abstract Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken);
 
+        [SuppressMessage("Usage", "CA2254:The logging message template should not vary between calls to LoggerExtensions", Justification = "This is just a simple shim")]
         protected class ConsoleLogger : XHarness.Apple.ILogger
         {
             private readonly Extensions.Logging.ILogger _logger;
