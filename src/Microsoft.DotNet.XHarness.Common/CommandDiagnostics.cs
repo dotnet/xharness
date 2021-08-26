@@ -59,7 +59,12 @@ namespace Microsoft.DotNet.XHarness.Common
             };
         }
 
-        public void SaveData(string targetFile)
+        /// <summary>
+        /// Saves the data to a JSON file as an object in a JSON array.
+        /// If the file exists already, it is appended at the end of the array.
+        /// </summary>
+        /// <param name="targetFile">JSON file where to save the data</param>
+        public void SaveToJsonFile(string targetFile)
         {
             _timer.Stop();
 
@@ -111,6 +116,7 @@ namespace Microsoft.DotNet.XHarness.Common
                     {
                         this
                     };
+
                     string json = JsonSerializer.Serialize(data, options);
                     File.WriteAllText(targetFile, JsonSerializer.Serialize(data, options));
                 }

@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 // Save diagnostic data into a file
                 if (result != ExitCode.HELP_SHOWN && !string.IsNullOrEmpty(diagnosticsPath))
                 {
-                    diagnostics.SaveData(diagnosticsPath);
+                    diagnostics.SaveToJsonFile(diagnosticsPath);
                 }
 
                 return (int)result;
