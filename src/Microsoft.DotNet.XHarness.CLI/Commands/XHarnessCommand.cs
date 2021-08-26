@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -132,7 +133,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                 var diagnostics = new CommandDiagnostics(logger, _targetPlatform, Name);
 
                 Services.TryAddSingleton(logger);
-                Services.TryAddSingleton(diagnostics);
+                Services.TryAddSingleton<IDiagnosticsData>(diagnostics);
 
                 var result = InvokeInternal(logger).GetAwaiter().GetResult();
 

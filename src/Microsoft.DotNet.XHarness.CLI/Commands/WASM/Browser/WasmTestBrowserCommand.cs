@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;

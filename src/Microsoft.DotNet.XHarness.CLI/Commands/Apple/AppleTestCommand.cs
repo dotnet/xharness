@@ -31,9 +31,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected override async Task<ExitCode> InvokeInternal(CancellationToken cancellationToken)
+        protected override async Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken)
         {
-            var serviceProvider = Services.BuildServiceProvider();
             var logger = serviceProvider.GetRequiredService<Extensions.Logging.ILogger>();
             logger.LogInformation($"Getting app bundle information from '{Arguments.AppBundlePath}'");
 

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.Common;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands
 {

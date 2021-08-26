@@ -3,16 +3,31 @@
 
 using System;
 using System.Diagnostics;
-using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI
+namespace Microsoft.DotNet.XHarness.Common
 {
+    public interface IDiagnosticsData
+    {
+        ExitCode ExitCode { get; set; }
+
+        /// <summary>
+        /// Original target the user specified when executing the command.
+        /// </summary>
+        string? OriginalTarget { get; set; }
+
+        /// <summary>
+        /// Actual test target (simulator, device) that was used for the run.
+        /// This should include OS version of the target.
+        /// </summary>
+        string? Target { get; set; }
+    }
+
     /// <summary>
     /// Class responsible for gathering of diagnostics data and saving them into a file.
     /// </summary>
-    internal class CommandDiagnostics
+    public class CommandDiagnostics : IDiagnosticsData
     {
         private readonly ILogger _logger;
         private readonly Stopwatch _timer = Stopwatch.StartNew();
@@ -23,15 +38,8 @@ namespace Microsoft.DotNet.XHarness.CLI
 
         public ExitCode ExitCode { get; set; }
 
-        /// <summary>
-        /// Original target the user specified when executing the command.
-        /// </summary>
-        public string? TestTarget { get; set; }
+        public string? OriginalTarget { get; set; }
 
-        /// <summary>
-        /// Actual test target (simulator, device) that was used for the run.
-        /// This should include OS version of the target.
-        /// </summary>
         public string? Target { get; set; }
 
         public int Duration => (int)_timer.Elapsed.TotalSeconds;

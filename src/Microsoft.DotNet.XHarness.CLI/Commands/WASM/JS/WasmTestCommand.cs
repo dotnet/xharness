@@ -14,6 +14,7 @@ using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.Extensions.Logging;
 using System.Threading;
+using Microsoft.DotNet.XHarness.Common;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {

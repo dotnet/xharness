@@ -12,6 +12,7 @@ using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;

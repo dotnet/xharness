@@ -4,6 +4,7 @@
 
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.Commands;
+using Microsoft.DotNet.XHarness.Common;
 
 namespace Microsoft.DotNet.XHarness.CLI.Android
 {

@@ -5,6 +5,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
@@ -45,8 +46,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             ILogs logs,
             IFileBackedLog mainLog,
             IErrorKnowledgeBase errorKnowledgeBase,
+            IDiagnosticsData diagnosticsData,
             IHelpers helpers)
-            : base(processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, helpers)
+            : base(processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
         {
             _appBundleInformationParser = appBundleInformationParser ?? throw new ArgumentNullException(nameof(appBundleInformationParser));
             _consoleLogger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));

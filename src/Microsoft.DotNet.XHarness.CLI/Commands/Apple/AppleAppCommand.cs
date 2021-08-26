@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -54,10 +55,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             Services.TryAddSingleton<IProcessManager>(processManager);
             Services.TryAddTransient<XHarness.Apple.ILogger, ConsoleLogger>();
 
+            var serviceProvider = Services.BuildServiceProvider();
+            var diagnosticsData = serviceProvider.GetRequiredService<IDiagnosticsData>();
+
+            diagnosticsData.OriginalTarget = Arguments.Target.Value.AsString();
+
             var cts = new CancellationTokenSource();
             cts.CancelAfter(Arguments.Timeout);
 
-            var exitCodeForRun = await InvokeInternal(cts.Token);
+            var exitCodeForRun = await InvokeInternal(serviceProvider, cts.Token);
             if (exitCodeForRun != ExitCode.SUCCESS)
             {
                 exitCode = exitCodeForRun;
@@ -66,7 +72,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             return exitCode;
         }
 
-        protected abstract Task<ExitCode> InvokeInternal(CancellationToken cancellationToken);
+        protected abstract Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken);
 
         protected class ConsoleLogger : XHarness.Apple.ILogger
         {
