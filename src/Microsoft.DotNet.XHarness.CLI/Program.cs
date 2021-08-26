@@ -65,9 +65,7 @@ namespace Microsoft.DotNet.XHarness.CLI
 
         public static CommandSet GetXHarnessCommandSet()
         {
-#pragma warning disable IDE0028 // Simplify collection initialization for DEBUG
             var commandSet = new CommandSet("xharness");
-#pragma warning restore IDE0028 // Simplify collection initialization for DEBUG
 
 #if !DEBUG
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
