@@ -33,6 +33,8 @@ namespace Microsoft.DotNet.XHarness.Android
             { "app", "shell pm list packages -3"}
         };
 
+        public int APIVersion => _api ?? GetAPIVersion();
+
         public AdbRunner(ILogger log, string adbExePath = "") : this(log, new AdbProcessManager(log), adbExePath) { }
 
         public AdbRunner(ILogger log, IAdbProcessManager processManager, string adbExePath = "")
@@ -481,13 +483,12 @@ namespace Microsoft.DotNet.XHarness.Android
 
             var result = allDevicesAndTheirProperties
                 .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split(new char[] { ',', '\r', '\n' }).Intersect(apkRequiredProperties).Any())
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value) as Dictionary<string, string>;
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value!);
 
             if (result.Count == 0)
             {
                 // In this case, the enumeration worked, we found one or more devices, but nothing matched the APK's architecture; fail out.
                 logger.LogError($"No devices with {propertyName} '{ string.Join("', '", apkRequiredProperties) }' was found among attached and authorized devices.");
-
             }
 
             return result;

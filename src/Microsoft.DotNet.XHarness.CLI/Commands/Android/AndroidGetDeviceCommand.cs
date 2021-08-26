@@ -70,6 +70,11 @@ Arguments:
                     return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
                 }
 
+                DiagnosticsData.Target = string.Join(",", Arguments.DeviceArchitecture.Value);
+
+                runner.SetActiveDevice(deviceToUse);
+                DiagnosticsData.TargetOS = runner.APIVersion.ToString();
+
                 Console.WriteLine(deviceToUse);
 
                 return Task.FromResult(ExitCode.SUCCESS);

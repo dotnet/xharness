@@ -50,6 +50,7 @@ Arguments:
                 logger.LogCritical($"Couldn't find {Arguments.AppPackagePath}!");
                 return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
             }
+
             var runner = new AdbRunner(logger);
 
             IEnumerable<string> apkRequiredArchitecture;
@@ -64,6 +65,8 @@ Arguments:
                 apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(Arguments.AppPackagePath);
                 logger.LogInformation($"Will attempt to run device on detected architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
             }
+
+            DiagnosticsData.Target = string.Join(",", apkRequiredArchitecture);
 
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
             string apkPackageName = Arguments.PackageName;

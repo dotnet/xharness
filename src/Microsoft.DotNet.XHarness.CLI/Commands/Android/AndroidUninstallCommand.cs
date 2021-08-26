@@ -58,6 +58,7 @@ Arguments:
                     }
 
                     runner.SetActiveDevice(deviceId);
+                    DiagnosticsData.TargetOS = runner.APIVersion.ToString();
 
                     logger.LogDebug($"Working with {runner.GetAdbVersion()}");
 

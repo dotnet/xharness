@@ -58,6 +58,8 @@ Arguments:
                 }
             }
 
+            DiagnosticsData.Target = string.Join(",", Arguments.DeviceArchitecture.Value);
+
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
             try
             {
@@ -82,7 +84,7 @@ Arguments:
             return Task.FromResult(ExitCode.GENERAL_FAILURE);
         }
 
-        public static ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, IEnumerable<string> apkRequiredArchitecture, string? deviceId, TimeSpan bootTimeoutSeconds, AdbRunner runner)
+        public ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, IEnumerable<string> apkRequiredArchitecture, string? deviceId, TimeSpan bootTimeoutSeconds, AdbRunner runner)
         {
             using (logger.BeginScope("Initialization and setup of APK on device"))
             {
@@ -101,6 +103,7 @@ Arguments:
                 }
 
                 runner.SetActiveDevice(deviceId);
+                DiagnosticsData.TargetOS = runner.APIVersion.ToString();
 
                 runner.TimeToWaitForBootCompletion = bootTimeoutSeconds;
 
