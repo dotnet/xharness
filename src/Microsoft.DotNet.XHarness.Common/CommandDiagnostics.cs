@@ -16,15 +16,14 @@ namespace Microsoft.DotNet.XHarness.Common
         ExitCode ExitCode { get; set; }
 
         /// <summary>
-        /// Original target the user specified when executing the command.
-        /// </summary>
-        string? OriginalTarget { get; set; }
-
-        /// <summary>
-        /// Actual test target (simulator, device) that was used for the run.
-        /// This should include OS version of the target.
+        /// Target the user/app specified when executing the command.
         /// </summary>
         string? Target { get; set; }
+
+        /// <summary>
+        /// OS version of the actual test target (simulator, device) that was used for the run.
+        /// </summary>
+        string? TargetOS { get; set; }
     }
 
     /// <summary>
@@ -41,9 +40,9 @@ namespace Microsoft.DotNet.XHarness.Common
 
         public ExitCode ExitCode { get; set; }
 
-        public string? OriginalTarget { get; set; }
-
         public string? Target { get; set; }
+
+        public string? TargetOS { get; set; }
 
         public int Duration => (int)_timer.Elapsed.TotalSeconds;
 

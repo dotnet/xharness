@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             var serviceProvider = Services.BuildServiceProvider();
             var diagnosticsData = serviceProvider.GetRequiredService<IDiagnosticsData>();
 
-            diagnosticsData.OriginalTarget = Arguments.Target.Value.AsString();
+            diagnosticsData.Target = Arguments.Target.Value.AsString();
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(Arguments.Timeout);

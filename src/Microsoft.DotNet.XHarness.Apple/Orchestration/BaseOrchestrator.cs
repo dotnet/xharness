@@ -171,7 +171,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             // Note down the actual test target
-            _diagnosticsData.Target = new TestTargetOs(target.Platform, device.OSVersion).AsString();
+            _diagnosticsData.TargetOS = device.OSVersion;
 
             // Uninstall the app first to get a clean state
             await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, true, cancellationToken);
