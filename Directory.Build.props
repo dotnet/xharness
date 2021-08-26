@@ -2,12 +2,12 @@
 <Project>
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
   <PropertyGroup>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>latest</LangVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
+    <DisableImplicitNamespaceImports_DotNet>true</DisableImplicitNamespaceImports_DotNet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(CopyrightNetFoundation)' != ''">
     <Copyright>$(CopyrightNetFoundation)</Copyright>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 </Project>
