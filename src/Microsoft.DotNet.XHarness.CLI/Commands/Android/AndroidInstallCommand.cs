@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
@@ -70,7 +71,8 @@ Arguments:
                 apkRequiredArchitecture: apkRequiredArchitecture,
                 deviceId: Arguments.DeviceId,
                 bootTimeoutSeconds: Arguments.LaunchTimeout,
-                runner: runner));
+                runner: runner,
+                DiagnosticsData));
             }
             catch (NoDeviceFoundException noDevice)
             {
@@ -84,7 +86,7 @@ Arguments:
             return Task.FromResult(ExitCode.GENERAL_FAILURE);
         }
 
-        public ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, IEnumerable<string> apkRequiredArchitecture, string? deviceId, TimeSpan bootTimeoutSeconds, AdbRunner runner)
+        public static ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, IEnumerable<string> apkRequiredArchitecture, string? deviceId, TimeSpan bootTimeoutSeconds, AdbRunner runner, IDiagnosticsData diagnosticsData)
         {
             using (logger.BeginScope("Initialization and setup of APK on device"))
             {
@@ -103,7 +105,7 @@ Arguments:
                 }
 
                 runner.SetActiveDevice(deviceId);
-                DiagnosticsData.TargetOS = runner.APIVersion.ToString();
+                diagnosticsData.TargetOS = runner.APIVersion.ToString();
 
                 runner.TimeToWaitForBootCompletion = bootTimeoutSeconds;
 

@@ -81,7 +81,8 @@ Arguments:
                     apkRequiredArchitecture: apkRequiredArchitecture,
                     deviceId: null,
                     bootTimeoutSeconds: Arguments.LaunchTimeout,
-                    runner: runner);
+                    runner,
+                    DiagnosticsData);
 
                 if (exitCode == ExitCode.SUCCESS)
                 {
