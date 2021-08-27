@@ -106,6 +106,7 @@ Arguments:
 
                 runner.SetActiveDevice(deviceId);
                 diagnosticsData.TargetOS = runner.APIVersion.ToString();
+                diagnosticsData.Device = deviceId;
 
                 runner.TimeToWaitForBootCompletion = bootTimeoutSeconds;
 

@@ -25,6 +25,11 @@ namespace Microsoft.DotNet.XHarness.Common
         /// OS version of the actual test target (simulator, device) that was used for the run.
         /// </summary>
         string? TargetOS { get; set; }
+
+        /// <summary>
+        /// Name of the used device.
+        /// </summary>
+        string? Device { get; set; }
     }
 
     /// <summary>
@@ -47,6 +52,9 @@ namespace Microsoft.DotNet.XHarness.Common
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? TargetOS { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Device { get; set; }
 
         public int Duration => (int)_timer.Elapsed.TotalSeconds;
 
