@@ -70,9 +70,9 @@ Arguments:
                     return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
                 }
 
-                DiagnosticsData.Target = string.Join(",", Arguments.DeviceArchitecture.Value);
-
                 runner.SetActiveDevice(deviceToUse);
+
+                DiagnosticsData.Target = string.Join(",", apkRequiredArchitecture);
                 DiagnosticsData.TargetOS = runner.APIVersion.ToString();
 
                 Console.WriteLine(deviceToUse);

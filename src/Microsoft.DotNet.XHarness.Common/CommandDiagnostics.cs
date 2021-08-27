@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
@@ -38,10 +39,13 @@ namespace Microsoft.DotNet.XHarness.Common
 
         public string Command { get; }
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
         public ExitCode ExitCode { get; set; }
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Target { get; set; }
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? TargetOS { get; set; }
 
         public int Duration => (int)_timer.Elapsed.TotalSeconds;

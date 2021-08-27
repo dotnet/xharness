@@ -59,7 +59,7 @@ Arguments:
                 }
             }
 
-            DiagnosticsData.Target = string.Join(",", Arguments.DeviceArchitecture.Value);
+            DiagnosticsData.Target = string.Join(",", apkRequiredArchitecture);
 
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
             try
