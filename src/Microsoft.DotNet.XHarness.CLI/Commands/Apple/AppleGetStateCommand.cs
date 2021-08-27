@@ -15,6 +15,7 @@ using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
@@ -67,7 +68,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         private const string SimulatorPrefix = "com.apple.CoreSimulator.SimDeviceType.";
 
-        public AppleGetStateCommand() : base(TargetPlatform.Apple)
+        public AppleGetStateCommand() : base(TargetPlatform.Apple, new ServiceCollection())
         {
         }
 

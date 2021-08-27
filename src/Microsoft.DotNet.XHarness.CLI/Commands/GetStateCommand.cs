@@ -4,6 +4,7 @@
 
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands
 {
@@ -12,7 +13,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
         private const string CommandHelp = "Print information about the current machine, such as host machine info and device status";
         protected override string CommandDescription { get; } = CommandHelp;
 
-        public GetStateCommand(TargetPlatform targetPlatform) : base(targetPlatform, "state", allowsExtraArgs: false, CommandHelp)
+        public GetStateCommand(TargetPlatform targetPlatform, ServiceCollection services)
+            : base(targetPlatform, "state", allowsExtraArgs: false, services, CommandHelp)
         {
         }
     }

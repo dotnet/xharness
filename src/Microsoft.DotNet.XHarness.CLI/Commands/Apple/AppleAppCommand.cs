@@ -9,9 +9,7 @@ using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -25,12 +23,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
     {
         protected readonly ErrorKnowledgeBase ErrorKnowledgeBase = new();
 
-        protected AppleAppCommand(string name, bool allowsExtraArgs, IServiceCollection services, string? help = null) : base(name, allowsExtraArgs, help)
+        protected AppleAppCommand(string name, bool allowsExtraArgs, IServiceCollection services, string? help = null)
+            : base(name, allowsExtraArgs, services, help)
         {
-            Services = services;
         }
 
-        protected sealed override async Task<ExitCode> InvokeInternal(Extensions.Logging.ILogger logger)
+        protected sealed override async Task<ExitCode> Invoke(Extensions.Logging.ILogger logger)
         {
             var exitCode = ExitCode.SUCCESS;
 
@@ -47,13 +45,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             CallbackLog debugLog = new(message => logger.LogDebug(message.Trim()));
             using var mainLog = Log.CreateReadableAggregatedLog(runLog, debugLog);
 
-            var processManager = new MlaunchProcessManager(Arguments.XcodeRoot, Arguments.MlaunchPath);
-
             Services.TryAddSingleton(mainLog);
             Services.TryAddSingleton(logs);
-            Services.TryAddSingleton<IMlaunchProcessManager>(processManager);
-            Services.TryAddSingleton<IMacOSProcessManager>(processManager);
-            Services.TryAddSingleton<IProcessManager>(processManager);
             Services.TryAddTransient<XHarness.Apple.ILogger, ConsoleLogger>();
 
             var serviceProvider = Services.BuildServiceProvider();

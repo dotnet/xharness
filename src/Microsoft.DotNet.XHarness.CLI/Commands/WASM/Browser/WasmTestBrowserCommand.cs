@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -31,7 +32,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
         protected override WasmTestBrowserCommandArguments Arguments { get; } = new();
 
-        public WasmTestBrowserCommand() : base(TargetPlatform.WASM, "test-browser", allowsExtraArgs: true, CommandHelp)
+        public WasmTestBrowserCommand()
+            : base(TargetPlatform.WASM, "test-browser", allowsExtraArgs: true, new ServiceCollection(), CommandHelp)
         {
         }
 

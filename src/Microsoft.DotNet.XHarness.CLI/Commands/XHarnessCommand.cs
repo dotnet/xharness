@@ -39,12 +39,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
         /// <summary>
         /// Service collection used to create dependencies.
         /// </summary>
-        protected IServiceCollection Services { get; set; } = new ServiceCollection();
+        protected IServiceCollection Services { get; }
 
-        protected XHarnessCommand(TargetPlatform targetPlatform, string name, bool allowsExtraArgs, string? help = null) : base(name, help)
+        protected XHarnessCommand(
+            TargetPlatform targetPlatform,
+            string name,
+            bool allowsExtraArgs,
+            IServiceCollection services,
+            string? help = null)
+            : base(name, help)
         {
             _allowsExtraArgs = allowsExtraArgs;
             _targetPlatform = targetPlatform;
+            Services = services;
         }
 
         /// <summary>

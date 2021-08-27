@@ -4,11 +4,9 @@
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal interface IAppleAppRunArguments : IAppleArguments
+    internal interface IAppleArguments : IXHarnessCommandArguments
     {
-        TargetArgument Target { get; }
-        OutputDirectoryArgument OutputDirectory { get; }
-        TimeoutArgument Timeout { get; }
-        DeviceNameArgument DeviceName { get; }
+        XcodeArgument XcodeRoot { get; }
+        MlaunchArgument MlaunchPath { get; }
     }
 }

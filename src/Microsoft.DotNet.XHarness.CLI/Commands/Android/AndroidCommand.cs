@@ -15,7 +15,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
         protected readonly Lazy<IDiagnosticsData> _diagnosticsData;
         protected IDiagnosticsData DiagnosticsData => _diagnosticsData.Value;
 
-        protected AndroidCommand(string name, bool allowsExtraArgs, string? help = null) : base(TargetPlatform.Android, name, allowsExtraArgs, help)
+        protected AndroidCommand(string name, bool allowsExtraArgs, string? help = null)
+            : base(TargetPlatform.Android, name, allowsExtraArgs, new ServiceCollection(), help)
         {
             _diagnosticsData = new(() => Services.BuildServiceProvider().GetRequiredService<IDiagnosticsData>());
         }

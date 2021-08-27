@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             Add(new AppleJustRunCommand(services));
 
             // Commands for getting information
-            Add(new AppleGetDeviceCommand());
+            Add(new AppleGetDeviceCommand(services));
             Add(new AppleGetStateCommand());
 
             // Commands for simulator management
