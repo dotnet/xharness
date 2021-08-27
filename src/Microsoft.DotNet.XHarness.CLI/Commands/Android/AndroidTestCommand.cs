@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidTestCommand : AndroidXHarnessCommand<AndroidTestCommandArguments>
+    internal class AndroidTestCommand : AndroidCommand<AndroidTestCommandArguments>
     {
         private const string ReturnCodeVariableName = "return-code";
 

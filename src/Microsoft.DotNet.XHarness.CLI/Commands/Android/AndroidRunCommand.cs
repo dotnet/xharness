@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidRunCommand : AndroidXHarnessCommand<AndroidRunCommandArguments>
+    internal class AndroidRunCommand : AndroidCommand<AndroidRunCommandArguments>
     {
         // nunit2 one should go away eventually
         private static readonly string[] s_xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };

@@ -7,9 +7,9 @@ using Microsoft.DotNet.XHarness.Common;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal abstract class AppleXHarnessCommand<TArguments> : XHarnessCommand<TArguments> where TArguments : IXHarnessCommandArguments
+    internal abstract class AppleCommand<TArguments> : XHarnessCommand<TArguments> where TArguments : IXHarnessCommandArguments
     {
-        protected AppleXHarnessCommand(string name, bool allowsExtraArgs, string? help = null)
+        protected AppleCommand(string name, bool allowsExtraArgs, string? help = null)
             : base(TargetPlatform.Apple, name, allowsExtraArgs, help)
         {
         }

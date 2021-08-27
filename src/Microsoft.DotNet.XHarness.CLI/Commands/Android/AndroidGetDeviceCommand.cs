@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidGetDeviceCommand : AndroidXHarnessCommand<AndroidGetDeviceCommandArguments>
+    internal class AndroidGetDeviceCommand : AndroidCommand<AndroidGetDeviceCommandArguments>
     {
         protected override AndroidGetDeviceCommandArguments Arguments { get; } = new()
         {

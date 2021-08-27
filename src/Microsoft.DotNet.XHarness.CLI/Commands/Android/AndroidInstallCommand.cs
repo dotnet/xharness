@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidInstallCommand : AndroidXHarnessCommand<AndroidInstallCommandArguments>
+    internal class AndroidInstallCommand : AndroidCommand<AndroidInstallCommandArguments>
     {
         protected override AndroidInstallCommandArguments Arguments { get; } = new();
 

@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidUninstallCommand : AndroidXHarnessCommand<AndroidUninstallCommandArguments>
+    internal class AndroidUninstallCommand : AndroidCommand<AndroidUninstallCommandArguments>
     {
         protected override AndroidUninstallCommandArguments Arguments { get; } = new();
 
