@@ -22,11 +22,9 @@
 
     <ItemGroup>
       <XHarnessApkToTest Include="$(TestAppDestinationDir)\$(TestPackageName)-x86.apk">
-        <AndroidPackageName>$(TestPackageName)</AndroidPackageName>
+        <AndroidPackageName>net.dot.$(TestPackageName)</AndroidPackageName>
         <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
         <WorkItemTimeout>00:12:00</WorkItemTimeout>
-        <TestTimeout>00:05:00</TestTimeout>
-        <LaunchTimeout>00:05:00</LaunchTimeout>
         <CustomCommands>
           set -ex;
           deviceId=`xharness android device --app="$app"`;
