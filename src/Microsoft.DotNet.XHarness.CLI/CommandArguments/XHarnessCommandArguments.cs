@@ -10,6 +10,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
     public interface IXHarnessCommandArguments
     {
+        DiagnosticsArgument Diagnostics { get; }
         VerbosityArgument Verbosity { get; set; }
         HelpArgument ShowHelp { get; }
         IEnumerable<Argument> GetCommandArguments();
@@ -18,11 +19,13 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 
     public abstract class XHarnessCommandArguments : IXHarnessCommandArguments
     {
+        public DiagnosticsArgument Diagnostics { get; } = new();
         public VerbosityArgument Verbosity { get; set; } = new(LogLevel.Information);
         public HelpArgument ShowHelp { get; } = new();
 
         public IEnumerable<Argument> GetCommandArguments() => GetArguments().Concat(new Argument[]
         {
+            Diagnostics,
             Verbosity,
             ShowHelp,
         });

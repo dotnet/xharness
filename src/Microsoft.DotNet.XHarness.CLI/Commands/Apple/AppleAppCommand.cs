@@ -2,14 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -19,22 +19,22 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal abstract class AppleAppCommand<TArguments> : XHarnessCommand<TArguments> where TArguments : IAppleAppRunArguments
+    internal abstract class AppleAppCommand<TArguments> : AppleCommand<TArguments> where TArguments : IAppleAppRunArguments
     {
         protected readonly ErrorKnowledgeBase ErrorKnowledgeBase = new();
 
-        protected AppleAppCommand(string name, bool allowsExtraArgs, IServiceCollection services, string? help = null) : base(name, allowsExtraArgs, help)
+        protected AppleAppCommand(string name, bool allowsExtraArgs, IServiceCollection services, string? help = null)
+            : base(name, allowsExtraArgs, services, help)
         {
-            Services = services;
         }
 
-        protected sealed override async Task<ExitCode> InvokeInternal(Extensions.Logging.ILogger logger)
+        protected sealed override async Task<ExitCode> Invoke(Extensions.Logging.ILogger logger)
         {
             var exitCode = ExitCode.SUCCESS;
 
             var targetName = Arguments.Target.Value.AsString();
 
-            logger.LogInformation($"Preparing run for {targetName}{ (!string.IsNullOrEmpty(Arguments.DeviceName.Value) ? " targeting " + Arguments.DeviceName.Value : null) }");
+            logger.LogInformation("Preparing run for {target}", targetName + (!string.IsNullOrEmpty(Arguments.DeviceName.Value) ? " targeting " + Arguments.DeviceName.Value : null));
 
             // Create main log file for the run
             using ILogs logs = new Logs(Arguments.OutputDirectory);
@@ -45,19 +45,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             CallbackLog debugLog = new(message => logger.LogDebug(message.Trim()));
             using var mainLog = Log.CreateReadableAggregatedLog(runLog, debugLog);
 
-            var processManager = new MlaunchProcessManager(Arguments.XcodeRoot, Arguments.MlaunchPath);
-
             Services.TryAddSingleton(mainLog);
             Services.TryAddSingleton(logs);
-            Services.TryAddSingleton<IMlaunchProcessManager>(processManager);
-            Services.TryAddSingleton<IMacOSProcessManager>(processManager);
-            Services.TryAddSingleton<IProcessManager>(processManager);
             Services.TryAddTransient<XHarness.Apple.ILogger, ConsoleLogger>();
+
+            var serviceProvider = Services.BuildServiceProvider();
+
+            var diagnosticsData = serviceProvider.GetRequiredService<IDiagnosticsData>();
+            diagnosticsData.Target = Arguments.Target.Value.AsString();
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(Arguments.Timeout);
 
-            var exitCodeForRun = await InvokeInternal(cts.Token);
+            var exitCodeForRun = await InvokeInternal(serviceProvider, cts.Token);
             if (exitCodeForRun != ExitCode.SUCCESS)
             {
                 exitCode = exitCodeForRun;
@@ -66,8 +66,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             return exitCode;
         }
 
-        protected abstract Task<ExitCode> InvokeInternal(CancellationToken cancellationToken);
+        protected abstract Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken);
 
+        [SuppressMessage("Usage", "CA2254:The logging message template should not vary between calls to LoggerExtensions", Justification = "This is just a simple shim")]
         protected class ConsoleLogger : XHarness.Apple.ILogger
         {
             private readonly Extensions.Logging.ILogger _logger;

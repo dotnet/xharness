@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Tests.Arguments
         private class SampleTimeSpanArgument : TimeSpanArgument
         {
             public SampleTimeSpanArgument(TimeSpan defaultValue)
-                : base("d=", string.Empty, defaultValue)
+                : base("t=", string.Empty, defaultValue)
             {
             }
         }
@@ -175,7 +175,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Tests.Arguments
 
             var exitCode = command.Invoke(new[]
             {
-                "-d",
+                "-t",
                 "00:02:30",
             });
 

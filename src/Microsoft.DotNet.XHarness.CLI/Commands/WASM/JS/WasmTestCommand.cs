@@ -14,6 +14,8 @@ using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.Extensions.Logging;
 using System.Threading;
+using Microsoft.DotNet.XHarness.Common;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
@@ -25,7 +27,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
         protected override string CommandUsage { get; } = "wasm test [OPTIONS] -- [ENGINE OPTIONS]";
         protected override string CommandDescription { get; } = CommandHelp;
 
-        public WasmTestCommand() : base("test", true, CommandHelp)
+        public WasmTestCommand() : base(TargetPlatform.WASM, "test", true, new ServiceCollection(), CommandHelp)
         {
         }
 

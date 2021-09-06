@@ -8,13 +8,14 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
+using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidTestCommand : XHarnessCommand<AndroidTestCommandArguments>
+    internal class AndroidTestCommand : AndroidCommand<AndroidTestCommandArguments>
     {
         private const string ReturnCodeVariableName = "return-code";
 
@@ -49,6 +50,7 @@ Arguments:
                 logger.LogCritical($"Couldn't find {Arguments.AppPackagePath}!");
                 return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
             }
+
             var runner = new AdbRunner(logger);
 
             IEnumerable<string> apkRequiredArchitecture;
@@ -64,6 +66,8 @@ Arguments:
                 logger.LogInformation($"Will attempt to run device on detected architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
             }
 
+            DiagnosticsData.Target = string.Join(",", apkRequiredArchitecture);
+
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
             string apkPackageName = Arguments.PackageName;
             string appPackagePath = Arguments.AppPackagePath;
@@ -77,7 +81,8 @@ Arguments:
                     apkRequiredArchitecture: apkRequiredArchitecture,
                     deviceId: null,
                     bootTimeoutSeconds: Arguments.LaunchTimeout,
-                    runner: runner);
+                    runner,
+                    DiagnosticsData);
 
                 if (exitCode == ExitCode.SUCCESS)
                 {

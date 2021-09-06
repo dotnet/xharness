@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
+using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
@@ -15,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidGetDeviceCommand : XHarnessCommand<AndroidGetDeviceCommandArguments>
+    internal class AndroidGetDeviceCommand : AndroidCommand<AndroidGetDeviceCommandArguments>
     {
         protected override AndroidGetDeviceCommandArguments Arguments { get; } = new()
         {
@@ -63,11 +64,16 @@ Arguments:
                 // enumerate the devices attached and their architectures
                 // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
                 var deviceToUse = runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture");
-
                 if (deviceToUse == null)
                 {
                     return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
                 }
+
+                runner.SetActiveDevice(deviceToUse);
+
+                DiagnosticsData.Target = string.Join(",", apkRequiredArchitecture);
+                DiagnosticsData.TargetOS = runner.APIVersion.ToString();
+                DiagnosticsData.Device = deviceToUse;
 
                 Console.WriteLine(deviceToUse);
 

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -16,13 +17,10 @@ using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands
 {
-    public abstract class XHarnessCommand : Command
+    public abstract class XHarnessCommand<T> : Command where T : IXHarnessCommandArguments
     {
-        /// <summary>
-        /// The verbatim "--" argument used for pass-through args is removed by Mono.Options when parsing CommandSets,
-        /// so in Program.cs, we temporarily replace it with this string and then recognize it back here.
-        /// </summary>
-        public const string VerbatimArgumentPlaceholder = "[[%verbatim_argument%]]";
+        private readonly TargetPlatform _targetPlatform;
+        private readonly bool _allowsExtraArgs;
 
         /// <summary>
         /// Will be printed in the header when help is invoked.
@@ -36,25 +34,24 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
         /// </summary>
         protected abstract string CommandDescription { get; }
 
+        protected abstract T Arguments { get; }
+
         /// <summary>
         /// Service collection used to create dependencies.
         /// </summary>
-        protected IServiceCollection Services { get; set; } = new ServiceCollection();
+        protected IServiceCollection Services { get; }
 
-        protected XHarnessCommand(string name, string? help = null) : base(name, help)
-        {
-        }
-    }
-
-    public abstract class XHarnessCommand<T> : XHarnessCommand where T : IXHarnessCommandArguments
-    {
-        private readonly bool _allowsExtraArgs;
-
-        protected abstract T Arguments { get; }
-
-        protected XHarnessCommand(string name, bool allowsExtraArgs, string? help = null) : base(name, help)
+        protected XHarnessCommand(
+            TargetPlatform targetPlatform,
+            string name,
+            bool allowsExtraArgs,
+            IServiceCollection services,
+            string? help = null)
+            : base(name, help)
         {
             _allowsExtraArgs = allowsExtraArgs;
+            _targetPlatform = targetPlatform;
+            Services = services;
         }
 
         /// <summary>
@@ -86,7 +83,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
 
             try
             {
-                var regularArguments = arguments.TakeWhile(arg => arg != VerbatimArgumentPlaceholder);
+                var regularArguments = arguments.TakeWhile(arg => arg != Program.VerbatimArgumentPlaceholder);
                 if (regularArguments.Count() < arguments.Count())
                 {
                     PassThroughArguments = arguments.Skip(regularArguments.Count() + 1);
@@ -129,17 +126,33 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
             }
             catch (Exception e)
             {
-                parseLogger.LogCritical("Unexpected failure argument: " + e);
+                parseLogger.LogCritical("Unexpected failure argument: {error}", e);
                 return (int)ExitCode.GENERAL_FAILURE;
             }
+
+            // Should we and where output the diagnostics data?
+            string? diagnosticsPath = Arguments.Diagnostics.Value ?? Environment.GetEnvironmentVariable(EnvironmentVariables.Names.DIAGNOSTICS_PATH);
 
             try
             {
                 using var factory = CreateLoggerFactory(Arguments.Verbosity);
                 ILogger logger = factory.CreateLogger(Name);
-                Services.TryAddSingleton(logger);
+                var diagnostics = new CommandDiagnostics(logger, _targetPlatform, Name);
 
-                return (int)InvokeInternal(logger).GetAwaiter().GetResult();
+                Services.TryAddSingleton(logger);
+                Services.TryAddSingleton<IDiagnosticsData>(diagnostics);
+
+                var result = InvokeInternal(logger).GetAwaiter().GetResult();
+
+                diagnostics.ExitCode = result;
+
+                // Save diagnostic data into a file
+                if (result != ExitCode.HELP_SHOWN && !string.IsNullOrEmpty(diagnosticsPath))
+                {
+                    diagnostics.SaveToJsonFile(diagnosticsPath);
+                }
+
+                return (int)result;
             }
             catch (Exception e)
             {

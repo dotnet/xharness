@@ -6,7 +6,9 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
@@ -16,6 +18,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
         protected override string CommandUsage { get; } = "android state";
 
         protected override AndroidGetStateCommandArguments Arguments { get; } = new();
+
+        public AndroidGetStateCommand() : base(TargetPlatform.Android, new ServiceCollection())
+        {
+        }
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {

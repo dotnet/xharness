@@ -6,7 +6,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.Commands;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 #nullable enable
@@ -35,7 +37,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Tests
         private readonly TArguments _arguments;
         protected override TArguments Arguments => _arguments;
 
-        public UnitTestCommand(TArguments arguments, bool allowExtraArgs = false) : base("unit-test", allowExtraArgs)
+        public UnitTestCommand(TArguments arguments, bool allowExtraArgs = false)
+            : base(TargetPlatform.Apple, "unit-test", allowExtraArgs, new ServiceCollection())
         {
             _arguments = arguments;
         }

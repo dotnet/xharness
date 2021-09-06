@@ -4,13 +4,15 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
+using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidInstallCommand : XHarnessCommand<AndroidInstallCommandArguments>
+    internal class AndroidInstallCommand : AndroidCommand<AndroidInstallCommandArguments>
     {
         protected override AndroidInstallCommandArguments Arguments { get; } = new();
 
@@ -57,6 +59,8 @@ Arguments:
                 }
             }
 
+            DiagnosticsData.Target = string.Join(",", apkRequiredArchitecture);
+
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
             try
             {
@@ -67,7 +71,8 @@ Arguments:
                 apkRequiredArchitecture: apkRequiredArchitecture,
                 deviceId: Arguments.DeviceId,
                 bootTimeoutSeconds: Arguments.LaunchTimeout,
-                runner: runner));
+                runner: runner,
+                DiagnosticsData));
             }
             catch (NoDeviceFoundException noDevice)
             {
@@ -81,7 +86,7 @@ Arguments:
             return Task.FromResult(ExitCode.GENERAL_FAILURE);
         }
 
-        public static ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, IEnumerable<string> apkRequiredArchitecture, string? deviceId, TimeSpan bootTimeoutSeconds, AdbRunner runner)
+        public static ExitCode InvokeHelper(ILogger logger, string apkPackageName, string appPackagePath, IEnumerable<string> apkRequiredArchitecture, string? deviceId, TimeSpan bootTimeoutSeconds, AdbRunner runner, IDiagnosticsData diagnosticsData)
         {
             using (logger.BeginScope("Initialization and setup of APK on device"))
             {
@@ -100,6 +105,8 @@ Arguments:
                 }
 
                 runner.SetActiveDevice(deviceId);
+                diagnosticsData.TargetOS = runner.APIVersion.ToString();
+                diagnosticsData.Device = deviceId;
 
                 runner.TimeToWaitForBootCompletion = bootTimeoutSeconds;
 

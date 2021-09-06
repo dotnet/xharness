@@ -12,10 +12,12 @@ using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
@@ -39,7 +41,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
 
         protected ILogger Logger { get; set; } = null!;
 
-        protected SimulatorsCommand(string name, bool allowsExtraArgs, string help) : base(name, allowsExtraArgs, help)
+        protected SimulatorsCommand(string name, bool allowsExtraArgs, string help)
+            : base(TargetPlatform.Apple, name, allowsExtraArgs, new ServiceCollection(), help)
         {
         }
 

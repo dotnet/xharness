@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
 {
-    internal class AppleGetDeviceCommandsArguments : XHarnessCommandArguments
+    internal class AppleGetDeviceCommandsArguments : XHarnessCommandArguments, IAppleArguments
     {
         public DeviceNameArgument DeviceName { get; } = new();
         public IncludeWirelessArgument IncludeWireless { get; } = new();

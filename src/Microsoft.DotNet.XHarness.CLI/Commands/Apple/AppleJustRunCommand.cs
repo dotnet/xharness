@@ -25,10 +25,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected override Task<ExitCode> InvokeInternal(CancellationToken cancellationToken) =>
-            Services
-                .BuildServiceProvider()
-                .GetRequiredService<IJustRunOrchestrator>()
+        protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken) =>
+            serviceProvider.GetRequiredService<IJustRunOrchestrator>()
                 .OrchestrateRun(
                     AppBundleInformation.FromBundleId(Arguments.BundleIdentifier),
                     Arguments.Target,

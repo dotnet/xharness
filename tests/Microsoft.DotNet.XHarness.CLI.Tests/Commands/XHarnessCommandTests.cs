@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
-using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
@@ -181,7 +180,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Tests.CommandArguments
                 "50",
                 "--enum",
                 "Value2",
-                XHarnessCommand.VerbatimArgumentPlaceholder,
+                Program.VerbatimArgumentPlaceholder,
                 "v8",
                 "--foo",
                 "runtime.js",
@@ -211,7 +210,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Tests.CommandArguments
                 "50",
                 "--enum",
                 "Value2",
-                XHarnessCommand.VerbatimArgumentPlaceholder,
+                Program.VerbatimArgumentPlaceholder,
                 "v8",
                 "--foo",
                 "runtime.js",
@@ -232,7 +231,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Tests.CommandArguments
                 "v8",
                 "--foo",
                 "runtime.js",
-                XHarnessCommand.VerbatimArgumentPlaceholder,
+                Program.VerbatimArgumentPlaceholder,
                 "-n",
                 "50",
                 "--enum",

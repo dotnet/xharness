@@ -7,6 +7,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -36,6 +37,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly ILogs _logs;
         private readonly IFileBackedLog _mainLog;
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
+        private readonly IDiagnosticsData _diagnosticsData;
         private readonly IHelpers _helpers;
         private bool _lldbFileCreated;
 
@@ -46,6 +48,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             ILogs logs,
             IFileBackedLog mainLog,
             IErrorKnowledgeBase errorKnowledgeBase,
+            IDiagnosticsData diagnosticsData,
             IHelpers helpers)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
@@ -54,6 +57,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
+            _diagnosticsData = diagnosticsData ?? throw new ArgumentNullException(nameof(diagnosticsData));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
         }
 
@@ -165,6 +169,10 @@ namespace Microsoft.DotNet.XHarness.Apple
                 _logger.LogError(e.Message);
                 return ExitCode.DEVICE_NOT_FOUND;
             }
+
+            // Note down the actual test target
+            _diagnosticsData.TargetOS = device.OSVersion;
+            _diagnosticsData.Device = device.Name ?? device.UDID;
 
             // Uninstall the app first to get a clean state
             await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, true, cancellationToken);

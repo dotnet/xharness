@@ -7,16 +7,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
-using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    internal class AppleGetDeviceCommand : XHarnessCommand<AppleGetDeviceCommandsArguments>
+    internal class AppleGetDeviceCommand : AppleCommand<AppleGetDeviceCommandsArguments>
     {
         protected override AppleGetDeviceCommandsArguments Arguments { get; } = new();
 
@@ -29,14 +30,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 Arguments:
 ";
 
-        public AppleGetDeviceCommand() : base("device", true, CommandHelp)
+        public AppleGetDeviceCommand(IServiceCollection services) : base("device", true, services, CommandHelp)
         {
         }
 
-        protected override async Task<ExitCode> InvokeInternal(Extensions.Logging.ILogger logger)
+        protected override async Task<ExitCode> Invoke(Extensions.Logging.ILogger logger)
         {
-            var processManager = new MlaunchProcessManager(Arguments.XcodeRoot, Arguments.MlaunchPath);
-
             var log = new CallbackLog(m => logger.LogDebug(m));
             TestTargetOs target;
 
@@ -50,11 +49,19 @@ Arguments:
                 return ExitCode.INVALID_ARGUMENTS;
             }
 
+            var serviceProvider = Services.BuildServiceProvider();
+            var deviceFinder = serviceProvider.GetRequiredService<IDeviceFinder>();
+            var diagnosticsData = serviceProvider.GetRequiredService<IDiagnosticsData>();
+            diagnosticsData.Target = target.AsString();
+
             try
             {
-                var deviceFinder = new DeviceFinder(new HardwareDeviceLoader(processManager), new SimulatorLoader(processManager));
-                var device = await deviceFinder.FindDevice(target, Arguments.DeviceName, log, Arguments.IncludeWireless);
-                Console.WriteLine(device.Device.UDID);
+                var device = (await deviceFinder.FindDevice(target, Arguments.DeviceName, log, Arguments.IncludeWireless)).Device;
+
+                diagnosticsData.TargetOS = device.OSVersion;
+                diagnosticsData.Device = device.Name ?? device.UDID;
+
+                Console.WriteLine(device.UDID);
             }
             catch (Exception e)
             {

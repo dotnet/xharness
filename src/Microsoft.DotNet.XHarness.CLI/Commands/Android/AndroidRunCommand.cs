@@ -4,13 +4,14 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.Android.Execution;
+using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 {
-    internal class AndroidRunCommand : XHarnessCommand<AndroidRunCommandArguments>
+    internal class AndroidRunCommand : AndroidCommand<AndroidRunCommandArguments>
     {
         // nunit2 one should go away eventually
         private static readonly string[] s_xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
@@ -65,6 +66,8 @@ Arguments:
             }
 
             runner.SetActiveDevice(deviceId);
+            DiagnosticsData.TargetOS = runner.APIVersion.ToString();
+            DiagnosticsData.Device = deviceId;
 
             runner.TimeToWaitForBootCompletion = Arguments.LaunchTimeout;
 

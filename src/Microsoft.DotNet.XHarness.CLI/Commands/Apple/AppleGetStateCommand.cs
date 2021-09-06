@@ -9,11 +9,13 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
@@ -65,6 +67,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         }
 
         private const string SimulatorPrefix = "com.apple.CoreSimulator.SimDeviceType.";
+
+        public AppleGetStateCommand() : base(TargetPlatform.Apple, new ServiceCollection())
+        {
+        }
 
         protected override AppleGetStateCommandArguments Arguments { get; } = new();
 

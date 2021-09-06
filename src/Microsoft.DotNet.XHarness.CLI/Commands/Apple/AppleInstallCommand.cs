@@ -26,10 +26,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
         {
         }
 
-        protected override Task<ExitCode> InvokeInternal(CancellationToken cancellationToken)
+        protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken)
         {
-            var serviceProvider = Services.BuildServiceProvider();
-
             if (Arguments.Target.Value.Platform == TestTarget.MacCatalyst)
             {
                 var logger = serviceProvider.GetRequiredService<Extensions.Logging.ILogger>();
