@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.XHarness.Common
                     };
 
                     string json = JsonSerializer.Serialize(data, options);
-                    File.WriteAllText(targetFile, JsonSerializer.Serialize(data, options));
+                    File.WriteAllText(targetFile, json);
                 }
             }
             catch (Exception e)
