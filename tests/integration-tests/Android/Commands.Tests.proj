@@ -6,32 +6,38 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <XHarnessX86TestApkUrl>$(AssetsBaseUri)/android/test-apk/x86/System.Numerics.Vectors.Tests-x86.zip</XHarnessX86TestApkUrl>
+    <TestPackageName>System.Numerics.Vectors.Tests</TestPackageName>
+    <XHarnessX86TestApkUrl>$(AssetsBaseUri)/android/test-apk/x86/$(TestPackageName)-x86.zip</XHarnessX86TestApkUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\android\x86</TestAppDestinationDir>
   </PropertyGroup>
 
   <Target Name="TestAndroid" BeforeTargets="CoreTest">
-    <DownloadFile SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)apk" SkipUnchangedFiles="True" Retries="5">
+    <DownloadFile SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(TestAppDestinationDir)" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
 
     <Message Text="Downloaded @(DownloadedApkFile) for XHarness Test purposes" Importance="High" />
+    <Unzip SourceFiles="@(DownloadedApkFile)" DestinationFolder="$(TestAppDestinationDir)" />
+    <Message Text="Extracted to $(TestAppDestinationDir)" Importance="High" />
 
     <ItemGroup>
-      <HelixWorkItem Include="System.Numerics.Vectors.Tests">
-        <Command>
+      <XHarnessApkToTest Include="$(TestAppDestinationDir)\$(TestPackageName)-x86.apk">
+        <AndroidPackageName>net.dot.$(TestPackageName)</AndroidPackageName>
+        <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
+        <WorkItemTimeout>00:12:00</WorkItemTimeout>
+        <CustomCommands>
           set -ex;
-          deviceId=`dotnet exec "$XHARNESS_CLI_PATH" android device --app="$HELIX_WORKITEM_PAYLOAD/System.Numerics.Vectors.Tests-x86.apk"`;
-          dotnet exec $XHARNESS_CLI_PATH android install --device-id="$deviceId" --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" --package-name="net.dot.System.Numerics.Vectors.Tests" --app="$HELIX_WORKITEM_PAYLOAD/System.Numerics.Vectors.Tests-x86.apk";
+          deviceId=`xharness android device --app="$app"`;
+          xharness android install --device-id="$deviceId" --output-directory="$output_directory" --package-name="$package_name" --app="$app";
           set +e;
           result=0;
-          dotnet exec "$XHARNESS_CLI_PATH" android run --device-id="$deviceId" --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" --package-name="net.dot.System.Numerics.Vectors.Tests";
+          xharness android run --device-id="$deviceId" --output-directory="$output_directory" --package-name="$package_name";
           ((result|=$?));
-          dotnet exec "$XHARNESS_CLI_PATH" android uninstall --device-id="$deviceId" --package-name="net.dot.System.Numerics.Vectors.Tests";
+          xharness android uninstall --device-id="$deviceId" --package-name="$package_name";
           ((result|=$?));
           exit $result;
-        </Command>
-        <PayloadArchive>@(DownloadedApkFile)</PayloadArchive>
-      </HelixWorkItem>
+        </CustomCommands>
+      </XHarnessApkToTest>
     </ItemGroup>
   </Target>
 
