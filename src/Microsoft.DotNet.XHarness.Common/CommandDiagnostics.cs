@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.XHarness.Common
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Device { get; set; }
 
-        public int Duration => (int)_timer.Elapsed.TotalSeconds;
+        public int Duration => (int)Math.Round(_timer.Elapsed.TotalSeconds);
 
         public CommandDiagnostics(ILogger logger, TargetPlatform platform, string command)
         {
