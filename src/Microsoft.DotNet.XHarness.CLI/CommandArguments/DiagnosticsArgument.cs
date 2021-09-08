@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
 {
     public class DiagnosticsArgument : StringArgument
     {
-        public DiagnosticsArgument() : base("diagnostics=|d=", "Path to a file where diagnostics data from the run will be stored")
+        public DiagnosticsArgument() : base("diagnostics=", "Path to a file where diagnostics data from the run will be stored")
         {
         }
     }
