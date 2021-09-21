@@ -2,7 +2,7 @@
   <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>
-    <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
+    <HelixTargetQueue Include="ubuntu.1804.amd64.android.29.open"/>
     
     <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)TestApks.proj">
       <AdditionalProperties>TestArch=x86;TestPackageName=net.dot.System.Buffers.Tests;TestInstrumentationName=net.dot.MonoRunner;TestFileName=System.Buffers.Tests-x86</AdditionalProperties>
