@@ -58,7 +58,7 @@ Arguments:
             {
                 var device = (await deviceFinder.FindDevice(target, Arguments.DeviceName, log, Arguments.IncludeWireless)).Device;
 
-                diagnosticsData.TargetOS = device.OSVersion;
+                diagnosticsData.TargetOS = device.OSVersion.Split(' ', 2).Last();
                 diagnosticsData.Device = device.Name ?? device.UDID;
 
                 Console.WriteLine(device.UDID);
