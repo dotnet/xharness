@@ -199,7 +199,7 @@ For these reasons, the `test` command won't just work with any app. For those sc
 
 ### iOS/tvOS device runs are timing out
 
-For iOS/tvOS 14+, we have problems detecting when the application exits on the real device (simulators work fine).
+For some iOS/tvOS, we have problems detecting when the application exits on the real device (simulators work fine).
 The workaround we went with lies in sharing a random string with the application using an [environmental variable `RUN_END_TAG`](https://github.com/dotnet/xharness/blob/main/src/Microsoft.DotNet.XHarness.iOS.Shared/Execution/EnviromentVariables.cs) and expecting the app to output this string at the end of its run.
 
 To turn this workaround on, run XHarness with `--signal-app-end` and make sure your application logs the string it reads from the env variable.

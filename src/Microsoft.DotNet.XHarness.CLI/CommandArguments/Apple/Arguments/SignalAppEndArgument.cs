@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
     /// </summary>
     internal class SignalAppEndArgument : SwitchArgument
     {
-        public SignalAppEndArgument() : base("signal-app-end", "Tells the test application to signal back when tests have finished (iOS 14+ cannot detect this reliably otherwise)", false)
+        public SignalAppEndArgument() : base("signal-app-end", "Tells the test application to signal back when tests have finished (some iOS/tvOS cannot detect this reliably otherwise)", false)
         {
         }
     }
