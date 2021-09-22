@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -171,7 +172,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             // Note down the actual test target
-            _diagnosticsData.TargetOS = device.OSVersion;
+            // For simulators (e.g. "iOS 13.4"), we strip the iOS part and keep the version only, for devices there's no OS
+            _diagnosticsData.TargetOS = target.Platform.IsSimulator() ? device.OSVersion.Split(' ', 2).Last() : device.OSVersion;
             _diagnosticsData.Device = device.Name ?? device.UDID;
 
             // Uninstall the app first to get a clean state

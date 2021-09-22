@@ -72,7 +72,7 @@ Arguments:
                 runner.SetActiveDevice(deviceToUse);
 
                 DiagnosticsData.Target = string.Join(",", apkRequiredArchitecture);
-                DiagnosticsData.TargetOS = runner.APIVersion.ToString();
+                DiagnosticsData.TargetOS = "API " + runner.APIVersion;
                 DiagnosticsData.Device = deviceToUse;
 
                 Console.WriteLine(deviceToUse);
