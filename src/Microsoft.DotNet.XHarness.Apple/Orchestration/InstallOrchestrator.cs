@@ -74,7 +74,14 @@ namespace Microsoft.DotNet.XHarness.Apple
             Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice)
                 => Task.FromResult(ExitCode.SUCCESS); // no-op
 
-            return await OrchestrateRun(target, deviceName, includeWirelessDevices, resetSimulator, enableLldb, appBundleInfo, executeMacCatalystApp, executeApp, cancellationToken);
+            var result = await OrchestrateRun(target, deviceName, includeWirelessDevices, resetSimulator, enableLldb, appBundleInfo, executeMacCatalystApp, executeApp, cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return ExitCode.PACKAGE_INSTALLATION_TIMEOUT;
+            }
+
+            return result;
         }
 
         protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
