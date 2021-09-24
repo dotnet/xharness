@@ -104,16 +104,18 @@ namespace Microsoft.DotNet.XHarness.Apple
             // OrchestrateRun() that happen before we start the app execution.
             // We will achieve this by sending a special cancellation token to OrchestrateRun() and only cancel if it in case
             // we didn't manage to start the app run until then.
-            using var launchTimeoutCancellation = new CancellationTokenSource();
+            var launchTimeoutCancellation = new CancellationTokenSource(); // Note: cannot dispose in this method (no await)
             _appRunStarted = false;
-            var task = Task.Delay(launchTimeout < timeout ? launchTimeout : timeout).ContinueWith(t => {
+            var task = Task.Delay(launchTimeout < timeout ? launchTimeout : timeout).ContinueWith(t =>
+            {
                 if (!_appRunStarted)
                 {
                     launchTimeoutCancellation.Cancel();
                 }
             });
 
-            using var launchTimeoutCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
+            // Note: cannot dispose in this method (no await)
+            var launchTimeoutCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
                 launchTimeoutCancellation.Token,
                 cancellationToken);
 

@@ -256,7 +256,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             try
             {
-                result = await appInstaller.InstallApp(appBundleInfo, target, device, cancellationToken: cancellationToken);
+                result = await appInstaller.InstallApp(appBundleInfo, target, device, cancellationToken);
             }
             catch (Exception e)
             {
@@ -266,6 +266,12 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             if (!result.Succeeded)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    _logger.LogError($"Application installation timed out");
+                    return ExitCode.PACKAGE_INSTALLATION_TIMEOUT;
+                }
+
                 // use the knowledge base class to decide if the error is known, if it is, let the user know
                 // the failure reason
                 if (_errorKnowledgeBase.IsKnownInstallIssue(_mainLog, out var errorMessage))
