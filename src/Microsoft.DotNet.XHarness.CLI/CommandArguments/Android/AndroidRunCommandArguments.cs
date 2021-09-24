@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         public PackageNameArgument PackageName { get; } = new();
         public OutputDirectoryArgument OutputDirectory { get; } = new();
         public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
-        public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(5));
+        public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(8));
         public DeviceIdArgument DeviceId { get; } = new();
         public InstrumentationNameArgument InstrumentationName { get; } = new();
         public InstrumentationArguments InstrumentationArguments { get; } = new();

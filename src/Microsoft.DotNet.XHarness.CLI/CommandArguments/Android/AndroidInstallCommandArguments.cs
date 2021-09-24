@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
         public OutputDirectoryArgument OutputDirectory { get; } = new();
         public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
         public DeviceIdArgument DeviceId { get; } = new();
-        public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(5));
+        public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(8));
         public DeviceArchitectureArgument DeviceArchitecture { get; } = new();
 
         protected override IEnumerable<Argument> GetArguments() => new Argument[]

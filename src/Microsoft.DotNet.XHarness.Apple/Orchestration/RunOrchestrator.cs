@@ -26,6 +26,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             TestTargetOs target,
             string? deviceName,
             TimeSpan timeout,
+            TimeSpan launchTimeout,
             int expectedExitCode,
             bool includeWirelessDevices,
             bool resetSimulator,
@@ -49,6 +50,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IFileBackedLog _mainLog;
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
         private readonly AppRunner _appRunner;
+        private bool _appRunStarted = false;
 
         public RunOrchestrator(
             IMlaunchProcessManager processManager,
@@ -86,6 +88,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             TestTargetOs target,
             string? deviceName,
             TimeSpan timeout,
+            TimeSpan launchTimeout,
             int expectedExitCode,
             bool includeWirelessDevices,
             bool resetSimulator,
@@ -95,6 +98,25 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
         {
+            // The --launch-timeout option must start counting now and not complete before we start running tests to succeed.
+            // After then, this timeout must not interfere.
+            // Tests start running inside of ExecuteApp() which means we have to time-constrain all operations happening inside
+            // OrchestrateRun() that happen before we start the app execution.
+            // We will achieve this by sending a special cancellation token to OrchestrateRun() and only cancel if it in case
+            // we didn't manage to start the app run until then.
+            using var launchTimeoutCancellation = new CancellationTokenSource();
+            _appRunStarted = false;
+            var task = Task.Delay(launchTimeout < timeout ? launchTimeout : timeout).ContinueWith(t => {
+                if (!_appRunStarted)
+                {
+                    launchTimeoutCancellation.Cancel();
+                }
+            });
+
+            using var launchTimeoutCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
+                launchTimeoutCancellation.Token,
+                cancellationToken);
+
             Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo) =>
                 ExecuteMacCatalystApp(
                     appBundleInfo,
@@ -127,7 +149,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 appBundleInformation,
                 executeMacCatalystApp,
                 executeApp,
-                cancellationToken);
+                launchTimeoutCancellationToken.Token);
         }
 
         private async Task<ExitCode> ExecuteApp(
@@ -149,6 +171,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             _logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on '{device.Name}'");
+            _appRunStarted = true;
 
             ProcessExecutionResult result = await _appRunner.RunApp(
                 appBundleInfo,
@@ -180,6 +203,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Starting '{appBundleInfo.AppName}' on MacCatalyst");
+            _appRunStarted = true;
 
             ProcessExecutionResult result = await _appRunner.RunMacCatalystApp(
                 appBundleInfo,
