@@ -50,6 +50,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
                 Arguments.Target,
                 Arguments.DeviceName,
                 Arguments.Timeout,
+                Arguments.LaunchTimeout,
                 Arguments.ExpectedExitCode,
                 Arguments.IncludeWireless,
                 Arguments.ResetSimulator,
