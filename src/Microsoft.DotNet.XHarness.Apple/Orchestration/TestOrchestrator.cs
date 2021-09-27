@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
         }
 
-        public Task<ExitCode> OrchestrateTest(
+        public async Task<ExitCode> OrchestrateTest(
             AppBundleInformation appBundleInformation,
             TestTargetOs target,
             string? deviceName,
@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             // OrchestrateRun() that happen before we start the app execution.
             // We will achieve this by sending a special cancellation token to OrchestrateRun() and only cancel if it in case
             // we didn't manage to start the app run until then.
-            var launchTimeoutCancellation = new CancellationTokenSource(); // Note: cannot dispose in this method (no await)
+            using var launchTimeoutCancellation = new CancellationTokenSource();
             var appRunStarted = false;
             var task = Task.Delay(launchTimeout < timeout ? launchTimeout : timeout).ContinueWith(t =>
             {
@@ -108,8 +108,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             // We also want to shrink the launch timeout by whatever elapsed before we get to ExecuteApp
             var watch = Stopwatch.StartNew();
 
-            // Note: cannot dispose in this method (no await)
-            var launchTimeoutCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
+            using var launchTimeoutCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
                 launchTimeoutCancellation.Token,
                 cancellationToken);
 
@@ -150,7 +149,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     cancellationToken);
             };
 
-            return OrchestrateRun(
+            return await OrchestrateRun(
                 target,
                 deviceName,
                 includeWirelessDevices,
