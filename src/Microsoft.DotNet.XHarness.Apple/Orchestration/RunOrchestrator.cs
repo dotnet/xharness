@@ -50,7 +50,6 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IFileBackedLog _mainLog;
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
         private readonly AppRunner _appRunner;
-        private bool _appRunStarted = false;
 
         public RunOrchestrator(
             IMlaunchProcessManager processManager,
@@ -105,10 +104,10 @@ namespace Microsoft.DotNet.XHarness.Apple
             // We will achieve this by sending a special cancellation token to OrchestrateRun() and only cancel if it in case
             // we didn't manage to start the app run until then.
             var launchTimeoutCancellation = new CancellationTokenSource(); // Note: cannot dispose in this method (no await)
-            _appRunStarted = false;
+            var appRunStarted = false;
             var task = Task.Delay(launchTimeout < timeout ? launchTimeout : timeout).ContinueWith(t =>
             {
-                if (!_appRunStarted)
+                if (!appRunStarted)
                 {
                     launchTimeoutCancellation.Cancel();
                 }
@@ -120,7 +119,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                 cancellationToken);
 
             Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo) =>
-                ExecuteMacCatalystApp(
+            {
+                appRunStarted = true;
+                return ExecuteMacCatalystApp(
                     appBundleInfo,
                     timeout,
                     expectedExitCode,
@@ -128,9 +129,12 @@ namespace Microsoft.DotNet.XHarness.Apple
                     environmentalVariables,
                     passthroughArguments,
                     cancellationToken);
+            };
 
             Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice) =>
-                ExecuteApp(
+            {
+                appRunStarted = true;
+                return ExecuteApp(
                     appBundleInfo,
                     target,
                     device,
@@ -141,6 +145,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     environmentalVariables,
                     passthroughArguments,
                     cancellationToken);
+            };
 
             return OrchestrateRun(
                 target,
@@ -173,7 +178,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             _logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on '{device.Name}'");
-            _appRunStarted = true;
 
             ProcessExecutionResult result = await _appRunner.RunApp(
                 appBundleInfo,
@@ -205,7 +209,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Starting '{appBundleInfo.AppName}' on MacCatalyst");
-            _appRunStarted = true;
 
             ProcessExecutionResult result = await _appRunner.RunMacCatalystApp(
                 appBundleInfo,
