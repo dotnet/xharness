@@ -5,7 +5,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.CLI.Commands;
+using Microsoft.DotNet.XHarness.CLI.Commands.Apple;
+using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
@@ -240,6 +244,39 @@ namespace Microsoft.DotNet.XHarness.CLI.Tests.CommandArguments
 
             Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, exitCode);
             Assert.False(_command.CommandRun);
+        }
+
+        [Theory]
+        [InlineData("apple test")]
+        [InlineData("apple run")]
+        [InlineData("apple just-test")]
+        [InlineData("apple just-run")]
+        [InlineData("apple install")]
+        [InlineData("apple uninstall")]
+
+        [InlineData("android test")]
+        [InlineData("android run")]
+        [InlineData("android install")]
+        [InlineData("android uninstall")]
+
+        [InlineData("wasm test")]
+        [InlineData("wasm test-browser")]
+        public void ArgumentPrototypesAreNotClashing(string command)
+        {
+            // This test tries to run all of the commands which will fail because of some missing argument
+            // If we for example add a new option and that would clash with some already existing argument,
+            // this will fail to add the duplicate option prototype.
+            // (it already happened that we added -d to all commands and the WASM command failed because it already had -d)
+            var commandSet = new CommandSet("test")
+            {
+                new AppleCommandSet(),
+                new AndroidCommandSet(),
+                new WasmCommandSet(),
+                new XHarnessHelpCommand(),
+                new XHarnessVersionCommand()
+            };
+
+            Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, commandSet.Run(command.Split(" ")));
         }
 
         private class SampleUnitTestArguments : XHarnessCommandArguments
