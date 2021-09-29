@@ -247,20 +247,22 @@ namespace Microsoft.DotNet.XHarness.CLI.Tests.CommandArguments
         }
 
         [Theory]
-        [InlineData("apple test")]
-        [InlineData("apple run")]
-        [InlineData("apple just-test")]
-        [InlineData("apple just-run")]
-        [InlineData("apple install")]
-        [InlineData("apple uninstall")]
+        [InlineData("apple test -h")]
+        [InlineData("apple run -h")]
+        [InlineData("apple just-test -h")]
+        [InlineData("apple just-run -h")]
+        [InlineData("apple install -h")]
+        [InlineData("apple uninstall -h")]
+        [InlineData("apple state -h")]
 
-        [InlineData("android test")]
-        [InlineData("android run")]
-        [InlineData("android install")]
-        [InlineData("android uninstall")]
+        [InlineData("android test -h")]
+        [InlineData("android run -h")]
+        [InlineData("android install -h")]
+        [InlineData("android uninstall -h")]
+        [InlineData("android state -h")]
 
-        [InlineData("wasm test")]
-        [InlineData("wasm test-browser")]
+        [InlineData("wasm test -h")]
+        [InlineData("wasm test-browser -h")]
         public void ArgumentPrototypesAreNotClashing(string command)
         {
             // This test tries to run all of the commands which will fail because of some missing argument
@@ -276,7 +278,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Tests.CommandArguments
                 new XHarnessVersionCommand()
             };
 
-            Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, commandSet.Run(command.Split(" ")));
+            Assert.Equal((int)ExitCode.HELP_SHOWN, commandSet.Run(command.Split(" ")));
         }
 
         private class SampleUnitTestArguments : XHarnessCommandArguments
