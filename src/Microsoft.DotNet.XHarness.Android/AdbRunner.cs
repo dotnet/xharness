@@ -35,6 +35,8 @@ namespace Microsoft.DotNet.XHarness.Android
 
         public int APIVersion => _api ?? GetAPIVersion();
 
+        public string AdbExePath => _absoluteAdbExePath;
+
         public AdbRunner(ILogger log, string adbExePath = "") : this(log, new AdbProcessManager(log), adbExePath) { }
 
         public AdbRunner(ILogger log, IAdbProcessManager processManager, string adbExePath = "")
@@ -51,17 +53,20 @@ namespace Microsoft.DotNet.XHarness.Android
                 _log.LogDebug($"Using {AdbEnvironmentVariableName} environment variable ({environmentPath}) for ADB path.");
                 adbExePath = environmentPath;
             }
+
             if (string.IsNullOrEmpty(adbExePath))
             {
                 adbExePath = GetCliAdbExePath();
             }
 
             _absoluteAdbExePath = Path.GetFullPath(Environment.ExpandEnvironmentVariables(adbExePath));
+
             if (!File.Exists(_absoluteAdbExePath))
             {
                 _log.LogError($"Unable to find adb.exe");
                 throw new FileNotFoundException($"Could not find adb.exe. Either set it in the environment via {AdbEnvironmentVariableName} or call with valid path (provided:  '{adbExePath}')", adbExePath);
             }
+
             if (!_absoluteAdbExePath.Equals(adbExePath))
             {
                 _log.LogDebug($"ADBRunner using ADB.exe supplied from {adbExePath}");

@@ -25,10 +25,17 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
 
         protected override Task<ExitCode> InvokeInternal(ILogger logger)
         {
+            var runner = new AdbRunner(logger);
+
+            if (Arguments.ShowAdbPath)
+            {
+                Console.WriteLine(runner.AdbExePath);
+                return Task.FromResult(ExitCode.SUCCESS);
+            }
+
             logger.LogInformation("Getting state of ADB and attached Android device(s)");
             try
             {
-                var runner = new AdbRunner(logger);
                 string state = runner.GetAdbState();
                 if (string.IsNullOrEmpty(state))
                 {

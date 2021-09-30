@@ -98,10 +98,21 @@ namespace Microsoft.DotNet.XHarness.CLI
 
             switch (args[0])
             {
-                case "ios":
                 case "apple":
-                case "android":
                     return args[1] == "device";
+
+                case "android":
+                    if (args[1] == "device")
+                    {
+                        return true;
+                    }
+
+                    if (args[1] == "state" && args.Contains("--adb"))
+                    {
+                        return true;
+                    }
+
+                    return false;
             }
 
             return false;
