@@ -53,6 +53,7 @@ namespace Microsoft.DotNet.XHarness.Common.CLI
         APP_LAUNCH_FAILURE = 83,
         DEVICE_FILE_COPY_FAILURE = 84,
         ADB_DEVICE_ENUMERATION_FAILURE = 85,
+        PACKAGE_INSTALLATION_TIMEOUT = 86,
 
         #endregion
     }

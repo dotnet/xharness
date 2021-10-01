@@ -30,8 +30,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
         protected sealed override async Task<ExitCode> Invoke(Extensions.Logging.ILogger logger)
         {
-            var exitCode = ExitCode.SUCCESS;
-
             var targetName = Arguments.Target.Value.AsString();
 
             logger.LogInformation("Preparing run for {target}", targetName + (!string.IsNullOrEmpty(Arguments.DeviceName.Value) ? " targeting " + Arguments.DeviceName.Value : null));
@@ -57,13 +55,14 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             var cts = new CancellationTokenSource();
             cts.CancelAfter(Arguments.Timeout);
 
-            var exitCodeForRun = await InvokeInternal(serviceProvider, cts.Token);
-            if (exitCodeForRun != ExitCode.SUCCESS)
+            var result = await InvokeInternal(serviceProvider, cts.Token);
+
+            if (cts.IsCancellationRequested && result != ExitCode.PACKAGE_INSTALLATION_TIMEOUT)
             {
-                exitCode = exitCodeForRun;
+                return ExitCode.TIMED_OUT;
             }
 
-            return exitCode;
+            return result;
         }
 
         protected abstract Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken);

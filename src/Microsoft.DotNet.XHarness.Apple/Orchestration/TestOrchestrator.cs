@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,7 +71,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
         }
 
-        public Task<ExitCode> OrchestrateTest(
+        public async Task<ExitCode> OrchestrateTest(
             AppBundleInformation appBundleInformation,
             TestTargetOs target,
             string? deviceName,
@@ -88,11 +89,36 @@ namespace Microsoft.DotNet.XHarness.Apple
             IEnumerable<string> passthroughArguments,
             CancellationToken cancellationToken)
         {
+            // The --launch-timeout option must start counting now and not complete before we start running tests to succeed.
+            // After then, this timeout must not interfere.
+            // Tests start running inside of ExecuteApp() which means we have to time-constrain all operations happening inside
+            // OrchestrateRun() that happen before we start the app execution.
+            // We will achieve this by sending a special cancellation token to OrchestrateRun() and only cancel if it in case
+            // we didn't manage to start the app run until then.
+            using var launchTimeoutCancellation = new CancellationTokenSource();
+            var appRunStarted = false;
+            var task = Task.Delay(launchTimeout < timeout ? launchTimeout : timeout).ContinueWith(t =>
+            {
+                if (!appRunStarted)
+                {
+                    launchTimeoutCancellation.Cancel();
+                }
+            });
+
+            // We also want to shrink the launch timeout by whatever elapsed before we get to ExecuteApp
+            var watch = Stopwatch.StartNew();
+
+            using var launchTimeoutCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
+                launchTimeoutCancellation.Token,
+                cancellationToken);
+
             Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo) =>
-                ExecuteMacCatalystApp(
+            {
+                appRunStarted = true;
+                return ExecuteMacCatalystApp(
                     appBundleInfo,
                     timeout,
-                    launchTimeout,
+                    launchTimeout - watch.Elapsed,
                     communicationChannel,
                     xmlResultJargon,
                     singleMethodFilters,
@@ -101,15 +127,18 @@ namespace Microsoft.DotNet.XHarness.Apple
                     passthroughArguments,
                     signalAppEnd,
                     cancellationToken);
+            };
 
             Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice) =>
-                ExecuteApp(
+            {
+                appRunStarted = true;
+                return ExecuteApp(
                     appBundleInfo,
                     target,
                     device,
                     companionDevice,
                     timeout,
-                    launchTimeout,
+                    launchTimeout - watch.Elapsed,
                     communicationChannel,
                     xmlResultJargon,
                     singleMethodFilters,
@@ -118,8 +147,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                     passthroughArguments,
                     signalAppEnd,
                     cancellationToken);
+            };
 
-            return OrchestrateRun(
+            return await OrchestrateRun(
                 target,
                 deviceName,
                 includeWirelessDevices,
@@ -128,7 +158,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 appBundleInformation,
                 executeMacCatalystApp,
                 executeApp,
-                cancellationToken);
+                launchTimeoutCancellationToken.Token);
         }
 
         private async Task<ExitCode> ExecuteApp(

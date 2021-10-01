@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public TargetArgument Target { get; } = new();
         public OutputDirectoryArgument OutputDirectory { get; } = new();
         public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
+        public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(5));
         public XcodeArgument XcodeRoot { get; } = new();
         public MlaunchArgument MlaunchPath { get; } = new();
         public DeviceNameArgument DeviceName { get; } = new();
@@ -32,6 +33,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             DeviceName,
             IncludeWireless,
             Timeout,
+            LaunchTimeout,
             ExpectedExitCode,
             XcodeRoot,
             MlaunchPath,
