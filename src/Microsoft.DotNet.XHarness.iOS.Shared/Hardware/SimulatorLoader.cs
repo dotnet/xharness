@@ -29,6 +29,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
 
         private readonly SemaphoreSlim _semaphore = new(1);
         private readonly IMlaunchProcessManager _processManager;
+        private readonly ISimulatorSelector _simulatorSelector;
         private bool _loaded;
 
         public IEnumerable<SimRuntime> SupportedRuntimes => _supportedRuntimes;
@@ -36,9 +37,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         public IEnumerable<SimulatorDevice> AvailableDevices => _availableDevices;
         public IEnumerable<SimDevicePair> AvailableDevicePairs => _availableDevicePairs;
 
-        public SimulatorLoader(IMlaunchProcessManager processManager)
+        public SimulatorLoader(IMlaunchProcessManager processManager, ISimulatorSelector? simulatorSelector = null)
         {
             _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _simulatorSelector = simulatorSelector ?? new DefaultSimulatorSelector();
         }
 
         public async Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false, bool _ = true)
@@ -332,15 +334,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         /// </summary>
         public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, bool createIfNeeded = true, bool minVersion = false)
         {
-            var runtimePrefix = target.Platform switch
-            {
-                TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimRuntime.iOS-",
-                TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimRuntime.iOS-",
-                TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimRuntime.iOS-",
-                TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimRuntime.tvOS-",
-                TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimRuntime.watchOS-",
-                _ => throw new Exception(string.Format("Invalid simulator target: {0}", target))
-            };
+            var runtimePrefix = _simulatorSelector.GetRuntimePrefix(target);
 
             var runtimeVersion = target.OSVersion;
 
@@ -362,25 +356,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             }
 
             string simulatorRuntime = runtimePrefix + runtimeVersion.Replace('.', '-');
-            string simulatorDeviceType = target.Platform switch
-            {
-                TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
-                TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
-                TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X"),
-                TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p",
-                TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "Apple-Watch-38mm" : "Apple-Watch-Series-3-38mm"),
-                _ => throw new Exception(string.Format("Invalid simulator target: {0}", target))
-            };
+            string simulatorDeviceType = _simulatorSelector.GetDeviceType(target, minVersion);
 
-            string? companionDeviceType = null;
-            string? companionRuntime = null;
-
-            if (target.Platform == TestTarget.Simulator_watchOS)
-            {
-                // TODO: Allow to specify companion runtime
-                companionRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-" + (minVersion ? SdkVersions.MinWatchOSCompanionSimulator : SdkVersions.MaxWatchOSCompanionSimulator).Replace('.', '-');
-                companionDeviceType = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X");
-            }
+            // TODO: Allow to specify companion runtime
+            _simulatorSelector.GetCompanionRuntimeAndDeviceType(target, minVersion, out var companionRuntime, out var companionDeviceType);
 
             var devices = await FindOrCreateDevicesAsync(log, simulatorRuntime, simulatorDeviceType);
             IEnumerable<ISimulatorDevice>? companionDevices = null;
@@ -494,6 +473,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
         }
 
         public IEnumerable<ISimulatorDevice?> SelectDevices(TestTarget target, ILog log, bool minVersion) => new SimulatorEnumerable(this, target, minVersion, log);
+        public IEnumerable<ISimulatorDevice?> SelectDevices(TestTargetOs target, ILog log, bool minVersion) => new SimulatorEnumerable(this, target, minVersion, log);
 
         private class SimulatorXmlNodeComparer : IEqualityComparer<XmlNode>
         {
@@ -533,6 +513,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
             private readonly string _toString;
 
             public SimulatorEnumerable(ISimulatorLoader simulators, TestTarget target, bool minVersion, ILog log)
+            {
+                _findTask = new Lazy<Task<(ISimulatorDevice, ISimulatorDevice?)>>(() => simulators.FindSimulators(target, log, minVersion: minVersion), LazyThreadSafetyMode.ExecutionAndPublication);
+                _toString = $"Simulators for {target} (MinVersion: {minVersion})";
+            }
+
+            public SimulatorEnumerable(ISimulatorLoader simulators, TestTargetOs target, bool minVersion, ILog log)
             {
                 _findTask = new Lazy<Task<(ISimulatorDevice, ISimulatorDevice?)>>(() => simulators.FindSimulators(target, log, minVersion: minVersion), LazyThreadSafetyMode.ExecutionAndPublication);
                 _toString = $"Simulators for {target} (MinVersion: {minVersion})";
