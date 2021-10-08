@@ -57,18 +57,17 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                         else if (!_xmlOutput && line.StartsWith("Tests run: ", StringComparison.Ordinal))
                         {
                             Log.WriteLine("Tests have finished executing");
-                            Finished();
-                            return;
+                            break;
                         }
                         else if (_xmlOutput && line == "<!-- the end -->")
                         {
                             Log.WriteLine("Tests have finished executing");
-                            Finished();
-                            return;
+                            break;
                         }
                     }
                 }
             }
+            Finished();
         }
 
         private class BlockingFileStream : FileStream
