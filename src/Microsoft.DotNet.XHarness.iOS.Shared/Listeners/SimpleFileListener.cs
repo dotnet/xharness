@@ -67,6 +67,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                     }
                 }
             }
+            TestLog.Flush ();
             Finished();
         }
 
