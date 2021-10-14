@@ -1,9 +1,3 @@
-variables:
-  - template: eng/common-variables.yml
-  - name: Build.Repository.Clean
-    value: true
-
-# CI and PR triggers
 trigger:
   batch: true
   branches:
@@ -17,7 +11,11 @@ pr:
     - main
     - xcode/*
 
-# Build
+variables:
+- template: eng/common-variables.yml
+
+- name: Build.Repository.Clean
+  value: true
 
 stages:
 - stage: Build_Windows_NT
@@ -31,61 +29,55 @@ stages:
       enablePublishUsingPipelines: true
       enablePublishBuildAssets: true
       helixRepo: dotnet/xharness
-
       jobs:
       - job: Windows_NT
         pool:
-          ${{ if eq(variables._RunAsInternal, True) }}:
+          ${{ if eq(variables['_RunAsInternal'], True) }}:
             name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals Build.Server.Amd64.VS2019
-          ${{ if eq(variables._RunAsPublic, True) }}:
+            demands:
+            - ImageOverride -equals Build.Server.Amd64.VS2019
+          ${{ if eq(variables['_RunAsPublic'], True) }}:
             vmImage: windows-2019
         strategy:
-          matrix:
-            Release:
-              _BuildConfig: Release
-            ${{ if eq(variables._RunAsPublic, True) }}:
+          ${{ if eq(variables['_RunAsPublic'], True) }}:
+            matrix:
+              Release:
+                _BuildConfig: Release
               Debug:
                 _BuildConfig: Debug
+          ${{ if ne(variables['_RunAsPublic'], True) }}:
+            matrix:
+              Release:
+                _BuildConfig: Release
         steps:
-        - ${{ if eq(variables._RunAsPublic, False) }}:
-          - script: eng\common\CIBuild.cmd
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              $(_InternalBuildArgs)
-              /p:Test=false
-            name: Build
+        - ${{ if eq(variables['_RunAsPublic'], False) }}:
+          - script: |-
+              eng\common\CIBuild.cmd -configuration $(_BuildConfig) -prepareMachine $(_InternalBuildArgs) /p:Test=false
             displayName: Build
             condition: succeeded()
 
-        - ${{ if eq(variables._RunAsPublic, True) }}:
-          - script: eng\common\CIBuild.cmd
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              $(_InternalBuildArgs)
-            name: Build
+        - ${{ if eq(variables['_RunAsPublic'], True) }}:
+          - script: |-
+              eng\common\CIBuild.cmd -configuration $(_BuildConfig) -prepareMachine $(_InternalBuildArgs)
             displayName: Build and run tests
             condition: succeeded()
-
           - task: PublishTestResults@2
-            displayName: 'Publish Unit Test Results'
+            displayName: Publish Unit Test Results
             inputs:
               testResultsFormat: xUnit
-              testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
+              testResultsFiles: $(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml
               mergeTestResults: true
               searchFolder: $(system.defaultworkingdirectory)
               testRunTitle: XHarness unit tests - $(Agent.JobName)
             condition: succeededOrFailed()
+          - task: ComponentGovernanceComponentDetection@0
+            displayName: Component Governance scan
+            inputs:
+              ignoreDirectories: $(Build.SourcesDirectory)/.packages,$(Build.SourcesDirectory)/artifacts/obj/Microsoft.DotNet.XHarness.CLI/$(_BuildConfig)/net6.0/android-tools-unzipped
 
-        - task: ComponentGovernanceComponentDetection@0
-          displayName: Component Governance scan
-          inputs:
-            ignoreDirectories: '$(Build.SourcesDirectory)/.packages,$(Build.SourcesDirectory)/artifacts/obj/Microsoft.DotNet.XHarness.CLI/$(_BuildConfig)/net6.0/android-tools-unzipped'
-
-- ${{ if eq(variables._RunAsPublic, True) }}:
+- ${{ if eq(variables['_RunAsPublic'], True) }}:
   - stage: Build_OSX
     displayName: Build OSX
-    dependsOn:
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
       parameters:
@@ -95,54 +87,46 @@ stages:
         enablePublishUsingPipelines: true
         enablePublishBuildAssets: true
         helixRepo: dotnet/xharness
-
         jobs:
         - job: OSX
+          displayName: Build OSX
           pool:
             name: Hosted macOS
           strategy:
-            matrix:
-              Release:
-                _BuildConfig: Release
-              ${{ if eq(variables._RunAsPublic, True) }}:
+            ${{ if eq(variables['_RunAsPublic'], True) }}:
+              matrix:
+                Release:
+                  _BuildConfig: Release
                 Debug:
                   _BuildConfig: Debug
+            ${{ if ne(variables['_RunAsPublic'], True) }}:
+              matrix:
+                Release:
+                  _BuildConfig: Release
           steps:
-          - ${{ if eq(variables._RunAsPublic, False) }}:
-            - script: eng/common/cibuild.sh
-                --configuration $(_BuildConfig)
-                --prepareMachine
-                $(_InternalBuildArgs)
-                /p:Test=false
-              name: Build
+          - ${{ if eq(variables['_RunAsPublic'], False) }}:
+            - script: |-
+                eng/common/cibuild.sh --configuration $(_BuildConfig) --prepareMachine $(_InternalBuildArgs) /p:Test=false
               displayName: Build
               condition: succeeded()
-
-          - ${{ if eq(variables._RunAsPublic, True) }}:
-            - script: eng/common/cibuild.sh
-                --configuration $(_BuildConfig)
-                --prepareMachine
-                $(_InternalBuildArgs)
-              name: Build
+          - ${{ if eq(variables['_RunAsPublic'], True) }}:
+            - script: |-
+                eng/common/cibuild.sh --configuration $(_BuildConfig) --prepareMachine $(_InternalBuildArgs)
               displayName: Build and run tests
               condition: succeeded()
-
             - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.1.0.0-ci.nupkg
-              artifact: Microsoft.DotNet.XHarness.CLI.$(_BuildConfig)
               displayName: Publish XHarness CLI for Helix Testing
+              artifact: Microsoft.DotNet.XHarness.CLI.$(_BuildConfig)
               condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
-
             - task: PublishTestResults@2
-              displayName: 'Publish Unit Test Results'
+              displayName: Publish Unit Test Results
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
+                testResultsFiles: $(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml
                 mergeTestResults: true
                 searchFolder: $(system.defaultworkingdirectory)
                 testRunTitle: XHarness unit tests - $(Agent.JobName)
               condition: succeededOrFailed()
-
-# E2E tests
 
   - template: eng/e2e-test.yml
     parameters:
@@ -204,10 +188,8 @@ stages:
       displayName: WASM
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/WASM/WASM.Helix.SDK.Tests.proj
 
-# NuGet publishing
-
-- ${{ if eq(variables._RunAsInternal, True) }}:
-  - template: eng\common\templates\post-build\post-build.yml
+- ${{ if eq(variables['_RunAsInternal'], True) }}:
+  - template: eng/common/templates/post-build/post-build.yml
     parameters:
       publishingInfraVersion: 3
       enableSymbolValidation: true
@@ -216,17 +198,7 @@ stages:
       - Build_Windows_NT
       publishDependsOn:
       - Validate
-      # This is to enable SDL runs part of Post-Build Validation Stage
       SDLValidationParameters:
         enable: false
         continueOnError: false
-        params: ' -SourceToolsList @("policheck","credscan")
-        -TsaInstanceURL $(_TsaInstanceURL)
-        -TsaProjectName $(_TsaProjectName)
-        -TsaNotificationEmail $(_TsaNotificationEmail)
-        -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
-        -TsaBugAreaPath $(_TsaBugAreaPath)
-        -TsaIterationPath $(_TsaIterationPath)
-        -TsaRepositoryName "Arcade"
-        -TsaCodebaseName "Arcade"
-        -TsaPublish $True'
+        params: ' -SourceToolsList @("policheck","credscan") -TsaInstanceURL $(_TsaInstanceURL) -TsaProjectName $(_TsaProjectName) -TsaNotificationEmail $(_TsaNotificationEmail) -TsaCodebaseAdmin $(_TsaCodebaseAdmin) -TsaBugAreaPath $(_TsaBugAreaPath) -TsaIterationPath $(_TsaIterationPath) -TsaRepositoryName "Arcade" -TsaCodebaseName "Arcade" -TsaPublish $True'
