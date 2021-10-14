@@ -78,6 +78,7 @@ stages:
 - ${{ if eq(variables['_RunAsPublic'], True) }}:
   - stage: Build_OSX
     displayName: Build OSX
+    dependsOn: ''
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
       parameters:
