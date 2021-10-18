@@ -26,6 +26,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
     {
         private readonly TaskCompletionSource<bool> _stopped = new();
         private readonly TaskCompletionSource<bool> _connected = new();
+        private string? _remoteAddress = null;
 
         public IFileBackedLog TestLog { get; private set; }
 
@@ -45,7 +46,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
 
         protected void Connected(string remote)
         {
-            Log.WriteLine("Connection from {0} saving logs to {1}", remote, TestLog.FullPath);
+            // When app is in some crashing state, it might start connecting and disconnecting in a loop until we end up with an infinite log
+            // So logging only when the endpoint would change (which it shouldn't but we want to know)
+            if (_remoteAddress != remote)
+            {
+                _remoteAddress = remote;
+                Log.WriteLine("Connection from {0} saving logs to {1}", remote, TestLog.FullPath);
+            }
+
             _connected.TrySetResult(true);
         }
 
