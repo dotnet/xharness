@@ -24,6 +24,9 @@ namespace Microsoft.DotNet.XHarness.Apple
             ["the device is locked"] =
                 ("Cannot launch the application because the device is locked. Please unlock the device and try again", null),
 
+            ["while Setup Assistant is running"] =
+                ("Cannot launch the application because the device's update hasn't been finished. The setup assistant is still running. Please finish the device OS update on the device", null),
+
             ["LSOpenURLsWithRole() failed with error -10825"] =
                 ("This application requires a newer version of MacOS", null),
         };
