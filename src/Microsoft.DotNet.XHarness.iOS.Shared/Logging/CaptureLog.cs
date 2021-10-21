@@ -179,6 +179,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         public override StreamReader GetReader()
         {
+            // If we copied the original file over, use it as the source for reading
+            // (original file might not exist anymore)
+            if (_stopped)
+            {
+                return new StreamReader(new FileStream(FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+            }
+
+            // If we want to capture something in the future that doesn't exist yet
             if (!File.Exists(CapturePath))
             {
                 return null;

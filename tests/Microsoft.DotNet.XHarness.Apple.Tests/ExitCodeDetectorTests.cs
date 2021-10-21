@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 
             var exitCode = detector.DetectExitCode(appBundleInformation, GetLogMock(log));
 
-            Assert.Equal(0, exitCode);
+            Assert.Null(exitCode);
         }
 
         [Fact]
