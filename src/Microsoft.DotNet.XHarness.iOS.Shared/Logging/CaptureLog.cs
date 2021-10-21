@@ -70,41 +70,51 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         public void StopCapture(TimeSpan? waitIfEmpty = null)
         {
-            lock(CapturePath)
+            if (_stopped)
+            {
+                return;
+            }
+
+            lock (CapturePath)
             {
                 if (_stopped)
                 {
                     return;
                 }
 
-                _stopped = true;
+                try
+                {
+                    if (!_started && !_entireFile)
+                    {
+                        throw new InvalidOperationException("StartCapture() must be called before StopCature() on when the entire file is being captured.");
+                    }
+
+                    if (!File.Exists(CapturePath))
+                    {
+                        File.WriteAllText(FullPath, $"Could not capture the file '{CapturePath}' because it doesn't exist.");
+                        return;
+                    }
+
+                    _endPosition = new FileInfo(CapturePath).Length;
+
+                    if ((_endPosition == 0 || (_startPosition == _endPosition && !_entireFile)) && waitIfEmpty.HasValue)
+                    {
+                        Thread.Sleep((int)waitIfEmpty.Value.TotalMilliseconds);
+                    }
+
+                    if (_entireFile)
+                    {
+                        File.Copy(CapturePath, FullPath, true);
+                        return;
+                    }
+
+                    Capture();
+                }
+                finally
+                {
+                    _stopped = true;
+                }
             }
-
-            if (!_started && !_entireFile)
-            {
-                throw new InvalidOperationException("StartCapture() must be called before StopCature() on when the entire file is being captured.");
-            }
-
-            if (!File.Exists(CapturePath))
-            {
-                File.WriteAllText(FullPath, $"Could not capture the file '{CapturePath}' because it doesn't exist.");
-                return;
-            }
-
-            _endPosition = new FileInfo(CapturePath).Length;
-
-            if ((_endPosition == 0 || (_startPosition == _endPosition && !_entireFile)) && waitIfEmpty.HasValue)
-            {
-                Thread.Sleep((int)waitIfEmpty.Value.TotalMilliseconds);
-            }
-
-            if (_entireFile)
-            {
-                File.Copy(CapturePath, FullPath, true);
-                return;
-            }
-
-            Capture();
         }
 
         private void Capture()
@@ -179,11 +189,14 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
 
         public override StreamReader GetReader()
         {
-            // If we copied the original file over, use it as the source for reading
-            // (original file might not exist anymore)
-            if (_stopped)
+            lock (CapturePath)
             {
-                return new StreamReader(new FileStream(FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+                // If we copied the original file over, use it as the source for reading
+                // (original file might not exist anymore)
+                if (_stopped)
+                {
+                    return new StreamReader(new FileStream(FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+                }
             }
 
             // If we want to capture something in the future that doesn't exist yet
