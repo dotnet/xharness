@@ -128,5 +128,48 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 Assert.Equal(expectedFailureMessage, failureMessage.Value.HumanMessage);
             }
         }
+
+        [Fact]
+        public void DeviceUpdateNotFinishedTest()
+        {
+            var expectedFailureMessage = "Cannot launch the application because the device's update hasn't been finished. The setup assistant is still running. Please finish the device OS update on the device";
+            using (var log = new LogFile("test", _logPath))
+            {
+                log.WriteLine("[08:44:10.0123870] Xamarin.Hosting: Mounted developer image on 'DNCENGTVOS-090'");
+                log.WriteLine("[08:44:10.7259750] warning MT1043: Failed to launch the application using the instruments service. Will try launching the app using gdb service.");
+                log.WriteLine("[08:44:10.7260060]         ");
+                log.WriteLine("[08:44:10.7260580] --- inner exception");
+                log.WriteLine("[08:44:10.7265060] error HE0003: Failed to launch the application 'net.dot.System.Buffers.Tests' on 'DNCENGTVOS-090: 1 (Request to launch net.dot.System.Buffers.Tests failed.)");
+                log.WriteLine("[08:44:10.7265220]         ");
+                log.WriteLine("[08:44:10.7265280] ---");
+                log.WriteLine("[08:44:10.7278170] Launching 'net.dot.System.Buffers.Tests' on the device 'DNCENGTVOS-090'");
+                log.WriteLine("[08:44:11.3152170] Launching /private/var/containers/Bundle/Application/27FA8535-C645-413A-ABE9-2ABD0BC6086B/System.Buffers.Tests.app");
+                log.WriteLine("[08:44:11.3156130] Xamarin.Hosting: Sending command: $A208,0,2f707269766174652f7661722f636f6e7461696e6572732f42756e646c652f4170706c69636174696f6e2f32374641383533352d433634352d343133412d414245392d3241424430424336303836422f53797374656d2e427566666572732e54657374732e617070#43");
+                log.WriteLine("[08:44:11.3174180] Xamarin.Hosting: Received command: OK");
+                log.WriteLine("[08:44:11.3174360] Xamarin.Hosting: Sending command: $qLaunchSuccess#a5");
+                log.WriteLine("[08:44:11.3864920] Xamarin.Hosting: Received command: EThe operation couldn’t be completed. [PBD] Denying open-application request for reason: Disabled (Cannot launch app 'net.dot.System.Buffers.Tests' while Setup Assistant is running)");
+                log.WriteLine("[08:44:11.3886900] error MT1007: Failed to launch the application 'net.dot.System.Buffers.Tests' on the device 'DNCENGTVOS-090': Failed to launch the application 'net.dot.System.Buffers.Tests' on the device 'DNCENGTVOS-090': Application failed to launch: EThe operation couldn’t be completed. [PBD] Denying open-application request for reason: Disabled (Cannot launch app 'net.dot.System.Buffers.Tests' while Setup Assistant is running)");
+                log.WriteLine("[08:44:11.3887100]         ");
+                log.WriteLine("[08:44:11.3887170]         . You can still launch the application manually by tapping on it.");
+                log.WriteLine("[08:44:11.3887220]         ");
+                log.WriteLine("[08:44:11.3887260] --- inner exception");
+                log.WriteLine("[08:44:11.3887310] error MT1020: Failed to launch the application 'net.dot.System.Buffers.Tests' on the device 'DNCENGTVOS-090': Application failed to launch: EThe operation couldn’t be completed. [PBD] Denying open-application request for reason: Disabled (Cannot launch app 'net.dot.System.Buffers.Tests' while Setup Assistant is running)");
+                log.WriteLine("[08:44:11.3887360]         ");
+                log.WriteLine("[08:44:11.3887400]         ");
+                log.WriteLine("[08:44:11.3887450] ---");
+                log.WriteLine("[08:44:11.3887490] --- inner exception");
+                log.WriteLine("[08:44:11.3887570] error HE1107: Application failed to launch: EThe operation couldn’t be completed. [PBD] Denying open-application request for reason: Disabled (Cannot launch app 'net.dot.System.Buffers.Tests' while Setup Assistant is running)");
+                log.WriteLine("[08:44:11.3887790]         ");
+                log.WriteLine("[08:44:11.3887840] ---");
+                log.WriteLine("[08:44:11.3917790]   at Xamarin.Launcher.DevController.LaunchDeviceBundleIdAsync (System.String bundle_id, Xamarin.Hosting.DeviceLaunchConfig config) [0x001cc] in /Users/builder/azdo/_work/1/s/maccore/tools/mlaunch/Xamarin.Hosting/Xamarin.Launcher/controller-device.cs:208 ");
+                log.WriteLine("[08:44:11.3917960]   at Xamarin.Utils.NSRunLoopExtensions.RunUntilTaskCompletion[T] (Foundation.NSRunLoop this, System.Threading.Tasks.Task`1[TResult] task) [0x00082] in /Users/builder/azdo/_work/1/s/maccore/tools/mlaunch/Xamarin.Hosting/Xamarin.Utils/Extensions.cs:35 ");
+                log.WriteLine("[08:44:11.3918040]   at Xamarin.Launcher.Driver.Main2 (System.String[] args) [0x00b43] in /Users/builder/azdo/_work/1/s/maccore/tools/mlaunch/Xamarin.Hosting/Xamarin.Launcher/Main.cs:459 ");
+                log.WriteLine("[08:44:11.3918090]   at Xamarin.Launcher.Driver.Main (System.String[] args) [0x0006d] in /Users/builder/azdo/_work/1/s/maccore/tools/mlaunch/Xamarin.Hosting/Xamarin.Launcher/Main.cs:151 ");
+                log.Flush();
+
+                Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage));
+                Assert.Equal(expectedFailureMessage, failureMessage.Value.HumanMessage);
+            }
+        }
     }
 }
