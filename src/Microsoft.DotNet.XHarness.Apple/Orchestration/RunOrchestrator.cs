@@ -243,7 +243,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, systemLog);
 
-            if (exitCode == null)
+            if (exitCode is null)
             {
                 _logger.LogInformation("App run ended, no abnormal exit code detected (0 assumed)");
                 exitCode = 0;
