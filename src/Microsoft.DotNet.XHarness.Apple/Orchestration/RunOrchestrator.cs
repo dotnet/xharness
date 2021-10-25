@@ -232,7 +232,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 return ExitCode.TIMED_OUT;
             }
 
-            int exitCode;
+            int? exitCode;
 
             var systemLog = _logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
             if (systemLog == null)
@@ -242,7 +242,16 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, systemLog);
-            _logger.LogInformation($"App run ended with {exitCode}");
+
+            if (exitCode is null)
+            {
+                _logger.LogInformation("App run ended, no abnormal exit code detected (0 assumed)");
+                exitCode = 0;
+            }
+            else
+            {
+                _logger.LogInformation($"App run ended with {exitCode}");
+            }
 
             if (expectedExitCode != exitCode)
             {

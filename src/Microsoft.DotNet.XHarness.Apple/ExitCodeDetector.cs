@@ -11,12 +11,12 @@ namespace Microsoft.DotNet.XHarness.Apple
 {
     public interface IExitCodeDetector
     {
-        int DetectExitCode(AppBundleInformation appBundleInfo, IReadableLog systemLog);
+        int? DetectExitCode(AppBundleInformation appBundleInfo, IReadableLog systemLog);
     }
 
     public abstract class ExitCodeDetector : IExitCodeDetector
     {
-        public int DetectExitCode(AppBundleInformation appBundleInfo, IReadableLog systemLog)
+        public int? DetectExitCode(AppBundleInformation appBundleInfo, IReadableLog systemLog)
         {
             using var reader = systemLog.GetReader();
             while (!reader.EndOfStream)
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 }
             }
 
-            return 0;
+            return null;
         }
 
         protected abstract bool IsSignalLine(AppBundleInformation appBundleInfo, string logLine);
@@ -48,8 +48,8 @@ namespace Microsoft.DotNet.XHarness.Apple
         // Nov 18 04:31:44 ML-MacVM com.apple.CoreSimulator.SimDevice.2E1EE736-5672-4220-89B5-B7C77DB6AF18[55655] (UIKitApplication:net.dot.HelloiOS[9a0b][rb-legacy][57331]): Service exited with abnormal code: 200
         protected override bool IsSignalLine(AppBundleInformation appBundleInfo, string logLine) =>
             logLine.Contains("UIKitApplication:") &&
-            logLine.Contains(appBundleInfo.AppName) &&
-            logLine.Contains("Service exited with abnormal code");
+            logLine.Contains("Service exited with abnormal code") &&
+            (logLine.Contains(appBundleInfo.AppName) || logLine.Contains(appBundleInfo.BundleIdentifier));
     }
 
     public class MacCatalystExitCodeDetector : ExitCodeDetector
@@ -57,6 +57,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         // Example line
         // Feb 18 06:40:16 Admins-Mac-Mini com.apple.xpc.launchd[1] (net.dot.System.Buffers.Tests.15140[59229]): Service exited with abnormal code: 74
         protected override bool IsSignalLine(AppBundleInformation appBundleInfo, string logLine) =>
-            logLine.Contains(appBundleInfo.AppName) && logLine.Contains("Service exited with abnormal code");
+            logLine.Contains("Service exited with abnormal code") &&
+            (logLine.Contains(appBundleInfo.AppName) || logLine.Contains(appBundleInfo.BundleIdentifier));
     }
 }
