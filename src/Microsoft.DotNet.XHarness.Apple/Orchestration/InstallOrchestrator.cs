@@ -66,7 +66,17 @@ namespace Microsoft.DotNet.XHarness.Apple
             CancellationToken cancellationToken)
         {
             _consoleLogger.LogInformation($"Getting app bundle information from '{appPackagePath}'");
-            var appBundleInfo = await _appBundleInformationParser.ParseFromAppBundle(appPackagePath, target.Platform, _mainLog, cancellationToken);
+
+            AppBundleInformation appBundleInfo;
+            try
+            {
+                appBundleInfo = await _appBundleInformationParser.ParseFromAppBundle(appPackagePath, target.Platform, _mainLog, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _consoleLogger.LogError(e.Message);
+                return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
+            }                
 
             Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo)
                 => throw new InvalidOperationException("install command not available on maccatalyst");

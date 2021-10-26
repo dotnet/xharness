@@ -38,11 +38,21 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var mainLog = serviceProvider.GetRequiredService<IFileBackedLog>();
             var appBundleInformationParser = serviceProvider.GetRequiredService<IAppBundleInformationParser>();
-            var appBundleInfo = await appBundleInformationParser.ParseFromAppBundle(
-                Arguments.AppBundlePath.Value ?? throw new ArgumentException("App bundle path not provided"),
-                Arguments.Target.Value.Platform,
-                mainLog,
-                cancellationToken);
+
+            AppBundleInformation appBundleInfo;
+            try
+            {
+                appBundleInfo = await appBundleInformationParser.ParseFromAppBundle(
+                    Arguments.AppBundlePath.Value ?? throw new ArgumentException("App bundle path not provided"),
+                    Arguments.Target.Value.Platform,
+                    mainLog,
+                    cancellationToken);
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message);
+                return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
+            }
 
             var orchestrator = serviceProvider.GetRequiredService<IRunOrchestrator>();
             return await orchestrator.OrchestrateRun(
