@@ -256,16 +256,24 @@ namespace Microsoft.DotNet.XHarness.Apple
             if (expectedExitCode != exitCode)
             {
                 _logger.LogError($"Application has finished with exit code {exitCode} but {expectedExitCode} was expected");
+                var cliExitCode = ExitCode.GENERAL_FAILURE;
 
                 foreach (var log in _logs)
                 {
-                    if (_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage))
+                    if (_errorKnowledgeBase.IsKnownTestIssue(log, out var failure))
                     {
-                        _logger.LogError(failureMessage.Value.HumanMessage);
+                        _logger.LogError(failure.HumanMessage);
+
+                        if (failure.SuggestedExitCode.HasValue)
+                        {
+                            cliExitCode = (ExitCode)failure.SuggestedExitCode.Value;
+                        }
+
+                        break;
                     }
                 }
 
-                return ExitCode.GENERAL_FAILURE;
+                return cliExitCode;
             }
 
             _logger.LogInformation("Application has finished with exit code: " + exitCode +

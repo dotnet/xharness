@@ -108,13 +108,19 @@ namespace Microsoft.DotNet.XHarness.Apple
                 catch (Exception e)
                 {
                     var message = new StringBuilder().AppendLine("Application run failed:");
+                    exitCode = ExitCode.APP_LAUNCH_FAILURE;
 
-                    if (_errorKnowledgeBase.IsKnownTestIssue(_mainLog, out var failureMessage))
+                    if (_errorKnowledgeBase.IsKnownTestIssue(_mainLog, out var failure))
                     {
-                        message.Append(failureMessage.Value.HumanMessage);
-                        if (failureMessage.Value.IssueLink != null)
+                        message.Append(failure.HumanMessage);
+                        if (failure.IssueLink != null)
                         {
-                            message.AppendLine($" Find more information at {failureMessage.Value.IssueLink}");
+                            message.AppendLine($" Find more information at {failure.IssueLink}");
+                        }
+
+                        if (failure.SuggestedExitCode.HasValue)
+                        {
+                            exitCode = (ExitCode)failure.SuggestedExitCode.Value;
                         }
                     }
                     else
@@ -124,7 +130,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
                     _logger.LogError(message.ToString());
 
-                    return ExitCode.APP_LAUNCH_FAILURE;
+                    return exitCode;
                 }
             }
 
@@ -195,14 +201,21 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             catch (Exception e)
             {
+                exitCode = ExitCode.APP_LAUNCH_FAILURE;
+
                 var message = new StringBuilder().AppendLine("Application run failed:");
 
-                if (_errorKnowledgeBase.IsKnownTestIssue(_mainLog, out var failureMessage))
+                if (_errorKnowledgeBase.IsKnownTestIssue(_mainLog, out var failure))
                 {
-                    message.Append(failureMessage.Value.HumanMessage);
-                    if (failureMessage.Value.IssueLink != null)
+                    message.Append(failure.HumanMessage);
+                    if (failure.IssueLink != null)
                     {
-                        message.AppendLine($" Find more information at {failureMessage.Value.IssueLink}");
+                        message.AppendLine($" Find more information at {failure.IssueLink}");
+                    }
+
+                    if (failure.SuggestedExitCode.HasValue)
+                    {
+                        exitCode = (ExitCode)failure.SuggestedExitCode.Value;
                     }
                 }
                 else
@@ -211,8 +224,6 @@ namespace Microsoft.DotNet.XHarness.Apple
                 }
 
                 _logger.LogError(message.ToString());
-
-                exitCode = ExitCode.APP_LAUNCH_FAILURE;
             }
             finally
             {
@@ -272,19 +283,26 @@ namespace Microsoft.DotNet.XHarness.Apple
                     return ExitCode.PACKAGE_INSTALLATION_TIMEOUT;
                 }
 
+                var exitCode = ExitCode.PACKAGE_INSTALLATION_FAILURE;
+
                 // use the knowledge base class to decide if the error is known, if it is, let the user know
                 // the failure reason
-                if (_errorKnowledgeBase.IsKnownInstallIssue(_mainLog, out var errorMessage))
+                if (_errorKnowledgeBase.IsKnownInstallIssue(_mainLog, out var failure))
                 {
                     var error = new StringBuilder()
                         .AppendLine("Failed to install the application")
-                        .AppendLine(errorMessage.Value.HumanMessage);
+                        .AppendLine(failure.HumanMessage);
 
-                    if (errorMessage.Value.IssueLink != null)
+                    if (failure.IssueLink != null)
                     {
                         error
                             .AppendLine()
-                            .AppendLine($" Find more information at {errorMessage.Value.IssueLink}");
+                            .AppendLine($" Find more information at {failure.IssueLink}");
+                    }
+
+                    if (failure.SuggestedExitCode.HasValue)
+                    {
+                        exitCode = (ExitCode)failure.SuggestedExitCode.Value;
                     }
 
                     _logger.LogError(error.ToString());
@@ -294,7 +312,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     _logger.LogError($"Failed to install the application");
                 }
 
-                return ExitCode.PACKAGE_INSTALLATION_FAILURE;
+                return exitCode;
             }
 
             _logger.LogInformation($"Application '{appBundleInfo.AppName}' was installed successfully on '{device.Name}'");

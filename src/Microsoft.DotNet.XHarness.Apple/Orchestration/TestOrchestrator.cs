@@ -274,14 +274,14 @@ namespace Microsoft.DotNet.XHarness.Apple
             string newLine = Environment.NewLine;
             const string checkLogsMessage = "Check logs for more information";
 
-            void LogProblem(string message)
+            ExitCode LogProblem(string message, ExitCode defaultExitCode)
             {
                 foreach (var log in _logs)
                 {
                     if (_errorKnowledgeBase.IsKnownTestIssue(log, out var issue))
                     {
-                        _logger.LogError(message + newLine + issue.Value.HumanMessage);
-                        return;
+                        _logger.LogError(message + newLine + issue.HumanMessage);
+                        return issue.SuggestedExitCode.HasValue ? (ExitCode)issue.SuggestedExitCode.Value : defaultExitCode;
                     }
                 }
 
@@ -293,6 +293,8 @@ namespace Microsoft.DotNet.XHarness.Apple
                 {
                     _logger.LogError(message + newLine + checkLogsMessage);
                 }
+
+                return defaultExitCode;
             }
 
             switch (testResult)
@@ -308,12 +310,10 @@ namespace Microsoft.DotNet.XHarness.Apple
                     return ExitCode.TESTS_FAILED;
 
                 case TestExecutingResult.LaunchFailure:
-                    LogProblem("Failed to launch the application");
-                    return ExitCode.APP_LAUNCH_FAILURE;
+                    return LogProblem("Failed to launch the application", ExitCode.APP_LAUNCH_FAILURE);
 
                 case TestExecutingResult.Crashed:
-                    LogProblem("Application test run crashed");
-                    return ExitCode.APP_CRASH;
+                    return LogProblem("Application test run crashed", ExitCode.APP_LAUNCH_FAILURE);
 
                 case TestExecutingResult.TimedOut:
                     _logger.LogWarning($"Application test run timed out");
