@@ -20,6 +20,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
         void Cancel();
         int InitializeAndGetPort();
         void StartAsync();
+        Task StopAsync();
     }
 
     public abstract class SimpleListener : ISimpleListener
@@ -89,6 +90,26 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Listeners
                 IsBackground = true,
             };
             t.Start();
+        }
+
+        public Task StopAsync ()
+        {
+            var t = new Thread(() =>
+            {
+                try
+                {
+                    Stop();
+                }
+                catch (Exception e)
+                {
+                    Log.WriteLine($"{GetType().Name}: an exception occurred in processing thread: {e}");
+                }
+            })
+            {
+                IsBackground = true,
+            };
+            t.Start();
+            return _stopped.Task;
         }
 
         public bool WaitForCompletion(TimeSpan ts) => _stopped.Task.Wait(ts);
