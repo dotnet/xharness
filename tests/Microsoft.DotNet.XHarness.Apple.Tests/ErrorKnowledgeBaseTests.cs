@@ -42,8 +42,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                     "IncorrectArchitecture: Failed to find matching arch for 64-bit Mach-O input file /private/var/installd/Library/Caches/com.apple.mobile.installd.staging/temp.Ic8Ank/extracted/monotouchtest.app/monotouchtest");
                 log.Flush();
 
-                Assert.True(_errorKnowledgeBase.IsKnownInstallIssue(log, out var failureMessage));
-                Assert.Equal(expectedFailureMessage, failureMessage.Value.HumanMessage);
+                Assert.True(_errorKnowledgeBase.IsKnownInstallIssue(log, out var failure));
+                Assert.Equal(expectedFailureMessage, failure.HumanMessage);
             }
         }
 
@@ -61,8 +61,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 log.WriteLine("Status: VerifyingApplication");
                 log.Flush();
 
-                Assert.False(_errorKnowledgeBase.IsKnownInstallIssue(log, out var failureMessage));
-                Assert.Null(failureMessage);
+                Assert.False(_errorKnowledgeBase.IsKnownInstallIssue(log, out var failure));
+                Assert.Null(failure);
             }
         }
 
@@ -82,8 +82,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 log.WriteLine("Xamarin.Hosting.MobileDeviceException: Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device (error: 0xe8000065 kAMDMuxConnectError)");
                 log.Flush();
 
-                Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage));
-                Assert.Equal(expectedFailureMessage, failureMessage.Value.HumanMessage);
+                Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failure));
+                Assert.Equal(expectedFailureMessage, failure.HumanMessage);
             }
         }
 
@@ -100,8 +100,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 log.WriteLine("PercentComplete: 40");
                 log.Flush();
 
-                Assert.False(_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage));
-                Assert.Null(failureMessage);
+                Assert.False(_errorKnowledgeBase.IsKnownTestIssue(log, out var failure));
+                Assert.Null(failure);
             }
         }
 
@@ -124,8 +124,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 log.WriteLine("05:56:01.8938830 05:56:01.8938670 Pids to kill: 2797");
                 log.Flush();
 
-                Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage));
-                Assert.Equal(expectedFailureMessage, failureMessage.Value.HumanMessage);
+                Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failure));
+                Assert.Equal(expectedFailureMessage, failure.HumanMessage);
             }
         }
 
@@ -167,8 +167,8 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 log.WriteLine("[08:44:11.3918090]   at Xamarin.Launcher.Driver.Main (System.String[] args) [0x0006d] in /Users/builder/azdo/_work/1/s/maccore/tools/mlaunch/Xamarin.Hosting/Xamarin.Launcher/Main.cs:151 ");
                 log.Flush();
 
-                Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failureMessage));
-                Assert.Equal(expectedFailureMessage, failureMessage.Value.HumanMessage);
+                Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failure));
+                Assert.Equal(expectedFailureMessage, failure.HumanMessage);
             }
         }
     }

@@ -36,25 +36,74 @@ namespace Microsoft.DotNet.XHarness.Common.CLI
         /// </summary>
         PACKAGE_NOT_FOUND = 4,
 
-        #region General failures
-
+        /// <summary>
+        /// Time out based on the --timeout or --launch-timeout settings
+        /// </summary>
         TIMED_OUT = 70,
+
+        /// <summary>
+        /// Generic code for cases where we couldn't determine the exact cause
+        /// </summary>
         GENERAL_FAILURE = 71,
 
-        #endregion
-
-        #region Running the test package
-
+        /// <summary>
+        /// App installation failed
+        /// </summary>
         PACKAGE_INSTALLATION_FAILURE = 78,
+
+        /// <summary>
+        /// Failed to open/parse Info.plist inside of the app bundle
+        /// </summary>
         FAILED_TO_GET_BUNDLE_INFO = 79,
+
+        /// <summary>
+        /// The app was launched but we never heard from it and similar cases
+        /// </summary>
         APP_CRASH = 80,
+
+        /// <summary>
+        /// XHarness failed to find a suitable target for the test
+        /// </summary>
         DEVICE_NOT_FOUND = 81,
+
+        /// <summary>
+        /// Various scenarios that depend on an exit code which was not returned
+        /// </summary>
         RETURN_CODE_NOT_SET = 82,
+
+        /// <summary>
+        /// An error occurred when trying to launch the application
+        /// </summary>
         APP_LAUNCH_FAILURE = 83,
+
+        /// <summary>
+        /// Failed to retrieve a file from the Android device/emulator
+        /// </summary>
         DEVICE_FILE_COPY_FAILURE = 84,
+
+        /// <summary>
+        /// Failed to retrieve a list of Android targets via ADB
+        /// </summary>
         ADB_DEVICE_ENUMERATION_FAILURE = 85,
+
+        /// <summary>
+        /// Time outs happening during the installation phase (or install command)
+        /// </summary>
         PACKAGE_INSTALLATION_TIMEOUT = 86,
 
-        #endregion
+        /// <summary>
+        /// Apple app is not signed, provisioning profile is missing and similar
+        /// </summary>
+        APP_NOT_SIGNED = 87,
+
+        /// <summary>
+        /// Failed to start simulator (happens every now and then on MacOS mostly)
+        /// </summary>
+        SIMULATOR_FAILURE = 88,
+
+        /// <summary>
+        /// Hardware device is in some corrupted state, or just locked screen
+        /// </summary>
+        DEVICE_FAILURE = 89,
     }
 }

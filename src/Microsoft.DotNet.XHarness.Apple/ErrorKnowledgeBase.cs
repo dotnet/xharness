@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 
@@ -13,61 +14,68 @@ namespace Microsoft.DotNet.XHarness.Apple
 {
     public class ErrorKnowledgeBase : IErrorKnowledgeBase
     {
-        private static readonly Dictionary<string, (string HumanMessage, string? IssueLink)> s_testErrorMaps = new()
+        private static readonly Dictionary<string, KnownIssue> s_testErrorMaps = new()
         {
-            ["Failed to communicate with the device"] = // Known issue but not a failure.
-                ("Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device", null),
+            ["Failed to communicate with the device"] =
+                new("Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device",
+                    suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
 
             ["MT1031"] =
-                ("Cannot launch the application because the device is locked. Please unlock the device and try again", null),
+                new("Cannot launch the application because the device is locked. Please unlock the device and try again",
+                    suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
 
             ["the device is locked"] =
-                ("Cannot launch the application because the device is locked. Please unlock the device and try again", null),
+                new("Cannot launch the application because the device is locked. Please unlock the device and try again",
+                    suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
 
             ["while Setup Assistant is running"] =
-                ("Cannot launch the application because the device's update hasn't been finished. The setup assistant is still running. Please finish the device OS update on the device", null),
+                new("Cannot launch the application because the device's update hasn't been finished. The setup assistant is still running. Please finish the device OS update on the device",
+                    suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
 
             ["LSOpenURLsWithRole() failed with error -10825"] =
-                ("This application requires a newer version of MacOS", null),
+                new("This application requires a newer version of MacOS",
+                    suggestedExitCode: (int)ExitCode.GENERAL_FAILURE),
+
+            ["HE0018: Could not launch the simulator application"] =
+                new("Failed to launch the Simulator application. Please reboot the computer and try again",
+                    suggestedExitCode: (int)ExitCode.SIMULATOR_FAILURE),
         };
 
-        private static readonly Dictionary<string, (string HumanMessage, string? IssueLink)> s_buildErrorMaps = new();
+        private static readonly Dictionary<string, KnownIssue> s_buildErrorMaps = new();
 
-        private static readonly Dictionary<string, (string HumanMessage, string? IssueLink)> s_installErrorMaps = new()
+        private static readonly Dictionary<string, KnownIssue> s_installErrorMaps = new()
         {
             ["IncorrectArchitecture"] =
-                ("IncorrectArchitecture: Failed to find matching device arch for the application", null), // known failure, but not an issue
+                new("IncorrectArchitecture: Failed to find matching device arch for the application"), // known failure, but not an issue
 
             ["0xe8008015"] =
-                ("No valid provisioning profile found", null),
+                new("No valid provisioning profile found", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
 
             ["valid provisioning profile for this executable was not found"] =
-                ("No valid provisioning profile found", null),
+                new("No valid provisioning profile found", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
 
             ["0xe800801c"] =
-                ("App is not signed", null),
+                new("App is not signed", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
 
             ["No code signature found"] =
-                ("App is not signed", null),
+                new("App is not signed", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
+
+            ["HE0018: Could not launch the simulator application"] =
+                new("Failed to launch the Simulator application",
+                    suggestedExitCode: (int)ExitCode.SIMULATOR_FAILURE),
         };
 
-        public bool IsKnownBuildIssue(IFileBackedLog buildLog,
-                                      [NotNullWhen(true)]
-                                      out (string HumanMessage, string? IssueLink)? knownFailureMessage)
+        public bool IsKnownBuildIssue(IFileBackedLog buildLog, [NotNullWhen(true)] out KnownIssue? knownFailureMessage)
             => TryFindErrors(buildLog, s_buildErrorMaps, out knownFailureMessage);
 
-        public bool IsKnownTestIssue(IFileBackedLog runLog,
-                                    [NotNullWhen(true)]
-                                    out (string HumanMessage, string? IssueLink)? knownFailureMessage)
+        public bool IsKnownTestIssue(IFileBackedLog runLog, [NotNullWhen(true)] out KnownIssue? knownFailureMessage)
             => TryFindErrors(runLog, s_testErrorMaps, out knownFailureMessage);
 
-        public bool IsKnownInstallIssue(IFileBackedLog installLog,
-                                        [NotNullWhen(true)]
-                                        out (string HumanMessage, string? IssueLink)? knownFailureMessage)
+        public bool IsKnownInstallIssue(IFileBackedLog installLog, [NotNullWhen(true)] out KnownIssue? knownFailureMessage)
             => TryFindErrors(installLog, s_installErrorMaps, out knownFailureMessage);
 
-        private static bool TryFindErrors(IFileBackedLog log, Dictionary<string, (string HumanMessage, string? IssueLink)> errorMap,
-            [NotNullWhen(true)] out (string HumanMessage, string? IssueLink)? failureMessage)
+        private static bool TryFindErrors(IFileBackedLog log, Dictionary<string, KnownIssue> errorMap,
+            [NotNullWhen(true)] out KnownIssue? failureMessage)
         {
             failureMessage = null;
             if (log == null)
