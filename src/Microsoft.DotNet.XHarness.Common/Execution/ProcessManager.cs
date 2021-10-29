@@ -249,7 +249,7 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
             };
 
             var sb = new StringBuilder();
-            sb.AppendLine($"Running {StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
+            sb.Append($"Running {StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
 
             if (process.StartInfo.EnvironmentVariables != null)
             {
@@ -272,15 +272,17 @@ namespace Microsoft.DotNet.XHarness.Common.Execution
                     {
                         if (!headerShown)
                         {
-                            sb.Append("With env vars: ");
+                            sb.AppendLine().Append("With env vars: ");
                             headerShown = true;
                         }
 
-                        sb.Append($"{variable}={StringUtils.Quote(b)} ");
+                        sb.AppendLine().Append($"    {variable} = '{StringUtils.Quote(b)}'");
                     }
                 }
             }
 
+            // Separate process calls in logs
+            log.WriteLine(string.Empty);
             log.WriteLine(sb.ToString());
 
             process.Start();
