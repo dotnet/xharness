@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected override Task<ExitCode> InstallApp(AppBundleInformation appBundleInfo, IDevice device, TestTargetOs target, CancellationToken cancellationToken)
             => Task.FromResult(ExitCode.SUCCESS); // no-op - we only want to run the app
 
-        protected override Task UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
-            => Task.CompletedTask; // no-op - we only want to run the app
+        protected override Task<ExitCode> UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
+            => Task.FromResult(ExitCode.SUCCESS); // no-op - we only want to run the app
     }
 }

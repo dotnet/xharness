@@ -78,12 +78,12 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected override Task<ExitCode> InstallApp(AppBundleInformation appBundleInfo, IDevice device, TestTargetOs target, CancellationToken cancellationToken)
             => Task.FromResult(ExitCode.SUCCESS); // no-op - we only want to uninstall the app
 
-        protected override Task UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
+        protected override Task<ExitCode> UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
         {
             // For the uninstallation, we don't want to uninstall twice so we skip the preparation one
             if (isPreparation)
             {
-                return Task.CompletedTask;
+                return Task.FromResult(ExitCode.SUCCESS);
             }
 
             return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
