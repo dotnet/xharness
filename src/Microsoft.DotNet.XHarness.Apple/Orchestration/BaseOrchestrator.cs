@@ -183,14 +183,28 @@ namespace Microsoft.DotNet.XHarness.Apple
             _diagnosticsData.Device = device.Name ?? device.UDID;
 
             // Uninstall the app first to get a clean state
-            await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, true, cancellationToken);
+            if (!resetSimulator)
+            {
+                var uninstallResult = await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, isPreparation: true, cancellationToken);
+                if (uninstallResult == ExitCode.SIMULATOR_FAILURE)
+                {
+                    // Sometimes the simulator gets in a bad shape and we won't be able to run the app, we can tell here already
+                    return ExitCode.SIMULATOR_FAILURE;
+                }
+            }
 
             exitCode = await InstallApp(appBundleInfo, device, target, cancellationToken);
 
             if (exitCode != ExitCode.SUCCESS)
             {
                 _logger.LogInformation($"Cleaning up the failed installation from '{device.Name}'");
-                await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, false, new CancellationToken());
+
+                var uninstallResult = await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, isPreparation: false, new CancellationToken());
+                if (uninstallResult == ExitCode.SIMULATOR_FAILURE)
+                {
+                    // Sometimes the simulator gets in a bad shape and we won't be able to run the app, we can tell here
+                    return ExitCode.SIMULATOR_FAILURE;
+                }
 
                 return exitCode;
             }
@@ -231,8 +245,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 {
                     await CleanUpSimulators(device, companionDevice);
                 }
-
-                if (device != null)
+                else if (device != null) // Do not uninstall if device was cleaned up
                 {
                     await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, false, new CancellationToken());
                 }
@@ -320,7 +333,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             return ExitCode.SUCCESS;
         }
 
-        protected virtual async Task UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
+        protected virtual async Task<ExitCode> UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
         {
             if (isPreparation)
             {
@@ -349,6 +362,20 @@ namespace Microsoft.DotNet.XHarness.Apple
                     _logger.LogInformation($"Application '{bundleIdentifier}' was uninstalled successfully");
                 }
             }
+
+            if (uninstallResult.Succeeded)
+            {
+                return ExitCode.SUCCESS;
+            }
+
+            if (target.IsSimulator() && uninstallResult.ExitCode == 165)
+            {
+                // When uninstallation returns 165, the simulator is in a weird state where it cannot be booted and running an app later will fail
+                _logger.LogCritical($"Failed to uninstall the application - bad simulator state detected!");
+                return ExitCode.SIMULATOR_FAILURE;
+            }
+
+            return ExitCode.GENERAL_FAILURE;
         }
 
         protected virtual async Task CleanUpSimulators(IDevice device, IDevice? companionDevice)

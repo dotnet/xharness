@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
             => Task.CompletedTask; // no-op so that we don't remove the app after (reset will only clean it up before)
 
-        protected override Task UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
+        protected override Task<ExitCode> UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
         {
             // For the installation, we want to uninstall during preparation only
             if (isPreparation)
@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
             }
 
-            return Task.CompletedTask;
+            return Task.FromResult(ExitCode.SUCCESS);
         }
     }
 }
