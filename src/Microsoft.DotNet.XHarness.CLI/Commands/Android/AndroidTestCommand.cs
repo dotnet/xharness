@@ -66,8 +66,6 @@ Arguments:
                 logger.LogInformation($"Will attempt to run device on detected architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
             }
 
-            DiagnosticsData.Target = string.Join(",", apkRequiredArchitecture);
-
             // Package Name is not guaranteed to match file name, so it needs to be mandatory.
             string apkPackageName = Arguments.PackageName;
             string appPackagePath = Arguments.AppPackagePath;

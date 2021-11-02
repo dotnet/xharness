@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.Android.Execution;
@@ -66,12 +67,16 @@ Arguments:
             }
 
             runner.SetActiveDevice(deviceId);
-            DiagnosticsData.TargetOS = "API " + runner.APIVersion;
-            DiagnosticsData.Device = deviceId;
+
+            // For test command, this was already filled during installation
+            if (DiagnosticsData.Device == null)
+            {
+                FillDiagnosticData(DiagnosticsData, deviceId, runner.APIVersion, Enumerable.Empty<string>());
+            }
 
             runner.TimeToWaitForBootCompletion = Arguments.LaunchTimeout;
 
-            // Wait til at least device(s) are ready
+            // Wait till at least device(s) are ready
             runner.WaitForDevice();
 
             return Task.FromResult(InvokeHelper(
