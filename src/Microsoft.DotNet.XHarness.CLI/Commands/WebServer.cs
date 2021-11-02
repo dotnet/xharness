@@ -123,6 +123,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
             {
                 var provider = new FileExtensionContentTypeProvider();
                 provider.Mappings[".wasm"] = "application/wasm";
+                provider.Mappings[".cjs"] = "text/javascript";
+                provider.Mappings[".mjs"] = "text/javascript";
 
                 foreach (var extn in new string[] { ".dll", ".pdb", ".dat", ".blat" })
                 {
