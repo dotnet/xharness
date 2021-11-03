@@ -18,8 +18,9 @@
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
 
     <!-- Upload the diagnostics.json with other results -->
-    <HelixPostCommands Condition="$(IsPosixShell)">cp "$HELIX_WORKITEM_PAYLOAD/diagnostics.json" "$HELIX_WORKITEM_UPLOAD_ROOT";$(HelixPostCommands)</HelixPostCommands>
-    <HelixPostCommands Condition="!$(IsPosixShell)">cp "%HELIX_WORKITEM_PAYLOAD%\diagnostics.json" "%HELIX_WORKITEM_UPLOAD_ROOT%";$(HelixPostCommands)</HelixPostCommands>
+    <IsPosixShell Condition=" '$(IsPosixShell)' == '' ">true</IsPosixShell>
+    <HelixPostCommands Condition=" '$(IsPosixShell)' == 'true' ">cp "$HELIX_WORKITEM_PAYLOAD/diagnostics.json" "$HELIX_WORKITEM_UPLOAD_ROOT";$(HelixPostCommands)</HelixPostCommands>
+    <HelixPostCommands Condition=" '$(IsPosixShell)' == 'false' ">cp "%HELIX_WORKITEM_PAYLOAD%\diagnostics.json" "%HELIX_WORKITEM_UPLOAD_ROOT%";$(HelixPostCommands)</HelixPostCommands>
   </PropertyGroup>
 
   <!-- For non-ci local runs -->
