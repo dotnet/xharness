@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
             data.Target = string.Join(",", apkRequiredArchitecture);
             data.TargetOS = "API " + apiVersion;
             data.Device = deviceName;
-            data.IsDevice = deviceName.ToLowerInvariant().StartsWith("emulator");
+            data.IsDevice = !deviceName.ToLowerInvariant().StartsWith("emulator");
         }
     }
 }
