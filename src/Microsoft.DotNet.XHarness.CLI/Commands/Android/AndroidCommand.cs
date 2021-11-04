@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common;
@@ -19,6 +20,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Android
             : base(TargetPlatform.Android, name, allowsExtraArgs, new ServiceCollection(), help)
         {
             _diagnosticsData = new(() => Services.BuildServiceProvider().GetRequiredService<IDiagnosticsData>());
+        }
+
+        protected static void FillDiagnosticData(
+            IDiagnosticsData data,
+            string deviceName,
+            int apiVersion,
+            IEnumerable<string> apkRequiredArchitecture)
+        {
+            data.Target = string.Join(",", apkRequiredArchitecture);
+            data.TargetOS = "API " + apiVersion;
+            data.Device = deviceName;
+            data.IsDevice = !deviceName.ToLowerInvariant().StartsWith("emulator");
         }
     }
 }

@@ -10,6 +10,7 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -51,6 +52,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 
             var diagnosticsData = serviceProvider.GetRequiredService<IDiagnosticsData>();
             diagnosticsData.Target = Arguments.Target.Value.AsString();
+            diagnosticsData.IsDevice = !Arguments.Target.Value.Platform.IsSimulator();
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(Arguments.Timeout);

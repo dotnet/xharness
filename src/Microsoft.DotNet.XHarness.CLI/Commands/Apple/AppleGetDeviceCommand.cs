@@ -60,6 +60,7 @@ Arguments:
 
                 diagnosticsData.TargetOS = device.OSVersion.Split(' ', 2).Last();
                 diagnosticsData.Device = device.Name ?? device.UDID;
+                diagnosticsData.IsDevice = !target.Platform.IsSimulator();
 
                 Console.WriteLine(device.UDID);
             }

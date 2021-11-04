@@ -16,6 +16,11 @@
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
     <!-- Pick up the nupkg from this repo for testing purposes -->
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
+
+    <!-- Upload the diagnostics.json with other results -->
+    <IsPosixShell Condition=" '$(IsPosixShell)' != 'false' ">true</IsPosixShell>
+    <HelixPostCommands Condition=" '$(IsPosixShell)' == 'true' ">cp "$XHARNESS_DIAGNOSTICS_PATH" "$HELIX_WORKITEM_UPLOAD_ROOT";$(HelixPostCommands)</HelixPostCommands>
+    <HelixPostCommands Condition=" '$(IsPosixShell)' == 'false' ">copy "%XHARNESS_DIAGNOSTICS_PATH%" "%HELIX_WORKITEM_UPLOAD_ROOT%";$(HelixPostCommands)</HelixPostCommands>
   </PropertyGroup>
 
   <!-- For non-ci local runs -->

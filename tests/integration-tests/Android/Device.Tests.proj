@@ -1,4 +1,8 @@
 <Project DefaultTargets="Test">
+  <PropertyGroup>
+    <IsPosixShell>false</IsPosixShell>
+  </PropertyGroup>
+
   <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>

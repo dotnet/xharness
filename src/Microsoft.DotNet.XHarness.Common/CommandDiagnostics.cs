@@ -30,6 +30,11 @@ namespace Microsoft.DotNet.XHarness.Common
         /// Name of the used device.
         /// </summary>
         string? Device { get; set; }
+
+        /// <summary>
+        /// True when the target is a real HW device, false for simulators, maccatalyst..
+        /// </summary>
+        bool? IsDevice { get; set; }
     }
 
     /// <summary>
@@ -55,6 +60,9 @@ namespace Microsoft.DotNet.XHarness.Common
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Device { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? IsDevice { get; set; }
 
         public int Duration => (int)Math.Round(_timer.Elapsed.TotalSeconds);
 
