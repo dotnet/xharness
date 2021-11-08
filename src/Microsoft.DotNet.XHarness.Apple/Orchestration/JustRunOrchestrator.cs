@@ -27,6 +27,9 @@ namespace Microsoft.DotNet.XHarness.Apple
     public class JustRunOrchestrator : RunOrchestrator, IJustRunOrchestrator
     {
         public JustRunOrchestrator(
+            IAppInstaller appInstaller,
+            IAppUninstaller appUninstaller,
+            IAppRunnerFactory appRunnerFactory,
             IMlaunchProcessManager processManager,
             IDeviceFinder deviceFinder,
             ILogger consoleLogger,
@@ -35,7 +38,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IErrorKnowledgeBase errorKnowledgeBase,
             IDiagnosticsData diagnosticsData,
             IHelpers helpers)
-            : base(processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+            : base(appInstaller, appUninstaller, appRunnerFactory, processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
         {
         }
 

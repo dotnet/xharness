@@ -30,6 +30,13 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             services.TryAddTransient<IDeviceLogCapturerFactory, DeviceLogCapturerFactory>();
             services.TryAddTransient<ICrashSnapshotReporterFactory, CrashSnapshotReporterFactory>();
 
+            services.TryAddTransient<IAppInstaller, AppInstaller>();
+            services.TryAddTransient<IAppTester, AppTester>();
+            services.TryAddTransient<IAppRunner, AppRunner>();
+            services.TryAddTransient<IAppUninstaller, AppUninstaller>();
+            services.TryAddTransient<IAppTesterFactory, AppTesterFactory>();
+            services.TryAddTransient<IAppRunnerFactory, AppRunnerFactory>();
+
             services.TryAddTransient<IInstallOrchestrator, InstallOrchestrator>();
             services.TryAddTransient<IJustRunOrchestrator, JustRunOrchestrator>();
             services.TryAddTransient<IJustTestOrchestrator, JustTestOrchestrator>();

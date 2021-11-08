@@ -44,14 +44,15 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// </summary>
     public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
     {
-        private readonly IMlaunchProcessManager _processManager;
         private readonly ILogger _logger;
         private readonly ILogs _logs;
-        private readonly IFileBackedLog _mainLog;
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
-        private readonly AppRunner _appRunner;
+        private readonly IAppRunner _appRunner;
 
         public RunOrchestrator(
+            IAppInstaller appInstaller,
+            IAppUninstaller appUninstaller,
+            IAppRunnerFactory appRunnerFactory,
             IMlaunchProcessManager processManager,
             IDeviceFinder deviceFinder,
             ILogger consoleLogger,
@@ -60,26 +61,15 @@ namespace Microsoft.DotNet.XHarness.Apple
             IErrorKnowledgeBase errorKnowledgeBase,
             IDiagnosticsData diagnosticsData,
             IHelpers helpers)
-            : base(processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+            : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
         {
-            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
             _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
-            _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
 
             // Only add the extra callback if we do know that the feature was indeed enabled
             Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(_logger, l) : null;
-
-            _appRunner = new AppRunner(
-                _processManager,
-                new CrashSnapshotReporterFactory(_processManager),
-                new CaptureLogFactory(),
-                new DeviceLogCapturerFactory(_processManager),
-                _mainLog,
-                _logs,
-                new Helpers(),
-                logCallback);
+            _appRunner = appRunnerFactory.Create(mainLog, logs, logCallback);
         }
 
         public async Task<ExitCode> OrchestrateRun(
@@ -146,7 +136,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     cancellationToken);
             };
 
-            return await OrchestrateRun(
+            return await OrchestrateOperation(
                 target,
                 deviceName,
                 includeWirelessDevices,
