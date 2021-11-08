@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
 {
     public class ExitCodeDetectorTests : IDisposable
     {
-        private readonly string _tempFilename = null;
+        private readonly string? _tempFilename = null;
 
         [Fact]
         public void ExitCodeIsDetectedTest()
