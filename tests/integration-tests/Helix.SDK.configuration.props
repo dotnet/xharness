@@ -19,8 +19,8 @@
 
     <!-- Upload the diagnostics.json with other results -->
     <IsPosixShell Condition=" '$(IsPosixShell)' != 'false' ">true</IsPosixShell>
-    <HelixPostCommands Condition=" '$(IsPosixShell)' == 'true' ">cp "$XHARNESS_DIAGNOSTICS_PATH" "$HELIX_WORKITEM_UPLOAD_ROOT";$(HelixPostCommands)</HelixPostCommands>
-    <HelixPostCommands Condition=" '$(IsPosixShell)' == 'false' ">copy "%XHARNESS_DIAGNOSTICS_PATH%" "%HELIX_WORKITEM_UPLOAD_ROOT%";$(HelixPostCommands)</HelixPostCommands>
+    <HelixPostCommands Condition=" '$(IsPosixShell)' == 'true' ">cp diagnostics.json "$HELIX_WORKITEM_UPLOAD_ROOT";$(HelixPostCommands)</HelixPostCommands>
+    <HelixPostCommands Condition=" '$(IsPosixShell)' == 'false' ">copy diagnostics.json "%HELIX_WORKITEM_UPLOAD_ROOT%";$(HelixPostCommands)</HelixPostCommands>
   </PropertyGroup>
 
   <!-- For non-ci local runs -->
