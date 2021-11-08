@@ -13,7 +13,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Moq;
 using Xunit;
 
-namespace Microsoft.DotNet.XHarness.Apple.Tests
+namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations
 {
     public class AppUninstallerTests
     {

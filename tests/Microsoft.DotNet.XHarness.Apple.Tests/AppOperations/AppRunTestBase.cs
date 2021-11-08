@@ -15,7 +15,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Moq;
 
-namespace Microsoft.DotNet.XHarness.Apple.Tests
+namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations
 {
     public abstract class AppRunTestBase : IDisposable
     {
@@ -123,7 +123,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             finally
             {
                 GC.SuppressFinalize(this);
-            }            
+            }
         }
     }
 }
