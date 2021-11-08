@@ -12,7 +12,13 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
-    public class AppUninstaller
+    public interface IAppUninstaller
+    {
+        Task<ProcessExecutionResult> UninstallApp(IDevice simulator, string appBundleId, CancellationToken cancellationToken = default);
+        Task<ProcessExecutionResult> UninstallDeviceApp(IDevice device, string appBundleId, CancellationToken cancellationToken = default);
+    }
+
+    public class AppUninstaller : IAppUninstaller
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILog _mainLog;
