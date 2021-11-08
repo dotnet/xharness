@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -18,7 +20,18 @@ namespace Microsoft.DotNet.XHarness.Apple
     {
         public int? DetectExitCode(AppBundleInformation appBundleInfo, IReadableLog systemLog)
         {
-            using var reader = systemLog.GetReader();
+            StreamReader reader;
+
+            try
+            {
+                reader = systemLog.GetReader();
+            }
+            catch (FileNotFoundException e)
+            {
+                throw new Exception("Failed to detect application's exit code. The system log was empty / not found at " + e.FileName);
+            }
+
+            using (reader)
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();
