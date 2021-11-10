@@ -345,7 +345,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             ProcessExecutionResult uninstallResult = target.IsSimulator()
-                ? await _appUninstaller.UninstallApp(device, bundleIdentifier, cancellationToken)
+                ? await _appUninstaller.UninstallSimulatorApp(device, bundleIdentifier, cancellationToken)
                 : await _appUninstaller.UninstallDeviceApp(device, bundleIdentifier, cancellationToken);
 
             // We try to uninstall app before each run to clear it from the device

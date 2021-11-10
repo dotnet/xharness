@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations
             var simulator = Mock.Of<IDevice>(x => x.Name == DeviceName && x.UDID == UDID);
 
             // Act
-            var result = await _appUninstaller.UninstallApp(simulator, AppBundleId);
+            var result = await _appUninstaller.UninstallSimulatorApp(simulator, AppBundleId);
 
             // Verify
             Assert.Equal(0, result.ExitCode);
