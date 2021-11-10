@@ -5,101 +5,21 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
-using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
-using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Moq;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations;
 
-public class InstallOrchestratorTests
+public class InstallOrchestratorTests : OrchestratorTestBase
 {
-    private static readonly string s_appIdentifier = Guid.NewGuid().ToString();
-    private const string UDID = "8A450AA31EA94191AD6B02455F377CC1";
-    private const string DeviceName = "Some iPhone";
-    private const string AppName = "System.Buffers.Tests";
-    private const string AppPath = "/tmp/apps/System.Buffers.Tests.app";
-
-    private readonly Mock<IDeviceFinder> _deviceFinder;
-    private readonly Mock<IAppBundleInformationParser> _appBundleInformationParser;
-    private readonly Mock<IErrorKnowledgeBase> _errorKnowledgeBase;
-    private readonly Mock<IFileBackedLog> _mainLog;
-    private readonly Mock<ILogger> _logger;
-    private readonly Mock<ILogs> _logs;
-    private readonly Mock<IHelpers> _helpers;
-    private readonly Mock<IAppInstaller> _appInstaller;
-    private readonly Mock<IAppUninstaller> _appUninstaller;
-
-    private readonly AppBundleInformation _appBundleInformation;
-    private readonly IDiagnosticsData _diagnosticsData;
     private readonly InstallOrchestrator _installOrchestrator;
-
-    private readonly Mock<ISimulatorDevice>? _simulator;
-    private readonly Mock<ISimulatorDevice>? _device;
 
     public InstallOrchestratorTests()
     {
-        _logger = new();
-        _mainLog = new();
-        _logs = new();
-        _helpers = new();
-        _errorKnowledgeBase = new();
-        _appInstaller = new();
-        _appUninstaller = new();
-
-        _simulator = new();
-        _simulator.Setup(x => x.UDID).Returns(UDID);
-        _simulator.Setup(x => x.Name).Returns(DeviceName);
-        _simulator.Setup(x => x.OSVersion).Returns("13.5");
-
-        _device = new();
-        _device.Setup(x => x.UDID).Returns(UDID);
-        _device.Setup(x => x.Name).Returns(DeviceName);
-        _device.Setup(x => x.OSVersion).Returns("14.2");
-
-        _appBundleInformation = new AppBundleInformation(
-            appName: AppName,
-            bundleIdentifier: s_appIdentifier,
-            appPath: AppPath,
-            launchAppPath: AppPath,
-            supports32b: false,
-            extension: null);
-
-        _appBundleInformationParser = new Mock<IAppBundleInformationParser>();
-        _appBundleInformationParser
-            .Setup(x => x.ParseFromAppBundle(
-                AppPath,
-                It.IsAny<TestTarget>(),
-                _mainLog.Object,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(_appBundleInformation);
-
-        _diagnosticsData = new CommandDiagnostics(Mock.Of<Extensions.Logging.ILogger>(), TargetPlatform.Apple, "install");
-
-        _deviceFinder = new Mock<IDeviceFinder>();
-
-        _deviceFinder
-            .Setup(x => x.FindDevice(
-                It.Is<TestTargetOs>(t => t.Platform.IsSimulator()),
-                It.IsAny<string?>(),
-                It.IsAny<ILog>(),
-                It.IsAny<bool>()))
-            .ReturnsAsync((_simulator.Object, null));
-
-        _deviceFinder
-            .Setup(x => x.FindDevice(
-                It.Is<TestTargetOs>(t => !t.Platform.IsSimulator()),
-                It.IsAny<string?>(),
-                It.IsAny<ILog>(),
-                It.IsAny<bool>()))
-            .ReturnsAsync((_device.Object, null));
-
         _installOrchestrator = new(
             _appInstaller.Object,
             _appUninstaller.Object,
@@ -133,9 +53,11 @@ public class InstallOrchestratorTests
                     TimedOut = false,
             });
 
+        var testTarget = new TestTargetOs(TestTarget.Simulator_iOS64, "13.5");
+
         // Act
         var result = await _installOrchestrator.OrchestrateInstall(
-            new(TestTarget.Simulator_iOS64, "13.5"),
+            testTarget,
             null,
             AppPath,
             TimeSpan.FromMinutes(30),
@@ -147,20 +69,15 @@ public class InstallOrchestratorTests
         // Verify
         Assert.Equal(ExitCode.SUCCESS, result);
 
-        _deviceFinder
-            .Verify(x => x.FindDevice(It.Is<TestTargetOs>(
-                t => t.Platform == TestTarget.Simulator_iOS64 && t.OSVersion == "13.5"), null, It.IsAny<ILog>(), false),
-                Times.Once);
+        _deviceFinder.Verify(
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
+            Times.Once);
 
         VerifySimulatorReset(false);
         VerifySimulatorCleanUp(false);
 
         _appInstaller.Verify(
-            x => x.InstallApp(
-                _appBundleInformation,
-                It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_iOS64 && t.OSVersion == "13.5"),
-                _simulator!.Object,
-                It.IsAny<CancellationToken>()),
+            x => x.InstallApp(_appBundleInformation, testTarget, _simulator!.Object, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -184,9 +101,11 @@ public class InstallOrchestratorTests
                     TimedOut = false,
             });
 
+        var testTarget = new TestTargetOs(TestTarget.Simulator_tvOS, "13.5");
+
         // Act
         var result = await _installOrchestrator.OrchestrateInstall(
-            new(TestTarget.Simulator_tvOS, "13.5"),
+            testTarget,
             null,
             AppPath,
             TimeSpan.FromMinutes(30),
@@ -198,20 +117,15 @@ public class InstallOrchestratorTests
         // Verify
         Assert.Equal(ExitCode.SUCCESS, result);
 
-        _deviceFinder
-            .Verify(x => x.FindDevice(It.Is<TestTargetOs>(
-                t => t.Platform == TestTarget.Simulator_tvOS && t.OSVersion == "13.5"), null, It.IsAny<ILog>(), true),
-                Times.Once);
+        _deviceFinder.Verify(
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), true),
+            Times.Once);
 
         VerifySimulatorReset(true);
         VerifySimulatorCleanUp(false); // Install doesn't end with a cleanup so that the app stays behind
 
         _appInstaller.Verify(
-            x => x.InstallApp(
-                _appBundleInformation,
-                It.Is<TestTargetOs>(t => t.Platform == TestTarget.Simulator_tvOS && t.OSVersion == "13.5"),
-                _simulator!.Object,
-                It.IsAny<CancellationToken>()),
+            x => x.InstallApp(_appBundleInformation, testTarget, _simulator!.Object, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -235,9 +149,11 @@ public class InstallOrchestratorTests
                 TimedOut = false,
             });
 
+        var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
+
         // Act
         var result = await _installOrchestrator.OrchestrateInstall(
-            new(TestTarget.Device_iOS, "14.2"),
+            testTarget,
             null,
             AppPath,
             TimeSpan.FromMinutes(30),
@@ -252,31 +168,42 @@ public class InstallOrchestratorTests
         VerifySimulatorReset(false);
         VerifySimulatorCleanUp(false);
 
-        _deviceFinder
-            .Verify(x => x.FindDevice(It.Is<TestTargetOs>(
-                t => t.Platform == TestTarget.Device_iOS && t.OSVersion == "13.5"), null, It.IsAny<ILog>(), false),
-                Times.Once);
+        _deviceFinder.Verify(
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
+            Times.Once);
 
         _appInstaller.Verify(
-            x => x.InstallApp(
-                _appBundleInformation,
-                It.Is<TestTargetOs>(t => t.Platform == TestTarget.Device_iOS && t.OSVersion == "14.2"),
-                _device!.Object,
-                It.IsAny<CancellationToken>()),
+            x => x.InstallApp(_appBundleInformation, testTarget, _device!.Object, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
-    private void VerifySimulatorReset(bool shouldBeReset)
+    [Fact]
+    public async Task OrchestrateDeviceInstallationWhenNoDeviceTest()
     {
-        _simulator!.Verify(
-            x => x.PrepareSimulator(It.IsAny<ILog>(), It.IsAny<string[]>()),
-            shouldBeReset ? Times.Once : Times.Never);
-    }
+        // Setup
+        _deviceFinder.Reset();
+        _deviceFinder
+            .Setup(x => x.FindDevice(
+                It.IsAny<TestTargetOs>(),
+                It.IsAny<string?>(),
+                It.IsAny<ILog>(),
+                It.IsAny<bool>()))
+            .ThrowsAsync(new NoDeviceFoundException());
 
-    private void VerifySimulatorCleanUp(bool shouldBeCleanedUp)
-    {
-        _simulator!.Verify(
-            x => x.KillEverything(It.IsAny<ILog>()),
-            shouldBeCleanedUp ? Times.Once : Times.Never);
+        var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
+
+        // Act
+        var result = await _installOrchestrator.OrchestrateInstall(
+            testTarget,
+            null,
+            AppPath,
+            TimeSpan.FromMinutes(30),
+            includeWirelessDevices: false,
+            resetSimulator: false,
+            enableLldb: true,
+            new CancellationToken());
+
+        // Verify
+        Assert.Equal(ExitCode.DEVICE_NOT_FOUND, result);
     }
 }
