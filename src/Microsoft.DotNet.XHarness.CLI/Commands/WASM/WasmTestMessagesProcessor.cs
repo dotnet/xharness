@@ -79,6 +79,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             {
                 if (line.Contains("STARTRESULTXML"))
                 {
+                    _logger.LogDebug("Reached start of testResults.xml");
                     _xmlResultsFileWriter = File.CreateText(_xmlResultsFilePath);
                     return;
                 }
@@ -113,6 +114,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             {
                 if (line.Contains("ENDRESULTXML"))
                 {
+                    _logger.LogDebug("Reached end of testResults.xml");
                     _xmlResultsFileWriter.Flush();
                     _xmlResultsFileWriter.Dispose();
                     _xmlResultsFileWriter = null;
@@ -128,6 +130,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             // has been written to the console
             if (line.StartsWith("WASM EXIT"))
             {
+                _logger.LogDebug("Reached wasm exit");
                 WasmExitReceivedTcs.SetResult(true);
             }
         }

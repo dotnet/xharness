@@ -69,12 +69,13 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 Console.WriteLine($"STARTRESULTXML");
                 var resultsXml = new XElement("assemblies");
                 resultsXml.Add(resultsXmlAssembly);
-                resultsXml.Save(Console.OpenStandardOutput());
+                resultsXml.Save(Console.Out);
                 Console.WriteLine();
                 Console.WriteLine($"ENDRESULTXML");
             }
 
             var failed = resultsSink.ExecutionSummary.Failed > 0 || resultsSink.ExecutionSummary.Errors > 0;
+            Console.Out.Flush();
             return failed ? 1 : 0;
         }
     }
