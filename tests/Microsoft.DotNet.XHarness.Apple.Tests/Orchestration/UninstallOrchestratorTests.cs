@@ -13,7 +13,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Moq;
 using Xunit;
 
-namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations;
+namespace Microsoft.DotNet.XHarness.Apple.Tests.Orchestration;
 
 public class UninstallOrchestratorTests : OrchestratorTestBase
 {

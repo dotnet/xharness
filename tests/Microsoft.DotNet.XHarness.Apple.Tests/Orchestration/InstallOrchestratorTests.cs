@@ -9,11 +9,10 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Moq;
 using Xunit;
 
-namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations;
+namespace Microsoft.DotNet.XHarness.Apple.Tests.Orchestration;
 
 public class InstallOrchestratorTests : OrchestratorTestBase
 {
@@ -100,7 +99,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
             .ReturnsAsync(new ProcessExecutionResult
             {
                 ExitCode = 1, // This can fail as this is the first purge of the app before we install it
-                    TimedOut = false,
+                TimedOut = false,
             });
 
         var testTarget = new TestTargetOs(TestTarget.Simulator_tvOS, "13.5");
