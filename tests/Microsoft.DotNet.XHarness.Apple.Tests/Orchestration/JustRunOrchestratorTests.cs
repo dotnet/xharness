@@ -63,7 +63,16 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
             .Verifiable();
 
         _appRunner
-            .Setup(x => x.RunApp(_appBundleInformation, testTarget, _simulator.Object, null, TimeSpan.FromMinutes(30), false, It.IsAny<IEnumerable<string>>(), envVars, It.IsAny<CancellationToken>()))
+            .Setup(x => x.RunApp(
+                _appBundleInformation,
+                testTarget,
+                _simulator.Object,
+                null,
+                TimeSpan.FromMinutes(30),
+                false,
+                It.IsAny<IEnumerable<string>>(),
+                envVars,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProcessExecutionResult
             {
                 ExitCode = 0,
@@ -118,7 +127,16 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         var extraArguments = new[] { "--some arg1", "--some arg2" };
 
         _appRunner
-            .Setup(x => x.RunApp(_appBundleInformation, testTarget, _device.Object, null, TimeSpan.FromMinutes(30), false, extraArguments, It.IsAny<IEnumerable<(string, string)>>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.RunApp(
+                _appBundleInformation,
+                testTarget,
+                _device.Object,
+                null,
+                TimeSpan.FromMinutes(30),
+                false,
+                extraArguments,
+                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProcessExecutionResult
             {
                 ExitCode = 0,
@@ -166,7 +184,16 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         var testTarget = new TestTargetOs(TestTarget.Simulator_iOS64, "13.5");
 
         _appRunner
-            .Setup(x => x.RunApp(_appBundleInformation, testTarget, _simulator.Object, null, TimeSpan.FromMinutes(30), false, It.IsAny<IEnumerable<string>>(), It.IsAny<IEnumerable<(string, string)>>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.RunApp(
+                _appBundleInformation,
+                testTarget,
+                _simulator.Object,
+                null,
+                TimeSpan.FromMinutes(30),
+                false,
+                It.IsAny<IEnumerable<string>>(),
+                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception())
             .Verifiable();
 
@@ -223,7 +250,16 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         var extraArguments = new[] { "--some arg1", "--some arg2" };
 
         _appRunner
-            .Setup(x => x.RunApp(_appBundleInformation, testTarget, _device.Object, null, TimeSpan.FromMinutes(30), true, extraArguments, It.IsAny<IEnumerable<(string, string)>>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.RunApp(
+                _appBundleInformation,
+                testTarget,
+                _device.Object,
+                null,
+                TimeSpan.FromMinutes(30),
+                true,
+                extraArguments,
+                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProcessExecutionResult
             {
                 ExitCode = 0,
@@ -288,7 +324,13 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
             .Verifiable();
 
         _appRunner
-            .Setup(x => x.RunMacCatalystApp(_appBundleInformation, TimeSpan.FromMinutes(30), true, It.IsAny<IEnumerable<string>>(), envVars, It.IsAny<CancellationToken>()))
+            .Setup(x => x.RunMacCatalystApp(
+                _appBundleInformation,
+                TimeSpan.FromMinutes(30),
+                true,
+                It.IsAny<IEnumerable<string>>(),
+                envVars,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProcessExecutionResult
             {
                 ExitCode = 0,

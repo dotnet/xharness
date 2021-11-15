@@ -186,7 +186,7 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
         var testTarget = new TestTargetOs(TestTarget.MacCatalyst, null);
 
         // Act
-        var result = await _uninstallOrchestrator.OrchestrateAppUninstall(
+        await _uninstallOrchestrator.OrchestrateAppUninstall(
             AppName,
             testTarget,
             null,
