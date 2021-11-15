@@ -5,12 +5,14 @@
 using System;
 using System.Threading;
 using Microsoft.DotNet.XHarness.Common;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Moq;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations;
 
@@ -18,13 +20,14 @@ public abstract class OrchestratorTestBase
 {
     protected static readonly string s_appIdentifier = Guid.NewGuid().ToString();
     protected const string UDID = "8A450AA31EA94191AD6B02455F377CC1";
-    protected const string DeviceName = "Some iPhone";
+    protected const string SimulatorName = "iPhone X (13.5) - created by xharness";
+    protected const string DeviceName = "iPhone X (14.4)";
     protected const string AppName = "System.Buffers.Tests";
     protected const string AppPath = "/tmp/apps/System.Buffers.Tests.app";
 
     protected readonly Mock<IDeviceFinder> _deviceFinder;
-    protected readonly Mock<ISimulatorDevice>? _simulator;
-    protected readonly Mock<ISimulatorDevice>? _device;
+    protected readonly Mock<ISimulatorDevice> _simulator;
+    protected readonly Mock<ISimulatorDevice> _device;
     protected readonly Mock<IAppBundleInformationParser> _appBundleInformationParser;
     protected readonly Mock<IErrorKnowledgeBase> _errorKnowledgeBase;
     protected readonly Mock<IFileBackedLog> _mainLog;
@@ -48,7 +51,7 @@ public abstract class OrchestratorTestBase
 
         _simulator = new();
         _simulator.Setup(x => x.UDID).Returns(UDID);
-        _simulator.Setup(x => x.Name).Returns(DeviceName);
+        _simulator.Setup(x => x.Name).Returns(SimulatorName);
         _simulator.Setup(x => x.OSVersion).Returns("13.5");
 
         _device = new();
@@ -76,7 +79,6 @@ public abstract class OrchestratorTestBase
         _diagnosticsData = new CommandDiagnostics(Mock.Of<Extensions.Logging.ILogger>(), TargetPlatform.Apple, "install");
 
         _deviceFinder = new Mock<IDeviceFinder>();
-
         _deviceFinder
             .Setup(x => x.FindDevice(
                 It.Is<TestTargetOs>(t => t.Platform.IsSimulator()),
@@ -96,15 +98,21 @@ public abstract class OrchestratorTestBase
 
     protected void VerifySimulatorReset(bool shouldBeReset)
     {
-        _simulator!.Verify(
+        _simulator.Verify(
             x => x.PrepareSimulator(It.IsAny<ILog>(), It.IsAny<string[]>()),
             shouldBeReset ? Times.Once : Times.Never);
     }
 
     protected void VerifySimulatorCleanUp(bool shouldBeCleanedUp)
     {
-        _simulator!.Verify(
+        _simulator.Verify(
             x => x.KillEverything(It.IsAny<ILog>()),
             shouldBeCleanedUp ? Times.Once : Times.Never);
+    }
+
+    protected void VerifyDiagnosticData(TestTargetOs target)
+    {
+        Assert.Equal(target.Platform.IsSimulator() ? _simulator.Object.Name : _device.Object.Name, _diagnosticsData.Device);
+        Assert.Contains(target.OSVersion, _diagnosticsData.TargetOS);
     }
 }

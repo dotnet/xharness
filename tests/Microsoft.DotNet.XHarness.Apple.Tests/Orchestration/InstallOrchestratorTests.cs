@@ -9,6 +9,7 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Moq;
 using Xunit;
 
@@ -50,7 +51,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
             .ReturnsAsync(new ProcessExecutionResult
             {
                 ExitCode = 1, // This can fail as this is the first purge of the app before we install it
-                    TimedOut = false,
+                TimedOut = false,
             });
 
         var testTarget = new TestTargetOs(TestTarget.Simulator_iOS64, "13.5");
@@ -75,6 +76,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
 
         VerifySimulatorReset(false);
         VerifySimulatorCleanUp(false);
+        VerifyDiagnosticData(testTarget);
 
         _appInstaller.Verify(
             x => x.InstallApp(_appBundleInformation, testTarget, _simulator!.Object, It.IsAny<CancellationToken>()),
@@ -123,6 +125,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
 
         VerifySimulatorReset(true);
         VerifySimulatorCleanUp(false); // Install doesn't end with a cleanup so that the app stays behind
+        VerifyDiagnosticData(testTarget);
 
         _appInstaller.Verify(
             x => x.InstallApp(_appBundleInformation, testTarget, _simulator!.Object, It.IsAny<CancellationToken>()),
@@ -167,6 +170,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
 
         VerifySimulatorReset(false);
         VerifySimulatorCleanUp(false);
+        VerifyDiagnosticData(testTarget);
 
         _deviceFinder.Verify(
             x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
@@ -175,6 +179,43 @@ public class InstallOrchestratorTests : OrchestratorTestBase
         _appInstaller.Verify(
             x => x.InstallApp(_appBundleInformation, testTarget, _device!.Object, It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task OrchestrateMacCatalystInstallationTest()
+    {
+        var testTarget = new TestTargetOs(TestTarget.MacCatalyst, null);
+
+        // Act
+        var result = await _installOrchestrator.OrchestrateInstall(
+            testTarget,
+            null,
+            AppPath,
+            TimeSpan.FromMinutes(30),
+            includeWirelessDevices: false,
+            resetSimulator: false,
+            enableLldb: true,
+            new CancellationToken());
+
+        // Verify
+        _deviceFinder.Verify(
+            x => x.FindDevice(testTarget, It.IsAny<string>(), It.IsAny<ILog>(), It.IsAny<bool>()),
+            Times.Never);
+
+        VerifySimulatorReset(false);
+        VerifySimulatorCleanUp(false);
+
+        _appInstaller.Verify(
+            x => x.InstallApp(It.IsAny<AppBundleInformation>(), It.IsAny<TestTargetOs>(), It.IsAny<IDevice>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        _appUninstaller.Verify(
+            x => x.UninstallDeviceApp(It.IsAny<IDevice>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        _appUninstaller.Verify(
+            x => x.UninstallSimulatorApp(It.IsAny<IDevice>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
