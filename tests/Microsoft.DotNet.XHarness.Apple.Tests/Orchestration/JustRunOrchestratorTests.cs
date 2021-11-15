@@ -50,7 +50,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
     }
 
     [Fact]
-    public async Task OrchestrateSimulatorRunTest()
+    public async Task OrchestrateSimulatorJustRunTest()
     {
         // Setup
         var testTarget = new TestTargetOs(TestTarget.Simulator_iOS64, "13.5");
@@ -105,7 +105,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
     }
 
     [Fact]
-    public async Task OrchestrateDeviceRunTest()
+    public async Task OrchestrateDeviceJustRunTest()
     {
         // Setup
         var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
@@ -160,7 +160,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
     }
 
     [Fact]
-    public async Task OrchestrateFailedSimulatorRunTest()
+    public async Task OrchestrateFailedSimulatorJustRunTest()
     {
         // Setup
         var testTarget = new TestTargetOs(TestTarget.Simulator_iOS64, "13.5");
@@ -210,7 +210,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
     }
 
     [Fact]
-    public async Task OrchestrateFailedDeviceRunTest()
+    public async Task OrchestrateFailedDeviceJustRunTest()
     {
         // Setup
         var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
@@ -271,7 +271,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
     }
 
     [Fact]
-    public async Task OrchestrateMacCatalystRunTest()
+    public async Task OrchestrateMacCatalystJustRunTest()
     {
         // Setup
         _appInstaller.Reset();
