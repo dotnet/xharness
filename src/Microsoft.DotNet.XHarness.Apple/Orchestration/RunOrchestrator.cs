@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             _appRunner = appRunnerFactory.Create(mainLog, logs, logCallback);
         }
 
-        public async Task<ExitCode> OrchestrateRun(
+        public virtual async Task<ExitCode> OrchestrateRun(
             AppBundleInformation appBundleInformation,
             TestTargetOs target,
             string? deviceName,

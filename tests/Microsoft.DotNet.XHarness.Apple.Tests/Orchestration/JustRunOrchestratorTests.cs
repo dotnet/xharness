@@ -15,19 +15,23 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations;
 
-public class RunOrchestratorTests : AppOrchestratorTestBase
+public class JustRunOrchestratorTests : AppOrchestratorTestBase
 {
-    private readonly RunOrchestrator _runOrchestrator;
+    private readonly JustRunOrchestrator _justRunOrchestrator;
     private readonly Mock<IExitCodeDetector> _exitCodeDetector;
     private readonly Mock<IAppRunner> _appRunner;
 
-    public RunOrchestratorTests()
+    public JustRunOrchestratorTests()
     {
         _exitCodeDetector = new();
         _appRunner = new();
         _appRunnerFactory.SetReturnsDefault(_appRunner.Object);
 
-        _runOrchestrator = new(
+        // These two shouldn't get invoked at all
+        _appInstaller.Reset();
+        _appUninstaller.Reset();
+
+        _justRunOrchestrator = new(
             _appInstaller.Object,
             _appUninstaller.Object,
             _appRunnerFactory.Object,
@@ -66,7 +70,7 @@ public class RunOrchestratorTests : AppOrchestratorTestBase
             .Verifiable();
 
         // Act
-        var result = await _runOrchestrator.OrchestrateRun(
+        var result = await _justRunOrchestrator.OrchestrateRun(
             _appBundleInformation,
             testTarget,
             null,
@@ -88,16 +92,14 @@ public class RunOrchestratorTests : AppOrchestratorTestBase
             x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
             Times.Once);
 
-        VerifySimulatorReset(true);
-        VerifySimulatorCleanUp(true);
+        VerifySimulatorReset(false);
+        VerifySimulatorCleanUp(false);
         VerifyDiagnosticData(testTarget);
-
-        _appInstaller.Verify(
-            x => x.InstallApp(_appBundleInformation, testTarget, _simulator.Object, It.IsAny<CancellationToken>()),
-            Times.Once);
 
         _exitCodeDetector.VerifyAll();
         _appRunner.VerifyAll();
+        _appInstaller.VerifyNoOtherCalls();
+        _appUninstaller.VerifyNoOtherCalls();
     }
 
     [Fact]
@@ -123,7 +125,7 @@ public class RunOrchestratorTests : AppOrchestratorTestBase
             .Verifiable();
 
         // Act
-        var result = await _runOrchestrator.OrchestrateRun(
+        var result = await _justRunOrchestrator.OrchestrateRun(
             _appBundleInformation,
             testTarget,
             DeviceName,
@@ -149,12 +151,10 @@ public class RunOrchestratorTests : AppOrchestratorTestBase
         VerifySimulatorCleanUp(false);
         VerifyDiagnosticData(testTarget);
 
-        _appInstaller.Verify(
-            x => x.InstallApp(_appBundleInformation, testTarget, _device.Object, It.IsAny<CancellationToken>()),
-            Times.Once);
-
         _exitCodeDetector.VerifyAll();
         _appRunner.VerifyAll();
+        _appInstaller.VerifyNoOtherCalls();
+        _appUninstaller.VerifyNoOtherCalls();
     }
 
     [Fact]
@@ -175,7 +175,7 @@ public class RunOrchestratorTests : AppOrchestratorTestBase
             .Verifiable();
 
         // Act
-        var result = await _runOrchestrator.OrchestrateRun(
+        var result = await _justRunOrchestrator.OrchestrateRun(
             _appBundleInformation,
             testTarget,
             null,
@@ -201,12 +201,10 @@ public class RunOrchestratorTests : AppOrchestratorTestBase
         VerifySimulatorCleanUp(false);
         VerifyDiagnosticData(testTarget);
 
-        _appInstaller.Verify(
-            x => x.InstallApp(_appBundleInformation, testTarget, _simulator.Object, It.IsAny<CancellationToken>()),
-            Times.Once);
-
         _errorKnowledgeBase.VerifyAll();
         _appRunner.VerifyAll();
+        _appInstaller.VerifyNoOtherCalls();
+        _appUninstaller.VerifyNoOtherCalls();
     }
 
     [Fact]
@@ -238,7 +236,7 @@ public class RunOrchestratorTests : AppOrchestratorTestBase
             .Verifiable();
 
         // Act
-        var result = await _runOrchestrator.OrchestrateRun(
+        var result = await _justRunOrchestrator.OrchestrateRun(
             _appBundleInformation,
             testTarget,
             DeviceName,
@@ -264,12 +262,10 @@ public class RunOrchestratorTests : AppOrchestratorTestBase
         VerifySimulatorCleanUp(false);
         VerifyDiagnosticData(testTarget);
 
-        _appInstaller.Verify(
-            x => x.InstallApp(_appBundleInformation, testTarget, _device.Object, It.IsAny<CancellationToken>()),
-            Times.Once);
-
         _exitCodeDetector.VerifyAll();
         _appRunner.VerifyAll();
+        _appInstaller.VerifyNoOtherCalls();
+        _appUninstaller.VerifyNoOtherCalls();
     }
 
     [Fact]
@@ -299,7 +295,7 @@ public class RunOrchestratorTests : AppOrchestratorTestBase
             .Verifiable();
 
         // Act
-        var result = await _runOrchestrator.OrchestrateRun(
+        var result = await _justRunOrchestrator.OrchestrateRun(
             _appBundleInformation,
             testTarget,
             null,

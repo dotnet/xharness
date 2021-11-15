@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common;
@@ -43,6 +45,35 @@ namespace Microsoft.DotNet.XHarness.Apple
             : base(appInstaller, appUninstaller, appRunnerFactory, processManager, deviceFinder, iOSExitCodeDetector, macCatalystExitCodeDetector, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
         {
         }
+
+        public override Task<ExitCode> OrchestrateRun(
+            AppBundleInformation appBundleInformation,
+            TestTargetOs target,
+            string? deviceName,
+            TimeSpan timeout,
+            TimeSpan launchTimeout,
+            int expectedExitCode,
+            bool includeWirelessDevices,
+            bool resetSimulator,
+            bool enableLldb,
+            bool signalAppEnd,
+            IReadOnlyCollection<(string, string)> environmentalVariables,
+            IEnumerable<string> passthroughArguments,
+            CancellationToken cancellationToken)
+            => base.OrchestrateRun(
+                appBundleInformation,
+                target,
+                deviceName,
+                timeout,
+                launchTimeout,
+                expectedExitCode,
+                includeWirelessDevices,
+                resetSimulator: false, // No simulator reset for just- commands
+                enableLldb,
+                signalAppEnd,
+                environmentalVariables,
+                passthroughArguments,
+                cancellationToken);
 
         protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
             => Task.CompletedTask; // no-op so that we don't remove the app after (reset will only clean it up before)

@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
         }
 
-        public async Task<ExitCode> OrchestrateTest(
+        public virtual async Task<ExitCode> OrchestrateTest(
             AppBundleInformation appBundleInformation,
             TestTargetOs target,
             string? deviceName,
