@@ -27,7 +27,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
             _appBundleInformationParser.Object,
             _deviceFinder.Object,
             _logger.Object,
-            _logs.Object,
+            _logs,
             _mainLog.Object,
             _errorKnowledgeBase.Object,
             _diagnosticsData,
@@ -39,7 +39,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
     {
         // Setup
         _appInstaller
-            .Setup(x => x.InstallApp(_appBundleInformation, It.IsAny<TestTargetOs>(), _simulator!.Object, It.IsAny<CancellationToken>()))
+            .Setup(x => x.InstallApp(_appBundleInformation, It.IsAny<TestTargetOs>(), _simulator.Object, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProcessExecutionResult
             {
                 ExitCode = 0,
@@ -47,7 +47,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
             });
 
         _appUninstaller
-            .Setup(x => x.UninstallSimulatorApp(_simulator!.Object, s_appIdentifier, It.IsAny<CancellationToken>()))
+            .Setup(x => x.UninstallSimulatorApp(_simulator.Object, s_appIdentifier, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProcessExecutionResult
             {
                 ExitCode = 1, // This can fail as this is the first purge of the app before we install it
@@ -79,7 +79,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
         VerifyDiagnosticData(testTarget);
 
         _appInstaller.Verify(
-            x => x.InstallApp(_appBundleInformation, testTarget, _simulator!.Object, It.IsAny<CancellationToken>()),
+            x => x.InstallApp(_appBundleInformation, testTarget, _simulator.Object, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -88,7 +88,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
     {
         // Setup
         _appInstaller
-            .Setup(x => x.InstallApp(_appBundleInformation, It.IsAny<TestTargetOs>(), _simulator!.Object, It.IsAny<CancellationToken>()))
+            .Setup(x => x.InstallApp(_appBundleInformation, It.IsAny<TestTargetOs>(), _simulator.Object, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProcessExecutionResult
             {
                 ExitCode = 0,
@@ -96,7 +96,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
             });
 
         _appUninstaller
-            .Setup(x => x.UninstallSimulatorApp(_simulator!.Object, s_appIdentifier, It.IsAny<CancellationToken>()))
+            .Setup(x => x.UninstallSimulatorApp(_simulator.Object, s_appIdentifier, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProcessExecutionResult
             {
                 ExitCode = 1, // This can fail as this is the first purge of the app before we install it
@@ -128,7 +128,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
         VerifyDiagnosticData(testTarget);
 
         _appInstaller.Verify(
-            x => x.InstallApp(_appBundleInformation, testTarget, _simulator!.Object, It.IsAny<CancellationToken>()),
+            x => x.InstallApp(_appBundleInformation, testTarget, _simulator.Object, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -137,7 +137,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
     {
         // Setup
         _appInstaller
-            .Setup(x => x.InstallApp(_appBundleInformation, It.IsAny<TestTargetOs>(), _device!.Object, It.IsAny<CancellationToken>()))
+            .Setup(x => x.InstallApp(_appBundleInformation, It.IsAny<TestTargetOs>(), _device.Object, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProcessExecutionResult
             {
                 ExitCode = 0,
@@ -145,7 +145,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
             });
 
         _appUninstaller
-            .Setup(x => x.UninstallDeviceApp(_device!.Object, s_appIdentifier, It.IsAny<CancellationToken>()))
+            .Setup(x => x.UninstallDeviceApp(_device.Object, s_appIdentifier, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProcessExecutionResult
             {
                 ExitCode = 1, // This can fail as this is the first purge of the app before we install it
@@ -177,7 +177,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
             Times.Once);
 
         _appInstaller.Verify(
-            x => x.InstallApp(_appBundleInformation, testTarget, _device!.Object, It.IsAny<CancellationToken>()),
+            x => x.InstallApp(_appBundleInformation, testTarget, _device.Object, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

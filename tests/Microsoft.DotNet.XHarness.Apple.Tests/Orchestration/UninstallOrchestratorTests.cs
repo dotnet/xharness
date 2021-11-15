@@ -26,7 +26,7 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
             _appUninstaller.Object,
             _deviceFinder.Object,
             _logger.Object,
-            _logs.Object,
+            _logs,
             _mainLog.Object,
             _errorKnowledgeBase.Object,
             _diagnosticsData,

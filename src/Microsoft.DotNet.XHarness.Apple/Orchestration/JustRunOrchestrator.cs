@@ -32,13 +32,15 @@ namespace Microsoft.DotNet.XHarness.Apple
             IAppRunnerFactory appRunnerFactory,
             IMlaunchProcessManager processManager,
             IDeviceFinder deviceFinder,
+            IExitCodeDetector iOSExitCodeDetector,
+            IExitCodeDetector macCatalystExitCodeDetector,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,
             IErrorKnowledgeBase errorKnowledgeBase,
             IDiagnosticsData diagnosticsData,
             IHelpers helpers)
-            : base(appInstaller, appUninstaller, appRunnerFactory, processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+            : base(appInstaller, appUninstaller, appRunnerFactory, processManager, deviceFinder, iOSExitCodeDetector, macCatalystExitCodeDetector, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
         {
         }
 

@@ -5,7 +5,6 @@
 using System;
 using System.Threading;
 using Microsoft.DotNet.XHarness.Common;
-using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
@@ -32,22 +31,25 @@ public abstract class OrchestratorTestBase
     protected readonly Mock<IErrorKnowledgeBase> _errorKnowledgeBase;
     protected readonly Mock<IFileBackedLog> _mainLog;
     protected readonly Mock<ILogger> _logger;
-    protected readonly Mock<ILogs> _logs;
     protected readonly Mock<IHelpers> _helpers;
     protected readonly Mock<IAppInstaller> _appInstaller;
     protected readonly Mock<IAppUninstaller> _appUninstaller;
     protected readonly AppBundleInformation _appBundleInformation;
     protected readonly IDiagnosticsData _diagnosticsData;
 
+    protected readonly MockLogs _logs;
+
     public OrchestratorTestBase()
     {
         _logger = new();
         _mainLog = new();
-        _logs = new();
         _helpers = new();
         _errorKnowledgeBase = new();
         _appInstaller = new();
         _appUninstaller = new();
+        _logs = new();
+
+        _logs.AddFile("system.log", LogType.SystemLog.ToString());
 
         _simulator = new();
         _simulator.Setup(x => x.UDID).Returns(UDID);

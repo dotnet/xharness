@@ -44,6 +44,8 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// </summary>
     public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
     {
+        private readonly IExitCodeDetector _iOSExitCodeDetector;
+        private readonly IExitCodeDetector _macCatalystExitCodeDetector;
         private readonly ILogger _logger;
         private readonly ILogs _logs;
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
@@ -55,6 +57,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             IAppRunnerFactory appRunnerFactory,
             IMlaunchProcessManager processManager,
             IDeviceFinder deviceFinder,
+            IExitCodeDetector iOSExitCodeDetector,
+            IExitCodeDetector macCatalystExitCodeDetector,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,
@@ -63,6 +67,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             IHelpers helpers)
             : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
         {
+            _iOSExitCodeDetector = iOSExitCodeDetector ?? throw new ArgumentNullException(nameof(iOSExitCodeDetector));
+            _macCatalystExitCodeDetector = macCatalystExitCodeDetector ?? throw new ArgumentNullException(nameof(macCatalystExitCodeDetector));
             _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
@@ -185,7 +191,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 return ExitCode.APP_LAUNCH_FAILURE;
             }
 
-            return ParseResult(new iOSExitCodeDetector(), expectedExitCode, appBundleInfo, result);
+            return ParseResult(_iOSExitCodeDetector, expectedExitCode, appBundleInfo, result);
         }
 
         private async Task<ExitCode> ExecuteMacCatalystApp(
@@ -207,7 +213,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 environmentalVariables,
                 cancellationToken: cancellationToken);
 
-            return ParseResult(new MacCatalystExitCodeDetector(), expectedExitCode, appBundleInfo, result);
+            return ParseResult(_macCatalystExitCodeDetector, expectedExitCode, appBundleInfo, result);
         }
 
         private ExitCode ParseResult(
