@@ -15,23 +15,38 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations;
 
-public class RunOrchestratorTests : AppOrchestratorTestBase
+public class RunOrchestratorTests : OrchestratorTestBase
 {
     private readonly RunOrchestrator _runOrchestrator;
     private readonly Mock<IExitCodeDetector> _exitCodeDetector;
     private readonly Mock<IAppRunner> _appRunner;
+    private readonly Mock<IAppRunnerFactory> _appRunnerFactory;
 
     public RunOrchestratorTests()
     {
         _exitCodeDetector = new();
         _appRunner = new();
+        _appRunnerFactory = new();
+
         _appRunnerFactory.SetReturnsDefault(_appRunner.Object);
+
+        // Prepare succeeding install/uninstall as we don't care about those in the test/run tests
+        _appInstaller.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult
+        {
+            ExitCode = 0,
+            TimedOut = false,
+        }));
+
+        _appUninstaller.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult
+        {
+            ExitCode = 0,
+            TimedOut = false,
+        }));
 
         _runOrchestrator = new(
             _appInstaller.Object,
             _appUninstaller.Object,
             _appRunnerFactory.Object,
-            _processManager.Object,
             _deviceFinder.Object,
             _exitCodeDetector.Object,
             _exitCodeDetector.Object,

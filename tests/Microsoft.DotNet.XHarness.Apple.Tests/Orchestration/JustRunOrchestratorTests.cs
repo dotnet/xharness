@@ -15,16 +15,19 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations;
 
-public class JustRunOrchestratorTests : AppOrchestratorTestBase
+public class JustRunOrchestratorTests : OrchestratorTestBase
 {
     private readonly JustRunOrchestrator _justRunOrchestrator;
     private readonly Mock<IExitCodeDetector> _exitCodeDetector;
     private readonly Mock<IAppRunner> _appRunner;
+    private readonly Mock<IAppRunnerFactory> _appRunnerFactory;
 
     public JustRunOrchestratorTests()
     {
         _exitCodeDetector = new();
         _appRunner = new();
+
+        _appRunnerFactory = new();
         _appRunnerFactory.SetReturnsDefault(_appRunner.Object);
 
         // These two shouldn't get invoked at all
@@ -35,7 +38,6 @@ public class JustRunOrchestratorTests : AppOrchestratorTestBase
             _appInstaller.Object,
             _appUninstaller.Object,
             _appRunnerFactory.Object,
-            _processManager.Object,
             _deviceFinder.Object,
             _exitCodeDetector.Object,
             _exitCodeDetector.Object,

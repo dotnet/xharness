@@ -10,7 +10,6 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -32,7 +31,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             IAppInstaller appInstaller,
             IAppUninstaller appUninstaller,
             IAppRunnerFactory appRunnerFactory,
-            IMlaunchProcessManager processManager,
             IDeviceFinder deviceFinder,
             IExitCodeDetector iOSExitCodeDetector,
             IExitCodeDetector macCatalystExitCodeDetector,
@@ -42,7 +40,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IErrorKnowledgeBase errorKnowledgeBase,
             IDiagnosticsData diagnosticsData,
             IHelpers helpers)
-            : base(appInstaller, appUninstaller, appRunnerFactory, processManager, deviceFinder, iOSExitCodeDetector, macCatalystExitCodeDetector, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+            : base(appInstaller, appUninstaller, appRunnerFactory, deviceFinder, iOSExitCodeDetector, macCatalystExitCodeDetector, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
         {
         }
 
