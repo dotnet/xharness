@@ -182,6 +182,61 @@ public class InstallOrchestratorTests : OrchestratorTestBase
     }
 
     [Fact]
+    public async Task OrchestrateFailedDeviceInstallationTest()
+    {
+        // Setup
+        _appInstaller
+            .Setup(x => x.InstallApp(_appBundleInformation, It.IsAny<TestTargetOs>(), _device.Object, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ProcessExecutionResult
+            {
+                ExitCode = 1,
+                TimedOut = false,
+            });
+
+        _appUninstaller
+            .Setup(x => x.UninstallDeviceApp(_device.Object, s_appIdentifier, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ProcessExecutionResult
+            {
+                ExitCode = 1, // This can fail as this is the first purge of the app before we install it
+                TimedOut = false,
+            });
+
+        var failure = new KnownIssue("Some failure", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED);
+        _errorKnowledgeBase
+            .Setup(x => x.IsKnownInstallIssue(It.IsAny<IFileBackedLog>(), out failure))
+            .Returns(true)
+            .Verifiable();
+
+        var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
+
+        // Act
+        var result = await _installOrchestrator.OrchestrateInstall(
+            testTarget,
+            null,
+            AppPath,
+            TimeSpan.FromMinutes(30),
+            includeWirelessDevices: false,
+            resetSimulator: false,
+            enableLldb: true,
+            new CancellationToken());
+
+        // Verify
+        Assert.Equal(ExitCode.APP_NOT_SIGNED, result);
+
+        VerifySimulatorReset(false);
+        VerifySimulatorCleanUp(false);
+        VerifyDiagnosticData(testTarget);
+
+        _deviceFinder.Verify(
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
+            Times.Once);
+
+        _appInstaller.Verify(
+            x => x.InstallApp(_appBundleInformation, testTarget, _device.Object, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task OrchestrateMacCatalystInstallationTest()
     {
         // Setup
