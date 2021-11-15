@@ -12,7 +12,6 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -112,7 +111,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 launchTimeoutCancellation.Token,
                 cancellationToken);
 
-            Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo) =>
+            Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
             {
                 appRunStarted = true;
                 return ExecuteMacCatalystApp(
@@ -127,9 +126,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                     passthroughArguments,
                     signalAppEnd,
                     cancellationToken);
-            };
+            }
 
-            Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice) =>
+            Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
             {
                 appRunStarted = true;
                 return ExecuteApp(
@@ -147,7 +146,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     passthroughArguments,
                     signalAppEnd,
                     cancellationToken);
-            };
+            }
 
             return await OrchestrateOperation(
                 target,

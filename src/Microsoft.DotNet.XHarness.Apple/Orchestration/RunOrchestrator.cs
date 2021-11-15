@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 launchTimeoutCancellation.Token,
                 cancellationToken);
 
-            Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo) =>
+            Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
             {
                 appRunStarted = true;
                 return ExecuteMacCatalystApp(
@@ -118,9 +118,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                     environmentalVariables,
                     passthroughArguments,
                     cancellationToken);
-            };
+            }
 
-            Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice) =>
+            Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
             {
                 appRunStarted = true;
                 return ExecuteApp(
@@ -134,7 +134,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                     environmentalVariables,
                     passthroughArguments,
                     cancellationToken);
-            };
+            }
 
             return await OrchestrateOperation(
                 target,

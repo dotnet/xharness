@@ -57,10 +57,10 @@ namespace Microsoft.DotNet.XHarness.Apple
             bool enableLldb,
             CancellationToken cancellationToken)
         {
-            Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo)
+            static Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
                 => throw new InvalidOperationException("uninstall command not available on maccatalyst");
 
-            Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice)
+            static Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
                 => Task.FromResult(ExitCode.SUCCESS); // no-op
 
             return OrchestrateOperation(

@@ -76,12 +76,12 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 _consoleLogger.LogError(e.Message);
                 return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
-            }                
+            }
 
-            Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo)
+            static Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
                 => throw new InvalidOperationException("install command not available on maccatalyst");
 
-            Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice)
+            static Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
                 => Task.FromResult(ExitCode.SUCCESS); // no-op
 
             var result = await OrchestrateOperation(target, deviceName, includeWirelessDevices, resetSimulator, enableLldb, appBundleInfo, executeMacCatalystApp, executeApp, cancellationToken);
