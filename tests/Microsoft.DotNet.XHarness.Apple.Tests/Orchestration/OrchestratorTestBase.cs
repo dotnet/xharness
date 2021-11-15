@@ -26,7 +26,7 @@ public abstract class OrchestratorTestBase
 
     protected readonly Mock<IDeviceFinder> _deviceFinder;
     protected readonly Mock<ISimulatorDevice> _simulator;
-    protected readonly Mock<ISimulatorDevice> _device;
+    protected readonly Mock<IHardwareDevice> _device;
     protected readonly Mock<IAppBundleInformationParser> _appBundleInformationParser;
     protected readonly Mock<IErrorKnowledgeBase> _errorKnowledgeBase;
     protected readonly Mock<IFileBackedLog> _mainLog;

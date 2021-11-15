@@ -9,6 +9,7 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Moq;
 using Xunit;
 
@@ -37,21 +38,8 @@ public class InstallOrchestratorTests : OrchestratorTestBase
     public async Task OrchestrateSimulatorInstallationTest()
     {
         // Setup
-        _appInstaller
-            .Setup(x => x.InstallApp(_appBundleInformation, It.IsAny<TestTargetOs>(), _simulator.Object, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProcessExecutionResult
-            {
-                ExitCode = 0,
-                TimedOut = false,
-            });
-
-        _appUninstaller
-            .Setup(x => x.UninstallSimulatorApp(_simulator.Object, s_appIdentifier, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProcessExecutionResult
-            {
-                ExitCode = 1, // This can fail as this is the first purge of the app before we install it
-                TimedOut = false,
-            });
+        SetupInstall(_simulator.Object);
+        SetupUninstall(_simulator.Object, 1); // This can fail as this is the first purge of the app before we install it
 
         var testTarget = new TestTargetOs(TestTarget.Simulator_iOS64, "13.5");
 
@@ -86,21 +74,8 @@ public class InstallOrchestratorTests : OrchestratorTestBase
     public async Task OrchestrateSimulatorInstallationWithResetTest()
     {
         // Setup
-        _appInstaller
-            .Setup(x => x.InstallApp(_appBundleInformation, It.IsAny<TestTargetOs>(), _simulator.Object, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProcessExecutionResult
-            {
-                ExitCode = 0,
-                TimedOut = false,
-            });
-
-        _appUninstaller
-            .Setup(x => x.UninstallSimulatorApp(_simulator.Object, s_appIdentifier, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProcessExecutionResult
-            {
-                ExitCode = 1, // This can fail as this is the first purge of the app before we install it
-                TimedOut = false,
-            });
+        SetupInstall(_simulator.Object);
+        SetupUninstall(_simulator.Object, 1); // This can fail as this is the first purge of the app before we install it
 
         var testTarget = new TestTargetOs(TestTarget.Simulator_tvOS, "13.5");
 
@@ -135,21 +110,8 @@ public class InstallOrchestratorTests : OrchestratorTestBase
     public async Task OrchestrateDeviceInstallationTest()
     {
         // Setup
-        _appInstaller
-            .Setup(x => x.InstallApp(_appBundleInformation, It.IsAny<TestTargetOs>(), _device.Object, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProcessExecutionResult
-            {
-                ExitCode = 0,
-                TimedOut = false,
-            });
-
-        _appUninstaller
-            .Setup(x => x.UninstallDeviceApp(_device.Object, s_appIdentifier, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProcessExecutionResult
-            {
-                ExitCode = 1, // This can fail as this is the first purge of the app before we install it
-                TimedOut = false,
-            });
+        SetupInstall(_device.Object);
+        SetupUninstall(_device.Object, 1); // This can fail as this is the first purge of the app before we install it
 
         var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
 
@@ -184,21 +146,8 @@ public class InstallOrchestratorTests : OrchestratorTestBase
     public async Task OrchestrateFailedDeviceInstallationTest()
     {
         // Setup
-        _appInstaller
-            .Setup(x => x.InstallApp(_appBundleInformation, It.IsAny<TestTargetOs>(), _device.Object, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProcessExecutionResult
-            {
-                ExitCode = 1,
-                TimedOut = false,
-            });
-
-        _appUninstaller
-            .Setup(x => x.UninstallDeviceApp(_device.Object, s_appIdentifier, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProcessExecutionResult
-            {
-                ExitCode = 1, // This can fail as this is the first purge of the app before we install it
-                TimedOut = false,
-            });
+        SetupInstall(_device.Object, 1);
+        SetupUninstall(_device.Object, 1); // This can fail as this is the first purge of the app before we install it
 
         var failure = new KnownIssue("Some failure", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED);
         _errorKnowledgeBase
@@ -222,13 +171,13 @@ public class InstallOrchestratorTests : OrchestratorTestBase
         // Verify
         Assert.Equal(ExitCode.APP_NOT_SIGNED, result);
 
-        VerifySimulatorReset(false);
-        VerifySimulatorCleanUp(false);
-        VerifyDiagnosticData(testTarget);
-
         _deviceFinder.Verify(
             x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
             Times.Once);
+
+        VerifySimulatorReset(false);
+        VerifySimulatorCleanUp(false);
+        VerifyDiagnosticData(testTarget);
 
         _appInstaller.Verify(
             x => x.InstallApp(_appBundleInformation, testTarget, _device.Object, It.IsAny<CancellationToken>()),
@@ -297,5 +246,40 @@ public class InstallOrchestratorTests : OrchestratorTestBase
 
         // Verify
         Assert.Equal(ExitCode.DEVICE_NOT_FOUND, result);
+    }
+
+    private void SetupInstall(IDevice device, int exitCode = 0)
+    {
+        _appInstaller
+            .Setup(x => x.InstallApp(_appBundleInformation, It.IsAny<TestTargetOs>(), device, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ProcessExecutionResult
+            {
+                ExitCode = exitCode,
+                TimedOut = false,
+            });
+    }
+
+    private void SetupUninstall(IDevice device, int exitCode = 0)
+    {
+        if (device is ISimulatorDevice)
+        {
+            _appUninstaller
+                .Setup(x => x.UninstallSimulatorApp(device, s_appIdentifier, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ProcessExecutionResult
+                {
+                    ExitCode = exitCode,
+                    TimedOut = false,
+                });
+        }
+        else
+        {
+            _appUninstaller
+                .Setup(x => x.UninstallDeviceApp(device, s_appIdentifier, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ProcessExecutionResult
+                {
+                    ExitCode = exitCode,
+                    TimedOut = false,
+                });
+        }
     }
 }
