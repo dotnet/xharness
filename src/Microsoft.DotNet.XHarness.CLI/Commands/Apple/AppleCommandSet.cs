@@ -8,13 +8,14 @@ using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
+using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Mono.Options;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
 {
-    public class AppleCommandSet : CommandSet
+    internal class AppleCommandSet : CommandSet
     {
         public AppleCommandSet() : base("apple")
         {
@@ -29,6 +30,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             services.TryAddTransient<ICaptureLogFactory, CaptureLogFactory>();
             services.TryAddTransient<IDeviceLogCapturerFactory, DeviceLogCapturerFactory>();
             services.TryAddTransient<ICrashSnapshotReporterFactory, CrashSnapshotReporterFactory>();
+            services.TryAddTransient<ITestReporterFactory, TestReporterFactory>();
+            services.TryAddTransient<IResultParser, XmlResultParser>();
 
             services.TryAddTransient<IAppInstaller, AppInstaller>();
             services.TryAddTransient<IAppTester, AppTester>();
