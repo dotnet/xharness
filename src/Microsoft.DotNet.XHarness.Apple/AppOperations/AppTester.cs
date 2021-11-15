@@ -22,8 +22,32 @@ namespace Microsoft.DotNet.XHarness.Apple
 {
     public interface IAppTester
     {
-        Task<(TestExecutingResult Result, string ResultMessage)> TestApp(AppBundleInformation appInformation, TestTargetOs target, IDevice device, IDevice? companionDevice, TimeSpan timeout, TimeSpan testLaunchTimeout, bool signalAppEnd, IEnumerable<string> extraAppArguments, IEnumerable<(string, string)> extraEnvVariables, XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit, string[]? skippedMethods = null, string[]? skippedTestClasses = null, CancellationToken cancellationToken = default);
-        Task<(TestExecutingResult Result, string ResultMessage)> TestMacCatalystApp(AppBundleInformation appInformation, TimeSpan timeout, TimeSpan testLaunchTimeout, bool signalAppEnd, IEnumerable<string> extraAppArguments, IEnumerable<(string, string)> extraEnvVariables, XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit, string[]? skippedMethods = null, string[]? skippedTestClasses = null, CancellationToken cancellationToken = default);
+        Task<(TestExecutingResult Result, string ResultMessage)> TestApp(
+            AppBundleInformation appInformation,
+            TestTargetOs target,
+            IDevice device,
+            IDevice? companionDevice,
+            TimeSpan timeout,
+            TimeSpan testLaunchTimeout,
+            bool signalAppEnd,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
+            XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
+            string[]? skippedMethods = null,
+            string[]? skippedTestClasses = null,
+            CancellationToken cancellationToken = default);
+
+        Task<(TestExecutingResult Result, string ResultMessage)> TestMacCatalystApp(
+            AppBundleInformation appInformation,
+            TimeSpan timeout,
+            TimeSpan testLaunchTimeout,
+            bool signalAppEnd,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
+            XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
+            string[]? skippedMethods = null,
+            string[]? skippedTestClasses = null,
+            CancellationToken cancellationToken = default);
     }
 
     /// <summary>

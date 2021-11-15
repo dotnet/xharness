@@ -22,8 +22,24 @@ namespace Microsoft.DotNet.XHarness.Apple
 {
     public interface IAppRunner
     {
-        Task<ProcessExecutionResult> RunApp(AppBundleInformation appInformation, TestTargetOs target, IDevice device, IDevice? companionDevice, TimeSpan timeout, bool signalAppEnd, IEnumerable<string> extraAppArguments, IEnumerable<(string, string)> extraEnvVariables, CancellationToken cancellationToken = default);
-        Task<ProcessExecutionResult> RunMacCatalystApp(AppBundleInformation appInformation, TimeSpan timeout, bool signalAppEnd, IEnumerable<string> extraAppArguments, IEnumerable<(string, string)> extraEnvVariables, CancellationToken cancellationToken = default);
+        Task<ProcessExecutionResult> RunApp(
+            AppBundleInformation appInformation,
+            TestTargetOs target,
+            IDevice device,
+            IDevice? companionDevice,
+            TimeSpan timeout,
+            bool signalAppEnd,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
+            CancellationToken cancellationToken = default);
+
+        Task<ProcessExecutionResult> RunMacCatalystApp(
+            AppBundleInformation appInformation,
+            TimeSpan timeout,
+            bool signalAppEnd,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
+            CancellationToken cancellationToken = default);
     }
 
     /// <summary>

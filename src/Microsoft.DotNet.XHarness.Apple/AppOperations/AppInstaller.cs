@@ -17,7 +17,11 @@ namespace Microsoft.DotNet.XHarness.Apple
 {
     public interface IAppInstaller
     {
-        Task<ProcessExecutionResult> InstallApp(AppBundleInformation appBundleInformation, TestTargetOs target, IDevice device, CancellationToken cancellationToken = default);
+        Task<ProcessExecutionResult> InstallApp(
+            AppBundleInformation appBundleInformation,
+            TestTargetOs target,
+            IDevice device,
+            CancellationToken cancellationToken = default);
     }
 
     public class AppInstaller : IAppInstaller
