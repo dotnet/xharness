@@ -217,7 +217,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             catch (Exception e)
             {
-                exitCode = ExitCode.APP_LAUNCH_FAILURE;
+                exitCode = ExitCode.GENERAL_FAILURE;
 
                 var message = new StringBuilder().AppendLine("Application run failed:");
 

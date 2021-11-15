@@ -179,11 +179,9 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
     public async Task OrchestrateMacCatalystUninstallationTest()
     {
         // Setup
-        _appUninstaller.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult
-        {
-            ExitCode = 0,
-            TimedOut = false,
-        }));
+        _appInstaller.Reset();
+        _appUninstaller.Reset();
+        _deviceFinder.Reset();
 
         var testTarget = new TestTargetOs(TestTarget.MacCatalyst, null);
 
@@ -199,24 +197,12 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
             new CancellationToken());
 
         // Verify
-        _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, It.IsAny<string>(), It.IsAny<ILog>(), It.IsAny<bool>()),
-            Times.Never);
-
         VerifySimulatorReset(false);
         VerifySimulatorCleanUp(false);
 
-        _appInstaller.Verify(
-            x => x.InstallApp(It.IsAny<AppBundleInformation>(), It.IsAny<TestTargetOs>(), It.IsAny<IDevice>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-
-        _appUninstaller.Verify(
-            x => x.UninstallSimulatorApp(It.IsAny<IDevice>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-
-        _appUninstaller.Verify(
-            x => x.UninstallDeviceApp(It.IsAny<IDevice>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        _appInstaller.VerifyNoOtherCalls();
+        _appUninstaller.VerifyNoOtherCalls();
+        _deviceFinder.VerifyNoOtherCalls();
     }
 
     [Fact]
