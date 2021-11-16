@@ -20,11 +20,41 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
+    public interface IAppTester
+    {
+        Task<(TestExecutingResult Result, string ResultMessage)> TestApp(
+            AppBundleInformation appInformation,
+            TestTargetOs target,
+            IDevice device,
+            IDevice? companionDevice,
+            TimeSpan timeout,
+            TimeSpan testLaunchTimeout,
+            bool signalAppEnd,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
+            XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
+            string[]? skippedMethods = null,
+            string[]? skippedTestClasses = null,
+            CancellationToken cancellationToken = default);
+
+        Task<(TestExecutingResult Result, string ResultMessage)> TestMacCatalystApp(
+            AppBundleInformation appInformation,
+            TimeSpan timeout,
+            TimeSpan testLaunchTimeout,
+            bool signalAppEnd,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
+            XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
+            string[]? skippedMethods = null,
+            string[]? skippedTestClasses = null,
+            CancellationToken cancellationToken = default);
+    }
+
     /// <summary>
     /// Class that will run an app bundle that contains the TestRunner on a given simulator/device.
     /// It will collect test results ran in the app and return results.
     /// </summary>
-    public class AppTester : AppRunnerBase
+    public class AppTester : AppRunnerBase, IAppTester
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ISimpleListenerFactory _listenerFactory;
@@ -134,7 +164,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             var isSimulator = target.Platform.IsSimulator();
 
             var testLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
-            
+
             var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
                 runMode,
                 log: _mainLog,

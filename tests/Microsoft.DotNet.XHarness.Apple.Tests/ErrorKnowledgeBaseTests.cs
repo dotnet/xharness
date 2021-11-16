@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 log.Flush();
 
                 Assert.True(_errorKnowledgeBase.IsKnownInstallIssue(log, out var failure));
-                Assert.Equal(expectedFailureMessage, failure.HumanMessage);
+                Assert.Equal(expectedFailureMessage, failure?.HumanMessage);
             }
         }
 
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 log.Flush();
 
                 Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failure));
-                Assert.Equal(expectedFailureMessage, failure.HumanMessage);
+                Assert.Equal(expectedFailureMessage, failure?.HumanMessage);
             }
         }
 
@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 log.Flush();
 
                 Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failure));
-                Assert.Equal(expectedFailureMessage, failure.HumanMessage);
+                Assert.Equal(expectedFailureMessage, failure?.HumanMessage);
             }
         }
 
@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
                 log.Flush();
 
                 Assert.True(_errorKnowledgeBase.IsKnownTestIssue(log, out var failure));
-                Assert.Equal(expectedFailureMessage, failure.HumanMessage);
+                Assert.Equal(expectedFailureMessage, failure?.HumanMessage);
             }
         }
     }

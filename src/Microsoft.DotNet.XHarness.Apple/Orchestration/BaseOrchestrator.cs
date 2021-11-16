@@ -13,7 +13,6 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -31,8 +30,8 @@ namespace Microsoft.DotNet.XHarness.Apple
     public abstract class BaseOrchestrator : IDisposable
     {
         protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
-
-        private readonly IMlaunchProcessManager _processManager;
+        private readonly IAppInstaller _appInstaller;
+        private readonly IAppUninstaller _appUninstaller;
         private readonly IDeviceFinder _deviceFinder;
         private readonly ILogger _logger;
         private readonly ILogs _logs;
@@ -40,10 +39,12 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
         private readonly IDiagnosticsData _diagnosticsData;
         private readonly IHelpers _helpers;
+
         private bool _lldbFileCreated;
 
         protected BaseOrchestrator(
-            IMlaunchProcessManager processManager,
+            IAppInstaller appInstaller,
+            IAppUninstaller appUninstaller,
             IDeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
@@ -52,7 +53,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             IDiagnosticsData diagnosticsData,
             IHelpers helpers)
         {
-            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _appInstaller = appInstaller ?? throw new ArgumentNullException(nameof(appInstaller));
+            _appUninstaller = appUninstaller ?? throw new ArgumentNullException(nameof(appUninstaller));
             _deviceFinder = deviceFinder ?? throw new ArgumentNullException(nameof(deviceFinder));
             _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
@@ -62,7 +64,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
         }
 
-        protected async Task<ExitCode> OrchestrateRun(
+        protected async Task<ExitCode> OrchestrateOperation(
             TestTargetOs target,
             string? deviceName,
             bool includeWirelessDevices,
@@ -215,7 +217,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
             catch (Exception e)
             {
-                exitCode = ExitCode.APP_LAUNCH_FAILURE;
+                exitCode = ExitCode.GENERAL_FAILURE;
 
                 var message = new StringBuilder().AppendLine("Application run failed:");
 
@@ -274,13 +276,11 @@ namespace Microsoft.DotNet.XHarness.Apple
         {
             _logger.LogInformation($"Installing application '{appBundleInfo.AppName}' on '{device.Name}'");
 
-            var appInstaller = new AppInstaller(_processManager, _mainLog);
-
             ProcessExecutionResult result;
 
             try
             {
-                result = await appInstaller.InstallApp(appBundleInfo, target, device, cancellationToken);
+                result = await _appInstaller.InstallApp(appBundleInfo, target, device, cancellationToken);
             }
             catch (Exception e)
             {
@@ -344,10 +344,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                 _logger.LogInformation($"Uninstalling the application '{bundleIdentifier}' from '{device.Name}'");
             }
 
-            var appUninstaller = new AppUninstaller(_processManager, _mainLog);
             ProcessExecutionResult uninstallResult = target.IsSimulator()
-                ? await appUninstaller.UninstallApp(device, bundleIdentifier, cancellationToken)
-                : await appUninstaller.UninstallDeviceApp(device, bundleIdentifier, cancellationToken);
+                ? await _appUninstaller.UninstallSimulatorApp(device, bundleIdentifier, cancellationToken)
+                : await _appUninstaller.UninstallDeviceApp(device, bundleIdentifier, cancellationToken);
 
             // We try to uninstall app before each run to clear it from the device
             // For those cases, we don't care about the result

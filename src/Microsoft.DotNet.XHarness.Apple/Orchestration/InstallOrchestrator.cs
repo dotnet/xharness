@@ -9,7 +9,6 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -39,7 +38,8 @@ namespace Microsoft.DotNet.XHarness.Apple
         private readonly IFileBackedLog _mainLog;
 
         public InstallOrchestrator(
-            IMlaunchProcessManager processManager,
+            IAppInstaller appInstaller,
+            IAppUninstaller appUninstaller,
             IAppBundleInformationParser appBundleInformationParser,
             IDeviceFinder deviceFinder,
             ILogger consoleLogger,
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IErrorKnowledgeBase errorKnowledgeBase,
             IDiagnosticsData diagnosticsData,
             IHelpers helpers)
-            : base(processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+            : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
         {
             _appBundleInformationParser = appBundleInformationParser ?? throw new ArgumentNullException(nameof(appBundleInformationParser));
             _consoleLogger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
@@ -76,15 +76,15 @@ namespace Microsoft.DotNet.XHarness.Apple
             {
                 _consoleLogger.LogError(e.Message);
                 return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
-            }                
+            }
 
-            Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo)
+            static Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
                 => throw new InvalidOperationException("install command not available on maccatalyst");
 
-            Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice)
+            static Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
                 => Task.FromResult(ExitCode.SUCCESS); // no-op
 
-            var result = await OrchestrateRun(target, deviceName, includeWirelessDevices, resetSimulator, enableLldb, appBundleInfo, executeMacCatalystApp, executeApp, cancellationToken);
+            var result = await OrchestrateOperation(target, deviceName, includeWirelessDevices, resetSimulator, enableLldb, appBundleInfo, executeMacCatalystApp, executeApp, cancellationToken);
 
             if (cancellationToken.IsCancellationRequested)
             {

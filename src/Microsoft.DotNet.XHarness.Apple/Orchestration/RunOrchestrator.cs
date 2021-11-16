@@ -12,7 +12,6 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -44,45 +43,40 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// </summary>
     public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
     {
-        private readonly IMlaunchProcessManager _processManager;
+        private readonly IiOSExitCodeDetector _iOSExitCodeDetector;
+        private readonly IMacCatalystExitCodeDetector _macCatalystExitCodeDetector;
         private readonly ILogger _logger;
         private readonly ILogs _logs;
-        private readonly IFileBackedLog _mainLog;
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
-        private readonly AppRunner _appRunner;
+        private readonly IAppRunner _appRunner;
 
         public RunOrchestrator(
-            IMlaunchProcessManager processManager,
+            IAppInstaller appInstaller,
+            IAppUninstaller appUninstaller,
+            IAppRunnerFactory appRunnerFactory,
             IDeviceFinder deviceFinder,
+            IiOSExitCodeDetector iOSExitCodeDetector,
+            IMacCatalystExitCodeDetector macCatalystExitCodeDetector,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,
             IErrorKnowledgeBase errorKnowledgeBase,
             IDiagnosticsData diagnosticsData,
             IHelpers helpers)
-            : base(processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+            : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
         {
-            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _iOSExitCodeDetector = iOSExitCodeDetector ?? throw new ArgumentNullException(nameof(iOSExitCodeDetector));
+            _macCatalystExitCodeDetector = macCatalystExitCodeDetector ?? throw new ArgumentNullException(nameof(macCatalystExitCodeDetector));
             _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
-            _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
 
             // Only add the extra callback if we do know that the feature was indeed enabled
             Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(_logger, l) : null;
-
-            _appRunner = new AppRunner(
-                _processManager,
-                new CrashSnapshotReporterFactory(_processManager),
-                new CaptureLogFactory(),
-                new DeviceLogCapturerFactory(_processManager),
-                _mainLog,
-                _logs,
-                new Helpers(),
-                logCallback);
+            _appRunner = appRunnerFactory.Create(mainLog, logs, logCallback);
         }
 
-        public async Task<ExitCode> OrchestrateRun(
+        public virtual async Task<ExitCode> OrchestrateRun(
             AppBundleInformation appBundleInformation,
             TestTargetOs target,
             string? deviceName,
@@ -117,7 +111,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 launchTimeoutCancellation.Token,
                 cancellationToken);
 
-            Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo) =>
+            Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
             {
                 appRunStarted = true;
                 return ExecuteMacCatalystApp(
@@ -128,9 +122,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                     environmentalVariables,
                     passthroughArguments,
                     cancellationToken);
-            };
+            }
 
-            Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice) =>
+            Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
             {
                 appRunStarted = true;
                 return ExecuteApp(
@@ -144,9 +138,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                     environmentalVariables,
                     passthroughArguments,
                     cancellationToken);
-            };
+            }
 
-            return await OrchestrateRun(
+            return await OrchestrateOperation(
                 target,
                 deviceName,
                 includeWirelessDevices,
@@ -195,7 +189,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 return ExitCode.APP_LAUNCH_FAILURE;
             }
 
-            return ParseResult(new iOSExitCodeDetector(), expectedExitCode, appBundleInfo, result);
+            return ParseResult(_iOSExitCodeDetector, expectedExitCode, appBundleInfo, result);
         }
 
         private async Task<ExitCode> ExecuteMacCatalystApp(
@@ -217,7 +211,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 environmentalVariables,
                 cancellationToken: cancellationToken);
 
-            return ParseResult(new MacCatalystExitCodeDetector(), expectedExitCode, appBundleInfo, result);
+            return ParseResult(_macCatalystExitCodeDetector, expectedExitCode, appBundleInfo, result);
         }
 
         private ExitCode ParseResult(

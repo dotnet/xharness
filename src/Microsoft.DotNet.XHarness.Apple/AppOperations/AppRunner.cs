@@ -20,10 +20,32 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
+    public interface IAppRunner
+    {
+        Task<ProcessExecutionResult> RunApp(
+            AppBundleInformation appInformation,
+            TestTargetOs target,
+            IDevice device,
+            IDevice? companionDevice,
+            TimeSpan timeout,
+            bool signalAppEnd,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
+            CancellationToken cancellationToken = default);
+
+        Task<ProcessExecutionResult> RunMacCatalystApp(
+            AppBundleInformation appInformation,
+            TimeSpan timeout,
+            bool signalAppEnd,
+            IEnumerable<string> extraAppArguments,
+            IEnumerable<(string, string)> extraEnvVariables,
+            CancellationToken cancellationToken = default);
+    }
+
     /// <summary>
     /// Class that will run an app bundle on a given simulator/device and return the exit code.
     /// </summary>
-    public class AppRunner : AppRunnerBase
+    public class AppRunner : AppRunnerBase, IAppRunner
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;

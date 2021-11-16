@@ -13,7 +13,7 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Moq;
 using Xunit;
 
-namespace Microsoft.DotNet.XHarness.Apple.Tests
+namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations
 {
     public class AppUninstallerTests
     {
@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests
             var simulator = Mock.Of<IDevice>(x => x.Name == DeviceName && x.UDID == UDID);
 
             // Act
-            var result = await _appUninstaller.UninstallApp(simulator, AppBundleId);
+            var result = await _appUninstaller.UninstallSimulatorApp(simulator, AppBundleId);
 
             // Verify
             Assert.Equal(0, result.ExitCode);

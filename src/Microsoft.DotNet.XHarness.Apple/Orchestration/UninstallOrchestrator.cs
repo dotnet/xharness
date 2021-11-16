@@ -9,7 +9,6 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -35,7 +34,8 @@ namespace Microsoft.DotNet.XHarness.Apple
     public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
     {
         public UninstallOrchestrator(
-            IMlaunchProcessManager processManager,
+            IAppInstaller appInstaller,
+            IAppUninstaller appUninstaller,
             IDeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             IErrorKnowledgeBase errorKnowledgeBase,
             IDiagnosticsData diagnosticsData,
             IHelpers helpers)
-            : base(processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+            : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
         {
         }
 
@@ -57,13 +57,13 @@ namespace Microsoft.DotNet.XHarness.Apple
             bool enableLldb,
             CancellationToken cancellationToken)
         {
-            Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo)
+            static Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
                 => throw new InvalidOperationException("uninstall command not available on maccatalyst");
 
-            Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice)
+            static Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
                 => Task.FromResult(ExitCode.SUCCESS); // no-op
 
-            return OrchestrateRun(
+            return OrchestrateOperation(
                 target,
                 deviceName,
                 includeWirelessDevices,

@@ -12,12 +12,9 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
-using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
-using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
-using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
@@ -47,14 +44,16 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// </summary>
     public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
     {
-        private readonly IMlaunchProcessManager _processManager;
+        private readonly IAppTesterFactory _appTesterFactory;
         private readonly ILogger _logger;
         private readonly ILogs _logs;
         private readonly IFileBackedLog _mainLog;
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
 
         public TestOrchestrator(
-            IMlaunchProcessManager processManager,
+            IAppInstaller appInstaller,
+            IAppUninstaller appUninstaller,
+            IAppTesterFactory appTesterFactory,
             IDeviceFinder deviceFinder,
             ILogger consoleLogger,
             ILogs logs,
@@ -62,16 +61,16 @@ namespace Microsoft.DotNet.XHarness.Apple
             IErrorKnowledgeBase errorKnowledgeBase,
             IDiagnosticsData diagnosticsData,
             IHelpers helpers)
-            : base(processManager, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+            : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
         {
-            _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+            _appTesterFactory = appTesterFactory ?? throw new ArgumentNullException(nameof(appTesterFactory));
             _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
             _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
         }
 
-        public async Task<ExitCode> OrchestrateTest(
+        public virtual async Task<ExitCode> OrchestrateTest(
             AppBundleInformation appBundleInformation,
             TestTargetOs target,
             string? deviceName,
@@ -112,7 +111,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 launchTimeoutCancellation.Token,
                 cancellationToken);
 
-            Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp = (appBundleInfo) =>
+            Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
             {
                 appRunStarted = true;
                 return ExecuteMacCatalystApp(
@@ -127,9 +126,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                     passthroughArguments,
                     signalAppEnd,
                     cancellationToken);
-            };
+            }
 
-            Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp = (appBundleInfo, device, companionDevice) =>
+            Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
             {
                 appRunStarted = true;
                 return ExecuteApp(
@@ -147,9 +146,9 @@ namespace Microsoft.DotNet.XHarness.Apple
                     passthroughArguments,
                     signalAppEnd,
                     cancellationToken);
-            };
+            }
 
-            return await OrchestrateRun(
+            return await OrchestrateOperation(
                 target,
                 deviceName,
                 includeWirelessDevices,
@@ -196,7 +195,7 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             _logger.LogInformation("Starting test run for " + appBundleInfo.BundleIdentifier + "..");
 
-            AppTester appTester = GetAppTester(communicationChannel, target.Platform.IsSimulator());
+            var appTester = GetAppTester(communicationChannel, target.Platform.IsSimulator());
 
             (TestExecutingResult testResult, string resultMessage) = await appTester.TestApp(
                 appBundleInfo,
@@ -229,7 +228,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             bool signalAppEnd,
             CancellationToken cancellationToken)
         {
-            AppTester appTester = GetAppTester(communicationChannel, TestTarget.MacCatalyst.IsSimulator());
+            var appTester = GetAppTester(communicationChannel, TestTarget.MacCatalyst.IsSimulator());
 
             (TestExecutingResult testResult, string resultMessage) = await appTester.TestMacCatalystApp(
                 appBundleInfo,
@@ -246,27 +245,12 @@ namespace Microsoft.DotNet.XHarness.Apple
             return ParseResult(testResult, resultMessage);
         }
 
-        private AppTester GetAppTester(CommunicationChannel communicationChannel, bool isSimulator)
+        private IAppTester GetAppTester(CommunicationChannel communicationChannel, bool isSimulator)
         {
-            var tunnelBore = (communicationChannel == CommunicationChannel.UsbTunnel && !isSimulator)
-                ? new TunnelBore(_processManager)
-                : null;
-
             // Only add the extra callback if we do know that the feature was indeed enabled
             Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(_logger, l) : null;
 
-            return new AppTester(
-                _processManager,
-                new SimpleListenerFactory(tunnelBore),
-                new CrashSnapshotReporterFactory(_processManager),
-                new CaptureLogFactory(),
-                new DeviceLogCapturerFactory(_processManager),
-                new TestReporterFactory(_processManager),
-                new XmlResultParser(),
-                _mainLog,
-                _logs,
-                new Helpers(),
-                logCallback: logCallback);
+            return _appTesterFactory.Create(communicationChannel, isSimulator, _mainLog, _logs, logCallback);
         }
 
         private ExitCode ParseResult(TestExecutingResult testResult, string resultMessage)

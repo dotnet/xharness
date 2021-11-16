@@ -44,9 +44,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             CallbackLog debugLog = new(message => logger.LogDebug(message.Trim()));
             using var mainLog = Log.CreateReadableAggregatedLog(runLog, debugLog);
 
-            Services.TryAddSingleton(mainLog);
             Services.TryAddSingleton(logs);
             Services.TryAddTransient<XHarness.Apple.ILogger, ConsoleLogger>();
+
+            Services.TryAddSingleton(mainLog);
+            Services.TryAddSingleton<ILog>(mainLog);
+            Services.TryAddSingleton<IReadableLog>(mainLog);
 
             var serviceProvider = Services.BuildServiceProvider();
 

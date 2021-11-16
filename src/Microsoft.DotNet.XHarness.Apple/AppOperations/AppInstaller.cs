@@ -15,7 +15,16 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
-    public class AppInstaller
+    public interface IAppInstaller
+    {
+        Task<ProcessExecutionResult> InstallApp(
+            AppBundleInformation appBundleInformation,
+            TestTargetOs target,
+            IDevice device,
+            CancellationToken cancellationToken = default);
+    }
+
+    public class AppInstaller : IAppInstaller
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILog _mainLog;

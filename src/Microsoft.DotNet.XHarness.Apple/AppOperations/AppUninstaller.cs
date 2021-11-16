@@ -12,7 +12,13 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 
 namespace Microsoft.DotNet.XHarness.Apple
 {
-    public class AppUninstaller
+    public interface IAppUninstaller
+    {
+        Task<ProcessExecutionResult> UninstallSimulatorApp(IDevice simulator, string appBundleId, CancellationToken cancellationToken = default);
+        Task<ProcessExecutionResult> UninstallDeviceApp(IDevice device, string appBundleId, CancellationToken cancellationToken = default);
+    }
+
+    public class AppUninstaller : IAppUninstaller
     {
         private readonly IMlaunchProcessManager _processManager;
         private readonly ILog _mainLog;
@@ -23,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
         }
 
-        public Task<ProcessExecutionResult> UninstallApp(IDevice simulator, string appBundleId, CancellationToken cancellationToken = default)
+        public Task<ProcessExecutionResult> UninstallSimulatorApp(IDevice simulator, string appBundleId, CancellationToken cancellationToken = default)
             => _processManager.ExecuteXcodeCommandAsync(
                 "simctl",
                 new[] { "uninstall", simulator.UDID, appBundleId },
