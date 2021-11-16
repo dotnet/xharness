@@ -18,13 +18,15 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests.Orchestration;
 public class RunOrchestratorTests : OrchestratorTestBase
 {
     private readonly RunOrchestrator _runOrchestrator;
-    private readonly Mock<IExitCodeDetector> _exitCodeDetector;
+    private readonly Mock<IiOSExitCodeDetector> _iOSExitCodeDetector;
+    private readonly Mock<IMacCatalystExitCodeDetector> _macCatalystExitCodeDetector;
     private readonly Mock<IAppRunner> _appRunner;
     private readonly Mock<IAppRunnerFactory> _appRunnerFactory;
 
     public RunOrchestratorTests()
     {
-        _exitCodeDetector = new();
+        _iOSExitCodeDetector = new();
+        _macCatalystExitCodeDetector = new();
         _appRunner = new();
         _appRunnerFactory = new();
 
@@ -48,8 +50,8 @@ public class RunOrchestratorTests : OrchestratorTestBase
             _appUninstaller.Object,
             _appRunnerFactory.Object,
             _deviceFinder.Object,
-            _exitCodeDetector.Object,
-            _exitCodeDetector.Object,
+            _iOSExitCodeDetector.Object,
+            _macCatalystExitCodeDetector.Object,
             _logger.Object,
             _logs,
             _mainLog.Object,
@@ -66,7 +68,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
 
         var envVars = new[] { ("envVar1", "value1"), ("envVar2", "value2") };
 
-        _exitCodeDetector
+        _iOSExitCodeDetector
             .Setup(x => x.DetectExitCode(_appBundleInformation, It.IsAny<IReadableLog>()))
             .Returns(100)
             .Verifiable();
@@ -120,7 +122,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
             x => x.InstallApp(_appBundleInformation, testTarget, _simulator.Object, It.IsAny<CancellationToken>()),
             Times.Once);
 
-        _exitCodeDetector.VerifyAll();
+        _iOSExitCodeDetector.VerifyAll();
         _appRunner.VerifyAll();
     }
 
@@ -130,7 +132,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
         // Setup
         var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
 
-        _exitCodeDetector
+        _iOSExitCodeDetector
             .Setup(x => x.DetectExitCode(_appBundleInformation, It.IsAny<IReadableLog>()))
             .Returns(100)
             .Verifiable();
@@ -186,7 +188,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
             x => x.InstallApp(_appBundleInformation, testTarget, _device.Object, It.IsAny<CancellationToken>()),
             Times.Once);
 
-        _exitCodeDetector.VerifyAll();
+        _iOSExitCodeDetector.VerifyAll();
         _appRunner.VerifyAll();
     }
 
@@ -257,7 +259,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
         // Setup
         var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
 
-        _exitCodeDetector
+        _iOSExitCodeDetector
             .Setup(x => x.DetectExitCode(_appBundleInformation, It.IsAny<IReadableLog>()))
             .Returns(200)
             .Verifiable();
@@ -319,7 +321,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
             x => x.InstallApp(_appBundleInformation, testTarget, _device.Object, It.IsAny<CancellationToken>()),
             Times.Once);
 
-        _exitCodeDetector.VerifyAll();
+        _iOSExitCodeDetector.VerifyAll();
         _appRunner.VerifyAll();
     }
 
@@ -335,7 +337,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
 
         var envVars = new[] { ("envVar1", "value1"), ("envVar2", "value2") };
 
-        _exitCodeDetector
+        _macCatalystExitCodeDetector
             .Setup(x => x.DetectExitCode(_appBundleInformation, It.IsAny<IReadableLog>()))
             .Returns(100)
             .Verifiable();
@@ -377,7 +379,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
         VerifySimulatorReset(false);
         VerifySimulatorCleanUp(false);
 
-        _exitCodeDetector.VerifyAll();
+        _macCatalystExitCodeDetector.VerifyAll();
         _appRunner.VerifyAll();
         _deviceFinder.VerifyNoOtherCalls();
         _appInstaller.VerifyNoOtherCalls();

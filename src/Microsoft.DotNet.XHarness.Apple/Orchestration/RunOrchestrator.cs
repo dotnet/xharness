@@ -43,8 +43,8 @@ namespace Microsoft.DotNet.XHarness.Apple
     /// </summary>
     public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
     {
-        private readonly IExitCodeDetector _iOSExitCodeDetector;
-        private readonly IExitCodeDetector _macCatalystExitCodeDetector;
+        private readonly IiOSExitCodeDetector _iOSExitCodeDetector;
+        private readonly IMacCatalystExitCodeDetector _macCatalystExitCodeDetector;
         private readonly ILogger _logger;
         private readonly ILogs _logs;
         private readonly IErrorKnowledgeBase _errorKnowledgeBase;
@@ -55,8 +55,8 @@ namespace Microsoft.DotNet.XHarness.Apple
             IAppUninstaller appUninstaller,
             IAppRunnerFactory appRunnerFactory,
             IDeviceFinder deviceFinder,
-            IExitCodeDetector iOSExitCodeDetector,
-            IExitCodeDetector macCatalystExitCodeDetector,
+            IiOSExitCodeDetector iOSExitCodeDetector,
+            IMacCatalystExitCodeDetector macCatalystExitCodeDetector,
             ILogger consoleLogger,
             ILogs logs,
             IFileBackedLog mainLog,

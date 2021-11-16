@@ -15,6 +15,13 @@ namespace Microsoft.DotNet.XHarness.Apple
     {
         int? DetectExitCode(AppBundleInformation appBundleInfo, IReadableLog systemLog);
     }
+    public interface IiOSExitCodeDetector : IExitCodeDetector
+    {
+    }
+
+    public interface IMacCatalystExitCodeDetector : IExitCodeDetector
+    {
+    }
 
     public abstract class ExitCodeDetector : IExitCodeDetector
     {
@@ -55,7 +62,7 @@ namespace Microsoft.DotNet.XHarness.Apple
         protected virtual Regex ExitCodeRegex { get; } = new Regex(" (\\-?[0-9]+)$", RegexOptions.Compiled);
     }
 
-    public class iOSExitCodeDetector : ExitCodeDetector
+    public class iOSExitCodeDetector : ExitCodeDetector, IiOSExitCodeDetector
     {
         // Example line
         // Nov 18 04:31:44 ML-MacVM com.apple.CoreSimulator.SimDevice.2E1EE736-5672-4220-89B5-B7C77DB6AF18[55655] (UIKitApplication:net.dot.HelloiOS[9a0b][rb-legacy][57331]): Service exited with abnormal code: 200
@@ -65,7 +72,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             (logLine.Contains(appBundleInfo.AppName) || logLine.Contains(appBundleInfo.BundleIdentifier));
     }
 
-    public class MacCatalystExitCodeDetector : ExitCodeDetector
+    public class MacCatalystExitCodeDetector : ExitCodeDetector, IMacCatalystExitCodeDetector
     {
         // Example line
         // Feb 18 06:40:16 Admins-Mac-Mini com.apple.xpc.launchd[1] (net.dot.System.Buffers.Tests.15140[59229]): Service exited with abnormal code: 74

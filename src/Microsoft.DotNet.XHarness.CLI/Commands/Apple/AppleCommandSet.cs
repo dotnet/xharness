@@ -24,6 +24,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
             services.TryAddSingleton<ISimulatorLoader, SimulatorLoader>();
             services.TryAddSingleton<IHardwareDeviceLoader, HardwareDeviceLoader>();
             services.TryAddSingleton<IDeviceFinder, DeviceFinder>();
+            services.TryAddSingleton<IiOSExitCodeDetector, iOSExitCodeDetector>();
+            services.TryAddSingleton<IMacCatalystExitCodeDetector, MacCatalystExitCodeDetector>();
             services.TryAddSingleton<IHelpers, Helpers>();
 
             services.TryAddTransient<IErrorKnowledgeBase, ErrorKnowledgeBase>();
