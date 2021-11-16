@@ -25,7 +25,7 @@ Write-Host ".dotnet" -ForegroundColor Yellow
 Write-Host ".NET installed" -ForegroundColor Cyan
 Write-Host "Installing XHarness in current folder" -ForegroundColor Cyan
 
-Invoke-Expression -Command "& ./.dotnet/dotnet tool install --tool-path . --version '$xharness_version' --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json Microsoft.DotNet.XHarness.CLI"
+./.dotnet/dotnet tool install --tool-path . --version $xharness_version --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json Microsoft.DotNet.XHarness.CLI
 
 Write-Host "XHarness installed, run it using: " -ForegroundColor Cyan -NoNewline
 Write-Host ".\xharness help" -ForegroundColor Yellow
