@@ -1,7 +1,7 @@
 #!/bin/bash
 
-### This script is a quick way to install and test XHarness on any POSIX machine.
-### It installs the .NET SDK and the XHarness tool, everything in a local folder.
+### This script is a quick way to install and test XHarness on any POSIX system.
+### It installs the .NET SDK and the XHarness tool, everything in a local folder which can be deleted afterwards.
 ###
 ### Use the following command to run this script from anywhere:
 ### curl -L https://aka.ms/get-xharness | bash -
