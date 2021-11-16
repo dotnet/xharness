@@ -10,22 +10,22 @@ param (
     $Version = "*"
 )
 
+$ErrorActionPreference = "Stop"
+
 $xharness_version = "1.0.0-prerelease.$Version"
 
 # Install .NET
-Write-Host "Getting dotnet-install.ps1.."
-Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "$PSScriptRoot/dotnet-install.ps1"
+Write-Host "Getting dotnet-install.ps1.." -ForegroundColor Cyan
+Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "dotnet-install.ps1"
 
-Write-Host "Installing .NET SDK locally to " -NoNewline
-Write-Host "$PSScriptRoot/.dotnet" -ForegroundColor Yellow
-Invoke-Expression -Command "& '$PSScriptRoot/dotnet-install.ps1' -InstallDir '$PSScriptRoot/.dotnet' -Version '6.0.100'"
+Write-Host "Installing .NET SDK locally to " -NoNewline -ForegroundColor Cyan
+Write-Host ".dotnet" -ForegroundColor Yellow
+Invoke-Expression -Command "& ./dotnet-install.ps1 -InstallDir ./.dotnet -Version 6.0.100"
 
-Write-Host ".NET installed"
+Write-Host ".NET installed" -ForegroundColor Cyan
+Write-Host "Installing XHarness in current folder" -ForegroundColor Cyan
 
-Write-Host "Installing XHarness locally to " -NoNewline
-Write-Host "$PSScriptRoot" -ForegroundColor Yellow
+Invoke-Expression -Command "& ./.dotnet/dotnet tool install --tool-path . --version '$xharness_version' --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json Microsoft.DotNet.XHarness.CLI"
 
-Invoke-Expression -Command "& '$PSScriptRoot/.dotnet/dotnet' tool install --tool-path '$PSScriptRoot' --version '$xharness_version' --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json Microsoft.DotNet.XHarness.CLI"
-
-Write-Host "XHarness installed, run it using:"
-Write-Host ".\xharness help"  -ForegroundColor Yellow
+Write-Host "XHarness installed, run it using: " -ForegroundColor Cyan -NoNewline
+Write-Host ".\xharness help" -ForegroundColor Yellow
