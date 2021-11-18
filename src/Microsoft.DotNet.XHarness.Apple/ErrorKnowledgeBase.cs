@@ -35,10 +35,6 @@ namespace Microsoft.DotNet.XHarness.Apple
             ["LSOpenURLsWithRole() failed with error -10825"] =
                 new("This application requires a newer version of MacOS",
                     suggestedExitCode: (int)ExitCode.GENERAL_FAILURE),
-
-            ["HE0018: Could not launch the simulator application"] =
-                new("Failed to launch the Simulator application. Please reboot the computer and try again",
-                    suggestedExitCode: (int)ExitCode.SIMULATOR_FAILURE),
         };
 
         private static readonly Dictionary<string, KnownIssue> s_buildErrorMaps = new();
@@ -59,10 +55,6 @@ namespace Microsoft.DotNet.XHarness.Apple
 
             ["No code signature found"] =
                 new("App is not signed", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
-
-            ["HE0018: Could not launch the simulator application"] =
-                new("Failed to launch the Simulator application",
-                    suggestedExitCode: (int)ExitCode.SIMULATOR_FAILURE),
         };
 
         public bool IsKnownBuildIssue(IFileBackedLog buildLog, [NotNullWhen(true)] out KnownIssue? knownFailureMessage)
