@@ -43,8 +43,10 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
                             case "Error":
                             case "Failed":
                                 var name = reader["name"];
-                                reader.ReadToDescendant("message");
-                                var message = reader.ReadElementContentAsString();
+                                var subtree = reader.ReadSubtree();
+                                subtree.ReadToDescendant("message");
+                                var message = subtree.ReadElementContentAsString();
+                                while (subtree.Read()) { } // read to end of subtree
                                 failedTests.Add((name, message));
                                 break;
 
