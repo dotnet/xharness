@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 
 #nullable enable
@@ -13,6 +14,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
     public class WasmTestMessagesProcessor
     {
+        private MemoryStream? _xmlResultsMemoryStream;
         private StreamWriter? _xmlResultsFileWriter;
         private readonly StreamWriter _stdoutFileWriter;
         private readonly string _xmlResultsFilePath;
@@ -80,7 +82,8 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 if (line.Contains("STARTRESULTXML"))
                 {
                     _logger.LogDebug("Reached start of testResults.xml");
-                    _xmlResultsFileWriter = File.CreateText(_xmlResultsFilePath);
+                    _xmlResultsMemoryStream = new MemoryStream();
+                    _xmlResultsFileWriter = new StreamWriter(_xmlResultsMemoryStream);
                     return;
                 }
                 else if (line.StartsWith("[PASS]") || line.StartsWith("[SKIP]"))
@@ -114,10 +117,27 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             {
                 if (line.Contains("ENDRESULTXML"))
                 {
-                    _logger.LogDebug("Reached end of testResults.xml");
+                    _logger.LogDebug($"Reached end of {_xmlResultsFilePath}");
                     _xmlResultsFileWriter.Flush();
+                    _xmlResultsMemoryStream!.Seek(0, SeekOrigin.Begin);
+                    try
+                    {
+                        // we validate it, to make sure it's not corrupted.
+                        var testResults = XElement.Load(_xmlResultsMemoryStream);
+                        using (var testResultsFile = File.CreateText(_xmlResultsFilePath))
+                        {
+                            testResults.Save(testResultsFile);
+                            _logger.LogInformation($"Written {_xmlResultsMemoryStream.Length} original bytes of {_xmlResultsFilePath} as {testResultsFile.BaseStream.Length} formatted bytes");
+                        };
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Error while saving testResults.xml {ex}");
+                    }
                     _xmlResultsFileWriter.Dispose();
                     _xmlResultsFileWriter = null;
+                    _xmlResultsMemoryStream.Dispose();
+                    _xmlResultsMemoryStream = null;
                     return;
                 }
 
