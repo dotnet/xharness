@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     catch (Exception ex)
                     {
                         _logger.LogError($"Error while saving testResults.xml {ex}");
-                        throw ex;
+                        throw;
                     }
                     _xmlResultsFileWriter.Dispose();
                     _xmlResultsFileWriter = null;
