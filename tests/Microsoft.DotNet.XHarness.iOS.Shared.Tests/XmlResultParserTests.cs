@@ -565,7 +565,7 @@ CreateTimer_NewSignature:   WaitOne<br/>
 </ul>
 </div>
 ";
-            Assert.Equal(writer.ToString(), expectedOutput);
+            Assert.Equal(writer.ToString().Replace ("\r", ""), expectedOutput.Replace ("\r", ""));
         }
     }
 }
