@@ -531,5 +531,41 @@ Xamarin.MTouch.RebuildWhenReferenceSymbolsInCode: message</li>
 ";
             Assert.Equal(writer.ToString(), expectedOutput);
         }
+
+        [Fact]
+        public void NUnitV3MultipleTestFailures()
+        {
+            var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("NUnitV3SampleFailures.xml", StringComparison.Ordinal)).FirstOrDefault();
+            using var writer = new StringWriter();
+            using var stream = GetType().Assembly.GetManifestResourceStream(name);
+            using var reader = new StreamReader(stream);
+            _resultParser.GenerateTestReport(writer, reader, XmlResultJargon.NUnitV3);
+
+            var expectedOutput =
+@"<div style='padding-left: 15px;'>
+<ul>
+<li>
+Bug17793:   Not signalled twice in 5s<br/>
+  Expected: True<br/>
+  But was:  False<br/>
+<br />
+</li>
+<li>
+Bug2443:   Not signalled twice in 5s<br/>
+  Expected: True<br/>
+  But was:  False<br/>
+<br />
+</li>
+<li>
+CreateTimer_NewSignature:   WaitOne<br/>
+  Expected: True<br/>
+  But was:  False<br/>
+<br />
+</li>
+</ul>
+</div>
+";
+            Assert.Equal(writer.ToString().Replace ("\r", ""), expectedOutput.Replace ("\r", ""));
+        }
     }
 }

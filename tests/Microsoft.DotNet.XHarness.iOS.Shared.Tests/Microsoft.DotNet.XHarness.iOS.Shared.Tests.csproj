@@ -41,6 +41,7 @@
     <EmbeddedResource Include="Samples\NUnitV2SampleFailure.xml" />
     <EmbeddedResource Include="Samples\NUnitV3Sample.xml" />
     <EmbeddedResource Include="Samples\NUnitV3SampleFailure.xml" />
+    <EmbeddedResource Include="Samples\NUnitV3SampleFailures.xml" />
     <EmbeddedResource Include="Samples\NUnitV3SampleParameterizedFailure.xml" />
     <EmbeddedResource Include="Samples\NUnitV3SampleSuccess.xml" />
     <EmbeddedResource Include="Samples\run-log.txt" />
