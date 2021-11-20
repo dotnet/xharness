@@ -72,27 +72,16 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                 {
                     var resultsXml = new XElement("assemblies");
                     resultsXml.Add(resultsXmlAssembly);
-                    using (var ms = new MemoryStream())
+                    int length;
+                    using (var sw = new StringWriter())
                     {
-                        using (var tw = new StreamWriter(ms, Encoding.UTF8, 100*1024, true))
-                        {
-                            // no new line. make it single line, single WS message
-                            resultsXml.Save(tw, SaveOptions.DisableFormatting);
-                        }
-                        ms.Seek(0, SeekOrigin.Begin);
-                        using (var stdout = Console.OpenStandardOutput())
-                        {
-                            using (var twc = new StreamWriter(stdout))
-                            {
-                                twc.WriteLine($"STARTRESULTXML {ms.Length}");
-                                twc.Flush();
-                                ms.CopyTo(stdout, 100 * 1024);
-                                twc.WriteLine();
-                                twc.WriteLine("ENDRESULTXML");
-                            }
-                        }
-                        Console.WriteLine($"Finished writing {ms.Length} bytes of RESULTXML");
+                        resultsXml.Save(sw);
+                        var bytes = System.Text.Encoding.UTF8.GetBytes(sw.ToString());
+                        length=bytes.Length;
+                        var base64 = Convert.ToBase64String(bytes, Base64FormattingOptions.None);
+                        Console.WriteLine($"STARTRESULTXML {length} {base64} ENDRESULTXML");
                     }
+                    Console.WriteLine($"Finished writing {length} bytes of RESULTXML");
                 }
 
                 var failed = resultsSink.ExecutionSummary.Failed > 0 || resultsSink.ExecutionSummary.Errors > 0;

@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                     engineBinary,
                     engineArgs,
                     log: new CallbackLog(m => logger.LogInformation(m)),
-                    stdoutLog: new CallbackLog(logProcessor.Invoke),
+                    stdoutLog: new CallbackLog(logProcessor.ProcessOutMessage),
                     stderrLog: new CallbackLog(logProcessor.ProcessErrorMessage),
                     Arguments.Timeout);
                 
