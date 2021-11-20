@@ -15,8 +15,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
     public class WasmTestMessagesProcessor
     {
         private static Regex xmlRx = new Regex(@"^STARTRESULTXML ([0-9]*) ([^ ]*) ENDRESULTXML", RegexOptions.Compiled | RegexOptions.CultureInvariant);
-        private bool _isXmlFromWebSocket;
-        private StreamWriter? _xmlResultsFileWriter;
         private readonly StreamWriter _stdoutFileWriter;
         private readonly string _xmlResultsFilePath;
 
@@ -85,10 +83,19 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var match = xmlRx.Match(line);
             if (match.Success)
             {
+                var expectedLenght = Int32.Parse(match.Groups[1].Value);
                 using (var stream = new FileStream(_xmlResultsFilePath, FileMode.CreateNew))
                 {
                     var bytes = System.Convert.FromBase64String(match.Groups[2].Value);
                     stream.Write(bytes);
+                    if(bytes.Length==expectedLenght)
+                    {
+                        _logger.LogInformation($"Received expected {bytes.Length} of {_xmlResultsFilePath}");
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"Received {bytes.Length} of {_xmlResultsFilePath} but expected {expectedLenght}");
+                    }
                 }
             }
             else
