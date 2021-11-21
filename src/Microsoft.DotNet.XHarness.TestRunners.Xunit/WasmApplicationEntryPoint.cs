@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             foreach (var cl in IncludedClasses) filters.IncludedClasses.Add(cl);
             foreach (var me in IncludedMethods) filters.IncludedMethods.Add(me);
 
-            var result = await ThreadlessXunitTestRunner.Run(TestAssembly, printXml: true, filters);
+            var result = await ThreadlessXunitTestRunner.Run(TestAssembly, printXml: true, filters, true);
 
             return result;
         }

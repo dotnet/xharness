@@ -40,16 +40,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 _errorScanner = new Lazy<ErrorPatternScanner>(() => new ErrorPatternScanner(errorPatternsFile, logger));
             }
         }
-        public void ProcessOutMessage(string message)
-        {
-            ProcessOutMessage(message, false);
-        }
 
-        public void ProcessOutMessage(string message, bool isWebSocket)
+        public void Invoke(string message)
         {
             try
             {
-                InvokeInternal(message, isWebSocket);
+                InvokeInternal(message);
             }
             catch (Exception ex) when (WasmExitReceivedTcs.Task.IsCompletedSuccessfully)
             {
@@ -58,7 +54,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             }
         }
 
-        private void InvokeInternal(string message, bool isWebSocket)
+        private void InvokeInternal(string message)
         {
             WasmLogMessage? logMessage = null;
             string line;
@@ -83,18 +79,18 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             var match = xmlRx.Match(line);
             if (match.Success)
             {
-                var expectedLenght = Int32.Parse(match.Groups[1].Value);
-                using (var stream = new FileStream(_xmlResultsFilePath, FileMode.CreateNew))
+                var expectedLength = Int32.Parse(match.Groups[1].Value);
+                using (var stream = new FileStream(_xmlResultsFilePath, FileMode.Create))
                 {
                     var bytes = System.Convert.FromBase64String(match.Groups[2].Value);
                     stream.Write(bytes);
-                    if(bytes.Length==expectedLenght)
+                    if (bytes.Length == expectedLength)
                     {
                         _logger.LogInformation($"Received expected {bytes.Length} of {_xmlResultsFilePath}");
                     }
                     else
                     {
-                        _logger.LogInformation($"Received {bytes.Length} of {_xmlResultsFilePath} but expected {expectedLenght}");
+                        _logger.LogInformation($"Received {bytes.Length} of {_xmlResultsFilePath} but expected {expectedLength}");
                     }
                 }
             }

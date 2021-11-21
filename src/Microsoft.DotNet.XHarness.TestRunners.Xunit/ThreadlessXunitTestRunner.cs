@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 {
     internal class ThreadlessXunitTestRunner
     {
-        public static async Task<int> Run(string assemblyFileName, bool printXml, XunitFilters filters)
+        public static async Task<int> Run(string assemblyFileName, bool printXml, XunitFilters filters, bool oneLineResults = false)
         {
             try
             {
@@ -70,18 +70,26 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
                 if (printXml)
                 {
-                    var resultsXml = new XElement("assemblies");
-                    resultsXml.Add(resultsXmlAssembly);
-                    int length;
-                    using (var sw = new StringWriter())
+                    if (oneLineResults)
                     {
+                        var resultsXml = new XElement("assemblies");
+                        resultsXml.Add(resultsXmlAssembly);
+                        using var sw = new StringWriter();
                         resultsXml.Save(sw);
                         var bytes = System.Text.Encoding.UTF8.GetBytes(sw.ToString());
-                        length=bytes.Length;
                         var base64 = Convert.ToBase64String(bytes, Base64FormattingOptions.None);
-                        Console.WriteLine($"STARTRESULTXML {length} {base64} ENDRESULTXML");
+                        Console.WriteLine($"STARTRESULTXML {bytes.Length} {base64} ENDRESULTXML");
+                        Console.WriteLine($"Finished writing {bytes.Length} bytes of RESULTXML");
                     }
-                    Console.WriteLine($"Finished writing {length} bytes of RESULTXML");
+                    else
+                    {
+                        Console.WriteLine($"STARTRESULTXML");
+                        var resultsXml = new XElement("assemblies");
+                        resultsXml.Add(resultsXmlAssembly);
+                        resultsXml.Save(Console.Out);
+                        Console.WriteLine();
+                        Console.WriteLine($"ENDRESULTXML");
+                    }
                 }
 
                 var failed = resultsSink.ExecutionSummary.Failed > 0 || resultsSink.ExecutionSummary.Errors > 0;

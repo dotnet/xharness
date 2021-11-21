@@ -167,7 +167,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                         var line = Encoding.UTF8.GetString(mem.GetBuffer(), 0, (int)mem.Length);
                         line += Environment.NewLine;
 
-                        _messagesProcessor.ProcessOutMessage(line, true);
+                        _messagesProcessor.Invoke(line);
                         mem.SetLength(0);
                         mem.Seek(0, SeekOrigin.Begin);
                     }
@@ -221,7 +221,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
                             var match = s_consoleLogRegex.Match(Regex.Unescape(logEntry.Message));
                             string msg = match.Success ? match.Groups[1].Value : logEntry.Message;
-                            _messagesProcessor.ProcessOutMessage(msg, false);
+                            _messagesProcessor.Invoke(msg);
                         }
                     }
                 }
