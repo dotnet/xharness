@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 {
     internal class ThreadlessXunitTestRunner
     {
-        public static async Task<int> Run(string assemblyFileName, bool printXml, XunitFilters filters)
+        public static async Task<int> Run(string assemblyFileName, bool printXml, XunitFilters filters, bool oneLineResults = false)
         {
             try
             {
@@ -70,28 +70,25 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
 
                 if (printXml)
                 {
-                    var resultsXml = new XElement("assemblies");
-                    resultsXml.Add(resultsXmlAssembly);
-                    using (var ms = new MemoryStream())
+                    if (oneLineResults)
                     {
-                        using (var tw = new StreamWriter(ms, Encoding.UTF8, 100*1024, true))
-                        {
-                            // no new line. make it single line, single WS message
-                            resultsXml.Save(tw, SaveOptions.DisableFormatting);
-                        }
-                        ms.Seek(0, SeekOrigin.Begin);
-                        using (var stdout = Console.OpenStandardOutput())
-                        {
-                            using (var twc = new StreamWriter(stdout))
-                            {
-                                twc.WriteLine($"STARTRESULTXML {ms.Length}");
-                                twc.Flush();
-                                ms.CopyTo(stdout, 100 * 1024);
-                                twc.WriteLine();
-                                twc.WriteLine("ENDRESULTXML");
-                            }
-                        }
-                        Console.WriteLine($"Finished writing {ms.Length} bytes of RESULTXML");
+                        var resultsXml = new XElement("assemblies");
+                        resultsXml.Add(resultsXmlAssembly);
+                        using var sw = new StringWriter();
+                        resultsXml.Save(sw);
+                        var bytes = System.Text.Encoding.UTF8.GetBytes(sw.ToString());
+                        var base64 = Convert.ToBase64String(bytes, Base64FormattingOptions.None);
+                        Console.WriteLine($"STARTRESULTXML {bytes.Length} {base64} ENDRESULTXML");
+                        Console.WriteLine($"Finished writing {bytes.Length} bytes of RESULTXML");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"STARTRESULTXML");
+                        var resultsXml = new XElement("assemblies");
+                        resultsXml.Add(resultsXmlAssembly);
+                        resultsXml.Save(Console.Out);
+                        Console.WriteLine();
+                        Console.WriteLine($"ENDRESULTXML");
                     }
                 }
 

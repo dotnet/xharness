@@ -5,8 +5,8 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 
 #nullable enable
@@ -14,8 +14,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 {
     public class WasmTestMessagesProcessor
     {
-        private MemoryStream? _xmlResultsMemoryStream;
-        private StreamWriter? _xmlResultsFileWriter;
+        private static Regex xmlRx = new Regex(@"^STARTRESULTXML ([0-9]*) ([^ ]*) ENDRESULTXML", RegexOptions.Compiled | RegexOptions.CultureInvariant);
         private readonly StreamWriter _stdoutFileWriter;
         private readonly string _xmlResultsFilePath;
 
@@ -77,16 +76,27 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 line = message.TrimEnd();
             }
 
-            if (_xmlResultsFileWriter == null)
+            var match = xmlRx.Match(line);
+            if (match.Success)
             {
-                if (line.Contains("STARTRESULTXML"))
+                var expectedLength = Int32.Parse(match.Groups[1].Value);
+                using (var stream = new FileStream(_xmlResultsFilePath, FileMode.Create))
                 {
-                    _logger.LogDebug("Reached start of testResults.xml");
-                    _xmlResultsMemoryStream = new MemoryStream();
-                    _xmlResultsFileWriter = new StreamWriter(_xmlResultsMemoryStream);
-                    return;
+                    var bytes = System.Convert.FromBase64String(match.Groups[2].Value);
+                    stream.Write(bytes);
+                    if (bytes.Length == expectedLength)
+                    {
+                        _logger.LogInformation($"Received expected {bytes.Length} of {_xmlResultsFilePath}");
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"Received {bytes.Length} of {_xmlResultsFilePath} but expected {expectedLength}");
+                    }
                 }
-                else if (line.StartsWith("[PASS]") || line.StartsWith("[SKIP]"))
+            }
+            else
+            {
+                if (line.StartsWith("[PASS]") || line.StartsWith("[SKIP]"))
                 {
                     _logger.LogDebug(line);
                 }
@@ -112,38 +122,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
 
                 if (_stdoutFileWriter.BaseStream.CanWrite)
                     _stdoutFileWriter.WriteLine(line);
-            }
-            else
-            {
-                if (line.Contains("ENDRESULTXML"))
-                {
-                    _logger.LogDebug($"Reached end of {_xmlResultsFilePath}");
-                    _xmlResultsFileWriter.Flush();
-                    _xmlResultsMemoryStream!.Seek(0, SeekOrigin.Begin);
-                    try
-                    {
-                        // we validate it, to make sure it's not corrupted.
-                        var testResults = XElement.Load(_xmlResultsMemoryStream);
-                        using (var testResultsFile = File.CreateText(_xmlResultsFilePath))
-                        {
-                            testResults.Save(testResultsFile);
-                            _logger.LogInformation($"Written {_xmlResultsMemoryStream.Length} original bytes of {_xmlResultsFilePath} as {testResultsFile.BaseStream.Length} formatted bytes");
-                        };
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"Error while saving testResults.xml {ex}");
-                        throw;
-                    }
-                    _xmlResultsFileWriter.Dispose();
-                    _xmlResultsFileWriter = null;
-                    _xmlResultsMemoryStream.Dispose();
-                    _xmlResultsMemoryStream = null;
-                    return;
-                }
-
-                if (_xmlResultsFileWriter?.BaseStream.CanWrite == true)
-                    _xmlResultsFileWriter.WriteLine(line);
             }
 
             // the test runner writes this as the last line,
