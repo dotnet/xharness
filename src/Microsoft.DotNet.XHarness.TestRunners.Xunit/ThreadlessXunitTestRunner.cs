@@ -74,9 +74,9 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
                     {
                         var resultsXml = new XElement("assemblies");
                         resultsXml.Add(resultsXmlAssembly);
-                        using var sw = new StringWriter();
-                        resultsXml.Save(sw);
-                        var bytes = System.Text.Encoding.UTF8.GetBytes(sw.ToString());
+                        using var ms = new MemoryStream();
+                        resultsXml.Save(ms);
+                        var bytes = ms.ToArray();
                         var base64 = Convert.ToBase64String(bytes, Base64FormattingOptions.None);
                         Console.WriteLine($"STARTRESULTXML {bytes.Length} {base64} ENDRESULTXML");
                         Console.WriteLine($"Finished writing {bytes.Length} bytes of RESULTXML");
