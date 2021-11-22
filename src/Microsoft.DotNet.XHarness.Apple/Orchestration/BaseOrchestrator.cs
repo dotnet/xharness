@@ -187,12 +187,7 @@ namespace Microsoft.DotNet.XHarness.Apple
             // Uninstall the app first to get a clean state
             if (!resetSimulator)
             {
-                var uninstallResult = await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, isPreparation: true, cancellationToken);
-                if (uninstallResult == ExitCode.SIMULATOR_FAILURE)
-                {
-                    // Sometimes the simulator gets in a bad shape and we won't be able to run the app, we can tell here already
-                    return ExitCode.SIMULATOR_FAILURE;
-                }
+                await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, isPreparation: true, cancellationToken);
             }
 
             exitCode = await InstallApp(appBundleInfo, device, target, cancellationToken);
@@ -204,7 +199,7 @@ namespace Microsoft.DotNet.XHarness.Apple
                 var uninstallResult = await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, isPreparation: false, new CancellationToken());
                 if (uninstallResult == ExitCode.SIMULATOR_FAILURE)
                 {
-                    // Sometimes the simulator gets in a bad shape and we won't be able to run the app, we can tell here
+                    // Sometimes the simulator gets in a bad shape and we won't be able to install the app, we can tell here
                     return ExitCode.SIMULATOR_FAILURE;
                 }
 
