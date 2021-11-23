@@ -343,30 +343,30 @@ namespace Microsoft.DotNet.XHarness.Apple
                 ? await _appUninstaller.UninstallSimulatorApp(device, bundleIdentifier, cancellationToken)
                 : await _appUninstaller.UninstallDeviceApp(device, bundleIdentifier, cancellationToken);
 
-            // We try to uninstall app before each run to clear it from the device
-            // For those cases, we don't care about the result
-            if (!isPreparation)
-            {
-                if (!uninstallResult.Succeeded)
-                {
-                    _logger.LogError($"Failed to uninstall the app bundle! Check logs for more details!");
-                }
-                else
-                {
-                    _logger.LogInformation($"Application '{bundleIdentifier}' was uninstalled successfully");
-                }
-            }
-
             if (uninstallResult.Succeeded)
             {
+                _logger.LogInformation($"Application '{bundleIdentifier}' was uninstalled successfully");
                 return ExitCode.SUCCESS;
             }
 
-            if (target.IsSimulator() && uninstallResult.ExitCode == 165)
+            // We try to uninstall app before each run to clear it from the device
+            // For those cases, we don't care about the result
+            if (isPreparation)
             {
-                // When uninstallation returns 165, the simulator is in a weird state where it cannot be booted and running an app later will fail
-                _logger.LogCritical($"Failed to uninstall the application - bad simulator state detected!");
-                return ExitCode.SIMULATOR_FAILURE;
+                _logger.LogDebug($"Preemptive uninstallation of application {(uninstallResult.TimedOut ? "timed out" : "failed")}");
+            }
+            else
+            {
+                if (target.IsSimulator() && uninstallResult.ExitCode == 165)
+                {
+                    // When uninstallation returns 165, the simulator is in a weird state where it cannot be booted and running an app later will fail
+                    _logger.LogCritical($"Failed to uninstall the application - bad simulator state detected!");
+                    return ExitCode.SIMULATOR_FAILURE;
+                }
+                else
+                {
+                    _logger.LogError($"Failed to uninstall the app bundle! Check logs for more details!");
+                }
             }
 
             return ExitCode.GENERAL_FAILURE;
