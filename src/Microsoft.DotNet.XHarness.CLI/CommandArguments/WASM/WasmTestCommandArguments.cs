@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         public WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; } = new();
         public WebServerUseHttpsArguments WebServerUseHttps { get; } = new();
         public WebServerUseCorsArguments WebServerUseCors { get; } = new();
+        public WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; } = new();
 
         protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
@@ -37,6 +38,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             WebServerHttpsEnvironmentVariables,
             WebServerUseHttps,
             WebServerUseCors,
+            WebServerUseCrossOriginPolicy,
         };
     }
 }
