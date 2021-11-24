@@ -11,5 +11,6 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
         WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; }
         WebServerUseHttpsArguments WebServerUseHttps { get; }
         WebServerUseCorsArguments WebServerUseCors { get; }
+        WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; }
     }
 }

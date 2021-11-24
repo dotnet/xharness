@@ -56,6 +56,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                     services.Configure<TestWebServerOptions>(options =>
                     {
                         options.WebServerUseCors = arguments.WebServerUseCors;
+                        options.WebServerUseCrossOriginPolicy = arguments.WebServerUseCrossOriginPolicy;
                         options.OnConsoleConnected = onConsoleConnected;
                         foreach (var (middlewarePath, middlewareTypeName) in arguments.WebServerMiddlewarePathsAndTypes.Value)
                         {
@@ -131,14 +132,24 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
                     provider.Mappings[extn] = "application/octet-stream";
                 }
 
+                var options = optionsAccessor.CurrentValue;
+
+                if (options.WebServerUseCrossOriginPolicy)
+                {
+                    app.Use((context, next) =>
+                    {
+                        context.Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
+                        context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
+                        return next();
+                    });
+                }
+
                 app.UseStaticFiles(new StaticFileOptions
                 {
                     FileProvider = new PhysicalFileProvider(_hostingEnvironment.ContentRootPath),
                     ContentTypeProvider = provider,
                     ServeUnknownFileTypes = true
                 });
-
-                var options = optionsAccessor.CurrentValue;
 
                 if (options.WebServerUseCors)
                 {
@@ -176,6 +187,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands
             public Func<WebSocket, Task>? OnConsoleConnected { get; set; }
             public IList<Type> EchoServerMiddlewares { get; set; } = new List<Type>();
             public bool WebServerUseCors { get; set; }
+            public bool WebServerUseCrossOriginPolicy { get; set; }
         }
     }
 
