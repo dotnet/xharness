@@ -1,15 +1,21 @@
-### This script is a quick way to run the XHarness E2E tests.
-### These test are located in tests/integration-tests and require the Arcade and Helix SDK.
-### To run them, you need to invoke these through MSBuild which makes the process a bit cumbersome.
-### This script should make things easier.
-###
-### Usage: .\run-e2e-test.ps1 -TestProject Apple/SimulatorInstaller.Tests.proj [-SkipBuild]
+<#
+.SYNOPSIS
+  This script is a quick way to run the XHarness E2E tests.
+  These test are located in tests/integration-tests and require the Arcade and Helix SDK.
+  To run them, you need to invoke these through MSBuild which makes the process a bit cumbersome.
+  This script should make things easier.
+
+.EXAMPLE
+  .\run-e2e-test.ps1 -TestProject Apple/SimulatorInstaller.Tests.proj [-SkipBuild]
+#>
 
 param (
+    <# Path to the test project. Can be also relative to tests/integration-tests, e.g. Apple/Device.iOS.Tests.proj #>
     [Parameter(Mandatory = $true)]
     [string]
     $TestProject,
-    
+
+    <# Skip re-building the local package #>
     [switch]
     $SkipBuild = $false
 )
@@ -57,7 +63,7 @@ if ($SkipBuild) {
 
 $Env:BUILD_REASON = "pr"
 $Env:BUILD_REPOSITORY_NAME = "arcade"
-$Env:BUILD_SOURCEBRANCH = "prvysoky"
+$Env:BUILD_SOURCEBRANCH = "test"
 $Env:SYSTEM_TEAMPROJECT = "dnceng"
 $Env:SYSTEM_ACCESSTOKEN = ""
 
