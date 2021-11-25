@@ -20,23 +20,15 @@ param (
     $SkipBuild = $false
 )
 
-$repoRoot = "$PSScriptRoot\.."
+$repoRoot = Resolve-Path "$PSScriptRoot\.."
 
 function Write-Projects {
+    $testRoot = "$repoRoot\tests\integration-tests\"
+    $files = Get-ChildItem -Recurse -Include *Tests.proj -Path $testRoot | ForEach-Object { $_.FullName.Substring($testRoot.Length) }
+
     Write-Output "Possible options:"
-    $files = Get-ChildItem -Include *Tests.proj -Recurse -Path "$repoRoot\tests\integration-tests\Android"
     foreach ($item in $files) {
-        '  - Android\{0}' -f $item.Name
-    }
-
-    $files = Get-ChildItem -Include *Tests.proj -Recurse -Path "$repoRoot\tests\integration-tests\Apple"
-    foreach ($item in $files) {
-        '  - Apple\{0}' -f $item.Name
-    }
-
-    $files = Get-ChildItem -Include *Tests.proj -Recurse -Path "$repoRoot\tests\integration-tests\WASM"
-    foreach ($item in $files) {
-        '  - WASM\{0}' -f $item.Name
+        " - $item"
     }
 }
 
