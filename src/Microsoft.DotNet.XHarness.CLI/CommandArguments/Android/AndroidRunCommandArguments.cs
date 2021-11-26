@@ -5,23 +5,23 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
-{
-    internal class AndroidRunCommandArguments : XHarnessCommandArguments
-    {
-        public PackageNameArgument PackageName { get; } = new();
-        public OutputDirectoryArgument OutputDirectory { get; } = new();
-        public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
-        public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(5));
-        public DeviceIdArgument DeviceId { get; } = new();
-        public InstrumentationNameArgument InstrumentationName { get; } = new();
-        public InstrumentationArguments InstrumentationArguments { get; } = new();
-        public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
-        public DeviceOutputFolderArgument DeviceOutputFolder { get; } = new();
-        public WifiArgument Wifi { get; } = new();
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
-        protected override IEnumerable<Argument> GetArguments() => new Argument[]
-        {
+internal class AndroidRunCommandArguments : XHarnessCommandArguments
+{
+    public PackageNameArgument PackageName { get; } = new();
+    public OutputDirectoryArgument OutputDirectory { get; } = new();
+    public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
+    public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(5));
+    public DeviceIdArgument DeviceId { get; } = new();
+    public InstrumentationNameArgument InstrumentationName { get; } = new();
+    public InstrumentationArguments InstrumentationArguments { get; } = new();
+    public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
+    public DeviceOutputFolderArgument DeviceOutputFolder { get; } = new();
+    public WifiArgument Wifi { get; } = new();
+
+    protected override IEnumerable<Argument> GetArguments() => new Argument[]
+    {
             PackageName,
             OutputDirectory,
             Timeout,
@@ -32,6 +32,5 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
             ExpectedExitCode,
             DeviceOutputFolder,
             Wifi,
-        };
-    }
+    };
 }

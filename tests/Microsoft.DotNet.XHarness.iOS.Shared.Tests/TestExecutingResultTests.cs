@@ -6,26 +6,26 @@ using System;
 using System.Linq;
 using Xunit;
 
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
+namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests;
+
+public class TestExecutingResultTests
 {
-    public class TestExecutingResultTests
-    {
-        [Theory]
-        [InlineData(
-            new[]
-            {
+    [Theory]
+    [InlineData(
+        new[]
+        {
                 TestExecutingResult.Crashed,
                 TestExecutingResult.TimedOut,
                 TestExecutingResult.HarnessException,
                 TestExecutingResult.LaunchFailure,
                 TestExecutingResult.BuildFailure,
                 TestExecutingResult.Failed,
-            },
-            TestExecutingResult.Failed
-        )]
-        [InlineData(
-            new[]
-            {
+        },
+        TestExecutingResult.Failed
+    )]
+    [InlineData(
+        new[]
+        {
                 TestExecutingResult.Building,
                 TestExecutingResult.BuildQueued,
                 TestExecutingResult.Built,
@@ -33,32 +33,31 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests
                 TestExecutingResult.RunQueued,
                 TestExecutingResult.InProgress,
                 TestExecutingResult.StateMask,
-            },
-            TestExecutingResult.InProgress
-        )]
-        [InlineData(
-            new[]
-            {
+        },
+        TestExecutingResult.InProgress
+    )]
+    [InlineData(
+        new[]
+        {
                 TestExecutingResult.Succeeded,
                 TestExecutingResult.BuildSucceeded,
-            },
-            TestExecutingResult.Succeeded
-        )]
-        public void FlaggedIsPresentWhereItShouldBe(TestExecutingResult[] withFlag, TestExecutingResult flag)
+        },
+        TestExecutingResult.Succeeded
+    )]
+    public void FlaggedIsPresentWhereItShouldBe(TestExecutingResult[] withFlag, TestExecutingResult flag)
+    {
+        var withoutFlag = Enum.GetValues(typeof(TestExecutingResult))
+            .Cast<TestExecutingResult>()
+            .Except(withFlag);
+
+        foreach (var result in withoutFlag)
         {
-            var withoutFlag = Enum.GetValues(typeof(TestExecutingResult))
-                .Cast<TestExecutingResult>()
-                .Except(withFlag);
+            Assert.False(result.HasFlag(flag), $"{result} should not have {flag}");
+        }
 
-            foreach (var result in withoutFlag)
-            {
-                Assert.False(result.HasFlag(flag), $"{result} should not have {flag}");
-            }
-
-            foreach (var result in withFlag)
-            {
-                Assert.True(result.HasFlag(flag), $"{result} should have {flag}");
-            }
+        foreach (var result in withFlag)
+        {
+            Assert.True(result.HasFlag(flag), $"{result} should have {flag}");
         }
     }
 }

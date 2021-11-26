@@ -5,23 +5,22 @@
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
+
+internal class ErrorPatternsFileArgument : StringArgument
 {
-    internal class ErrorPatternsFileArgument : StringArgument
+    public ErrorPatternsFileArgument()
+        : base("error-patterns=|p=", "File containing error patterns. Each line prefixed with '@', or '%' for a simple string, or a .net regex, respectively")
     {
-        public ErrorPatternsFileArgument()
-            : base("error-patterns=|p=", "File containing error patterns. Each line prefixed with '@', or '%' for a simple string, or a .net regex, respectively")
-        {
-        }
+    }
 
-        public override void Validate()
-        {
-            base.Validate();
+    public override void Validate()
+    {
+        base.Validate();
 
-            if (Value != null && !File.Exists(Value))
-            {
-                throw new ArgumentException($"Cannot find error patterns file {Value}");
-            }
+        if (Value != null && !File.Exists(Value))
+        {
+            throw new ArgumentException($"Cannot find error patterns file {Value}");
         }
     }
 }

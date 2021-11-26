@@ -4,21 +4,20 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
-{
-    internal class AppleGetDeviceCommandsArguments : XHarnessCommandArguments, IAppleArguments
-    {
-        public DeviceNameArgument DeviceName { get; } = new();
-        public IncludeWirelessArgument IncludeWireless { get; } = new();
-        public XcodeArgument XcodeRoot { get; } = new();
-        public MlaunchArgument MlaunchPath { get; } = new();
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 
-        protected override IEnumerable<Argument> GetArguments() => new Argument[]
-        {
+internal class AppleGetDeviceCommandsArguments : XHarnessCommandArguments, IAppleArguments
+{
+    public DeviceNameArgument DeviceName { get; } = new();
+    public IncludeWirelessArgument IncludeWireless { get; } = new();
+    public XcodeArgument XcodeRoot { get; } = new();
+    public MlaunchArgument MlaunchPath { get; } = new();
+
+    protected override IEnumerable<Argument> GetArguments() => new Argument[]
+    {
             DeviceName,
             IncludeWireless,
             XcodeRoot,
             MlaunchPath,
-        };
-    }
+    };
 }

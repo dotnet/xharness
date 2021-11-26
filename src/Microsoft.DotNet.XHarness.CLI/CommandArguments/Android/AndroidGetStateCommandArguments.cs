@@ -4,15 +4,14 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
-{
-    internal class AndroidGetStateCommandArguments : XHarnessCommandArguments
-    {
-        public ShowAdbPathArgument ShowAdbPath { get; set; } = new();
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
-        protected override IEnumerable<Argument> GetArguments() => new Argument[]
-        {
+internal class AndroidGetStateCommandArguments : XHarnessCommandArguments
+{
+    public ShowAdbPathArgument ShowAdbPath { get; set; } = new();
+
+    protected override IEnumerable<Argument> GetArguments() => new Argument[]
+    {
             ShowAdbPath
-        };
-    }
+    };
 }

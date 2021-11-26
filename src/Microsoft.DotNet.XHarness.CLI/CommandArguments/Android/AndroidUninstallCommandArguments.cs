@@ -4,17 +4,16 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
-{
-    internal class AndroidUninstallCommandArguments : XHarnessCommandArguments
-    {
-        public PackageNameArgument PackageName { get; } = new();
-        public DeviceIdArgument DeviceId { get; } = new();
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
-        protected override IEnumerable<Argument> GetArguments() => new Argument[]
-        {
+internal class AndroidUninstallCommandArguments : XHarnessCommandArguments
+{
+    public PackageNameArgument PackageName { get; } = new();
+    public DeviceIdArgument DeviceId { get; } = new();
+
+    protected override IEnumerable<Argument> GetArguments() => new Argument[]
+    {
             PackageName,
             DeviceId,
-        };
-    }
+    };
 }

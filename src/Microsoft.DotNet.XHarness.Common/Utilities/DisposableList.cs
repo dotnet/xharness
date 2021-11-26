@@ -6,18 +6,17 @@ using System;
 using System.Collections.Generic;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.Common.Utilities
-{
-    public class DisposableList<T> : List<T>, IDisposable where T : IDisposable
-    {
-        public void Dispose()
-        {
-            foreach (var item in this)
-            {
-                item.Dispose();
-            }
+namespace Microsoft.DotNet.XHarness.Common.Utilities;
 
-            GC.SuppressFinalize(this);
+public class DisposableList<T> : List<T>, IDisposable where T : IDisposable
+{
+    public void Dispose()
+    {
+        foreach (var item in this)
+        {
+            item.Dispose();
         }
+
+        GC.SuppressFinalize(this);
     }
 }

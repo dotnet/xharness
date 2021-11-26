@@ -5,40 +5,39 @@
 using System;
 using System.Text;
 
-namespace Microsoft.DotNet.XHarness.Common.Logging
+namespace Microsoft.DotNet.XHarness.Common.Logging;
+
+/// <summary>
+/// A log that forwards all written data to a callback
+/// </summary>
+public class CallbackLog : Log
 {
-    /// <summary>
-    /// A log that forwards all written data to a callback
-    /// </summary>
-    public class CallbackLog : Log
+    private readonly Action<string> _onWrite;
+    private readonly StringBuilder _captured = new();
+
+    public CallbackLog(Action<string> onWrite)
+        : base("Callback log")
     {
-        private readonly Action<string> _onWrite;
-        private readonly StringBuilder _captured = new();
+        _onWrite = onWrite;
+        Timestamp = false;
+    }
 
-        public CallbackLog(Action<string> onWrite)
-            : base("Callback log")
+    public override void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
+
+    public override void Flush()
+    {
+    }
+
+    protected override void WriteImpl(string value)
+    {
+        lock (_captured)
         {
-            _onWrite = onWrite;
-            Timestamp = false;
+            _captured.Append(value);
         }
 
-        public override void Dispose()
-        {
-            GC.SuppressFinalize(this);
-        }
-
-        public override void Flush()
-        {
-        }
-
-        protected override void WriteImpl(string value)
-        {
-            lock (_captured)
-            {
-                _captured.Append(value);
-            }
-
-            _onWrite(value);
-        }
+        _onWrite(value);
     }
 }

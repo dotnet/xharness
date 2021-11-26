@@ -4,16 +4,15 @@
 
 using System;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
+
+/// <summary>
+/// How long we wait before app starts and first test should start running
+/// </summary>
+internal class LaunchTimeoutArgument : TimeSpanArgument
 {
-    /// <summary>
-    /// How long we wait before app starts and first test should start running
-    /// </summary>
-    internal class LaunchTimeoutArgument : TimeSpanArgument
+    public LaunchTimeoutArgument(TimeSpan defaultValue)
+        : base("launch-timeout=|lt=", "Time span in the form of \"00:00:00\" or number of seconds to wait for the app to start", defaultValue)
     {
-        public LaunchTimeoutArgument(TimeSpan defaultValue)
-            : base("launch-timeout=|lt=", "Time span in the form of \"00:00:00\" or number of seconds to wait for the app to start", defaultValue)
-        {
-        }
     }
 }

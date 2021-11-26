@@ -4,18 +4,17 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
+
+internal class InstallCommandArguments : SimulatorsCommandArguments
 {
-    internal class InstallCommandArguments : SimulatorsCommandArguments
+    public ForceInstallationArgument Force { get; } = new();
+
+    public HideProgressArgument HideProgress { get; } = new();
+
+    protected override IEnumerable<Argument> GetAdditionalArguments() => new Argument[]
     {
-        public ForceInstallationArgument Force { get; } = new();
-
-        public HideProgressArgument HideProgress { get; } = new();
-
-        protected override IEnumerable<Argument> GetAdditionalArguments() => new Argument[]
-        {
             Force,
             HideProgress,
-        };
-    }
+    };
 }

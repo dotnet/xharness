@@ -5,18 +5,17 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
+
+internal abstract class SimulatorsCommandArguments : XHarnessCommandArguments
 {
-    internal abstract class SimulatorsCommandArguments : XHarnessCommandArguments
-    {
-        public XcodeArgument XcodeRoot { get; } = new();
+    public XcodeArgument XcodeRoot { get; } = new();
 
-        protected sealed override IEnumerable<Argument> GetArguments() =>
-            GetAdditionalArguments().Concat(new Argument[]
-            {
+    protected sealed override IEnumerable<Argument> GetArguments() =>
+        GetAdditionalArguments().Concat(new Argument[]
+        {
                 XcodeRoot
-            });
+        });
 
-        protected abstract IEnumerable<Argument> GetAdditionalArguments();
-    }
+    protected abstract IEnumerable<Argument> GetAdditionalArguments();
 }

@@ -5,17 +5,16 @@
 using System;
 using System.Reflection;
 
-namespace Microsoft.DotNet.XHarness.TestRunners.Common
-{
-    public class TestAssemblyInfo
-    {
-        public Assembly Assembly { get; }
-        public string FullPath { get; }
+namespace Microsoft.DotNet.XHarness.TestRunners.Common;
 
-        public TestAssemblyInfo(Assembly assembly, string fullPath)
-        {
-            Assembly = assembly ?? throw new ArgumentNullException(nameof(assembly));
-            FullPath = fullPath ?? string.Empty;
-        }
+public class TestAssemblyInfo
+{
+    public Assembly Assembly { get; }
+    public string FullPath { get; }
+
+    public TestAssemblyInfo(Assembly assembly, string fullPath)
+    {
+        Assembly = assembly ?? throw new ArgumentNullException(nameof(assembly));
+        FullPath = fullPath ?? string.Empty;
     }
 }

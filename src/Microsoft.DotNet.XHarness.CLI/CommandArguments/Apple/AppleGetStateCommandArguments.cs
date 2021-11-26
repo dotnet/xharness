@@ -4,25 +4,24 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
-{
-    internal class AppleGetStateCommandArguments : XHarnessCommandArguments
-    {
-        public XcodeArgument XcodeRoot { get; } = new();
-        public MlaunchArgument MlaunchPath { get; set; } = new();
-        public ShowSimulatorsUUIDArgument ShowSimulatorsUUID { get; set; } = new();
-        public ShowDevicesUUIDArgument ShowDevicesUUID { get; set; } = new();
-        public IncludeWirelessArgument IncludeWireless { get; } = new();
-        public UseJsonArgument UseJson { get; set; } = new();
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 
-        protected override IEnumerable<Argument> GetArguments() => new Argument[]
-        {
+internal class AppleGetStateCommandArguments : XHarnessCommandArguments
+{
+    public XcodeArgument XcodeRoot { get; } = new();
+    public MlaunchArgument MlaunchPath { get; set; } = new();
+    public ShowSimulatorsUUIDArgument ShowSimulatorsUUID { get; set; } = new();
+    public ShowDevicesUUIDArgument ShowDevicesUUID { get; set; } = new();
+    public IncludeWirelessArgument IncludeWireless { get; } = new();
+    public UseJsonArgument UseJson { get; set; } = new();
+
+    protected override IEnumerable<Argument> GetArguments() => new Argument[]
+    {
             XcodeRoot,
             MlaunchPath,
             ShowSimulatorsUUID,
             ShowDevicesUUID,
             IncludeWireless,
             UseJson,
-        };
-    }
+    };
 }

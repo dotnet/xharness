@@ -2,13 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
+
+internal class JavaScriptFileArgument : RequiredStringArgument
 {
-    internal class JavaScriptFileArgument : RequiredStringArgument
+    public JavaScriptFileArgument(string defaultValue)
+        : base("js-file=", "Main JavaScript file to be run on the JavaScript engine. Default is " + defaultValue, defaultValue)
     {
-        public JavaScriptFileArgument(string defaultValue)
-            : base("js-file=", "Main JavaScript file to be run on the JavaScript engine. Default is " + defaultValue, defaultValue)
-        {
-        }
     }
 }

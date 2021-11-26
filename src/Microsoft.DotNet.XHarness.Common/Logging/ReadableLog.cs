@@ -5,17 +5,16 @@
 using System.IO;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.Common.Logging
+namespace Microsoft.DotNet.XHarness.Common.Logging;
+
+public interface IReadableLog : ILog
 {
-    public interface IReadableLog : ILog
-    {
-        StreamReader GetReader();
-    }
+    StreamReader GetReader();
+}
 
-    public abstract class ReadableLog : Log, IReadableLog
-    {
-        protected ReadableLog(string? description = null) : base(description) { }
+public abstract class ReadableLog : Log, IReadableLog
+{
+    protected ReadableLog(string? description = null) : base(description) { }
 
-        public abstract StreamReader GetReader();
-    }
+    public abstract StreamReader GetReader();
 }

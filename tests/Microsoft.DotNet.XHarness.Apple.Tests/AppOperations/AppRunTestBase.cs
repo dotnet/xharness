@@ -15,115 +15,114 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Moq;
 
-namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations
+namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations;
+
+public abstract class AppRunTestBase : IDisposable
 {
-    public abstract class AppRunTestBase : IDisposable
+    protected const string AppName = "System.Text.Json.Tests.app";
+    protected const string AppBundleIdentifier = "net.dot.System.Text.Json.Tests";
+    protected const string SimulatorDeviceName = "Test iPhone simulator";
+    protected const string DeviceName = "Test iPhone";
+
+    protected static readonly string s_outputPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+    protected static readonly string s_appPath = Path.Combine(s_outputPath, AppName);
+
+    protected static readonly IHardwareDevice s_mockDevice = Mock.Of<IHardwareDevice>(x =>
+        x.BuildVersion == "17A577" &&
+        x.DeviceClass == DeviceClass.iPhone &&
+        x.DeviceIdentifier == "8A450AA31EA94191AD6B02455F377CC1" &&
+        x.UDID == "8A450AA31EA94191AD6B02455F377CC1" &&
+        x.InterfaceType == "Usb" &&
+        x.IsUsableForDebugging == true &&
+        x.Name == DeviceName &&
+        x.ProductType == "iPhone12,1" &&
+        x.ProductVersion == "13.0");
+
+    protected readonly string _simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
+
+    protected readonly ISimulatorDevice _mockSimulator;
+
+    protected readonly Mock<IMlaunchProcessManager> _processManager;
+    protected readonly Mock<ILogs> _logs;
+    protected readonly Mock<IFileBackedLog> _mainLog;
+    protected readonly Mock<ICrashSnapshotReporter> _snapshotReporter;
+    protected readonly Mock<IHelpers> _helpers;
+
+    protected readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
+    protected readonly IFileBackedLog _stdoutLog;
+    protected readonly IFileBackedLog _stderrLog;
+
+    protected AppRunTestBase()
     {
-        protected const string AppName = "System.Text.Json.Tests.app";
-        protected const string AppBundleIdentifier = "net.dot.System.Text.Json.Tests";
-        protected const string SimulatorDeviceName = "Test iPhone simulator";
-        protected const string DeviceName = "Test iPhone";
+        _mainLog = new Mock<IFileBackedLog>();
 
-        protected static readonly string s_outputPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        protected static readonly string s_appPath = Path.Combine(s_outputPath, AppName);
+        _processManager = new Mock<IMlaunchProcessManager>();
+        _processManager.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult() { ExitCode = 0 }));
 
-        protected static readonly IHardwareDevice s_mockDevice = Mock.Of<IHardwareDevice>(x =>
-            x.BuildVersion == "17A577" &&
-            x.DeviceClass == DeviceClass.iPhone &&
-            x.DeviceIdentifier == "8A450AA31EA94191AD6B02455F377CC1" &&
-            x.UDID == "8A450AA31EA94191AD6B02455F377CC1" &&
-            x.InterfaceType == "Usb" &&
-            x.IsUsableForDebugging == true &&
-            x.Name == DeviceName &&
-            x.ProductType == "iPhone12,1" &&
-            x.ProductVersion == "13.0");
+        _snapshotReporter = new Mock<ICrashSnapshotReporter>();
 
-        protected readonly string _simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
+        _stdoutLog = Mock.Of<IFileBackedLog>(
+            x => x.FullPath == $"./{AppBundleIdentifier}.log" && x.Description == LogType.ApplicationLog.ToString());
+        _stderrLog = Mock.Of<IFileBackedLog>(
+            x => x.FullPath == $"./{AppBundleIdentifier}.err.log" && x.Description == LogType.ApplicationLog.ToString());
 
-        protected readonly ISimulatorDevice _mockSimulator;
+        _logs = new Mock<ILogs>();
+        _logs
+            .SetupGet(x => x.Directory)
+            .Returns(Path.Combine(s_outputPath, "logs"));
+        _logs
+            .Setup(x => x.CreateFile($"{AppBundleIdentifier}-mocked_timestamp.log", It.IsAny<LogType>()))
+            .Returns($"./{AppBundleIdentifier}-mocked_timestamp.log");
+        _logs
+            .Setup(x => x.CreateFile(AppBundleIdentifier + ".log", LogType.ApplicationLog))
+            .Returns(_stdoutLog.FullPath);
+        _logs
+            .Setup(x => x.Create(AppBundleIdentifier + ".log", LogType.ApplicationLog.ToString(), It.IsAny<bool?>()))
+            .Returns(_stdoutLog);
+        _logs
+            .Setup(x => x.Create(AppBundleIdentifier + ".err.log", LogType.ApplicationLog.ToString(), It.IsAny<bool?>()))
+            .Returns(_stderrLog);
 
-        protected readonly Mock<IMlaunchProcessManager> _processManager;
-        protected readonly Mock<ILogs> _logs;
-        protected readonly Mock<IFileBackedLog> _mainLog;
-        protected readonly Mock<ICrashSnapshotReporter> _snapshotReporter;
-        protected readonly Mock<IHelpers> _helpers;
+        var factory2 = new Mock<ICrashSnapshotReporterFactory>();
+        factory2.SetReturnsDefault(_snapshotReporter.Object);
+        _snapshotReporterFactory = factory2.Object;
 
-        protected readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
-        protected readonly IFileBackedLog _stdoutLog;
-        protected readonly IFileBackedLog _stderrLog;
+        _mockSimulator = Mock.Of<ISimulatorDevice>(x =>
+            x.UDID == "58F21118E4D34FD69EAB7860BB9B38A0" &&
+            x.Name == SimulatorDeviceName &&
+            x.LogPath == _simulatorLogPath &&
+            x.SystemLog == Path.Combine(_simulatorLogPath, "system.log"));
 
-        protected AppRunTestBase()
+        _helpers = new Mock<IHelpers>();
+        _helpers
+            .Setup(x => x.GetTerminalName(It.IsAny<int>()))
+            .Returns("tty1");
+        _helpers
+            .Setup(x => x.GenerateStableGuid(It.IsAny<string>()))
+            .Returns(Guid.NewGuid());
+        _helpers
+            .SetupGet(x => x.Timestamp)
+            .Returns("mocked_timestamp");
+        _helpers
+            .Setup(x => x.GetLocalIpAddresses())
+            .Returns(new[] { IPAddress.Loopback, IPAddress.IPv6Loopback });
+
+        Directory.CreateDirectory(s_outputPath);
+    }
+
+    public void Dispose()
+    {
+        try
         {
-            _mainLog = new Mock<IFileBackedLog>();
-
-            _processManager = new Mock<IMlaunchProcessManager>();
-            _processManager.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult() { ExitCode = 0 }));
-
-            _snapshotReporter = new Mock<ICrashSnapshotReporter>();
-
-            _stdoutLog = Mock.Of<IFileBackedLog>(
-                x => x.FullPath == $"./{AppBundleIdentifier}.log" && x.Description == LogType.ApplicationLog.ToString());
-            _stderrLog = Mock.Of<IFileBackedLog>(
-                x => x.FullPath == $"./{AppBundleIdentifier}.err.log" && x.Description == LogType.ApplicationLog.ToString());
-
-            _logs = new Mock<ILogs>();
-            _logs
-                .SetupGet(x => x.Directory)
-                .Returns(Path.Combine(s_outputPath, "logs"));
-            _logs
-                .Setup(x => x.CreateFile($"{AppBundleIdentifier}-mocked_timestamp.log", It.IsAny<LogType>()))
-                .Returns($"./{AppBundleIdentifier}-mocked_timestamp.log");
-            _logs
-                .Setup(x => x.CreateFile(AppBundleIdentifier + ".log", LogType.ApplicationLog))
-                .Returns(_stdoutLog.FullPath);
-            _logs
-                .Setup(x => x.Create(AppBundleIdentifier + ".log", LogType.ApplicationLog.ToString(), It.IsAny<bool?>()))
-                .Returns(_stdoutLog);
-            _logs
-                .Setup(x => x.Create(AppBundleIdentifier + ".err.log", LogType.ApplicationLog.ToString(), It.IsAny<bool?>()))
-                .Returns(_stderrLog);
-
-            var factory2 = new Mock<ICrashSnapshotReporterFactory>();
-            factory2.SetReturnsDefault(_snapshotReporter.Object);
-            _snapshotReporterFactory = factory2.Object;
-
-            _mockSimulator = Mock.Of<ISimulatorDevice>(x =>
-                x.UDID == "58F21118E4D34FD69EAB7860BB9B38A0" &&
-                x.Name == SimulatorDeviceName &&
-                x.LogPath == _simulatorLogPath &&
-                x.SystemLog == Path.Combine(_simulatorLogPath, "system.log"));
-
-            _helpers = new Mock<IHelpers>();
-            _helpers
-                .Setup(x => x.GetTerminalName(It.IsAny<int>()))
-                .Returns("tty1");
-            _helpers
-                .Setup(x => x.GenerateStableGuid(It.IsAny<string>()))
-                .Returns(Guid.NewGuid());
-            _helpers
-                .SetupGet(x => x.Timestamp)
-                .Returns("mocked_timestamp");
-            _helpers
-                .Setup(x => x.GetLocalIpAddresses())
-                .Returns(new[] { IPAddress.Loopback, IPAddress.IPv6Loopback });
-
-            Directory.CreateDirectory(s_outputPath);
+            Directory.Delete(s_outputPath, true);
         }
-
-        public void Dispose()
+        catch
         {
-            try
-            {
-                Directory.Delete(s_outputPath, true);
-            }
-            catch
-            {
-                // Concurrency can cause these
-            }
-            finally
-            {
-                GC.SuppressFinalize(this);
-            }
+            // Concurrency can cause these
+        }
+        finally
+        {
+            GC.SuppressFinalize(this);
         }
     }
 }

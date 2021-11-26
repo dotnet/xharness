@@ -4,45 +4,44 @@
 
 using System;
 
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
+namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+
+public enum Architecture
 {
-    public enum Architecture
-    {
-        ARMv6,
-        ARMv7,
-        ARMv7k,
-        ARMv7s,
-        ARM64,
-        ARM64_32,
-        i386,
-        x86_64,
-    }
+    ARMv6,
+    ARMv7,
+    ARMv7k,
+    ARMv7s,
+    ARM64,
+    ARM64_32,
+    i386,
+    x86_64,
+}
 
-    public enum DevicePlatform
-    {
-        Unknown,
-        iOS,
-        tvOS,
-        watchOS,
-        macOS,
-    }
+public enum DevicePlatform
+{
+    Unknown,
+    iOS,
+    tvOS,
+    watchOS,
+    macOS,
+}
 
-    public interface IDevice
-    {
-        string Name { get; }
-        string UDID { get; }
-        string OSVersion { get; }
-    }
+public interface IDevice
+{
+    string Name { get; }
+    string UDID { get; }
+    string OSVersion { get; }
+}
 
-    public static class DevicePlatformExtensions
+public static class DevicePlatformExtensions
+{
+    public static string AsString(this DevicePlatform value) => value switch
     {
-        public static string AsString(this DevicePlatform value) => value switch
-        {
-            DevicePlatform.iOS => "iOS",
-            DevicePlatform.tvOS => "tvOS",
-            DevicePlatform.watchOS => "watchOS",
-            DevicePlatform.macOS => "macOS",
-            _ => throw new Exception($"Unknown platform: {value}"),
-        };
-    }
+        DevicePlatform.iOS => "iOS",
+        DevicePlatform.tvOS => "tvOS",
+        DevicePlatform.watchOS => "watchOS",
+        DevicePlatform.macOS => "macOS",
+        _ => throw new Exception($"Unknown platform: {value}"),
+    };
 }

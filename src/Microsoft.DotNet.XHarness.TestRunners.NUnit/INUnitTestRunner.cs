@@ -5,25 +5,24 @@
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.TestRunners.NUnit
+namespace Microsoft.DotNet.XHarness.TestRunners.NUnit;
+
+/// <summary>
+/// Interface to be implemented by the runner so that the listener can interact with it.
+/// </summary>
+internal interface INUnitTestRunner
 {
-    /// <summary>
-    /// Interface to be implemented by the runner so that the listener can interact with it.
-    /// </summary>
-    internal interface INUnitTestRunner
-    {
-        void IncreasePassedTests();
+    void IncreasePassedTests();
 
-        void IncreaseSkippedTests();
+    void IncreaseSkippedTests();
 
-        void IncreaseFailedTests();
+    void IncreaseFailedTests();
 
-        void IncreaseInconclusiveTests();
+    void IncreaseInconclusiveTests();
 
-        void Add(TestFailureInfo info);
+    void Add(TestFailureInfo info);
 
-        bool GCAfterEachFixture { get; }
+    bool GCAfterEachFixture { get; }
 
-        string? TestsRootDirectory { get; }
-    }
+    string? TestsRootDirectory { get; }
 }

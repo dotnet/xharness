@@ -11,53 +11,52 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.Android
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Android;
+
+internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandArguments>
 {
-    internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandArguments>
+    protected override string CommandUsage { get; } = "android state";
+
+    protected override AndroidGetStateCommandArguments Arguments { get; } = new();
+
+    public AndroidGetStateCommand() : base(TargetPlatform.Android, new ServiceCollection())
     {
-        protected override string CommandUsage { get; } = "android state";
+    }
 
-        protected override AndroidGetStateCommandArguments Arguments { get; } = new();
+    protected override Task<ExitCode> InvokeInternal(ILogger logger)
+    {
+        var runner = new AdbRunner(logger);
 
-        public AndroidGetStateCommand() : base(TargetPlatform.Android, new ServiceCollection())
+        if (Arguments.ShowAdbPath)
         {
+            Console.WriteLine(runner.AdbExePath);
+            return Task.FromResult(ExitCode.SUCCESS);
         }
 
-        protected override Task<ExitCode> InvokeInternal(ILogger logger)
+        logger.LogInformation("Getting state of ADB and attached Android device(s)");
+        try
         {
-            var runner = new AdbRunner(logger);
-
-            if (Arguments.ShowAdbPath)
+            string state = runner.GetAdbState();
+            if (string.IsNullOrEmpty(state))
             {
-                Console.WriteLine(runner.AdbExePath);
-                return Task.FromResult(ExitCode.SUCCESS);
+                state = "No device attached";
+            }
+            logger.LogInformation($"ADB Version info:{Environment.NewLine}{runner.GetAdbVersion()}");
+            logger.LogInformation($"ADB State ('device' if physically attached):{Environment.NewLine}{state}");
+
+            logger.LogInformation($"List of devices:");
+            var deviceAndArchList = runner.GetAttachedDevicesWithProperties("architecture");
+            foreach (string device in deviceAndArchList.Keys)
+            {
+                logger.LogInformation($"Device: '{device}' - Architecture: {deviceAndArchList[device]}");
             }
 
-            logger.LogInformation("Getting state of ADB and attached Android device(s)");
-            try
-            {
-                string state = runner.GetAdbState();
-                if (string.IsNullOrEmpty(state))
-                {
-                    state = "No device attached";
-                }
-                logger.LogInformation($"ADB Version info:{Environment.NewLine}{runner.GetAdbVersion()}");
-                logger.LogInformation($"ADB State ('device' if physically attached):{Environment.NewLine}{state}");
-
-                logger.LogInformation($"List of devices:");
-                var deviceAndArchList = runner.GetAttachedDevicesWithProperties("architecture");
-                foreach (string device in deviceAndArchList.Keys)
-                {
-                    logger.LogInformation($"Device: '{device}' - Architecture: {deviceAndArchList[device]}");
-                }
-
-                return Task.FromResult(ExitCode.SUCCESS);
-            }
-            catch (Exception toLog)
-            {
-                logger.LogCritical(toLog, $"Error: {toLog.Message}");
-                return Task.FromResult(ExitCode.GENERAL_FAILURE);
-            }
+            return Task.FromResult(ExitCode.SUCCESS);
+        }
+        catch (Exception toLog)
+        {
+            logger.LogCritical(toLog, $"Error: {toLog.Message}");
+            return Task.FromResult(ExitCode.GENERAL_FAILURE);
         }
     }
 }

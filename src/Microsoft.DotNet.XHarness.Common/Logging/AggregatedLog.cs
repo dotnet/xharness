@@ -7,73 +7,72 @@ using System.Collections.Generic;
 using System.IO;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.Common.Logging
+namespace Microsoft.DotNet.XHarness.Common.Logging;
+
+public abstract partial class Log
 {
-    public abstract partial class Log
+    public static IFileBackedLog CreateReadableAggregatedLog(IFileBackedLog defaultLog, params ILog[] logs) => new ReadableAggregatedLog(defaultLog, logs);
+
+    public static ILog CreateAggregatedLog(params ILog[] logs) => new AggregatedLog(logs);
+
+    // Log that will duplicate log output to multiple other logs.
+    private class AggregatedLog : Log
     {
-        public static IFileBackedLog CreateReadableAggregatedLog(IFileBackedLog defaultLog, params ILog[] logs) => new ReadableAggregatedLog(defaultLog, logs);
+        protected readonly List<ILog> _logs = new();
 
-        public static ILog CreateAggregatedLog(params ILog[] logs) => new AggregatedLog(logs);
-
-        // Log that will duplicate log output to multiple other logs.
-        private class AggregatedLog : Log
+        public AggregatedLog(params ILog[] logs)
         {
-            protected readonly List<ILog> _logs = new();
+            _logs.AddRange(logs);
+            Timestamp = false;
+        }
 
-            public AggregatedLog(params ILog[] logs)
+        protected override void WriteImpl(string value)
+        {
+            foreach (var log in _logs)
             {
-                _logs.AddRange(logs);
-                Timestamp = false;
-            }
-
-            protected override void WriteImpl(string value)
-            {
-                foreach (var log in _logs)
-                {
-                    log.Write(value);
-                }
-            }
-
-            public override void Write(byte[] buffer, int offset, int count)
-            {
-                foreach (var log in _logs)
-                {
-                    log.Write(buffer, offset, count);
-                }
-            }
-
-            public override void Flush()
-            {
-                foreach (var log in _logs)
-                {
-                    log.Flush();
-                }
-            }
-
-            public override void Dispose()
-            {
-                foreach (var log in _logs)
-                {
-                    log.Dispose();
-                }
+                log.Write(value);
             }
         }
 
-        private class ReadableAggregatedLog : AggregatedLog, IFileBackedLog
+        public override void Write(byte[] buffer, int offset, int count)
         {
-            private readonly IFileBackedLog _defaultLog;
-
-            public ReadableAggregatedLog(IFileBackedLog defaultLog, params ILog[] logs) : base(logs)
+            foreach (var log in _logs)
             {
-                _defaultLog = defaultLog ?? throw new ArgumentNullException(nameof(defaultLog));
-                // make sure that we also write in the default log
-                _logs.Add(defaultLog);
-                Timestamp = false;
+                log.Write(buffer, offset, count);
             }
-
-            public StreamReader GetReader() => _defaultLog.GetReader();
-
-            public string FullPath => _defaultLog.FullPath;
         }
+
+        public override void Flush()
+        {
+            foreach (var log in _logs)
+            {
+                log.Flush();
+            }
+        }
+
+        public override void Dispose()
+        {
+            foreach (var log in _logs)
+            {
+                log.Dispose();
+            }
+        }
+    }
+
+    private class ReadableAggregatedLog : AggregatedLog, IFileBackedLog
+    {
+        private readonly IFileBackedLog _defaultLog;
+
+        public ReadableAggregatedLog(IFileBackedLog defaultLog, params ILog[] logs) : base(logs)
+        {
+            _defaultLog = defaultLog ?? throw new ArgumentNullException(nameof(defaultLog));
+            // make sure that we also write in the default log
+            _logs.Add(defaultLog);
+            Timestamp = false;
+        }
+
+        public StreamReader GetReader() => _defaultLog.GetReader();
+
+        public string FullPath => _defaultLog.FullPath;
     }
 }

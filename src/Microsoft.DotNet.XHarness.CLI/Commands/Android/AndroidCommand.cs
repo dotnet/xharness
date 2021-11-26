@@ -9,29 +9,28 @@ using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Microsoft.DotNet.XHarness.CLI.Android
+namespace Microsoft.DotNet.XHarness.CLI.Android;
+
+internal abstract class AndroidCommand<TArguments> : XHarnessCommand<TArguments> where TArguments : IXHarnessCommandArguments
 {
-    internal abstract class AndroidCommand<TArguments> : XHarnessCommand<TArguments> where TArguments : IXHarnessCommandArguments
+    protected readonly Lazy<IDiagnosticsData> _diagnosticsData;
+    protected IDiagnosticsData DiagnosticsData => _diagnosticsData.Value;
+
+    protected AndroidCommand(string name, bool allowsExtraArgs, string? help = null)
+        : base(TargetPlatform.Android, name, allowsExtraArgs, new ServiceCollection(), help)
     {
-        protected readonly Lazy<IDiagnosticsData> _diagnosticsData;
-        protected IDiagnosticsData DiagnosticsData => _diagnosticsData.Value;
+        _diagnosticsData = new(() => Services.BuildServiceProvider().GetRequiredService<IDiagnosticsData>());
+    }
 
-        protected AndroidCommand(string name, bool allowsExtraArgs, string? help = null)
-            : base(TargetPlatform.Android, name, allowsExtraArgs, new ServiceCollection(), help)
-        {
-            _diagnosticsData = new(() => Services.BuildServiceProvider().GetRequiredService<IDiagnosticsData>());
-        }
-
-        protected static void FillDiagnosticData(
-            IDiagnosticsData data,
-            string deviceName,
-            int apiVersion,
-            IEnumerable<string> apkRequiredArchitecture)
-        {
-            data.Target = string.Join(",", apkRequiredArchitecture);
-            data.TargetOS = "API " + apiVersion;
-            data.Device = deviceName;
-            data.IsDevice = !deviceName.ToLowerInvariant().StartsWith("emulator");
-        }
+    protected static void FillDiagnosticData(
+        IDiagnosticsData data,
+        string deviceName,
+        int apiVersion,
+        IEnumerable<string> apkRequiredArchitecture)
+    {
+        data.Target = string.Join(",", apkRequiredArchitecture);
+        data.TargetOS = "API " + apiVersion;
+        data.Device = deviceName;
+        data.IsDevice = !deviceName.ToLowerInvariant().StartsWith("emulator");
     }
 }

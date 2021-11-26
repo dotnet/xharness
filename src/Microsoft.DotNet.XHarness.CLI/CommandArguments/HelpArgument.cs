@@ -2,12 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments;
+
+public class HelpArgument : SwitchArgument
 {
-    public class HelpArgument : SwitchArgument
+    public HelpArgument() : base("help|h", string.Empty, false)
     {
-        public HelpArgument() : base("help|h", string.Empty, false)
-        {
-        }
     }
 }

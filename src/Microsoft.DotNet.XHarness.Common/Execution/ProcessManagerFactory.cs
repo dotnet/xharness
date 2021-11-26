@@ -5,28 +5,27 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.XHarness.Common.Execution
+namespace Microsoft.DotNet.XHarness.Common.Execution;
+
+public static class ProcessManagerFactory
 {
-    public static class ProcessManagerFactory
+    public static IProcessManager CreateProcessManager()
     {
-        public static IProcessManager CreateProcessManager()
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                return new LinuxProcessManager();
-            }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                return new MacOSProcessManager();
-            }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                return new WindowsProcessManager();
-            }
-
-            throw new InvalidOperationException("Unsupported OS platform detected when creating ProcessManager");
+            return new LinuxProcessManager();
         }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            return new MacOSProcessManager();
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return new WindowsProcessManager();
+        }
+
+        throw new InvalidOperationException("Unsupported OS platform detected when creating ProcessManager");
     }
 }

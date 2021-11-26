@@ -13,80 +13,79 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
-namespace Microsoft.DotNet.XHarness.Apple
+namespace Microsoft.DotNet.XHarness.Apple;
+
+public interface IUninstallOrchestrator
 {
-    public interface IUninstallOrchestrator
+    Task<ExitCode> OrchestrateAppUninstall(
+        string bundleIdentifier,
+        TestTargetOs target,
+        string? deviceName,
+        TimeSpan timeout,
+        bool includeWirelessDevices,
+        bool resetSimulator,
+        bool enableLldb,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// This orchestrator implements the `uninstall` command flow.
+/// </summary>
+public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
+{
+    public UninstallOrchestrator(
+        IAppInstaller appInstaller,
+        IAppUninstaller appUninstaller,
+        IDeviceFinder deviceFinder,
+        ILogger consoleLogger,
+        ILogs logs,
+        IFileBackedLog mainLog,
+        IErrorKnowledgeBase errorKnowledgeBase,
+        IDiagnosticsData diagnosticsData,
+        IHelpers helpers)
+        : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
-        Task<ExitCode> OrchestrateAppUninstall(
-            string bundleIdentifier,
-            TestTargetOs target,
-            string? deviceName,
-            TimeSpan timeout,
-            bool includeWirelessDevices,
-            bool resetSimulator,
-            bool enableLldb,
-            CancellationToken cancellationToken);
     }
 
-    /// <summary>
-    /// This orchestrator implements the `uninstall` command flow.
-    /// </summary>
-    public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
+    public Task<ExitCode> OrchestrateAppUninstall(
+        string bundleIdentifier,
+        TestTargetOs target,
+        string? deviceName,
+        TimeSpan timeout,
+        bool includeWirelessDevices,
+        bool resetSimulator,
+        bool enableLldb,
+        CancellationToken cancellationToken)
     {
-        public UninstallOrchestrator(
-            IAppInstaller appInstaller,
-            IAppUninstaller appUninstaller,
-            IDeviceFinder deviceFinder,
-            ILogger consoleLogger,
-            ILogs logs,
-            IFileBackedLog mainLog,
-            IErrorKnowledgeBase errorKnowledgeBase,
-            IDiagnosticsData diagnosticsData,
-            IHelpers helpers)
-            : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        static Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
+            => throw new InvalidOperationException("uninstall command not available on maccatalyst");
+
+        static Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
+            => Task.FromResult(ExitCode.SUCCESS); // no-op
+
+        return OrchestrateOperation(
+            target,
+            deviceName,
+            includeWirelessDevices,
+            resetSimulator,
+            enableLldb,
+            AppBundleInformation.FromBundleId(bundleIdentifier),
+            executeMacCatalystApp,
+            executeApp,
+            cancellationToken);
+    }
+
+    protected override Task<ExitCode> InstallApp(AppBundleInformation appBundleInfo, IDevice device, TestTargetOs target, CancellationToken cancellationToken)
+        => Task.FromResult(ExitCode.SUCCESS); // no-op - we only want to uninstall the app
+
+    protected override Task<ExitCode> UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
+    {
+        // For the uninstallation, we don't want to uninstall twice so we skip the preparation one
+        if (isPreparation)
         {
+            return Task.FromResult(ExitCode.SUCCESS);
         }
 
-        public Task<ExitCode> OrchestrateAppUninstall(
-            string bundleIdentifier,
-            TestTargetOs target,
-            string? deviceName,
-            TimeSpan timeout,
-            bool includeWirelessDevices,
-            bool resetSimulator,
-            bool enableLldb,
-            CancellationToken cancellationToken)
-        {
-            static Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
-                => throw new InvalidOperationException("uninstall command not available on maccatalyst");
-
-            static Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
-                => Task.FromResult(ExitCode.SUCCESS); // no-op
-
-            return OrchestrateOperation(
-                target,
-                deviceName,
-                includeWirelessDevices,
-                resetSimulator,
-                enableLldb,
-                AppBundleInformation.FromBundleId(bundleIdentifier),
-                executeMacCatalystApp,
-                executeApp,
-                cancellationToken);
-        }
-
-        protected override Task<ExitCode> InstallApp(AppBundleInformation appBundleInfo, IDevice device, TestTargetOs target, CancellationToken cancellationToken)
-            => Task.FromResult(ExitCode.SUCCESS); // no-op - we only want to uninstall the app
-
-        protected override Task<ExitCode> UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
-        {
-            // For the uninstallation, we don't want to uninstall twice so we skip the preparation one
-            if (isPreparation)
-            {
-                return Task.FromResult(ExitCode.SUCCESS);
-            }
-
-            return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
-        }
+        return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
     }
 }

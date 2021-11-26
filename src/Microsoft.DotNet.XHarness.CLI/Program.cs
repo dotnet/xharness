@@ -12,27 +12,27 @@ using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI
+namespace Microsoft.DotNet.XHarness.CLI;
+
+public static class Program
 {
-    public static class Program
+    /// <summary>
+    /// The verbatim "--" argument used for pass-through args is removed by Mono.Options when parsing CommandSets,
+    /// so in Program.cs, we temporarily replace it with this string and then recognize it back here.
+    /// </summary>
+    public const string VerbatimArgumentPlaceholder = "[[%verbatim_argument%]]";
+
+    public static int Main(string[] args)
     {
-        /// <summary>
-        /// The verbatim "--" argument used for pass-through args is removed by Mono.Options when parsing CommandSets,
-        /// so in Program.cs, we temporarily replace it with this string and then recognize it back here.
-        /// </summary>
-        public const string VerbatimArgumentPlaceholder = "[[%verbatim_argument%]]";
+        bool shouldOutput = !IsOutputSensitive(args);
 
-        public static int Main(string[] args)
+        if (shouldOutput)
         {
-            bool shouldOutput = !IsOutputSensitive(args);
+            Console.WriteLine($"XHarness command issued: {string.Join(' ', args)}");
+        }
 
-            if (shouldOutput)
-            {
-                Console.WriteLine($"XHarness command issued: {string.Join(' ', args)}");
-            }
-
-            if (args.Length > 0)
-            {
+        if (args.Length > 0)
+        {
 #if !DEBUG
                 if (args[0] == "apple" && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
@@ -42,31 +42,31 @@ namespace Microsoft.DotNet.XHarness.CLI
                 }
 #endif
 
-                // Mono.Options wouldn't allow "--" so we will temporarily rename it and parse it ourselves later
-                args = args.Select(a => a == "--" ? VerbatimArgumentPlaceholder : a).ToArray();
-            }
-
-            var commands = GetXHarnessCommandSet();
-            int result = commands.Run(args);
-
-            string? exitCodeName = null;
-            if (args.Length > 0 && result != 0 && Enum.IsDefined(typeof(ExitCode), result))
-            {
-                exitCodeName = $" ({(ExitCode)result})";
-            }
-
-            if (shouldOutput)
-            {
-                Console.WriteLine($"XHarness exit code: {result}{exitCodeName}");
-            }
-
-            return result;
+            // Mono.Options wouldn't allow "--" so we will temporarily rename it and parse it ourselves later
+            args = args.Select(a => a == "--" ? VerbatimArgumentPlaceholder : a).ToArray();
         }
 
-        public static CommandSet GetXHarnessCommandSet()
+        var commands = GetXHarnessCommandSet();
+        int result = commands.Run(args);
+
+        string? exitCodeName = null;
+        if (args.Length > 0 && result != 0 && Enum.IsDefined(typeof(ExitCode), result))
         {
+            exitCodeName = $" ({(ExitCode)result})";
+        }
+
+        if (shouldOutput)
+        {
+            Console.WriteLine($"XHarness exit code: {result}{exitCodeName}");
+        }
+
+        return result;
+    }
+
+    public static CommandSet GetXHarnessCommandSet()
+    {
 #pragma warning disable IDE0028 // Simplify collection initialization for DEBUG
-            var commandSet = new CommandSet("xharness");
+        var commandSet = new CommandSet("xharness");
 #pragma warning restore IDE0028 // Simplify collection initialization for DEBUG
 
 #if !DEBUG
@@ -75,47 +75,46 @@ namespace Microsoft.DotNet.XHarness.CLI
                 commandSet.Add(new AppleCommandSet());
             }
 #else
-            commandSet.Add(new AppleCommandSet());
+        commandSet.Add(new AppleCommandSet());
 #endif
 
-            commandSet.Add(new AndroidCommandSet());
-            commandSet.Add(new WasmCommandSet());
-            commandSet.Add(new XHarnessHelpCommand());
-            commandSet.Add(new XHarnessVersionCommand());
+        commandSet.Add(new AndroidCommandSet());
+        commandSet.Add(new WasmCommandSet());
+        commandSet.Add(new XHarnessHelpCommand());
+        commandSet.Add(new XHarnessVersionCommand());
 
-            return commandSet;
-        }
+        return commandSet;
+    }
 
-        /// <summary>
-        /// Returns true when the command outputs data suitable for parsing and we should keep the output clean.
-        /// </summary>
-        private static bool IsOutputSensitive(string[] args)
+    /// <summary>
+    /// Returns true when the command outputs data suitable for parsing and we should keep the output clean.
+    /// </summary>
+    private static bool IsOutputSensitive(string[] args)
+    {
+        if (args.Length < 2 || args.Contains("--help") || args.Contains("-h"))
         {
-            if (args.Length < 2 || args.Contains("--help") || args.Contains("-h"))
-            {
-                return false;
-            }
-
-            switch (args[0])
-            {
-                case "apple":
-                    return args[1] == "device";
-
-                case "android":
-                    if (args[1] == "device")
-                    {
-                        return true;
-                    }
-
-                    if (args[1] == "state" && args.Contains("--adb"))
-                    {
-                        return true;
-                    }
-
-                    return false;
-            }
-
             return false;
         }
+
+        switch (args[0])
+        {
+            case "apple":
+                return args[1] == "device";
+
+            case "android":
+                if (args[1] == "device")
+                {
+                    return true;
+                }
+
+                if (args[1] == "state" && args.Contains("--adb"))
+                {
+                    return true;
+                }
+
+                return false;
+        }
+
+        return false;
     }
 }

@@ -9,72 +9,71 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators;
+
+internal class ListCommand : SimulatorsCommand
 {
-    internal class ListCommand : SimulatorsCommand
+    private const string CommandName = "list";
+    private const string CommandHelp = "Lists available simulators";
+
+    protected override string CommandUsage => CommandName;
+
+    protected override string CommandDescription => CommandHelp;
+
+    protected override ListCommandArguments Arguments { get; } = new();
+
+    public ListCommand() : base(CommandName, false, CommandHelp)
     {
-        private const string CommandName = "list";
-        private const string CommandHelp = "Lists available simulators";
+    }
 
-        protected override string CommandUsage => CommandName;
+    protected override async Task<ExitCode> InvokeInternal(ILogger logger)
+    {
+        Logger = logger;
 
-        protected override string CommandDescription => CommandHelp;
+        var simulators = await GetAvailableSimulators();
 
-        protected override ListCommandArguments Arguments { get; } = new();
-
-        public ListCommand() : base(CommandName, false, CommandHelp)
+        foreach (var simulator in simulators)
         {
-        }
+            var output = new StringBuilder();
+            output.AppendLine(simulator.Name);
+            output.Append($"  Version: {simulator.Version}");
 
-        protected override async Task<ExitCode> InvokeInternal(ILogger logger)
-        {
-            Logger = logger;
-
-            var simulators = await GetAvailableSimulators();
-
-            foreach (var simulator in simulators)
+            string? installStatus = null;
+            var installedVersion = await IsInstalled(simulator.Identifier);
+            if (installedVersion == null)
             {
-                var output = new StringBuilder();
-                output.AppendLine(simulator.Name);
-                output.Append($"  Version: {simulator.Version}");
-
-                string? installStatus = null;
-                var installedVersion = await IsInstalled(simulator.Identifier);
-                if (installedVersion == null)
+                if (Arguments.ListInstalledOnly)
                 {
-                    if (Arguments.ListInstalledOnly)
-                    {
-                        Logger.LogDebug($"The simulator '{simulator.Name}' is not installed");
-                        continue;
-                    }
+                    Logger.LogDebug($"The simulator '{simulator.Name}' is not installed");
+                    continue;
+                }
 
-                    installStatus = "not installed";
+                installStatus = "not installed";
+            }
+            else
+            {
+                if (installedVersion >= Version.Parse(simulator.Version))
+                {
+                    if (!Arguments.ListInstalledOnly)
+                    {
+                        installStatus = "installed";
+                    }
                 }
                 else
                 {
-                    if (installedVersion >= Version.Parse(simulator.Version))
-                    {
-                        if (!Arguments.ListInstalledOnly)
-                        {
-                            installStatus = "installed";
-                        }
-                    }
-                    else
-                    {
-                        output.AppendLine();
-                        installStatus = $"an earlier version is installed: {installedVersion}";
-                    }
+                    output.AppendLine();
+                    installStatus = $"an earlier version is installed: {installedVersion}";
                 }
-
-                output.AppendLine($" ({installStatus})");
-                output.AppendLine($"  Source: {simulator.Source}");
-                output.AppendLine($"  Identifier: {simulator.Identifier}");
-                output.AppendLine($"  InstallPrefix: {simulator.InstallPrefix}");
-
-                Logger.LogInformation(output.ToString());
             }
 
-            return ExitCode.SUCCESS;
+            output.AppendLine($" ({installStatus})");
+            output.AppendLine($"  Source: {simulator.Source}");
+            output.AppendLine($"  Identifier: {simulator.Identifier}");
+            output.AppendLine($"  InstallPrefix: {simulator.InstallPrefix}");
+
+            Logger.LogInformation(output.ToString());
         }
+
+        return ExitCode.SUCCESS;
     }
 }

@@ -2,13 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
+
+internal class ShowDevicesUUIDArgument : SwitchArgument
 {
-    internal class ShowDevicesUUIDArgument : SwitchArgument
+    public ShowDevicesUUIDArgument()
+        : base("include-devices-uuid", "Include the devices UUID. Defaults to true", true)
     {
-        public ShowDevicesUUIDArgument()
-            : base("include-devices-uuid", "Include the devices UUID. Defaults to true", true)
-        {
-        }
     }
 }

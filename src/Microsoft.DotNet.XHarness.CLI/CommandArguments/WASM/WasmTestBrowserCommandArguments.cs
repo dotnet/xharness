@@ -7,34 +7,34 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.DotNet.XHarness.Common.CLI;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
+
+internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebServerArguments
 {
-    internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebServerArguments
+    public AppPathArgument AppPackagePath { get; } = new();
+    public BrowserArgument Browser { get; } = new();
+    public BrowserLocationArgument BrowserLocation { get; } = new();
+    public BrowserArguments BrowserArgs { get; } = new();
+    public HTMLFileArgument HTMLFile { get; } = new("index.html");
+    public ErrorPatternsFileArgument ErrorPatternsFile { get; } = new();
+    public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
+    public OutputDirectoryArgument OutputDirectory { get; } = new();
+    public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
+    public DebuggerPortArgument DebuggerPort { get; set; } = new();
+    public NoIncognitoArgument NoIncognito { get; } = new();
+    public NoHeadlessArgument NoHeadless { get; } = new();
+    public NoQuitArgument NoQuit { get; } = new();
+    public BackgroundThrottlingArgument BackgroundThrottling { get; } = new();
+
+    public WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; } = new();
+    public WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; } = new();
+    public WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; } = new();
+    public WebServerUseHttpsArguments WebServerUseHttps { get; } = new();
+    public WebServerUseCorsArguments WebServerUseCors { get; } = new();
+    public WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; } = new();
+
+    protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
-        public AppPathArgument AppPackagePath { get; } = new();
-        public BrowserArgument Browser { get; } = new();
-        public BrowserLocationArgument BrowserLocation { get; } = new();
-        public BrowserArguments BrowserArgs { get; } = new();
-        public HTMLFileArgument HTMLFile { get; } = new("index.html");
-        public ErrorPatternsFileArgument ErrorPatternsFile { get; } = new();
-        public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
-        public OutputDirectoryArgument OutputDirectory { get; } = new();
-        public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
-        public DebuggerPortArgument DebuggerPort { get; set; } = new();
-        public NoIncognitoArgument NoIncognito { get; } = new();
-        public NoHeadlessArgument NoHeadless { get; } = new();
-        public NoQuitArgument NoQuit { get; } = new();
-        public BackgroundThrottlingArgument BackgroundThrottling { get; } = new();
-
-        public WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; } = new();
-        public WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; } = new();
-        public WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; } = new();
-        public WebServerUseHttpsArguments WebServerUseHttps { get; } = new();
-        public WebServerUseCorsArguments WebServerUseCors { get; } = new();
-        public WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; } = new();
-
-        protected override IEnumerable<Argument> GetArguments() => new Argument[]
-        {
             AppPackagePath,
             Browser,
             BrowserLocation,
@@ -55,29 +55,28 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
             WebServerUseHttps,
             WebServerUseCors,
             WebServerUseCrossOriginPolicy,
-        };
+    };
 
-        public override void Validate()
+    public override void Validate()
+    {
+        base.Validate();
+
+        if (!string.IsNullOrEmpty(BrowserLocation))
         {
-            base.Validate();
-
-            if (!string.IsNullOrEmpty(BrowserLocation))
+            if (Browser == Wasm.Browser.Safari)
             {
-                if (Browser == Wasm.Browser.Safari)
-                {
-                    throw new ArgumentException("Safari driver doesn't support custom browser path");
-                }
-
-                if (!File.Exists(BrowserLocation))
-                {
-                    throw new ArgumentException($"Could not find browser at {BrowserLocation}");
-                }
+                throw new ArgumentException("Safari driver doesn't support custom browser path");
             }
 
-            if (DebuggerPort.Value != null || NoQuit)
+            if (!File.Exists(BrowserLocation))
             {
-                NoHeadless.Set(true);
+                throw new ArgumentException($"Could not find browser at {BrowserLocation}");
             }
+        }
+
+        if (DebuggerPort.Value != null || NoQuit)
+        {
+            NoHeadless.Set(true);
         }
     }
 }

@@ -5,22 +5,22 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
-{
-    internal class AppleInstallCommandArguments : XHarnessCommandArguments, IAppleAppRunArguments
-    {
-        public AppPathArgument AppBundlePath { get; } = new();
-        public TargetArgument Target { get; } = new();
-        public OutputDirectoryArgument OutputDirectory { get; } = new();
-        public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
-        public XcodeArgument XcodeRoot { get; } = new();
-        public MlaunchArgument MlaunchPath { get; } = new();
-        public DeviceNameArgument DeviceName { get; } = new();
-        public IncludeWirelessArgument IncludeWireless { get; } = new();
-        public ResetSimulatorArgument ResetSimulator { get; } = new();
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 
-        protected override IEnumerable<Argument> GetArguments() => new Argument[]
-        {
+internal class AppleInstallCommandArguments : XHarnessCommandArguments, IAppleAppRunArguments
+{
+    public AppPathArgument AppBundlePath { get; } = new();
+    public TargetArgument Target { get; } = new();
+    public OutputDirectoryArgument OutputDirectory { get; } = new();
+    public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
+    public XcodeArgument XcodeRoot { get; } = new();
+    public MlaunchArgument MlaunchPath { get; } = new();
+    public DeviceNameArgument DeviceName { get; } = new();
+    public IncludeWirelessArgument IncludeWireless { get; } = new();
+    public ResetSimulatorArgument ResetSimulator { get; } = new();
+
+    protected override IEnumerable<Argument> GetArguments() => new Argument[]
+    {
             AppBundlePath,
             Target,
             OutputDirectory,
@@ -30,6 +30,5 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             XcodeRoot,
             MlaunchPath,
             ResetSimulator,
-        };
-    }
+    };
 }

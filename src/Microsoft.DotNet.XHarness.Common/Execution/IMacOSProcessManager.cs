@@ -9,19 +9,18 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.Common.Execution
+namespace Microsoft.DotNet.XHarness.Common.Execution;
+
+public interface IMacOSProcessManager : IProcessManager
 {
-    public interface IMacOSProcessManager : IProcessManager
-    {
-        string XcodeRoot { get; }
+    string XcodeRoot { get; }
 
-        public Version XcodeVersion { get; }
+    public Version XcodeVersion { get; }
 
-        Task<ProcessExecutionResult> ExecuteXcodeCommandAsync(
-            string executable,
-            IList<string> args,
-            ILog log,
-            TimeSpan timeout,
-            CancellationToken cancellationToken = default);
-    }
+    Task<ProcessExecutionResult> ExecuteXcodeCommandAsync(
+        string executable,
+        IList<string> args,
+        ILog log,
+        TimeSpan timeout,
+        CancellationToken cancellationToken = default);
 }
