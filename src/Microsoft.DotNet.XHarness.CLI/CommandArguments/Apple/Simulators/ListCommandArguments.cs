@@ -4,15 +4,14 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
-{
-    internal class ListCommandArguments : SimulatorsCommandArguments
-    {
-        public ListInstalledArgument ListInstalledOnly { get; } = new();
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
 
-        protected override IEnumerable<Argument> GetAdditionalArguments() => new Argument[]
-        {
+internal class ListCommandArguments : SimulatorsCommandArguments
+{
+    public ListInstalledArgument ListInstalledOnly { get; } = new();
+
+    protected override IEnumerable<Argument> GetAdditionalArguments() => new Argument[]
+    {
             ListInstalledOnly,
-        };
-    }
+    };
 }

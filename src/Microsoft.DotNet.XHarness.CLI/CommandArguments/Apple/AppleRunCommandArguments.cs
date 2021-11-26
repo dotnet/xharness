@@ -6,27 +6,27 @@ using System;
 using System.Collections.Generic;
 using Microsoft.DotNet.XHarness.Common.CLI;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
-{
-    internal class AppleRunCommandArguments : XHarnessCommandArguments, IAppleAppRunArguments
-    {
-        public AppPathArgument AppBundlePath { get; } = new();
-        public TargetArgument Target { get; } = new();
-        public OutputDirectoryArgument OutputDirectory { get; } = new();
-        public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
-        public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(5));
-        public XcodeArgument XcodeRoot { get; } = new();
-        public MlaunchArgument MlaunchPath { get; } = new();
-        public DeviceNameArgument DeviceName { get; } = new();
-        public IncludeWirelessArgument IncludeWireless { get; } = new();
-        public EnableLldbArgument EnableLldb { get; } = new();
-        public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
-        public ResetSimulatorArgument ResetSimulator { get; } = new();
-        public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
-        public SignalAppEndArgument SignalAppEnd { get; } = new();
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 
-        protected override IEnumerable<Argument> GetArguments() => new Argument[]
-        {
+internal class AppleRunCommandArguments : XHarnessCommandArguments, IAppleAppRunArguments
+{
+    public AppPathArgument AppBundlePath { get; } = new();
+    public TargetArgument Target { get; } = new();
+    public OutputDirectoryArgument OutputDirectory { get; } = new();
+    public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
+    public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(5));
+    public XcodeArgument XcodeRoot { get; } = new();
+    public MlaunchArgument MlaunchPath { get; } = new();
+    public DeviceNameArgument DeviceName { get; } = new();
+    public IncludeWirelessArgument IncludeWireless { get; } = new();
+    public EnableLldbArgument EnableLldb { get; } = new();
+    public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
+    public ResetSimulatorArgument ResetSimulator { get; } = new();
+    public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
+    public SignalAppEndArgument SignalAppEnd { get; } = new();
+
+    protected override IEnumerable<Argument> GetArguments() => new Argument[]
+    {
             AppBundlePath,
             Target,
             OutputDirectory,
@@ -41,6 +41,5 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             SignalAppEnd,
             EnvironmentalVariables,
             ResetSimulator,
-        };
-    }
+    };
 }

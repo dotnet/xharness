@@ -9,86 +9,85 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators;
+
+internal class FindCommand : SimulatorsCommand
 {
-    internal class FindCommand : SimulatorsCommand
+    private const string CommandName = "find";
+    private const string CommandHelp = "Finds whether given simulators are installed and outputs list of missing ones (returns 0 when none missing)";
+
+    protected override string CommandUsage => CommandName + " [OPTIONS] [SIMULATOR] [SIMULATOR] ..";
+
+    protected override string CommandDescription => CommandHelp + Environment.NewLine + Environment.NewLine + SimulatorHelpString;
+
+    protected override FindCommandArguments Arguments { get; } = new();
+
+    public FindCommand() : base(CommandName, true, CommandHelp)
     {
-        private const string CommandName = "find";
-        private const string CommandHelp = "Finds whether given simulators are installed and outputs list of missing ones (returns 0 when none missing)";
+    }
 
-        protected override string CommandUsage => CommandName + " [OPTIONS] [SIMULATOR] [SIMULATOR] ..";
+    protected override async Task<ExitCode> InvokeInternal(ILogger logger)
+    {
+        Logger = logger;
 
-        protected override string CommandDescription => CommandHelp + Environment.NewLine + Environment.NewLine + SimulatorHelpString;
+        var searchedSimulators = ParseSimulatorIds();
 
-        protected override FindCommandArguments Arguments { get; } = new();
+        var simulators = await GetAvailableSimulators();
+        var exitCode = ExitCode.SUCCESS;
 
-        public FindCommand() : base(CommandName, true, CommandHelp)
+        var unknownSimulators = searchedSimulators.Where(identifier =>
+            !simulators.Any(sim => sim.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)));
+
+        if (unknownSimulators.Any())
         {
+            // This output is actually matched in some tools, so please don't change
+            var message = "Unknown simulators: " + string.Join(", ", unknownSimulators);
+
+            if (Arguments.Verbosity == LogLevel.Debug)
+            {
+                Logger.LogDebug(message);
+
+            }
+            else
+            {
+                // For parsing
+                Console.WriteLine(message);
+            }
+            return ExitCode.DEVICE_NOT_FOUND;
         }
 
-        protected override async Task<ExitCode> InvokeInternal(ILogger logger)
+        // We output a list of simulators that were supplied and not installed
+        foreach (var simulator in simulators)
         {
-            Logger = logger;
+            var installedVersion = await IsInstalled(simulator.Identifier);
 
-            var searchedSimulators = ParseSimulatorIds();
-
-            var simulators = await GetAvailableSimulators();
-            var exitCode = ExitCode.SUCCESS;
-
-            var unknownSimulators = searchedSimulators.Where(identifier =>
-                !simulators.Any(sim => sim.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)));
-
-            if (unknownSimulators.Any())
+            if (installedVersion == null && searchedSimulators.Any(identifier => simulator.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
             {
-                // This output is actually matched in some tools, so please don't change
-                var message = "Unknown simulators: " + string.Join(", ", unknownSimulators);
-
                 if (Arguments.Verbosity == LogLevel.Debug)
                 {
-                    Logger.LogDebug(message);
+                    Logger.LogDebug($"The simulator '{simulator.Name}' is not installed");
 
                 }
                 else
                 {
                     // For parsing
-                    Console.WriteLine(message);
+                    Console.WriteLine(simulator.Identifier);
                 }
-                return ExitCode.DEVICE_NOT_FOUND;
+
+                exitCode = ExitCode.DEVICE_NOT_FOUND;
+                continue;
             }
 
-            // We output a list of simulators that were supplied and not installed
-            foreach (var simulator in simulators)
+            if (installedVersion >= Version.Parse(simulator.Version))
             {
-                var installedVersion = await IsInstalled(simulator.Identifier);
-
-                if (installedVersion == null && searchedSimulators.Any(identifier => simulator.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
-                {
-                    if (Arguments.Verbosity == LogLevel.Debug)
-                    {
-                        Logger.LogDebug($"The simulator '{simulator.Name}' is not installed");
-
-                    }
-                    else
-                    {
-                        // For parsing
-                        Console.WriteLine(simulator.Identifier);
-                    }
-
-                    exitCode = ExitCode.DEVICE_NOT_FOUND;
-                    continue;
-                }
-
-                if (installedVersion >= Version.Parse(simulator.Version))
-                {
-                    Logger.LogDebug($"The simulator {simulator.Version} is installed ({simulator.Version})");
-                }
-                else
-                {
-                    Logger.LogDebug($"The simulator {simulator.Name} is installed, but an update is available ({simulator.Version}).");
-                }
+                Logger.LogDebug($"The simulator {simulator.Version} is installed ({simulator.Version})");
             }
-
-            return exitCode;
+            else
+            {
+                Logger.LogDebug($"The simulator {simulator.Name} is installed, but an update is available ({simulator.Version}).");
+            }
         }
+
+        return exitCode;
     }
 }

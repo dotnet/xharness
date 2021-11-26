@@ -13,99 +13,98 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
-namespace Microsoft.DotNet.XHarness.Apple
+namespace Microsoft.DotNet.XHarness.Apple;
+
+public interface IInstallOrchestrator
 {
-    public interface IInstallOrchestrator
+    Task<ExitCode> OrchestrateInstall(
+        TestTargetOs target,
+        string? deviceName,
+        string appPackagePath,
+        TimeSpan timeout,
+        bool includeWirelessDevices,
+        bool resetSimulator,
+        bool enableLldb,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// This orchestrator implements the `install` command flow.
+/// </summary>
+public class InstallOrchestrator : BaseOrchestrator, IInstallOrchestrator
+{
+    private readonly IAppBundleInformationParser _appBundleInformationParser;
+    private readonly ILogger _consoleLogger;
+    private readonly IFileBackedLog _mainLog;
+
+    public InstallOrchestrator(
+        IAppInstaller appInstaller,
+        IAppUninstaller appUninstaller,
+        IAppBundleInformationParser appBundleInformationParser,
+        IDeviceFinder deviceFinder,
+        ILogger consoleLogger,
+        ILogs logs,
+        IFileBackedLog mainLog,
+        IErrorKnowledgeBase errorKnowledgeBase,
+        IDiagnosticsData diagnosticsData,
+        IHelpers helpers)
+        : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
-        Task<ExitCode> OrchestrateInstall(
-            TestTargetOs target,
-            string? deviceName,
-            string appPackagePath,
-            TimeSpan timeout,
-            bool includeWirelessDevices,
-            bool resetSimulator,
-            bool enableLldb,
-            CancellationToken cancellationToken);
+        _appBundleInformationParser = appBundleInformationParser ?? throw new ArgumentNullException(nameof(appBundleInformationParser));
+        _consoleLogger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
+        _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
     }
 
-    /// <summary>
-    /// This orchestrator implements the `install` command flow.
-    /// </summary>
-    public class InstallOrchestrator : BaseOrchestrator, IInstallOrchestrator
+    public async Task<ExitCode> OrchestrateInstall(
+        TestTargetOs target,
+        string? deviceName,
+        string appPackagePath,
+        TimeSpan timeout,
+        bool includeWirelessDevices,
+        bool resetSimulator,
+        bool enableLldb,
+        CancellationToken cancellationToken)
     {
-        private readonly IAppBundleInformationParser _appBundleInformationParser;
-        private readonly ILogger _consoleLogger;
-        private readonly IFileBackedLog _mainLog;
+        _consoleLogger.LogInformation($"Getting app bundle information from '{appPackagePath}'");
 
-        public InstallOrchestrator(
-            IAppInstaller appInstaller,
-            IAppUninstaller appUninstaller,
-            IAppBundleInformationParser appBundleInformationParser,
-            IDeviceFinder deviceFinder,
-            ILogger consoleLogger,
-            ILogs logs,
-            IFileBackedLog mainLog,
-            IErrorKnowledgeBase errorKnowledgeBase,
-            IDiagnosticsData diagnosticsData,
-            IHelpers helpers)
-            : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        AppBundleInformation appBundleInfo;
+        try
         {
-            _appBundleInformationParser = appBundleInformationParser ?? throw new ArgumentNullException(nameof(appBundleInformationParser));
-            _consoleLogger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
-            _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
+            appBundleInfo = await _appBundleInformationParser.ParseFromAppBundle(appPackagePath, target.Platform, _mainLog, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _consoleLogger.LogError(e.Message);
+            return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
         }
 
-        public async Task<ExitCode> OrchestrateInstall(
-            TestTargetOs target,
-            string? deviceName,
-            string appPackagePath,
-            TimeSpan timeout,
-            bool includeWirelessDevices,
-            bool resetSimulator,
-            bool enableLldb,
-            CancellationToken cancellationToken)
+        static Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
+            => throw new InvalidOperationException("install command not available on maccatalyst");
+
+        static Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
+            => Task.FromResult(ExitCode.SUCCESS); // no-op
+
+        var result = await OrchestrateOperation(target, deviceName, includeWirelessDevices, resetSimulator, enableLldb, appBundleInfo, executeMacCatalystApp, executeApp, cancellationToken);
+
+        if (cancellationToken.IsCancellationRequested)
         {
-            _consoleLogger.LogInformation($"Getting app bundle information from '{appPackagePath}'");
-
-            AppBundleInformation appBundleInfo;
-            try
-            {
-                appBundleInfo = await _appBundleInformationParser.ParseFromAppBundle(appPackagePath, target.Platform, _mainLog, cancellationToken);
-            }
-            catch (Exception e)
-            {
-                _consoleLogger.LogError(e.Message);
-                return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
-            }
-
-            static Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
-                => throw new InvalidOperationException("install command not available on maccatalyst");
-
-            static Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
-                => Task.FromResult(ExitCode.SUCCESS); // no-op
-
-            var result = await OrchestrateOperation(target, deviceName, includeWirelessDevices, resetSimulator, enableLldb, appBundleInfo, executeMacCatalystApp, executeApp, cancellationToken);
-
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return ExitCode.PACKAGE_INSTALLATION_TIMEOUT;
-            }
-
-            return result;
+            return ExitCode.PACKAGE_INSTALLATION_TIMEOUT;
         }
 
-        protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
-            => Task.CompletedTask; // no-op so that we don't remove the app after (reset will only clean it up before)
+        return result;
+    }
 
-        protected override Task<ExitCode> UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
+    protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
+        => Task.CompletedTask; // no-op so that we don't remove the app after (reset will only clean it up before)
+
+    protected override Task<ExitCode> UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
+    {
+        // For the installation, we want to uninstall during preparation only
+        if (isPreparation)
         {
-            // For the installation, we want to uninstall during preparation only
-            if (isPreparation)
-            {
-                return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
-            }
-
-            return Task.FromResult(ExitCode.SUCCESS);
+            return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
         }
+
+        return Task.FromResult(ExitCode.SUCCESS);
     }
 }

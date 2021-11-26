@@ -5,10 +5,9 @@
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
 
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware
+namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
+
+public interface IDeviceLoader
 {
-    public interface IDeviceLoader
-    {
-        Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false, bool includeWirelessDevices = true);
-    }
+    Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false, bool includeWirelessDevices = true);
 }

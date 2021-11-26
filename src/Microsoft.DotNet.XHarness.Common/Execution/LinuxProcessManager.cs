@@ -4,13 +4,12 @@
 
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.XHarness.Common.Execution
-{
-    public class LinuxProcessManager : UnixProcessManager
-    {
-        [DllImport("libc")]
-        private static extern int kill(int pid, int sig);
+namespace Microsoft.DotNet.XHarness.Common.Execution;
 
-        protected override int Kill(int pid, int sig) => kill(pid, sig);
-    }
+public class LinuxProcessManager : UnixProcessManager
+{
+    [DllImport("libc")]
+    private static extern int kill(int pid, int sig);
+
+    protected override int Kill(int pid, int sig) => kill(pid, sig);
 }

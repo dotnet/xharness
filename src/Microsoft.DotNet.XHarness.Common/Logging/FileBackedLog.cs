@@ -3,17 +3,16 @@
 // See the LICENSE file in the project root for more information.
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.Common.Logging
+namespace Microsoft.DotNet.XHarness.Common.Logging;
+
+public interface IFileBackedLog : IReadableLog
 {
-    public interface IFileBackedLog : IReadableLog
-    {
-        string FullPath { get; }
-    }
+    string FullPath { get; }
+}
 
-    public abstract class FileBackedLog : ReadableLog, IFileBackedLog
-    {
-        protected FileBackedLog(string? description = null) : base(description) { }
+public abstract class FileBackedLog : ReadableLog, IFileBackedLog
+{
+    protected FileBackedLog(string? description = null) : base(description) { }
 
-        public abstract string FullPath { get; }
-    }
+    public abstract string FullPath { get; }
 }

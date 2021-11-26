@@ -12,25 +12,24 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple;
+
+internal abstract class AppleCommand<TArguments> : XHarnessCommand<TArguments> where TArguments : IAppleArguments
 {
-    internal abstract class AppleCommand<TArguments> : XHarnessCommand<TArguments> where TArguments : IAppleArguments
+    protected AppleCommand(string name, bool allowsExtraArgs, IServiceCollection services, string? help = null)
+        : base(TargetPlatform.Apple, name, allowsExtraArgs, services, help)
     {
-        protected AppleCommand(string name, bool allowsExtraArgs, IServiceCollection services, string? help = null)
-            : base(TargetPlatform.Apple, name, allowsExtraArgs, services, help)
-        {
-        }
-
-        protected sealed override Task<ExitCode> InvokeInternal(ILogger logger)
-        {
-            var processManager = new MlaunchProcessManager(Arguments.XcodeRoot, Arguments.MlaunchPath);
-            Services.TryAddSingleton<IMlaunchProcessManager>(processManager);
-            Services.TryAddSingleton<IMacOSProcessManager>(processManager);
-            Services.TryAddSingleton<IProcessManager>(processManager);
-
-            return Invoke(logger);
-        }
-
-        protected abstract Task<ExitCode> Invoke(ILogger logger);
     }
+
+    protected sealed override Task<ExitCode> InvokeInternal(ILogger logger)
+    {
+        var processManager = new MlaunchProcessManager(Arguments.XcodeRoot, Arguments.MlaunchPath);
+        Services.TryAddSingleton<IMlaunchProcessManager>(processManager);
+        Services.TryAddSingleton<IMacOSProcessManager>(processManager);
+        Services.TryAddSingleton<IProcessManager>(processManager);
+
+        return Invoke(logger);
+    }
+
+    protected abstract Task<ExitCode> Invoke(ILogger logger);
 }

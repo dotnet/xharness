@@ -13,69 +13,68 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Moq;
 using Xunit;
 
-namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations
+namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations;
+
+public class AppUninstallerTests
 {
-    public class AppUninstallerTests
+    private const string DeviceName = "Test iPad";
+    private const string AppBundleId = "some.bundle.name.app";
+    private const string UDID = "8A450AA31EA94191AD6B02455F377CC1";
+
+    private readonly Mock<IMlaunchProcessManager> _processManager;
+    private readonly Mock<ILog> _mainLog;
+    private readonly AppUninstaller _appUninstaller;
+
+    public AppUninstallerTests()
     {
-        private const string DeviceName = "Test iPad";
-        private const string AppBundleId = "some.bundle.name.app";
-        private const string UDID = "8A450AA31EA94191AD6B02455F377CC1";
+        _mainLog = new Mock<ILog>();
 
-        private readonly Mock<IMlaunchProcessManager> _processManager;
-        private readonly Mock<ILog> _mainLog;
-        private readonly AppUninstaller _appUninstaller;
+        _processManager = new Mock<IMlaunchProcessManager>();
+        _processManager.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult() { ExitCode = 0 }));
 
-        public AppUninstallerTests()
-        {
-            _mainLog = new Mock<ILog>();
+        _appUninstaller = new AppUninstaller(_processManager.Object, _mainLog.Object);
+    }
 
-            _processManager = new Mock<IMlaunchProcessManager>();
-            _processManager.SetReturnsDefault(Task.FromResult(new ProcessExecutionResult() { ExitCode = 0 }));
+    [Fact]
+    public async Task UninstallFromSimulatorTest()
+    {
+        var simulator = Mock.Of<IDevice>(x => x.Name == DeviceName && x.UDID == UDID);
 
-            _appUninstaller = new AppUninstaller(_processManager.Object, _mainLog.Object);
-        }
+        // Act
+        var result = await _appUninstaller.UninstallSimulatorApp(simulator, AppBundleId);
 
-        [Fact]
-        public async Task UninstallFromSimulatorTest()
-        {
-            var simulator = Mock.Of<IDevice>(x => x.Name == DeviceName && x.UDID == UDID);
+        // Verify
+        Assert.Equal(0, result.ExitCode);
 
-            // Act
-            var result = await _appUninstaller.UninstallSimulatorApp(simulator, AppBundleId);
+        var expectedArgs = $"uninstall {UDID} {StringUtils.FormatArguments(AppBundleId)}";
 
-            // Verify
-            Assert.Equal(0, result.ExitCode);
+        _processManager.Verify(x => x.ExecuteXcodeCommandAsync(
+            "simctl",
+           It.Is<string[]>(args => string.Join(" ", args) == expectedArgs),
+           _mainLog.Object,
+           It.IsAny<TimeSpan>(),
+           It.IsAny<CancellationToken>()));
+    }
 
-            var expectedArgs = $"uninstall {UDID} {StringUtils.FormatArguments(AppBundleId)}";
+    [Fact]
+    public async Task UninstallFromDeviceTest()
+    {
+        var device = Mock.Of<IDevice>(x => x.Name == DeviceName && x.UDID == UDID);
 
-            _processManager.Verify(x => x.ExecuteXcodeCommandAsync(
-                "simctl",
-               It.Is<string[]>(args => string.Join(" ", args) == expectedArgs),
-               _mainLog.Object,
-               It.IsAny<TimeSpan>(),
-               It.IsAny<CancellationToken>()));
-        }
+        // Act
+        var result = await _appUninstaller.UninstallDeviceApp(device, AppBundleId);
 
-        [Fact]
-        public async Task UninstallFromDeviceTest()
-        {
-            var device = Mock.Of<IDevice>(x => x.Name == DeviceName && x.UDID == UDID);
+        // Verify
+        Assert.Equal(0, result.ExitCode);
 
-            // Act
-            var result = await _appUninstaller.UninstallDeviceApp(device, AppBundleId);
+        var expectedArgs = $"--uninstalldevbundleid {StringUtils.FormatArguments(AppBundleId)} --devname {UDID}";
 
-            // Verify
-            Assert.Equal(0, result.ExitCode);
-
-            var expectedArgs = $"--uninstalldevbundleid {StringUtils.FormatArguments(AppBundleId)} --devname {UDID}";
-
-            _processManager.Verify(x => x.ExecuteCommandAsync(
-               It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
-               _mainLog.Object,
-               It.IsAny<TimeSpan>(),
-               null,
-               It.IsAny<int>(),
-               It.IsAny<CancellationToken>()));
-        }
+        _processManager.Verify(x => x.ExecuteCommandAsync(
+           It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
+           _mainLog.Object,
+           It.IsAny<TimeSpan>(),
+           null,
+           It.IsAny<int>(),
+           It.IsAny<CancellationToken>()));
     }
 }

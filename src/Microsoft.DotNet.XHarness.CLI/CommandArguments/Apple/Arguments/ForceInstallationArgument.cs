@@ -2,13 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
+
+internal class ForceInstallationArgument : SwitchArgument
 {
-    internal class ForceInstallationArgument : SwitchArgument
+    public ForceInstallationArgument()
+        : base("force", "Install again even if already installed", false)
     {
-        public ForceInstallationArgument()
-            : base("force", "Install again even if already installed", false)
-        {
-        }
     }
 }

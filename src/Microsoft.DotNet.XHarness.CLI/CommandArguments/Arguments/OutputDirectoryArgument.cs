@@ -5,23 +5,22 @@
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
-{
-    /// <summary>
-    /// Path where the outputs of execution will be stored
-    /// </summary>
-    internal class OutputDirectoryArgument : RequiredPathArgument
-    {
-        public OutputDirectoryArgument() : base("output-directory=|o=", "Directory where logs and results will be saved")
-        {
-        }
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments;
 
-        public override void Validate()
+/// <summary>
+/// Path where the outputs of execution will be stored
+/// </summary>
+internal class OutputDirectoryArgument : RequiredPathArgument
+{
+    public OutputDirectoryArgument() : base("output-directory=|o=", "Directory where logs and results will be saved")
+    {
+    }
+
+    public override void Validate()
+    {
+        if (!Directory.Exists(Value ?? throw new ArgumentNullException("You must provide an output directory where results will be stored")))
         {
-            if (!Directory.Exists(Value ?? throw new ArgumentNullException("You must provide an output directory where results will be stored")))
-            {
-                Directory.CreateDirectory(Value);
-            }
+            Directory.CreateDirectory(Value);
         }
     }
 }

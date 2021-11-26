@@ -2,13 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.TestRunners.Common
+namespace Microsoft.DotNet.XHarness.TestRunners.Common;
+
+internal enum TestRunSelectorType
 {
-    internal enum TestRunSelectorType
-    {
-        Assembly,
-        Namespace,
-        Class,
-        Single,
-    }
+    Assembly,
+    Namespace,
+    Class,
+    Single,
 }

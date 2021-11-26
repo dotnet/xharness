@@ -5,10 +5,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
+
+internal class FindCommandArguments : SimulatorsCommandArguments
 {
-    internal class FindCommandArguments : SimulatorsCommandArguments
-    {
-        protected override IEnumerable<Argument> GetAdditionalArguments() => Enumerable.Empty<Argument>();
-    }
+    protected override IEnumerable<Argument> GetAdditionalArguments() => Enumerable.Empty<Argument>();
 }

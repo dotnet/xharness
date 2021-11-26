@@ -7,49 +7,48 @@ using System.IO;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Xunit;
 
-namespace Microsoft.DotNet.XHarness.Common.Tests.Logging
+namespace Microsoft.DotNet.XHarness.Common.Tests.Logging;
+
+[CollectionDefinition("ConsoleLogTest", DisableParallelization = true)]
+public class ConsoleLogTest : IDisposable
 {
-    [CollectionDefinition("ConsoleLogTest", DisableParallelization = true)]
-    public class ConsoleLogTest : IDisposable
+    private readonly string _testFile;
+    private readonly TextWriter _sdoutWriter;
+    private readonly ConsoleLog _log;
+
+    public ConsoleLogTest()
     {
-        private readonly string _testFile;
-        private readonly TextWriter _sdoutWriter;
-        private readonly ConsoleLog _log;
+        _testFile = Path.GetTempFileName();
+        _log = new ConsoleLog();
+        _sdoutWriter = Console.Out;
+    }
 
-        public ConsoleLogTest()
+    [Fact(Skip = "Flakey test that gets in the way by messing around with Console.Out")]
+    public void TestWrite()
+    {
+        var message = "This is a log message";
+        using (var testStream = new FileStream(_testFile, FileMode.OpenOrCreate, FileAccess.Write))
+        using (var writer = new StreamWriter(testStream))
         {
-            _testFile = Path.GetTempFileName();
-            _log = new ConsoleLog();
-            _sdoutWriter = Console.Out;
+            Console.SetOut(writer);
+            // simply test that we do write in the file. We need to close the stream to be able to read it
+            _log.WriteLine(message);
         }
 
-        [Fact(Skip = "Flakey test that gets in the way by messing around with Console.Out")]
-        public void TestWrite()
+        using (var testStream = new FileStream(_testFile, FileMode.OpenOrCreate, FileAccess.Read))
+        using (var reader = new StreamReader(testStream))
         {
-            var message = "This is a log message";
-            using (var testStream = new FileStream(_testFile, FileMode.OpenOrCreate, FileAccess.Write))
-            using (var writer = new StreamWriter(testStream))
-            {
-                Console.SetOut(writer);
-                // simply test that we do write in the file. We need to close the stream to be able to read it
-                _log.WriteLine(message);
-            }
-
-            using (var testStream = new FileStream(_testFile, FileMode.OpenOrCreate, FileAccess.Read))
-            using (var reader = new StreamReader(testStream))
-            {
-                var line = reader.ReadLine();
-                Assert.EndsWith(message, line); // consider the time stamp
-            }
-
+            var line = reader.ReadLine();
+            Assert.EndsWith(message, line); // consider the time stamp
         }
 
-        public void Dispose()
-        {
-            _log.Dispose();
-            Console.SetOut(_sdoutWriter); // get back to write to the console
-            File.Delete(_testFile);
-            GC.SuppressFinalize(this);
-        }
+    }
+
+    public void Dispose()
+    {
+        _log.Dispose();
+        Console.SetOut(_sdoutWriter); // get back to write to the console
+        File.Delete(_testFile);
+        GC.SuppressFinalize(this);
     }
 }

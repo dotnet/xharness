@@ -5,52 +5,51 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
+
+internal class BrowserArgument : Argument<Browser>
 {
-    internal class BrowserArgument : Argument<Browser>
+    public BrowserArgument()
+        : base("browser=|b=", "Specifies the browser to be used. Default is Chrome", Browser.Chrome)
     {
-        public BrowserArgument()
-            : base("browser=|b=", "Specifies the browser to be used. Default is Chrome", Browser.Chrome)
+    }
+
+    public override void Action(string argumentValue) =>
+        Value = ParseArgument<Browser>("browser", argumentValue);
+
+    public override void Validate()
+    {
+        base.Validate();
+
+        if (Value == Browser.Safari && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-        }
-
-        public override void Action(string argumentValue) =>
-            Value = ParseArgument<Browser>("browser", argumentValue);
-
-        public override void Validate()
-        {
-            base.Validate();
-
-            if (Value == Browser.Safari && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                throw new ArgumentException("Safari is only supported on OSX");
-            }
+            throw new ArgumentException("Safari is only supported on OSX");
         }
     }
+}
+
+/// <summary>
+/// Specifies the name of a Browser used to run the WASM application
+/// </summary>
+internal enum Browser
+{
+    /// <summary>
+    /// Chrome
+    /// </summary>
+    Chrome,
 
     /// <summary>
-    /// Specifies the name of a Browser used to run the WASM application
+    /// Safari
     /// </summary>
-    internal enum Browser
-    {
-        /// <summary>
-        /// Chrome
-        /// </summary>
-        Chrome,
+    Safari,
 
-        /// <summary>
-        /// Safari
-        /// </summary>
-        Safari,
+    /// <summary>
+    /// Firefox
+    /// </summary>
+    Firefox,
 
-        /// <summary>
-        /// Firefox
-        /// </summary>
-        Firefox,
-
-        /// <summary>
-        /// Edge
-        /// </summary>
-        Edge
-    }
+    /// <summary>
+    /// Edge
+    /// </summary>
+    Edge
 }

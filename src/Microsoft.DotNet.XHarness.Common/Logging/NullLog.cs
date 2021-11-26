@@ -5,45 +5,44 @@
 using System;
 using System.Text;
 
-namespace Microsoft.DotNet.XHarness.Common.Logging
+namespace Microsoft.DotNet.XHarness.Common.Logging;
+
+/// <summary>
+/// Log that discards everything
+/// </summary>
+public class NullLog : ILog
 {
-    /// <summary>
-    /// Log that discards everything
-    /// </summary>
-    public class NullLog : ILog
+    public string? Description { get; set; } = "NullLog";
+    public bool Timestamp { get; set; }
+
+    public Encoding Encoding => Encoding.UTF8;
+
+    public void Dispose()
     {
-        public string? Description { get; set; } = "NullLog";
-        public bool Timestamp { get; set; }
+        GC.SuppressFinalize(this);
+    }
 
-        public Encoding Encoding => Encoding.UTF8;
+    public void Flush()
+    {
+    }
 
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-        }
+    public void Write(byte[] buffer, int offset, int count)
+    {
+    }
 
-        public void Flush()
-        {
-        }
+    public void Write(string value)
+    {
+    }
 
-        public void Write(byte[] buffer, int offset, int count)
-        {
-        }
+    public void WriteLine(string value)
+    {
+    }
 
-        public void Write(string value)
-        {
-        }
+    public static void WriteLine(StringBuilder value)
+    {
+    }
 
-        public void WriteLine(string value)
-        {
-        }
-
-        public static void WriteLine(StringBuilder value)
-        {
-        }
-
-        public void WriteLine(string format, params object[] args)
-        {
-        }
+    public void WriteLine(string format, params object[] args)
+    {
     }
 }

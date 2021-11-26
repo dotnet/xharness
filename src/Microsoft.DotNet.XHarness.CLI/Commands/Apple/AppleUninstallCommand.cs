@@ -9,30 +9,29 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple;
+
+internal class AppleUninstallCommand : AppleAppCommand<AppleUninstallCommandArguments>
 {
-    internal class AppleUninstallCommand : AppleAppCommand<AppleUninstallCommandArguments>
+    private const string CommandHelp = "Uninstalls a given iOS/tvOS/watchOS/MacCatalyst application bundle from a target device/simulator";
+
+    protected override AppleUninstallCommandArguments Arguments { get; } = new();
+    protected override string CommandUsage { get; } = "apple uninstall --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
+    protected override string CommandDescription { get; } = CommandHelp;
+
+    public AppleUninstallCommand(IServiceCollection services) : base("uninstall", false, services, CommandHelp)
     {
-        private const string CommandHelp = "Uninstalls a given iOS/tvOS/watchOS/MacCatalyst application bundle from a target device/simulator";
-
-        protected override AppleUninstallCommandArguments Arguments { get; } = new();
-        protected override string CommandUsage { get; } = "apple uninstall --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
-        protected override string CommandDescription { get; } = CommandHelp;
-
-        public AppleUninstallCommand(IServiceCollection services) : base("uninstall", false, services, CommandHelp)
-        {
-        }
-
-        protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken) =>
-            serviceProvider.GetRequiredService<IUninstallOrchestrator>()
-                .OrchestrateAppUninstall(
-                    Arguments.BundleIdentifier,
-                    Arguments.Target,
-                    Arguments.DeviceName,
-                    Arguments.Timeout,
-                    Arguments.IncludeWireless,
-                    resetSimulator: false,
-                    enableLldb: false,
-                    cancellationToken);
     }
+
+    protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken) =>
+        serviceProvider.GetRequiredService<IUninstallOrchestrator>()
+            .OrchestrateAppUninstall(
+                Arguments.BundleIdentifier,
+                Arguments.Target,
+                Arguments.DeviceName,
+                Arguments.Timeout,
+                Arguments.IncludeWireless,
+                resetSimulator: false,
+                enableLldb: false,
+                cancellationToken);
 }

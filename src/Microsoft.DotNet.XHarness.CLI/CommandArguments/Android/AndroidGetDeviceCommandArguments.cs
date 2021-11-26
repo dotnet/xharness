@@ -4,17 +4,16 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android
-{
-    internal class AndroidGetDeviceCommandArguments : XHarnessCommandArguments
-    {
-        public AppPathArgument AppPackagePath { get; } = new();
-        public DeviceArchitectureArgument DeviceArchitecture { get; } = new();
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
-        protected override IEnumerable<Argument> GetArguments() => new Argument[]
-        {
+internal class AndroidGetDeviceCommandArguments : XHarnessCommandArguments
+{
+    public AppPathArgument AppPackagePath { get; } = new();
+    public DeviceArchitectureArgument DeviceArchitecture { get; } = new();
+
+    protected override IEnumerable<Argument> GetArguments() => new Argument[]
+    {
             AppPackagePath,
             DeviceArchitecture,
-        };
-    }
+    };
 }

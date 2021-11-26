@@ -7,44 +7,43 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.XHarness.Common.Utilities
-{
-    public static class Extensions
-    {
-        // Returns false if timed out
-        public static async Task<bool> TimeoutAfter(this Task task, TimeSpan timeout)
-        {
-            if (timeout.Ticks < -1)
-            {
-                return false;
-            }
+namespace Microsoft.DotNet.XHarness.Common.Utilities;
 
-            if (task == await Task.WhenAny(task, Task.Delay(timeout)))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+public static class Extensions
+{
+    // Returns false if timed out
+    public static async Task<bool> TimeoutAfter(this Task task, TimeSpan timeout)
+    {
+        if (timeout.Ticks < -1)
+        {
+            return false;
         }
 
-        // Returns false if timed out
-        public static async Task<bool> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout)
+        if (task == await Task.WhenAny(task, Task.Delay(timeout)))
         {
-            if (timeout.Ticks < -1)
-            {
-                return false;
-            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 
-            if (task == await Task.WhenAny(task, Task.Delay(timeout)))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+    // Returns false if timed out
+    public static async Task<bool> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout)
+    {
+        if (timeout.Ticks < -1)
+        {
+            return false;
+        }
+
+        if (task == await Task.WhenAny(task, Task.Delay(timeout)))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
 }

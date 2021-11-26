@@ -6,28 +6,27 @@ using System;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Xunit;
 
-namespace Microsoft.DotNet.XHarness.Common.Tests.Logging
+namespace Microsoft.DotNet.XHarness.Common.Tests.Logging;
+
+public class CallbackLogTest
 {
-    public class CallbackLogTest
+    [Fact]
+    public void OnWriteTest()
     {
-        [Fact]
-        public void OnWriteTest()
+        var message = "This is a log message";
+        bool called = false;
+        string data = null;
+
+        Action<string> cb = (d) =>
         {
-            var message = "This is a log message";
-            bool called = false;
-            string data = null;
+            called = true;
+            data = d;
+        };
 
-            Action<string> cb = (d) =>
-            {
-                called = true;
-                data = d;
-            };
-
-            var log = new CallbackLog(cb);
-            log.Write(message);
-            Assert.True(called, "Callback was not called");
-            Assert.NotNull(data);
-            Assert.EndsWith(message, data); // TODO: take time stamp into account
-        }
+        var log = new CallbackLog(cb);
+        log.Write(message);
+        Assert.True(called, "Callback was not called");
+        Assert.NotNull(data);
+        Assert.EndsWith(message, data); // TODO: take time stamp into account
     }
 }

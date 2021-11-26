@@ -7,29 +7,28 @@ using System.IO;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
+
+/// <summary>
+/// Path to the mlaunch binary.
+/// Default comes from the NuGet.
+/// </summary>
+internal class MlaunchArgument : Argument<string>
 {
-    /// <summary>
-    /// Path to the mlaunch binary.
-    /// Default comes from the NuGet.
-    /// </summary>
-    internal class MlaunchArgument : Argument<string>
+    public MlaunchArgument() : base("mlaunch=", "Path to the mlaunch binary", MacOSProcessManager.DetectMlaunchPath())
     {
-        public MlaunchArgument() : base("mlaunch=", "Path to the mlaunch binary", MacOSProcessManager.DetectMlaunchPath())
-        {
-        }
+    }
 
-        public override void Action(string argumentValue) => Value = RootPath(argumentValue);
+    public override void Action(string argumentValue) => Value = RootPath(argumentValue);
 
-        public override void Validate()
+    public override void Validate()
+    {
+        if (!File.Exists(Value))
         {
-            if (!File.Exists(Value))
-            {
-                throw new ArgumentException(
-                    $"Failed to find mlaunch at {Value}. " +
-                    $"Make sure you specify --mlaunch or set the {EnvironmentVariables.Names.MLAUNCH_PATH} env var. " +
-                    $"See README.md for more information");
-            }
+            throw new ArgumentException(
+                $"Failed to find mlaunch at {Value}. " +
+                $"Make sure you specify --mlaunch or set the {EnvironmentVariables.Names.MLAUNCH_PATH} env var. " +
+                $"See README.md for more information");
         }
     }
 }

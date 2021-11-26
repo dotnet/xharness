@@ -2,15 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
+
+internal interface IWebServerArguments
 {
-    internal interface IWebServerArguments
-    {
-        WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; }
-        WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; }
-        WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; }
-        WebServerUseHttpsArguments WebServerUseHttps { get; }
-        WebServerUseCorsArguments WebServerUseCors { get; }
-        WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; }
-    }
+    WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; }
+    WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; }
+    WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; }
+    WebServerUseHttpsArguments WebServerUseHttps { get; }
+    WebServerUseCorsArguments WebServerUseCors { get; }
+    WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; }
 }

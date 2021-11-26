@@ -10,38 +10,37 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple;
+
+internal class AppleJustTestCommand : AppleAppCommand<AppleJustTestCommandArguments>
 {
-    internal class AppleJustTestCommand : AppleAppCommand<AppleJustTestCommandArguments>
+    private const string CommandHelp = "Runs an already installed iOS/tvOS/watchOS/MacCatalyst test application containing a TestRunner in a target device/simulator.";
+
+    protected override string CommandUsage { get; } = "apple just-test --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
+    protected override string CommandDescription { get; } = CommandHelp;
+    protected override AppleJustTestCommandArguments Arguments { get; } = new();
+
+    public AppleJustTestCommand(IServiceCollection services) : base("just-test", false, services, CommandHelp)
     {
-        private const string CommandHelp = "Runs an already installed iOS/tvOS/watchOS/MacCatalyst test application containing a TestRunner in a target device/simulator.";
-
-        protected override string CommandUsage { get; } = "apple just-test --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
-        protected override string CommandDescription { get; } = CommandHelp;
-        protected override AppleJustTestCommandArguments Arguments { get; } = new();
-
-        public AppleJustTestCommand(IServiceCollection services) : base("just-test", false, services, CommandHelp)
-        {
-        }
-
-        protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken) =>
-            serviceProvider.GetRequiredService<IJustTestOrchestrator>()
-                .OrchestrateTest(
-                    AppBundleInformation.FromBundleId(Arguments.BundleIdentifier.Value),
-                    Arguments.Target,
-                    Arguments.DeviceName,
-                    Arguments.Timeout,
-                    Arguments.LaunchTimeout,
-                    Arguments.CommunicationChannel,
-                    Arguments.XmlResultJargon,
-                    Arguments.SingleMethodFilters.Value,
-                    Arguments.ClassMethodFilters.Value,
-                    includeWirelessDevices: Arguments.IncludeWireless,
-                    resetSimulator: false,
-                    enableLldb: Arguments.EnableLldb,
-                    signalAppEnd: Arguments.SignalAppEnd,
-                    Arguments.EnvironmentalVariables.Value,
-                    PassThroughArguments,
-                    cancellationToken);
     }
+
+    protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken) =>
+        serviceProvider.GetRequiredService<IJustTestOrchestrator>()
+            .OrchestrateTest(
+                AppBundleInformation.FromBundleId(Arguments.BundleIdentifier.Value),
+                Arguments.Target,
+                Arguments.DeviceName,
+                Arguments.Timeout,
+                Arguments.LaunchTimeout,
+                Arguments.CommunicationChannel,
+                Arguments.XmlResultJargon,
+                Arguments.SingleMethodFilters.Value,
+                Arguments.ClassMethodFilters.Value,
+                includeWirelessDevices: Arguments.IncludeWireless,
+                resetSimulator: false,
+                enableLldb: Arguments.EnableLldb,
+                signalAppEnd: Arguments.SignalAppEnd,
+                Arguments.EnvironmentalVariables.Value,
+                PassThroughArguments,
+                cancellationToken);
 }

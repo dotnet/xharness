@@ -4,23 +4,22 @@
 
 using System;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
-{
-    internal class DebuggerPortArgument : Argument<int?>
-    {
-        public DebuggerPortArgument()
-            : base("debugger=|d=", "Run browser in debug mode, with a port to listen on. Default port number is 9222", null)
-        {
-        }
-        public override void Action(string argumentValue)
-        {
-            if (int.TryParse(argumentValue, out var number))
-            {
-                Value = number;
-                return;
-            }
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 
-            throw new ArgumentException($"{Prototype} must be an integer");
+internal class DebuggerPortArgument : Argument<int?>
+{
+    public DebuggerPortArgument()
+        : base("debugger=|d=", "Run browser in debug mode, with a port to listen on. Default port number is 9222", null)
+    {
+    }
+    public override void Action(string argumentValue)
+    {
+        if (int.TryParse(argumentValue, out var number))
+        {
+            Value = number;
+            return;
         }
+
+        throw new ArgumentException($"{Prototype} must be an integer");
     }
 }

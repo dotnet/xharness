@@ -7,85 +7,84 @@ using Microsoft.Extensions.Logging;
 
 #nullable enable
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
+
+public class ErrorPatternScanner
 {
-    public class ErrorPatternScanner
+    private readonly ILogger _logger;
+    private readonly List<string> _errorPatternStrings = new();
+    private readonly List<Regex> _errorPatternRegexes = new();
+    private readonly bool _empty;
+
+    public ErrorPatternScanner(string patternsFile, ILogger logger)
     {
-        private readonly ILogger _logger;
-        private readonly List<string> _errorPatternStrings = new();
-        private readonly List<Regex> _errorPatternRegexes = new();
-        private readonly bool _empty;
+        _logger = logger;
+        if (string.IsNullOrEmpty(patternsFile))
+            throw new ArgumentNullException(nameof(patternsFile));
 
-        public ErrorPatternScanner(string patternsFile, ILogger logger)
+        if (!File.Exists(patternsFile))
+            throw new FileNotFoundException(patternsFile);
+
+        foreach (string line in File.ReadAllLines(patternsFile))
         {
-            _logger = logger;
-            if (string.IsNullOrEmpty(patternsFile))
-                throw new ArgumentNullException(nameof(patternsFile));
+            if (line.Trim().Length <= 1)
+                continue;
 
-            if (!File.Exists(patternsFile))
-                throw new FileNotFoundException(patternsFile);
+            char type = line[0];
+            string pattern = line[1..];
 
-            foreach (string line in File.ReadAllLines(patternsFile))
+            switch (type)
             {
-                if (line.Trim().Length <= 1)
-                    continue;
+                case '#':
+                    // comment
+                    break;
 
-                char type = line[0];
-                string pattern = line[1..];
+                case '@':
+                    _errorPatternStrings.Add(pattern);
+                    break;
 
-                switch(type)
-                {
-                    case '#':
-                        // comment
-                        break;
-
-                    case '@':
-                        _errorPatternStrings.Add(pattern);
-                        break;
-
-                    case '%':
+                case '%':
+                    {
+                        try
                         {
-                            try
-                            {
-                                _errorPatternRegexes.Add(new Regex(pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase));
-                            }
-                            catch (Exception ex) when (ex is ArgumentException || ex is ArgumentNullException || ex is ArgumentOutOfRangeException)
-                            {
-                                _logger.LogWarning($"ErrorPatternScanner: Failed to compile regex error pattern '{pattern}': {ex.Message}");
-                            }
+                            _errorPatternRegexes.Add(new Regex(pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase));
                         }
-                        break;
+                        catch (Exception ex) when (ex is ArgumentException || ex is ArgumentNullException || ex is ArgumentOutOfRangeException)
+                        {
+                            _logger.LogWarning($"ErrorPatternScanner: Failed to compile regex error pattern '{pattern}': {ex.Message}");
+                        }
+                    }
+                    break;
 
-                    default:
-                        _logger.LogWarning($"ErrorPatternScanner: Unknown type prefix '{type}' on line '{line}'. Ignoring.");
-                        break;
-                }
+                default:
+                    _logger.LogWarning($"ErrorPatternScanner: Unknown type prefix '{type}' on line '{line}'. Ignoring.");
+                    break;
             }
-
-            _empty = _errorPatternRegexes.Count == 0 && _errorPatternStrings.Count == 0;
         }
 
-        public bool IsError(string line, out string? matchedPattern)
-        {
-            matchedPattern = null;
-            if (_empty)
-                return false;
+        _empty = _errorPatternRegexes.Count == 0 && _errorPatternStrings.Count == 0;
+    }
 
-            string? patternString = _errorPatternStrings.FirstOrDefault(pattern => line.Contains(pattern, StringComparison.InvariantCultureIgnoreCase));
-            if (patternString != null)
-            {
-                matchedPattern = patternString;
-                return true;
-            }
-
-            Regex? matchedRegex = _errorPatternRegexes.FirstOrDefault(regex => regex.IsMatch(line));
-            if (matchedRegex != null)
-            {
-                matchedPattern = matchedRegex.ToString();
-                return true;
-            }
-
+    public bool IsError(string line, out string? matchedPattern)
+    {
+        matchedPattern = null;
+        if (_empty)
             return false;
+
+        string? patternString = _errorPatternStrings.FirstOrDefault(pattern => line.Contains(pattern, StringComparison.InvariantCultureIgnoreCase));
+        if (patternString != null)
+        {
+            matchedPattern = patternString;
+            return true;
         }
+
+        Regex? matchedRegex = _errorPatternRegexes.FirstOrDefault(regex => regex.IsMatch(line));
+        if (matchedRegex != null)
+        {
+            matchedPattern = matchedRegex.ToString();
+            return true;
+        }
+
+        return false;
     }
 }

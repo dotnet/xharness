@@ -4,10 +4,9 @@
 
 using Microsoft.DotNet.XHarness.Common.Logging;
 
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
+namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+
+public interface IEventLogger
 {
-    public interface IEventLogger
-    {
-        public void LogEvent(ILog log, string text, params object[] args);
-    }
+    public void LogEvent(ILog log, string text, params object[] args);
 }

@@ -5,23 +5,22 @@
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
-{
-    /// <summary>
-    /// Path to where Xcode is located.
-    /// </summary>
-    internal class XcodeArgument : PathArgument
-    {
-        public XcodeArgument() : base("xcode=", "Path where Xcode is installed", false)
-        {
-        }
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 
-        public override void Validate()
+/// <summary>
+/// Path to where Xcode is located.
+/// </summary>
+internal class XcodeArgument : PathArgument
+{
+    public XcodeArgument() : base("xcode=", "Path where Xcode is installed", false)
+    {
+    }
+
+    public override void Validate()
+    {
+        if (Value != null && !Directory.Exists(Value))
         {
-            if (Value != null && !Directory.Exists(Value))
-            {
-                throw new ArgumentException($"Failed to find Xcode root at {Value}");
-            }
+            throw new ArgumentException($"Failed to find Xcode root at {Value}");
         }
     }
 }

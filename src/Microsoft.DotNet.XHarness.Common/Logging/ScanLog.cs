@@ -5,86 +5,85 @@
 using System;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.Common.Logging
+namespace Microsoft.DotNet.XHarness.Common.Logging;
+
+/// <summary>
+/// Log that scans for a given tag and notifies when tag is found in the stream.
+/// </summary>
+public class ScanLog : Log
 {
-    /// <summary>
-    /// Log that scans for a given tag and notifies when tag is found in the stream.
-    /// </summary>
-    public class ScanLog : Log
+    private readonly string _tag;
+    private readonly Action _tagFoundNotify;
+    private readonly char[] _buffer;
+    private int _startIndex;
+    private bool _hasBeenFilled = false;
+
+    public override bool Timestamp { get => false; set { } }
+
+    public ScanLog(string tag, Action tagFoundNotify)
     {
-        private readonly string _tag;
-        private readonly Action _tagFoundNotify;
-        private readonly char[] _buffer;
-        private int _startIndex;
-        private bool _hasBeenFilled = false;
-
-        public override bool Timestamp { get => false; set { } }
-
-        public ScanLog(string tag, Action tagFoundNotify)
+        if (string.IsNullOrEmpty(tag))
         {
-            if (string.IsNullOrEmpty(tag))
-            {
-                throw new ArgumentException($"'{nameof(tag)}' cannot be null or empty.", nameof(tag));
-            }
-
-            _tag = tag;
-            _tagFoundNotify = tagFoundNotify;
-            _buffer = new char[_tag.Length];
-            _startIndex = -1;
+            throw new ArgumentException($"'{nameof(tag)}' cannot be null or empty.", nameof(tag));
         }
 
-        protected override void WriteImpl(string value)
-        {
-            foreach (var c in value)
-            {
-                Add(c);
+        _tag = tag;
+        _tagFoundNotify = tagFoundNotify;
+        _buffer = new char[_tag.Length];
+        _startIndex = -1;
+    }
 
-                if (IsMatch())
-                {
-                    _tagFoundNotify();
-                }
+    protected override void WriteImpl(string value)
+    {
+        foreach (var c in value)
+        {
+            Add(c);
+
+            if (IsMatch())
+            {
+                _tagFoundNotify();
             }
         }
+    }
 
-        public override void Flush()
+    public override void Flush()
+    {
+    }
+
+    public override void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
+
+    private void Add(char c)
+    {
+        _startIndex++;
+
+        if (_startIndex == _buffer.Length - 1)
         {
+            _hasBeenFilled = true;
         }
 
-        public override void Dispose()
+        _startIndex %= _buffer.Length;
+        _buffer[_startIndex] = c;
+    }
+
+    private bool IsMatch()
+    {
+        if (!_hasBeenFilled)
         {
-            GC.SuppressFinalize(this);
+            return false;
         }
 
-        private void Add(char c)
+        for (int i = 1; i <= _buffer.Length; i++)
         {
-            _startIndex++;
-
-            if (_startIndex == _buffer.Length - 1)
-            {
-                _hasBeenFilled = true;
-            }
-
-            _startIndex %= _buffer.Length;
-            _buffer[_startIndex] = c;
-        }
-
-        private bool IsMatch()
-        {
-            if (!_hasBeenFilled)
+            int index = (i + _startIndex) % _buffer.Length;
+            if (_buffer[index] != _tag[i - 1])
             {
                 return false;
             }
-
-            for (int i = 1; i <= _buffer.Length; i++)
-            {
-                int index = (i + _startIndex) % _buffer.Length;
-                if (_buffer[index] != _tag[i - 1])
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
+
+        return true;
     }
 }

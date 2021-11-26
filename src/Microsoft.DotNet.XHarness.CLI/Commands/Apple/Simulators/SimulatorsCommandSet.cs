@@ -4,19 +4,18 @@
 
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators;
+
+/// <summary>
+/// These commands allow management of Xcode iOS/WatchOS/tvOS Simulators on MacOS.
+/// Originally taken from: https://github.com/xamarin/xamarin-macios/blob/master/tools/siminstaller
+/// </summary>
+public class SimulatorsCommandSet : CommandSet
 {
-    /// <summary>
-    /// These commands allow management of Xcode iOS/WatchOS/tvOS Simulators on MacOS.
-    /// Originally taken from: https://github.com/xamarin/xamarin-macios/blob/master/tools/siminstaller
-    /// </summary>
-    public class SimulatorsCommandSet : CommandSet
+    public SimulatorsCommandSet() : base("simulators")
     {
-        public SimulatorsCommandSet() : base("simulators")
-        {
-            Add(new ListCommand());
-            Add(new FindCommand());
-            Add(new InstallCommand());
-        }
+        Add(new ListCommand());
+        Add(new FindCommand());
+        Add(new InstallCommand());
     }
 }

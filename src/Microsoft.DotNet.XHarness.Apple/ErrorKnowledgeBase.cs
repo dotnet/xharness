@@ -10,99 +10,98 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 
-namespace Microsoft.DotNet.XHarness.Apple
+namespace Microsoft.DotNet.XHarness.Apple;
+
+public class ErrorKnowledgeBase : IErrorKnowledgeBase
 {
-    public class ErrorKnowledgeBase : IErrorKnowledgeBase
+    private static readonly Dictionary<string, KnownIssue> s_testErrorMaps = new()
     {
-        private static readonly Dictionary<string, KnownIssue> s_testErrorMaps = new()
+        ["Failed to communicate with the device"] =
+            new("Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device",
+                suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
+
+        ["MT1031"] =
+            new("Cannot launch the application because the device is locked. Please unlock the device and try again",
+                suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
+
+        ["the device is locked"] =
+            new("Cannot launch the application because the device is locked. Please unlock the device and try again",
+                suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
+
+        ["while Setup Assistant is running"] =
+            new("Cannot launch the application because the device's update hasn't been finished. The setup assistant is still running. Please finish the device OS update on the device",
+                suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
+
+        ["LSOpenURLsWithRole() failed with error -10825"] =
+            new("This application requires a newer version of MacOS",
+                suggestedExitCode: (int)ExitCode.GENERAL_FAILURE),
+    };
+
+    private static readonly Dictionary<string, KnownIssue> s_buildErrorMaps = new();
+
+    private static readonly Dictionary<string, KnownIssue> s_installErrorMaps = new()
+    {
+        ["IncorrectArchitecture"] =
+            new("IncorrectArchitecture: Failed to find matching device arch for the application"), // known failure, but not an issue
+
+        ["0xe8008015"] =
+            new("No valid provisioning profile found", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
+
+        ["valid provisioning profile for this executable was not found"] =
+            new("No valid provisioning profile found", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
+
+        ["0xe800801c"] =
+            new("App is not signed", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
+
+        ["No code signature found"] =
+            new("App is not signed", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
+    };
+
+    public bool IsKnownBuildIssue(IFileBackedLog buildLog, [NotNullWhen(true)] out KnownIssue? knownFailureMessage)
+        => TryFindErrors(buildLog, s_buildErrorMaps, out knownFailureMessage);
+
+    public bool IsKnownTestIssue(IFileBackedLog runLog, [NotNullWhen(true)] out KnownIssue? knownFailureMessage)
+        => TryFindErrors(runLog, s_testErrorMaps, out knownFailureMessage);
+
+    public bool IsKnownInstallIssue(IFileBackedLog installLog, [NotNullWhen(true)] out KnownIssue? knownFailureMessage)
+        => TryFindErrors(installLog, s_installErrorMaps, out knownFailureMessage);
+
+    private static bool TryFindErrors(IFileBackedLog log, Dictionary<string, KnownIssue> errorMap,
+        [NotNullWhen(true)] out KnownIssue? failureMessage)
+    {
+        failureMessage = null;
+        if (log == null)
         {
-            ["Failed to communicate with the device"] =
-                new("Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device",
-                    suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
+            return false;
+        }
 
-            ["MT1031"] =
-                new("Cannot launch the application because the device is locked. Please unlock the device and try again",
-                    suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
-
-            ["the device is locked"] =
-                new("Cannot launch the application because the device is locked. Please unlock the device and try again",
-                    suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
-
-            ["while Setup Assistant is running"] =
-                new("Cannot launch the application because the device's update hasn't been finished. The setup assistant is still running. Please finish the device OS update on the device",
-                    suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
-
-            ["LSOpenURLsWithRole() failed with error -10825"] =
-                new("This application requires a newer version of MacOS",
-                    suggestedExitCode: (int)ExitCode.GENERAL_FAILURE),
-        };
-
-        private static readonly Dictionary<string, KnownIssue> s_buildErrorMaps = new();
-
-        private static readonly Dictionary<string, KnownIssue> s_installErrorMaps = new()
+        if (!File.Exists(log.FullPath) || new FileInfo(log.FullPath).Length <= 0)
         {
-            ["IncorrectArchitecture"] =
-                new("IncorrectArchitecture: Failed to find matching device arch for the application"), // known failure, but not an issue
+            return false;
+        }
 
-            ["0xe8008015"] =
-                new("No valid provisioning profile found", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
-
-            ["valid provisioning profile for this executable was not found"] =
-                new("No valid provisioning profile found", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
-
-            ["0xe800801c"] =
-                new("App is not signed", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
-
-            ["No code signature found"] =
-                new("App is not signed", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
-        };
-
-        public bool IsKnownBuildIssue(IFileBackedLog buildLog, [NotNullWhen(true)] out KnownIssue? knownFailureMessage)
-            => TryFindErrors(buildLog, s_buildErrorMaps, out knownFailureMessage);
-
-        public bool IsKnownTestIssue(IFileBackedLog runLog, [NotNullWhen(true)] out KnownIssue? knownFailureMessage)
-            => TryFindErrors(runLog, s_testErrorMaps, out knownFailureMessage);
-
-        public bool IsKnownInstallIssue(IFileBackedLog installLog, [NotNullWhen(true)] out KnownIssue? knownFailureMessage)
-            => TryFindErrors(installLog, s_installErrorMaps, out knownFailureMessage);
-
-        private static bool TryFindErrors(IFileBackedLog log, Dictionary<string, KnownIssue> errorMap,
-            [NotNullWhen(true)] out KnownIssue? failureMessage)
+        using var reader = log.GetReader();
+        while (!reader.EndOfStream)
         {
-            failureMessage = null;
-            if (log == null)
+            var line = reader.ReadLine();
+            if (line == null)
             {
-                return false;
+                continue;
             }
 
-            if (!File.Exists(log.FullPath) || new FileInfo(log.FullPath).Length <= 0)
+            //go over errors and return true as soon as we find one that matches
+            foreach (var error in errorMap.Keys)
             {
-                return false;
-            }
-
-            using var reader = log.GetReader();
-            while (!reader.EndOfStream)
-            {
-                var line = reader.ReadLine();
-                if (line == null)
+                if (!line.Contains(error, StringComparison.InvariantCultureIgnoreCase))
                 {
                     continue;
                 }
 
-                //go over errors and return true as soon as we find one that matches
-                foreach (var error in errorMap.Keys)
-                {
-                    if (!line.Contains(error, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    failureMessage = errorMap[error];
-                    return true;
-                }
+                failureMessage = errorMap[error];
+                return true;
             }
-
-            return false;
         }
+
+        return false;
     }
 }

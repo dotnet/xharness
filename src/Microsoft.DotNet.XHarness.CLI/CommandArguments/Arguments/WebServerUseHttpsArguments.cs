@@ -2,13 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments;
+
+internal class WebServerUseHttpsArguments : SwitchArgument
 {
-    internal class WebServerUseHttpsArguments : SwitchArgument
+    public WebServerUseHttpsArguments()
+        : base("web-server-use-https", "Bind HTTPS port too", false)
     {
-        public WebServerUseHttpsArguments()
-            : base("web-server-use-https", "Bind HTTPS port too", false)
-        {
-        }
     }
 }

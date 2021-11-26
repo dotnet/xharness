@@ -2,10 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.Android.Execution
+namespace Microsoft.DotNet.XHarness.Android.Execution;
+
+internal interface IReportManager
 {
-    internal interface IReportManager
-    {
-        string DumpBugReport(AdbRunner runner, string outputFilePathWithoutFormat);
-    }
+    string DumpBugReport(AdbRunner runner, string outputFilePathWithoutFormat);
 }

@@ -12,41 +12,40 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.CLI.Tests
+namespace Microsoft.DotNet.XHarness.CLI.Tests;
+
+internal class UnitTestCommand
 {
-    internal class UnitTestCommand
+    public static UnitTestCommand<UnitTestArguments<TArgument>> FromArgument<TArgument>(TArgument arg) where TArgument : Argument
     {
-        public static UnitTestCommand<UnitTestArguments<TArgument>> FromArgument<TArgument>(TArgument arg) where TArgument : Argument
-        {
-            return new UnitTestCommand<UnitTestArguments<TArgument>>(new UnitTestArguments<TArgument>(arg));
-        }
+        return new UnitTestCommand<UnitTestArguments<TArgument>>(new UnitTestArguments<TArgument>(arg));
+    }
+}
+
+internal class UnitTestCommand<TArguments> : XHarnessCommand<TArguments> where TArguments : XHarnessCommandArguments
+{
+    protected override string CommandUsage => "test";
+
+    protected override string CommandDescription => "unit test command";
+
+    public bool CommandRun { get; private set; }
+
+    public IEnumerable<string> PassThroughArgs => PassThroughArguments;
+
+    public IEnumerable<string> ExtraArgs => ExtraArguments;
+
+    private readonly TArguments _arguments;
+    protected override TArguments Arguments => _arguments;
+
+    public UnitTestCommand(TArguments arguments, bool allowExtraArgs = false)
+        : base(TargetPlatform.Apple, "unit-test", allowExtraArgs, new ServiceCollection())
+    {
+        _arguments = arguments;
     }
 
-    internal class UnitTestCommand<TArguments> : XHarnessCommand<TArguments> where TArguments : XHarnessCommandArguments
+    protected override Task<ExitCode> InvokeInternal(ILogger logger)
     {
-        protected override string CommandUsage => "test";
-
-        protected override string CommandDescription => "unit test command";
-
-        public bool CommandRun { get; private set; }
-
-        public IEnumerable<string> PassThroughArgs => PassThroughArguments;
-
-        public IEnumerable<string> ExtraArgs => ExtraArguments;
-
-        private readonly TArguments _arguments;
-        protected override TArguments Arguments => _arguments;
-
-        public UnitTestCommand(TArguments arguments, bool allowExtraArgs = false)
-            : base(TargetPlatform.Apple, "unit-test", allowExtraArgs, new ServiceCollection())
-        {
-            _arguments = arguments;
-        }
-
-        protected override Task<ExitCode> InvokeInternal(ILogger logger)
-        {
-            CommandRun = true;
-            return Task.FromResult(ExitCode.SUCCESS);
-        }
+        CommandRun = true;
+        return Task.FromResult(ExitCode.SUCCESS);
     }
 }

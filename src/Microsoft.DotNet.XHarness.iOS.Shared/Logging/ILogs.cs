@@ -6,27 +6,26 @@ using System;
 using System.Collections.Generic;
 using Microsoft.DotNet.XHarness.Common.Logging;
 
-namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging
+namespace Microsoft.DotNet.XHarness.iOS.Shared.Logging;
+
+public interface ILogs : IList<IFileBackedLog>, IDisposable
 {
-    public interface ILogs : IList<IFileBackedLog>, IDisposable
-    {
-        string Directory { get; set; }
+    string Directory { get; set; }
 
-        // Create a new log backed with a file
-        IFileBackedLog Create(string filename, string name, bool? timestamp = null);
+    // Create a new log backed with a file
+    IFileBackedLog Create(string filename, string name, bool? timestamp = null);
 
-        // Adds an existing file to this collection of logs.
-        // If the file is not inside the log directory, then it's copied there.
-        // 'path' must be a full path to the file.
-        IFileBackedLog AddFile(string path);
+    // Adds an existing file to this collection of logs.
+    // If the file is not inside the log directory, then it's copied there.
+    // 'path' must be a full path to the file.
+    IFileBackedLog AddFile(string path);
 
-        // Adds an existing file to this collection of logs.
-        // If the file is not inside the log directory, then it's copied there.
-        // 'path' must be a full path to the file.
-        IFileBackedLog AddFile(string path, string name);
+    // Adds an existing file to this collection of logs.
+    // If the file is not inside the log directory, then it's copied there.
+    // 'path' must be a full path to the file.
+    IFileBackedLog AddFile(string path, string name);
 
-        // Create an empty file in the log directory and return the full path to the file
-        string CreateFile(string path, string description);
-        string CreateFile(string path, LogType type);
-    }
+    // Create an empty file in the log directory and return the full path to the file
+    string CreateFile(string path, string description);
+    string CreateFile(string path, LogType type);
 }

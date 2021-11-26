@@ -2,13 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
+
+internal class BrowserArguments : RepeatableArgument
 {
-    internal class BrowserArguments : RepeatableArgument
+    public BrowserArguments()
+        : base("browser-arg=", "Argument to pass to the browser")
     {
-        public BrowserArguments()
-            : base("browser-arg=", "Argument to pass to the browser")
-        {
-        }
     }
 }

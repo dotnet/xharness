@@ -5,23 +5,22 @@
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
+
+internal class HTMLFileArgument : RequiredStringArgument
 {
-    internal class HTMLFileArgument : RequiredStringArgument
+    public HTMLFileArgument(string defaultValue)
+        : base("html-file=", $"Main html file to load from the app directory. Default is {defaultValue}", defaultValue)
     {
-        public HTMLFileArgument(string defaultValue)
-            : base("html-file=", $"Main html file to load from the app directory. Default is {defaultValue}", defaultValue)
-        {
-        }
+    }
 
-        public override void Validate()
-        {
-            base.Validate();
+    public override void Validate()
+    {
+        base.Validate();
 
-            if (Path.IsPathRooted(Value))
-            {
-                throw new ArgumentException("--html-file argument must be a relative path");
-            }
+        if (Path.IsPathRooted(Value))
+        {
+            throw new ArgumentException("--html-file argument must be a relative path");
         }
     }
 }

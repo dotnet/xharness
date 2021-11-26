@@ -5,10 +5,9 @@
 using System.IO;
 
 #nullable enable
-namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults
+namespace Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
+
+public interface IXmlResultParser
 {
-    public interface IXmlResultParser
-    {
-        (string resultLine, bool failed) ParseXml(TextReader stream, TextWriter? humanReadableOutput);
-    }
+    (string resultLine, bool failed) ParseXml(TextReader stream, TextWriter? humanReadableOutput);
 }

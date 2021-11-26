@@ -2,14 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
+namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
+
+internal enum XUnitFilterType
 {
-    internal enum XUnitFilterType
-    {
-        Trait,
-        TypeName,
-        Assembly,
-        Single,
-        Namespace,
-    }
+    Trait,
+    TypeName,
+    Assembly,
+    Single,
+    Namespace,
 }
