@@ -44,7 +44,7 @@ done
 here="$( cd -P "$( dirname "$source" )" && pwd )"
 repo_root="$( cd -P "$( dirname "$here" )" && pwd )"
 
-if [ -z $test_project ] || [ "-h" == "$test_project" ] || [ "--help" == "$test_project" ]; then
+if [ -z "$test_project" ] || [ "-h" == "$test_project" ] || [ "--help" == "$test_project" ]; then
   fail "Usage: ./run-e2e-test.sh Apple/SimulatorInstaller.Tests.proj [--skip-build]"
   print_projects
   exit 2
@@ -82,6 +82,8 @@ if [ "true" != "$skip_build" ]; then
   highlight "> Building Microsoft.DotNet.XHarness.CLI.1.0.0-dev.nupkg"
   rm -rf "$repo_root/artifacts/tmp/Debug/Microsoft.DotNet.XHarness.CLI" "$repo_root/artifacts/packages"
   "$repo_root/build.sh" -build -pack --projects "$repo_root/src/Microsoft.DotNet.XHarness.CLI/Microsoft.DotNet.XHarness.CLI.csproj"
+else
+  highlight "> Skipping build"
 fi
 
 export BUILD_REASON="dev"
@@ -90,5 +92,5 @@ export BUILD_SOURCEBRANCH="master"
 export SYSTEM_TEAMPROJECT="dnceng"
 export SYSTEM_ACCESSTOKEN=""
 
-highlight "> Starting tests (logging to ./XHarness.binlog)"
+highlight "> Starting tests (logging to XHarness.binlog)"
 "$repo_root/build.sh" -configuration Debug -restore -test -projects "$test_project" /p:RestoreUsingNugetTargets=false /bl:./XHarness.binlog
