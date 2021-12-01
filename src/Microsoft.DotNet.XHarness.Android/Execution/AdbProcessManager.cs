@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Android.Execution;
@@ -22,6 +23,8 @@ public class AdbProcessManager : IAdbProcessManager
     public ProcessExecutionResults Run(string adbExePath, string arguments, TimeSpan timeOut)
     {
         string deviceSerialArgs = string.IsNullOrEmpty(DeviceSerial) ? string.Empty : $"-s {DeviceSerial}";
+
+        arguments = StringUtils.FormatArguments(arguments);
 
         _log.LogDebug($"Executing command: '{adbExePath} {deviceSerialArgs} {arguments}'");
 
