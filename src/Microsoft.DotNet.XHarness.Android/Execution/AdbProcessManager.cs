@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Android.Execution;
@@ -90,15 +89,15 @@ public class AdbProcessManager : IAdbProcessManager
         p.Close();
 
         lock (standardOut)
-            lock (standardErr)
+        lock (standardErr)
+        {
+            return new ProcessExecutionResults()
             {
-                return new ProcessExecutionResults()
-                {
-                    ExitCode = exitCode,
-                    StandardOutput = standardOut.ToString(),
-                    StandardError = standardErr.ToString(),
-                    TimedOut = timedOut
-                };
-            }
+                ExitCode = exitCode,
+                StandardOutput = standardOut.ToString(),
+                StandardError = standardErr.ToString(),
+                TimedOut = timedOut
+            };
+        }
     }
 }

@@ -34,12 +34,12 @@ public static class Program
         if (args.Length > 0)
         {
 #if !DEBUG
-                if (args[0] == "apple" && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                {
-                    // Otherwise the command would just not be found
-                    Console.Error.WriteLine("The 'apple' command is not available on non-OSX platforms!");
-                    return (int)ExitCode.INVALID_ARGUMENTS;
-                }
+            if (args[0] == "apple" && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                // Otherwise the command would just not be found
+                Console.Error.WriteLine("The 'apple' command is not available on non-OSX platforms!");
+                return (int)ExitCode.INVALID_ARGUMENTS;
+            }
 #endif
 
             // Mono.Options wouldn't allow "--" so we will temporarily rename it and parse it ourselves later
@@ -99,20 +99,19 @@ public static class Program
         switch (args[0])
         {
             case "apple":
-                return args[1] == "device";
+                return args[1] switch
+                {
+                    "device" => true,
+                    _ => false,
+                };
 
             case "android":
-                if (args[1] == "device")
+                return args[1] switch
                 {
-                    return true;
-                }
-
-                if (args[1] == "state" && args.Contains("--adb"))
-                {
-                    return true;
-                }
-
-                return false;
+                    "device" => true,
+                    "adb" => true,
+                    _ => false,
+                };
         }
 
         return false;

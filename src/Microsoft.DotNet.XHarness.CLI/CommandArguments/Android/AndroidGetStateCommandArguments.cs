@@ -8,10 +8,5 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
 internal class AndroidGetStateCommandArguments : XHarnessCommandArguments
 {
-    public ShowAdbPathArgument ShowAdbPath { get; set; } = new();
-
-    protected override IEnumerable<Argument> GetArguments() => new Argument[]
-    {
-            ShowAdbPath
-    };
+    protected override IEnumerable<Argument> GetArguments() => System.Array.Empty<Argument>();
 }
