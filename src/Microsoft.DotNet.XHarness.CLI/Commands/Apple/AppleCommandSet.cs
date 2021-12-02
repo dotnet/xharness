@@ -71,6 +71,7 @@ internal class AppleCommandSet : CommandSet
         services.TryAddTransient<IRunOrchestrator, RunOrchestrator>();
         services.TryAddTransient<ITestOrchestrator, TestOrchestrator>();
         services.TryAddTransient<IUninstallOrchestrator, UninstallOrchestrator>();
+        services.TryAddTransient<ISimulatorResetOrchestrator, SimulatorResetOrchestrator>();
 
         return services;
     }
