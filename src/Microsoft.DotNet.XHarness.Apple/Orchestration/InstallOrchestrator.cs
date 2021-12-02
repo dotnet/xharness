@@ -78,13 +78,13 @@ public class InstallOrchestrator : BaseOrchestrator, IInstallOrchestrator
             return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
         }
 
-        static Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
+        static Task<ExitCode> ExecuteMacCatalystApp(AppBundleInformation appBundleInfo)
             => throw new InvalidOperationException("install command not available on maccatalyst");
 
-        static Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
+        static Task<ExitCode> ExecuteApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
             => Task.FromResult(ExitCode.SUCCESS); // no-op
 
-        var result = await OrchestrateOperation(target, deviceName, includeWirelessDevices, resetSimulator, enableLldb, appBundleInfo, executeMacCatalystApp, executeApp, cancellationToken);
+        var result = await OrchestrateOperation(target, deviceName, includeWirelessDevices, resetSimulator, enableLldb, appBundleInfo, ExecuteMacCatalystApp, ExecuteApp, cancellationToken);
 
         if (cancellationToken.IsCancellationRequested)
         {

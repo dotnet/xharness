@@ -15,25 +15,23 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple;
 
-public interface IUninstallOrchestrator
+public interface ISimulatorResetOrchestrator
 {
-    Task<ExitCode> OrchestrateAppUninstall(
-        string bundleIdentifier,
+    Task<ExitCode> OrchestrateSimulatorReset(
         TestTargetOs target,
         string? deviceName,
         TimeSpan timeout,
-        bool includeWirelessDevices,
-        bool resetSimulator,
-        bool enableLldb,
         CancellationToken cancellationToken);
 }
 
 /// <summary>
 /// This orchestrator implements the `uninstall` command flow.
 /// </summary>
-public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
+public class SimulatorResetOrchestrator : BaseOrchestrator, ISimulatorResetOrchestrator
 {
-    public UninstallOrchestrator(
+    private readonly ILogger _consoleLogger;
+
+    public SimulatorResetOrchestrator(
         IAppInstaller appInstaller,
         IAppUninstaller appUninstaller,
         IDeviceFinder deviceFinder,
@@ -45,20 +43,23 @@ public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
         IHelpers helpers)
         : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
+        _consoleLogger = consoleLogger;
     }
 
-    public Task<ExitCode> OrchestrateAppUninstall(
-        string bundleIdentifier,
+    public Task<ExitCode> OrchestrateSimulatorReset(
         TestTargetOs target,
         string? deviceName,
         TimeSpan timeout,
-        bool includeWirelessDevices,
-        bool resetSimulator,
-        bool enableLldb,
         CancellationToken cancellationToken)
     {
+        if (!target.Platform.IsSimulator() || target.Platform.ToRunMode() == RunMode.MacOS)
+        {
+            _consoleLogger.LogError($"The simulator reset action requires a simulator target while {target.AsString()} specified");
+            return Task.FromResult(ExitCode.INVALID_ARGUMENTS);
+        }
+
         static Task<ExitCode> ExecuteMacCatalystApp(AppBundleInformation appBundleInfo)
-            => throw new InvalidOperationException("uninstall command not available on maccatalyst");
+            => throw new InvalidOperationException("reset-simulator command not available on maccatalyst");
 
         static Task<ExitCode> ExecuteApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
             => Task.FromResult(ExitCode.SUCCESS); // no-op
@@ -66,26 +67,21 @@ public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
         return OrchestrateOperation(
             target,
             deviceName,
-            includeWirelessDevices,
-            resetSimulator,
-            enableLldb,
-            AppBundleInformation.FromBundleId(bundleIdentifier),
+            includeWirelessDevices: false,
+            resetSimulator: true,
+            enableLldb: false,
+            new AppBundleInformation(string.Empty, string.Empty, string.Empty, string.Empty, false),
             ExecuteMacCatalystApp,
             ExecuteApp,
             cancellationToken);
     }
 
     protected override Task<ExitCode> InstallApp(AppBundleInformation appBundleInfo, IDevice device, TestTargetOs target, CancellationToken cancellationToken)
-        => Task.FromResult(ExitCode.SUCCESS); // no-op - we only want to uninstall the app
+        => Task.FromResult(ExitCode.SUCCESS); // no-op - we only want to reset the simulator
 
     protected override Task<ExitCode> UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
-    {
-        // For the uninstallation, we don't want to uninstall twice so we skip the preparation one
-        if (isPreparation)
-        {
-            return Task.FromResult(ExitCode.SUCCESS);
-        }
+        => Task.FromResult(ExitCode.SUCCESS); // no-op - we only want to reset the simulator
 
-        return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
-    }
+    protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
+        => Task.CompletedTask; // no-op - reset is enough, clean-up is not needed afterwards
 }

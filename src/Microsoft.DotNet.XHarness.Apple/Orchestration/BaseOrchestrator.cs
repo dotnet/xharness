@@ -159,15 +159,16 @@ public abstract class BaseOrchestrator : IDisposable
             if (target.Platform.IsSimulator() && resetSimulator)
             {
                 var simulator = (ISimulatorDevice)device;
+                var bundleIds = appBundleInfo.BundleIdentifier == string.Empty ? Array.Empty<string>() : new[] { appBundleInfo.BundleIdentifier };
 
                 _logger.LogInformation($"Reseting simulator '{device.Name}'");
-                await simulator.PrepareSimulator(_mainLog, appBundleInfo.BundleIdentifier);
+                await simulator.PrepareSimulator(_mainLog, bundleIds);
 
                 if (companionDevice != null)
                 {
                     _logger.LogInformation($"Reseting companion simulator '{companionDevice.Name}'");
                     var companionSimulator = (ISimulatorDevice)companionDevice;
-                    await companionSimulator.PrepareSimulator(_mainLog, appBundleInfo.BundleIdentifier);
+                    await companionSimulator.PrepareSimulator(_mainLog, bundleIds);
                 }
 
                 _logger.LogInformation("Simulator reset finished");

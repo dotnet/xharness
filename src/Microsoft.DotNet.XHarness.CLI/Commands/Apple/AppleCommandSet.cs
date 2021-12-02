@@ -19,7 +19,30 @@ internal class AppleCommandSet : CommandSet
 {
     public AppleCommandSet() : base("apple")
     {
+        var services = GetAppleDependencies();
+
+        // Commands for full install/execute/uninstall flows
+        Add(new AppleTestCommand(services));
+        Add(new AppleRunCommand(services));
+
+        // Commands for more fine grained control over the separate operations
+        Add(new AppleInstallCommand(services));
+        Add(new AppleUninstallCommand(services));
+        Add(new AppleJustTestCommand(services));
+        Add(new AppleJustRunCommand(services));
+
+        // Commands for getting information
+        Add(new AppleGetDeviceCommand(services));
+        Add(new AppleGetStateCommand());
+
+        // Commands for simulator management
+        Add(new SimulatorsCommandSet());
+    }
+
+    public static IServiceCollection GetAppleDependencies()
+    {
         var services = new ServiceCollection();
+
         services.TryAddSingleton<IAppBundleInformationParser, AppBundleInformationParser>();
         services.TryAddSingleton<ISimulatorLoader, SimulatorLoader>();
         services.TryAddSingleton<IHardwareDeviceLoader, HardwareDeviceLoader>();
@@ -48,22 +71,8 @@ internal class AppleCommandSet : CommandSet
         services.TryAddTransient<IRunOrchestrator, RunOrchestrator>();
         services.TryAddTransient<ITestOrchestrator, TestOrchestrator>();
         services.TryAddTransient<IUninstallOrchestrator, UninstallOrchestrator>();
+        services.TryAddTransient<ISimulatorResetOrchestrator, SimulatorResetOrchestrator>();
 
-        // Commands for full install/execute/uninstall flows
-        Add(new AppleTestCommand(services));
-        Add(new AppleRunCommand(services));
-
-        // Commands for more fine grained control over the separate operations
-        Add(new AppleInstallCommand(services));
-        Add(new AppleUninstallCommand(services));
-        Add(new AppleJustTestCommand(services));
-        Add(new AppleJustRunCommand(services));
-
-        // Commands for getting information
-        Add(new AppleGetDeviceCommand(services));
-        Add(new AppleGetStateCommand());
-
-        // Commands for simulator management
-        Add(new SimulatorsCommandSet());
+        return services;
     }
 }
