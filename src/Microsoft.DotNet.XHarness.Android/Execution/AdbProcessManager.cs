@@ -22,7 +22,7 @@ public class AdbProcessManager : IAdbProcessManager
 
     public ProcessExecutionResults Run(string adbExePath, IEnumerable<string> arguments, TimeSpan timeOut)
     {
-        if (string.IsNullOrEmpty(DeviceSerial))
+        if (!string.IsNullOrEmpty(DeviceSerial))
         {
             arguments = arguments.Prepend("-s").Prepend(DeviceSerial);
         }
