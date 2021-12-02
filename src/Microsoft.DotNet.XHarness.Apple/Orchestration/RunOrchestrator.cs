@@ -111,10 +111,10 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             launchTimeoutCancellation.Token,
             cancellationToken);
 
-        Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
+        Task<ExitCode> ExecuteMacCatalystApp(AppBundleInformation appBundleInfo)
         {
             appRunStarted = true;
-            return ExecuteMacCatalystApp(
+            return this.ExecuteMacCatalystApp(
                 appBundleInfo,
                 timeout,
                 expectedExitCode,
@@ -124,10 +124,10 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
                 cancellationToken);
         }
 
-        Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
+        Task<ExitCode> ExecuteApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
         {
             appRunStarted = true;
-            return ExecuteApp(
+            return this.ExecuteApp(
                 appBundleInfo,
                 target,
                 device,
@@ -147,8 +147,8 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             resetSimulator,
             enableLldb,
             appBundleInformation,
-            executeMacCatalystApp,
-            executeApp,
+            ExecuteMacCatalystApp,
+            ExecuteApp,
             launchTimeoutCancellationToken.Token);
     }
 

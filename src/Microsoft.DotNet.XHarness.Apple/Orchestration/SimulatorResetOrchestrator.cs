@@ -58,10 +58,10 @@ public class SimulatorResetOrchestrator : BaseOrchestrator, ISimulatorResetOrche
             return Task.FromResult(ExitCode.INVALID_ARGUMENTS);
         }
 
-        static Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
+        static Task<ExitCode> ExecuteMacCatalystApp(AppBundleInformation appBundleInfo)
             => throw new InvalidOperationException("reset-simulator command not available on maccatalyst");
 
-        static Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
+        static Task<ExitCode> ExecuteApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
             => Task.FromResult(ExitCode.SUCCESS); // no-op
 
         return OrchestrateOperation(
@@ -71,8 +71,8 @@ public class SimulatorResetOrchestrator : BaseOrchestrator, ISimulatorResetOrche
             resetSimulator: true,
             enableLldb: false,
             new AppBundleInformation(string.Empty, string.Empty, string.Empty, string.Empty, false),
-            executeMacCatalystApp,
-            executeApp,
+            ExecuteMacCatalystApp,
+            ExecuteApp,
             cancellationToken);
     }
 

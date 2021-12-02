@@ -57,10 +57,10 @@ public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
         bool enableLldb,
         CancellationToken cancellationToken)
     {
-        static Task<ExitCode> executeMacCatalystApp(AppBundleInformation appBundleInfo)
+        static Task<ExitCode> ExecuteMacCatalystApp(AppBundleInformation appBundleInfo)
             => throw new InvalidOperationException("uninstall command not available on maccatalyst");
 
-        static Task<ExitCode> executeApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
+        static Task<ExitCode> ExecuteApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
             => Task.FromResult(ExitCode.SUCCESS); // no-op
 
         return OrchestrateOperation(
@@ -70,8 +70,8 @@ public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
             resetSimulator,
             enableLldb,
             AppBundleInformation.FromBundleId(bundleIdentifier),
-            executeMacCatalystApp,
-            executeApp,
+            ExecuteMacCatalystApp,
+            ExecuteApp,
             cancellationToken);
     }
 
