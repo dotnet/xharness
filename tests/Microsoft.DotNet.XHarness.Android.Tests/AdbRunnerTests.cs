@@ -8,8 +8,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using Microsoft.DotNet.XHarness.Android.Execution;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.Extensions.Logging;
 
 using Moq;
@@ -39,13 +39,13 @@ public class AdbRunnerTests : IDisposable
 
         // Fake ADB executable since its path is checked 
         Directory.CreateDirectory(s_scratchAndOutputPath);
-        File.Create(s_adbPath).Close();
+        File.WriteAllText(s_adbPath, string.Empty);
 
         // Mock to check the args ADB actually gets called with
         _processManager.Setup(pm => pm.Run(
            It.IsAny<string>(), // process, not checking the value to match any call
-           It.IsAny<string>(), // same
-           It.IsAny<TimeSpan>())).Returns((string p, string a, TimeSpan t) => CallFakeProcessManager(p, a, t));
+           It.IsAny<IEnumerable<string>>(), // same
+           It.IsAny<TimeSpan>())).Returns((string p, IEnumerable<string> a, TimeSpan t) => CallFakeProcessManager(p, a.ToArray(), t));
     }
 
     public void Dispose()
@@ -61,7 +61,7 @@ public class AdbRunnerTests : IDisposable
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         string result = runner.GetAdbState();
-        _processManager.Verify(pm => pm.Run(s_adbPath, "get-state", TimeSpan.FromMinutes(5)), Times.Once);
+        VerifyAdbCall("get-state");
         Assert.Equal("device", result);
     }
 
@@ -70,7 +70,7 @@ public class AdbRunnerTests : IDisposable
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         runner.ClearAdbLog();
-        _processManager.Verify(pm => pm.Run(s_adbPath, "logcat -c", TimeSpan.FromMinutes(5)), Times.Once);
+        VerifyAdbCall("logcat", "-c");
     }
     [Fact]
     public void DumpAdbLog()
@@ -78,7 +78,7 @@ public class AdbRunnerTests : IDisposable
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         string pathToDumpLogTo = Path.Join(s_scratchAndOutputPath, $"{Path.GetRandomFileName()}.log");
         runner.DumpAdbLog(pathToDumpLogTo);
-        _processManager.Verify(pm => pm.Run(s_adbPath, "logcat -d ", TimeSpan.FromMinutes(2)), Times.Once);
+        VerifyAdbCall("logcat", "-d", "");
 
         Assert.Equal("Sample LogCat Output", File.ReadAllText(pathToDumpLogTo));
     }
@@ -90,7 +90,7 @@ public class AdbRunnerTests : IDisposable
         runner.SetActiveDevice(string.Empty);
         string pathToDumpBugReport = Path.Join(s_scratchAndOutputPath, Path.GetRandomFileName());
         runner.DumpBugReport(pathToDumpBugReport);
-        _processManager.Verify(pm => pm.Run(s_adbPath, $"bugreport {pathToDumpBugReport}.zip", TimeSpan.FromMinutes(5)), Times.Once);
+        VerifyAdbCall("bugreport", $"{pathToDumpBugReport}.zip");
 
         Assert.Equal("Sample BugReport Output", File.ReadAllText($"{pathToDumpBugReport}.zip"));
     }
@@ -107,8 +107,8 @@ public class AdbRunnerTests : IDisposable
         s_bootCompleteCheckTimes = 0; // Force simulating device is offline
         runner.SetActiveDevice(null);
         runner.WaitForDevice();
-        _processManager.Verify(pm => pm.Run(s_adbPath, "wait-for-device", TimeSpan.FromMinutes(5)), Times.Exactly(2));
-        _processManager.Verify(pm => pm.Run(s_adbPath, "shell getprop sys.boot_completed", TimeSpan.FromMinutes(5)), Times.Exactly(4));
+        VerifyAdbCall(Times.Exactly(2), "wait-for-device");
+        VerifyAdbCall(Times.Exactly(4), "shell", "getprop", "sys.boot_completed");
     }
 
     [Fact]
@@ -116,15 +116,15 @@ public class AdbRunnerTests : IDisposable
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         var result = runner.GetAttachedDevicesWithProperties("architecture");
-        _processManager.Verify(pm => pm.Run(s_adbPath, "devices -l", TimeSpan.FromSeconds(30)), Times.Once);
+        VerifyAdbCall("devices", "-l");
 
         // Ensure it called, parsed the four random device names and found all four architectures
         foreach (var fakeDeviceInfo in _fakeDeviceList.Keys)
         {
-            _processManager.Verify(pm => pm.Run(s_adbPath, $"-s {fakeDeviceInfo.Item1} shell getprop ro.product.cpu.abilist", TimeSpan.FromSeconds(30)), Times.Once);
+            VerifyAdbCall("-s", fakeDeviceInfo.Item1, "shell", "getprop", "ro.product.cpu.abilist");
             Assert.Equal(fakeDeviceInfo.Item2, result[fakeDeviceInfo.Item1]);
-
         }
+
         Assert.Equal(4, result.Count);
     }
 
@@ -133,7 +133,7 @@ public class AdbRunnerTests : IDisposable
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         runner.StartAdbServer();
-        _processManager.Verify(pm => pm.Run(s_adbPath, "start-server", TimeSpan.FromMinutes(5)), Times.Once);
+        VerifyAdbCall("start-server");
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public class AdbRunnerTests : IDisposable
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         runner.KillAdbServer();
-        _processManager.Verify(pm => pm.Run(s_adbPath, "kill-server", TimeSpan.FromMinutes(5)), Times.Once);
+        VerifyAdbCall("kill-server");
     }
 
     [Fact]
@@ -151,7 +151,7 @@ public class AdbRunnerTests : IDisposable
         string fakeApkPath = Path.Join(s_scratchAndOutputPath, $"{Path.GetRandomFileName()}.apk");
         File.Create(fakeApkPath).Close();
         int exitCode = runner.InstallApk(fakeApkPath);
-        _processManager.Verify(pm => pm.Run(s_adbPath, $"install \"{fakeApkPath}\"", TimeSpan.FromMinutes(5)), Times.Once);
+        VerifyAdbCall("install", fakeApkPath);
         Assert.Equal(0, exitCode);
     }
 
@@ -161,7 +161,7 @@ public class AdbRunnerTests : IDisposable
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         string fakeApkName = $"{Path.GetRandomFileName()}";
         int exitCode = runner.UninstallApk(fakeApkName);
-        _processManager.Verify(pm => pm.Run(s_adbPath, $"uninstall {fakeApkName}", TimeSpan.FromMinutes(5)), Times.Once);
+        VerifyAdbCall("uninstall", fakeApkName);
         Assert.Equal(0, exitCode);
     }
 
@@ -171,7 +171,7 @@ public class AdbRunnerTests : IDisposable
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         string fakeApkName = $"{Path.GetRandomFileName()}";
         int exitCode = runner.KillApk(fakeApkName);
-        _processManager.Verify(pm => pm.Run(s_adbPath, $"shell am kill --user all {fakeApkName}", TimeSpan.FromMinutes(5)), Times.Once);
+        VerifyAdbCall("shell", "am", "kill", "--user", "all", fakeApkName);
         Assert.Equal(0, exitCode);
     }
 
@@ -181,7 +181,7 @@ public class AdbRunnerTests : IDisposable
         var requiredArchitecture = "x86_64";
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         var result = runner.GetDeviceToUse(_mainLog.Object, new[] { requiredArchitecture }, "architecture");
-        _processManager.Verify(pm => pm.Run(s_adbPath, "devices -l", TimeSpan.FromSeconds(30)), Times.Once);
+        VerifyAdbCall("devices", "-l");
         Assert.True(_fakeDeviceList.ContainsKey(new Tuple<string, string>(result, requiredArchitecture)));
     }
 
@@ -190,7 +190,7 @@ public class AdbRunnerTests : IDisposable
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         string result = runner.RebootAndroidDevice();
-        _processManager.Verify(pm => pm.Run(s_adbPath, "reboot", TimeSpan.FromMinutes(5)), Times.Once);
+        VerifyAdbCall("reboot");
     }
 
     [Theory]
@@ -217,19 +217,20 @@ public class AdbRunnerTests : IDisposable
 
         if (string.IsNullOrEmpty(instrumentationName))
         {
-            _processManager.Verify(pm => pm.Run(s_adbPath, $"shell am instrument  -e arg1 value1 -e arg2 value2 -w {fakeApkName}", TimeSpan.FromSeconds(123)), Times.Once);
-            _processManager.Verify(pm => pm.Run(s_adbPath, $"shell am instrument  -w {fakeApkName}", TimeSpan.FromSeconds(456)), Times.Once);
+            VerifyAdbCall("shell", "am", "instrument", "-e", "arg1", "value1", "-e", "arg2", "value2", "-w", fakeApkName);
+            VerifyAdbCall("shell", "am", "instrument", "-w", fakeApkName);
         }
         else
         {
-            _processManager.Verify(pm => pm.Run(s_adbPath, $"shell am instrument  -e arg1 value1 -e arg2 value2 -w {fakeApkName}/{instrumentationName}", TimeSpan.FromSeconds(123)), Times.Once);
-            _processManager.Verify(pm => pm.Run(s_adbPath, $"shell am instrument  -w {fakeApkName}/{instrumentationName}", TimeSpan.FromSeconds(456)), Times.Once);
+            VerifyAdbCall("shell", "am", "instrument", "-e", "arg1", "value1", "-e", "arg2", "value2", "-w", $"{fakeApkName}/{instrumentationName}");
+            VerifyAdbCall("shell", "am", "instrument", "-w", $"{fakeApkName}/{instrumentationName}");
         }
     }
 
     #endregion
 
     #region Helper Functions
+
     // Generates a list of fake devices, one per supported architecture so we can test AdbRunner's parsing of the output.
     // As with most of these tests, if adb.exe changes, this will break (we are locked into specific version) 
     private static Dictionary<Tuple<string, string>, int> InitializeFakeDeviceList()
@@ -245,51 +246,53 @@ public class AdbRunnerTests : IDisposable
         return values;
     }
 
-    private ProcessExecutionResults CallFakeProcessManager(string process, string arguments, TimeSpan timeout)
+    private ProcessExecutionResults CallFakeProcessManager(string process, string[] arguments, TimeSpan timeout)
     {
         if (Debugger.IsAttached)
         {
-            Debug.WriteLine($"Fake ADB Process Manager invoked with args: '{process} {arguments}' (timeout = {timeout.TotalSeconds})");
+            Debug.WriteLine($"Fake ADB Process Manager invoked with args: '{process} {StringUtils.FormatArguments(arguments)}' (timeout = {timeout.TotalSeconds})");
         }
 
         bool timedOut = false;
         int exitCode = 0;
         string stdOut = "";
         string stdErr = "";
-
-        string[] allArgs = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
         int argStart = 0;
 
-        if (allArgs[0] == "-s")
+        if (arguments[0] == "-s")
         {
-            s_currentDeviceSerial = allArgs[1];
+            s_currentDeviceSerial = arguments[1];
             argStart = 2;
         }
 
-        switch (allArgs[argStart].ToLowerInvariant())
+        switch (arguments[argStart].ToLowerInvariant())
         {
             case "get-state":
                 stdOut = "device";
                 exitCode = 0;
                 break;
+
             case "devices":
                 var s = new StringBuilder();
                 int transportId = 1;
                 s.AppendLine("List of devices attached");
+
                 foreach (var device in _fakeDeviceList)
                 {
                     string offlineMsg = _fakeDeviceList[device.Key]++ > 4 ? "offline" : "online";
                     s.AppendLine($"{device.Key.Item1}          {offlineMsg} transportid:{transportId++}");
                 }
+
                 stdOut = s.ToString();
                 break;
+
             case "shell":
-                if ($"{allArgs[argStart + 1]} {allArgs[argStart + 2]}".Equals("getprop ro.product.cpu.abilist"))
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.product.cpu.abilist"))
                 {
                     stdOut = _fakeDeviceList.Keys.Where(k => k.Item1 == s_currentDeviceSerial).Single().Item2;
                 }
-                if ($"{allArgs[argStart + 1]} {allArgs[argStart + 2]}".Equals("getprop sys.boot_completed"))
+
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop sys.boot_completed"))
                 {
                     // Newline is strange, but this is actually what it looks like
                     if (s_bootCompleteCheckTimes > 0)
@@ -303,32 +306,36 @@ public class AdbRunnerTests : IDisposable
                     }
                     s_bootCompleteCheckTimes++;
                 }
-                if ($"{allArgs[argStart + 1]} {allArgs[argStart + 2]}".Equals("getprop ro.build.version.sdk"))
+
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.build.version.sdk"))
                 {
                     stdOut = $"29{Environment.NewLine}";
                 }
+
                 exitCode = 0;
                 break;
+
             case "logcat":
-                if (allArgs[argStart + 1].Equals("-c")) { }; // Do nothing
-                if (allArgs[argStart + 1].Equals("-d"))
+                if (arguments[argStart + 1].Equals("-d"))
                 {
                     stdOut = "Sample LogCat Output";
                 }
+
                 break;
+
             case "bugreport":
-                var outputPath = allArgs[argStart + 1];
+                var outputPath = arguments[argStart + 1];
                 File.WriteAllText(outputPath, "Sample BugReport Output");
                 break;
+
             case "install":
             case "reboot":
             case "uninstall":
             case "wait-for-device":
             case "start-server":
             case "kill-server":
-                // No output needed, but pretend to wait a little
-                Thread.Sleep(1000);
                 break;
+
             default:
                 throw new InvalidOperationException($"Fake ADB doesn't know how to handle argument: {arguments}");
         }
@@ -340,6 +347,15 @@ public class AdbRunnerTests : IDisposable
             StandardError = stdErr,
             StandardOutput = stdOut
         };
+    }
+
+    private void VerifyAdbCall(params string[] arguments) => VerifyAdbCall(Times.Once(), arguments);
+
+    private void VerifyAdbCall(Times occurence, params string[] arguments)
+    {
+        _processManager.Verify(
+            x => x.Run(s_adbPath, It.Is<IEnumerable<string>>(args => Enumerable.SequenceEqual(arguments, args)), It.IsAny<TimeSpan>()),
+            occurence);
     }
 
     #endregion

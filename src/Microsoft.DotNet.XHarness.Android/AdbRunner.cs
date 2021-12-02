@@ -27,10 +27,10 @@ public class AdbRunner
     private readonly string _absoluteAdbExePath;
     private readonly ILogger _log;
     private readonly IAdbProcessManager _processManager;
-    private readonly Dictionary<string, string> _commandList = new()
+    private readonly Dictionary<string, string[]> _commandList = new()
     {
-        { "architecture", "shell getprop ro.product.cpu.abilist" },
-        { "app", "shell pm list packages -3" }
+        { "architecture", new[] { "shell", "getprop", "ro.product.cpu.abilist" } },
+        { "app", new[] { "shell", "pm", "list", "packages", "-3" } },
     };
 
     public int APIVersion => _api ?? GetAPIVersion();
@@ -85,7 +85,7 @@ public class AdbRunner
 
     private int GetAPIVersion()
     {
-        var output = RunAdbCommand("shell getprop ro.build.version.sdk");
+        var output = RunAdbCommand(new[] { "shell", "getprop", "ro.build.version.sdk" });
         return int.Parse(output.StandardOutput);
     }
 
@@ -113,22 +113,22 @@ public class AdbRunner
 
     public TimeSpan TimeToWaitForBootCompletion { get; set; } = TimeSpan.FromMinutes(5);
 
-    public string GetAdbVersion() => RunAdbCommand("version").StandardOutput;
+    public string GetAdbVersion() => RunAdbCommand(new[] { "version" }).StandardOutput;
 
-    public string GetAdbState() => RunAdbCommand("get-state").StandardOutput;
+    public string GetAdbState() => RunAdbCommand(new[] { "get-state" }).StandardOutput;
 
-    public string RebootAndroidDevice() => RunAdbCommand("reboot").StandardOutput;
+    public string RebootAndroidDevice() => RunAdbCommand(new[] { "reboot" }).StandardOutput;
 
-    public void ClearAdbLog() => RunAdbCommand("logcat -c");
+    public void ClearAdbLog() => RunAdbCommand(new[] { "logcat", "-c" });
 
-    public void EnableWifi(bool enable) => RunAdbCommand($"shell svc wifi {(enable ? "enable" : "disable")}");
+    public void EnableWifi(bool enable) => RunAdbCommand(new[] { "shell", "svc", "wifi", enable ? "enable" : "disable" });
 
     public void DumpAdbLog(string outputFilePath, string filterSpec = "")
     {
         // Workaround: Doesn't seem to have a flush() function and sometimes it doesn't have the full log on emulators.
         Thread.Sleep(3000);
 
-        var result = RunAdbCommand($"logcat -d {filterSpec}", TimeSpan.FromMinutes(2));
+        var result = RunAdbCommand(new[] { "logcat", "-d", filterSpec }, TimeSpan.FromMinutes(2));
         if (result.ExitCode != 0)
         {
             // Could throw here, but it would tear down a possibly otherwise acceptable execution.
@@ -155,7 +155,7 @@ public class AdbRunner
         // (Returns instantly if device is ready)
         // This can fail if _currentDevice is unset if there are multiple devices.
         _log.LogInformation("Waiting for device to be available (max 5 minutes)");
-        var result = RunAdbCommand("wait-for-device", TimeSpan.FromMinutes(5));
+        var result = RunAdbCommand(new[] { "wait-for-device" }, TimeSpan.FromMinutes(5));
         _log.LogDebug($"{result.StandardOutput}");
         if (result.ExitCode != 0)
         {
@@ -167,11 +167,11 @@ public class AdbRunner
         // to be '1' (as opposed to empty) to make subsequent automation happy.
         var began = DateTimeOffset.UtcNow;
         var waitingUntil = began.Add(TimeToWaitForBootCompletion);
-        var bootCompleted = RunAdbCommand($"shell getprop {AdbShellPropertyForBootCompletion}");
+        var bootCompleted = RunAdbCommand(new[] { "shell", "getprop", AdbShellPropertyForBootCompletion });
 
         while (!bootCompleted.StandardOutput.Trim().StartsWith("1") && DateTimeOffset.UtcNow < waitingUntil)
         {
-            bootCompleted = RunAdbCommand($"shell getprop {AdbShellPropertyForBootCompletion}");
+            bootCompleted = RunAdbCommand(new[] { "shell", "getprop", AdbShellPropertyForBootCompletion });
             _log.LogDebug($"{AdbShellPropertyForBootCompletion} = '{bootCompleted.StandardOutput.Trim()}'");
             Thread.Sleep((int)TimeSpan.FromSeconds(10).TotalMilliseconds);
         }
@@ -188,7 +188,7 @@ public class AdbRunner
 
     public void StartAdbServer()
     {
-        var result = RunAdbCommand("start-server");
+        var result = RunAdbCommand(new[] { "start-server" });
         _log.LogDebug($"{result.StandardOutput}");
         if (result.ExitCode != 0)
         {
@@ -198,7 +198,7 @@ public class AdbRunner
 
     public void KillAdbServer()
     {
-        var result = RunAdbCommand("kill-server");
+        var result = RunAdbCommand(new[] { "kill-server" });
         if (result.ExitCode != 0)
         {
             throw new Exception($"Error killing ADB Server.  Std out:{result.StandardOutput} Std. Err: {result.StandardError}");
@@ -217,7 +217,7 @@ public class AdbRunner
             throw new FileNotFoundException($"Could not find {apkPath}", apkPath);
         }
 
-        var result = RunAdbCommand($"install \"{apkPath}\"");
+        var result = RunAdbCommand(new[] { "install", apkPath });
 
         // Two possible retry scenarios, theoretically both can happen on the same run:
 
@@ -227,7 +227,7 @@ public class AdbRunner
             _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install");
             KillAdbServer();
             StartAdbServer();
-            result = RunAdbCommand($"install \"{apkPath}\"");
+            result = RunAdbCommand(new[] { "install", apkPath });
         }
 
         // 2. Installation cache on device is messed up; restarting the device reliably seems to unblock this (unless the device is actually full, if so this will error the same)
@@ -236,7 +236,7 @@ public class AdbRunner
             _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{Environment.NewLine}Output:{result}");
             RebootAndroidDevice();
             WaitForDevice();
-            result = RunAdbCommand($"install \"{apkPath}\"");
+            result = RunAdbCommand(new[] { "install", apkPath });
         }
 
         // 3. Installation timed out or failed with exception; restarting the ADB server, reboot the device and give more time for installation
@@ -248,7 +248,7 @@ public class AdbRunner
             StartAdbServer();
             RebootAndroidDevice();
             WaitForDevice();
-            result = RunAdbCommand($"install \"{apkPath}\"", TimeSpan.FromMinutes(10));
+            result = RunAdbCommand(new[] { "install", apkPath }, TimeSpan.FromMinutes(10));
         }
 
         if (result.ExitCode != 0)
@@ -271,7 +271,7 @@ public class AdbRunner
         }
 
         _log.LogInformation($"Attempting to remove apk '{apkName}': ");
-        var result = RunAdbCommand($"uninstall {apkName}");
+        var result = RunAdbCommand(new[] { "uninstall", apkName });
 
         // See note above in install()
         if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE)
@@ -280,7 +280,7 @@ public class AdbRunner
 
             KillAdbServer();
             StartAdbServer();
-            result = RunAdbCommand($"uninstall {apkName}");
+            result = RunAdbCommand(new[] { "uninstall", apkName });
         }
 
         if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
@@ -303,7 +303,7 @@ public class AdbRunner
     public int KillApk(string apkName)
     {
         _log.LogInformation($"Killing all running processes for '{apkName}': ");
-        var result = RunAdbCommand($"shell am kill --user all {apkName}");
+        var result = RunAdbCommand(new[] { "shell", "am", "kill", "--user", "all", apkName});
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
         {
             _log.LogError($"Error:{Environment.NewLine}{result}");
@@ -331,7 +331,7 @@ public class AdbRunner
             _log.LogInformation($"Attempting to pull contents of {devicePath} to {localPath}");
             var copiedFiles = new List<string>();
 
-            var result = RunAdbCommand($"pull {devicePath} {tempFolder}");
+            var result = RunAdbCommand(new[] { "pull", devicePath, tempFolder });
 
             if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
             {
@@ -372,9 +372,20 @@ public class AdbRunner
     {
         var devicesAndProperties = new Dictionary<string, string?>();
 
-        string command = _commandList[property];
+        IEnumerable<string> GetAdbArguments(string deviceSerial)
+        {
+            var args = new List<string>
+            {
+                "-s",
+                deviceSerial,
+            };
 
-        var result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
+            args.AddRange(_commandList[property]);
+
+            return args;
+        }
+
+        var result = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
         string[] standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
         // Retry up to 3 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
@@ -386,7 +397,7 @@ public class AdbRunner
         {
             _log.LogDebug($"Unexpected response from adb devices -l:{Environment.NewLine}Exit code={result.ExitCode}{Environment.NewLine}Std. Output: {result.StandardOutput} {Environment.NewLine}Std. Error: {result.StandardError}");
             Thread.Sleep(10000);
-            result = RunAdbCommand("devices -l", TimeSpan.FromSeconds(30));
+            result = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
             standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
         }
 
@@ -402,7 +413,7 @@ public class AdbRunner
                 {
                     var deviceSerial = lineParts[0];
 
-                    var shellResult = RunAdbCommand($"-s {deviceSerial} {command}", TimeSpan.FromSeconds(30));
+                    var shellResult = RunAdbCommand(GetAdbArguments(deviceSerial), TimeSpan.FromSeconds(30));
 
                     // Assumption:  All Devices on a machine running Xharness should attempt to be online or disconnected.
                     retriesLeft = 30; // Max 5 minutes (30 attempts * 10 second waits)
@@ -411,7 +422,7 @@ public class AdbRunner
                         _log.LogWarning($"Device '{deviceSerial}' is offline; retrying up to one minute.");
                         Thread.Sleep(10000);
 
-                        shellResult = RunAdbCommand($"-s {deviceSerial} {command}", TimeSpan.FromSeconds(30));
+                        shellResult = RunAdbCommand(GetAdbArguments(deviceSerial), TimeSpan.FromSeconds(30));
                     }
 
                     if (shellResult.ExitCode == (int)AdbExitCodes.SUCCESS)
@@ -502,30 +513,28 @@ public class AdbRunner
     public ProcessExecutionResults RunApkInstrumentation(string apkName, string? instrumentationClassName, Dictionary<string, string> args, TimeSpan timeout)
     {
         string displayName = string.IsNullOrEmpty(instrumentationClassName) ? "{default}" : instrumentationClassName;
-        string appArguments = "";
-        if (args.Count > 0)
-        {
-            foreach (string key in args.Keys)
-            {
-                appArguments = $"{appArguments} -e {key} {args[key]}";
-            }
-        }
 
-        string command = $"shell am instrument {appArguments} -w {apkName}";
+        var adbArgs = new List<string>
+        {
+            "shell", "am", "instrument"
+        };
+
+        adbArgs.AddRange(args.SelectMany(arg => new[] { "-e", arg.Key, arg.Value }));
+        adbArgs.Add("-w");
+
         if (string.IsNullOrEmpty(instrumentationClassName))
         {
             _log.LogInformation($"Starting default instrumentation class on {apkName} (exit code 0 == success)");
+            adbArgs.Add(apkName);
         }
         else
         {
             _log.LogInformation($"Starting instrumentation class '{instrumentationClassName}' on {apkName}");
-            command = $"{command}/{instrumentationClassName}";
+            adbArgs.Add($"{apkName}/{instrumentationClassName}");
         }
-        _log.LogDebug($"Raw command: '{command}'");
 
-        var stopWatch = new Stopwatch();
-        stopWatch.Start();
-        var result = RunAdbCommand(command, timeout);
+        var stopWatch = Stopwatch.StartNew();
+        var result = RunAdbCommand(adbArgs, timeout);
         stopWatch.Stop();
 
         if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
@@ -536,7 +545,9 @@ public class AdbRunner
         {
             _log.LogInformation($"Running instrumentation class {displayName} took {stopWatch.Elapsed.TotalSeconds} seconds");
         }
+
         _log.LogDebug(result.ToString());
+
         return result;
     }
 
@@ -544,16 +555,16 @@ public class AdbRunner
 
     #region Process runner helpers
 
-    public ProcessExecutionResults RunAdbCommand(string command) => RunAdbCommand(command, TimeSpan.FromMinutes(5));
+    public ProcessExecutionResults RunAdbCommand(IEnumerable<string> arguments) => RunAdbCommand(arguments, TimeSpan.FromMinutes(5));
 
-    public ProcessExecutionResults RunAdbCommand(string command, TimeSpan timeOut)
+    public ProcessExecutionResults RunAdbCommand(IEnumerable<string> arguments, TimeSpan timeOut)
     {
         if (!File.Exists(_absoluteAdbExePath))
         {
             throw new FileNotFoundException($"Provided path for adb.exe was not valid ('{_absoluteAdbExePath}')", _absoluteAdbExePath);
         }
 
-        return _processManager.Run(_absoluteAdbExePath, command, timeOut);
+        return _processManager.Run(_absoluteAdbExePath, arguments, timeOut);
     }
 
     #endregion

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
-using System.Threading;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Android.Execution;
@@ -18,15 +20,14 @@ public class AdbProcessManager : IAdbProcessManager
     /// </summary>
     public string DeviceSerial { get; set; } = string.Empty;
 
-    public ProcessExecutionResults Run(string adbExePath, string arguments) => Run(adbExePath, arguments, TimeSpan.FromMinutes(5));
-
-    public ProcessExecutionResults Run(string adbExePath, string arguments, TimeSpan timeOut)
+    public ProcessExecutionResults Run(string adbExePath, IEnumerable<string> arguments, TimeSpan timeOut)
     {
-        string deviceSerialArgs = string.IsNullOrEmpty(DeviceSerial) ? string.Empty : $"-s {DeviceSerial}";
+        if (!string.IsNullOrEmpty(DeviceSerial))
+        {
+            arguments = arguments.Prepend(DeviceSerial).Prepend("-s");
+        }
 
-        _log.LogDebug($"Executing command: '{adbExePath} {deviceSerialArgs} {arguments}'");
-
-        var processStartInfo = new ProcessStartInfo
+        var processStartInfo = new ProcessStartInfo()
         {
             CreateNoWindow = true,
             UseShellExecute = false,
@@ -34,9 +35,17 @@ public class AdbProcessManager : IAdbProcessManager
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             FileName = adbExePath,
-            Arguments = $"{deviceSerialArgs} {arguments}",
         };
+
+        foreach (var arg in arguments)
+        {
+            processStartInfo.ArgumentList.Add(arg);
+        }
+
+        _log.LogDebug($"Executing command: '{adbExePath} {StringUtils.FormatArguments(processStartInfo.ArgumentList)}'");
+
         var p = new Process() { StartInfo = processStartInfo };
+
         var standardOut = new StringBuilder();
         var standardErr = new StringBuilder();
 
@@ -63,7 +72,6 @@ public class AdbProcessManager : IAdbProcessManager
         };
 
         p.Start();
-
         p.BeginOutputReadLine();
         p.BeginErrorReadLine();
 
@@ -90,15 +98,15 @@ public class AdbProcessManager : IAdbProcessManager
         p.Close();
 
         lock (standardOut)
-            lock (standardErr)
+        lock (standardErr)
+        {
+            return new ProcessExecutionResults()
             {
-                return new ProcessExecutionResults()
-                {
-                    ExitCode = exitCode,
-                    StandardOutput = standardOut.ToString(),
-                    StandardError = standardErr.ToString(),
-                    TimedOut = timedOut
-                };
-            }
+                ExitCode = exitCode,
+                StandardOutput = standardOut.ToString(),
+                StandardError = standardErr.ToString(),
+                TimedOut = timedOut
+            };
+        }
     }
 }

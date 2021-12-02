@@ -21,6 +21,7 @@ public class AndroidCommandSet : CommandSet
         Add(new AndroidInstallCommand());
         Add(new AndroidRunCommand());
         Add(new AndroidUninstallCommand());
+        Add(new AndroidAdbCommand());
         Add(new AndroidGetStateCommand());
     }
 }

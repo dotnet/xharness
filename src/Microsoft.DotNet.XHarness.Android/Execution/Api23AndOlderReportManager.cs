@@ -23,7 +23,7 @@ internal class Api23AndOlderReportManager : IReportManager
         // give some time for bug report to be available
         Thread.Sleep(3000);
 
-        var result = runner.RunAdbCommand($"bugreport", TimeSpan.FromMinutes(5));
+        var result = runner.RunAdbCommand(new[] { "bugreport" }, TimeSpan.FromMinutes(5));
 
         if (result.ExitCode != 0)
         {

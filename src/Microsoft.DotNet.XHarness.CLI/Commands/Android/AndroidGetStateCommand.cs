@@ -27,12 +27,6 @@ internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandAr
     {
         var runner = new AdbRunner(logger);
 
-        if (Arguments.ShowAdbPath)
-        {
-            Console.WriteLine(runner.AdbExePath);
-            return Task.FromResult(ExitCode.SUCCESS);
-        }
-
         logger.LogInformation("Getting state of ADB and attached Android device(s)");
         try
         {
