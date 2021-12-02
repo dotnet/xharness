@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
@@ -139,7 +140,7 @@ public class SimulatorDevice : ISimulatorDevice
         }
 
         var result = true;
-        if (File.Exists(tccDB))
+        if (bundleIdentifiers.Any() && File.Exists(tccDB))
         {
             result &= await _tCCDatabase.AgreeToPromptsAsync(SimRuntime, tccDB, UDID, log, bundleIdentifiers);
         }

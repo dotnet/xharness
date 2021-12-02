@@ -17,5 +17,6 @@ public class SimulatorsCommandSet : CommandSet
         Add(new ListCommand());
         Add(new FindCommand());
         Add(new InstallCommand());
+        Add(new AppleResetSimulatorCommand(AppleCommandSet.GetAppleDependencies()));
     }
 }
