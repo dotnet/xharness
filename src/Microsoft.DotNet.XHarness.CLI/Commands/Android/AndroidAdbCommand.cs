@@ -42,7 +42,7 @@ internal class AndroidAdbCommand : XHarnessCommand<AndroidAdbCommandArguments>
 
         try
         {
-            var result = runner.RunAdbCommand(string.Join(" ", PassThroughArguments), Arguments.Timeout);
+            var result = runner.RunAdbCommand(PassThroughArguments, Arguments.Timeout);
 
             Console.Write(result.StandardOutput);
             Console.Error.Write(result.StandardError);

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.Extensions.Logging;
@@ -18,15 +20,16 @@ public class AdbProcessManager : IAdbProcessManager
     /// </summary>
     public string DeviceSerial { get; set; } = string.Empty;
 
-    public ProcessExecutionResults Run(string adbExePath, string arguments) => Run(adbExePath, arguments, TimeSpan.FromMinutes(5));
-
-    public ProcessExecutionResults Run(string adbExePath, string arguments, TimeSpan timeOut)
+    public ProcessExecutionResults Run(string adbExePath, IEnumerable<string> arguments, TimeSpan timeOut)
     {
-        string deviceSerialArgs = string.IsNullOrEmpty(DeviceSerial) ? string.Empty : $"-s {DeviceSerial}";
+        if (string.IsNullOrEmpty(DeviceSerial))
+        {
+            arguments = arguments.Prepend("-s").Prepend(DeviceSerial);
+        }
 
-        arguments = StringUtils.FormatArguments(arguments);
+        var processArgs = StringUtils.FormatArguments(arguments.ToArray());
 
-        _log.LogDebug($"Executing command: '{adbExePath} {deviceSerialArgs} {arguments}'");
+        _log.LogDebug($"Executing command: '{adbExePath} {processArgs}'");
 
         var processStartInfo = new ProcessStartInfo
         {
@@ -36,8 +39,9 @@ public class AdbProcessManager : IAdbProcessManager
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             FileName = adbExePath,
-            Arguments = $"{deviceSerialArgs} {arguments}",
+            Arguments = processArgs,
         };
+
         var p = new Process() { StartInfo = processStartInfo };
         var standardOut = new StringBuilder();
         var standardErr = new StringBuilder();

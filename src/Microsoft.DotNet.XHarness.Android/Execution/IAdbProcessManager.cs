@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Microsoft.DotNet.XHarness.Android.Execution;
@@ -30,10 +31,12 @@ public class ProcessExecutionResults
 
 }
 
-// interface that helps to manage the different processes in the app.
+/// <summary>
+/// Interface for calling the adb binary in a separate process.
+/// </summary>
 public interface IAdbProcessManager
 {
     public string DeviceSerial { get; set; }
-    public ProcessExecutionResults Run(string filename, string arguments);
-    public ProcessExecutionResults Run(string filename, string arguments, TimeSpan timeout);
+
+    public ProcessExecutionResults Run(string filename, IEnumerable<string> arguments, TimeSpan timeout);
 }
