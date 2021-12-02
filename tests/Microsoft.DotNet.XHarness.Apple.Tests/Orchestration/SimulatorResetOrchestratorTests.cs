@@ -84,7 +84,7 @@ public class SimulatorResetOrchestratorTests : OrchestratorTestBase
     }
 
     [Fact]
-    public async Task TryMaccatalystResetTest()
+    public async Task TryMacCatalystResetTest()
     {
         // Setup
         var testTarget = new TestTargetOs(TestTarget.MacCatalyst, null);
