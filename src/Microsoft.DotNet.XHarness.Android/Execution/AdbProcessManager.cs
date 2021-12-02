@@ -24,7 +24,7 @@ public class AdbProcessManager : IAdbProcessManager
     {
         if (!string.IsNullOrEmpty(DeviceSerial))
         {
-            arguments = arguments.Prepend("-s").Prepend(DeviceSerial);
+            arguments = arguments.Prepend(DeviceSerial).Prepend("-s");
         }
 
         var processArgs = StringUtils.FormatArguments(arguments.ToArray());
