@@ -27,11 +27,7 @@ public class AdbProcessManager : IAdbProcessManager
             arguments = arguments.Prepend(DeviceSerial).Prepend("-s");
         }
 
-        var processArgs = StringUtils.FormatArguments(arguments.ToArray());
-
-        _log.LogDebug($"Executing command: '{adbExePath} {processArgs}'");
-
-        var processStartInfo = new ProcessStartInfo
+        var processStartInfo = new ProcessStartInfo()
         {
             CreateNoWindow = true,
             UseShellExecute = false,
@@ -39,10 +35,17 @@ public class AdbProcessManager : IAdbProcessManager
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             FileName = adbExePath,
-            Arguments = processArgs,
         };
 
+        foreach (var arg in arguments)
+        {
+            processStartInfo.ArgumentList.Add(arg);
+        }
+
+        _log.LogDebug($"Executing command: '{adbExePath} {StringUtils.FormatArguments(processStartInfo.ArgumentList)}'");
+
         var p = new Process() { StartInfo = processStartInfo };
+
         var standardOut = new StringBuilder();
         var standardErr = new StringBuilder();
 
@@ -69,7 +72,6 @@ public class AdbProcessManager : IAdbProcessManager
         };
 
         p.Start();
-
         p.BeginOutputReadLine();
         p.BeginErrorReadLine();
 
