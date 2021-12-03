@@ -125,7 +125,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
                 environmentalVariables,
                 passthroughArguments,
                 signalAppEnd,
-                cancellationToken);
+                cancellationToken); // This cancellation token doesn't include the launch-timeout one
         }
 
         Task<ExitCode> ExecuteApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
@@ -145,7 +145,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
                 environmentalVariables,
                 passthroughArguments,
                 signalAppEnd,
-                cancellationToken);
+                cancellationToken); // This cancellation token doesn't include the launch-timeout one
         }
 
         return await OrchestrateOperation(

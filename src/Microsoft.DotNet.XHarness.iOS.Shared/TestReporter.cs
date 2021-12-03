@@ -296,8 +296,16 @@ public class TestReporter : ITestReporter
         else
         {
             _cancellationTokenSource.Cancel();
-            _mainLog.WriteLine("Test execution timed out after {0} minute(s).", _timeoutWatch.Elapsed.TotalMinutes);
             _timedout = true;
+
+            if (_listener.ConnectedTask.IsCompleted && _listener.ConnectedTask.Result)
+            {
+                _mainLog.WriteLine($"Test execution timed out after {_timeoutWatch.Elapsed.TotalMinutes:0.##} minutes");
+            }
+            else
+            {
+                _mainLog.WriteLine($"Test failed to start in {_timeoutWatch.Elapsed.TotalMinutes:0.##} minutes");
+            }
         }
     }
 
@@ -617,7 +625,15 @@ public class TestReporter : ITestReporter
 
         if (_timedout)
         {
-            result.ExecutingResult = TestExecutingResult.TimedOut;
+            // Did the test execution start?
+            if (_listener.ConnectedTask.IsCompleted && _listener.ConnectedTask.Result)
+            {
+                result.ExecutingResult = TestExecutingResult.TimedOut;
+            }
+            else
+            {
+                result.ExecutingResult = TestExecutingResult.LaunchTimedOut;
+            }
         }
         else if (_launchFailure)
         {
