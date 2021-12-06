@@ -76,7 +76,10 @@ public class TestReporter : ITestReporter
 
     public bool ResultsUseXml => _xmlJargon != XmlResultJargon.Missing;
 
-    public TestReporter(IMlaunchProcessManager processManager,
+    private bool TestExecutionStarted => _listener.ConnectedTask.IsCompleted && _listener.ConnectedTask.Result;
+
+    public TestReporter(
+        IMlaunchProcessManager processManager,
         IFileBackedLog mainLog,
         IReadableLog runLog,
         ILogs logs,
@@ -284,29 +287,31 @@ public class TestReporter : ITestReporter
         if (launchResult.IsFaulted)
         {
             _mainLog.WriteLine($"Test execution failed: {launchResult.Exception}");
+            return;
         }
-        else if (launchResult.IsCanceled)
+
+        if (launchResult.IsCanceled)
         {
             _mainLog.WriteLine("Test execution was cancelled");
+            return;
         }
-        else if (launchResult.Result)
+
+        if (launchResult.Result)
         {
             _mainLog.WriteLine("Test execution started");
+            return;
         }
-        else
-        {
-            _cancellationTokenSource.Cancel();
-            _timedout = true;
+        
+        _cancellationTokenSource.Cancel();
+        _timedout = true;
 
-            if (_listener.ConnectedTask.IsCompleted && _listener.ConnectedTask.Result)
-            {
-                _mainLog.WriteLine($"Test execution timed out after {_timeoutWatch.Elapsed.TotalMinutes:0.##} minutes");
-            }
-            else
-            {
-                _mainLog.WriteLine($"Test failed to start in {_timeoutWatch.Elapsed.TotalMinutes:0.##} minutes");
-            }
+        if (TestExecutionStarted)
+        {
+            _mainLog.WriteLine($"Test execution timed out after {_timeoutWatch.Elapsed.TotalMinutes:0.##} minutes");
+            return;
         }
+
+        _mainLog.WriteLine($"Test failed to start in {_timeoutWatch.Elapsed.TotalMinutes:0.##} minutes");
     }
 
     public async Task CollectSimulatorResult(ProcessExecutionResult runResult)
@@ -517,7 +522,7 @@ public class TestReporter : ITestReporter
             return;
         }
 
-        if (!string.IsNullOrEmpty(crashReason))
+        if (string.IsNullOrEmpty(crashReason))
         {
             _resultParser.GenerateFailure(
                 _logs,
@@ -528,8 +533,11 @@ public class TestReporter : ITestReporter
                 $"App crashed: {failure}",
                 _mainLog.FullPath,
                 _xmlJargon);
+
+            return;
         }
-        else if (_launchFailure)
+
+        if (_launchFailure)
         {
             _resultParser.GenerateFailure(
                 _logs,
@@ -540,8 +548,11 @@ public class TestReporter : ITestReporter
                 $"{failure} on {_deviceName}",
                 _mainLog.FullPath,
                 _xmlJargon);
+
+            return;
         }
-        else if (!_isSimulatorTest && crashed && string.IsNullOrEmpty(crashReason))
+
+        if (!_isSimulatorTest && crashed && string.IsNullOrEmpty(crashReason))
         {
             // this happens more that what we would like on devices, the main reason most of the time is that we have had netwoking problems and the
             // tcp connection could not be stablished. We are going to report it as an error since we have not parsed the logs, evne when the app might have
@@ -625,8 +636,7 @@ public class TestReporter : ITestReporter
 
         if (_timedout)
         {
-            // Did the test execution start?
-            if (_listener.ConnectedTask.IsCompleted && _listener.ConnectedTask.Result)
+            if (TestExecutionStarted)
             {
                 result.ExecutingResult = TestExecutingResult.TimedOut;
             }
