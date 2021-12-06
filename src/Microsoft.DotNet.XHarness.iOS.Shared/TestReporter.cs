@@ -522,7 +522,7 @@ public class TestReporter : ITestReporter
             return;
         }
 
-        if (string.IsNullOrEmpty(crashReason))
+        if (!string.IsNullOrEmpty(crashReason))
         {
             _resultParser.GenerateFailure(
                 _logs,
