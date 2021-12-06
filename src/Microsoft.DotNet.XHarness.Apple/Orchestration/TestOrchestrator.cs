@@ -299,6 +299,10 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             case TestExecutingResult.Crashed:
                 return LogProblem("Application test run crashed", ExitCode.APP_LAUNCH_FAILURE);
 
+            case TestExecutingResult.LaunchTimedOut:
+                _logger.LogError("Application launch timed out before the test execution has started");
+                return ExitCode.APP_LAUNCH_TIMEOUT;
+
             case TestExecutingResult.TimedOut:
                 _logger.LogWarning($"Application test run timed out");
                 return ExitCode.TIMED_OUT;
