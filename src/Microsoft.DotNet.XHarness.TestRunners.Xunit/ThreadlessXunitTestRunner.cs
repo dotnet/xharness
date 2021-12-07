@@ -42,11 +42,11 @@ internal class ThreadlessXunitTestRunner
             var discoverer = new ThreadlessXunitDiscoverer(assemblyInfo, new NullSourceInformationProvider(), discoverySink);
 
             discoverer.FindWithoutThreads(includeSourceInformation: false, discoverySink, discoveryOptions);
-            discoverySink.Finished.WaitOne();
             var testCasesToRun = discoverySink.TestCases.Where(filters.Filter).ToList();
             Console.WriteLine($"Discovered:  {assemblyFileName} (found {testCasesToRun.Count} of {discoverySink.TestCases.Count} test cases)");
 
-            var summarySink = new DelegatingExecutionSummarySink(testSink, () => false, (completed, summary) => { Console.WriteLine($"{Environment.NewLine}=== TEST EXECUTION SUMMARY ==={Environment.NewLine}Total: {summary.Total}, Errors: 0, Failed: {summary.Failed}, Skipped: {summary.Skipped}, Time: {TimeSpan.FromSeconds((double)summary.Time).TotalSeconds}s{Environment.NewLine}"); });
+            var summaryTaskSource = new TaskCompletionSource<ExecutionSummary>();
+            var summarySink = new DelegatingExecutionSummarySink(testSink, () => false, (completed, summary) => summaryTaskSource.SetResult(summary));
             var resultsXmlAssembly = new XElement("assembly");
             var resultsSink = new DelegatingXmlCreationSink(summarySink, resultsXmlAssembly);
 
@@ -63,10 +63,8 @@ internal class ThreadlessXunitTestRunner
 
             controller.RunTests(testCasesToRun, resultsSink, testOptions);
 
-            while (!resultsSink.Finished.WaitOne(0))
-            {
-                await Task.Delay(1);
-            }
+            var summary = await summaryTaskSource.Task;
+            Console.WriteLine($"{Environment.NewLine}=== TEST EXECUTION SUMMARY ==={Environment.NewLine}Total: {summary.Total}, Errors: 0, Failed: {summary.Failed}, Skipped: {summary.Skipped}, Time: {TimeSpan.FromSeconds((double)summary.Time).TotalSeconds}s{Environment.NewLine}");
 
             if (printXml)
             {
