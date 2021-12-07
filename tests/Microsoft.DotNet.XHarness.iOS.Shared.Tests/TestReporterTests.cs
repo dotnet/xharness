@@ -71,7 +71,7 @@ public class TestReporterTests : IDisposable
         return GetType().Assembly.GetManifestResourceStream(name);
     }
 
-    private TestReporter BuildTestResult()
+    private TestReporter BuildTestReporter()
     {
         _logs.Setup(l => l.Directory).Returns(_logsDirectory);
 
@@ -101,11 +101,11 @@ public class TestReporterTests : IDisposable
         // not dealing with the launch faliure
         _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
 
-        var testResult = BuildTestResult();
+        var testReporter = BuildTestReporter();
         var processResult = new ProcessExecutionResult() { TimedOut = false, ExitCode = 0 };
-        await testResult.CollectSimulatorResult(processResult);
+        await testReporter.CollectSimulatorResult(processResult);
         // we should have timeout, since the task completion source was never set
-        Assert.True(testResult.Success, "success");
+        Assert.True(testReporter.Success, "success");
 
         _processManager.Verify(p => p.KillTreeAsync(It.IsAny<int>(), It.IsAny<ILog>(), true), Times.Never);
     }
@@ -139,11 +139,11 @@ public class TestReporterTests : IDisposable
         // not dealing with the launch faliure
         _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(File.Create(tmpFile)));
 
-        var testResult = BuildTestResult();
+        var testReporter = BuildTestReporter();
         var processResult = new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 };
-        await testResult.CollectSimulatorResult(processResult);
+        await testReporter.CollectSimulatorResult(processResult);
         // we should have timeout, since the task completion source was never set
-        Assert.False(testResult.Success, "success");
+        Assert.False(testReporter.Success, "success");
 
         // verify that we do not try to kill a process that never got started
         _processManager.Verify(p => p.KillTreeAsync(It.IsAny<int>(), It.IsAny<ILog>(), true), Times.Never);
@@ -163,17 +163,17 @@ public class TestReporterTests : IDisposable
         // ensure we do not consider it to be a launch failure
         _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
 
-        var testResult = BuildTestResult();
-        await testResult.CollectSimulatorResult(processResult);
+        var testReporter = BuildTestReporter();
+        await testReporter.CollectSimulatorResult(processResult);
 
         // we should have timeout, since the task completion source was never set
         if (processExitCode != 0)
         {
-            Assert.False(testResult.Success, "success");
+            Assert.False(testReporter.Success, "success");
         }
         else
         {
-            Assert.True(testResult.Success, "success");
+            Assert.True(testReporter.Success, "success");
         }
 
         if (processExitCode != 0)
@@ -198,11 +198,11 @@ public class TestReporterTests : IDisposable
         // not dealing with the launch faliure
         _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
 
-        var testResult = BuildTestResult();
+        var testReporter = BuildTestReporter();
         var processResult = new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 };
-        await testResult.CollectDeviceResult(processResult);
+        await testReporter.CollectDeviceResult(processResult);
         // we should have timeout, since the task completion source was never set
-        Assert.False(testResult.Success, "success");
+        Assert.False(testReporter.Success, "success");
     }
 
     [Theory]
@@ -216,26 +216,26 @@ public class TestReporterTests : IDisposable
         // ensure we do not consider it to be a launch failure
         _runLog.Setup(l => l.GetReader()).Returns(new StreamReader(GetRunLogSample()));
 
-        var testResult = BuildTestResult();
-        await testResult.CollectDeviceResult(processResult);
+        var testReporter = BuildTestReporter();
+        await testReporter.CollectDeviceResult(processResult);
 
         // we should have timeout, since the task completion source was never set
         if (processExitCode != 0)
         {
-            Assert.False(testResult.Success, "success");
+            Assert.False(testReporter.Success, "success");
         }
         else
         {
-            Assert.True(testResult.Success, "success");
+            Assert.True(testReporter.Success, "success");
         }
     }
 
     [Fact]
     public void LaunchCallbackFaultedTest()
     {
-        var testResult = BuildTestResult();
+        var testReporter = BuildTestReporter();
         var t = Task.FromException<bool>(new Exception("test"));
-        testResult.LaunchCallback(t);
+        testReporter.LaunchCallback(t);
         // verify that we did report the launch proble
         _mainLog.Verify(l => l.WriteLine(
            It.Is<string>(s => s.StartsWith($"Test execution failed:"))), Times.Once);
@@ -244,10 +244,10 @@ public class TestReporterTests : IDisposable
     [Fact]
     public void LaunchCallbackCanceledTest()
     {
-        var testResult = BuildTestResult();
+        var testReporter = BuildTestReporter();
         var tcs = new TaskCompletionSource<bool>();
         tcs.TrySetCanceled();
-        testResult.LaunchCallback(tcs.Task);
+        testReporter.LaunchCallback(tcs.Task);
         // verify we notify that the execution was canceled
         _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test execution was cancelled"))), Times.Once);
     }
@@ -255,10 +255,32 @@ public class TestReporterTests : IDisposable
     [Fact]
     public void LaunchCallbackSuccessTest()
     {
-        var testResult = BuildTestResult();
+        var testReporter = BuildTestReporter();
         var t = Task.FromResult(true);
-        testResult.LaunchCallback(t);
+        testReporter.LaunchCallback(t);
         _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test execution started"))), Times.Once);
+    }
+
+    [Fact]
+    public void LaunchCallbackTimedOutTest()
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        _listener.Setup(l => l.ConnectedTask).Returns(Task.FromResult(true));
+        var testReporter = BuildTestReporter();
+        var t = Task.FromResult(false);
+        testReporter.LaunchCallback(t);
+        _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Test execution timed out"))), Times.Once);
+    }
+
+    [Fact]
+    public void LaunchCallbackLaunchTimedOutTest()
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        _listener.Setup(l => l.ConnectedTask).Returns(Task.FromResult(false));
+        var testReporter = BuildTestReporter();
+        var t = Task.FromResult(false);
+        testReporter.LaunchCallback(t);
+        _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Test failed to start"))), Times.Once);
     }
 
     // copy the sample data to a given tmp file
@@ -281,17 +303,16 @@ public class TestReporterTests : IDisposable
     public async Task ParseResultFailingTestsTest()
     {
         var sample = CreateSampleFile("NUnitV3SampleFailure.xml");
-        var listenerLog = new Mock<IFileBackedLog>();
-        _listener.Setup(l => l.TestLog).Returns(listenerLog.Object);
-        listenerLog.Setup(l => l.FullPath).Returns(sample);
+        var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == sample);
+        _listener.Setup(l => l.TestLog).Returns(listenerLog);
 
-        var testResult = BuildTestResult();
-        var (result, resultMessage) = await testResult.ParseResult();
+        var testReporter = BuildTestReporter();
+        var (result, resultMessage) = await testReporter.ParseResult();
         Assert.Equal(TestExecutingResult.Failed, result);
         Assert.Equal("Tests run: 5 Passed: 3 Inconclusive: 1 Failed: 2 Ignored: 4", resultMessage);
 
         // ensure that we do  call the crash reporter end capture but with 0, since it was a success
-        _crashReporter.Verify(c => c.EndCaptureAsync(It.Is<TimeSpan>(t => t.TotalSeconds == 5)), Times.Once);
+        _crashReporter.Verify(c => c.EndCaptureAsync(TimeSpan.FromSeconds(5)), Times.Once);
     }
 
     [Fact]
@@ -299,12 +320,11 @@ public class TestReporterTests : IDisposable
     {
         // get a file with a success result so that we can return it as part of the listener log
         var sample = CreateSampleFile("NUnitV3SampleSuccess.xml");
-        var listenerLog = new Mock<IFileBackedLog>();
-        _listener.Setup(l => l.TestLog).Returns(listenerLog.Object);
-        listenerLog.Setup(l => l.FullPath).Returns(sample);
+        var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == sample);
+        _listener.Setup(l => l.TestLog).Returns(listenerLog);
 
-        var testResult = BuildTestResult();
-        var (result, resultMessage) = await testResult.ParseResult();
+        var testReporter = BuildTestReporter();
+        var (result, resultMessage) = await testReporter.ParseResult();
         Assert.Equal(TestExecutingResult.Succeeded, result);
         Assert.Equal("Tests run: 5 Passed: 4 Inconclusive: 0 Failed: 0 Ignored: 1", resultMessage);
 
@@ -341,12 +361,12 @@ public class TestReporterTests : IDisposable
         }
         _mainLog.Setup(l => l.FullPath).Returns(stderr);
 
-        var testResult = BuildTestResult();
+        var testReporter = BuildTestReporter();
         var processResult = new ProcessExecutionResult() { TimedOut = true, ExitCode = 0 };
-        await testResult.CollectDeviceResult(processResult);
+        await testReporter.CollectDeviceResult(processResult);
         // we should have timeout, since the task completion source was never set
-        var (result, failure) = await testResult.ParseResult();
-        Assert.False(testResult.Success, "success");
+        var (result, failure) = await testReporter.ParseResult();
+        Assert.False(testReporter.Success, "success");
 
         // verify that we state that there was a timeout
         _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test run never launched"))), Times.Once);
@@ -367,5 +387,44 @@ public class TestReporterTests : IDisposable
         }
         Assert.True(isTimeoutFailure, "correct xml");
         File.Delete(failurePath);
+    }
+
+    // it is possible that the app didn't connect in time in which case we should receive the LaunchTimedOut result
+    [Fact]
+    public async Task ParseResultLaunchTimedOutTest()
+    {
+        // set the listener to return a task that we are not going to complete
+        var cancellationTokenSource = new CancellationTokenSource();
+        var tcs = new TaskCompletionSource<bool>();
+        _listener.Setup(l => l.ConnectedTask).Returns(tcs.Task); // will never be set to be completed
+        var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
+        _listener.Setup(l => l.TestLog).Returns(listenerLog);
+
+        var failurePath = Path.Combine(_logsDirectory, "my-failure.xml");
+        var failureLog = new Mock<IFileBackedLog>();
+        failureLog.Setup(l => l.FullPath).Returns(failurePath);
+        _logs.Setup(l => l.Create(It.IsAny<string>(), It.IsAny<string>(), null)).Returns(failureLog.Object);
+
+        // create some data for the stderr
+        var stderr = Path.GetTempFileName();
+        using (var stream = File.Create(stderr))
+        using (var writer = new StreamWriter(stream))
+        {
+            await writer.WriteAsync("Some data to be added to stderr of the failure");
+        }
+        _mainLog.Setup(l => l.FullPath).Returns(stderr);
+
+        var testReporter = BuildTestReporter();
+
+        // this is called when launch timeout expires
+        // false means we never received a connection which would flip it to true
+        testReporter.LaunchCallback(Task.FromResult(false));
+
+        var (result, resultMessage) = await testReporter.ParseResult();
+        Assert.Equal(TestExecutingResult.LaunchTimedOut, result);
+
+        // verify that we do not try to kill a process that never got started
+        _processManager.Verify(p => p.KillTreeAsync(It.IsAny<int>(), It.IsAny<ILog>(), true), Times.Never);
+        _crashReporter.Verify(c => c.EndCaptureAsync(TimeSpan.FromSeconds(5)), Times.Once);
     }
 }

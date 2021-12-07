@@ -434,7 +434,7 @@ public class AppTester : AppRunnerBase, IAppTester
 
         deviceListener.ConnectedTask
             .TimeoutAfter(testLaunchTimeout)
-            .ContinueWith(testReporter.LaunchCallback)
+            .ContinueWith(testReporter.LaunchCallback, cancellationToken)
             .DoNotAwait();
 
         _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");

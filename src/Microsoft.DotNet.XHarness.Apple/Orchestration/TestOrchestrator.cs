@@ -125,7 +125,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
                 environmentalVariables,
                 passthroughArguments,
                 signalAppEnd,
-                cancellationToken);
+                cancellationToken); // This cancellation token doesn't include the launch-timeout one
         }
 
         Task<ExitCode> ExecuteApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
@@ -145,7 +145,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
                 environmentalVariables,
                 passthroughArguments,
                 signalAppEnd,
-                cancellationToken);
+                cancellationToken); // This cancellation token doesn't include the launch-timeout one
         }
 
         return await OrchestrateOperation(
@@ -298,6 +298,10 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
 
             case TestExecutingResult.Crashed:
                 return LogProblem("Application test run crashed", ExitCode.APP_LAUNCH_FAILURE);
+
+            case TestExecutingResult.LaunchTimedOut:
+                _logger.LogError("Application launch timed out before the test execution has started");
+                return ExitCode.APP_LAUNCH_TIMEOUT;
 
             case TestExecutingResult.TimedOut:
                 _logger.LogWarning($"Application test run timed out");

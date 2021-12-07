@@ -105,4 +105,10 @@ public enum ExitCode
     /// Hardware device is in some corrupted state, or just locked screen
     /// </summary>
     DEVICE_FAILURE = 89,
+
+    /// <summary>
+    /// This timeout occurs when the Apple app has been launched but hasn't
+    /// connected yetover TCP and --launch-timeout expires
+    /// </summary>
+    APP_LAUNCH_TIMEOUT = 90,
 }

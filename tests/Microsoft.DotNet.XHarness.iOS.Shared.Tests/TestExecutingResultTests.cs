@@ -14,37 +14,38 @@ public class TestExecutingResultTests
     [InlineData(
         new[]
         {
-                TestExecutingResult.Crashed,
-                TestExecutingResult.TimedOut,
-                TestExecutingResult.HarnessException,
-                TestExecutingResult.LaunchFailure,
-                TestExecutingResult.BuildFailure,
-                TestExecutingResult.Failed,
+            TestExecutingResult.Crashed,
+            TestExecutingResult.TimedOut,
+            TestExecutingResult.HarnessException,
+            TestExecutingResult.LaunchFailure,
+            TestExecutingResult.BuildFailure,
+            TestExecutingResult.LaunchTimedOut,
+            TestExecutingResult.Failed,
         },
         TestExecutingResult.Failed
     )]
     [InlineData(
         new[]
         {
-                TestExecutingResult.Building,
-                TestExecutingResult.BuildQueued,
-                TestExecutingResult.Built,
-                TestExecutingResult.Running,
-                TestExecutingResult.RunQueued,
-                TestExecutingResult.InProgress,
-                TestExecutingResult.StateMask,
+            TestExecutingResult.Building,
+            TestExecutingResult.BuildQueued,
+            TestExecutingResult.Built,
+            TestExecutingResult.Running,
+            TestExecutingResult.RunQueued,
+            TestExecutingResult.InProgress,
+            TestExecutingResult.StateMask,
         },
         TestExecutingResult.InProgress
     )]
     [InlineData(
         new[]
         {
-                TestExecutingResult.Succeeded,
-                TestExecutingResult.BuildSucceeded,
+            TestExecutingResult.Succeeded,
+            TestExecutingResult.BuildSucceeded,
         },
         TestExecutingResult.Succeeded
     )]
-    public void FlaggedIsPresentWhereItShouldBe(TestExecutingResult[] withFlag, TestExecutingResult flag)
+    public void FlagIsPresentWhereItShouldBe(TestExecutingResult[] withFlag, TestExecutingResult flag)
     {
         var withoutFlag = Enum.GetValues(typeof(TestExecutingResult))
             .Cast<TestExecutingResult>()
@@ -56,6 +57,24 @@ public class TestExecutingResultTests
         }
 
         foreach (var result in withFlag)
+        {
+            Assert.True(result.HasFlag(flag), $"{result} should have {flag}");
+        }
+    }
+
+    [Theory]
+    [InlineData(
+        TestExecutingResult.LaunchTimedOut,
+        new[]
+        {
+            TestExecutingResult.TimedOut,
+            TestExecutingResult.LaunchFailure,
+            TestExecutingResult.Failed,
+        }
+    )]
+    public void ResultHasFlag(TestExecutingResult result, TestExecutingResult[] flags)
+    {
+        foreach (var flag in flags)
         {
             Assert.True(result.HasFlag(flag), $"{result} should have {flag}");
         }
