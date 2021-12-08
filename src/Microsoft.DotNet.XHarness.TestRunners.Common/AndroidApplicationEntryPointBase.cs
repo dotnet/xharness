@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -7,11 +11,12 @@ using System.Threading.Tasks;
 #nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Common;
 
+/// <summary>
+/// Implementors should provide a text writter than will be used to
+/// write the logging of the tests that are executed.
+/// </summary>
 public abstract class AndroidApplicationEntryPointBase : ApplicationEntryPoint
-{    /// <summary>
-     /// Implementors should provide a text writter than will be used to
-     /// write the logging of the tests that are executed.
-     /// </summary>
+{
     public abstract TextWriter? Logger { get; }
 
     /// <summary>

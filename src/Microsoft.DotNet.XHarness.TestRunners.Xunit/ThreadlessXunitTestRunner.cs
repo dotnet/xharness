@@ -56,7 +56,7 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
             var discoverer = new ThreadlessXunitDiscoverer(assemblyInfo, new NullSourceInformationProvider(), discoverySink);
 
             discoverer.FindWithoutThreads(includeSourceInformation: false, discoverySink, discoveryOptions);
-            var testCasesToRun = discoverySink.TestCases.Where(t => _filters.IsExcluded(t)).ToList();
+            var testCasesToRun = discoverySink.TestCases.Where(t => !_filters.IsExcluded(t)).ToList();
             Console.WriteLine($"Discovered:  {assemblyFileName} (found {testCasesToRun.Count} of {discoverySink.TestCases.Count} test cases)");
 
             var summaryTaskSource = new TaskCompletionSource<ExecutionSummary>();
