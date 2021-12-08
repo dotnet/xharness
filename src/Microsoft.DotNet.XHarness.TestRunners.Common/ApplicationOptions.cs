@@ -16,7 +16,7 @@ internal enum XmlMode
     Wrapped = 1,
 }
 
-internal class ApplicationOptions
+public class ApplicationOptions
 {
     public static ApplicationOptions Current = new();
     private readonly List<string> _singleMethodFilters = new();

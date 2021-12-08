@@ -28,30 +28,12 @@ public abstract class iOSApplicationEntryPointBase : ApplicationEntryPoint
             writer = null; // null means we will fall back to console output
         }
 
-        // we generate the logs in two different ways depending if the generate xml flag was
-        // provided. If it was, we will write the xml file to the tcp writer if present, else
-        // we will write the normal console output using the LogWriter
         using (writer)
         {
             var logger = (writer == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, writer);
             logger.MinimumLogLevel = MinimumLogLevel.Info;
 
-            // if we have ignore files, ignore those tests
-            var runner = await InternalRunAsync(logger);
-
-            WriteResults(runner, options, logger, writer ?? Console.Out);
-
-            logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests + runner.SkippedTests}");
-
-            if (options.AppEndTag != null)
-            {
-                logger.Info(options.AppEndTag);
-            }
-
-            if (options.TerminateAfterExecution)
-            {
-                TerminateWithSuccess();
-            }
+            await InternalRunAsync(options, writer, writer);
         }
     }
 }

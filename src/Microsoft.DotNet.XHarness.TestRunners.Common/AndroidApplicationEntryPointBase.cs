@@ -29,41 +29,7 @@ public abstract class AndroidApplicationEntryPointBase : ApplicationEntryPoint
     public override async Task RunAsync()
     {
         var options = ApplicationOptions.Current;
-        // we generate the logs in two different ways depending if the generate xml flag was
-        // provided. If it was, we will write the xml file to the tcp writer if present, else
-        // we will write the normal console output using the LogWriter
-        var logger = (Logger == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, Logger);
-        logger.MinimumLogLevel = MinimumLogLevel.Info;
-
-        var runner = await InternalRunAsync(logger);
-        if (options.EnableXml)
-        {
-            if (TestsResultsFinalPath == null)
-            {
-                throw new InvalidOperationException("Tests results final path cannot be null.");
-            }
-
-            using (var stream = File.Create(TestsResultsFinalPath))
-            using (var writer = new StreamWriter(stream))
-            {
-                WriteResults(runner, options, logger, writer);
-            }
-        }
-        else
-        {
-            WriteResults(runner, options, logger, Console.Out);
-        }
-
-        logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests}");
-
-        if (options.AppEndTag != null)
-        {
-            logger.Info(options.AppEndTag);
-        }
-
-        if (options.TerminateAfterExecution)
-        {
-            TerminateWithSuccess();
-        }
+        using TextWriter? resultsFileMaybe = options.EnableXml ? File.CreateText(TestsResultsFinalPath) : null;
+        await InternalRunAsync(options, Logger, resultsFileMaybe);
     }
 }

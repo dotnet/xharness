@@ -3,28 +3,30 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Common;
 
 public class LogWriter
 {
     private readonly TextWriter _writer;
-    private readonly IDevice _device;
+    private readonly IDevice? _device;
 
     public MinimumLogLevel MinimumLogLevel { get; set; } = MinimumLogLevel.Info;
 
     public LogWriter() : this(null, Console.Out) { }
 
-    public LogWriter(IDevice device) : this(device, Console.Out) { }
+    public LogWriter(IDevice? device) : this(device, Console.Out) { }
 
     public LogWriter(TextWriter w) : this(null, w) { }
 
-    public LogWriter(IDevice device, TextWriter writer)
+    public LogWriter(IDevice? device, TextWriter writer)
     {
         _writer = writer ?? Console.Out;
         _device = device;
-        if (_device != null) // we just write the header if we do have the device info
+        if (_device is not null) // we just write the header if we do have the device info
         {
             InitLogging();
         }
@@ -35,6 +37,7 @@ public class LogWriter
 
     public void InitLogging()
     {
+        Debug.Assert(_device is not null);
         // print some useful info
         _writer.WriteLine("[Runner executing:\t{0}]", "Run everything");
         _writer.WriteLine("[{0}:\t{1} v{2}]", _device.Model, _device.SystemName, _device.SystemVersion);

@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-
+#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Common;
 
 /// <summary>
@@ -39,24 +39,24 @@ public abstract class ApplicationEntryPoint
     /// <summary>
     /// Event raised when the test run has started.
     /// </summary>
-    public event EventHandler TestsStarted;
+    public event EventHandler? TestsStarted;
 
     /// <summary>
     /// Event raised when the test run has completed.
     /// </summary>
-    public event EventHandler<TestRunResult> TestsCompleted;
+    public event EventHandler<TestRunResult>? TestsCompleted;
 
     // fwd the events from the runner so that clients can connect to them
 
     /// <summary>
     /// Event raised when a test has started.
     /// </summary>
-    public event EventHandler<string> TestStarted;
+    public event EventHandler<string>? TestStarted;
 
     /// <summary>
     /// Event raised when a test has completed or has been skipped.
     /// </summary>
-    public event EventHandler<(string TestName, TestResult TestResult)> TestCompleted;
+    public event EventHandler<(string TestName, TestResult TestResult)>? TestCompleted;
 
     protected abstract int? MaxParallelThreads { get; }
 
@@ -64,7 +64,7 @@ public abstract class ApplicationEntryPoint
     /// Must be implemented and return a class that returns the information
     /// of a device. It can return null.
     /// </summary>
-    protected abstract IDevice Device { get; }
+    protected abstract IDevice? Device { get; }
 
     /// <summary>
     /// Returns the IEnumerable with the asseblies that contain the tests
@@ -97,7 +97,7 @@ public abstract class ApplicationEntryPoint
     /// * the 'KLASS:' prefix can be used to ignore all the tests in a class.
     /// * the 'Platform32:' prefix can be used to ignore a test but only in a 32b arch device.
     /// </summary>
-    protected virtual string IgnoreFilesDirectory => null;
+    protected virtual string? IgnoreFilesDirectory => null;
 
     /// <summary>
     /// Returns the path to a file that contains the list of traits to ignore in the following format:
@@ -105,7 +105,7 @@ public abstract class ApplicationEntryPoint
     ///
     /// The default implementation will return null and therefore no traits will be ignored.
     /// </summary>
-    protected virtual string IgnoredTraitsFilePath => null;
+    protected virtual string? IgnoredTraitsFilePath => null;
 
     /// <summary>
     /// States if the skipped tests should be logged. Helpful to determine why some tests are executed and others
@@ -129,9 +129,9 @@ public abstract class ApplicationEntryPoint
     /// </summary>
     public MinimumLogLevel MinimumLogLevel { get; set; } = MinimumLogLevel.Info;
 
-    private void OnTestStarted(object sender, string testName) => TestStarted?.Invoke(sender, testName);
+    private void OnTestStarted(object? sender, string testName) => TestStarted?.Invoke(sender, testName);
 
-    private void OnTestCompleted(object sender, (string TestName, TestResult Testresult) result) => TestCompleted?.Invoke(sender, result);
+    private void OnTestCompleted(object? sender, (string TestName, TestResult Testresult) result) => TestCompleted?.Invoke(sender, result);
 
     private async Task<List<string>> GetIgnoredCategories()
     {
@@ -173,14 +173,13 @@ public abstract class ApplicationEntryPoint
         }
     }
 
-    internal static string WriteResults(TestRunner runner, ApplicationOptions options, LogWriter logger, TextWriter writer)
+    private static void WriteResults(TestRunner runner, ApplicationOptions options, LogWriter logger, TextWriter writer)
     {
         if (options.EnableXml && writer == null)
         {
             throw new ArgumentNullException(nameof(writer));
         }
 
-        string resultsFilePath = null;
         if (options.EnableXml)
         {
             runner.WriteResultsToFile(writer, options.XmlVersion);
@@ -188,14 +187,12 @@ public abstract class ApplicationEntryPoint
         }
         else
         {
-            resultsFilePath = runner.WriteResultsToFile(options.XmlVersion);
+            string resultsFilePath = runner.WriteResultsToFile(options.XmlVersion);
             logger.Info($"XML results can be found in '{resultsFilePath}'");
         }
-
-        return resultsFilePath;
     }
 
-    protected async Task<TestRunner> InternalRunAsync(LogWriter logger)
+    private async Task<TestRunner> InternalRunAsync(LogWriter logger)
     {
         logger.MinimumLogLevel = MinimumLogLevel;
         var runner = GetTestRunner(logger);
@@ -218,6 +215,32 @@ public abstract class ApplicationEntryPoint
         // notify the client we are done and the results, but do not expose
         // the runner.
         TestsCompleted?.Invoke(this, result);
+        return runner;
+    }
+
+    protected async Task<TestRunner> InternalRunAsync(ApplicationOptions options, TextWriter? loggerWriter, TextWriter? resultsFile)
+    {
+        // we generate the logs in two different ways depending if the generate xml flag was
+        // provided. If it was, we will write the xml file to the provided writer if present, else
+        // we will write the normal console output using the LogWriter
+        var logger = (loggerWriter == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, loggerWriter);
+        logger.MinimumLogLevel = MinimumLogLevel.Info;
+        var runner = await InternalRunAsync(logger);
+
+        WriteResults(runner, options, logger, resultsFile ?? Console.Out);
+
+        logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests} Skipped: {runner.SkippedTests}");
+
+        if (options.AppEndTag != null)
+        {
+            logger.Info(options.AppEndTag);
+        }
+
+        if (options.TerminateAfterExecution)
+        {
+            TerminateWithSuccess();
+        }
+
         return runner;
     }
 }
