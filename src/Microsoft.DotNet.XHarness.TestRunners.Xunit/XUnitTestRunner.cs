@@ -27,14 +27,13 @@ internal class XsltIdGenerator
     public int GenerateHash() => _seed++;
 }
 
-internal class XUnitTestRunner : TestRunner
+internal class XUnitTestRunner : XunitTestRunnerBase
 {
     private readonly TestMessageSink _messageSink;
 
     public int? MaxParallelThreads { get; set; }
 
     private XElement _assembliesElement;
-    private XUnitFiltersCollection _filters = new();
 
     public AppDomainSupport AppDomainSupport { get; set; } = AppDomainSupport.Denied;
     protected override string ResultsFileName { get; set; } = "TestResults.xUnit.xml";
@@ -1126,66 +1125,4 @@ internal class XUnitTestRunner : TestRunner
             }
         }
     }
-
-    public override void SkipTests(IEnumerable<string> tests)
-    {
-        if (tests.Any())
-        {
-            // create a single filter per test
-            foreach (var t in tests)
-            {
-                if (t.StartsWith("KLASS:", StringComparison.Ordinal))
-                {
-                    var klass = t.Replace("KLASS:", "");
-                    _filters.Add(XUnitFilter.CreateClassFilter(klass, true));
-                }
-                else if (t.StartsWith("KLASS32:", StringComparison.Ordinal) && IntPtr.Size == 4)
-                {
-                    var klass = t.Replace("KLASS32:", "");
-                    _filters.Add(XUnitFilter.CreateClassFilter(klass, true));
-                }
-                else if (t.StartsWith("KLASS64:", StringComparison.Ordinal) && IntPtr.Size == 8)
-                {
-                    var klass = t.Replace("KLASS32:", "");
-                    _filters.Add(XUnitFilter.CreateClassFilter(klass, true));
-                }
-                else if (t.StartsWith("Platform32:", StringComparison.Ordinal) && IntPtr.Size == 4)
-                {
-                    var filter = t.Replace("Platform32:", "");
-                    _filters.Add(XUnitFilter.CreateSingleFilter(filter, true));
-                }
-                else
-                {
-                    _filters.Add(XUnitFilter.CreateSingleFilter(t, true));
-                }
-            }
-        }
-    }
-
-    public override void SkipCategories(IEnumerable<string> categories)
-    {
-        if (categories == null)
-        {
-            throw new ArgumentNullException(nameof(categories));
-        }
-
-        foreach (var c in categories)
-        {
-            var traitInfo = c.Split('=');
-            if (traitInfo.Length == 2)
-            {
-                _filters.Add(XUnitFilter.CreateTraitFilter(traitInfo[0], traitInfo[1], true));
-            }
-            else
-            {
-                _filters.Add(XUnitFilter.CreateTraitFilter(c, null, true));
-            }
-        }
-    }
-
-    public override void SkipMethod(string method, bool isExcluded)
-        => _filters.Add(XUnitFilter.CreateSingleFilter(singleTestName: method, exclude: isExcluded));
-
-    public override void SkipClass(string className, bool isExcluded)
-        => _filters.Add(XUnitFilter.CreateClassFilter(className: className, exclude: isExcluded));
 }

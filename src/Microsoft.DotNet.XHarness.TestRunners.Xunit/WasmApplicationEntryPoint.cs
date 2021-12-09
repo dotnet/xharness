@@ -6,12 +6,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.TestRunners.Common;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
-public abstract class WasmApplicationEntryPoint
+public abstract class WasmApplicationEntryPoint : WasmApplicationEntryPointBase
 {
     protected virtual string TestAssembly { get; set; } = "";
     protected virtual IEnumerable<string> ExcludedTraits { get; set; } = Array.Empty<string>();
@@ -20,39 +22,37 @@ public abstract class WasmApplicationEntryPoint
     protected virtual IEnumerable<string> IncludedMethods { get; set; } = Array.Empty<string>();
     protected virtual IEnumerable<string> IncludedNamespaces { get; set; } = Array.Empty<string>();
 
-    public async Task<int> Run()
+    protected override bool IsXunit => true;
+
+    protected override TestRunner GetTestRunner(LogWriter logWriter)
     {
-        var filters = new XunitFilters();
+        var runner = new ThreadlessXunitTestRunner(logWriter, true);
+        ConfigureRunnerFilters(runner, ApplicationOptions.Current);
 
-        foreach (var trait in ExcludedTraits) ParseEqualSeparatedArgument(filters.ExcludedTraits, trait);
-        foreach (var trait in IncludedTraits) ParseEqualSeparatedArgument(filters.IncludedTraits, trait);
-        foreach (var ns in IncludedNamespaces) filters.IncludedNamespaces.Add(ns);
-        foreach (var cl in IncludedClasses) filters.IncludedClasses.Add(cl);
-        foreach (var me in IncludedMethods) filters.IncludedMethods.Add(me);
-
-        var result = await ThreadlessXunitTestRunner.Run(TestAssembly, printXml: true, filters, true);
-
-        return result;
+        runner.SkipCategories(ExcludedTraits);
+        runner.SkipCategories(IncludedTraits, isExcluded: false);
+        foreach (var cls in IncludedClasses)
+        {
+            runner.SkipClass(cls, false);
+        }
+        foreach (var method in IncludedMethods)
+        {
+            runner.SkipMethod(method, false);
+        }
+        foreach (var ns in IncludedNamespaces)
+        {
+            runner.SkipNamespace(ns, isExcluded: false);
+        }
+        return runner;
     }
 
-    private static void ParseEqualSeparatedArgument(Dictionary<string, List<string>> targetDictionary, string argument)
-    {
-        var parts = argument.Split('=');
-        if (parts.Length != 2 || string.IsNullOrEmpty(parts[0]) || string.IsNullOrEmpty(parts[1]))
-        {
-            throw new ArgumentException($"Invalid argument value '{argument}'.", nameof(argument));
-        }
+    protected override IEnumerable<TestAssemblyInfo> GetTestAssemblies()
+        => new[] { new TestAssemblyInfo(Assembly.LoadFrom(TestAssembly), TestAssembly) };
 
-        var name = parts[0];
-        var value = parts[1];
-        List<string> excludedTraits;
-        if (targetDictionary.TryGetValue(name, out excludedTraits!))
-        {
-            excludedTraits.Add(value);
-        }
-        else
-        {
-            targetDictionary[name] = new List<string> { value };
-        }
+    public async Task<int> Run()
+    {
+        await RunAsync();
+
+        return LastRunHadFailedTests ? 1 : 0;
     }
 }

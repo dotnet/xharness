@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,36 +14,49 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-
+using Microsoft.DotNet.XHarness.Common;
+using Microsoft.DotNet.XHarness.TestRunners.Common;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
-internal class ThreadlessXunitTestRunner
+internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
 {
-    public static async Task<int> Run(string assemblyFileName, bool printXml, XunitFilters filters, bool oneLineResults = false)
+    public ThreadlessXunitTestRunner(LogWriter logger, bool oneLineResults = false) : base(logger)
     {
-        try
+        _oneLineResults = oneLineResults;
+    }
+
+    protected override string ResultsFileName { get => string.Empty; set => throw new InvalidOperationException("This runner outputs its results to stdout."); }
+
+    private readonly XElement _assembliesElement = new XElement("assemblies");
+    private readonly bool _oneLineResults;
+
+    public override async Task Run(IEnumerable<TestAssemblyInfo> testAssemblies)
+    {
+        var configuration = new TestAssemblyConfiguration() { ShadowCopy = false, ParallelizeAssembly = false, ParallelizeTestCollections = false, MaxParallelThreads = 1, PreEnumerateTheories = false };
+        var discoveryOptions = TestFrameworkOptions.ForDiscovery(configuration);
+        var discoverySink = new TestDiscoverySink();
+        var diagnosticSink = new ConsoleDiagnosticMessageSink();
+        var testOptions = TestFrameworkOptions.ForExecution(configuration);
+        var testSink = new TestMessageSink();
+
+        var totalSummary = new ExecutionSummary();
+        foreach (var testAsmInfo in testAssemblies)
         {
-            var configuration = new TestAssemblyConfiguration() { ShadowCopy = false, ParallelizeAssembly = false, ParallelizeTestCollections = false, MaxParallelThreads = 1, PreEnumerateTheories = false };
-            var discoveryOptions = TestFrameworkOptions.ForDiscovery(configuration);
-            var discoverySink = new TestDiscoverySink();
-            var diagnosticSink = new ConsoleDiagnosticMessageSink();
-            var testOptions = TestFrameworkOptions.ForExecution(configuration);
-            var testSink = new TestMessageSink();
+            string assemblyFileName = testAsmInfo.FullPath;
             var controller = new Xunit2(AppDomainSupport.Denied, new NullSourceInformationProvider(), assemblyFileName, configFileName: null, shadowCopy: false, shadowCopyFolder: null, diagnosticMessageSink: diagnosticSink, verifyTestAssemblyExists: false);
 
             discoveryOptions.SetSynchronousMessageReporting(true);
             testOptions.SetSynchronousMessageReporting(true);
 
             Console.WriteLine($"Discovering: {assemblyFileName} (method display = {discoveryOptions.GetMethodDisplayOrDefault()}, method display options = {discoveryOptions.GetMethodDisplayOptionsOrDefault()})");
-            var assembly = Assembly.LoadFrom(assemblyFileName);
-            var assemblyInfo = new global::Xunit.Sdk.ReflectionAssemblyInfo(assembly);
+            var assemblyInfo = new global::Xunit.Sdk.ReflectionAssemblyInfo(testAsmInfo.Assembly);
             var discoverer = new ThreadlessXunitDiscoverer(assemblyInfo, new NullSourceInformationProvider(), discoverySink);
 
             discoverer.FindWithoutThreads(includeSourceInformation: false, discoverySink, discoveryOptions);
-            var testCasesToRun = discoverySink.TestCases.Where(filters.Filter).ToList();
+            var testCasesToRun = discoverySink.TestCases.Where(t => !_filters.IsExcluded(t)).ToList();
             Console.WriteLine($"Discovered:  {assemblyFileName} (found {testCasesToRun.Count} of {discoverySink.TestCases.Count} test cases)");
 
             var summaryTaskSource = new TaskCompletionSource<ExecutionSummary>();
@@ -50,53 +64,77 @@ internal class ThreadlessXunitTestRunner
             var resultsXmlAssembly = new XElement("assembly");
             var resultsSink = new DelegatingXmlCreationSink(summarySink, resultsXmlAssembly);
 
+
             if (Environment.GetEnvironmentVariable("XHARNESS_LOG_TEST_START") != null)
             {
                 testSink.Execution.TestStartingEvent += args => { Console.WriteLine($"[STRT] {args.Message.Test.DisplayName}"); };
             }
-            testSink.Execution.TestPassedEvent += args => { Console.WriteLine($"[PASS] {args.Message.Test.DisplayName}"); };
-            testSink.Execution.TestSkippedEvent += args => { Console.WriteLine($"[SKIP] {args.Message.Test.DisplayName}"); };
-            testSink.Execution.TestFailedEvent += args => { Console.WriteLine($"[FAIL] {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}"); };
+            testSink.Execution.TestPassedEvent += args =>
+            {
+                Console.WriteLine($"[PASS] {args.Message.Test.DisplayName}");
+                PassedTests++;
+            };
+            testSink.Execution.TestSkippedEvent += args =>
+            {
+                Console.WriteLine($"[SKIP] {args.Message.Test.DisplayName}");
+                SkippedTests++;
+            };
+            testSink.Execution.TestFailedEvent += args =>
+            {
+                Console.WriteLine($"[FAIL] {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}");
+                FailedTests++;
+            };
+            testSink.Execution.TestFinishedEvent += args => ExecutedTests++;
 
             testSink.Execution.TestAssemblyStartingEvent += args => { Console.WriteLine($"Starting:    {assemblyFileName}"); };
             testSink.Execution.TestAssemblyFinishedEvent += args => { Console.WriteLine($"Finished:    {assemblyFileName}"); };
 
             controller.RunTests(testCasesToRun, resultsSink, testOptions);
 
-            var summary = await summaryTaskSource.Task;
-            Console.WriteLine($"{Environment.NewLine}=== TEST EXECUTION SUMMARY ==={Environment.NewLine}Total: {summary.Total}, Errors: 0, Failed: {summary.Failed}, Skipped: {summary.Skipped}, Time: {TimeSpan.FromSeconds((double)summary.Time).TotalSeconds}s{Environment.NewLine}");
-
-            if (printXml)
-            {
-                if (oneLineResults)
-                {
-                    var resultsXml = new XElement("assemblies");
-                    resultsXml.Add(resultsXmlAssembly);
-                    using var ms = new MemoryStream();
-                    resultsXml.Save(ms);
-                    var bytes = ms.ToArray();
-                    var base64 = Convert.ToBase64String(bytes, Base64FormattingOptions.None);
-                    Console.WriteLine($"STARTRESULTXML {bytes.Length} {base64} ENDRESULTXML");
-                    Console.WriteLine($"Finished writing {bytes.Length} bytes of RESULTXML");
-                }
-                else
-                {
-                    Console.WriteLine($"STARTRESULTXML");
-                    var resultsXml = new XElement("assemblies");
-                    resultsXml.Add(resultsXmlAssembly);
-                    resultsXml.Save(Console.Out);
-                    Console.WriteLine();
-                    Console.WriteLine($"ENDRESULTXML");
-                }
-            }
-
-            var failed = resultsSink.ExecutionSummary.Failed > 0 || resultsSink.ExecutionSummary.Errors > 0;
-            return failed ? 1 : 0;
+            totalSummary = Combine(totalSummary, await summaryTaskSource.Task);
+            _assembliesElement.Add(resultsXmlAssembly);
         }
-        catch (Exception ex)
+        TotalTests = totalSummary.Total;
+        Console.WriteLine($"{Environment.NewLine}=== TEST EXECUTION SUMMARY ==={Environment.NewLine}Total: {totalSummary.Total}, Errors: 0, Failed: {totalSummary.Failed}, Skipped: {totalSummary.Skipped}, Time: {TimeSpan.FromSeconds((double)totalSummary.Time).TotalSeconds}s{Environment.NewLine}");
+    }
+
+    private ExecutionSummary Combine(ExecutionSummary aggregateSummary, ExecutionSummary assemblySummary)
+    {
+        return new ExecutionSummary
         {
-            Console.Error.WriteLine($"ThreadlessXunitTestRunner failed: {ex}");
-            return 2;
+            Total = aggregateSummary.Total + assemblySummary.Total,
+            Failed = aggregateSummary.Failed + assemblySummary.Failed,
+            Skipped = aggregateSummary.Skipped + assemblySummary.Skipped,
+            Errors = aggregateSummary.Errors + assemblySummary.Errors,
+            Time = aggregateSummary.Time + assemblySummary.Time
+        };
+    }
+
+    public override string WriteResultsToFile(XmlResultJargon xmlResultJargon)
+    {
+        Debug.Assert(xmlResultJargon == XmlResultJargon.xUnit);
+        WriteResultsToFile(Console.Out, xmlResultJargon);
+        return "";
+    }
+
+    public override void WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
+    {
+        if (_oneLineResults)
+        {
+
+            using var ms = new MemoryStream();
+            _assembliesElement.Save(ms);
+            var bytes = ms.ToArray();
+            var base64 = Convert.ToBase64String(bytes, Base64FormattingOptions.None);
+            Console.WriteLine($"STARTRESULTXML {bytes.Length} {base64} ENDRESULTXML");
+            Console.WriteLine($"Finished writing {bytes.Length} bytes of RESULTXML");
+        }
+        else
+        {
+            writer.WriteLine($"STARTRESULTXML");
+            _assembliesElement.Save(writer);
+            writer.WriteLine();
+            writer.WriteLine($"ENDRESULTXML");
         }
     }
 }
