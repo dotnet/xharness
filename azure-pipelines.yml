@@ -99,8 +99,7 @@ stages:
         jobs:
         - job: OSX
           pool:
-            name: Hosted macOS
-            vmImage: macOS-10.15
+            vmImage: 'macOS-10.15'
           strategy:
             matrix:
               Release:
