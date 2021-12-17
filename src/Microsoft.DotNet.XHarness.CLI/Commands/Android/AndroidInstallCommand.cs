@@ -112,7 +112,9 @@ Arguments:
 
             runner.SetActiveDevice(deviceId);
 
-            FillDiagnosticData(diagnosticsData, deviceId, runner.APIVersion, apkRequiredArchitecture);
+            var deviceArchitecture = runner.GetDeviceArchitecture(logger);
+
+            FillDiagnosticData(diagnosticsData, deviceId, runner.APIVersion, deviceArchitecture);
 
             runner.TimeToWaitForBootCompletion = bootTimeoutSeconds;
 
