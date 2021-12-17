@@ -63,13 +63,13 @@ Arguments:
         try
         {
             return Task.FromResult(InvokeHelper(
-            logger: logger,
-            apkPackageName: Arguments.PackageName,
-            appPackagePath: Arguments.AppPackagePath,
-            apkRequiredArchitecture: apkRequiredArchitecture,
-            deviceId: Arguments.DeviceId,
-            bootTimeoutSeconds: Arguments.LaunchTimeout,
-            runner: runner,
+                logger: logger,
+                apkPackageName: Arguments.PackageName,
+                appPackagePath: Arguments.AppPackagePath,
+                apkRequiredArchitecture: apkRequiredArchitecture,
+                deviceId: Arguments.DeviceId,
+                bootTimeoutSeconds: Arguments.LaunchTimeout,
+                runner: runner,
             DiagnosticsData));
         }
         catch (NoDeviceFoundException noDevice)
@@ -112,7 +112,7 @@ Arguments:
 
             runner.SetActiveDevice(deviceId);
 
-            var deviceArchitecture = runner.GetDeviceArchitecture(logger);
+            var deviceArchitecture = runner.GetDeviceArchitecture(logger) ?? string.Join(",", apkRequiredArchitecture);
 
             FillDiagnosticData(diagnosticsData, deviceId, runner.APIVersion, deviceArchitecture);
 

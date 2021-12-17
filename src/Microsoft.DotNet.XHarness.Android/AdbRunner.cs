@@ -508,9 +508,16 @@ public class AdbRunner
         return result;
     }
 
-    public string? GetDeviceArchitecture(ILogger logger)
+    public string? GetDeviceArchitecture(ILogger logger, string? deviceName = null)
     {
-        var result = RunAdbCommand(new[] { "shell", "getprop", "ro.product.cpu.abi" }, TimeSpan.FromMinutes(1));
+        IEnumerable<string> args = new[] { "shell", "getprop", "ro.product.cpu.abi" };
+
+        if (!string.IsNullOrEmpty(deviceName))
+        {
+            args = new[] { "-s", deviceName }.Concat(args);
+        }
+
+        var result = RunAdbCommand(args, TimeSpan.FromMinutes(1));
 
         if (!result.Succeeded)
         {

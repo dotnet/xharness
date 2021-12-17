@@ -71,7 +71,7 @@ Arguments:
 
             runner.SetActiveDevice(deviceToUse);
 
-            var deviceArchitecture = runner.GetDeviceArchitecture(logger);
+            var deviceArchitecture = runner.GetDeviceArchitecture(logger) ?? string.Join(",", apkRequiredArchitecture);
 
             FillDiagnosticData(DiagnosticsData, deviceToUse, runner.APIVersion, deviceArchitecture);
 

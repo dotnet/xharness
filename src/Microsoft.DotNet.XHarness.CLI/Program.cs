@@ -102,6 +102,7 @@ public static class Program
                 return args[1] switch
                 {
                     "device" => true,
+                    "state" => args.Contains("--json"),
                     _ => false,
                 };
 
@@ -109,6 +110,7 @@ public static class Program
                 return args[1] switch
                 {
                     "device" => true,
+                    "state" => args.Contains("--json"),
                     "adb" => true,
                     _ => false,
                 };
