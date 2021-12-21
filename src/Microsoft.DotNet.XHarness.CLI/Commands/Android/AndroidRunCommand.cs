@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.Android.Execution;
@@ -71,7 +70,8 @@ Arguments:
         // For test command, this was already filled during installation
         if (DiagnosticsData.Device == null)
         {
-            FillDiagnosticData(DiagnosticsData, deviceId, runner.APIVersion, Enumerable.Empty<string>());
+            var deviceArchitecture = runner.GetDeviceArchitecture(logger);
+            FillDiagnosticData(DiagnosticsData, deviceId, runner.APIVersion, deviceArchitecture);
         }
 
         runner.TimeToWaitForBootCompletion = Arguments.LaunchTimeout;

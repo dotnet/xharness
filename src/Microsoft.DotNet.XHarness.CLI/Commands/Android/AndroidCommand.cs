@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common;
@@ -26,9 +25,9 @@ internal abstract class AndroidCommand<TArguments> : XHarnessCommand<TArguments>
         IDiagnosticsData data,
         string deviceName,
         int apiVersion,
-        IEnumerable<string> apkRequiredArchitecture)
+        string? deviceArchitecture)
     {
-        data.Target = string.Join(",", apkRequiredArchitecture);
+        data.Target = deviceArchitecture;
         data.TargetOS = "API " + apiVersion;
         data.Device = deviceName;
         data.IsDevice = !deviceName.ToLowerInvariant().StartsWith("emulator");

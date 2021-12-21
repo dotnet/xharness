@@ -8,5 +8,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
 internal class AndroidGetStateCommandArguments : XHarnessCommandArguments
 {
-    protected override IEnumerable<Argument> GetArguments() => System.Array.Empty<Argument>();
+    public UseJsonArgument UseJson { get; set; } = new();
+
+    protected override IEnumerable<Argument> GetArguments() => new Argument[]
+    {
+        UseJson,
+    };
 }

@@ -446,8 +446,6 @@ public class AdbRunner
         return devicesAndProperties;
     }
 
-
-
     public string? GetDeviceToUse(ILogger logger, IEnumerable<string> apkRequiredProperties, string propertyName)
     {
         var allDevicesAndTheirProperties = GetAllDevicesToUse(logger, apkRequiredProperties, propertyName);
@@ -508,6 +506,28 @@ public class AdbRunner
         }
 
         return result;
+    }
+
+    public string? GetDeviceArchitecture(ILogger logger, string? deviceName = null)
+    {
+        IEnumerable<string> args = new[] { "shell", "getprop", "ro.product.cpu.abi" };
+
+        if (!string.IsNullOrEmpty(deviceName))
+        {
+            args = new[] { "-s", deviceName }.Concat(args);
+        }
+
+        var result = RunAdbCommand(args, TimeSpan.FromMinutes(1));
+
+        if (!result.Succeeded)
+        {
+            _log.LogError("Failed to get device's architecture. Check if a device is attached / emulator is started" + Environment.NewLine + result.StandardError);
+            return null;
+        }
+
+        _log.LogDebug($"Detected architecture `{result.StandardOutput}` on the selected device");
+
+        return result.StandardOutput.Trim();
     }
 
     public ProcessExecutionResults RunApkInstrumentation(string apkName, string? instrumentationClassName, Dictionary<string, string> args, TimeSpan timeout)
