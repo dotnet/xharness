@@ -40,42 +40,41 @@ internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandAr
                 };
 
                 JsonSerializer.Serialize(Console.OpenStandardOutput(), data, options);
+                return Task.FromResult(ExitCode.SUCCESS);
             }
-            else
+
+            var state = data.DeviceState switch
             {
-                var state = data.DeviceState switch
-                {
-                    "device" => "Device/emulator is ready",
-                    null or "" => "No device attached",
-                    _ => data.DeviceState,
-                };
+                "device" => "Device/emulator is ready",
+                null or "" => "No device attached",
+                _ => data.DeviceState,
+            };
 
-                void PrintDeviceInfo(DeviceInfo device)
+            void PrintDeviceInfo(DeviceInfo device)
+            {
+                logger.LogInformation($"{device.Name}:{Environment.NewLine}" +
+                    $"  Architecture: {device.Architecture}{Environment.NewLine}" +
+                    $"  Supported architectures: {string.Join(", ", device.SupportedArchitectures)}");
+            }
+
+            logger.LogInformation($"ADB Version info:{Environment.NewLine}{string.Join(Environment.NewLine, data.AdbVersion)}");
+            logger.LogInformation($"ADB State:{Environment.NewLine}{state}");
+
+            if (data.Emulators.Any())
+            {
+                logger.LogInformation($"List of emulators:");
+                foreach (DeviceInfo emulator in data.Emulators)
                 {
-                    logger.LogInformation($"{device.Name}:{Environment.NewLine}" +
-                        $"  Architecture: {device.Architecture}{Environment.NewLine}" +
-                        $"  Supported architectures: {string.Join(", ", device.SupportedArchitectures)}");
+                    PrintDeviceInfo(emulator);
                 }
+            }
 
-                logger.LogInformation($"ADB Version info:{Environment.NewLine}{string.Join(Environment.NewLine, data.AdbVersion)}");
-                logger.LogInformation($"ADB State:{Environment.NewLine}{state}");
-
-                if (data.Emulators.Any())
+            if (data.Devices.Any())
+            {
+                logger.LogInformation($"List of devices:");
+                foreach (DeviceInfo device in data.Devices)
                 {
-                    logger.LogInformation($"List of emulators:");
-                    foreach (DeviceInfo emulator in data.Emulators)
-                    {
-                        PrintDeviceInfo(emulator);
-                    }
-                }
-
-                if (data.Devices.Any())
-                {
-                    logger.LogInformation($"List of devices:");
-                    foreach (DeviceInfo device in data.Devices)
-                    {
-                        PrintDeviceInfo(device);
-                    }
+                    PrintDeviceInfo(device);
                 }
             }
 
@@ -99,7 +98,7 @@ internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandAr
 
         var state = runner.GetAdbState().Trim();
 
-        var deviceAndArchList = runner.GetAttachedDevicesWithProperties("architecture");
+        Dictionary<string, string?> deviceAndArchList = runner.GetAttachedDevicesWithProperties("architecture");
         var allDevices = deviceAndArchList
             .Select(d => new DeviceInfo(
                 Name: d.Key,
