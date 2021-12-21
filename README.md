@@ -24,9 +24,16 @@ The tool requires **.NET 6** or later to be run. It is packaged as a `dotnet too
 
 ## Try the tool out quickly
 
-If you want to test the tool quickly (MacOS and Linux only), following script will install the required .NET SDK and the XHarness tool locally in the current folder:
+If you want to test the tool quickly, following script will install the required .NET SDK and the XHarness tool locally in the current folder.
+
 ```bash
-curl -L https://aka.ms/xharness-bootstrap | bash -
+# Using bash on Linux/MacOS
+curl -L https://aka.ms/get-xharness | bash -
+```
+
+```powershell
+# Using PowerShell on Windows
+iex ((New-Object System.Net.WebClient).DownloadString('https://aka.ms/get-xharness-ps1'))
 ```
 
 You can delete the folder after you're done, nothing is installed in your system.
