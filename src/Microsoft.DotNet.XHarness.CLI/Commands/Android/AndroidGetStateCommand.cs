@@ -99,7 +99,7 @@ internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandAr
         var state = runner.GetAdbState().Trim();
 
         Dictionary<string, string?> deviceAndArchList = runner.GetAttachedDevicesWithProperties("architecture");
-        var allDevices = deviceAndArchList
+        List<DeviceInfo> allDevices = deviceAndArchList
             .Select(d => new DeviceInfo(
                 Name: d.Key,
                 Architecture: runner.GetDeviceArchitecture(logger, d.Key) ?? "unknown",
