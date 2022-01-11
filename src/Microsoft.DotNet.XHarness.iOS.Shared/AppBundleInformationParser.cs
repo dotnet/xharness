@@ -172,7 +172,7 @@ public class AppBundleInformationParser : IAppBundleInformationParser
             };
 
         var commandOutput = new MemoryLog { Timestamp = false };
-        var result = await _processManager.ExecuteCommandAsync(PlistBuddyPath, args, log, commandOutput, commandOutput, TimeSpan.FromSeconds(15), cancellationToken: cancellationToken);
+        var result = await _processManager.ExecuteCommandAsync(PlistBuddyPath, args, log, commandOutput, commandOutput, TimeSpan.FromSeconds(30), cancellationToken: cancellationToken);
 
         if (!result.Succeeded)
         {
