@@ -162,10 +162,14 @@ public class AppBundleInformationParser : IAppBundleInformationParser
             bundleExecutable: bundleExecutable);
     }
 
-    private async Task<string> GetPlistProperty(string plistPath, string propertyName, ILog log, CancellationToken cancellationToken = default, int attempt = 1)
+    private async Task<string> GetPlistProperty(
+        string plistPath,
+        string propertyName,
+        ILog log,
+        CancellationToken cancellationToken = default,
+        int attempt = 1,
+        int maxAttempts = 3)
     {
-        const int maxAttempts = 3;
-
         var args = new[]
         {
             "-c",
@@ -188,7 +192,7 @@ public class AppBundleInformationParser : IAppBundleInformationParser
             if (result.TimedOut && attempt < maxAttempts)
             {
                 log.WriteLine($"Attempt to get {propertyName} from {plistPath} timed out, retrying {attempt + 1} out of {maxAttempts}...");
-                return await GetPlistProperty(plistPath, propertyName, log, cancellationToken, attempt + 1);
+                return await GetPlistProperty(plistPath, propertyName, log, cancellationToken, attempt + 1, maxAttempts);
             }
 
             throw new Exception($"Failed to get bundle information: {commandOutput}");
