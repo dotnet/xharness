@@ -162,20 +162,39 @@ public class AppBundleInformationParser : IAppBundleInformationParser
             bundleExecutable: bundleExecutable);
     }
 
-    private async Task<string> GetPlistProperty(string plistPath, string propertyName, ILog log, CancellationToken cancellationToken = default)
+    private async Task<string> GetPlistProperty(
+        string plistPath,
+        string propertyName,
+        ILog log,
+        CancellationToken cancellationToken = default,
+        int attempt = 1,
+        int maxAttempts = 3)
     {
         var args = new[]
         {
-                "-c",
-                $"Print {propertyName}",
-                plistPath,
-            };
+            "-c",
+            $"Print {propertyName}",
+            plistPath,
+        };
 
         var commandOutput = new MemoryLog { Timestamp = false };
-        var result = await _processManager.ExecuteCommandAsync(PlistBuddyPath, args, log, commandOutput, commandOutput, TimeSpan.FromSeconds(30), cancellationToken: cancellationToken);
+        var result = await _processManager.ExecuteCommandAsync(
+            PlistBuddyPath,
+            args,
+            log,
+            commandOutput,
+            commandOutput,
+            TimeSpan.FromSeconds(10),
+            cancellationToken: cancellationToken);
 
         if (!result.Succeeded)
         {
+            if (result.TimedOut && attempt < maxAttempts)
+            {
+                log.WriteLine($"Attempt to get {propertyName} from {plistPath} timed out, retrying {attempt + 1} out of {maxAttempts}...");
+                return await GetPlistProperty(plistPath, propertyName, log, cancellationToken, attempt + 1, maxAttempts);
+            }
+
             throw new Exception($"Failed to get bundle information: {commandOutput}");
         }
 
