@@ -139,7 +139,7 @@ Arguments:
                             logger.LogInformation($"Found XML result file: '{resultValues[possibleResultKey]}'(key: {possibleResultKey})");
                             try
                             {
-                                runner.PullFiles(resultValues[possibleResultKey], outputDirectory);
+                                runner.PullFiles(apkPackageName, resultValues[possibleResultKey], outputDirectory);
                             }
                             catch (Exception toLog)
                             {
@@ -185,7 +185,7 @@ Arguments:
                 {
                     try
                     {
-                        var logs = runner.PullFiles(deviceOutputFolder, outputDirectory);
+                        var logs = runner.PullFiles(apkPackageName, deviceOutputFolder, outputDirectory);
                         foreach (string log in logs)
                         {
                             logger.LogDebug($"Found output file: {log}");
