@@ -316,7 +316,7 @@ public class AdbRunner
     }
 
     // Assumes the directory is empty so any files present after the pull are new.
-    public List<string> PullFiles(string devicePath, string localPath)
+    public List<string> PullFiles(string apkPackageName, string devicePath, string localPath)
     {
         if (string.IsNullOrEmpty(localPath))
         {
@@ -335,28 +335,84 @@ public class AdbRunner
 
             if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
             {
-                throw new Exception($"Failed pulling files: {result}");
-
-            }
-            else
-            {
-                var copiedToTemp = Directory.GetFiles(tempFolder, "*", SearchOption.AllDirectories);
-                foreach (var filePath in copiedToTemp)
+                if (APIVersion == 30)
                 {
+                    // On Android API 30 we can't use "adb pull" directly due to permission issues on emulators, see https://github.com/dotnet/xharness/issues/385
+                    // As a workaround we copy the files to the temp directory on the device using "run-as" and pull from there
+                    _log.LogInformation($"Failed to pull file. Device is running Android API 30, trying fallback to pull {devicePath}");
 
-                    var relativePath = Path.GetRelativePath(tempFolder, filePath);
-                    var destinationPath = Path.Combine(localPath, relativePath);
-                    // if the file is already there, just warn and skip it.
-                    if (File.Exists(destinationPath))
+                    result = RunAdbCommand(new[] { "shell", "run-as", apkPackageName, "ls", devicePath });
+
+                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
                     {
-                        _log.LogWarning($"Skipping file copy as {destinationPath} already exists.");
+                        throw new Exception($"Failed checking for file using fallback: {result}");
                     }
-                    else
+
+                    string? fileName = devicePath.Split("/").LastOrDefault();
+                    if (string.IsNullOrWhiteSpace(fileName))
                     {
-                        Directory.CreateDirectory(Path.GetDirectoryName(destinationPath) ?? throw new ArgumentException(nameof(destinationPath)));
-                        File.Move(filePath, destinationPath);
-                        copiedFiles.Add(destinationPath);
+                        throw new Exception($"Failed pulling file using fallback: Couldn't determine filename for {devicePath}");
                     }
+
+                    string deviceTempPath = $"/data/local/tmp/{fileName}";
+
+                    result = RunAdbCommand(new[] { "shell", "rm", "-rf", deviceTempPath });
+
+
+                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
+                    {
+                        throw new Exception($"Failed removing {deviceTempPath} before using fallback: {result}");
+                    }
+
+                    result = RunAdbCommand(new[] { "shell", "touch", deviceTempPath });
+
+                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
+                    {
+                        throw new Exception($"Failed touching {deviceTempPath}: {result}");
+                    }
+
+                    result = RunAdbCommand(new[] { "shell", "run-as", apkPackageName, "cp", devicePath, deviceTempPath });
+
+                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
+                    {
+                        throw new Exception($"Failed copying file using fallback: {result}");
+                    }
+
+                    result = RunAdbCommand(new[] { "pull", deviceTempPath, tempFolder });
+
+                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
+                    {
+                        throw new Exception($"Failed pulling file using fallback: {result}");
+                    }
+
+                    result = RunAdbCommand(new[] { "shell", "rm", "-f", deviceTempPath });
+
+                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
+                    {
+                        throw new Exception($"Failed removing {deviceTempPath} after using fallback: {result}");
+                    }
+                }
+                else
+                {
+                    throw new Exception($"Failed pulling files: {result}");
+                }
+            }
+
+            var copiedToTemp = Directory.GetFiles(tempFolder, "*", SearchOption.AllDirectories);
+            foreach (var filePath in copiedToTemp)
+            {
+                var relativePath = Path.GetRelativePath(tempFolder, filePath);
+                var destinationPath = Path.Combine(localPath, relativePath);
+                // if the file is already there, just warn and skip it.
+                if (File.Exists(destinationPath))
+                {
+                    _log.LogWarning($"Skipping file copy as {destinationPath} already exists.");
+                }
+                else
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(destinationPath) ?? throw new ArgumentException(nameof(destinationPath)));
+                    File.Move(filePath, destinationPath);
+                    copiedFiles.Add(destinationPath);
                 }
             }
             _log.LogDebug($"Copied {copiedFiles.Count} files to {localPath}.");
