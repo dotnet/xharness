@@ -245,7 +245,14 @@ public abstract class BaseOrchestrator : IDisposable
             }
             else if (device != null) // Do not uninstall if device was cleaned up
             {
-                await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, false, new CancellationToken());
+                var uninstallResult = await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, false, new CancellationToken());
+
+                // We are able to detect a case when simulator is in a bad shape
+                // If it also failed the test/run, we should present that as the failure
+                if (uninstallResult == ExitCode.SIMULATOR_FAILURE && exitCode != ExitCode.SUCCESS && exitCode != ExitCode.TESTS_FAILED)
+                {
+                    exitCode = ExitCode.SIMULATOR_FAILURE;
+                }
             }
         }
 

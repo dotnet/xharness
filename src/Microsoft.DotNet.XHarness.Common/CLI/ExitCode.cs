@@ -37,7 +37,7 @@ public enum ExitCode
     PACKAGE_NOT_FOUND = 4,
 
     /// <summary>
-    /// Time out based on the --timeout or --launch-timeout settings
+    /// Time out based on the --timeout settings
     /// </summary>
     TIMED_OUT = 70,
 

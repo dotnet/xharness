@@ -60,14 +60,7 @@ internal abstract class AppleAppCommand<TArguments> : AppleCommand<TArguments> w
         var cts = new CancellationTokenSource();
         cts.CancelAfter(Arguments.Timeout);
 
-        var result = await InvokeInternal(serviceProvider, cts.Token);
-
-        if (cts.IsCancellationRequested && result != ExitCode.PACKAGE_INSTALLATION_TIMEOUT)
-        {
-            return ExitCode.TIMED_OUT;
-        }
-
-        return result;
+        return await InvokeInternal(serviceProvider, cts.Token);
     }
 
     protected abstract Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken);

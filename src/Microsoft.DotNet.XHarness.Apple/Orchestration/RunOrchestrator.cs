@@ -183,12 +183,6 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             environmentalVariables,
             cancellationToken);
 
-        if (!result.Succeeded)
-        {
-            _logger.LogError($"App run has failed. mlaunch exited with {result.ExitCode}");
-            return ExitCode.APP_LAUNCH_FAILURE;
-        }
-
         return ParseResult(_iOSExitCodeDetector, expectedExitCode, appBundleInfo, result);
     }
 
@@ -224,6 +218,12 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         {
             _logger.LogError($"App run has timed out");
             return ExitCode.TIMED_OUT;
+        }
+
+        if (!result.Succeeded)
+        {
+            _logger.LogError($"App run has failed. mlaunch exited with {result.ExitCode}");
+            return ExitCode.APP_LAUNCH_FAILURE;
         }
 
         int? exitCode;
