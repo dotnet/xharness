@@ -356,7 +356,8 @@ public class AdbRunner
 
                     string deviceTempPath = $"/data/local/tmp/{fileName}";
 
-                    result = RunAdbCommand(new[] { "shell", "rm", "-f", deviceTempPath });
+                    result = RunAdbCommand(new[] { "shell", "rm", "-rf", deviceTempPath });
+
 
                     if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
                     {
