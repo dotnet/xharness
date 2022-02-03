@@ -385,4 +385,65 @@ public class RunOrchestratorTests : OrchestratorTestBase
         _appInstaller.VerifyNoOtherCalls();
         _appUninstaller.VerifyNoOtherCalls();
     }
+
+    [Fact]
+    public async Task OrchestrateMacCatalystRunWithNoExitCodeTest()
+    {
+        // Setup
+        _appInstaller.Reset();
+        _appUninstaller.Reset();
+        _deviceFinder.Reset();
+
+        var testTarget = new TestTargetOs(TestTarget.MacCatalyst, null);
+
+        var envVars = new[] { ("envVar1", "value1"), ("envVar2", "value2") };
+
+        _macCatalystExitCodeDetector
+            .Setup(x => x.DetectExitCode(_appBundleInformation, It.IsAny<IReadableLog>()))
+            .Returns((int?)null)
+            .Verifiable();
+
+        _appRunner
+            .Setup(x => x.RunMacCatalystApp(
+                _appBundleInformation,
+                TimeSpan.FromMinutes(30),
+                true,
+                It.IsAny<IEnumerable<string>>(),
+                envVars,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ProcessExecutionResult
+            {
+                ExitCode = 0,
+                TimedOut = false,
+            })
+            .Verifiable();
+
+        // Act
+        var result = await _runOrchestrator.OrchestrateRun(
+            _appBundleInformation,
+            testTarget,
+            null,
+            TimeSpan.FromMinutes(30),
+            TimeSpan.FromMinutes(3),
+            expectedExitCode: 100,
+            includeWirelessDevices: false,
+            resetSimulator: true,
+            enableLldb: false,
+            signalAppEnd: true,
+            envVars,
+            Array.Empty<string>(),
+            new CancellationToken());
+
+        // Verify
+        Assert.Equal(ExitCode.RETURN_CODE_NOT_SET, result);
+
+        VerifySimulatorReset(false);
+        VerifySimulatorCleanUp(false);
+
+        _macCatalystExitCodeDetector.VerifyAll();
+        _appRunner.VerifyAll();
+        _deviceFinder.VerifyNoOtherCalls();
+        _appInstaller.VerifyNoOtherCalls();
+        _appUninstaller.VerifyNoOtherCalls();
+    }
 }
