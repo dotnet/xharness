@@ -235,7 +235,15 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             return ExitCode.RETURN_CODE_NOT_SET;
         }
 
-        exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, systemLog);
+        try
+        {
+            exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, systemLog);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError($"Failed to determine the exit code:{Environment.NewLine}{e}");
+            return ExitCode.RETURN_CODE_NOT_SET;
+        }
 
         if (exitCode is null)
         {
