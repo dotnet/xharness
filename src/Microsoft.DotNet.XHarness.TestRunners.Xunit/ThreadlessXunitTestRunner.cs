@@ -71,17 +71,17 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
             }
             testSink.Execution.TestPassedEvent += args =>
             {
-                Console.WriteLine($"[PASS] {args.Message.Test.DisplayName}");
+                Console.WriteLine($"[PASS] {EscapeNewLines(args.Message.Test.DisplayName)}");
                 PassedTests++;
             };
             testSink.Execution.TestSkippedEvent += args =>
             {
-                Console.WriteLine($"[SKIP] {args.Message.Test.DisplayName}");
+                Console.WriteLine($"[SKIP] {EscapeNewLines(args.Message.Test.DisplayName)}");
                 SkippedTests++;
             };
             testSink.Execution.TestFailedEvent += args =>
             {
-                Console.WriteLine($"[FAIL] {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}");
+                Console.WriteLine($"[FAIL] {EscapeNewLines(args.Message.Test.DisplayName)}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}");
                 FailedTests++;
             };
             testSink.Execution.TestFinishedEvent += args => ExecutedTests++;
@@ -96,6 +96,8 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
         }
         TotalTests = totalSummary.Total;
         Console.WriteLine($"{Environment.NewLine}=== TEST EXECUTION SUMMARY ==={Environment.NewLine}Total: {totalSummary.Total}, Errors: 0, Failed: {totalSummary.Failed}, Skipped: {totalSummary.Skipped}, Time: {TimeSpan.FromSeconds((double)totalSummary.Time).TotalSeconds}s{Environment.NewLine}");
+
+        static string EscapeNewLines(string message) => message.Replace("\r", "\\r").Replace("\n", "\\n");
     }
 
     private ExecutionSummary Combine(ExecutionSummary aggregateSummary, ExecutionSummary assemblySummary)
