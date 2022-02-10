@@ -25,7 +25,7 @@ internal class AndroidGetDeviceCommand : AndroidCommand<AndroidGetDeviceCommandA
 
     protected override string CommandUsage { get; } = "android device --app=... [OPTIONS]";
 
-    private const string CommandHelp = "Get Id of the device compatible with a given .apk";
+    private const string CommandHelp = "Get ID of the device compatible with a given .apk / architecture";
     protected override string CommandDescription { get; } = @$"
 {CommandHelp}
  
@@ -63,19 +63,22 @@ Arguments:
 
             // enumerate the devices attached and their architectures
             // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
-            var deviceToUse = runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture");
-            if (deviceToUse == null)
+            var device = runner.GetDevice(
+                logger,
+                shouldGetArchitecture: true,
+                requiredApiVersion: Arguments.ApiVersion.Value == -1 ? null : Arguments.ApiVersion.Value,
+                requiredArchitectures: apkRequiredArchitecture);
+
+            if (device is null)
             {
                 return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
             }
 
-            runner.SetActiveDevice(deviceToUse);
+            runner.SetActiveDevice(device);
 
-            var deviceArchitecture = runner.GetDeviceArchitecture(logger) ?? string.Join(",", apkRequiredArchitecture);
+            FillDiagnosticData(DiagnosticsData, device.DeviceSerial, runner.ApiVersion, device.Architecture);
 
-            FillDiagnosticData(DiagnosticsData, deviceToUse, runner.APIVersion, deviceArchitecture);
-
-            Console.WriteLine(deviceToUse);
+            Console.WriteLine(device);
 
             return Task.FromResult(ExitCode.SUCCESS);
         }
