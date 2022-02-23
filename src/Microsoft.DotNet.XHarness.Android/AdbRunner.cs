@@ -746,9 +746,11 @@ public class AdbRunner
             return null;
         }
 
-        _log.LogDebug($"Detected architecture `{result.StandardOutput}` on the selected device");
+        var architecture = result.StandardOutput.Trim();
 
-        return result.StandardOutput.Trim();
+        _log.LogDebug($"Detected architecture `{architecture}` on the selected device");
+
+        return architecture;
     }
 
     public ProcessExecutionResults RunApkInstrumentation(string apkName, string? instrumentationClassName, Dictionary<string, string> args, TimeSpan timeout)
