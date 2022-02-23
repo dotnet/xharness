@@ -66,7 +66,7 @@ Arguments:
             var device = runner.GetDevice(
                 logger,
                 shouldGetArchitecture: true,
-                requiredApiVersion: Arguments.ApiVersion.Value == -1 ? null : Arguments.ApiVersion.Value,
+                requiredApiVersion: Arguments.ApiVersion.Value,
                 requiredArchitectures: apkRequiredArchitecture);
 
             if (device is null)

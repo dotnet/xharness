@@ -154,6 +154,25 @@ public abstract class IntArgument : Argument<int>
     }
 }
 
+public abstract class OptionalIntArgument : Argument<int?>
+{
+    public OptionalIntArgument(string prototype, string description)
+        : base(prototype, description, null)
+    {
+    }
+
+    public override void Action(string argumentValue)
+    {
+        if (int.TryParse(argumentValue, out var number))
+        {
+            Value = number;
+            return;
+        }
+
+        throw new ArgumentException($"{Prototype} must be an integer");
+    }
+}
+
 public abstract class StringArgument : Argument<string?>
 {
     public StringArgument(string prototype, string description)

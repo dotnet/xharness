@@ -6,11 +6,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
 internal interface IAndroidAppRunArguments
 {
-    public PackageNameArgument PackageName { get; }
-    public OutputDirectoryArgument OutputDirectory { get; }
-    public TimeoutArgument Timeout { get; }
-    public LaunchTimeoutArgument LaunchTimeout { get; }
-    public DeviceIdArgument DeviceId { get; }
-    public DeviceArchitectureArgument DeviceArchitecture { get; }
-    public ApiVersionArgument ApiVersion { get; }
+    PackageNameArgument PackageName { get; }
+    OutputDirectoryArgument OutputDirectory { get; }
+    TimeoutArgument Timeout { get; }
+    LaunchTimeoutArgument LaunchTimeout { get; }
+    DeviceIdArgument DeviceId { get; }
+    ApiVersionArgument ApiVersion { get; }
 }

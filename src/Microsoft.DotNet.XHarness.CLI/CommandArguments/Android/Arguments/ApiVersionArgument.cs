@@ -4,10 +4,10 @@
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
-internal class ApiVersionArgument : IntArgument
+internal class ApiVersionArgument : OptionalIntArgument
 {
     public ApiVersionArgument()
-        : base("api-version=|api=", "Target a device/emulator with given Android API version (level)", defaultValue: -1)
+        : base("api-version=|api=", "Target a device/emulator with given Android API version (level)")
     {
     }
 }

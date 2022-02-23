@@ -10,5 +10,5 @@ public record AndroidDevice(
     string DeviceSerial,
     int? ApiVersion = null,
     string? Architecture = null,
-    ICollection<string>? SupportedArchitectures = null,
-    ICollection<string>? InstalledApplications = null);
+    IReadOnlyCollection<string>? SupportedArchitectures = null,
+    IReadOnlyCollection<string>? InstalledApplications = null);

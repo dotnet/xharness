@@ -31,7 +31,7 @@ internal class AndroidTestCommandArguments : XHarnessCommandArguments, IAndroidA
         Timeout,
         LaunchTimeout,
         DeviceArchitecture,
-        DeviceId, // TODO: Use this in the command
+        DeviceId,
         ApiVersion,
         InstrumentationName,
         InstrumentationArguments,

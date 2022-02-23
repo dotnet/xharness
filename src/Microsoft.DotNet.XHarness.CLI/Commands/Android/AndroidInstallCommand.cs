@@ -68,7 +68,7 @@ Arguments:
                 appPackagePath: Arguments.AppPackagePath,
                 apkRequiredArchitecture: apkRequiredArchitecture,
                 deviceId: Arguments.DeviceId,
-                apiVersion: Arguments.ApiVersion.Value == -1 ? null : Arguments.ApiVersion.Value,
+                apiVersion: Arguments.ApiVersion.Value,
                 bootTimeoutSeconds: Arguments.LaunchTimeout,
                 runner: runner,
             DiagnosticsData));
