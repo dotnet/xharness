@@ -87,6 +87,7 @@ public class AdbRunnerTests : IDisposable
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         string pathToDumpBugReport = Path.Join(s_scratchAndOutputPath, Path.GetRandomFileName());
+        runner.SetActiveDevice(_fakeDeviceList.First());
         runner.DumpBugReport(pathToDumpBugReport);
         VerifyAdbCall("bugreport", $"{pathToDumpBugReport}.zip");
 
@@ -201,6 +202,18 @@ public class AdbRunnerTests : IDisposable
     }
 
     [Fact]
+    public void GetDeviceWithApiVersion()
+    {
+        var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+        var device = _fakeDeviceList.Single(d => d.ApiVersion == 30);
+        var result = runner.GetDevice(_mainLog.Object, shouldGetArchitecture: true, requiredApiVersion: 30);
+        VerifyAdbCall("devices", "-l");
+        Assert.Equal(device.DeviceSerial, result.DeviceSerial);
+        Assert.Equal(device.ApiVersion, result.ApiVersion);
+        Assert.Equal(device.Architecture, result.Architecture);
+    }
+
+    [Fact]
     public void RebootAndroidDevice()
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
@@ -254,16 +267,16 @@ public class AdbRunnerTests : IDisposable
         return new List<AndroidDevice>
         {
             new AndroidDevice($"somedevice-{r.Next(9999)}",
-                29, "x86_64", new[] { "x86_64", "x86" }),
+                29, "x86_64", new[] { "x86_64", "x86" }, new[] { "net.dot.A", "net.dot.B" }),
 
             new AndroidDevice($"somedevice-{r.Next(9999)}",
-                30, "x86", new[] { "x86" }),
+                30, "x86", new[] { "x86" }, new[] { "net.dot.C", "net.dot.D" }),
 
             new AndroidDevice($"emulator-{r.Next(9999)}",
-                31, "arm64-v8a", new[] { "arm64-v8a", "x86_64", "x86" }),
+                31, "arm64-v8a", new[] { "arm64-v8a", "x86_64", "x86" }, new[] { "net.dot.E", "net.dot.F" }),
 
             new AndroidDevice($"emulator-{r.Next(9999)}",
-                32, "armeabi-v7a", new[] { "armeabi-v7a", "x86_64", "x86" }),
+                32, "armeabi-v7a", new[] { "armeabi-v7a", "x86_64", "x86" }, new[] { "net.dot.G", "net.dot.H" }),
         };
     }
 
@@ -336,6 +349,11 @@ public class AdbRunnerTests : IDisposable
                         stdOut = Environment.NewLine;
                     }
                     s_bootCompleteCheckTimes++;
+                }
+
+                if (string.Join(" ", arguments.Skip(argStart + 1).Take(5)).Equals("shell pm list packages -3"))
+                {
+                    stdOut = "package:" + string.Join("\npackage:", _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).InstalledApplications);
                 }
 
                 exitCode = 0;
