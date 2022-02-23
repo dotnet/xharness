@@ -449,14 +449,14 @@ public class AdbRunner
     }
 
     public List<AndroidDevice> GetAttachedDevicesWithProperties()
-        => GetAttachedDevicesWithProperties(
+        => GetDevices(
                 AdbPropertyNames.Architecture,
                 AdbPropertyNames.ApiVersion,
                 AdbPropertyNames.SupportedArchitectures)
             .Select(DeviceFromPropertyBag)
             .ToList();
 
-    private Dictionary<string, Dictionary<string, string?>> GetAttachedDevicesWithProperties(params string[] properties)
+    private Dictionary<string, Dictionary<string, string?>> GetDevices(params string[] propertiesToLoad)
     {
         var devicesAndProperties = new Dictionary<string, Dictionary<string, string?>>();
 
@@ -503,7 +503,7 @@ public class AdbRunner
                     var deviceProperties = new Dictionary<string, string?>();
                     devicesAndProperties.Add(deviceSerial, deviceProperties);
 
-                    foreach (var property in properties)
+                    foreach (var property in propertiesToLoad)
                     {
                         var shellResult = RunAdbCommand(GetAdbArguments(deviceSerial, property), TimeSpan.FromSeconds(30));
 
@@ -664,7 +664,7 @@ public class AdbRunner
 
         try
         {
-            devices = GetAttachedDevicesWithProperties(properties.ToArray())
+            devices = GetDevices(properties.ToArray())
                 .Select(DeviceFromPropertyBag)
                 .ToList();
         }
@@ -814,7 +814,7 @@ public class AdbRunner
 
     #endregion
 
-        #region Process runner helpers
+    #region Process runner helpers
 
     public ProcessExecutionResults RunAdbCommand(params string[] arguments) => RunAdbCommand(arguments, TimeSpan.FromMinutes(5));
 
