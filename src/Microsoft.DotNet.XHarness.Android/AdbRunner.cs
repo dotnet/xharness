@@ -33,13 +33,13 @@ public class AdbRunner
         { AdbProperty.ApiVersion, new[] { "shell", "getprop", "ro.build.version.sdk" } },
         { AdbProperty.Architecture, new[] { "shell", "getprop", "ro.product.cpu.abi" } },
         { AdbProperty.InstalledApps, new[] { "shell", "pm", "list", "packages", "-3" } },
+        { AdbProperty.BootCompletion, new[] { "shell", "getprop", "sys.boot_completed" } },
     };
 
     private const string AdbEnvironmentVariableName = "ADB_EXE_PATH";
     private const string AdbDeviceFullInstallFailureMessage = "INSTALL_FAILED_INSUFFICIENT_STORAGE";
     private const string AdbInstallBrokenPipeError = "Failure calling service package: Broken pipe";
     private const string AdbInstallException = "Exception occurred while executing 'install':";
-    private const string AdbShellPropertyForBootCompletion = "sys.boot_completed";
 
     private readonly string _absoluteAdbExePath;
     private readonly ILogger _log;
@@ -82,30 +82,6 @@ public class AdbRunner
             _log.LogDebug($"ADBRunner using ADB.exe supplied from {adbExePath}");
             _log.LogDebug($"Full resolved path:'{_absoluteAdbExePath}'");
         }
-    }
-
-    public int GetDeviceApiVersion()
-    {
-        if (_activeDevice?.ApiVersion != null)
-        {
-            return _activeDevice.ApiVersion.Value;
-        }
-
-        string? output = GetDeviceProperty(AdbProperty.ApiVersion, _activeDevice?.DeviceSerial);
-
-        if (output == null)
-        {
-            throw new Exception("Failed to get device's API version");
-        }
-
-        var apiVersion = int.Parse(output);
-
-        if (_activeDevice != null)
-        {
-            _activeDevice.ApiVersion = apiVersion;
-        }
-
-        return apiVersion;
     }
 
     private static string GetCliAdbExePath()
@@ -167,6 +143,30 @@ public class AdbRunner
         return reportManager.DumpBugReport(this, outputFilePathWithoutFormat);
     }
 
+    public int GetDeviceApiVersion()
+    {
+        if (_activeDevice?.ApiVersion != null)
+        {
+            return _activeDevice.ApiVersion.Value;
+        }
+
+        string? output = GetDeviceProperty(AdbProperty.ApiVersion, _activeDevice?.DeviceSerial);
+
+        if (output == null)
+        {
+            throw new Exception("Failed to get device's API version");
+        }
+
+        var apiVersion = int.Parse(output);
+
+        if (_activeDevice != null)
+        {
+            _activeDevice.ApiVersion = apiVersion;
+        }
+
+        return apiVersion;
+    }
+
     public void WaitForDevice()
     {
         // This command waits for ANY kind of device to be available (emulator or real)
@@ -186,22 +186,23 @@ public class AdbRunner
         // to be '1' (as opposed to empty) to make subsequent automation happy.
         var began = DateTimeOffset.UtcNow;
         var waitingUntil = began.Add(TimeToWaitForBootCompletion);
-        var bootCompleted = RunAdbCommand(new[] { "shell", "getprop", AdbShellPropertyForBootCompletion });
 
-        while (!bootCompleted.StandardOutput.Trim().StartsWith("1") && DateTimeOffset.UtcNow < waitingUntil)
+        string bootCompleted = GetDeviceProperty(AdbProperty.BootCompletion, _activeDevice?.DeviceSerial) ?? string.Empty;
+
+        while (!bootCompleted.StartsWith("1") && DateTimeOffset.UtcNow < waitingUntil)
         {
-            bootCompleted = RunAdbCommand(new[] { "shell", "getprop", AdbShellPropertyForBootCompletion });
-            _log.LogDebug($"{AdbShellPropertyForBootCompletion} = '{bootCompleted.StandardOutput.Trim()}'");
+            bootCompleted = GetDeviceProperty(AdbProperty.BootCompletion, _activeDevice?.DeviceSerial) ?? string.Empty;
+            _log.LogDebug($"sys.boot_completed = '{bootCompleted}'");
             Thread.Sleep((int)TimeSpan.FromSeconds(10).TotalMilliseconds);
         }
 
-        if (bootCompleted.StandardOutput.Trim().StartsWith("1"))
+        if (bootCompleted.StartsWith("1"))
         {
-            _log.LogDebug($"Waited {DateTimeOffset.UtcNow.Subtract(began).TotalSeconds} seconds for device for {AdbShellPropertyForBootCompletion} to be 1.");
+            _log.LogDebug($"Waited {DateTimeOffset.UtcNow.Subtract(began).TotalSeconds} seconds for device boot completion.");
         }
         else
         {
-            _log.LogWarning($"Did not detect boot completion variable on device; variable used ('{AdbShellPropertyForBootCompletion}') may be incorrect or device may be in a bad state");
+            _log.LogWarning($"Did not detect boot completion variable on device; device may be in a bad state");
         }
     }
 

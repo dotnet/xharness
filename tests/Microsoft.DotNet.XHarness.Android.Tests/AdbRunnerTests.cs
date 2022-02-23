@@ -107,7 +107,8 @@ public class AdbRunnerTests : IDisposable
         runner.SetActiveDevice(null);
         runner.WaitForDevice();
         VerifyAdbCall(Times.Exactly(2), "wait-for-device");
-        VerifyAdbCall(Times.Exactly(4), "shell", "getprop", "sys.boot_completed");
+        VerifyAdbCall(Times.Exactly(2), "-s", fakeDeviceName, "shell", "getprop", "sys.boot_completed");
+        VerifyAdbCall(Times.Exactly(2), "shell", "getprop", "sys.boot_completed");
     }
 
     [Fact]
