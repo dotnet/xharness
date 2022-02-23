@@ -214,6 +214,17 @@ public class AdbRunnerTests : IDisposable
     }
 
     [Fact]
+    public void GetDeviceWithAppAndApiVersion()
+    {
+        var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+        var device = _fakeDeviceList.Single(d => d.ApiVersion == 31 && d.InstalledApplications.Contains("net.dot.E"));
+        var result = runner.GetDevice(_mainLog.Object, requiredInstalledApp: "net.dot.E", requiredApiVersion: 31);
+        VerifyAdbCall("devices", "-l");
+        Assert.Equal(device.DeviceSerial, result.DeviceSerial);
+        Assert.Equal(device.ApiVersion, result.ApiVersion);
+    }
+
+    [Fact]
     public void RebootAndroidDevice()
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
@@ -351,7 +362,7 @@ public class AdbRunnerTests : IDisposable
                     s_bootCompleteCheckTimes++;
                 }
 
-                if (string.Join(" ", arguments.Skip(argStart + 1).Take(5)).Equals("shell pm list packages -3"))
+                if (string.Join(" ", arguments.Skip(argStart).Take(5)).Equals("shell pm list packages -3"))
                 {
                     stdOut = "package:" + string.Join("\npackage:", _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).InstalledApplications);
                 }

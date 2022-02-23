@@ -657,7 +657,7 @@ public class AdbRunner
 
         if (requiredInstalledApp != null)
         {
-            properties.Add("app");
+            properties.Add(AdbPropertyNames.InstalledApps);
         }
 
         List<AndroidDevice> devices;
@@ -715,7 +715,7 @@ public class AdbRunner
 
         if (requiredInstalledApp != null)
         {
-            devices = devices.Where(device => device.InstalledApplications?.Contains(requiredInstalledApp) ?? false).ToList();
+            devices = devices.Where(device => device.InstalledApplications?.Any(app => app.Contains(requiredInstalledApp)) ?? false).ToList();
 
             if (devices.Count == 0)
             {
