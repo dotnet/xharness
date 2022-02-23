@@ -453,19 +453,6 @@ public class AdbRunner
     {
         var devices = new List<AndroidDevice>();
 
-        static IEnumerable<string> GetAdbArguments(string deviceSerial, AdbProperty property)
-        {
-            var args = new List<string>
-            {
-                "-s",
-                deviceSerial,
-            };
-
-            args.AddRange(s_commandList[property]);
-
-            return args;
-        }
-
         var result = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
         string[] standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
@@ -495,28 +482,7 @@ public class AdbRunner
 
                 foreach (var property in propertiesToLoad)
                 {
-                    var shellResult = RunAdbCommand(GetAdbArguments(device.DeviceSerial, property), TimeSpan.FromSeconds(30));
-
-                    // Assumption:  All Devices on a machine running Xharness should attempt to be online or disconnected.
-                    retriesLeft = 30; // Max 5 minutes (30 attempts * 10 second waits)
-                    while (retriesLeft-- > 0 && shellResult.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _log.LogWarning($"Device '{device.DeviceSerial}' is offline; retrying up to one minute.");
-                        Thread.Sleep(10000);
-
-                        shellResult = RunAdbCommand(GetAdbArguments(device.DeviceSerial, property), TimeSpan.FromSeconds(30));
-                    }
-
-                    string? value;
-                    if (shellResult.ExitCode == (int)AdbExitCodes.SUCCESS)
-                    {
-                        value = shellResult.StandardOutput.Trim();
-                    }
-                    else
-                    {
-                        _log.LogError($"Failed to get property {property} of device {device.DeviceSerial}: {shellResult.StandardError}");
-                        value = null;
-                    }
+                    string? value = GetDeviceProperty(property, device.DeviceSerial);
 
                     switch (property)
                     {
@@ -529,11 +495,11 @@ public class AdbRunner
                             break;
 
                         case AdbProperty.SupportedArchitectures:
-                            device.SupportedArchitectures = value == null ? null : value.Split(new char[] { ',', '\r', '\n' });
+                            device.SupportedArchitectures = value?.Split(new char[] { ',', '\r', '\n' });
                             break;
 
                         case AdbProperty.InstalledApps:
-                            device.InstalledApplications = value == null ? null : value.Split("\n");
+                            device.InstalledApplications = value?.Split("\n");
                             break;
                     }
                 }
@@ -759,7 +725,17 @@ public class AdbRunner
             args = new[] { "-s", deviceName }.Concat(args);
         }
 
-        var result = RunAdbCommand(args, TimeSpan.FromMinutes(1));
+        var result = RunAdbCommand(args, TimeSpan.FromSeconds(30));
+
+        // Assumption:  All Devices on a machine running Xharness should attempt to be online or disconnected.
+        var retriesLeft = 30; // Max 5 minutes (30 attempts * 10 second waits)
+        while (retriesLeft-- > 0 && result.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
+        {
+            _log.LogWarning($"Device {deviceName} is offline; retrying up to one minute.");
+            Thread.Sleep(10000);
+
+            result = RunAdbCommand(args, TimeSpan.FromSeconds(30));
+        }
 
         if (!result.Succeeded)
         {
