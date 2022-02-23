@@ -444,78 +444,13 @@ public class AdbRunner
         }
     }
 
+    /// <summary>
+    /// Gets all attached devices and their properties.
+    /// </summary>
     public IReadOnlyCollection<AndroidDevice> GetDevices() => GetDevices(
         AdbProperty.Architecture,
         AdbProperty.ApiVersion,
         AdbProperty.SupportedArchitectures);
-
-    private IReadOnlyCollection<AndroidDevice> GetDevices(params AdbProperty[] propertiesToLoad)
-    {
-        var devices = new List<AndroidDevice>();
-
-        var result = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
-        string[] standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-
-        // Retry up to 3 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
-        int retriesLeft = 18;
-
-        // We will keep retrying until we get something back like 'List of devices attached...{newline} {info about a device} ',
-        // which when split on newlines ignoring empties will be at least 2 lines when there are any available devices.
-        while (retriesLeft-- > 0 && standardOutputLines.Length < 2)
-        {
-            _log.LogDebug($"Unexpected response from adb devices -l:{Environment.NewLine}Exit code={result.ExitCode}{Environment.NewLine}Std. Output: {result.StandardOutput} {Environment.NewLine}Std. Error: {result.StandardError}");
-            Thread.Sleep(10000);
-            result = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
-            standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-        }
-
-        // Two lines = At least one device was found.  On a multi-device machine, we can't function without specifying device serial number.
-        if (result.ExitCode == (int)AdbExitCodes.SUCCESS && standardOutputLines.Length >= 2)
-        {
-            // Start at 1 to skip first line, which is always 'List of devices attached'
-            for (int lineNumber = 1; lineNumber < standardOutputLines.Length; lineNumber++)
-            {
-                _log.LogDebug($"Evaluating output line for device serial: {standardOutputLines[lineNumber]}");
-                var lineParts = standardOutputLines[lineNumber].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-                var device = new AndroidDevice(lineParts[0]);
-
-                foreach (var property in propertiesToLoad)
-                {
-                    string? value = GetDeviceProperty(property, device.DeviceSerial);
-
-                    switch (property)
-                    {
-                        case AdbProperty.Architecture:
-                            device.Architecture = value;
-                            break;
-
-                        case AdbProperty.ApiVersion:
-                            device.ApiVersion = value == null ? null : int.Parse(value);
-                            break;
-
-                        case AdbProperty.SupportedArchitectures:
-                            device.SupportedArchitectures = value?.Split(new char[] { ',', '\r', '\n' });
-                            break;
-
-                        case AdbProperty.InstalledApps:
-                            device.InstalledApplications = value?.Split("\n");
-                            break;
-                    }
-                }
-
-                devices.Add(device);
-            }
-        }
-        else
-        {
-            // Abandon the run here, don't just guess.
-            _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}. Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, unlocked and authorized.");
-            throw new Exception("One or more attached Android devices are offline or without USB debug permission");
-        }
-
-        return devices;
-    }
 
     /// <summary>
     /// Gets all connected devices that satisfy the requirements.
@@ -714,6 +649,74 @@ public class AdbRunner
         }
 
         return device;
+    }
+
+    private IReadOnlyCollection<AndroidDevice> GetDevices(params AdbProperty[] propertiesToLoad)
+    {
+        var devices = new List<AndroidDevice>();
+
+        var result = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
+        string[] standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+
+        // Retry up to 3 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
+        int retriesLeft = 18;
+
+        // We will keep retrying until we get something back like 'List of devices attached...{newline} {info about a device} ',
+        // which when split on newlines ignoring empties will be at least 2 lines when there are any available devices.
+        while (retriesLeft-- > 0 && standardOutputLines.Length < 2)
+        {
+            _log.LogDebug($"Unexpected response from adb devices -l:{Environment.NewLine}Exit code={result.ExitCode}{Environment.NewLine}Std. Output: {result.StandardOutput} {Environment.NewLine}Std. Error: {result.StandardError}");
+            Thread.Sleep(10000);
+            result = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
+            standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        // Two lines = At least one device was found.  On a multi-device machine, we can't function without specifying device serial number.
+        if (result.ExitCode == (int)AdbExitCodes.SUCCESS && standardOutputLines.Length >= 2)
+        {
+            // Start at 1 to skip first line, which is always 'List of devices attached'
+            for (int lineNumber = 1; lineNumber < standardOutputLines.Length; lineNumber++)
+            {
+                _log.LogDebug($"Evaluating output line for device serial: {standardOutputLines[lineNumber]}");
+                var lineParts = standardOutputLines[lineNumber].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                var device = new AndroidDevice(lineParts[0]);
+
+                foreach (var property in propertiesToLoad)
+                {
+                    string? value = GetDeviceProperty(property, device.DeviceSerial);
+
+                    switch (property)
+                    {
+                        case AdbProperty.Architecture:
+                            device.Architecture = value;
+                            break;
+
+                        case AdbProperty.ApiVersion:
+                            device.ApiVersion = value == null ? null : int.Parse(value);
+                            break;
+
+                        case AdbProperty.SupportedArchitectures:
+                            device.SupportedArchitectures = value?.Split(new char[] { ',', '\r', '\n' });
+                            break;
+
+                        case AdbProperty.InstalledApps:
+                            device.InstalledApplications = value?.Split("\n");
+                            break;
+                    }
+                }
+
+                devices.Add(device);
+            }
+        }
+        else
+        {
+            // Abandon the run here, don't just guess.
+            _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}. Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, unlocked and authorized.");
+            throw new Exception("One or more attached Android devices are offline or without USB debug permission");
+        }
+
+        return devices;
     }
 
     private string? GetDeviceProperty(AdbProperty property, string? deviceName = null)
