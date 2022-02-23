@@ -23,7 +23,7 @@ internal class AndroidGetDeviceCommand : AndroidCommand<AndroidGetDeviceCommandA
         Verbosity = new VerbosityArgument(LogLevel.Error)
     };
 
-    protected override string CommandUsage { get; } = "android device --app=... [OPTIONS]";
+    protected override string CommandUsage { get; } = "android device [OPTIONS]";
 
     private const string CommandHelp = "Get ID of the device compatible with a given .apk / architecture";
     protected override string CommandDescription { get; } = @$"
@@ -38,22 +38,22 @@ Arguments:
 
     protected override Task<ExitCode> InvokeInternal(ILogger logger)
     {
-        if (!File.Exists(Arguments.AppPackagePath))
-        {
-            logger.LogCritical($"Couldn't find {Arguments.AppPackagePath}!");
-            return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
-        }
-
         var runner = new AdbRunner(logger);
-        IEnumerable<string> apkRequiredArchitecture;
+        IEnumerable<string>? apkRequiredArchitecture = null;
 
         if (Arguments.DeviceArchitecture.Value.Any())
         {
             apkRequiredArchitecture = Arguments.DeviceArchitecture.Value;
         }
-        else
+        else if (!string.IsNullOrEmpty(Arguments.AppPackagePath.Value))
         {
-            apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(Arguments.AppPackagePath);
+            if (!File.Exists(Arguments.AppPackagePath.Value))
+            {
+                logger.LogCritical($"Couldn't find {Arguments.AppPackagePath.Value}!");
+                return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
+            }
+
+            apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(Arguments.AppPackagePath.Value);
         }
 
         try
@@ -78,7 +78,7 @@ Arguments:
 
             FillDiagnosticData(DiagnosticsData, device.DeviceSerial, runner.ApiVersion, device.Architecture);
 
-            Console.WriteLine(device);
+            Console.WriteLine(device.DeviceSerial);
 
             return Task.FromResult(ExitCode.SUCCESS);
         }
