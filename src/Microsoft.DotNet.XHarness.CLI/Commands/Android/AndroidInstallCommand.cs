@@ -102,23 +102,26 @@ Arguments:
             // Make sure the adb server is started
             runner.StartAdbServer();
 
-            AndroidDevice? device = runner.GetDevice(logger, true, deviceId, apiVersion, apkRequiredArchitecture);
+            AndroidDevice? device = runner.GetDevice(
+                loadArchitecture: true,
+                loadApiVersion: true,
+                deviceId,
+                apiVersion,
+                apkRequiredArchitecture);
 
             if (device is null)
             {
                 throw new NoDeviceFoundException($"Failed to find compatible device: {string.Join(", ", apkRequiredArchitecture)}");
             }
 
-            runner.SetActiveDevice(device);
-
-            FillDiagnosticData(diagnosticsData, device.DeviceSerial, runner.ApiVersion, device.Architecture);
+            diagnosticsData.CaptureDeviceInfo(device);
 
             runner.TimeToWaitForBootCompletion = bootTimeoutSeconds;
 
             // Wait till at least device(s) are ready
             runner.WaitForDevice();
 
-            logger.LogDebug($"Working with {runner.GetAdbVersion()}");
+            logger.LogDebug($"Working with {device.DeviceSerial} (API {device.ApiVersion})");
 
             // If anything changed about the app, Install will fail; uninstall it first.
             // (we'll ignore if it's not present)

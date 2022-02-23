@@ -87,7 +87,7 @@ public class AdbRunnerTests : IDisposable
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         string pathToDumpBugReport = Path.Join(s_scratchAndOutputPath, Path.GetRandomFileName());
-        runner.SetActiveDevice(_fakeDeviceList.First());
+        runner.GetDevice(requiredDeviceId: _fakeDeviceList.First().DeviceSerial);
         runner.DumpBugReport(pathToDumpBugReport);
         VerifyAdbCall("bugreport", $"{pathToDumpBugReport}.zip");
 
@@ -114,7 +114,7 @@ public class AdbRunnerTests : IDisposable
     public void ListDevicesAndArchitectures()
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
-        var result = runner.GetAttachedDevicesWithProperties();
+        var result = runner.GetDevices();
         VerifyAdbCall("devices", "-l");
 
         // Ensure it called, parsed the four random device names and found all four architectures
@@ -185,7 +185,7 @@ public class AdbRunnerTests : IDisposable
     {
         var requiredArchitecture = "x86_64";
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
-        var result = runner.GetDevice(_mainLog.Object, requiredArchitectures: new[] { requiredArchitecture });
+        var result = runner.GetDevice(requiredArchitectures: new[] { requiredArchitecture });
         VerifyAdbCall("devices", "-l");
         Assert.Contains(_fakeDeviceList, d => d.DeviceSerial == result.DeviceSerial);
     }
@@ -195,7 +195,7 @@ public class AdbRunnerTests : IDisposable
     {
         var requiredArchitecture = "x86";
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
-        var result = runner.GetDevice(_mainLog.Object, shouldGetArchitecture: true, requiredArchitectures: new[] { requiredArchitecture });
+        var result = runner.GetDevice(loadArchitecture: true, requiredArchitectures: new[] { requiredArchitecture });
         VerifyAdbCall("devices", "-l");
         VerifyAdbCall("-s", result.DeviceSerial, "shell", "getprop", "ro.product.cpu.abi");
         Assert.Contains(_fakeDeviceList, d => d.DeviceSerial == result.DeviceSerial && d.Architecture == result.Architecture);
@@ -206,7 +206,7 @@ public class AdbRunnerTests : IDisposable
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         var device = _fakeDeviceList.Single(d => d.ApiVersion == 30);
-        var result = runner.GetDevice(_mainLog.Object, shouldGetArchitecture: true, requiredApiVersion: 30);
+        var result = runner.GetDevice(loadArchitecture: true, requiredApiVersion: 30);
         VerifyAdbCall("devices", "-l");
         Assert.Equal(device.DeviceSerial, result.DeviceSerial);
         Assert.Equal(device.ApiVersion, result.ApiVersion);
@@ -218,7 +218,7 @@ public class AdbRunnerTests : IDisposable
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         var device = _fakeDeviceList.Single(d => d.ApiVersion == 31 && d.InstalledApplications.Contains("net.dot.E"));
-        var result = runner.GetDevice(_mainLog.Object, requiredInstalledApp: "net.dot.E", requiredApiVersion: 31);
+        var result = runner.GetDevice(requiredInstalledApp: "net.dot.E", requiredApiVersion: 31);
         VerifyAdbCall("devices", "-l");
         Assert.Equal(device.DeviceSerial, result.DeviceSerial);
         Assert.Equal(device.ApiVersion, result.ApiVersion);
@@ -277,17 +277,37 @@ public class AdbRunnerTests : IDisposable
         var r = new Random();
         return new List<AndroidDevice>
         {
-            new AndroidDevice($"somedevice-{r.Next(9999)}",
-                29, "x86_64", new[] { "x86_64", "x86" }, new[] { "net.dot.A", "net.dot.B" }),
+            new AndroidDevice($"somedevice-{r.Next(9999)}")
+            {
+                ApiVersion = 29,
+                Architecture = "x86_64",
+                SupportedArchitectures = new[] { "x86_64", "x86" },
+                InstalledApplications = new[] { "net.dot.A", "net.dot.B" }
+            },
 
-            new AndroidDevice($"somedevice-{r.Next(9999)}",
-                30, "x86", new[] { "x86" }, new[] { "net.dot.C", "net.dot.D" }),
+            new AndroidDevice($"somedevice-{r.Next(9999)}")
+            {
+                ApiVersion = 30,
+                Architecture = "x86",
+                SupportedArchitectures = new[] { "x86" },
+                InstalledApplications = new[] { "net.dot.C", "net.dot.D" }
+            },
 
-            new AndroidDevice($"emulator-{r.Next(9999)}",
-                31, "arm64-v8a", new[] { "arm64-v8a", "x86_64", "x86" }, new[] { "net.dot.E", "net.dot.F" }),
+            new AndroidDevice($"emulator-{r.Next(9999)}")
+            {
+                ApiVersion = 31,
+                Architecture = "arm64-v8a",
+                SupportedArchitectures = new[] { "arm64-v8a", "x86_64", "x86" },
+                InstalledApplications = new[] { "net.dot.E", "net.dot.F" }
+            },
 
-            new AndroidDevice($"emulator-{r.Next(9999)}",
-                32, "armeabi-v7a", new[] { "armeabi-v7a", "x86_64", "x86" }, new[] { "net.dot.G", "net.dot.H" }),
+            new AndroidDevice($"emulator-{r.Next(9999)}")
+            {
+                ApiVersion = 32,
+                Architecture = "armeabi-v7a",
+                SupportedArchitectures = new[] { "armeabi-v7a", "x86_64", "x86" },
+                InstalledApplications = new[] { "net.dot.G", "net.dot.H" }
+            },
         };
     }
 

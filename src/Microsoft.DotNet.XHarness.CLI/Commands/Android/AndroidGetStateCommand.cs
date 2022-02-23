@@ -99,7 +99,7 @@ internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandAr
 
         var state = runner.GetAdbState().Trim();
 
-        List<AndroidDevice> allDevices = runner.GetAttachedDevicesWithProperties();
+        IReadOnlyCollection<AndroidDevice> allDevices = runner.GetDevices();
 
         var emulators = allDevices.Where(d => d.DeviceSerial.StartsWith("emulator"));
         var devices = allDevices.Except(emulators);

@@ -58,21 +58,15 @@ Arguments:
         runner.StartAdbServer();
 
         var device = string.IsNullOrEmpty(Arguments.DeviceId.Value)
-            ? runner.GetSingleDevice(logger, true, requiredInstalledApp: "package:" + apkPackageName)
-            : runner.GetSingleDevice(logger, true, requiredDeviceId: Arguments.DeviceId.Value);
+            ? runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredInstalledApp: "package:" + apkPackageName)
+            : runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredDeviceId: Arguments.DeviceId.Value);
 
         if (device is null)
         {
             return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
         }
 
-        runner.SetActiveDevice(device);
-
-        // For test command, this was already filled during installation
-        if (DiagnosticsData.Device == null)
-        {
-            FillDiagnosticData(DiagnosticsData, device.DeviceSerial, runner.ApiVersion, device.Architecture);
-        }
+        DiagnosticsData.CaptureDeviceInfo(device);
 
         runner.TimeToWaitForBootCompletion = Arguments.LaunchTimeout;
 
@@ -106,7 +100,7 @@ Arguments:
     {
         int instrumentationExitCode = (int)ExitCode.GENERAL_FAILURE;
 
-        logger.LogDebug($"Working with {runner.GetAdbVersion()}");
+        logger.LogDebug($"Working with API {runner.GetAdbVersion()}");
 
         // Empty log as we'll be uploading the full logcat for this execution
         runner.ClearAdbLog();

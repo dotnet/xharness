@@ -11,6 +11,7 @@ using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
@@ -64,8 +65,8 @@ Arguments:
             // enumerate the devices attached and their architectures
             // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
             var device = runner.GetDevice(
-                logger,
-                shouldGetArchitecture: true,
+                loadApiVersion: true,
+                loadArchitecture: true,
                 requiredApiVersion: Arguments.ApiVersion.Value,
                 requiredArchitectures: apkRequiredArchitecture);
 
@@ -74,9 +75,7 @@ Arguments:
                 return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
             }
 
-            runner.SetActiveDevice(device);
-
-            FillDiagnosticData(DiagnosticsData, device.DeviceSerial, runner.ApiVersion, device.Architecture);
+            DiagnosticsData.CaptureDeviceInfo(device);
 
             Console.WriteLine(device.DeviceSerial);
 

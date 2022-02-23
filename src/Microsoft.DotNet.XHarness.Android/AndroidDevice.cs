@@ -6,9 +6,17 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.XHarness.Android;
 
-public record AndroidDevice(
-    string DeviceSerial,
-    int? ApiVersion = null,
-    string? Architecture = null,
-    IReadOnlyCollection<string>? SupportedArchitectures = null,
-    IReadOnlyCollection<string>? InstalledApplications = null);
+public record AndroidDevice
+{
+    public string DeviceSerial { get; init; }
+
+    public int? ApiVersion { get; set; } = null;
+
+    public string? Architecture { get; set; } = null;
+
+    public IReadOnlyCollection<string>? SupportedArchitectures { get; set; } = null;
+
+    public IReadOnlyCollection<string>? InstalledApplications { get; set; } = null;
+
+    public AndroidDevice(string deviceSerial) => DeviceSerial = deviceSerial;
+}

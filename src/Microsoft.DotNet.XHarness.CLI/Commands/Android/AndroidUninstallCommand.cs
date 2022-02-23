@@ -46,8 +46,8 @@ Arguments:
                 runner.StartAdbServer();
 
                 AndroidDevice? device = runner.GetSingleDevice(
-                    logger,
-                    true,
+                    loadArchitecture: true,
+                    loadApiVersion: true,
                     requiredDeviceId: Arguments.DeviceId,
                     requiredInstalledApp: "package:" + apkPackageName);
 
@@ -56,11 +56,9 @@ Arguments:
                     return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
                 }
 
-                runner.SetActiveDevice(device);
+                DiagnosticsData.CaptureDeviceInfo(device);
 
-                FillDiagnosticData(DiagnosticsData, device.DeviceSerial, runner.ApiVersion, device.Architecture);
-
-                logger.LogDebug($"Working with {runner.GetAdbVersion()}");
+                logger.LogDebug($"Working with {device.DeviceSerial} (API {device.ApiVersion})");
 
                 runner.UninstallApk(apkPackageName);
                 return Task.FromResult(ExitCode.SUCCESS);

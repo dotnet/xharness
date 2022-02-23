@@ -20,16 +20,4 @@ internal abstract class AndroidCommand<TArguments> : XHarnessCommand<TArguments>
     {
         _diagnosticsData = new(() => Services.BuildServiceProvider().GetRequiredService<IDiagnosticsData>());
     }
-
-    protected static void FillDiagnosticData(
-        IDiagnosticsData data,
-        string deviceName,
-        int apiVersion,
-        string? deviceArchitecture)
-    {
-        data.Target = deviceArchitecture;
-        data.TargetOS = "API " + apiVersion;
-        data.Device = deviceName;
-        data.IsDevice = !deviceName.ToLowerInvariant().StartsWith("emulator");
-    }
 }
