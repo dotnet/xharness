@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android.Execution;
 using Microsoft.Extensions.Logging;
 
@@ -210,11 +209,41 @@ public class AdbRunner
 
     public void StartAdbServer()
     {
-        var result = RunAdbCommand(new[] { "start-server" });
-        _log.LogDebug($"{result.StandardOutput}");
-        if (result.ExitCode != 0)
+        bool started = false;
+
+        Retry(() =>
+            {
+                var result = RunAdbCommand(new[] { "start-server" }, TimeSpan.FromMinutes(1));
+                started = result.Succeeded;
+
+                if (!started)
+                {
+                    _log.LogWarning($"Error starting ADB Server.{Environment.NewLine}  " +
+                        $"Std out:{result.StandardOutput}{Environment.NewLine}  " +
+                        $"Std. Err: {result.StandardError}");
+
+                    try
+                    {
+                        KillAdbServer();
+                    }
+                    catch
+                    {
+                        _log.LogDebug($"Error killing ADB server after a failed start");
+                    }
+                }
+                else
+                {
+                    _log.LogDebug(result.StandardOutput);
+                }
+
+                return started;
+            },
+            retryInterval: TimeSpan.FromSeconds(10),
+            retryPeriod: TimeSpan.FromMinutes(5));
+
+        if (!started)
         {
-            throw new Exception($"Error starting ADB Server.  Std out:{result.StandardOutput} Std. Err: {result.StandardError}");
+            throw new Exception("Failed to start the ADB server!");
         }
     }
 
@@ -828,9 +857,9 @@ public class AdbRunner
 
     #region Process runner helpers
 
-    private ProcessExecutionResults RunAdbCommand(params string[] arguments) => RunAdbCommand(arguments, TimeSpan.FromMinutes(5));
+    public ProcessExecutionResults RunAdbCommand(params string[] arguments) => RunAdbCommand(arguments, TimeSpan.FromMinutes(5));
 
-    private ProcessExecutionResults RunAdbCommand(IEnumerable<string> arguments, TimeSpan timeOut)
+    public ProcessExecutionResults RunAdbCommand(IEnumerable<string> arguments, TimeSpan timeOut)
     {
         if (!File.Exists(_absoluteAdbExePath))
         {
@@ -840,18 +869,32 @@ public class AdbRunner
         return _processManager.Run(_absoluteAdbExePath, arguments, timeOut);
     }
 
-    private static void Retry(Func<bool> action, TimeSpan retryInterval, int maxRetries = -1, TimeSpan? retryPeriod = null)
+    private void Retry(Func<bool> action, TimeSpan retryInterval, ushort? maxRetries = null, TimeSpan? retryPeriod = null)
     {
-        int attempt = 1;
-        var watch = new Stopwatch();
-
-        if (retryPeriod.HasValue)
+        if (!maxRetries.HasValue && !retryPeriod.HasValue)
         {
-            watch.Start();
+            throw new ArgumentException($"Please provide one or both of {nameof(maxRetries)} or {nameof(retryPeriod)}");
         }
 
-        while (!action() && (maxRetries == -1 || attempt <= maxRetries) && (!retryPeriod.HasValue || watch.Elapsed <= retryPeriod))
+        var watch = Stopwatch.StartNew();
+        int attempt = 0;
+
+        while (true)
         {
+            bool result = action();
+            if (result)
+            {
+                break;
+            }
+
+            if ((maxRetries != -1 && attempt > maxRetries) || (retryPeriod.HasValue && watch.Elapsed > retryPeriod))
+            {
+                _log.LogDebug($"All {attempt} retries of action failed");
+                break;
+            }
+
+            ++attempt;
+            _log.LogDebug($"Action failed, retrying in {(int)retryInterval.TotalSeconds} seconds (attempt {attempt})...");
             Thread.Sleep(retryInterval);
         }
     }
