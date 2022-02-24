@@ -50,11 +50,12 @@ internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandAr
                 _ => data.DeviceState,
             };
 
-            void PrintDeviceInfo(DeviceInfo device)
+            void PrintAndroidDevice(AndroidDevice device)
             {
-                logger.LogInformation($"{device.Name}:{Environment.NewLine}" +
+                logger.LogInformation($"{device.DeviceSerial}:{Environment.NewLine}" +
                     $"  Architecture: {device.Architecture}{Environment.NewLine}" +
-                    $"  Supported architectures: {string.Join(", ", device.SupportedArchitectures)}");
+                    $"  API version: {device.ApiVersion}{Environment.NewLine}" +
+                    $"  Supported architectures: {string.Join(", ", device?.SupportedArchitectures ?? Array.Empty<string>())}");
             }
 
             logger.LogInformation($"ADB Version info:{Environment.NewLine}{string.Join(Environment.NewLine, data.AdbVersion)}");
@@ -63,18 +64,18 @@ internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandAr
             if (data.Emulators.Any())
             {
                 logger.LogInformation($"List of emulators:");
-                foreach (DeviceInfo emulator in data.Emulators)
+                foreach (AndroidDevice emulator in data.Emulators)
                 {
-                    PrintDeviceInfo(emulator);
+                    PrintAndroidDevice(emulator);
                 }
             }
 
             if (data.Devices.Any())
             {
                 logger.LogInformation($"List of devices:");
-                foreach (DeviceInfo device in data.Devices)
+                foreach (AndroidDevice device in data.Devices)
                 {
-                    PrintDeviceInfo(device);
+                    PrintAndroidDevice(device);
                 }
             }
 
@@ -98,21 +99,13 @@ internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandAr
 
         var state = runner.GetAdbState().Trim();
 
-        Dictionary<string, string?> deviceAndArchList = runner.GetAttachedDevicesWithProperties("architecture");
-        List<DeviceInfo> allDevices = deviceAndArchList
-            .Select(d => new DeviceInfo(
-                Name: d.Key,
-                Architecture: runner.GetDeviceArchitecture(logger, d.Key) ?? "unknown",
-                SupportedArchitectures: d.Value?.Split(',') ?? Enumerable.Empty<string>()))
-            .ToList();
+        IReadOnlyCollection<AndroidDevice> allDevices = runner.GetDevices();
 
-        var emulators = allDevices.Where(d => d.Name.StartsWith("emulator"));
+        var emulators = allDevices.Where(d => d.DeviceSerial.StartsWith("emulator"));
         var devices = allDevices.Except(emulators);
 
         return new StateData(state, adbVersion, emulators, devices);
     }
 
-    private record StateData(string DeviceState, string[] AdbVersion, IEnumerable<DeviceInfo> Emulators, IEnumerable<DeviceInfo> Devices);
-
-    private record DeviceInfo(string Name, string Architecture, IEnumerable<string> SupportedArchitectures);
+    private record StateData(string DeviceState, string[] AdbVersion, IEnumerable<AndroidDevice> Emulators, IEnumerable<AndroidDevice> Devices);
 }

@@ -68,6 +68,7 @@ Arguments:
                 appPackagePath: Arguments.AppPackagePath,
                 apkRequiredArchitecture: apkRequiredArchitecture,
                 deviceId: Arguments.DeviceId,
+                apiVersion: Arguments.ApiVersion.Value,
                 bootTimeoutSeconds: Arguments.LaunchTimeout,
                 runner: runner,
             DiagnosticsData));
@@ -81,6 +82,7 @@ Arguments:
         {
             logger.LogCritical(toLog, toLog.Message);
         }
+
         return Task.FromResult(ExitCode.GENERAL_FAILURE);
     }
 
@@ -90,6 +92,7 @@ Arguments:
         string appPackagePath,
         IEnumerable<string> apkRequiredArchitecture,
         string? deviceId,
+        int? apiVersion,
         TimeSpan bootTimeoutSeconds,
         AdbRunner runner,
         IDiagnosticsData diagnosticsData)
@@ -99,29 +102,26 @@ Arguments:
             // Make sure the adb server is started
             runner.StartAdbServer();
 
-            // if call via install command device id must be set
-            // otherwise - from test command - apkRequiredArchitecture was set by user or .apk architecture
-            deviceId ??= apkRequiredArchitecture.Any()
-                ? runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture")
-                : throw new ArgumentException("Required architecture not specified");
+            AndroidDevice? device = runner.GetDevice(
+                loadArchitecture: true,
+                loadApiVersion: true,
+                deviceId,
+                apiVersion,
+                apkRequiredArchitecture);
 
-            if (deviceId == null)
+            if (device is null)
             {
                 throw new NoDeviceFoundException($"Failed to find compatible device: {string.Join(", ", apkRequiredArchitecture)}");
             }
 
-            runner.SetActiveDevice(deviceId);
-
-            var deviceArchitecture = runner.GetDeviceArchitecture(logger) ?? string.Join(",", apkRequiredArchitecture);
-
-            FillDiagnosticData(diagnosticsData, deviceId, runner.APIVersion, deviceArchitecture);
+            diagnosticsData.CaptureDeviceInfo(device);
 
             runner.TimeToWaitForBootCompletion = bootTimeoutSeconds;
 
             // Wait till at least device(s) are ready
             runner.WaitForDevice();
 
-            logger.LogDebug($"Working with {runner.GetAdbVersion()}");
+            logger.LogDebug($"Working with {device.DeviceSerial} (API {device.ApiVersion})");
 
             // If anything changed about the app, Install will fail; uninstall it first.
             // (we'll ignore if it's not present)
@@ -133,6 +133,7 @@ Arguments:
                 runner.UninstallApk(apkPackageName);
                 return ExitCode.PACKAGE_INSTALLATION_FAILURE;
             }
+
             runner.KillApk(apkPackageName);
         }
         return ExitCode.SUCCESS;

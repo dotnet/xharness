@@ -11,6 +11,7 @@ using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
@@ -23,9 +24,9 @@ internal class AndroidGetDeviceCommand : AndroidCommand<AndroidGetDeviceCommandA
         Verbosity = new VerbosityArgument(LogLevel.Error)
     };
 
-    protected override string CommandUsage { get; } = "android device --app=... [OPTIONS]";
+    protected override string CommandUsage { get; } = "android device [OPTIONS]";
 
-    private const string CommandHelp = "Get Id of the device compatible with a given .apk";
+    private const string CommandHelp = "Get ID of the device compatible with a given .apk / architecture";
     protected override string CommandDescription { get; } = @$"
 {CommandHelp}
  
@@ -38,22 +39,22 @@ Arguments:
 
     protected override Task<ExitCode> InvokeInternal(ILogger logger)
     {
-        if (!File.Exists(Arguments.AppPackagePath))
-        {
-            logger.LogCritical($"Couldn't find {Arguments.AppPackagePath}!");
-            return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
-        }
-
         var runner = new AdbRunner(logger);
-        IEnumerable<string> apkRequiredArchitecture;
+        IEnumerable<string>? apkRequiredArchitecture = null;
 
         if (Arguments.DeviceArchitecture.Value.Any())
         {
             apkRequiredArchitecture = Arguments.DeviceArchitecture.Value;
         }
-        else
+        else if (!string.IsNullOrEmpty(Arguments.AppPackagePath.Value))
         {
-            apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(Arguments.AppPackagePath);
+            if (!File.Exists(Arguments.AppPackagePath.Value))
+            {
+                logger.LogCritical($"Couldn't find {Arguments.AppPackagePath.Value}!");
+                return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
+            }
+
+            apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(Arguments.AppPackagePath.Value);
         }
 
         try
@@ -63,19 +64,20 @@ Arguments:
 
             // enumerate the devices attached and their architectures
             // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
-            var deviceToUse = runner.GetDeviceToUse(logger, apkRequiredArchitecture, "architecture");
-            if (deviceToUse == null)
+            var device = runner.GetDevice(
+                loadApiVersion: true,
+                loadArchitecture: true,
+                requiredApiVersion: Arguments.ApiVersion.Value,
+                requiredArchitectures: apkRequiredArchitecture);
+
+            if (device is null)
             {
                 return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
             }
 
-            runner.SetActiveDevice(deviceToUse);
+            DiagnosticsData.CaptureDeviceInfo(device);
 
-            var deviceArchitecture = runner.GetDeviceArchitecture(logger) ?? string.Join(",", apkRequiredArchitecture);
-
-            FillDiagnosticData(DiagnosticsData, deviceToUse, runner.APIVersion, deviceArchitecture);
-
-            Console.WriteLine(deviceToUse);
+            Console.WriteLine(device.DeviceSerial);
 
             return Task.FromResult(ExitCode.SUCCESS);
         }

@@ -13,3 +13,13 @@ internal class AppPathArgument : RequiredPathArgument
     {
     }
 }
+
+/// <summary>
+/// Path to the app bundle.
+/// </summary>
+internal class OptionalAppPathArgument : PathArgument
+{
+    public OptionalAppPathArgument() : base("app|a=", "Path to an already-packaged app", false)
+    {
+    }
+}

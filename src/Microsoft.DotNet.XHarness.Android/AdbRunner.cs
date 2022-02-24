@@ -6,36 +6,46 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.DotNet.XHarness.Android.Execution;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Android;
 
 public class AdbRunner
 {
+    private enum AdbProperty
+    {
+        Architecture,
+        ApiVersion,
+        SupportedArchitectures,
+        InstalledApps,
+        BootCompletion,
+    }
+
     #region Constructor and state variables
+
+    private static readonly Dictionary<AdbProperty, string[]> s_commandList = new()
+    {
+        { AdbProperty.SupportedArchitectures, new[] { "shell", "getprop", "ro.product.cpu.abilist" } },
+        { AdbProperty.ApiVersion, new[] { "shell", "getprop", "ro.build.version.sdk" } },
+        { AdbProperty.Architecture, new[] { "shell", "getprop", "ro.product.cpu.abi" } },
+        { AdbProperty.InstalledApps, new[] { "shell", "pm", "list", "packages", "-3" } },
+        { AdbProperty.BootCompletion, new[] { "shell", "getprop", "sys.boot_completed" } },
+    };
 
     private const string AdbEnvironmentVariableName = "ADB_EXE_PATH";
     private const string AdbDeviceFullInstallFailureMessage = "INSTALL_FAILED_INSUFFICIENT_STORAGE";
     private const string AdbInstallBrokenPipeError = "Failure calling service package: Broken pipe";
     private const string AdbInstallException = "Exception occurred while executing 'install':";
-    private const string AdbShellPropertyForBootCompletion = "sys.boot_completed";
-    private int? _api;
+
     private readonly string _absoluteAdbExePath;
     private readonly ILogger _log;
     private readonly IAdbProcessManager _processManager;
-    private readonly Dictionary<string, string[]> _commandList = new()
-    {
-        { "architecture", new[] { "shell", "getprop", "ro.product.cpu.abilist" } },
-        { "app", new[] { "shell", "pm", "list", "packages", "-3" } },
-    };
 
-    public int APIVersion => _api ?? GetAPIVersion();
-
-    public string AdbExePath => _absoluteAdbExePath;
+    private AndroidDevice? _activeDevice = null;
 
     public AdbRunner(ILogger log, string adbExePath = "") : this(log, new AdbProcessManager(log), adbExePath) { }
 
@@ -74,21 +84,6 @@ public class AdbRunner
         }
     }
 
-    public void SetActiveDevice(string? deviceSerialNumber)
-    {
-        _processManager.DeviceSerial = deviceSerialNumber ?? string.Empty;
-
-        _api = GetAPIVersion();
-
-        _log.LogInformation($"Active Android device set to serial '{deviceSerialNumber}'");
-    }
-
-    private int GetAPIVersion()
-    {
-        var output = RunAdbCommand(new[] { "shell", "getprop", "ro.build.version.sdk" });
-        return int.Parse(output.StandardOutput);
-    }
-
     private static string GetCliAdbExePath()
     {
         var currentAssemblyDirectory = Path.GetDirectoryName(typeof(AdbRunner).Assembly.Location);
@@ -113,15 +108,15 @@ public class AdbRunner
 
     public TimeSpan TimeToWaitForBootCompletion { get; set; } = TimeSpan.FromMinutes(5);
 
-    public string GetAdbVersion() => RunAdbCommand(new[] { "version" }).StandardOutput;
+    public string GetAdbVersion() => RunAdbCommand("version").StandardOutput;
 
-    public string GetAdbState() => RunAdbCommand(new[] { "get-state" }).StandardOutput;
+    public string GetAdbState() => RunAdbCommand("get-state").StandardOutput;
 
-    public string RebootAndroidDevice() => RunAdbCommand(new[] { "reboot" }).StandardOutput;
+    public string RebootAndroidDevice() => RunAdbCommand("reboot").StandardOutput;
 
-    public void ClearAdbLog() => RunAdbCommand(new[] { "logcat", "-c" });
+    public void ClearAdbLog() => RunAdbCommand("logcat", "-c");
 
-    public void EnableWifi(bool enable) => RunAdbCommand(new[] { "shell", "svc", "wifi", enable ? "enable" : "disable" });
+    public void EnableWifi(bool enable) => RunAdbCommand("shell", "svc", "wifi", enable ? "enable" : "disable");
 
     public void DumpAdbLog(string outputFilePath, string filterSpec = "")
     {
@@ -144,8 +139,32 @@ public class AdbRunner
 
     public string DumpBugReport(string outputFilePathWithoutFormat)
     {
-        var reportManager = AdbReportFactory.CreateReportManager(_log, _api ?? GetAPIVersion());
+        var reportManager = AdbReportFactory.CreateReportManager(_log, GetDeviceApiVersion());
         return reportManager.DumpBugReport(this, outputFilePathWithoutFormat);
+    }
+
+    public int GetDeviceApiVersion()
+    {
+        if (_activeDevice?.ApiVersion != null)
+        {
+            return _activeDevice.ApiVersion.Value;
+        }
+
+        string? output = GetDeviceProperty(AdbProperty.ApiVersion, _activeDevice?.DeviceSerial);
+
+        if (output == null)
+        {
+            throw new Exception("Failed to get device's API version");
+        }
+
+        var apiVersion = int.Parse(output);
+
+        if (_activeDevice != null)
+        {
+            _activeDevice.ApiVersion = apiVersion;
+        }
+
+        return apiVersion;
     }
 
     public void WaitForDevice()
@@ -167,22 +186,23 @@ public class AdbRunner
         // to be '1' (as opposed to empty) to make subsequent automation happy.
         var began = DateTimeOffset.UtcNow;
         var waitingUntil = began.Add(TimeToWaitForBootCompletion);
-        var bootCompleted = RunAdbCommand(new[] { "shell", "getprop", AdbShellPropertyForBootCompletion });
 
-        while (!bootCompleted.StandardOutput.Trim().StartsWith("1") && DateTimeOffset.UtcNow < waitingUntil)
+        string bootCompleted = GetDeviceProperty(AdbProperty.BootCompletion, _activeDevice?.DeviceSerial) ?? string.Empty;
+
+        while (!bootCompleted.StartsWith("1") && DateTimeOffset.UtcNow < waitingUntil)
         {
-            bootCompleted = RunAdbCommand(new[] { "shell", "getprop", AdbShellPropertyForBootCompletion });
-            _log.LogDebug($"{AdbShellPropertyForBootCompletion} = '{bootCompleted.StandardOutput.Trim()}'");
+            bootCompleted = GetDeviceProperty(AdbProperty.BootCompletion, _activeDevice?.DeviceSerial) ?? string.Empty;
+            _log.LogDebug($"sys.boot_completed = '{bootCompleted}'");
             Thread.Sleep((int)TimeSpan.FromSeconds(10).TotalMilliseconds);
         }
 
-        if (bootCompleted.StandardOutput.Trim().StartsWith("1"))
+        if (bootCompleted.StartsWith("1"))
         {
-            _log.LogDebug($"Waited {DateTimeOffset.UtcNow.Subtract(began).TotalSeconds} seconds for device for {AdbShellPropertyForBootCompletion} to be 1.");
+            _log.LogDebug($"Waited {DateTimeOffset.UtcNow.Subtract(began).TotalSeconds} seconds for device boot completion.");
         }
         else
         {
-            _log.LogWarning($"Did not detect boot completion variable on device; variable used ('{AdbShellPropertyForBootCompletion}') may be incorrect or device may be in a bad state");
+            _log.LogWarning($"Did not detect boot completion variable on device; device may be in a bad state");
         }
     }
 
@@ -303,7 +323,7 @@ public class AdbRunner
     public int KillApk(string apkName)
     {
         _log.LogInformation($"Killing all running processes for '{apkName}': ");
-        var result = RunAdbCommand(new[] { "shell", "am", "kill", "--user", "all", apkName});
+        var result = RunAdbCommand(new[] { "shell", "am", "kill", "--user", "all", apkName });
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
         {
             _log.LogError($"Error:{Environment.NewLine}{result}");
@@ -335,7 +355,7 @@ public class AdbRunner
 
             if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
             {
-                if (APIVersion == 30)
+                if (GetDeviceApiVersion() == 30)
                 {
                     // On Android API 30 we can't use "adb pull" directly due to permission issues on emulators, see https://github.com/dotnet/xharness/issues/385
                     // As a workaround we copy the files to the temp directory on the device using "run-as" and pull from there
@@ -424,22 +444,216 @@ public class AdbRunner
         }
     }
 
-    public Dictionary<string, string?> GetAttachedDevicesWithProperties(string property)
+    /// <summary>
+    /// Gets all attached devices and their properties.
+    /// </summary>
+    public IReadOnlyCollection<AndroidDevice> GetDevices() => GetDevices(
+        AdbProperty.Architecture,
+        AdbProperty.ApiVersion,
+        AdbProperty.SupportedArchitectures);
+
+    /// <summary>
+    /// Gets all connected devices that satisfy the requirements.
+    /// </summary>
+    /// <param name="loadArchitecture">Should we also query device's architecture?</param>
+    /// <param name="loadApiVersion">Should we also query device's architecture?</param>
+    /// <param name="requiredDeviceId">Specifies a particular device we are looking for</param>
+    /// <param name="requiredApiVersion">Filters devices based on the API (SDK) level/version</param>
+    /// <param name="requiredArchitectures">Allows only devices that support at least one of given architectures</param>
+    /// <param name="requiredInstalledApp">Allows only devices with a given app installed</param>
+    /// <returns>List of devices that satisfy the requirements</returns>
+    public AndroidDevice? GetDevice(
+        bool loadArchitecture = false,
+        bool loadApiVersion = false,
+        string? requiredDeviceId = null,
+        int? requiredApiVersion = null,
+        IEnumerable<string>? requiredArchitectures = null,
+        string? requiredInstalledApp = null) =>
+            GetDevice(
+                singleDevice: false,
+                loadArchitecture,
+                loadApiVersion,
+                requiredDeviceId,
+                requiredApiVersion,
+                requiredArchitectures,
+                requiredInstalledApp);
+
+    /// <summary>
+    /// Gets all connected devices that satisfy the requirements.
+    /// </summary>
+    /// <param name="loadArchitecture">Should we also query device's architecture?</param>
+    /// <param name="loadApiVersion">Should we also query device's architecture?</param>
+    /// <param name="requiredDeviceId">Specifies a particular device we are looking for</param>
+    /// <param name="requiredApiVersion">Filters devices based on the API (SDK) level/version</param>
+    /// <param name="requiredArchitectures">Allows only devices that support at least one of given architectures</param>
+    /// <param name="requiredInstalledApp">Allows only devices with a given app installed</param>
+    /// <returns>List of devices that satisfy the requirements</returns>
+    public AndroidDevice? GetSingleDevice(
+        bool loadArchitecture = false,
+        bool loadApiVersion = false,
+        string? requiredDeviceId = null,
+        int? requiredApiVersion = null,
+        IEnumerable<string>? requiredArchitectures = null,
+        string? requiredInstalledApp = null) =>
+            GetDevice(
+                singleDevice: true,
+                loadArchitecture,
+                loadApiVersion,
+                requiredDeviceId,
+                requiredApiVersion,
+                requiredArchitectures,
+                requiredInstalledApp);
+
+    /// <summary>
+    /// Gets all connected devices that satisfy the requirements.
+    /// </summary>
+    /// <param name="requiredDeviceId">Specifies a particular device we are looking for</param>
+    /// <param name="requiredApiVersion">Filters devices based on the API (SDK) level/version</param>
+    /// <param name="requiredArchitectures">Allows only devices that support at least one of given architectures</param>
+    /// <param name="requiredInstalledApp">Allows only devices with a given app installed</param>
+    /// <returns>List of devices that satisfy the requirements</returns>
+    private IReadOnlyCollection<AndroidDevice> GetAllDevices(
+        string? requiredDeviceId = null,
+        int? requiredApiVersion = null,
+        IEnumerable<string>? requiredArchitectures = null,
+        string? requiredInstalledApp = null)
     {
-        var devicesAndProperties = new Dictionary<string, string?>();
+        var properties = new List<AdbProperty>();
 
-        IEnumerable<string> GetAdbArguments(string deviceSerial)
+        if (requiredApiVersion.HasValue)
         {
-            var args = new List<string>
-            {
-                "-s",
-                deviceSerial,
-            };
-
-            args.AddRange(_commandList[property]);
-
-            return args;
+            properties.Add(AdbProperty.ApiVersion);
         }
+
+        if (requiredArchitectures?.Any() ?? false)
+        {
+            properties.Add(AdbProperty.SupportedArchitectures);
+        }
+
+        if (requiredInstalledApp != null)
+        {
+            properties.Add(AdbProperty.InstalledApps);
+        }
+
+        IReadOnlyCollection<AndroidDevice> devices;
+
+        try
+        {
+            devices = GetDevices(properties.ToArray());
+        }
+        catch (Exception toLog)
+        {
+            _log.LogError(toLog, $"Exception thrown while trying to find compatible device");
+            return new List<AndroidDevice>();
+        }
+
+        if (devices.Count == 0)
+        {
+            _log.LogError("No attached and authorized device detected");
+            return devices;
+        }
+
+        if (requiredDeviceId != null)
+        {
+            devices = devices.Where(device => device.DeviceSerial == requiredDeviceId).ToList();
+
+            if (devices.Count == 0)
+            {
+                _log.LogError($"No attached device with ID {requiredDeviceId} found");
+                return devices;
+            }
+        }
+
+        if (requiredApiVersion != null)
+        {
+            devices = devices.Where(device => device.ApiVersion == requiredApiVersion).ToList();
+
+            if (devices.Count == 0)
+            {
+                _log.LogError($"No attached device with API {requiredApiVersion} detected");
+                return devices;
+            }
+        }
+
+        if (requiredArchitectures?.Any() ?? false)
+        {
+            devices = devices.Where(device => device.SupportedArchitectures?.Intersect(requiredArchitectures).Any() ?? false).ToList();
+
+            if (devices.Count == 0)
+            {
+                _log.LogError($"No attached device supports one of required architectures {string.Join(", ", requiredArchitectures)}");
+                return devices;
+            }
+        }
+
+        if (requiredInstalledApp != null)
+        {
+            devices = devices.Where(device => device.InstalledApplications?.Any(app => app.Contains(requiredInstalledApp)) ?? false).ToList();
+
+            if (devices.Count == 0)
+            {
+                _log.LogError($"No attached device with app {requiredInstalledApp} installed");
+                return devices;
+            }
+        }
+
+        return devices;
+    }
+
+    private AndroidDevice? GetDevice(
+        bool singleDevice,
+        bool loadArchitecture = false,
+        bool loadApiVersion = false,
+        string? requiredDeviceId = null,
+        int? requiredApiVersion = null,
+        IEnumerable<string>? requiredArchitectures = null,
+        string? requiredInstalledApp = null)
+    {
+        var devices = GetAllDevices(
+            requiredDeviceId,
+            requiredApiVersion,
+            requiredArchitectures,
+            requiredInstalledApp);
+
+        if (devices.Count == 0)
+        {
+            _log.LogDebug($"No suitable devices found");
+
+            if (singleDevice)
+            {
+                _log.LogError($"Cannot find a suitable device, please check that a device is attached");
+            }
+
+            return null;
+        }
+
+        if (singleDevice && devices.Count > 1)
+        {
+            _log.LogError($"There is more than one suitable device. Please provide API version, device architecture or device ID");
+            return null;
+        }
+
+        var device = devices.First();
+        _log.LogDebug($"Found {devices.Count} possible devices. Using '{device.DeviceSerial}'");
+
+        SetActiveDevice(device);
+
+        if (loadArchitecture && device.Architecture == null)
+        {
+            device.Architecture = GetDeviceProperty(AdbProperty.Architecture, device.DeviceSerial);
+        }
+
+        if (loadApiVersion && device.ApiVersion == null)
+        {
+            device.ApiVersion = GetDeviceApiVersion();
+        }
+
+        return device;
+    }
+
+    private IReadOnlyCollection<AndroidDevice> GetDevices(params AdbProperty[] propertiesToLoad)
+    {
+        var devices = new List<AndroidDevice>();
 
         var result = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
         string[] standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
@@ -464,33 +678,35 @@ public class AdbRunner
             for (int lineNumber = 1; lineNumber < standardOutputLines.Length; lineNumber++)
             {
                 _log.LogDebug($"Evaluating output line for device serial: {standardOutputLines[lineNumber]}");
-                var lineParts = standardOutputLines[lineNumber].Split(' ');
-                if (!string.IsNullOrEmpty(lineParts[0]))
+                var lineParts = standardOutputLines[lineNumber].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                var device = new AndroidDevice(lineParts[0]);
+
+                foreach (var property in propertiesToLoad)
                 {
-                    var deviceSerial = lineParts[0];
+                    string? value = GetDeviceProperty(property, device.DeviceSerial);
 
-                    var shellResult = RunAdbCommand(GetAdbArguments(deviceSerial), TimeSpan.FromSeconds(30));
-
-                    // Assumption:  All Devices on a machine running Xharness should attempt to be online or disconnected.
-                    retriesLeft = 30; // Max 5 minutes (30 attempts * 10 second waits)
-                    while (retriesLeft-- > 0 && shellResult.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
+                    switch (property)
                     {
-                        _log.LogWarning($"Device '{deviceSerial}' is offline; retrying up to one minute.");
-                        Thread.Sleep(10000);
+                        case AdbProperty.Architecture:
+                            device.Architecture = value;
+                            break;
 
-                        shellResult = RunAdbCommand(GetAdbArguments(deviceSerial), TimeSpan.FromSeconds(30));
-                    }
+                        case AdbProperty.ApiVersion:
+                            device.ApiVersion = value == null ? null : int.Parse(value);
+                            break;
 
-                    if (shellResult.ExitCode == (int)AdbExitCodes.SUCCESS)
-                    {
-                        devicesAndProperties.Add(deviceSerial, shellResult.StandardOutput.Trim());
-                    }
-                    else
-                    {
-                        _log.LogError($"Error trying to get device: {shellResult.StandardError}");
-                        devicesAndProperties.Add(deviceSerial, null);
+                        case AdbProperty.SupportedArchitectures:
+                            device.SupportedArchitectures = value?.Split(new char[] { ',', '\r', '\n' });
+                            break;
+
+                        case AdbProperty.InstalledApps:
+                            device.InstalledApplications = value?.Split("\n");
+                            break;
                     }
                 }
+
+                devices.Add(device);
             }
         }
         else
@@ -499,91 +715,55 @@ public class AdbRunner
             _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}. Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, unlocked and authorized.");
             throw new Exception("One or more attached Android devices are offline or without USB debug permission");
         }
-        return devicesAndProperties;
+
+        return devices;
     }
 
-    public string? GetDeviceToUse(ILogger logger, IEnumerable<string> apkRequiredProperties, string propertyName)
+    private string? GetDeviceProperty(AdbProperty property, string? deviceName = null)
     {
-        var allDevicesAndTheirProperties = GetAllDevicesToUse(logger, apkRequiredProperties, propertyName);
-        if (allDevicesAndTheirProperties.Count > 0)
-        {
-            var firstAvailableCompatible = allDevicesAndTheirProperties.First();
-            logger.LogDebug($"Using first-found compatible device of {allDevicesAndTheirProperties.Count} total- serial: '{firstAvailableCompatible.Key}' - {propertyName}: {firstAvailableCompatible.Value}");
-            return firstAvailableCompatible.Key;
-        }
-        return null;
-    }
-
-    public string? GetUniqueDeviceToUse(ILogger logger, string apkRequiredProperties, string propertyName)
-    {
-        var devices = GetAllDevicesToUse(logger, new[] { apkRequiredProperties }, propertyName);
-        if (devices.Count == 0)
-        {
-            logger.LogError($"Cannot find a device with {propertyName}={apkRequiredProperties}, please check that a device is attached");
-            return null;
-        }
-        else if (devices.Count > 1)
-        {
-            logger.LogError($"There is more than one device with {propertyName}={apkRequiredProperties}, please provide --device-id to choose the required one");
-            return null;
-        }
-        return devices.Keys.First();
-    }
-
-    public Dictionary<string, string> GetAllDevicesToUse(ILogger logger, IEnumerable<string> apkRequiredProperties, string propertyName)
-    {
-
-        var allDevicesAndTheirProperties = new Dictionary<string, string?>();
-        try
-        {
-            allDevicesAndTheirProperties = GetAttachedDevicesWithProperties(propertyName);
-        }
-        catch (Exception toLog)
-        {
-            logger.LogError(toLog, $"Exception thrown while trying to find compatible device with {propertyName} '{ string.Join("', '", apkRequiredProperties) }'");
-
-            return new Dictionary<string, string>();
-        }
-
-        if (allDevicesAndTheirProperties.Count == 0)
-        {
-            logger.LogError("No attached device detected");
-            return new Dictionary<string, string>();
-        }
-
-        var result = allDevicesAndTheirProperties
-            .Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value.Split(new char[] { ',', '\r', '\n' }).Intersect(apkRequiredProperties).Any())
-            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value!);
-
-        if (result.Count == 0)
-        {
-            // In this case, the enumeration worked, we found one or more devices, but nothing matched the APK's architecture; fail out.
-            logger.LogError($"No devices with {propertyName} '{ string.Join("', '", apkRequiredProperties) }' was found among attached and authorized devices.");
-        }
-
-        return result;
-    }
-
-    public string? GetDeviceArchitecture(ILogger logger, string? deviceName = null)
-    {
-        IEnumerable<string> args = new[] { "shell", "getprop", "ro.product.cpu.abi" };
+        IEnumerable<string> args = s_commandList[property];
 
         if (!string.IsNullOrEmpty(deviceName))
         {
             args = new[] { "-s", deviceName }.Concat(args);
         }
 
-        var result = RunAdbCommand(args, TimeSpan.FromMinutes(1));
+        var result = RunAdbCommand(args, TimeSpan.FromSeconds(30));
+
+        // Assumption:  All Devices on a machine running Xharness should attempt to be online or disconnected.
+        var retriesLeft = 30; // Max 5 minutes (30 attempts * 10 second waits)
+        while (retriesLeft-- > 0 && result.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
+        {
+            _log.LogWarning($"Device {deviceName} is offline; retrying up to one minute.");
+            Thread.Sleep(10000);
+
+            result = RunAdbCommand(args, TimeSpan.FromSeconds(30));
+        }
 
         if (!result.Succeeded)
         {
-            _log.LogError("Failed to get device's architecture. Check if a device is attached / emulator is started" + Environment.NewLine + result.StandardError);
+            _log.LogError($"Failed to get device's property {property}. Check if a device is attached / emulator is started" +
+                Environment.NewLine + result.StandardError);
+
             return null;
         }
 
-        _log.LogDebug($"Detected architecture `{result.StandardOutput}` on the selected device");
-
         return result.StandardOutput.Trim();
+    }
+
+    public void SetActiveDevice(AndroidDevice? device)
+    {
+        _processManager.DeviceSerial = device?.DeviceSerial ?? string.Empty;
+        _activeDevice = device;
+
+        if (device is null)
+        {
+            _log.LogInformation($"Active Android device unset");
+        }
+        else
+        {
+            _log.LogInformation($"Active Android device set to serial '{device.DeviceSerial}'");
+        }
     }
 
     public ProcessExecutionResults RunApkInstrumentation(string apkName, string? instrumentationClassName, Dictionary<string, string> args, TimeSpan timeout)
@@ -631,7 +811,7 @@ public class AdbRunner
 
     #region Process runner helpers
 
-    public ProcessExecutionResults RunAdbCommand(IEnumerable<string> arguments) => RunAdbCommand(arguments, TimeSpan.FromMinutes(5));
+    public ProcessExecutionResults RunAdbCommand(params string[] arguments) => RunAdbCommand(arguments, TimeSpan.FromMinutes(5));
 
     public ProcessExecutionResults RunAdbCommand(IEnumerable<string> arguments, TimeSpan timeOut)
     {

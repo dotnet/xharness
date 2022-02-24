@@ -8,12 +8,14 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
 internal class AndroidGetDeviceCommandArguments : XHarnessCommandArguments
 {
-    public AppPathArgument AppPackagePath { get; } = new();
+    public OptionalAppPathArgument AppPackagePath { get; } = new();
     public DeviceArchitectureArgument DeviceArchitecture { get; } = new();
+    public ApiVersionArgument ApiVersion { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
-            AppPackagePath,
-            DeviceArchitecture,
+        AppPackagePath,
+        DeviceArchitecture,
+        ApiVersion,
     };
 }

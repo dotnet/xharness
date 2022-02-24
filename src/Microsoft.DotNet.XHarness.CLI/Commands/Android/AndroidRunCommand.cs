@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -53,26 +57,16 @@ Arguments:
         // Make sure the adb server is started
         runner.StartAdbServer();
 
-        string? deviceId = Arguments.DeviceId;
+        var device = string.IsNullOrEmpty(Arguments.DeviceId.Value)
+            ? runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredInstalledApp: "package:" + apkPackageName)
+            : runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredDeviceId: Arguments.DeviceId.Value);
 
-        if (string.IsNullOrEmpty(deviceId))
+        if (device is null)
         {
-            // trying to find out if there is only one device with the app installed
-            deviceId = runner.GetUniqueDeviceToUse(logger, "package:" + apkPackageName, "app");
-            if (string.IsNullOrEmpty(deviceId))
-            {
-                return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
-            }
+            return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
         }
 
-        runner.SetActiveDevice(deviceId);
-
-        // For test command, this was already filled during installation
-        if (DiagnosticsData.Device == null)
-        {
-            var deviceArchitecture = runner.GetDeviceArchitecture(logger);
-            FillDiagnosticData(DiagnosticsData, deviceId, runner.APIVersion, deviceArchitecture);
-        }
+        DiagnosticsData.CaptureDeviceInfo(device);
 
         runner.TimeToWaitForBootCompletion = Arguments.LaunchTimeout;
 
@@ -106,7 +100,7 @@ Arguments:
     {
         int instrumentationExitCode = (int)ExitCode.GENERAL_FAILURE;
 
-        logger.LogDebug($"Working with {runner.GetAdbVersion()}");
+        logger.LogDebug($"Working with API {runner.GetAdbVersion()}");
 
         // Empty log as we'll be uploading the full logcat for this execution
         runner.ClearAdbLog();

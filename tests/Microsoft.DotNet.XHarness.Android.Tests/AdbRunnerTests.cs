@@ -25,8 +25,7 @@ public class AdbRunnerTests : IDisposable
     private static int s_bootCompleteCheckTimes = 0;
     private readonly Mock<ILogger> _mainLog;
     private readonly Mock<IAdbProcessManager> _processManager;
-    private readonly Dictionary<Tuple<string, string>, int> _fakeDeviceList;
-
+    private readonly List<AndroidDevice> _fakeDeviceList;
 
     public AdbRunnerTests()
     {
@@ -87,8 +86,8 @@ public class AdbRunnerTests : IDisposable
     public void DumpBugReport()
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
-        runner.SetActiveDevice(string.Empty);
         string pathToDumpBugReport = Path.Join(s_scratchAndOutputPath, Path.GetRandomFileName());
+        runner.GetDevice(requiredDeviceId: _fakeDeviceList.First().DeviceSerial);
         runner.DumpBugReport(pathToDumpBugReport);
         VerifyAdbCall("bugreport", $"{pathToDumpBugReport}.zip");
 
@@ -101,28 +100,35 @@ public class AdbRunnerTests : IDisposable
         s_bootCompleteCheckTimes = 0; // Force simulating device is offline
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         string fakeDeviceName = $"emulator-{new Random().Next(9999)}";
-        runner.SetActiveDevice(fakeDeviceName);
+        runner.SetActiveDevice(new AndroidDevice(fakeDeviceName));
         runner.WaitForDevice();
 
         s_bootCompleteCheckTimes = 0; // Force simulating device is offline
         runner.SetActiveDevice(null);
         runner.WaitForDevice();
         VerifyAdbCall(Times.Exactly(2), "wait-for-device");
-        VerifyAdbCall(Times.Exactly(4), "shell", "getprop", "sys.boot_completed");
+        VerifyAdbCall(Times.Exactly(2), "-s", fakeDeviceName, "shell", "getprop", "sys.boot_completed");
+        VerifyAdbCall(Times.Exactly(2), "shell", "getprop", "sys.boot_completed");
     }
 
     [Fact]
     public void ListDevicesAndArchitectures()
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
-        var result = runner.GetAttachedDevicesWithProperties("architecture");
+        var result = runner.GetDevices();
         VerifyAdbCall("devices", "-l");
 
         // Ensure it called, parsed the four random device names and found all four architectures
-        foreach (var fakeDeviceInfo in _fakeDeviceList.Keys)
+        foreach (var fakeDevice in _fakeDeviceList)
         {
-            VerifyAdbCall("-s", fakeDeviceInfo.Item1, "shell", "getprop", "ro.product.cpu.abilist");
-            Assert.Equal(fakeDeviceInfo.Item2, result[fakeDeviceInfo.Item1]);
+            VerifyAdbCall("-s", fakeDevice.DeviceSerial, "shell", "getprop", "ro.product.cpu.abilist");
+            Assert.Equal(fakeDevice.SupportedArchitectures, result.Single(d => d.DeviceSerial == fakeDevice.DeviceSerial).SupportedArchitectures);
+
+            VerifyAdbCall("-s", fakeDevice.DeviceSerial, "shell", "getprop", "ro.build.version.sdk");
+            Assert.Equal(fakeDevice.ApiVersion, result.Single(d => d.ApiVersion == fakeDevice.ApiVersion).ApiVersion);
+
+            VerifyAdbCall("-s", fakeDevice.DeviceSerial, "shell", "getprop", "ro.product.cpu.abi");
+            Assert.Equal(fakeDevice.Architecture, result.Single(d => d.DeviceSerial == fakeDevice.DeviceSerial).Architecture);
         }
 
         Assert.Equal(4, result.Count);
@@ -176,20 +182,54 @@ public class AdbRunnerTests : IDisposable
     }
 
     [Fact]
-    public void GetDeviceToUse()
+    public void GetDevice()
     {
         var requiredArchitecture = "x86_64";
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
-        var result = runner.GetDeviceToUse(_mainLog.Object, new[] { requiredArchitecture }, "architecture");
+        var result = runner.GetDevice(requiredArchitectures: new[] { requiredArchitecture });
         VerifyAdbCall("devices", "-l");
-        Assert.True(_fakeDeviceList.ContainsKey(new Tuple<string, string>(result, requiredArchitecture)));
+        Assert.Contains(_fakeDeviceList, d => d.DeviceSerial == result.DeviceSerial);
+    }
+
+    [Fact]
+    public void GetDeviceWithArchitecture()
+    {
+        var requiredArchitecture = "x86";
+        var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+        var result = runner.GetDevice(loadArchitecture: true, requiredArchitectures: new[] { requiredArchitecture });
+        VerifyAdbCall("devices", "-l");
+        VerifyAdbCall("-s", result.DeviceSerial, "shell", "getprop", "ro.product.cpu.abi");
+        Assert.Contains(_fakeDeviceList, d => d.DeviceSerial == result.DeviceSerial && d.Architecture == result.Architecture);
+    }
+
+    [Fact]
+    public void GetDeviceWithApiVersion()
+    {
+        var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+        var device = _fakeDeviceList.Single(d => d.ApiVersion == 30);
+        var result = runner.GetDevice(loadArchitecture: true, requiredApiVersion: 30);
+        VerifyAdbCall("devices", "-l");
+        Assert.Equal(device.DeviceSerial, result.DeviceSerial);
+        Assert.Equal(device.ApiVersion, result.ApiVersion);
+        Assert.Equal(device.Architecture, result.Architecture);
+    }
+
+    [Fact]
+    public void GetDeviceWithAppAndApiVersion()
+    {
+        var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+        var device = _fakeDeviceList.Single(d => d.ApiVersion == 31 && d.InstalledApplications.Contains("net.dot.E"));
+        var result = runner.GetDevice(requiredInstalledApp: "net.dot.E", requiredApiVersion: 31);
+        VerifyAdbCall("devices", "-l");
+        Assert.Equal(device.DeviceSerial, result.DeviceSerial);
+        Assert.Equal(device.ApiVersion, result.ApiVersion);
     }
 
     [Fact]
     public void RebootAndroidDevice()
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
-        string result = runner.RebootAndroidDevice();
+        runner.RebootAndroidDevice();
         VerifyAdbCall("reboot");
     }
 
@@ -233,17 +273,43 @@ public class AdbRunnerTests : IDisposable
 
     // Generates a list of fake devices, one per supported architecture so we can test AdbRunner's parsing of the output.
     // As with most of these tests, if adb.exe changes, this will break (we are locked into specific version) 
-    private static Dictionary<Tuple<string, string>, int> InitializeFakeDeviceList()
+    private static List<AndroidDevice> InitializeFakeDeviceList()
     {
         var r = new Random();
-        var values = new Dictionary<Tuple<string, string>, int>
+        return new List<AndroidDevice>
+        {
+            new AndroidDevice($"somedevice-{r.Next(9999)}")
             {
-                { new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86_64"), 0 },
-                { new Tuple<string, string>($"somedevice-{r.Next(9999)}", "x86"), 0 },
-                { new Tuple<string, string>($"somedevice-{r.Next(9999)}", "arm64-v8a"), 0 },
-                { new Tuple<string, string>($"somedevice-{r.Next(9999)}", "armeabi-v7a"), 0 }
-            };
-        return values;
+                ApiVersion = 29,
+                Architecture = "x86_64",
+                SupportedArchitectures = new[] { "x86_64", "x86" },
+                InstalledApplications = new[] { "net.dot.A", "net.dot.B" }
+            },
+
+            new AndroidDevice($"somedevice-{r.Next(9999)}")
+            {
+                ApiVersion = 30,
+                Architecture = "x86",
+                SupportedArchitectures = new[] { "x86" },
+                InstalledApplications = new[] { "net.dot.C", "net.dot.D" }
+            },
+
+            new AndroidDevice($"emulator-{r.Next(9999)}")
+            {
+                ApiVersion = 31,
+                Architecture = "arm64-v8a",
+                SupportedArchitectures = new[] { "arm64-v8a", "x86_64", "x86" },
+                InstalledApplications = new[] { "net.dot.E", "net.dot.F" }
+            },
+
+            new AndroidDevice($"emulator-{r.Next(9999)}")
+            {
+                ApiVersion = 32,
+                Architecture = "armeabi-v7a",
+                SupportedArchitectures = new[] { "armeabi-v7a", "x86_64", "x86" },
+                InstalledApplications = new[] { "net.dot.G", "net.dot.H" }
+            },
+        };
     }
 
     private ProcessExecutionResults CallFakeProcessManager(string process, string[] arguments, TimeSpan timeout)
@@ -279,8 +345,8 @@ public class AdbRunnerTests : IDisposable
 
                 foreach (var device in _fakeDeviceList)
                 {
-                    string offlineMsg = _fakeDeviceList[device.Key]++ > 4 ? "offline" : "online";
-                    s.AppendLine($"{device.Key.Item1}          {offlineMsg} transportid:{transportId++}");
+                    string state = device == _fakeDeviceList.Last() ? "offline" : "online";
+                    s.AppendLine($"{device.DeviceSerial}          {state} transportid:{transportId++}");
                 }
 
                 stdOut = s.ToString();
@@ -289,7 +355,17 @@ public class AdbRunnerTests : IDisposable
             case "shell":
                 if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.product.cpu.abilist"))
                 {
-                    stdOut = _fakeDeviceList.Keys.Where(k => k.Item1 == s_currentDeviceSerial).Single().Item2;
+                    stdOut = string.Join(",", _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).SupportedArchitectures);
+                }
+
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.product.cpu.abi"))
+                {
+                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).Architecture;
+                }
+
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.build.version.sdk"))
+                {
+                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).ApiVersion + Environment.NewLine;
                 }
 
                 if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop sys.boot_completed"))
@@ -307,9 +383,9 @@ public class AdbRunnerTests : IDisposable
                     s_bootCompleteCheckTimes++;
                 }
 
-                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.build.version.sdk"))
+                if (string.Join(" ", arguments.Skip(argStart).Take(5)).Equals("shell pm list packages -3"))
                 {
-                    stdOut = $"29{Environment.NewLine}";
+                    stdOut = "package:" + string.Join("\npackage:", _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).InstalledApplications);
                 }
 
                 exitCode = 0;
