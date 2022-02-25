@@ -10,6 +10,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.DotNet.XHarness.Android.Execution;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Android;
@@ -667,32 +668,43 @@ public class AdbRunner
         string[] standardOutputLines = Array.Empty<string>();
         ProcessExecutionResults result = null!;
 
+        _log.LogInformation("Finding attached devices/emulators...");
+
         // Retry up to 3 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
         Retry(() =>
             {
                 result = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
+
+                if (!result.Succeeded)
+                {
+                    _log.LogDebug($"Unexpected response from adb devices -l:" + Environment.NewLine + result);
+                    return false;
+                }
+
                 standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
                 // We will keep retrying until we get something back like 'List of devices attached...{newline} {info about a device} ',
                 // which when split on newlines ignoring empties will be at least 2 lines when there are any available devices.
                 if (standardOutputLines.Length < 2)
                 {
-                    _log.LogDebug($"Unexpected response from adb devices -l:" + Environment.NewLine + result);
+                    _log.LogDebug($"No attached devices found" + Environment.NewLine + result);
                     return false;
                 }
 
                 return true;
             },
             retryInterval: TimeSpan.FromSeconds(10),
-            retryPeriod: TimeSpan.FromMinutes(3));
+            retryPeriod: TimeSpan.FromMinutes(2));
+
+        result.ThrowIfFailed("Failed to enumerate attached devices");
 
         // Two lines = At least one device was found.  On a multi-device machine, we can't function without specifying device serial number.
-        if (result.ExitCode != (int)AdbExitCodes.SUCCESS || standardOutputLines.Length < 2)
+        if (standardOutputLines.Length < 2)
         {
             // Abandon the run here, don't just guess.
-            _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}. " +
+            _log.LogWarning($"No attached devices / emulators detected. " +
                 $"Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, unlocked and authorized.");
-            throw new Exception("One or more attached Android devices are offline or without USB debug permission");
+            return Array.Empty<AndroidDevice>();
         }
 
         var devices = new List<AndroidDevice>();
@@ -870,7 +882,7 @@ public class AdbRunner
             }
 
             ++attempt;
-            _log.LogDebug($"Action failed, retrying in {(int)retryInterval.TotalSeconds} seconds (attempt {attempt})...");
+            _log.LogDebug($"Attempt {attempt} failed, retrying in {(int)retryInterval.TotalSeconds} seconds...");
             Thread.Sleep(retryInterval);
         }
     }

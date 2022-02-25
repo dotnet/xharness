@@ -33,7 +33,7 @@ internal abstract class AndroidCommand<TArguments> : XHarnessCommand<TArguments>
         }
         catch (NoDeviceFoundException noDevice)
         {
-            logger.LogCritical(noDevice, noDevice.Message);
+            logger.LogCritical(noDevice.Message);
             return Task.FromResult(ExitCode.DEVICE_NOT_FOUND);
         }
         catch (AdbFailureException adbFailure)
