@@ -13,6 +13,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android;
 
@@ -30,7 +31,7 @@ internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandAr
     {
         try
         {
-            var data = GetStateData(logger);
+            var data = GetStateData(Arguments.UseJson ? NullLogger.Instance : logger);
 
             if (Arguments.UseJson)
             {
@@ -107,5 +108,9 @@ internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandAr
         return new StateData(state, adbVersion, emulators, devices);
     }
 
-    private record StateData(string DeviceState, string[] AdbVersion, IEnumerable<AndroidDevice> Emulators, IEnumerable<AndroidDevice> Devices);
+    private record StateData(
+        string DeviceState,
+        string[] AdbVersion,
+        IEnumerable<AndroidDevice> Emulators,
+        IEnumerable<AndroidDevice> Devices);
 }

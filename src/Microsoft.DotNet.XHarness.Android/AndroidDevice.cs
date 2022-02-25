@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.XHarness.Android;
 
@@ -10,12 +11,16 @@ public record AndroidDevice
 {
     public string DeviceSerial { get; init; }
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? ApiVersion { get; set; } = null;
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Architecture { get; set; } = null;
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyCollection<string>? SupportedArchitectures { get; set; } = null;
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyCollection<string>? InstalledApplications { get; set; } = null;
 
     public AndroidDevice(string deviceSerial) => DeviceSerial = deviceSerial;

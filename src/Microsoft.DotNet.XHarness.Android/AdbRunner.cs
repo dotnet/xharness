@@ -116,12 +116,7 @@ public class AdbRunner
         return result.StandardOutput;
     }
 
-    public string GetAdbState()
-    {
-        var result = RunAdbCommand("get-state");
-        result.ThrowIfFailed("Failed to get ADB state");
-        return result.StandardOutput;
-    }
+    public string GetAdbState() => RunAdbCommand("get-state").StandardOutput;
 
     public string RebootAndroidDevice()
     {
@@ -556,13 +551,12 @@ public class AdbRunner
         catch (Exception toLog)
         {
             _log.LogError(toLog, $"Exception thrown while trying to find compatible device");
-            return new List<AndroidDevice>();
+            return Array.Empty<AndroidDevice>();
         }
 
         if (devices.Count == 0)
         {
-            _log.LogError("No attached and authorized device detected");
-            return devices;
+            return Array.Empty<AndroidDevice>();
         }
 
         if (requiredDeviceId != null)
@@ -694,7 +688,7 @@ public class AdbRunner
                 return true;
             },
             retryInterval: TimeSpan.FromSeconds(10),
-            retryPeriod: TimeSpan.FromMinutes(2));
+            retryPeriod: TimeSpan.FromSeconds(90));
 
         result.ThrowIfFailed("Failed to enumerate attached devices");
 
@@ -708,6 +702,8 @@ public class AdbRunner
         }
 
         var devices = new List<AndroidDevice>();
+
+        _log.LogDebug($"Found {standardOutputLines.Length - 1} possible devices");
 
         // Start at 1 to skip first line, which is always 'List of devices attached'
         for (int lineNumber = 1; lineNumber < standardOutputLines.Length; lineNumber++)
