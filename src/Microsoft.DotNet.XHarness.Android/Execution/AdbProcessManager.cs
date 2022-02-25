@@ -81,7 +81,7 @@ public class AdbProcessManager : IAdbProcessManager
         // (int.MaxValue ms is about 24 days).  Large values are effectively timeouts for the outer harness
         if (!p.WaitForExit((int)Math.Min(timeOut.TotalMilliseconds, int.MaxValue)))
         {
-            _log.LogError("Waiting for command timed out: execution may be compromised.");
+            _log.LogError("Waiting for command timed out: execution may be compromised");
             timedOut = true;
             exitCode = (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT;
 

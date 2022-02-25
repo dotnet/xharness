@@ -61,7 +61,7 @@ public class AdbRunner
         string? environmentPath = Environment.GetEnvironmentVariable(AdbEnvironmentVariableName);
         if (!string.IsNullOrEmpty(environmentPath))
         {
-            _log.LogDebug($"Using {AdbEnvironmentVariableName} environment variable ({environmentPath}) for ADB path.");
+            _log.LogDebug($"Using {AdbEnvironmentVariableName} environment variable ({environmentPath}) for ADB path");
             adbExePath = environmentPath;
         }
 
@@ -100,7 +100,7 @@ public class AdbRunner
         {
             return Path.Join(currentAssemblyDirectory, @"../../../runtimes/any/native/adb/macos/adb");
         }
-        throw new NotSupportedException("Cannot determine OS platform being used, thus we can not select an ADB executable.");
+        throw new NotSupportedException("Cannot determine OS platform being used, thus we can not select an ADB executable");
     }
 
     #endregion
@@ -207,7 +207,7 @@ public class AdbRunner
 
         if (bootCompleted)
         {
-            _log.LogDebug($"Waited {(int)watch.Elapsed.TotalSeconds} seconds for device boot completion.");
+            _log.LogDebug($"Waited {(int)watch.Elapsed.TotalSeconds} seconds for device boot completion");
         }
         else
         {
@@ -309,7 +309,7 @@ public class AdbRunner
         }
         else
         {
-            _log.LogInformation($"Successfully installed {apkPath}.");
+            _log.LogInformation($"Successfully installed {apkPath}");
         }
 
         return result.ExitCode;
@@ -322,7 +322,7 @@ public class AdbRunner
             throw new ArgumentNullException(nameof(apkName));
         }
 
-        _log.LogInformation($"Attempting to remove apk '{apkName}': ");
+        _log.LogInformation($"Attempting to remove apk '{apkName}'..");
         var result = RunAdbCommand(new[] { "uninstall", apkName });
 
         // See note above in install()
@@ -337,12 +337,12 @@ public class AdbRunner
 
         if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
         {
-            _log.LogInformation($"Successfully uninstalled {apkName}.");
+            _log.LogInformation($"Successfully uninstalled {apkName}");
         }
         else if (result.ExitCode == (int)AdbExitCodes.ADB_UNINSTALL_APP_NOT_ON_DEVICE ||
                  result.ExitCode == (int)AdbExitCodes.ADB_UNINSTALL_APP_NOT_ON_EMULATOR)
         {
-            _log.LogInformation($"APK '{apkName}' not on device.");
+            _log.LogInformation($"APK '{apkName}' was not on device");
         }
         else
         {
@@ -432,7 +432,7 @@ public class AdbRunner
                 // if the file is already there, just warn and skip it.
                 if (File.Exists(destinationPath))
                 {
-                    _log.LogWarning($"Skipping file copy as {destinationPath} already exists.");
+                    _log.LogWarning($"Skipping file copy as {destinationPath} already exists");
                 }
                 else
                 {
@@ -442,7 +442,7 @@ public class AdbRunner
                 }
             }
 
-            _log.LogDebug($"Copied {copiedFiles.Count} files to {localPath}.");
+            _log.LogDebug($"Copied {copiedFiles.Count} files to {localPath}");
             return copiedFiles;
         }
         finally
