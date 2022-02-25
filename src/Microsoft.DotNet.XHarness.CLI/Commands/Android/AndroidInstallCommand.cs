@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
@@ -29,15 +28,12 @@ Arguments:
     {
     }
 
-    protected override Task<ExitCode> InvokeInternal(ILogger logger)
+    protected override ExitCode InvokeCommand(ILogger logger)
     {
-        logger.LogDebug($"Android Install command called: App = {Arguments.AppPackagePath}");
-        logger.LogDebug($"Timeout = {Arguments.Timeout.Value.TotalSeconds} seconds.");
-
         if (!File.Exists(Arguments.AppPackagePath))
         {
             logger.LogCritical($"Couldn't find {Arguments.AppPackagePath}!");
-            return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
+            return ExitCode.PACKAGE_NOT_FOUND;
         }
 
         var runner = new AdbRunner(logger);
@@ -59,31 +55,16 @@ Arguments:
             }
         }
 
-        // Package Name is not guaranteed to match file name, so it needs to be mandatory.
-        try
-        {
-            return Task.FromResult(InvokeHelper(
-                logger: logger,
-                apkPackageName: Arguments.PackageName,
-                appPackagePath: Arguments.AppPackagePath,
-                apkRequiredArchitecture: apkRequiredArchitecture,
-                deviceId: Arguments.DeviceId,
-                apiVersion: Arguments.ApiVersion.Value,
-                bootTimeoutSeconds: Arguments.LaunchTimeout,
-                runner: runner,
-            DiagnosticsData));
-        }
-        catch (NoDeviceFoundException noDevice)
-        {
-            logger.LogCritical(noDevice, noDevice.Message);
-            return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
-        }
-        catch (Exception toLog)
-        {
-            logger.LogCritical(toLog, toLog.Message);
-        }
-
-        return Task.FromResult(ExitCode.GENERAL_FAILURE);
+        return InvokeHelper(
+            logger: logger,
+            apkPackageName: Arguments.PackageName,
+            appPackagePath: Arguments.AppPackagePath,
+            apkRequiredArchitecture: apkRequiredArchitecture,
+            deviceId: Arguments.DeviceId,
+            apiVersion: Arguments.ApiVersion.Value,
+            bootTimeoutSeconds: Arguments.LaunchTimeout,
+            runner: runner,
+            DiagnosticsData);
     }
 
     public static ExitCode InvokeHelper(

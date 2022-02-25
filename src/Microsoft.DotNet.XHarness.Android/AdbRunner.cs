@@ -243,7 +243,7 @@ public class AdbRunner
 
         if (!started)
         {
-            throw new Exception("Failed to start the ADB server!");
+            throw new AdbStartFailedException();
         }
     }
 

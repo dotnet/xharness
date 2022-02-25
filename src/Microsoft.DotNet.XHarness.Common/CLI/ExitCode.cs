@@ -82,11 +82,6 @@ public enum ExitCode
     DEVICE_FILE_COPY_FAILURE = 84,
 
     /// <summary>
-    /// Failed to retrieve a list of Android targets via ADB
-    /// </summary>
-    ADB_DEVICE_ENUMERATION_FAILURE = 85,
-
-    /// <summary>
     /// Time outs happening during the installation phase (or install command)
     /// </summary>
     PACKAGE_INSTALLATION_TIMEOUT = 86,
@@ -111,4 +106,9 @@ public enum ExitCode
     /// connected yetover TCP and --launch-timeout expires
     /// </summary>
     APP_LAUNCH_TIMEOUT = 90,
+
+    /// <summary>
+    /// Failure when calling ADB
+    /// </summary>
+    ADB_FAILURE = 91,
 }
