@@ -17,18 +17,26 @@ public class ProcessExecutionResults
     public string StandardOutput { get; set; } = "";
     public string StandardError { get; set; } = "";
 
+    public void ThrowIfFailed(string failureMessage)
+    {
+        if (!Succeeded)
+        {
+            throw new AdbFailureException(failureMessage + Environment.NewLine + this);
+        }
+    }
+
     public override string ToString()
     {
         var output = new StringBuilder();
         output.AppendLine($"Exit code: {ExitCode}");
-        output.AppendLine($"Standard Output:{Environment.NewLine}{StandardOutput}");
+        output.AppendLine($"Std out:{Environment.NewLine}{StandardOutput}{Environment.NewLine}");
         if (!string.IsNullOrEmpty(StandardError))
         {
-            output.AppendLine($"Standard Error:{Environment.NewLine}{StandardError}");
+            output.AppendLine($"Std err:{Environment.NewLine}{StandardError}{Environment.NewLine}");
         }
+
         return output.ToString();
     }
-
 }
 
 /// <summary>

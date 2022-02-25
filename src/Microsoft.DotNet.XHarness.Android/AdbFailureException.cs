@@ -6,9 +6,9 @@ using System;
 
 namespace Microsoft.DotNet.XHarness.Android;
 
-public class AdbStartFailedException : Exception
+public class AdbFailureException : Exception
 {
-    public AdbStartFailedException() : base("Failed to start the ADB server")
+    public AdbFailureException(string message) : base(message)
     {
     }
 }

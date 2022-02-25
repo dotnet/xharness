@@ -36,9 +36,9 @@ internal abstract class AndroidCommand<TArguments> : XHarnessCommand<TArguments>
             logger.LogCritical(noDevice, noDevice.Message);
             return Task.FromResult(ExitCode.DEVICE_NOT_FOUND);
         }
-        catch (AdbStartFailedException)
+        catch (AdbFailureException adbFailure)
         {
-            logger.LogCritical("Failed to start the ADB server");
+            logger.LogCritical(adbFailure, adbFailure.Message);
             return Task.FromResult(ExitCode.ADB_FAILURE);
         }
         catch (Exception toLog)

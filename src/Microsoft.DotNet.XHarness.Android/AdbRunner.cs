@@ -108,15 +108,31 @@ public class AdbRunner
 
     public TimeSpan TimeToWaitForBootCompletion { get; set; } = TimeSpan.FromMinutes(5);
 
-    public string GetAdbVersion() => RunAdbCommand("version").StandardOutput;
+    public string GetAdbVersion()
+    {
+        var result = RunAdbCommand("version");
+        result.ThrowIfFailed("Failed to get ADB version");
+        return result.StandardOutput;
+    }
 
-    public string GetAdbState() => RunAdbCommand("get-state").StandardOutput;
+    public string GetAdbState()
+    {
+        var result = RunAdbCommand("version");
+        result.ThrowIfFailed("Failed to get ADB state");
+        return result.StandardOutput;
+    }
 
-    public string RebootAndroidDevice() => RunAdbCommand("reboot").StandardOutput;
+    public string RebootAndroidDevice()
+    {
+        var result = RunAdbCommand("version");
+        result.ThrowIfFailed("Failed to reboot the device");
+        return result.StandardOutput;
+    }
 
     public void ClearAdbLog() => RunAdbCommand("logcat", "-c");
 
-    public void EnableWifi(bool enable) => RunAdbCommand("shell", "svc", "wifi", enable ? "enable" : "disable");
+    public void EnableWifi(bool enable) => RunAdbCommand("shell", "svc", "wifi", enable ? "enable" : "disable")
+        .ThrowIfFailed($"Failed to {(enable ? "enable" : "disable")} WiFi on the device");
 
     public void DumpAdbLog(string outputFilePath, string filterSpec = "")
     {
@@ -174,12 +190,8 @@ public class AdbRunner
         // (Returns instantly if device is ready)
         // This can fail if _currentDevice is unset if there are multiple devices.
         _log.LogInformation("Waiting for device to be available (max 5 minutes)");
-        var result = RunAdbCommand(new[] { "wait-for-device" }, TimeSpan.FromMinutes(5));
-        _log.LogDebug($"{result.StandardOutput}");
-        if (result.ExitCode != 0)
-        {
-            throw new Exception($"Error waiting for Android device/emulator.  Std out:{result.StandardOutput} Std. Err: {result.StandardError}.  Do you need to set the current device?");
-        }
+        RunAdbCommand(new[] { "wait-for-device" }, TimeSpan.FromMinutes(5))
+            .ThrowIfFailed("Error waiting for Android device/emulator");
 
         // Some users will be installing the emulator and immediately calling xharness, they need to be able to expect the device is ready to load APKs.
         // Once wait-for-device returns, we'll give it up to TimeToWaitForBootCompletion (default 5 min) for 'adb shell getprop sys.boot_completed'
@@ -218,9 +230,7 @@ public class AdbRunner
 
                 if (!started)
                 {
-                    _log.LogWarning($"Error starting the ADB server:" +
-                        $"{Environment.NewLine}  Std out: {result.StandardOutput}" +
-                        $"{Environment.NewLine}  Std err: {result.StandardError}");
+                    _log.LogWarning($"Error starting the ADB server" + Environment.NewLine + result);
 
                     try
                     {
@@ -243,26 +253,21 @@ public class AdbRunner
 
         if (!started)
         {
-            throw new AdbStartFailedException();
+            throw new AdbFailureException("Failed to start the ADB server");
         }
     }
 
-    public void KillAdbServer()
-    {
-        var result = RunAdbCommand(new[] { "kill-server" });
-        if (result.ExitCode != 0)
-        {
-            throw new Exception($"Error killing ADB Server.  Std out:{result.StandardOutput} Std. Err: {result.StandardError}");
-        }
-    }
+    public void KillAdbServer() => RunAdbCommand(new[] { "kill-server" }).ThrowIfFailed("Error killing ADB Server");
 
     public int InstallApk(string apkPath)
     {
-        _log.LogInformation($"Attempting to install {apkPath}: ");
+        _log.LogInformation($"Attempting to install {apkPath}");
+
         if (string.IsNullOrEmpty(apkPath))
         {
             throw new ArgumentException($"No value supplied for {nameof(apkPath)} ");
         }
+
         if (!File.Exists(apkPath))
         {
             throw new FileNotFoundException($"Could not find {apkPath}", apkPath);
@@ -347,6 +352,7 @@ public class AdbRunner
         {
             _log.LogError(message: $"Error: {result}");
         }
+
         return result.ExitCode;
     }
 
@@ -386,67 +392,40 @@ public class AdbRunner
 
             if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
             {
-                if (GetDeviceApiVersion() == 30)
+                if (GetDeviceApiVersion() != 30)
                 {
-                    // On Android API 30 we can't use "adb pull" directly due to permission issues on emulators, see https://github.com/dotnet/xharness/issues/385
-                    // As a workaround we copy the files to the temp directory on the device using "run-as" and pull from there
-                    _log.LogInformation($"Failed to pull file. Device is running Android API 30, trying fallback to pull {devicePath}");
-
-                    result = RunAdbCommand(new[] { "shell", "run-as", apkPackageName, "ls", devicePath });
-
-                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                    {
-                        throw new Exception($"Failed checking for file using fallback: {result}");
-                    }
-
-                    string? fileName = devicePath.Split("/").LastOrDefault();
-                    if (string.IsNullOrWhiteSpace(fileName))
-                    {
-                        throw new Exception($"Failed pulling file using fallback: Couldn't determine filename for {devicePath}");
-                    }
-
-                    string deviceTempPath = $"/data/local/tmp/{fileName}";
-
-                    result = RunAdbCommand(new[] { "shell", "rm", "-rf", deviceTempPath });
-
-
-                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                    {
-                        throw new Exception($"Failed removing {deviceTempPath} before using fallback: {result}");
-                    }
-
-                    result = RunAdbCommand(new[] { "shell", "touch", deviceTempPath });
-
-                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                    {
-                        throw new Exception($"Failed touching {deviceTempPath}: {result}");
-                    }
-
-                    result = RunAdbCommand(new[] { "shell", "run-as", apkPackageName, "cp", devicePath, deviceTempPath });
-
-                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                    {
-                        throw new Exception($"Failed copying file using fallback: {result}");
-                    }
-
-                    result = RunAdbCommand(new[] { "pull", deviceTempPath, tempFolder });
-
-                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                    {
-                        throw new Exception($"Failed pulling file using fallback: {result}");
-                    }
-
-                    result = RunAdbCommand(new[] { "shell", "rm", "-f", deviceTempPath });
-
-                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                    {
-                        throw new Exception($"Failed removing {deviceTempPath} after using fallback: {result}");
-                    }
+                    throw new AdbFailureException($"Failed pulling files: {result}");
                 }
-                else
+
+                // On Android API 30 we can't use "adb pull" directly due to permission issues on emulators, see https://github.com/dotnet/xharness/issues/385
+                // As a workaround we copy the files to the temp directory on the device using "run-as" and pull from there
+                _log.LogInformation($"Failed to pull file. Device is running Android API 30, trying fallback to pull {devicePath}");
+
+                result = RunAdbCommand(new[] { "shell", "run-as", apkPackageName, "ls", devicePath });
+                result.ThrowIfFailed($"Failed checking for file using fallback: {result}");
+
+                string? fileName = devicePath.Split("/").LastOrDefault();
+                if (string.IsNullOrWhiteSpace(fileName))
                 {
-                    throw new Exception($"Failed pulling files: {result}");
+                    throw new AdbFailureException($"Failed pulling file using fallback: Couldn't determine filename for {devicePath}");
                 }
+
+                string deviceTempPath = $"/data/local/tmp/{fileName}";
+
+                result = RunAdbCommand(new[] { "shell", "rm", "-rf", deviceTempPath });
+                result.ThrowIfFailed($"Failed removing {deviceTempPath} before using fallback: {result}");
+
+                result = RunAdbCommand(new[] { "shell", "touch", deviceTempPath });
+                result.ThrowIfFailed($"Failed touching {deviceTempPath}: {result}");
+
+                result = RunAdbCommand(new[] { "shell", "run-as", apkPackageName, "cp", devicePath, deviceTempPath });
+                result.ThrowIfFailed($"Failed copying file using fallback: {result}");
+
+                result = RunAdbCommand(new[] { "pull", deviceTempPath, tempFolder });
+                result.ThrowIfFailed($"Failed pulling file using fallback: {result}");
+
+                result = RunAdbCommand(new[] { "shell", "rm", "-f", deviceTempPath });
+                result.ThrowIfFailed($"Failed removing {deviceTempPath} after using fallback: {result}");
             }
 
             var copiedToTemp = Directory.GetFiles(tempFolder, "*", SearchOption.AllDirectories);
@@ -466,6 +445,7 @@ public class AdbRunner
                     copiedFiles.Add(destinationPath);
                 }
             }
+
             _log.LogDebug($"Copied {copiedFiles.Count} files to {localPath}.");
             return copiedFiles;
         }
@@ -697,11 +677,7 @@ public class AdbRunner
                 // which when split on newlines ignoring empties will be at least 2 lines when there are any available devices.
                 if (standardOutputLines.Length < 2)
                 {
-                    _log.LogDebug($"Unexpected response from adb devices -l:{Environment.NewLine}" +
-                        $"Exit code={result.ExitCode}{Environment.NewLine}" +
-                        $"Std. Output: {result.StandardOutput} {Environment.NewLine}" +
-                        $"Std. Error: {result.StandardError}");
-
+                    _log.LogDebug($"Unexpected response from adb devices -l:" + Environment.NewLine + result);
                     return false;
                 }
 
