@@ -138,10 +138,12 @@ Arguments:
                         }
                     }
                 }
+
                 if (resultValues.ContainsKey(TestRunSummaryVariableName))
                 {
                     logger.LogInformation($"Test execution summary:{Environment.NewLine}{resultValues[TestRunSummaryVariableName]}");
                 }
+
                 if (resultValues.ContainsKey(ShortMessageVariableName))
                 {
                     logger.LogInformation($"Short Message: {Environment.NewLine}{resultValues[ShortMessageVariableName]}");

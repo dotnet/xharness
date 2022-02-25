@@ -218,9 +218,9 @@ public class AdbRunner
 
                 if (!started)
                 {
-                    _log.LogWarning($"Error starting ADB Server.{Environment.NewLine}  " +
-                        $"Std out:{result.StandardOutput}{Environment.NewLine}  " +
-                        $"Std. Err: {result.StandardError}");
+                    _log.LogWarning($"Error starting the ADB server:" +
+                        $"{Environment.NewLine}  Std out: {result.StandardOutput}" +
+                        $"{Environment.NewLine}  Std err: {result.StandardError}");
 
                     try
                     {
