@@ -413,7 +413,7 @@ public class AdbRunnerTests : IDisposable
                 break;
 
             default:
-                throw new InvalidOperationException($"Fake ADB doesn't know how to handle argument: {arguments}");
+                throw new InvalidOperationException($"Fake ADB doesn't know how to handle argument: {string.Join(" ", arguments)}");
         }
 
         return new ProcessExecutionResults

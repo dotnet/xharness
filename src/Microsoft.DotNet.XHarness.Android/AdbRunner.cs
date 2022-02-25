@@ -117,14 +117,14 @@ public class AdbRunner
 
     public string GetAdbState()
     {
-        var result = RunAdbCommand("version");
+        var result = RunAdbCommand("get-state");
         result.ThrowIfFailed("Failed to get ADB state");
         return result.StandardOutput;
     }
 
     public string RebootAndroidDevice()
     {
-        var result = RunAdbCommand("version");
+        var result = RunAdbCommand("reboot");
         result.ThrowIfFailed("Failed to reboot the device");
         return result.StandardOutput;
     }
