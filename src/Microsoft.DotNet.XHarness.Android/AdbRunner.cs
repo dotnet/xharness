@@ -853,13 +853,8 @@ public class AdbRunner
         return _processManager.Run(_absoluteAdbExePath, arguments, timeOut);
     }
 
-    private void Retry(Func<bool> action, TimeSpan retryInterval, ushort? maxRetries = null, TimeSpan? retryPeriod = null)
+    private void Retry(Func<bool> action, TimeSpan retryInterval, TimeSpan retryPeriod)
     {
-        if (!maxRetries.HasValue && !retryPeriod.HasValue)
-        {
-            throw new ArgumentException($"Please provide one or both of {nameof(maxRetries)} or {nameof(retryPeriod)}");
-        }
-
         var watch = Stopwatch.StartNew();
         int attempt = 0;
 
@@ -871,7 +866,7 @@ public class AdbRunner
                 break;
             }
 
-            if ((maxRetries != -1 && attempt > maxRetries) || (retryPeriod.HasValue && watch.Elapsed > retryPeriod))
+            if (watch.Elapsed > retryPeriod)
             {
                 _log.LogDebug($"All {attempt} retries of action failed");
                 break;
