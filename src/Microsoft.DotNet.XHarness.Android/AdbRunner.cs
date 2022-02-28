@@ -858,14 +858,8 @@ public class AdbRunner
         var watch = Stopwatch.StartNew();
         int attempt = 0;
 
-        while (true)
+        while (!action())
         {
-            bool result = action();
-            if (result)
-            {
-                break;
-            }
-
             if (watch.Elapsed > retryPeriod)
             {
                 _log.LogDebug($"All {attempt} retries of action failed");
