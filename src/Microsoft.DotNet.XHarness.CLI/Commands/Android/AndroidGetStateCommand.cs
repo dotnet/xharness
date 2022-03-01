@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
@@ -37,7 +38,8 @@ internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandAr
             {
                 var options = new JsonSerializerOptions
                 {
-                    WriteIndented = true
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                    WriteIndented = true,
                 };
 
                 JsonSerializer.Serialize(Console.OpenStandardOutput(), data, options);
