@@ -10,7 +10,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.DotNet.XHarness.Android.Execution;
-using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Android;
@@ -193,14 +192,12 @@ public class AdbRunner
         // Once wait-for-device returns, we'll give it up to TimeToWaitForBootCompletion (default 5 min) for 'adb shell getprop sys.boot_completed'
         // to be '1' (as opposed to empty) to make subsequent automation happy.
         var watch = Stopwatch.StartNew();
-        bool bootCompleted = false;
-
-        Retry(() =>
+        bool bootCompleted = Retry(
+            () =>
             {
                 string? result = GetDeviceProperty(AdbProperty.BootCompletion, _activeDevice?.DeviceSerial);
                 _log.LogDebug($"sys.boot_completed = '{result}'");
-                bootCompleted = result?.StartsWith("1") ?? false;
-                return bootCompleted;
+                return result?.StartsWith('1') ?? false;
             },
             retryInterval: TimeSpan.FromSeconds(10),
             retryPeriod: TimeToWaitForBootCompletion);
@@ -217,9 +214,8 @@ public class AdbRunner
 
     public void StartAdbServer()
     {
-        bool started = false;
-
-        Retry(() =>
+        bool started = Retry(
+            () =>
             {
                 var result = RunAdbCommand(new[] { "start-server" }, TimeSpan.FromMinutes(1));
                 started = result.Succeeded;
@@ -660,32 +656,31 @@ public class AdbRunner
     private IReadOnlyCollection<AndroidDevice> GetDevices(params AdbProperty[] propertiesToLoad)
     {
         string[] standardOutputLines = Array.Empty<string>();
-        ProcessExecutionResults result = null!;
 
         _log.LogInformation("Finding attached devices/emulators...");
 
         // Retry up to 3 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
-        Retry(() =>
+        ProcessExecutionResults result = Retry(
+            action: () => RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30)),
+            needsRetry: r =>
             {
-                result = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
-
-                if (!result.Succeeded)
+                if (!r.Succeeded)
                 {
-                    _log.LogDebug($"Unexpected response from adb devices -l:" + Environment.NewLine + result);
-                    return false;
+                    _log.LogDebug("Unexpected response from adb devices -l:" + Environment.NewLine + r);
+                    return true;
                 }
 
-                standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+                standardOutputLines = r.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
                 // We will keep retrying until we get something back like 'List of devices attached...{newline} {info about a device} ',
                 // which when split on newlines ignoring empties will be at least 2 lines when there are any available devices.
                 if (standardOutputLines.Length < 2)
                 {
-                    _log.LogDebug($"No attached devices found" + Environment.NewLine + result);
-                    return false;
+                    _log.LogDebug("No attached devices found" + Environment.NewLine + r);
+                    return true;
                 }
 
-                return true;
+                return false;
             },
             retryInterval: TimeSpan.FromSeconds(10),
             retryPeriod: TimeSpan.FromSeconds(90));
@@ -696,8 +691,8 @@ public class AdbRunner
         if (standardOutputLines.Length < 2)
         {
             // Abandon the run here, don't just guess.
-            _log.LogWarning($"No attached devices / emulators detected. " +
-                $"Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, unlocked and authorized.");
+            _log.LogWarning("No attached devices / emulators detected. " +
+                "Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, unlocked and authorized.");
             return Array.Empty<AndroidDevice>();
         }
 
@@ -752,20 +747,18 @@ public class AdbRunner
             args = new[] { "-s", deviceName }.Concat(args);
         }
 
-        ProcessExecutionResults result = null!;
-
         // Assumption: All Devices on a machine running Xharness should attempt to be online or disconnected.
-        Retry(() =>
+        ProcessExecutionResults result = Retry(
+            action: () => RunAdbCommand(args, TimeSpan.FromSeconds(30)),
+            needsRetry: r =>
             {
-                result = RunAdbCommand(args, TimeSpan.FromSeconds(30));
-
-                if (!result.Succeeded || result.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
+                if (!r.Succeeded || r.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
                 {
                     _log.LogWarning($"Device {deviceName} is offline; retrying up to five minutes");
-                    return false;
+                    return true;
                 }
 
-                return true;
+                return false;
             },
             retryInterval: TimeSpan.FromSeconds(10),
             retryPeriod: TimeSpan.FromMinutes(5));
@@ -853,13 +846,24 @@ public class AdbRunner
         return _processManager.Run(_absoluteAdbExePath, arguments, timeOut);
     }
 
-    private void Retry(Func<bool> action, TimeSpan retryInterval, TimeSpan retryPeriod)
+    private bool Retry(Func<bool> action, TimeSpan retryInterval, TimeSpan retryPeriod) =>
+        Retry(action, result => !result, retryInterval, retryPeriod);
+
+    private T Retry<T>(Func<T> action, Func<T, bool> needsRetry, TimeSpan retryInterval, TimeSpan retryPeriod)
     {
         var watch = Stopwatch.StartNew();
         int attempt = 0;
 
-        while (!action())
+        T result;
+        while(true)
         {
+            result = action();
+
+            if (!needsRetry(result))
+            {
+                return result;
+            }
+
             if (watch.Elapsed > retryPeriod)
             {
                 _log.LogDebug($"All {attempt} retries of action failed");
@@ -870,6 +874,8 @@ public class AdbRunner
             _log.LogDebug($"Attempt {attempt} failed, retrying in {(int)retryInterval.TotalSeconds} seconds...");
             Thread.Sleep(retryInterval);
         }
+
+        return result;
     }
 
     #endregion
