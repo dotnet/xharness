@@ -103,7 +103,8 @@ public enum ExitCode
 
     /// <summary>
     /// This timeout occurs when the Apple app has been launched but hasn't
-    /// connected yetover TCP and --launch-timeout expires
+    /// connected yet over TCP and --launch-timeout expires
+
     /// </summary>
     APP_LAUNCH_TIMEOUT = 90,
 
