@@ -6,12 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
-using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
@@ -37,9 +35,8 @@ Arguments:
     {
     }
 
-    protected override Task<ExitCode> InvokeInternal(ILogger logger)
+    protected override ExitCode InvokeCommand(ILogger logger)
     {
-        var runner = new AdbRunner(logger);
         IEnumerable<string>? apkRequiredArchitecture = null;
 
         if (Arguments.DeviceArchitecture.Value.Any())
@@ -51,46 +48,33 @@ Arguments:
             if (!File.Exists(Arguments.AppPackagePath.Value))
             {
                 logger.LogCritical($"Couldn't find {Arguments.AppPackagePath.Value}!");
-                return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
+                return ExitCode.PACKAGE_NOT_FOUND;
             }
 
             apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(Arguments.AppPackagePath.Value);
         }
 
-        try
+        // Make sure the adb server is started
+        var runner = new AdbRunner(logger);
+        runner.StartAdbServer();
+
+        // enumerate the devices attached and their architectures
+        // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
+        var device = runner.GetDevice(
+            loadApiVersion: true,
+            loadArchitecture: true,
+            requiredApiVersion: Arguments.ApiVersion.Value,
+            requiredArchitectures: apkRequiredArchitecture);
+
+        if (device is null)
         {
-            // Make sure the adb server is started
-            runner.StartAdbServer();
-
-            // enumerate the devices attached and their architectures
-            // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
-            var device = runner.GetDevice(
-                loadApiVersion: true,
-                loadArchitecture: true,
-                requiredApiVersion: Arguments.ApiVersion.Value,
-                requiredArchitectures: apkRequiredArchitecture);
-
-            if (device is null)
-            {
-                return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
-            }
-
-            DiagnosticsData.CaptureDeviceInfo(device);
-
-            Console.WriteLine(device.DeviceSerial);
-
-            return Task.FromResult(ExitCode.SUCCESS);
-        }
-        catch (NoDeviceFoundException noDevice)
-        {
-            logger.LogCritical(noDevice, $"Failure to find compatible device: {noDevice.Message}");
-            return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
-        }
-        catch (Exception toLog)
-        {
-            logger.LogCritical(toLog, $"Failure to find compatible device: {toLog.Message}");
+            return ExitCode.DEVICE_NOT_FOUND;
         }
 
-        return Task.FromResult(ExitCode.GENERAL_FAILURE);
+        DiagnosticsData.CaptureDeviceInfo(device);
+
+        Console.WriteLine(device.DeviceSerial);
+
+        return ExitCode.SUCCESS;
     }
 }

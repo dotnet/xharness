@@ -2,11 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
@@ -39,78 +37,49 @@ Arguments:
     {
     }
 
-    protected override Task<ExitCode> InvokeInternal(ILogger logger)
+    protected override ExitCode InvokeCommand(ILogger logger)
     {
-        logger.LogDebug($"Android Test command called: App = {Arguments.AppPackagePath}{Environment.NewLine}Instrumentation Name = {Arguments.InstrumentationName}");
-        logger.LogDebug($"Output Directory:{Arguments.OutputDirectory}{Environment.NewLine}Timeout = {Arguments.Timeout.Value.TotalSeconds} seconds.");
-        logger.LogDebug("Arguments to instrumentation:");
-
         if (!File.Exists(Arguments.AppPackagePath))
         {
             logger.LogCritical($"Couldn't find {Arguments.AppPackagePath}!");
-            return Task.FromResult(ExitCode.PACKAGE_NOT_FOUND);
+            return ExitCode.PACKAGE_NOT_FOUND;
         }
+
+        IEnumerable<string> apkRequiredArchitecture = Arguments.DeviceArchitecture.Value.Any()
+            ? Arguments.DeviceArchitecture.Value
+            : ApkHelper.GetApkSupportedArchitectures(Arguments.AppPackagePath);
+
+        logger.LogInformation($"Required architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
 
         var runner = new AdbRunner(logger);
 
-        IEnumerable<string> apkRequiredArchitecture;
+        var exitCode = AndroidInstallCommand.InvokeHelper(
+            logger: logger,
+            apkPackageName: Arguments.PackageName,
+            appPackagePath: Arguments.AppPackagePath,
+            apkRequiredArchitecture: apkRequiredArchitecture,
+            deviceId: Arguments.DeviceId.Value,
+            apiVersion: Arguments.ApiVersion.Value,
+            bootTimeoutSeconds: Arguments.LaunchTimeout,
+            runner,
+            DiagnosticsData);
 
-        if (Arguments.DeviceArchitecture.Value.Any())
+        if (exitCode == ExitCode.SUCCESS)
         {
-            apkRequiredArchitecture = Arguments.DeviceArchitecture.Value;
-            logger.LogInformation($"Will attempt to run device on specified architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
-        }
-        else
-        {
-            apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(Arguments.AppPackagePath);
-            logger.LogInformation($"Will attempt to run device on detected architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
-        }
-
-        // Package Name is not guaranteed to match file name, so it needs to be mandatory.
-        string apkPackageName = Arguments.PackageName;
-        string appPackagePath = Arguments.AppPackagePath;
-
-        try
-        {
-            var exitCode = AndroidInstallCommand.InvokeHelper(
+            exitCode = AndroidRunCommand.InvokeHelper(
                 logger: logger,
-                apkPackageName: apkPackageName,
-                appPackagePath: appPackagePath,
-                apkRequiredArchitecture: apkRequiredArchitecture,
-                deviceId: Arguments.DeviceId.Value,
-                apiVersion: Arguments.ApiVersion.Value,
-                bootTimeoutSeconds: Arguments.LaunchTimeout,
-                runner,
-                DiagnosticsData);
-
-            if (exitCode == ExitCode.SUCCESS)
-            {
-                exitCode = AndroidRunCommand.InvokeHelper(
-                    logger: logger,
-                    apkPackageName: apkPackageName,
-                    instrumentationName: Arguments.InstrumentationName,
-                    instrumentationArguments: Arguments.InstrumentationArguments,
-                    outputDirectory: Arguments.OutputDirectory,
-                    deviceOutputFolder: Arguments.DeviceOutputFolder,
-                    timeout: Arguments.Timeout,
-                    expectedExitCode: Arguments.ExpectedExitCode,
-                    wifi: Arguments.Wifi,
-                    runner: runner);
-            }
-
-            runner.UninstallApk(apkPackageName);
-            return Task.FromResult(exitCode);
-        }
-        catch (NoDeviceFoundException noDevice)
-        {
-            logger.LogCritical(noDevice, noDevice.Message);
-            return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
-        }
-        catch (Exception toLog)
-        {
-            logger.LogCritical(toLog, toLog.Message);
+                apkPackageName: Arguments.PackageName,
+                instrumentationName: Arguments.InstrumentationName,
+                instrumentationArguments: Arguments.InstrumentationArguments,
+                outputDirectory: Arguments.OutputDirectory,
+                deviceOutputFolder: Arguments.DeviceOutputFolder,
+                timeout: Arguments.Timeout,
+                expectedExitCode: Arguments.ExpectedExitCode,
+                wifi: Arguments.Wifi,
+                runner: runner);
         }
 
-        return Task.FromResult(ExitCode.GENERAL_FAILURE);
+        runner.UninstallApk(Arguments.PackageName);
+        return exitCode;
     }
 }

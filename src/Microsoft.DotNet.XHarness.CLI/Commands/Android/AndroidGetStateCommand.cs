@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
@@ -13,6 +14,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android;
 
@@ -30,13 +32,14 @@ internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandAr
     {
         try
         {
-            var data = GetStateData(logger);
+            var data = GetStateData(Arguments.UseJson ? NullLogger.Instance : logger);
 
             if (Arguments.UseJson)
             {
                 var options = new JsonSerializerOptions
                 {
-                    WriteIndented = true
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                    WriteIndented = true,
                 };
 
                 JsonSerializer.Serialize(Console.OpenStandardOutput(), data, options);
@@ -107,5 +110,9 @@ internal class AndroidGetStateCommand : GetStateCommand<AndroidGetStateCommandAr
         return new StateData(state, adbVersion, emulators, devices);
     }
 
-    private record StateData(string DeviceState, string[] AdbVersion, IEnumerable<AndroidDevice> Emulators, IEnumerable<AndroidDevice> Devices);
+    private record StateData(
+        string DeviceState,
+        string[] AdbVersion,
+        IEnumerable<AndroidDevice> Emulators,
+        IEnumerable<AndroidDevice> Devices);
 }

@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
@@ -29,46 +27,31 @@ Arguments:
     {
     }
 
-    protected override Task<ExitCode> InvokeInternal(ILogger logger)
+    protected override ExitCode InvokeCommand(ILogger logger)
     {
-        logger.LogDebug($"Android Uninstall command called: App = {Arguments.PackageName}{Environment.NewLine}");
-
-        // Package Name is not guaranteed to match file name, so it needs to be mandatory.
-        string apkPackageName = Arguments.PackageName;
-
-        var runner = new AdbRunner(logger);
-
-        try
+        using (logger.BeginScope("Find device where to uninstall APK"))
         {
-            using (logger.BeginScope("Find device where to uninstall APK"))
+            // Make sure the adb server is started
+            var runner = new AdbRunner(logger);
+            runner.StartAdbServer();
+
+            AndroidDevice? device = runner.GetSingleDevice(
+                loadArchitecture: true,
+                loadApiVersion: true,
+                requiredDeviceId: Arguments.DeviceId,
+                requiredInstalledApp: "package:" + Arguments.PackageName);
+
+            if (device is null)
             {
-                // Make sure the adb server is started
-                runner.StartAdbServer();
-
-                AndroidDevice? device = runner.GetSingleDevice(
-                    loadArchitecture: true,
-                    loadApiVersion: true,
-                    requiredDeviceId: Arguments.DeviceId,
-                    requiredInstalledApp: "package:" + apkPackageName);
-
-                if (device is null)
-                {
-                    return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
-                }
-
-                DiagnosticsData.CaptureDeviceInfo(device);
-
-                logger.LogDebug($"Working with {device.DeviceSerial} (API {device.ApiVersion})");
-
-                runner.UninstallApk(apkPackageName);
-                return Task.FromResult(ExitCode.SUCCESS);
+                return ExitCode.DEVICE_NOT_FOUND;
             }
-        }
-        catch (Exception toLog)
-        {
-            logger.LogCritical(toLog, $"Failure to uninstall test package: {toLog.Message}");
-        }
 
-        return Task.FromResult(ExitCode.GENERAL_FAILURE);
+            DiagnosticsData.CaptureDeviceInfo(device);
+
+            logger.LogDebug($"Working with {device.DeviceSerial} (API {device.ApiVersion})");
+
+            runner.UninstallApk(Arguments.PackageName);
+            return ExitCode.SUCCESS;
+        }
     }
 }

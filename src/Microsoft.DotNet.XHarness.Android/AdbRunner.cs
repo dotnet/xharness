@@ -60,7 +60,7 @@ public class AdbRunner
         string? environmentPath = Environment.GetEnvironmentVariable(AdbEnvironmentVariableName);
         if (!string.IsNullOrEmpty(environmentPath))
         {
-            _log.LogDebug($"Using {AdbEnvironmentVariableName} environment variable ({environmentPath}) for ADB path.");
+            _log.LogDebug($"Using {AdbEnvironmentVariableName} environment variable ({environmentPath}) for ADB path");
             adbExePath = environmentPath;
         }
 
@@ -99,7 +99,7 @@ public class AdbRunner
         {
             return Path.Join(currentAssemblyDirectory, @"../../../runtimes/any/native/adb/macos/adb");
         }
-        throw new NotSupportedException("Cannot determine OS platform being used, thus we can not select an ADB executable.");
+        throw new NotSupportedException("Cannot determine OS platform being used, thus we can not select an ADB executable");
     }
 
     #endregion
@@ -108,15 +108,26 @@ public class AdbRunner
 
     public TimeSpan TimeToWaitForBootCompletion { get; set; } = TimeSpan.FromMinutes(5);
 
-    public string GetAdbVersion() => RunAdbCommand("version").StandardOutput;
+    public string GetAdbVersion()
+    {
+        var result = RunAdbCommand("version");
+        result.ThrowIfFailed("Failed to get ADB version");
+        return result.StandardOutput;
+    }
 
     public string GetAdbState() => RunAdbCommand("get-state").StandardOutput;
 
-    public string RebootAndroidDevice() => RunAdbCommand("reboot").StandardOutput;
+    public string RebootAndroidDevice()
+    {
+        var result = RunAdbCommand("reboot");
+        result.ThrowIfFailed("Failed to reboot the device");
+        return result.StandardOutput;
+    }
 
     public void ClearAdbLog() => RunAdbCommand("logcat", "-c");
 
-    public void EnableWifi(bool enable) => RunAdbCommand("shell", "svc", "wifi", enable ? "enable" : "disable");
+    public void EnableWifi(bool enable) => RunAdbCommand("shell", "svc", "wifi", enable ? "enable" : "disable")
+        .ThrowIfFailed($"Failed to {(enable ? "enable" : "disable")} WiFi on the device");
 
     public void DumpAdbLog(string outputFilePath, string filterSpec = "")
     {
@@ -174,31 +185,26 @@ public class AdbRunner
         // (Returns instantly if device is ready)
         // This can fail if _currentDevice is unset if there are multiple devices.
         _log.LogInformation("Waiting for device to be available (max 5 minutes)");
-        var result = RunAdbCommand(new[] { "wait-for-device" }, TimeSpan.FromMinutes(5));
-        _log.LogDebug($"{result.StandardOutput}");
-        if (result.ExitCode != 0)
-        {
-            throw new Exception($"Error waiting for Android device/emulator.  Std out:{result.StandardOutput} Std. Err: {result.StandardError}.  Do you need to set the current device?");
-        }
+        RunAdbCommand(new[] { "wait-for-device" }, TimeSpan.FromMinutes(5))
+            .ThrowIfFailed("Error waiting for Android device/emulator");
 
         // Some users will be installing the emulator and immediately calling xharness, they need to be able to expect the device is ready to load APKs.
         // Once wait-for-device returns, we'll give it up to TimeToWaitForBootCompletion (default 5 min) for 'adb shell getprop sys.boot_completed'
         // to be '1' (as opposed to empty) to make subsequent automation happy.
-        var began = DateTimeOffset.UtcNow;
-        var waitingUntil = began.Add(TimeToWaitForBootCompletion);
+        var watch = Stopwatch.StartNew();
+        bool bootCompleted = Retry(
+            () =>
+            {
+                string? result = GetDeviceProperty(AdbProperty.BootCompletion, _activeDevice?.DeviceSerial);
+                _log.LogDebug($"sys.boot_completed = '{result}'");
+                return result?.StartsWith('1') ?? false;
+            },
+            retryInterval: TimeSpan.FromSeconds(10),
+            retryPeriod: TimeToWaitForBootCompletion);
 
-        string bootCompleted = GetDeviceProperty(AdbProperty.BootCompletion, _activeDevice?.DeviceSerial) ?? string.Empty;
-
-        while (!bootCompleted.StartsWith("1") && DateTimeOffset.UtcNow < waitingUntil)
+        if (bootCompleted)
         {
-            bootCompleted = GetDeviceProperty(AdbProperty.BootCompletion, _activeDevice?.DeviceSerial) ?? string.Empty;
-            _log.LogDebug($"sys.boot_completed = '{bootCompleted}'");
-            Thread.Sleep((int)TimeSpan.FromSeconds(10).TotalMilliseconds);
-        }
-
-        if (bootCompleted.StartsWith("1"))
-        {
-            _log.LogDebug($"Waited {DateTimeOffset.UtcNow.Subtract(began).TotalSeconds} seconds for device boot completion.");
+            _log.LogDebug($"Waited {(int)watch.Elapsed.TotalSeconds} seconds for device boot completion");
         }
         else
         {
@@ -208,30 +214,52 @@ public class AdbRunner
 
     public void StartAdbServer()
     {
-        var result = RunAdbCommand(new[] { "start-server" });
-        _log.LogDebug($"{result.StandardOutput}");
-        if (result.ExitCode != 0)
+        bool started = Retry(
+            () =>
+            {
+                var result = RunAdbCommand(new[] { "start-server" }, TimeSpan.FromMinutes(1));
+                started = result.Succeeded;
+
+                if (!started)
+                {
+                    _log.LogWarning($"Error starting the ADB server" + Environment.NewLine + result);
+
+                    try
+                    {
+                        KillAdbServer();
+                    }
+                    catch
+                    {
+                        _log.LogDebug($"Error killing ADB server after a failed start");
+                    }
+                }
+                else
+                {
+                    _log.LogDebug(result.StandardOutput);
+                }
+
+                return started;
+            },
+            retryInterval: TimeSpan.FromSeconds(10),
+            retryPeriod: TimeSpan.FromMinutes(5));
+
+        if (!started)
         {
-            throw new Exception($"Error starting ADB Server.  Std out:{result.StandardOutput} Std. Err: {result.StandardError}");
+            throw new AdbFailureException("Failed to start the ADB server");
         }
     }
 
-    public void KillAdbServer()
-    {
-        var result = RunAdbCommand(new[] { "kill-server" });
-        if (result.ExitCode != 0)
-        {
-            throw new Exception($"Error killing ADB Server.  Std out:{result.StandardOutput} Std. Err: {result.StandardError}");
-        }
-    }
+    public void KillAdbServer() => RunAdbCommand(new[] { "kill-server" }).ThrowIfFailed("Error killing ADB Server");
 
     public int InstallApk(string apkPath)
     {
-        _log.LogInformation($"Attempting to install {apkPath}: ");
+        _log.LogInformation($"Attempting to install {apkPath}");
+
         if (string.IsNullOrEmpty(apkPath))
         {
             throw new ArgumentException($"No value supplied for {nameof(apkPath)} ");
         }
+
         if (!File.Exists(apkPath))
         {
             throw new FileNotFoundException($"Could not find {apkPath}", apkPath);
@@ -277,7 +305,7 @@ public class AdbRunner
         }
         else
         {
-            _log.LogInformation($"Successfully installed {apkPath}.");
+            _log.LogInformation($"Successfully installed {apkPath}");
         }
 
         return result.ExitCode;
@@ -290,7 +318,7 @@ public class AdbRunner
             throw new ArgumentNullException(nameof(apkName));
         }
 
-        _log.LogInformation($"Attempting to remove apk '{apkName}': ");
+        _log.LogInformation($"Attempting to remove apk '{apkName}'..");
         var result = RunAdbCommand(new[] { "uninstall", apkName });
 
         // See note above in install()
@@ -305,17 +333,18 @@ public class AdbRunner
 
         if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
         {
-            _log.LogInformation($"Successfully uninstalled {apkName}.");
+            _log.LogInformation($"Successfully uninstalled {apkName}");
         }
         else if (result.ExitCode == (int)AdbExitCodes.ADB_UNINSTALL_APP_NOT_ON_DEVICE ||
                  result.ExitCode == (int)AdbExitCodes.ADB_UNINSTALL_APP_NOT_ON_EMULATOR)
         {
-            _log.LogInformation($"APK '{apkName}' not on device.");
+            _log.LogInformation($"APK '{apkName}' was not on device");
         }
         else
         {
             _log.LogError(message: $"Error: {result}");
         }
+
         return result.ExitCode;
     }
 
@@ -355,67 +384,40 @@ public class AdbRunner
 
             if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
             {
-                if (GetDeviceApiVersion() == 30)
+                if (GetDeviceApiVersion() != 30)
                 {
-                    // On Android API 30 we can't use "adb pull" directly due to permission issues on emulators, see https://github.com/dotnet/xharness/issues/385
-                    // As a workaround we copy the files to the temp directory on the device using "run-as" and pull from there
-                    _log.LogInformation($"Failed to pull file. Device is running Android API 30, trying fallback to pull {devicePath}");
-
-                    result = RunAdbCommand(new[] { "shell", "run-as", apkPackageName, "ls", devicePath });
-
-                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                    {
-                        throw new Exception($"Failed checking for file using fallback: {result}");
-                    }
-
-                    string? fileName = devicePath.Split("/").LastOrDefault();
-                    if (string.IsNullOrWhiteSpace(fileName))
-                    {
-                        throw new Exception($"Failed pulling file using fallback: Couldn't determine filename for {devicePath}");
-                    }
-
-                    string deviceTempPath = $"/data/local/tmp/{fileName}";
-
-                    result = RunAdbCommand(new[] { "shell", "rm", "-rf", deviceTempPath });
-
-
-                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                    {
-                        throw new Exception($"Failed removing {deviceTempPath} before using fallback: {result}");
-                    }
-
-                    result = RunAdbCommand(new[] { "shell", "touch", deviceTempPath });
-
-                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                    {
-                        throw new Exception($"Failed touching {deviceTempPath}: {result}");
-                    }
-
-                    result = RunAdbCommand(new[] { "shell", "run-as", apkPackageName, "cp", devicePath, deviceTempPath });
-
-                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                    {
-                        throw new Exception($"Failed copying file using fallback: {result}");
-                    }
-
-                    result = RunAdbCommand(new[] { "pull", deviceTempPath, tempFolder });
-
-                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                    {
-                        throw new Exception($"Failed pulling file using fallback: {result}");
-                    }
-
-                    result = RunAdbCommand(new[] { "shell", "rm", "-f", deviceTempPath });
-
-                    if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
-                    {
-                        throw new Exception($"Failed removing {deviceTempPath} after using fallback: {result}");
-                    }
+                    throw new AdbFailureException($"Failed pulling files: {result}");
                 }
-                else
+
+                // On Android API 30 we can't use "adb pull" directly due to permission issues on emulators, see https://github.com/dotnet/xharness/issues/385
+                // As a workaround we copy the files to the temp directory on the device using "run-as" and pull from there
+                _log.LogInformation($"Failed to pull file. Device is running Android API 30, trying fallback to pull {devicePath}");
+
+                result = RunAdbCommand(new[] { "shell", "run-as", apkPackageName, "ls", devicePath });
+                result.ThrowIfFailed($"Failed checking for file using fallback: {result}");
+
+                string? fileName = devicePath.Split("/").LastOrDefault();
+                if (string.IsNullOrWhiteSpace(fileName))
                 {
-                    throw new Exception($"Failed pulling files: {result}");
+                    throw new AdbFailureException($"Failed pulling file using fallback: Couldn't determine filename for {devicePath}");
                 }
+
+                string deviceTempPath = $"/data/local/tmp/{fileName}";
+
+                result = RunAdbCommand(new[] { "shell", "rm", "-rf", deviceTempPath });
+                result.ThrowIfFailed($"Failed removing {deviceTempPath} before using fallback: {result}");
+
+                result = RunAdbCommand(new[] { "shell", "touch", deviceTempPath });
+                result.ThrowIfFailed($"Failed touching {deviceTempPath}: {result}");
+
+                result = RunAdbCommand(new[] { "shell", "run-as", apkPackageName, "cp", devicePath, deviceTempPath });
+                result.ThrowIfFailed($"Failed copying file using fallback: {result}");
+
+                result = RunAdbCommand(new[] { "pull", deviceTempPath, tempFolder });
+                result.ThrowIfFailed($"Failed pulling file using fallback: {result}");
+
+                result = RunAdbCommand(new[] { "shell", "rm", "-f", deviceTempPath });
+                result.ThrowIfFailed($"Failed removing {deviceTempPath} after using fallback: {result}");
             }
 
             var copiedToTemp = Directory.GetFiles(tempFolder, "*", SearchOption.AllDirectories);
@@ -426,7 +428,7 @@ public class AdbRunner
                 // if the file is already there, just warn and skip it.
                 if (File.Exists(destinationPath))
                 {
-                    _log.LogWarning($"Skipping file copy as {destinationPath} already exists.");
+                    _log.LogWarning($"Skipping file copy as {destinationPath} already exists");
                 }
                 else
                 {
@@ -435,7 +437,8 @@ public class AdbRunner
                     copiedFiles.Add(destinationPath);
                 }
             }
-            _log.LogDebug($"Copied {copiedFiles.Count} files to {localPath}.");
+
+            _log.LogDebug($"Copied {copiedFiles.Count} files to {localPath}");
             return copiedFiles;
         }
         finally
@@ -544,13 +547,12 @@ public class AdbRunner
         catch (Exception toLog)
         {
             _log.LogError(toLog, $"Exception thrown while trying to find compatible device");
-            return new List<AndroidDevice>();
+            return Array.Empty<AndroidDevice>();
         }
 
         if (devices.Count == 0)
         {
-            _log.LogError("No attached and authorized device detected");
-            return devices;
+            return Array.Empty<AndroidDevice>();
         }
 
         if (requiredDeviceId != null)
@@ -653,67 +655,84 @@ public class AdbRunner
 
     private IReadOnlyCollection<AndroidDevice> GetDevices(params AdbProperty[] propertiesToLoad)
     {
-        var devices = new List<AndroidDevice>();
+        string[] standardOutputLines = Array.Empty<string>();
 
-        var result = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
-        string[] standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        _log.LogInformation("Finding attached devices/emulators...");
 
         // Retry up to 3 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
-        int retriesLeft = 18;
-
-        // We will keep retrying until we get something back like 'List of devices attached...{newline} {info about a device} ',
-        // which when split on newlines ignoring empties will be at least 2 lines when there are any available devices.
-        while (retriesLeft-- > 0 && standardOutputLines.Length < 2)
-        {
-            _log.LogDebug($"Unexpected response from adb devices -l:{Environment.NewLine}Exit code={result.ExitCode}{Environment.NewLine}Std. Output: {result.StandardOutput} {Environment.NewLine}Std. Error: {result.StandardError}");
-            Thread.Sleep(10000);
-            result = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
-            standardOutputLines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-        }
-
-        // Two lines = At least one device was found.  On a multi-device machine, we can't function without specifying device serial number.
-        if (result.ExitCode == (int)AdbExitCodes.SUCCESS && standardOutputLines.Length >= 2)
-        {
-            // Start at 1 to skip first line, which is always 'List of devices attached'
-            for (int lineNumber = 1; lineNumber < standardOutputLines.Length; lineNumber++)
+        ProcessExecutionResults result = Retry(
+            action: () => RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30)),
+            needsRetry: r =>
             {
-                _log.LogDebug($"Evaluating output line for device serial: {standardOutputLines[lineNumber]}");
-                var lineParts = standardOutputLines[lineNumber].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-                var device = new AndroidDevice(lineParts[0]);
-
-                foreach (var property in propertiesToLoad)
+                if (!r.Succeeded)
                 {
-                    string? value = GetDeviceProperty(property, device.DeviceSerial);
-
-                    switch (property)
-                    {
-                        case AdbProperty.Architecture:
-                            device.Architecture = value;
-                            break;
-
-                        case AdbProperty.ApiVersion:
-                            device.ApiVersion = value == null ? null : int.Parse(value);
-                            break;
-
-                        case AdbProperty.SupportedArchitectures:
-                            device.SupportedArchitectures = value?.Split(new char[] { ',', '\r', '\n' });
-                            break;
-
-                        case AdbProperty.InstalledApps:
-                            device.InstalledApplications = value?.Split("\n");
-                            break;
-                    }
+                    _log.LogDebug("Unexpected response from adb devices -l:" + Environment.NewLine + r);
+                    return true;
                 }
 
-                devices.Add(device);
-            }
-        }
-        else
+                standardOutputLines = r.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+
+                // We will keep retrying until we get something back like 'List of devices attached...{newline} {info about a device} ',
+                // which when split on newlines ignoring empties will be at least 2 lines when there are any available devices.
+                if (standardOutputLines.Length < 2)
+                {
+                    _log.LogDebug("No attached devices found" + Environment.NewLine + r);
+                    return true;
+                }
+
+                return false;
+            },
+            retryInterval: TimeSpan.FromSeconds(10),
+            retryPeriod: TimeSpan.FromSeconds(90));
+
+        result.ThrowIfFailed("Failed to enumerate attached devices");
+
+        // Two lines = At least one device was found.  On a multi-device machine, we can't function without specifying device serial number.
+        if (standardOutputLines.Length < 2)
         {
             // Abandon the run here, don't just guess.
-            _log.LogError($"Error: listing attached devices / emulators: {result.StandardError}. Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, unlocked and authorized.");
-            throw new Exception("One or more attached Android devices are offline or without USB debug permission");
+            _log.LogWarning("No attached devices / emulators detected. " +
+                "Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, unlocked and authorized.");
+            return Array.Empty<AndroidDevice>();
+        }
+
+        var devices = new List<AndroidDevice>();
+
+        _log.LogDebug($"Found {standardOutputLines.Length - 1} possible devices");
+
+        // Start at 1 to skip first line, which is always 'List of devices attached'
+        for (int lineNumber = 1; lineNumber < standardOutputLines.Length; lineNumber++)
+        {
+            _log.LogDebug($"Evaluating output line for device serial: {standardOutputLines[lineNumber]}");
+            var lineParts = standardOutputLines[lineNumber].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            var device = new AndroidDevice(lineParts[0]);
+
+            foreach (var property in propertiesToLoad)
+            {
+                string? value = GetDeviceProperty(property, device.DeviceSerial);
+
+                switch (property)
+                {
+                    case AdbProperty.Architecture:
+                        device.Architecture = value;
+                        break;
+
+                    case AdbProperty.ApiVersion:
+                        device.ApiVersion = value == null ? null : int.Parse(value);
+                        break;
+
+                    case AdbProperty.SupportedArchitectures:
+                        device.SupportedArchitectures = value?.Split(new char[] { ',', '\r', '\n' });
+                        break;
+
+                    case AdbProperty.InstalledApps:
+                        device.InstalledApplications = value?.Split("\n");
+                        break;
+                }
+            }
+
+            devices.Add(device);
         }
 
         return devices;
@@ -728,17 +747,21 @@ public class AdbRunner
             args = new[] { "-s", deviceName }.Concat(args);
         }
 
-        var result = RunAdbCommand(args, TimeSpan.FromSeconds(30));
+        // Assumption: All Devices on a machine running Xharness should attempt to be online or disconnected.
+        ProcessExecutionResults result = Retry(
+            action: () => RunAdbCommand(args, TimeSpan.FromSeconds(30)),
+            needsRetry: r =>
+            {
+                if (!r.Succeeded || r.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
+                {
+                    _log.LogWarning($"Device {deviceName} is offline; retrying up to five minutes");
+                    return true;
+                }
 
-        // Assumption:  All Devices on a machine running Xharness should attempt to be online or disconnected.
-        var retriesLeft = 30; // Max 5 minutes (30 attempts * 10 second waits)
-        while (retriesLeft-- > 0 && result.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
-        {
-            _log.LogWarning($"Device {deviceName} is offline; retrying up to one minute.");
-            Thread.Sleep(10000);
-
-            result = RunAdbCommand(args, TimeSpan.FromSeconds(30));
-        }
+                return false;
+            },
+            retryInterval: TimeSpan.FromSeconds(10),
+            retryPeriod: TimeSpan.FromMinutes(5));
 
         if (!result.Succeeded)
         {
@@ -821,6 +844,38 @@ public class AdbRunner
         }
 
         return _processManager.Run(_absoluteAdbExePath, arguments, timeOut);
+    }
+
+    private bool Retry(Func<bool> action, TimeSpan retryInterval, TimeSpan retryPeriod) =>
+        Retry(action, result => !result, retryInterval, retryPeriod);
+
+    private T Retry<T>(Func<T> action, Func<T, bool> needsRetry, TimeSpan retryInterval, TimeSpan retryPeriod)
+    {
+        var watch = Stopwatch.StartNew();
+        int attempt = 0;
+
+        T result;
+        while(true)
+        {
+            result = action();
+
+            if (!needsRetry(result))
+            {
+                return result;
+            }
+
+            if (watch.Elapsed > retryPeriod)
+            {
+                _log.LogDebug($"All {attempt} retries of action failed");
+                break;
+            }
+
+            ++attempt;
+            _log.LogDebug($"Attempt {attempt} failed, retrying in {(int)retryInterval.TotalSeconds} seconds...");
+            Thread.Sleep(retryInterval);
+        }
+
+        return result;
     }
 
     #endregion

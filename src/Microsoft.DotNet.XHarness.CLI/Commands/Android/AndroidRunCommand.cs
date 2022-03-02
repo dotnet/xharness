@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.Android.Execution;
 using Microsoft.DotNet.XHarness.CLI.Android;
@@ -44,26 +43,20 @@ Arguments:
     {
     }
 
-    protected override Task<ExitCode> InvokeInternal(ILogger logger)
+    protected override ExitCode InvokeCommand(ILogger logger)
     {
-        logger.LogDebug($"Android Run command called: App = {Arguments.PackageName}{Environment.NewLine}");
-        logger.LogDebug($"Timeout = {Arguments.Timeout.Value.TotalSeconds} seconds.");
-
-        // Package Name is not guaranteed to match file name, so it needs to be mandatory.
-        string apkPackageName = Arguments.PackageName;
-
         var runner = new AdbRunner(logger);
 
         // Make sure the adb server is started
         runner.StartAdbServer();
 
         var device = string.IsNullOrEmpty(Arguments.DeviceId.Value)
-            ? runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredInstalledApp: "package:" + apkPackageName)
+            ? runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredInstalledApp: "package:" + Arguments.PackageName)
             : runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredDeviceId: Arguments.DeviceId.Value);
 
         if (device is null)
         {
-            return Task.FromResult(ExitCode.ADB_DEVICE_ENUMERATION_FAILURE);
+            return ExitCode.DEVICE_NOT_FOUND;
         }
 
         DiagnosticsData.CaptureDeviceInfo(device);
@@ -73,9 +66,9 @@ Arguments:
         // Wait till at least device(s) are ready
         runner.WaitForDevice();
 
-        return Task.FromResult(InvokeHelper(
+        return InvokeHelper(
             logger,
-            apkPackageName,
+            Arguments.PackageName,
             Arguments.InstrumentationName,
             Arguments.InstrumentationArguments,
             Arguments.OutputDirectory,
@@ -83,7 +76,7 @@ Arguments:
             Arguments.Timeout,
             Arguments.ExpectedExitCode,
             Arguments.Wifi,
-            runner));
+            runner);
     }
 
     public static ExitCode InvokeHelper(
@@ -110,117 +103,113 @@ Arguments:
             runner.EnableWifi(wifi == WifiStatus.Enable);
         }
 
-        try
+        // No class name = default Instrumentation
+        ProcessExecutionResults? result = runner.RunApkInstrumentation(
+            apkPackageName,
+            instrumentationName,
+            instrumentationArguments,
+            timeout);
+
+        bool processCrashed = false;
+        bool failurePullingFiles = false;
+
+        using (logger.BeginScope("Post-test copy and cleanup"))
         {
-            // No class name = default Instrumentation
-            ProcessExecutionResults? result = runner.RunApkInstrumentation(apkPackageName, instrumentationName, instrumentationArguments, timeout);
-            bool processCrashed = false;
-            bool failurePullingFiles = false;
-
-            using (logger.BeginScope("Post-test copy and cleanup"))
+            if (result.ExitCode == (int)ExitCode.SUCCESS)
             {
-                if (result.ExitCode == (int)ExitCode.SUCCESS)
+                Dictionary<string, string> resultValues;
+                // This is where test instrumentation can communicate outwardly that test execution failed
+                (resultValues, instrumentationExitCode) = ParseInstrumentationOutputs(logger, result.StandardOutput);
+
+                // Pull XUnit result XMLs off the device
+                foreach (string possibleResultKey in s_xmlOutputVariableNames)
                 {
-                    Dictionary<string, string> resultValues;
-                    // This is where test instrumentation can communicate outwardly that test execution failed
-                    (resultValues, instrumentationExitCode) = ParseInstrumentationOutputs(logger, result.StandardOutput);
+                    if (resultValues.ContainsKey(possibleResultKey))
+                    {
+                        logger.LogInformation($"Found XML result file: '{resultValues[possibleResultKey]}'(key: {possibleResultKey})");
+                        try
+                        {
+                            runner.PullFiles(apkPackageName, resultValues[possibleResultKey], outputDirectory);
+                        }
+                        catch (Exception toLog)
+                        {
+                            logger.LogError(toLog, "Hit error (typically permissions) trying to pull {filePathOnDevice}", resultValues[possibleResultKey]);
+                            failurePullingFiles = true;
+                        }
+                    }
+                }
 
-                    // Pull XUnit result XMLs off the device
-                    foreach (string possibleResultKey in s_xmlOutputVariableNames)
-                    {
-                        if (resultValues.ContainsKey(possibleResultKey))
-                        {
-                            logger.LogInformation($"Found XML result file: '{resultValues[possibleResultKey]}'(key: {possibleResultKey})");
-                            try
-                            {
-                                runner.PullFiles(apkPackageName, resultValues[possibleResultKey], outputDirectory);
-                            }
-                            catch (Exception toLog)
-                            {
-                                logger.LogError(toLog, "Hit error (typically permissions) trying to pull {filePathOnDevice}", resultValues[possibleResultKey]);
-                                failurePullingFiles = true;
-                            }
-                        }
-                    }
-                    if (resultValues.ContainsKey(TestRunSummaryVariableName))
-                    {
-                        logger.LogInformation($"Test execution summary:{Environment.NewLine}{resultValues[TestRunSummaryVariableName]}");
-                    }
-                    if (resultValues.ContainsKey(ShortMessageVariableName))
-                    {
-                        logger.LogInformation($"Short Message: {Environment.NewLine}{resultValues[ShortMessageVariableName]}");
-                        processCrashed = resultValues[ShortMessageVariableName].Contains(ProcessCrashedShortMessage);
-                    }
+                if (resultValues.ContainsKey(TestRunSummaryVariableName))
+                {
+                    logger.LogInformation($"Test execution summary:{Environment.NewLine}{resultValues[TestRunSummaryVariableName]}");
+                }
 
-                    // Due to the particulars of how instrumentations work, ADB will report a 0 exit code for crashed instrumentations
-                    // We'll change that to a specific value and print a message explaining why.
-                    if (resultValues.ContainsKey(ReturnCodeVariableName))
+                if (resultValues.ContainsKey(ShortMessageVariableName))
+                {
+                    logger.LogInformation($"Short Message: {Environment.NewLine}{resultValues[ShortMessageVariableName]}");
+                    processCrashed = resultValues[ShortMessageVariableName].Contains(ProcessCrashedShortMessage);
+                }
+
+                // Due to the particulars of how instrumentations work, ADB will report a 0 exit code for crashed instrumentations
+                // We'll change that to a specific value and print a message explaining why.
+                if (resultValues.ContainsKey(ReturnCodeVariableName))
+                {
+                    if (int.TryParse(resultValues[ReturnCodeVariableName], out int bundleExitCode))
                     {
-                        if (int.TryParse(resultValues[ReturnCodeVariableName], out int bundleExitCode))
-                        {
-                            logger.LogInformation($"Instrumentation finished normally with exit code {bundleExitCode}");
-                            instrumentationExitCode = bundleExitCode;
-                        }
-                        else
-                        {
-                            logger.LogError($"Un-parse-able value for '{ReturnCodeVariableName}' : '{resultValues[ReturnCodeVariableName]}'");
-                            instrumentationExitCode = (int)ExitCode.RETURN_CODE_NOT_SET;
-                        }
+                        logger.LogInformation($"Instrumentation finished normally with exit code {bundleExitCode}");
+                        instrumentationExitCode = bundleExitCode;
                     }
                     else
                     {
-                        logger.LogError($"No value for '{ReturnCodeVariableName}' provided in instrumentation result.  This may indicate a crashed test (see log)");
+                        logger.LogError($"Un-parse-able value for '{ReturnCodeVariableName}' : '{resultValues[ReturnCodeVariableName]}'");
                         instrumentationExitCode = (int)ExitCode.RETURN_CODE_NOT_SET;
                     }
                 }
-
-                // Optionally copy off an entire folder
-                if (!string.IsNullOrEmpty(deviceOutputFolder))
+                else
                 {
-                    try
-                    {
-                        var logs = runner.PullFiles(apkPackageName, deviceOutputFolder, outputDirectory);
-                        foreach (string log in logs)
-                        {
-                            logger.LogDebug($"Found output file: {log}");
-                        }
-                    }
-                    catch (Exception toLog)
-                    {
-                        logger.LogError(toLog, "Hit error (typically permissions) trying to pull {filePathOnDevice}", deviceOutputFolder);
-                        failurePullingFiles = true;
-                    }
-                }
-
-                runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log"));
-
-                if (processCrashed)
-                {
-                    runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{apkPackageName}"));
+                    logger.LogError($"No value for '{ReturnCodeVariableName}' provided in instrumentation result.  This may indicate a crashed test (see log)");
+                    instrumentationExitCode = (int)ExitCode.RETURN_CODE_NOT_SET;
                 }
             }
 
-            if (instrumentationExitCode != expectedExitCode)
+            // Optionally copy off an entire folder
+            if (!string.IsNullOrEmpty(deviceOutputFolder))
             {
-                logger.LogError($"Non-success instrumentation exit code: {instrumentationExitCode}, expected: {expectedExitCode}");
-                return ExitCode.TESTS_FAILED;
+                try
+                {
+                    var logs = runner.PullFiles(apkPackageName, deviceOutputFolder, outputDirectory);
+                    foreach (string log in logs)
+                    {
+                        logger.LogDebug($"Found output file: {log}");
+                    }
+                }
+                catch (Exception toLog)
+                {
+                    logger.LogError(toLog, "Hit error (typically permissions) trying to pull {filePathOnDevice}", deviceOutputFolder);
+                    failurePullingFiles = true;
+                }
             }
-            else if (failurePullingFiles)
+
+            runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log"));
+
+            if (processCrashed)
             {
-                logger.LogError($"Received expected instrumentation exit code ({instrumentationExitCode}), but we hit errors pulling files from the device (see log for details.)");
-                return ExitCode.DEVICE_FILE_COPY_FAILURE;
-            }
-            else
-            {
-                return ExitCode.SUCCESS;
+                runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{apkPackageName}"));
             }
         }
-        catch (Exception toLog)
+
+        if (instrumentationExitCode != expectedExitCode)
         {
-            logger.LogCritical(toLog, $"Failure to run test package: {toLog.Message}");
+            logger.LogError($"Non-success instrumentation exit code: {instrumentationExitCode}, expected: {expectedExitCode}");
+            return ExitCode.TESTS_FAILED;
+        }
+        else if (failurePullingFiles)
+        {
+            logger.LogError($"Received expected instrumentation exit code ({instrumentationExitCode}), but we hit errors pulling files from the device (see log for details.)");
+            return ExitCode.DEVICE_FILE_COPY_FAILURE;
         }
 
-        return ExitCode.GENERAL_FAILURE;
+        return ExitCode.SUCCESS;
     }
 
     private static (Dictionary<string, string> values, int exitCode) ParseInstrumentationOutputs(ILogger logger, string stdOut)

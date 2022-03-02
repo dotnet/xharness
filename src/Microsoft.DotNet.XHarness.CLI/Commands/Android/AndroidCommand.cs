@@ -3,10 +3,14 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Android;
 
@@ -20,4 +24,30 @@ internal abstract class AndroidCommand<TArguments> : XHarnessCommand<TArguments>
     {
         _diagnosticsData = new(() => Services.BuildServiceProvider().GetRequiredService<IDiagnosticsData>());
     }
+
+    protected sealed override Task<ExitCode> InvokeInternal(ILogger logger)
+    {
+        try
+        {
+            return Task.FromResult(InvokeCommand(logger));
+        }
+        catch (NoDeviceFoundException noDevice)
+        {
+            logger.LogCritical(noDevice.Message);
+            return Task.FromResult(ExitCode.DEVICE_NOT_FOUND);
+        }
+        catch (AdbFailureException adbFailure)
+        {
+            logger.LogCritical(adbFailure, adbFailure.Message);
+            return Task.FromResult(ExitCode.ADB_FAILURE);
+        }
+        catch (Exception toLog)
+        {
+            logger.LogCritical(toLog, toLog.Message);
+        }
+
+        return Task.FromResult(ExitCode.GENERAL_FAILURE);
+    }
+
+    protected abstract ExitCode InvokeCommand(ILogger logger);
 }
