@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.Mlaunch" Version="13.0.0-21459.20.efad4f0bae">
+    <PackageReference Include="Microsoft.DotNet.Mlaunch" Version="13.2.0-22110.16.6e6b84249b">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
