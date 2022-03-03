@@ -20,7 +20,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 
-internal class AppleGetStateCommand : GetStateCommand<AppleGetStateCommandArguments>
+internal class AppleStateCommand : GetStateCommand<AppleStateCommandArguments>
 {
     protected override string CommandUsage { get; } = "ios state [OPTIONS]";
 
@@ -68,11 +68,11 @@ internal class AppleGetStateCommand : GetStateCommand<AppleGetStateCommandArgume
 
     private const string SimulatorPrefix = "com.apple.CoreSimulator.SimDeviceType.";
 
-    public AppleGetStateCommand() : base(TargetPlatform.Apple, new ServiceCollection())
+    public AppleStateCommand() : base(TargetPlatform.Apple, new ServiceCollection())
     {
     }
 
-    protected override AppleGetStateCommandArguments Arguments { get; } = new();
+    protected override AppleStateCommandArguments Arguments { get; } = new();
 
     private static async Task AsJson(SystemInfo info)
     {

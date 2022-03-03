@@ -17,11 +17,11 @@ public class AndroidCommandSet : CommandSet
     {
         // Common verbs shared with Android
         Add(new AndroidTestCommand());
-        Add(new AndroidGetDeviceCommand());
+        Add(new AndroidDeviceCommand());
         Add(new AndroidInstallCommand());
         Add(new AndroidRunCommand());
         Add(new AndroidUninstallCommand());
         Add(new AndroidAdbCommand());
-        Add(new AndroidGetStateCommand());
+        Add(new AndroidStateCommand());
     }
 }

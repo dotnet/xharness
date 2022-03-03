@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
-internal class AndroidGetDeviceCommandArguments : XHarnessCommandArguments
+internal class AndroidDeviceCommandArguments : XHarnessCommandArguments
 {
     public OptionalAppPathArgument AppPackagePath { get; } = new();
     public DeviceArchitectureArgument DeviceArchitecture { get; } = new();

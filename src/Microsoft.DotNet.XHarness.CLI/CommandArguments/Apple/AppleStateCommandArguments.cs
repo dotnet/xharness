@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 
-internal class AppleGetStateCommandArguments : XHarnessCommandArguments
+internal class AppleStateCommandArguments : XHarnessCommandArguments
 {
     public XcodeArgument XcodeRoot { get; } = new();
     public MlaunchArgument MlaunchPath { get; set; } = new();
