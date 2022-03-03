@@ -126,6 +126,18 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
 
         Task<ExitCode> ExecuteApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
         {
+            // Exit code detection is broken on the newest iOS
+            // More details here: https://github.com/dotnet/xharness/issues/819
+            if (expectedExitCode != 0)
+            {
+                var os = target.Platform.IsSimulator() ? device.OSVersion.Split(' ', 2).Last() : device.OSVersion;
+                if (Version.TryParse(os, out var version) && version.Major > 14)
+                {
+                    _logger.LogWarning(
+                        "Exit code detection is not working on iOS/tvOS 15+ so the run will fail to match it with the expected value");
+                }
+            }
+
             appRunStarted = true;
             return this.ExecuteApp(
                 appBundleInfo,
