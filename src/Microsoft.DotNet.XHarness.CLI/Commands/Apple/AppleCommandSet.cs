@@ -32,8 +32,8 @@ internal class AppleCommandSet : CommandSet
         Add(new AppleJustRunCommand(services));
 
         // Commands for getting information
-        Add(new AppleGetDeviceCommand(services));
-        Add(new AppleGetStateCommand());
+        Add(new AppleDeviceCommand(services));
+        Add(new AppleStateCommand());
 
         // Commands for simulator management
         Add(new SimulatorsCommandSet());

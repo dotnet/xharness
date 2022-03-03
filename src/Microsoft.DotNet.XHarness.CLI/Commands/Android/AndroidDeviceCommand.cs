@@ -15,9 +15,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Android;
 
-internal class AndroidGetDeviceCommand : AndroidCommand<AndroidGetDeviceCommandArguments>
+internal class AndroidDeviceCommand : AndroidCommand<AndroidDeviceCommandArguments>
 {
-    protected override AndroidGetDeviceCommandArguments Arguments { get; } = new()
+    protected override AndroidDeviceCommandArguments Arguments { get; } = new()
     {
         Verbosity = new VerbosityArgument(LogLevel.Error)
     };
@@ -31,7 +31,7 @@ internal class AndroidGetDeviceCommand : AndroidCommand<AndroidGetDeviceCommandA
 Arguments:
 ";
 
-    public AndroidGetDeviceCommand() : base("device", false, CommandHelp)
+    public AndroidDeviceCommand() : base("device", false, CommandHelp)
     {
     }
 
