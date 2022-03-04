@@ -26,6 +26,9 @@ internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebS
     public NoQuitArgument NoQuit { get; } = new();
     public BackgroundThrottlingArgument BackgroundThrottling { get; } = new();
 
+    public SymbolMapFileArgument SymbolMapFileArgument { get; } = new();
+    public SymbolicatePatternsFileArgument SymbolicatePatternsFileArgument { get; } = new();
+    public SymbolicatorArgument SymbolicatorArgument { get; } = new();
     public WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; } = new();
     public WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; } = new();
     public WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; } = new();
@@ -49,6 +52,9 @@ internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebS
             NoHeadless,
             NoQuit,
             BackgroundThrottling,
+            SymbolMapFileArgument,
+            SymbolicatePatternsFileArgument,
+            SymbolicatorArgument,
             WebServerMiddlewarePathsAndTypes,
             WebServerHttpEnvironmentVariables,
             WebServerHttpsEnvironmentVariables,
