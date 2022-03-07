@@ -243,10 +243,10 @@ public abstract class AppRunnerBase
         var logReadTokenSource = new CancellationTokenSource();
         var simulatorLog = _logs.Create($"{simulator.Name}.stdout.log", LogType.SystemLog.ToString(), timestamp: false);
 
-        _mainLog.WriteLine($"Spawning log scan on the simulator..");
+        _mainLog.WriteLine($"Scan simulator log stream into {simulatorLog.FullPath}..");
         _processManager.ExecuteCommandAsync(
             "simctl",
-            new[] { "spawn", simulator.UDID, "log", "stream", "--level=Info", "--predicate", $"senderImagePath contains '{appInformation.AppName}'" },
+            new[] { "spawn", simulator.UDID, "log", "stream", "--level=Info", "--predicate", $"senderImagePath contains '{appInformation.BundleExecutable}'" },
             _mainLog,
             simulatorLog,
             simulatorLog,
