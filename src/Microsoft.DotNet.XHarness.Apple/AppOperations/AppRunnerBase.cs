@@ -226,7 +226,7 @@ public abstract class AppRunnerBase
 
     protected async Task<CancellationTokenSource?> CaptureSimulatorLog(IDevice simulator, AppBundleInformation appInformation, CancellationToken cancellationToken)
     {
-        _mainLog.WriteLine($"Booting the simulator {simulator.Name} and scanning its system log");
+        _mainLog.WriteLine($"Booting the simulator {simulator.Name} (to scan its system log)");
         var result = await _processManager.ExecuteXcodeCommandAsync(
             "simctl",
             new[] { "boot", simulator.UDID },
@@ -243,6 +243,7 @@ public abstract class AppRunnerBase
         var logReadTokenSource = new CancellationTokenSource();
         var simulatorLog = _logs.Create($"{simulator.Name}.stdout.log", LogType.SystemLog.ToString(), timestamp: false);
 
+        _mainLog.WriteLine($"Spawning log scan on the simulator..");
         _processManager.ExecuteCommandAsync(
             "simctl",
             new[] { "spawn", simulator.UDID, "log", "stream", "--level=Info", "--predicate", $"senderImagePath contains '{appInformation.AppName}'" },
@@ -252,6 +253,8 @@ public abstract class AppRunnerBase
             TimeSpan.FromDays(1),
             cancellationToken: CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, logReadTokenSource.Token).Token)
             .DoNotAwait();
+
+        logReadTokenSource.Token.Register(simulatorLog.Dispose);
 
         return logReadTokenSource;
     }
