@@ -31,7 +31,7 @@ public abstract class WasmSymbolicatorBase
 
         if (symbolicatorType is null)
         {
-            logger.LogWarning($"No symbolicator given");
+            logger.LogWarning("No symbolicator given");
             return null;
         }
 
