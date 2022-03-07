@@ -13,7 +13,7 @@ public interface ILogs : IList<IFileBackedLog>, IDisposable
     string Directory { get; set; }
 
     // Create a new log backed with a file
-    IFileBackedLog Create(string filename, string name, bool? timestamp = null);
+    IFileBackedLog Create(string filename, string description, bool? timestamp = null);
 
     // Adds an existing file to this collection of logs.
     // If the file is not inside the log directory, then it's copied there.

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
@@ -19,7 +20,7 @@ public abstract class AppRunnerBase
 {
     private const string SystemLogPath = "/var/log/system.log";
 
-    private readonly IProcessManager _processManager;
+    private readonly IMacOSProcessManager _processManager;
     private readonly ICaptureLogFactory _captureLogFactory;
     private readonly ILogs _logs;
     private readonly IHelpers _helpers;
@@ -28,7 +29,7 @@ public abstract class AppRunnerBase
     private bool _appEndSignalDetected = false;
 
     protected AppRunnerBase(
-        IProcessManager processManager,
+        IMacOSProcessManager processManager,
         ICaptureLogFactory captureLogFactory,
         ILogs logs,
         IFileBackedLog mainLog,
@@ -160,5 +161,37 @@ public abstract class AppRunnerBase
         }
 
         return result;
+    }
+
+    protected async Task<CancellationTokenSource?> CaptureSimulatorLog(IDevice simulator, AppBundleInformation appInformation, CancellationToken cancellationToken)
+    {
+        _mainLog.WriteLine($"Booting the simulator {simulator.Name} and scanning its system log");
+        var result = await _processManager.ExecuteXcodeCommandAsync(
+            "simctl",
+            new[] { "boot", simulator.UDID },
+            _mainLog,
+            TimeSpan.FromMinutes(2),
+            cancellationToken);
+
+        if (result.TimedOut)
+        {
+            _mainLog.WriteLine($"Failed to boot simulator {simulator.Name} in time! Exit code detection might fail");
+            return null;
+        }
+
+        var logReadTokenSource = new CancellationTokenSource();
+        var simulatorLog = _logs.Create($"{simulator.Name}.stdout.log", LogType.SystemLog.ToString(), timestamp: false);
+
+        _processManager.ExecuteCommandAsync(
+            "simctl",
+            new[] { "spawn", simulator.UDID, "log", "stream", "--level=Info", "--predicate", $"senderImagePath contains '{appInformation.AppName}'" },
+            _mainLog,
+            simulatorLog,
+            simulatorLog,
+            TimeSpan.FromDays(1),
+            cancellationToken: CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, logReadTokenSource.Token).Token)
+            .DoNotAwait();
+
+        return logReadTokenSource;
     }
 }

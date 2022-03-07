@@ -275,6 +275,7 @@ public class AppTester : AppRunnerBase, IAppTester
     }
 
     private async Task RunSimulatorTests(
+        AppBundleInformation appInformation,
         MlaunchArguments mlaunchArguments,
         ICrashSnapshotReporter crashReporter,
         ITestReporter testReporter,
@@ -294,10 +295,12 @@ public class AppTester : AppRunnerBase, IAppTester
         simulatorLog.StartCapture();
         _logs.Add(simulatorLog);
 
+        var simulatorScanToken = await CaptureSimulatorLog(simulator, appInformation, cancellationToken);
+
         using var systemLogs = new DisposableList<ICaptureLog>
-            {
-                simulatorLog
-            };
+        {
+            simulatorLog
+        };
 
         if (companionSimulator != null)
         {
@@ -312,6 +315,14 @@ public class AppTester : AppRunnerBase, IAppTester
             companionLog.StartCapture();
             _logs.Add(companionLog);
             systemLogs.Add(companionLog);
+
+            var companionScanToken = await CaptureSimulatorLog(companionSimulator, appInformation, cancellationToken);
+            if (companionScanToken != null)
+            {
+                simulatorScanToken = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken,
+                companionScanToken.Token);
+            }
         }
 
         await crashReporter.StartCaptureAsync();
@@ -321,6 +332,7 @@ public class AppTester : AppRunnerBase, IAppTester
         var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
 
         await testReporter.CollectSimulatorResult(result);
+        simulatorScanToken?.Cancel();
     }
 
     private async Task RunDeviceTests(

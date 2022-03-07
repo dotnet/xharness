@@ -193,6 +193,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
     }
 
     private async Task<ProcessExecutionResult> RunSimulatorApp(
+        AppBundleInformation appInformation,
         MlaunchArguments mlaunchArguments,
         ICrashSnapshotReporter crashReporter,
         ISimulatorDevice simulator,
@@ -211,10 +212,12 @@ public class AppRunner : AppRunnerBase, IAppRunner
         simulatorLog.StartCapture();
         _logs.Add(simulatorLog);
 
+        var simulatorScanToken = await CaptureSimulatorLog(simulator, appInformation, cancellationToken);
+
         using var systemLogs = new DisposableList<ICaptureLog>
-            {
-                simulatorLog
-            };
+        {
+            simulatorLog
+        };
 
         if (companionSimulator != null)
         {
@@ -229,13 +232,23 @@ public class AppRunner : AppRunnerBase, IAppRunner
             companionLog.StartCapture();
             _logs.Add(companionLog);
             systemLogs.Add(companionLog);
+
+            var companionScanToken = await CaptureSimulatorLog(companionSimulator, appInformation, cancellationToken);
+            if (companionScanToken != null)
+            {
+                simulatorScanToken = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken,
+                companionScanToken.Token);
+            }
         }
 
         await crashReporter.StartCaptureAsync();
 
-        _mainLog.WriteLine("Starting test run");
+        _mainLog.WriteLine("Starting the app");
 
-        return await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+        var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+        simulatorScanToken?.Cancel();
+        return result;
     }
 
     private async Task<ProcessExecutionResult> RunDeviceApp(
