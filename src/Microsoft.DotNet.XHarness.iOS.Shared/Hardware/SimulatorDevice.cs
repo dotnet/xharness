@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
@@ -158,4 +159,28 @@ public class SimulatorDevice : ISimulatorDevice
         return result;
     }
 
+    public async Task<string> GetAppBundlePath(ILog log, string bundleIdentifier, CancellationToken cancellationToken)
+    {
+        log.WriteLine($"Querying '{Name}' for bundle path of '{bundleIdentifier}'..");
+
+        var output = new MemoryLog();
+        var result = await _processManager.ExecuteXcodeCommandAsync(
+            "simctl",
+            new[] { "get_app_container" },
+            log,
+            output,
+            output,
+            TimeSpan.FromSeconds(30));
+
+        var bundlePath = output.ToString().Trim();
+
+        if (!result.Succeeded)
+        {
+            throw new Exception($"Failed to get information for '{bundleIdentifier}'. Please check the app is installed" + Environment.NewLine + bundlePath);
+        }
+
+        log.WriteLine($"Found installed app bundle at '{bundlePath}'");
+
+        return bundlePath;
+    }
 }

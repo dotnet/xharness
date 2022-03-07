@@ -23,4 +23,13 @@ public interface IMacOSProcessManager : IProcessManager
         ILog log,
         TimeSpan timeout,
         CancellationToken cancellationToken = default);
+
+    Task<ProcessExecutionResult> ExecuteXcodeCommandAsync(
+        string executable,
+        IList<string> args,
+        ILog log,
+        ILog stdoutLog,
+        ILog stderrLog,
+        TimeSpan timeout,
+        CancellationToken cancellationToken = default);
 }

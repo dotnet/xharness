@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
 
@@ -125,6 +126,7 @@ public interface ISimulatorDevice : IDevice
     Task Shutdown(ILog log);
     Task<bool> PrepareSimulator(ILog log, params string[] bundleIdentifiers);
     Task KillEverything(ILog log);
+    Task<string> GetAppBundlePath(ILog log, string bundleIdentifier, CancellationToken cancellationToken);
 }
 
 public interface ISimulatorLoader : IDeviceLoader
