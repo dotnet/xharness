@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.DotNet.XHarness.iOS.Shared;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 
@@ -21,14 +22,24 @@ internal class AppleInstallCommandArguments : XHarnessCommandArguments, IAppleAp
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
-            AppBundlePath,
-            Target,
-            OutputDirectory,
-            DeviceName,
-            IncludeWireless,
-            Timeout,
-            XcodeRoot,
-            MlaunchPath,
-            ResetSimulator,
+        AppBundlePath,
+        Target,
+        OutputDirectory,
+        DeviceName,
+        IncludeWireless,
+        Timeout,
+        XcodeRoot,
+        MlaunchPath,
+        ResetSimulator,
     };
+
+    public override void Validate()
+    {
+        base.Validate();
+
+        if (Target.Value.Platform == TestTarget.MacCatalyst)
+        {
+            throw new ArgumentException("This command is not supported with the maccatalyst target");
+        }
+    }
 }
