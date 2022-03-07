@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.DotNet.XHarness.Common;
 
 #nullable enable
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
@@ -20,12 +21,13 @@ public class WasmTestMessagesProcessor
 
     private readonly ILogger _logger;
     private readonly Lazy<ErrorPatternScanner>? _errorScanner;
+    private readonly WasmSymbolicatorBase? _symbolicator;
 
     public string? LineThatMatchedErrorPattern { get; private set; }
 
     public TaskCompletionSource<bool> WasmExitReceivedTcs { get; } = new TaskCompletionSource<bool>();
 
-    public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger, string? errorPatternsFile)
+    public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger, string? errorPatternsFile, WasmSymbolicatorBase? symbolicator)
     {
         _xmlResultsFilePath = xmlResultsFilePath;
         _stdoutFileWriter = File.CreateText(stdoutFilePath);
@@ -39,6 +41,8 @@ public class WasmTestMessagesProcessor
 
             _errorScanner = new Lazy<ErrorPatternScanner>(() => new ErrorPatternScanner(errorPatternsFile, logger));
         }
+
+        _symbolicator = symbolicator;
     }
 
     public void Invoke(string message)
@@ -106,7 +110,8 @@ public class WasmTestMessagesProcessor
             }
             else
             {
-                ScanMessage(line);
+                ScanMessageForErrorPatterns(line);
+                line = Symbolicate(line);
 
                 switch (logMessage?.method?.ToLowerInvariant())
                 {
@@ -134,7 +139,15 @@ public class WasmTestMessagesProcessor
         }
     }
 
-    private void ScanMessage(string message)
+    private string Symbolicate(string msg)
+    {
+        if (_symbolicator is null)
+            return msg;
+
+        return _symbolicator.Symbolicate(msg);
+    }
+
+    private void ScanMessageForErrorPatterns(string message)
     {
         if (LineThatMatchedErrorPattern != null || _errorScanner == null)
             return;
@@ -145,7 +158,9 @@ public class WasmTestMessagesProcessor
 
     public void ProcessErrorMessage(string message)
     {
+        message = message.TrimEnd();
+        message = Symbolicate(message);
         _logger.LogError(message);
-        ScanMessage(message);
+        ScanMessageForErrorPatterns(message);
     }
 }
