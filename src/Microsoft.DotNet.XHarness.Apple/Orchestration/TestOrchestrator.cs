@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.Apple;
 public interface ITestOrchestrator
 {
     Task<ExitCode> OrchestrateTest(
-        AppBundleInformation appBundleInformation,
+        string appBundlePath,
         TestTargetOs target,
         string? deviceName,
         TimeSpan timeout,
@@ -51,6 +51,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
     private readonly IErrorKnowledgeBase _errorKnowledgeBase;
 
     public TestOrchestrator(
+        IAppBundleInformationParser appBundleInformationParser,
         IAppInstaller appInstaller,
         IAppUninstaller appUninstaller,
         IAppTesterFactory appTesterFactory,
@@ -61,7 +62,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         IErrorKnowledgeBase errorKnowledgeBase,
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
-        : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        : base(appBundleInformationParser, appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
         _appTesterFactory = appTesterFactory ?? throw new ArgumentNullException(nameof(appTesterFactory));
         _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
@@ -70,8 +71,43 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
     }
 
+    public Task<ExitCode> OrchestrateTest(
+        string appBundlePath,
+        TestTargetOs target,
+        string? deviceName,
+        TimeSpan timeout,
+        TimeSpan launchTimeout,
+        CommunicationChannel communicationChannel,
+        XmlResultJargon xmlResultJargon,
+        IEnumerable<string> singleMethodFilters,
+        IEnumerable<string> classMethodFilters,
+        bool includeWirelessDevices,
+        bool resetSimulator,
+        bool enableLldb,
+        bool signalAppEnd,
+        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IEnumerable<string> passthroughArguments,
+        CancellationToken cancellationToken)
+        => OrchestrateTest(
+            (_, __) => Task.FromResult(appBundlePath),
+            target,
+            deviceName,
+            timeout,
+            launchTimeout,
+            communicationChannel,
+            xmlResultJargon,
+            singleMethodFilters,
+            classMethodFilters,
+            includeWirelessDevices,
+            resetSimulator: false, // No simulator reset for just- commands
+            enableLldb,
+            signalAppEnd,
+            environmentalVariables,
+            passthroughArguments,
+            cancellationToken);
+
     public virtual async Task<ExitCode> OrchestrateTest(
-        AppBundleInformation appBundleInformation,
+        Func<IDevice, CancellationToken, Task<string>> getAppBundlePath,
         TestTargetOs target,
         string? deviceName,
         TimeSpan timeout,
@@ -105,7 +141,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         });
 
         // We also want to shrink the launch timeout by whatever elapsed before we get to ExecuteApp
-        var watch = Stopwatch.StartNew();
+        Stopwatch watch = Stopwatch.StartNew();
 
         using var launchTimeoutCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
             launchTimeoutCancellation.Token,
@@ -154,7 +190,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             includeWirelessDevices,
             resetSimulator,
             enableLldb,
-            appBundleInformation,
+            getAppBundlePath,
             ExecuteMacCatalystApp,
             ExecuteApp,
             launchTimeoutCancellationToken.Token);

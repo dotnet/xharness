@@ -16,8 +16,22 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple;
 
-public interface IJustRunOrchestrator : IRunOrchestrator
+public interface IJustRunOrchestrator
 {
+    Task<ExitCode> OrchestrateRun(
+        string bundleIdentifier,
+        TestTargetOs target,
+        string? deviceName,
+        TimeSpan timeout,
+        TimeSpan launchTimeout,
+        int expectedExitCode,
+        bool includeWirelessDevices,
+        bool resetSimulator,
+        bool enableLldb,
+        bool signalAppEnd,
+        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IEnumerable<string> passthroughArguments,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -28,6 +42,7 @@ public interface IJustRunOrchestrator : IRunOrchestrator
 public class JustRunOrchestrator : RunOrchestrator, IJustRunOrchestrator
 {
     public JustRunOrchestrator(
+        IAppBundleInformationParser appBundleInformationParser,
         IAppInstaller appInstaller,
         IAppUninstaller appUninstaller,
         IAppRunnerFactory appRunnerFactory,
@@ -40,12 +55,12 @@ public class JustRunOrchestrator : RunOrchestrator, IJustRunOrchestrator
         IErrorKnowledgeBase errorKnowledgeBase,
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
-        : base(appInstaller, appUninstaller, appRunnerFactory, deviceFinder, iOSExitCodeDetector, macCatalystExitCodeDetector, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        : base(appBundleInformationParser, appInstaller, appUninstaller, appRunnerFactory, deviceFinder, iOSExitCodeDetector, macCatalystExitCodeDetector, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
     }
 
-    public override Task<ExitCode> OrchestrateRun(
-        AppBundleInformation appBundleInformation,
+    Task<ExitCode> IJustRunOrchestrator.OrchestrateRun(
+        string bundleIdentifier,
         TestTargetOs target,
         string? deviceName,
         TimeSpan timeout,
@@ -58,8 +73,8 @@ public class JustRunOrchestrator : RunOrchestrator, IJustRunOrchestrator
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
-        => base.OrchestrateRun(
-            appBundleInformation,
+        => OrchestrateRun(
+            (device, cancellationToken) => GetAppBundlePath(device, bundleIdentifier, cancellationToken),
             target,
             deviceName,
             timeout,

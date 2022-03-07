@@ -33,7 +33,10 @@ public interface IUninstallOrchestrator
 /// </summary>
 public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
 {
+    private readonly IFileBackedLog _mainLog;
+
     public UninstallOrchestrator(
+        IAppBundleInformationParser appBundleInformationParser,
         IAppInstaller appInstaller,
         IAppUninstaller appUninstaller,
         IDeviceFinder deviceFinder,
@@ -43,8 +46,9 @@ public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
         IErrorKnowledgeBase errorKnowledgeBase,
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
-        : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        : base(appBundleInformationParser, appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
+        _mainLog = mainLog;
     }
 
     public Task<ExitCode> OrchestrateAppUninstall(
@@ -69,7 +73,7 @@ public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
             includeWirelessDevices,
             resetSimulator,
             enableLldb,
-            AppBundleInformation.FromBundleId(bundleIdentifier),
+            (device, cancellationToken) => GetAppBundlePath(device, bundleIdentifier, cancellationToken),
             ExecuteMacCatalystApp,
             ExecuteApp,
             cancellationToken);

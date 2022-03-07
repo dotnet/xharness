@@ -30,6 +30,8 @@ namespace Microsoft.DotNet.XHarness.Apple;
 public abstract class BaseOrchestrator : IDisposable
 {
     protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
+
+    private readonly IAppBundleInformationParser _appBundleInformationParser;
     private readonly IAppInstaller _appInstaller;
     private readonly IAppUninstaller _appUninstaller;
     private readonly IDeviceFinder _deviceFinder;
@@ -43,6 +45,7 @@ public abstract class BaseOrchestrator : IDisposable
     private bool _lldbFileCreated;
 
     protected BaseOrchestrator(
+        IAppBundleInformationParser appBundleInformationParser,
         IAppInstaller appInstaller,
         IAppUninstaller appUninstaller,
         IDeviceFinder deviceFinder,
@@ -53,6 +56,7 @@ public abstract class BaseOrchestrator : IDisposable
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
     {
+        _appBundleInformationParser = appBundleInformationParser ?? throw new ArgumentNullException(nameof(appBundleInformationParser));
         _appInstaller = appInstaller ?? throw new ArgumentNullException(nameof(appInstaller));
         _appUninstaller = appUninstaller ?? throw new ArgumentNullException(nameof(appUninstaller));
         _deviceFinder = deviceFinder ?? throw new ArgumentNullException(nameof(deviceFinder));
@@ -70,7 +74,7 @@ public abstract class BaseOrchestrator : IDisposable
         bool includeWirelessDevices,
         bool resetSimulator,
         bool enableLldb,
-        AppBundleInformation appBundleInfo,
+        Func<IDevice, CancellationToken, Task<string>> getAppBundlePath,
         Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp,
         Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp,
         CancellationToken cancellationToken)
@@ -100,9 +104,21 @@ public abstract class BaseOrchestrator : IDisposable
         ExitCode exitCode;
         IDevice device;
         IDevice? companionDevice;
+        AppBundleInformation appBundleInfo;
 
         if (target.Platform == TestTarget.MacCatalyst)
         {
+            try
+            {
+                var appPackagePath = await getAppBundlePath(null! /* no device for maccatalyst */, cancellationToken);
+                appBundleInfo = await _appBundleInformationParser.ParseFromAppBundle(appPackagePath, target.Platform, _mainLog, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
+            }
+
             try
             {
                 return await executeMacCatalystApp(appBundleInfo);
@@ -155,8 +171,28 @@ public abstract class BaseOrchestrator : IDisposable
             {
                 _logger.LogInformation($"Found companion {(target.Platform.IsSimulator() ? "simulator" : "physical")} device '{companionDevice.Name}'");
             }
+        }
+        catch (NoDeviceFoundException e)
+        {
+            _logger.LogError(e.Message);
+            return ExitCode.DEVICE_NOT_FOUND;
+        }
 
-            if (target.Platform.IsSimulator() && resetSimulator)
+        try
+        {
+            var appPackagePath = await getAppBundlePath(device, cancellationToken);
+            _logger.LogInformation($"Getting app bundle information from '{appPackagePath}'");
+            appBundleInfo = await _appBundleInformationParser.ParseFromAppBundle(appPackagePath, target.Platform, _mainLog, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e.Message);
+            return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
+        }
+
+        if (target.Platform.IsSimulator() && resetSimulator)
+        {
+            try
             {
                 var simulator = (ISimulatorDevice)device;
                 var bundleIds = appBundleInfo.BundleIdentifier == string.Empty ? Array.Empty<string>() : new[] { appBundleInfo.BundleIdentifier };
@@ -173,11 +209,11 @@ public abstract class BaseOrchestrator : IDisposable
 
                 _logger.LogInformation("Simulator reset finished");
             }
-        }
-        catch (NoDeviceFoundException e)
-        {
-            _logger.LogError(e.Message);
-            return ExitCode.DEVICE_NOT_FOUND;
+            catch (Exception e)
+            {
+                _logger.LogError($"Failed to reset simulator: " + Environment.NewLine + e);
+                return ExitCode.SIMULATOR_FAILURE;
+            }
         }
 
         // Note down the actual test target
@@ -400,6 +436,16 @@ public abstract class BaseOrchestrator : IDisposable
         {
             _logger.LogInformation("Simulators cleaned up");
         }
+    }
+
+    protected Task<string> GetAppBundlePath(IDevice device, string bundleIdentifier, CancellationToken cancellationToken)
+    {
+        if (device is ISimulatorDevice simulator)
+        {
+            return simulator.GetAppBundlePath(_mainLog, bundleIdentifier, cancellationToken);
+        }
+
+        throw new NotImplementedException("TODO"); // TODO
     }
 
     protected static bool IsLldbEnabled() => File.Exists(s_mlaunchLldbConfigFile);
