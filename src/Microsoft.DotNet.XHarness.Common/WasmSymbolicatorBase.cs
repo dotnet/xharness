@@ -3,9 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Globalization;
-using System.IO;
-using System.Reflection;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Common;
@@ -35,9 +32,17 @@ public abstract class WasmSymbolicatorBase
         }
 
         var symbolicator = Activator.CreateInstance(symbolicatorType) as WasmSymbolicatorBase;
-        if (symbolicator?.Init(symbolMapFile, symbolsPatternFile, logger) == true)
+        if (symbolicator is null)
+        {
+            // should not happen
+            logger.LogError($"Symbolicator '{symbolicatorType}' is not of WasmSymbolicatorBase type.");
+            return null;
+        }
+
+        if (symbolicator.Init(symbolMapFile, symbolsPatternFile, logger) == true)
             return symbolicator;
 
+        logger.LogDebug($"Symbolicator '{symbolicatorType}'.Init({symbolMapFile}, {symbolsPatternFile}) returned false");
         return null;
     }
 
