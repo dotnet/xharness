@@ -192,65 +192,6 @@ public class AppRunner : AppRunnerBase, IAppRunner
         return result;
     }
 
-    private async Task<ProcessExecutionResult> RunSimulatorApp(
-        AppBundleInformation appInformation,
-        MlaunchArguments mlaunchArguments,
-        ICrashSnapshotReporter crashReporter,
-        ISimulatorDevice simulator,
-        ISimulatorDevice? companionSimulator,
-        TimeSpan timeout,
-        CancellationToken cancellationToken)
-    {
-        _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
-
-        var simulatorLog = _captureLogFactory.Create(
-            path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
-            systemLogPath: simulator.SystemLog,
-            entireFile: false,
-            LogType.SystemLog);
-
-        simulatorLog.StartCapture();
-        _logs.Add(simulatorLog);
-
-        var simulatorScanToken = await CaptureSimulatorLog(simulator, appInformation, cancellationToken);
-
-        using var systemLogs = new DisposableList<ICaptureLog>
-        {
-            simulatorLog
-        };
-
-        if (companionSimulator != null)
-        {
-            _mainLog.WriteLine("System log for the '{1}' companion simulator is: {0}", companionSimulator.SystemLog, companionSimulator.Name);
-
-            var companionLog = _captureLogFactory.Create(
-                path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
-                systemLogPath: companionSimulator.SystemLog,
-                entireFile: false,
-                LogType.CompanionSystemLog);
-
-            companionLog.StartCapture();
-            _logs.Add(companionLog);
-            systemLogs.Add(companionLog);
-
-            var companionScanToken = await CaptureSimulatorLog(companionSimulator, appInformation, cancellationToken);
-            if (companionScanToken != null)
-            {
-                simulatorScanToken = CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken,
-                companionScanToken.Token);
-            }
-        }
-
-        await crashReporter.StartCaptureAsync();
-
-        _mainLog.WriteLine("Starting the app");
-
-        var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
-        simulatorScanToken?.Cancel();
-        return result;
-    }
-
     private async Task<ProcessExecutionResult> RunDeviceApp(
         MlaunchArguments mlaunchArguments,
         ICrashSnapshotReporter crashReporter,

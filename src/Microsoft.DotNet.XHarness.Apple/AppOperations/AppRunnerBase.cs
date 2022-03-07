@@ -9,7 +9,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -20,7 +22,7 @@ public abstract class AppRunnerBase
 {
     private const string SystemLogPath = "/var/log/system.log";
 
-    private readonly IMacOSProcessManager _processManager;
+    private readonly IMlaunchProcessManager _processManager;
     private readonly ICaptureLogFactory _captureLogFactory;
     private readonly ILogs _logs;
     private readonly IHelpers _helpers;
@@ -29,7 +31,7 @@ public abstract class AppRunnerBase
     private bool _appEndSignalDetected = false;
 
     protected AppRunnerBase(
-        IMacOSProcessManager processManager,
+        IMlaunchProcessManager processManager,
         ICaptureLogFactory captureLogFactory,
         ILogs logs,
         IFileBackedLog mainLog,
@@ -105,6 +107,65 @@ public abstract class AppRunnerBase
         {
             systemLog.StopCapture(waitIfEmpty: TimeSpan.FromSeconds(10));
         }
+    }
+
+    protected async Task<ProcessExecutionResult> RunSimulatorApp(
+        AppBundleInformation appInformation,
+        MlaunchArguments mlaunchArguments,
+        ICrashSnapshotReporter crashReporter,
+        ISimulatorDevice simulator,
+        ISimulatorDevice? companionSimulator,
+        TimeSpan timeout,
+        CancellationToken cancellationToken)
+    {
+        _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
+
+        var simulatorLog = _captureLogFactory.Create(
+            path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
+            systemLogPath: simulator.SystemLog,
+            entireFile: false,
+            LogType.SystemLog);
+
+        simulatorLog.StartCapture();
+        _logs.Add(simulatorLog);
+
+        var simulatorScanToken = await CaptureSimulatorLog(simulator, appInformation, cancellationToken);
+
+        using var systemLogs = new DisposableList<ICaptureLog>
+        {
+            simulatorLog
+        };
+
+        if (companionSimulator != null)
+        {
+            _mainLog.WriteLine("System log for the '{1}' companion simulator is: {0}", companionSimulator.SystemLog, companionSimulator.Name);
+
+            var companionLog = _captureLogFactory.Create(
+                path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
+                systemLogPath: companionSimulator.SystemLog,
+                entireFile: false,
+                LogType.CompanionSystemLog);
+
+            companionLog.StartCapture();
+            _logs.Add(companionLog);
+            systemLogs.Add(companionLog);
+
+            var companionScanToken = await CaptureSimulatorLog(companionSimulator, appInformation, cancellationToken);
+            if (companionScanToken != null)
+            {
+                simulatorScanToken = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken,
+                companionScanToken.Token);
+            }
+        }
+
+        await crashReporter.StartCaptureAsync();
+
+        _mainLog.WriteLine("Starting the app");
+
+        var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+        simulatorScanToken?.Cancel();
+        return result;
     }
 
     /// <summary>
