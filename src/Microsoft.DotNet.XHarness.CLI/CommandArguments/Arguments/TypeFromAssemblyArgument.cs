@@ -8,8 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Loader;
 
-#nullable enable
-
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments;
 
 internal class TypeFromAssemblyArgument<T>: Argument<IList<(string path, string? type)>>

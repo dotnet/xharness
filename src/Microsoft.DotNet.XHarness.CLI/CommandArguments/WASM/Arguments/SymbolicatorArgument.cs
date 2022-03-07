@@ -4,8 +4,6 @@
 
 using Microsoft.DotNet.XHarness.Common;
 
-#nullable enable
-
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 
 internal class SymbolicatorArgument : TypeFromAssemblyArgument<WasmSymbolicatorBase>

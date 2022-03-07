@@ -8,7 +8,6 @@ using System.IO;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.Common;
 
 public abstract class WasmSymbolicatorBase
