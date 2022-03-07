@@ -163,10 +163,10 @@ public class SimulatorDevice : ISimulatorDevice
     {
         log.WriteLine($"Querying '{Name}' for bundle path of '{bundleIdentifier}'..");
 
-        var output = new MemoryLog();
+        var output = new MemoryLog() { Timestamp = false };
         var result = await _processManager.ExecuteXcodeCommandAsync(
             "simctl",
-            new[] { "get_app_container" },
+            new[] { "get_app_container", UDID, bundleIdentifier },
             log,
             output,
             output,
