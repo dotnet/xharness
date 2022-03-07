@@ -223,6 +223,7 @@ public class AppTester : AppRunnerBase, IAppTester
                     extraEnvVariables);
 
                 await RunSimulatorTests(
+                    appInformation,
                     mlaunchArguments,
                     crashReporter,
                     testReporter,

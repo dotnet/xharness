@@ -152,6 +152,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
                 extraEnvVariables);
 
             result = await RunSimulatorApp(
+                appInformation,
                 mlaunchArguments,
                 crashReporter,
                 simulator,
