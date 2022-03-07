@@ -110,7 +110,7 @@ public abstract class BaseOrchestrator : IDisposable
         {
             try
             {
-                var appPackagePath = await getAppBundlePath(null! /* no device for maccatalyst */, cancellationToken);
+                var appPackagePath = Path.GetFullPath(await getAppBundlePath(null! /* no device for maccatalyst */, cancellationToken));
                 appBundleInfo = await _appBundleInformationParser.ParseFromAppBundle(appPackagePath, target.Platform, _mainLog, cancellationToken);
             }
             catch (Exception e)
@@ -180,7 +180,7 @@ public abstract class BaseOrchestrator : IDisposable
 
         try
         {
-            var appPackagePath = await getAppBundlePath(device, cancellationToken);
+            var appPackagePath = Path.GetFullPath(await getAppBundlePath(device, cancellationToken));
             _logger.LogInformation($"Getting app bundle information from '{appPackagePath}'");
             appBundleInfo = await _appBundleInformationParser.ParseFromAppBundle(appPackagePath, target.Platform, _mainLog, cancellationToken);
         }
@@ -445,7 +445,7 @@ public abstract class BaseOrchestrator : IDisposable
             return simulator.GetAppBundlePath(_mainLog, bundleIdentifier, cancellationToken);
         }
 
-        throw new NotImplementedException("TODO"); // TODO
+        return null; // TODO
     }
 
     protected static bool IsLldbEnabled() => File.Exists(s_mlaunchLldbConfigFile);
