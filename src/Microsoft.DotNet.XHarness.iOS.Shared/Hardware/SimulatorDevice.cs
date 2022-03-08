@@ -159,6 +159,28 @@ public class SimulatorDevice : ISimulatorDevice
         return result;
     }
 
+    public async Task<bool> BootSimulator(ILog log, CancellationToken cancellationToken)
+    {
+        log.WriteLine($"Booting simulator '{Name}'");
+
+        var output = new MemoryLog() { Timestamp = false };
+
+        var result = await _processManager.ExecuteXcodeCommandAsync(
+            "simctl",
+            new[] { "boot", UDID },
+            Log.CreateAggregatedLog(log, output),
+            TimeSpan.FromMinutes(2),
+            cancellationToken);
+
+        if (!result.Succeeded && !output.ToString().Contains(TODO))
+        {
+            log.WriteLine($"Failed to boot simulator '{Name}'");
+            return false;
+        }
+
+        return true;
+    }
+
     public async Task<string> GetAppBundlePath(ILog log, string bundleIdentifier, CancellationToken cancellationToken)
     {
         log.WriteLine($"Querying '{Name}' for bundle path of '{bundleIdentifier}'..");
