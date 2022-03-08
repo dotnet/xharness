@@ -73,7 +73,7 @@ public class MacOSProcessManager : UnixProcessManager, IMacOSProcessManager
     }
 
     public Task<ProcessExecutionResult> ExecuteXcodeCommandAsync(string executable, IList<string> args, ILog log, TimeSpan timeout, CancellationToken cancellationToken = default)
-        => ExecuteXcodeCommandAsync(executable, args, log, timeout, cancellationToken);
+        => ExecuteXcodeCommandAsync(executable, args, log, log, log, timeout, cancellationToken);
 
     #endregion
 
