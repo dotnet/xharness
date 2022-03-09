@@ -29,7 +29,7 @@ public enum DeviceState
 {
     Unknown = 0,
     Shutdown = 1,
-    Booting = 2,
-    Booted = 3,
-    ShuttingDown = 4,
+    ShuttingDown = 2,
+    Booting = 3,
+    Booted = 4,
 }
