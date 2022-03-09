@@ -161,6 +161,7 @@ public class SimulatorDevice : ISimulatorDevice
 
     public async Task<bool> BootSimulator(ILog log, CancellationToken cancellationToken)
     {
+        // TODO: Replace this with `mlaunch --launchsimulator`
         log.WriteLine($"Booting simulator '{Name}'");
 
         var output = new MemoryLog() { Timestamp = false };
