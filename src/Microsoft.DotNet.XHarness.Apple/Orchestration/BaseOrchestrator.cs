@@ -116,7 +116,7 @@ public abstract class BaseOrchestrator : IDisposable
             catch (Exception e)
             {
                 _logger.LogError(e.Message);
-                return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
+                return ExitCode.PACKAGE_NOT_FOUND;
             }
 
             try
@@ -187,7 +187,7 @@ public abstract class BaseOrchestrator : IDisposable
         catch (Exception e)
         {
             _logger.LogError(e.Message);
-            return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
+            return ExitCode.PACKAGE_NOT_FOUND;
         }
 
         if (target.Platform.IsSimulator() && resetSimulator)

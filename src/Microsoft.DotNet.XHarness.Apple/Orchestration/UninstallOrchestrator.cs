@@ -33,8 +33,6 @@ public interface IUninstallOrchestrator
 /// </summary>
 public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
 {
-    private readonly IFileBackedLog _mainLog;
-
     public UninstallOrchestrator(
         IAppBundleInformationParser appBundleInformationParser,
         IAppInstaller appInstaller,
@@ -48,7 +46,6 @@ public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
         IHelpers helpers)
         : base(appBundleInformationParser, appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
-        _mainLog = mainLog;
     }
 
     public Task<ExitCode> OrchestrateAppUninstall(

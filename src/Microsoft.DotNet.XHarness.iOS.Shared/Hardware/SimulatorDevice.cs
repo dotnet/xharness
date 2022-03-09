@@ -203,13 +203,12 @@ public class SimulatorDevice : ISimulatorDevice
             output,
             TimeSpan.FromSeconds(30));
 
-        var bundlePath = output.ToString().Trim();
-
         if (!result.Succeeded)
         {
-            throw new Exception($"Failed to get information for '{bundleIdentifier}'. Please check the app is installed" + Environment.NewLine + bundlePath);
+            throw new Exception($"Failed to get information for '{bundleIdentifier}'. Please check the app is installed");
         }
 
+        var bundlePath = output.ToString().Trim();
         log.WriteLine($"Found installed app bundle at '{bundlePath}'");
 
         return bundlePath;
