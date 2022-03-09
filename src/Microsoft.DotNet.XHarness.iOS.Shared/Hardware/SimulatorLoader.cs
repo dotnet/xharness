@@ -389,7 +389,7 @@ public class SimulatorLoader : ISimulatorLoader
 
         if (companionRuntime == null)
         {
-            simulator = devices.First();
+            simulator = devices.OrderBy(s => s, _simulatorSelector).First();
         }
         else
         {

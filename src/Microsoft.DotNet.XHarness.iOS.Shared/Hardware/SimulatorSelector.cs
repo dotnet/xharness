@@ -5,10 +5,11 @@
 
 #nullable enable
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 
-public interface ISimulatorSelector
+public interface ISimulatorSelector : IComparer<ISimulatorDevice>
 {
     string GetRuntimePrefix(TestTargetOs target);
     string GetDeviceType(TestTargetOs target, bool minVersion);
@@ -55,5 +56,11 @@ public class DefaultSimulatorSelector : ISimulatorSelector
             companionRuntime = null;
             companionDeviceType = null;
         }
+    }
+
+    public int Compare(ISimulatorDevice x, ISimulatorDevice y)
+    {
+        // Put Booted/Booting in front of Shutdown/Unknown
+        return ((int)y.State).CompareTo((int)x.State);
     }
 }
