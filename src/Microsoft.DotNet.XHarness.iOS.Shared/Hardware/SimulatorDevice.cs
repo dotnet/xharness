@@ -165,20 +165,28 @@ public class SimulatorDevice : ISimulatorDevice
 
         var output = new MemoryLog() { Timestamp = false };
 
-        var result = await _processManager.ExecuteXcodeCommandAsync(
-            "simctl",
-            new[] { "boot", UDID },
-            Log.CreateAggregatedLog(log, output),
-            TimeSpan.FromMinutes(2),
-            cancellationToken);
+        var timeout = TimeSpan.FromMinutes(1);
+        var watch = Stopwatch.StartNew();
 
-        if (!result.Succeeded && !output.ToString().Contains(TODO))
+        while (watch.Elapsed < timeout && !cancellationToken.IsCancellationRequested)
         {
-            log.WriteLine($"Failed to boot simulator '{Name}'");
-            return false;
+            var result = await _processManager.ExecuteXcodeCommandAsync(
+                "simctl",
+                new[] { "boot", UDID },
+                Log.CreateAggregatedLog(log, output),
+                TimeSpan.FromMinutes(1),
+                cancellationToken);
+
+            // 149 means "Unable to boot device in current state: Booted"
+            if (result.ExitCode == 149)
+            {
+                log.WriteLine($"Simulator '{Name}' booted in {(int)watch.Elapsed.TotalSeconds} seconds");
+                return true;
+            }
         }
 
-        return true;
+        log.WriteLine($"Failed to boot simulator '{Name}'");
+        return false;
     }
 
     public async Task<string> GetAppBundlePath(ILog log, string bundleIdentifier, CancellationToken cancellationToken)
