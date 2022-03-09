@@ -45,7 +45,10 @@ public class SimpleTcpListener : SimpleListener, ITunnelListener
 
         // _server?.Stop(); was causing hangs
         // https://github.com/dotnet/xharness/issues/73
-        _server?.Server?.Shutdown(SocketShutdown.Both);
+        if (_server?.Server?.Connected ?? false)
+        {
+            _server.Server.Shutdown(SocketShutdown.Both);
+        }
     }
 
     public override int InitializeAndGetPort()
