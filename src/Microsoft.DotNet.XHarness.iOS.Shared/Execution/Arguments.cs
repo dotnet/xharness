@@ -302,15 +302,27 @@ public sealed class LaunchDeviceBundleIdArgument : SingleValueArgument
 /// <summary>
 /// Launch the specified app in the simulator.
 /// </summary>
-public sealed class LaunchSimulatorArgument : SingleValueArgument
+public sealed class LaunchSimulatorAppArgument : SingleValueArgument
 {
     private const string ArgName = "launchsim";
 
-    public LaunchSimulatorArgument(string launchAppPath) : base(ArgName, launchAppPath, false)
+    public LaunchSimulatorAppArgument(string launchAppPath) : base(ArgName, launchAppPath, false)
     {
     }
 
-    public LaunchSimulatorArgument(AppBundleInformation appInfo) : base(ArgName, appInfo.AppPath, false)
+    public LaunchSimulatorAppArgument(AppBundleInformation appInfo) : base(ArgName, appInfo.AppPath, false)
+    {
+    }
+}
+
+/// <summary>
+/// Launch the simulator only.
+/// </summary>
+public sealed class LaunchSimulatorArgument : OptionArgument
+{
+    private const string ArgName = "launchsimulator";
+
+    public LaunchSimulatorArgument() : base(ArgName)
     {
     }
 }
