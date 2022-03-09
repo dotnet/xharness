@@ -128,6 +128,14 @@ public class SimulatorLoader : ISimulatorLoader
                 {
                     Name = sim.Attributes["Name"].Value,
                     UDID = sim.Attributes["UDID"].Value,
+                    State = sim.Attributes["State"]?.Value switch
+                    {
+                        "Booting" => DeviceState.Booting,
+                        "Booted" => DeviceState.Booted,
+                        "ShuttingDown" => DeviceState.ShuttingDown,
+                        "Shutdown" => DeviceState.Shutdown,
+                        _ => DeviceState.Unknown,
+                    },
                     SimRuntime = sim.SelectSingleNode("SimRuntime").InnerText,
                     SimDeviceType = sim.SelectSingleNode("SimDeviceType").InnerText,
                     DataPath = sim.SelectSingleNode("DataPath").InnerText,
