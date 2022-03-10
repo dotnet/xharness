@@ -7,9 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 
@@ -26,24 +24,15 @@ internal class AppleInstallCommand : AppleAppCommand<AppleInstallCommandArgument
     {
     }
 
-    protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken)
-    {
-        if (Arguments.Target.Value.Platform == TestTarget.MacCatalyst)
-        {
-            var logger = serviceProvider.GetRequiredService<Extensions.Logging.ILogger>();
-            logger.LogError("Cannot install application on MacCatalyst");
-            return Task.FromResult(ExitCode.PACKAGE_INSTALLATION_FAILURE);
-        }
-
-        var installOrchestrator = serviceProvider.GetRequiredService<IInstallOrchestrator>();
-        return installOrchestrator.OrchestrateInstall(
-            Arguments.Target,
-            Arguments.DeviceName,
-            Arguments.AppBundlePath,
-            Arguments.Timeout,
-            Arguments.IncludeWireless,
-            Arguments.ResetSimulator,
-            enableLldb: false,
-            cancellationToken);
-    }
+    protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken) =>
+        serviceProvider.GetRequiredService<IInstallOrchestrator>()
+            .OrchestrateInstall(
+                Arguments.Target,
+                Arguments.DeviceName,
+                Arguments.AppBundlePath,
+                Arguments.Timeout,
+                Arguments.IncludeWireless,
+                Arguments.ResetSimulator,
+                enableLldb: false,
+                cancellationToken);
 }

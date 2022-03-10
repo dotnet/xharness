@@ -58,16 +58,8 @@ public class WebServer
                     options.WebServerUseCors = arguments.WebServerUseCors;
                     options.WebServerUseCrossOriginPolicy = arguments.WebServerUseCrossOriginPolicy;
                     options.OnConsoleConnected = onConsoleConnected;
-                    foreach (var (middlewarePath, middlewareTypeName) in arguments.WebServerMiddlewarePathsAndTypes.Value)
+                    foreach (var middlewareType in arguments.WebServerMiddlewarePathsAndTypes.GetLoadedTypes())
                     {
-                        var extensionAssembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(middlewarePath);
-                        var middlewareType = extensionAssembly?.GetTypes().Where(type => type.Name == middlewareTypeName).FirstOrDefault();
-                        if (middlewareType == null)
-                        {
-                            var message = $"Can't find {middlewareTypeName} middleware in {middlewarePath}";
-                            logger.LogError(message);
-                            throw new Exception(message);
-                        }
                         options.EchoServerMiddlewares.Add(middlewareType);
                     }
                 });

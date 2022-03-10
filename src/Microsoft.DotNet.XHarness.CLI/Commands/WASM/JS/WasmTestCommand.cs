@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using System.Threading;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.Extensions.DependencyInjection;
+using System.Linq;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 
@@ -128,7 +129,16 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
             var stdoutFilePath = Path.Combine(Arguments.OutputDirectory, "wasm-console.log");
             File.Delete(stdoutFilePath);
 
-            var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath, stdoutFilePath, logger, Arguments.ErrorPatternsFile);
+            var symbolicator = WasmSymbolicatorBase.Create(Arguments.SymbolicatorArgument.GetLoadedTypes().FirstOrDefault(),
+                                                           Arguments.SymbolMapFileArgument,
+                                                           Arguments.SymbolicatePatternsFileArgument,
+                                                           logger);
+
+            var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath,
+                                                             stdoutFilePath,
+                                                             logger,
+                                                             Arguments.ErrorPatternsFile,
+                                                             symbolicator);
             var result = await processManager.ExecuteCommandAsync(
                 engineBinary,
                 engineArgs,

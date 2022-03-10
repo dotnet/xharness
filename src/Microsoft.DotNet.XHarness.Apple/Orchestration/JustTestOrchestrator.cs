@@ -16,8 +16,25 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
 namespace Microsoft.DotNet.XHarness.Apple;
 
-public interface IJustTestOrchestrator : ITestOrchestrator
+public interface IJustTestOrchestrator
 {
+    Task<ExitCode> OrchestrateTest(
+        string bundleIdentifier,
+        TestTargetOs target,
+        string? deviceName,
+        TimeSpan timeout,
+        TimeSpan launchTimeout,
+        CommunicationChannel communicationChannel,
+        XmlResultJargon xmlResultJargon,
+        IEnumerable<string> singleMethodFilters,
+        IEnumerable<string> classMethodFilters,
+        bool includeWirelessDevices,
+        bool resetSimulator,
+        bool enableLldb,
+        bool signalAppEnd,
+        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IEnumerable<string> passthroughArguments,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -31,6 +48,7 @@ public interface IJustTestOrchestrator : ITestOrchestrator
 public class JustTestOrchestrator : TestOrchestrator, IJustTestOrchestrator
 {
     public JustTestOrchestrator(
+        IAppBundleInformationParser appBundleInformationParser,
         IAppInstaller appInstaller,
         IAppUninstaller appUninstaller,
         IAppTesterFactory appTesterFactory,
@@ -41,12 +59,12 @@ public class JustTestOrchestrator : TestOrchestrator, IJustTestOrchestrator
         IErrorKnowledgeBase errorKnowledgeBase,
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
-        : base(appInstaller, appUninstaller, appTesterFactory, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        : base(appBundleInformationParser, appInstaller, appUninstaller, appTesterFactory, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
     }
 
-    public override Task<ExitCode> OrchestrateTest(
-        AppBundleInformation appBundleInformation,
+    Task<ExitCode> IJustTestOrchestrator.OrchestrateTest(
+        string bundleIdentifier,
         TestTargetOs target,
         string? deviceName,
         TimeSpan timeout,
@@ -62,8 +80,8 @@ public class JustTestOrchestrator : TestOrchestrator, IJustTestOrchestrator
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
-        => base.OrchestrateTest(
-            appBundleInformation,
+        => OrchestrateTest(
+            (device, cancellationToken) => GetAppBundlePath(device, bundleIdentifier, cancellationToken),
             target,
             deviceName,
             timeout,

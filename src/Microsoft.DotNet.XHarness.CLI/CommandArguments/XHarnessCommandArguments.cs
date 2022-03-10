@@ -25,9 +25,9 @@ public abstract class XHarnessCommandArguments : IXHarnessCommandArguments
 
     public IEnumerable<Argument> GetCommandArguments() => GetArguments().Concat(new Argument[]
     {
-            Diagnostics,
-            Verbosity,
-            ShowHelp,
+        Diagnostics,
+        Verbosity,
+        ShowHelp,
     });
 
     public virtual void Validate()

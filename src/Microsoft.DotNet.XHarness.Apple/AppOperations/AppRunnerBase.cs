@@ -224,20 +224,11 @@ public abstract class AppRunnerBase
         return result;
     }
 
-    protected async Task<CancellationTokenSource?> CaptureSimulatorLog(IDevice simulator, AppBundleInformation appInformation, CancellationToken cancellationToken)
+    protected async Task<CancellationTokenSource?> CaptureSimulatorLog(ISimulatorDevice simulator, AppBundleInformation appInformation, CancellationToken cancellationToken)
     {
-        _mainLog.WriteLine($"Booting the simulator {simulator.Name} (to scan its system log)");
-        var result = await _processManager.ExecuteXcodeCommandAsync(
-            "simctl",
-            new[] { "boot", simulator.UDID },
-            _mainLog,
-            TimeSpan.FromMinutes(2),
-            cancellationToken);
-
-        if (result.TimedOut)
+        if (!await simulator.Boot(_mainLog, cancellationToken))
         {
             _mainLog.WriteLine($"Failed to boot simulator {simulator.Name} in time! Exit code detection might fail");
-            return null;
         }
 
         var logReadTokenSource = new CancellationTokenSource();
