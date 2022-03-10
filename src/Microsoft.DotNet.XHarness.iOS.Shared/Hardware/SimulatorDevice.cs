@@ -170,6 +170,7 @@ public class SimulatorDevice : ISimulatorDevice
         if (State == DeviceState.Booted)
         {
             log.WriteLine($"Simulator '{Name}' is already booted");
+            return true;
         }
 
         log.WriteLine($"Booting simulator '{Name}'");
