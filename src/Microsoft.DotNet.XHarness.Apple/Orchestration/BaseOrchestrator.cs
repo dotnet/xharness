@@ -442,7 +442,7 @@ public abstract class BaseOrchestrator : IDisposable
     {
         if (device is ISimulatorDevice simulator)
         {
-            await simulator.BootAndLaunch(_mainLog, cancellationToken);
+            await simulator.Boot(_mainLog, cancellationToken);
             return await simulator.GetAppBundlePath(_mainLog, bundleIdentifier, cancellationToken);
         }
 

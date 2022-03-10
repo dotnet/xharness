@@ -10,7 +10,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
@@ -166,7 +165,7 @@ public class SimulatorDevice : ISimulatorDevice
         return result;
     }
 
-    public async Task<bool> BootAndLaunch(ILog log, CancellationToken cancellationToken)
+    public async Task<bool> Boot(ILog log, CancellationToken cancellationToken)
     {
         if (State == DeviceState.Booted)
         {
@@ -176,56 +175,27 @@ public class SimulatorDevice : ISimulatorDevice
 
         log.WriteLine($"Booting simulator '{Name}'");
 
-        var output = new MemoryLog() { Timestamp = false };
-
-        var timeout = TimeSpan.FromMinutes(1);
-        var watch = Stopwatch.StartNew();
-
-        while (watch.Elapsed < timeout && !cancellationToken.IsCancellationRequested)
-        {
-            var simCtlresult = await _processManager.ExecuteXcodeCommandAsync(
-                "simctl",
-                new[] { "boot", UDID },
-                Log.CreateAggregatedLog(log, output),
-                TimeSpan.FromMinutes(1),
-                cancellationToken);
-
-            // 149 means "Unable to boot device in current state: Booted"
-            if (simCtlresult.ExitCode == 149)
-            {
-                log.WriteLine($"Simulator '{Name}' booted in {(int)watch.Elapsed.TotalSeconds} seconds");
-                break;
-            }
-
-            Thread.Sleep(TimeSpan.FromMilliseconds(100));
-        }
-
-        if (watch.Elapsed > timeout)
-        {
-            log.WriteLine($"Failed to boot the simulator '{Name}' in time");
-            return false;
-        }
-
         var args = new MlaunchArguments
         {
             new SimulatorUDIDArgument(this),
             new LaunchSimulatorArgument(),
         };
 
-        var mlaunchResult = await _processManager.ExecuteCommandAsync(
+        var watch = Stopwatch.StartNew();
+
+        var result = await _processManager.ExecuteCommandAsync(
             args,
             log,
             TimeSpan.FromSeconds(30),
-            verbosity: 2,
             cancellationToken: cancellationToken);
 
-        if (!mlaunchResult.Succeeded)
+        if (!result.Succeeded)
         {
-            log.WriteLine($"Failed to launch the simulator '{Name}'");
+            log.WriteLine($"Failed to boot the simulator '{Name}'");
             return false;
         }
 
-        log.WriteLine($"Simulator '{Name}' launched");
+        log.WriteLine($"Simulator '{Name}' booted in {(int)watch.Elapsed.TotalSeconds} seconds");
         State = DeviceState.Booted;
 
         return true;
