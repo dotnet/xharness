@@ -22,7 +22,7 @@ public interface ISimulatorDevice : IDevice
     Task Shutdown(ILog log);
     Task<bool> PrepareSimulator(ILog log, params string[] bundleIdentifiers);
     Task KillEverything(ILog log);
-    Task<bool> Boot(ILog log, CancellationToken cancellationToken);
+    Task<bool> BootAndLaunch(ILog log, CancellationToken cancellationToken);
     Task<string> GetAppBundlePath(ILog log, string bundleIdentifier, CancellationToken cancellationToken);
 }
 
