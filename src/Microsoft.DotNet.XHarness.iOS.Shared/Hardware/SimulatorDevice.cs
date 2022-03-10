@@ -187,6 +187,7 @@ public class SimulatorDevice : ISimulatorDevice
             args,
             log,
             TimeSpan.FromSeconds(30),
+            verbosity: 2,
             cancellationToken: cancellationToken);
 
         if (!result.Succeeded)
