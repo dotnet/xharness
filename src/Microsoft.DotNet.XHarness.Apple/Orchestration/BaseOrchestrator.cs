@@ -438,12 +438,12 @@ public abstract class BaseOrchestrator : IDisposable
         }
     }
 
-    protected Task<string> GetAppBundlePath(IDevice device, string bundleIdentifier, CancellationToken cancellationToken)
+    protected async Task<string> GetAppBundlePath(IDevice device, string bundleIdentifier, CancellationToken cancellationToken)
     {
         if (device is ISimulatorDevice simulator)
         {
-            simulator.BootAndLaunch(_mainLog, cancellationToken);
-            return simulator.GetAppBundlePath(_mainLog, bundleIdentifier, cancellationToken);
+            await simulator.BootAndLaunch(_mainLog, cancellationToken);
+            return await simulator.GetAppBundlePath(_mainLog, bundleIdentifier, cancellationToken);
         }
 
         return null; // TODO
