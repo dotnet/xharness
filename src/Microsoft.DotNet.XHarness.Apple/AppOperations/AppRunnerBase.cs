@@ -82,10 +82,10 @@ public abstract class AppRunnerBase
         await _processManager.ExecuteCommandAsync(lsRegisterPath, new[] { "-f", appInfo.LaunchAppPath }, _mainLog, TimeSpan.FromSeconds(10), cancellationToken: cancellationToken);
 
         var arguments = new List<string>
-            {
-                "-W",
-                appInfo.LaunchAppPath
-            };
+        {
+            "-W",
+            appInfo.LaunchAppPath
+        };
 
         arguments.AddRange(extraArguments);
 
@@ -176,17 +176,17 @@ public abstract class AppRunnerBase
     protected void AddExtraEnvVars(Dictionary<string, string> envVariables, IEnumerable<(string, string)> variables)
     {
         using (var enumerator = variables.GetEnumerator())
-            while (enumerator.MoveNext())
+        while (enumerator.MoveNext())
+        {
+            var (name, value) = enumerator.Current;
+            if (envVariables.ContainsKey(name))
             {
-                var (name, value) = enumerator.Current;
-                if (envVariables.ContainsKey(name))
-                {
-                    _mainLog.WriteLine($"Environmental variable {name} is already passed to the application to drive test run, skipping..");
-                    continue;
-                }
-
-                envVariables[name] = value;
+                _mainLog.WriteLine($"Environmental variable {name} is already passed to the application to drive test run, skipping..");
+                continue;
             }
+
+            envVariables[name] = value;
+        }
     }
 
     protected string WatchForAppEndTag(
@@ -224,25 +224,41 @@ public abstract class AppRunnerBase
         return result;
     }
 
-    protected async Task<CancellationTokenSource?> CaptureSimulatorLog(ISimulatorDevice simulator, AppBundleInformation appInformation, CancellationToken cancellationToken)
+    protected async Task<CancellationTokenSource?> CaptureSimulatorLog(
+        ISimulatorDevice simulator,
+        AppBundleInformation appInformation,
+        CancellationToken cancellationToken)
     {
         if (!await simulator.Boot(_mainLog, cancellationToken))
         {
             _mainLog.WriteLine($"Failed to boot simulator {simulator.Name} in time! Exit code detection might fail");
         }
 
-        var logReadTokenSource = new CancellationTokenSource();
-        var simulatorLog = _logs.Create($"{simulator.Name}.stdout.log", LogType.SystemLog.ToString(), timestamp: false);
+        var appName = appInformation.BundleExecutable ?? appInformation.AppName;
 
-        _mainLog.WriteLine($"Scan simulator log stream into {simulatorLog.FullPath}..");
-        _processManager.ExecuteCommandAsync(
-            "simctl",
-            new[] { "spawn", simulator.UDID, "log", "stream", "--level=Info", "--predicate", $"senderImagePath contains '{appInformation.BundleExecutable}'" },
-            _mainLog,
-            simulatorLog,
-            simulatorLog,
-            TimeSpan.FromDays(1),
-            cancellationToken: CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, logReadTokenSource.Token).Token)
+        var logReadTokenSource = new CancellationTokenSource();
+        var simulatorLog = _logs.Create($"{appName}.log", LogType.SystemLog.ToString(), timestamp: false);
+
+        _mainLog.WriteLine($"Scanning simulator log stream of {appName} into '{simulatorLog.FullPath}'..");
+
+        _processManager
+            .ExecuteXcodeCommandAsync(
+                "simctl",
+                new[]
+                {
+                    "spawn",
+                    simulator.UDID,
+                    "log",
+                    "stream",
+                    "--level=Info",
+                    "--predicate",
+                    $"senderImagePath contains '{appName}'"
+                },
+                _mainLog,
+                simulatorLog,
+                simulatorLog,
+                TimeSpan.FromDays(1),
+                cancellationToken: CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, logReadTokenSource.Token).Token)
             .DoNotAwait();
 
         logReadTokenSource.Token.Register(simulatorLog.Dispose);

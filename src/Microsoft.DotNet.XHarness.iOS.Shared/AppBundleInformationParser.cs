@@ -136,16 +136,13 @@ public class AppBundleInformationParser : IAppBundleInformationParser
         }
 
         string? bundleExecutable = null;
-        if (target == TestTarget.MacCatalyst)
+        try
         {
-            try
-            {
-                bundleExecutable = await GetPlistProperty(plistPath, PListExtensions.BundleExecutablePropertyName, log, cancellationToken);
-            }
-            catch
-            {
-                log.WriteLine("Failed to locate the bundle executable property in Info.plist");
-            }
+            bundleExecutable = await GetPlistProperty(plistPath, PListExtensions.BundleExecutablePropertyName, log, cancellationToken);
+        }
+        catch
+        {
+            log.WriteLine("Failed to locate the bundle executable property in Info.plist");
         }
 
         string launchAppPath = target.ToRunMode() == RunMode.WatchOS
