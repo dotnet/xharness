@@ -85,6 +85,7 @@ public class SimulatorResetOrchestrator : BaseOrchestrator, ISimulatorResetOrche
     protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
         => Task.CompletedTask; // no-op - reset is enough, clean-up is not needed afterwards
 
+    // The reset-simulator command doesn't (as oposed to the others) work with any app bundle specifically so we have to work around this part
     private class FakeAppBundleInformationParser : IAppBundleInformationParser
     {
         public Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default)
