@@ -250,7 +250,9 @@ public abstract class AppRunnerBase
                     simulator.UDID,
                     "log",
                     "stream",
-                    "--level=Info",
+                    "--level=debug",
+                    "--color=none",
+                    "--style=compact",
                     "--predicate",
                     $"senderImagePath contains '{appName}'"
                 },
