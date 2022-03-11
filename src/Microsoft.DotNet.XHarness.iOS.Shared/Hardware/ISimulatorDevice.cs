@@ -29,8 +29,8 @@ public interface ISimulatorDevice : IDevice
 public enum DeviceState
 {
     Unknown = 0,
-    Shutdown = 1,
     ShuttingDown = 2,
+    Shutdown = 1,
     Booting = 3,
     Booted = 4,
 }
