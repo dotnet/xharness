@@ -61,6 +61,6 @@ public class DefaultSimulatorSelector : ISimulatorSelector
     public int Compare(ISimulatorDevice x, ISimulatorDevice y)
     {
         // Put Booted/Booting in front of Shutdown/Unknown
-        return ((int)y.State).CompareTo((int)x.State);
+        return y.State.CompareTo(x.State);
     }
 }

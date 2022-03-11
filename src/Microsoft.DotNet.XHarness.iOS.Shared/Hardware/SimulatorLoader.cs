@@ -152,7 +152,7 @@ public class SimulatorLoader : ISimulatorLoader
             foreach (XmlNode sim in sim_device_pairs)
             {
                 _availableDevicePairs.Add(new SimDevicePair(
-                    uDID: sim.Attributes["UDID"].Value,
+                    UDID: sim.Attributes["UDID"].Value,
                     companion: sim.SelectSingleNode("Companion").InnerText,
                     gizmo: sim.SelectSingleNode("Gizmo").InnerText));
             }
