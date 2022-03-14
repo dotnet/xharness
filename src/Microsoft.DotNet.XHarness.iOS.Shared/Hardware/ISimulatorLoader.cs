@@ -19,6 +19,6 @@ public interface ISimulatorLoader : IDeviceLoader
     Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, bool createIfNeeded = true, bool minVersion = false);
     Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, int retryCount, bool createIfNeeded = true, bool minVersion = false);
     ISimulatorDevice FindCompanionDevice(ILog log, ISimulatorDevice device);
-    IEnumerable<ISimulatorDevice?> SelectDevices(TestTarget target, ILog log, bool min_version);
-    IEnumerable<ISimulatorDevice?> SelectDevices(TestTargetOs target, ILog log, bool min_version);
+    IEnumerable<ISimulatorDevice?> SelectDevices(TestTarget target, ILog log, bool minVersion);
+    IEnumerable<ISimulatorDevice?> SelectDevices(TestTargetOs target, ILog log, bool minVersion);
 }
