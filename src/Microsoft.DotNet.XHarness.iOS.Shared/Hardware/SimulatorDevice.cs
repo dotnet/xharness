@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
@@ -22,6 +23,7 @@ public class SimulatorDevice : ISimulatorDevice
     public string Name { get; set; }
     public string SimRuntime { get; set; }
     public string SimDeviceType { get; set; }
+    public DeviceState State { get; set; } = DeviceState.Unknown;
     public string DataPath { get; set; }
     public string LogPath { get; set; }
     public string SystemLog => Path.Combine(LogPath, "system.log");
@@ -57,7 +59,11 @@ public class SimulatorDevice : ISimulatorDevice
         await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "shutdown", UDID }, log, TimeSpan.FromMinutes(1));
     }
 
-    public async Task Shutdown(ILog log) => await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "shutdown", UDID }, log, TimeSpan.FromMinutes(1));
+    public async Task Shutdown(ILog log)
+    {
+        await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "shutdown", UDID }, log, TimeSpan.FromMinutes(1));
+        State = DeviceState.Shutdown;
+    }
 
     public async Task KillEverything(ILog log)
     {
@@ -72,6 +78,7 @@ public class SimulatorDevice : ISimulatorDevice
         args.AddRange(toKill);
 
         await _processManager.ExecuteCommandAsync("killall", args, log, TimeSpan.FromSeconds(10));
+        State = DeviceState.Shutdown;
 
         var dirsToBeDeleted = new[] {
                 Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library", "Saved Application State", "com.apple.watchsimulator.savedState"),
@@ -158,4 +165,40 @@ public class SimulatorDevice : ISimulatorDevice
         return result;
     }
 
+    public async Task<bool> Boot(ILog log, CancellationToken cancellationToken)
+    {
+        if (State == DeviceState.Booted)
+        {
+            log.WriteLine($"Simulator '{Name}' is already booted");
+            return true;
+        }
+
+        log.WriteLine($"Booting simulator '{Name}'");
+
+        var args = new MlaunchArguments
+        {
+            new SimulatorUDIDArgument(this),
+            new LaunchSimulatorArgument(),
+        };
+
+        var watch = Stopwatch.StartNew();
+
+        var result = await _processManager.ExecuteCommandAsync(
+            args,
+            log,
+            TimeSpan.FromSeconds(30),
+            verbosity: 2,
+            cancellationToken: cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            log.WriteLine($"Failed to boot the simulator '{Name}'");
+            return false;
+        }
+
+        log.WriteLine($"Simulator '{Name}' booted in {(int)watch.Elapsed.TotalSeconds} seconds");
+        State = DeviceState.Booted;
+
+        return true;
+    }
 }

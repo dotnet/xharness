@@ -128,6 +128,14 @@ public class SimulatorLoader : ISimulatorLoader
                 {
                     Name = sim.Attributes["Name"].Value,
                     UDID = sim.Attributes["UDID"].Value,
+                    State = sim.Attributes["State"]?.Value switch
+                    {
+                        "Booting" => DeviceState.Booting,
+                        "Booted" => DeviceState.Booted,
+                        "ShuttingDown" => DeviceState.ShuttingDown,
+                        "Shutdown" => DeviceState.Shutdown,
+                        _ => DeviceState.Unknown,
+                    },
                     SimRuntime = sim.SelectSingleNode("SimRuntime").InnerText,
                     SimDeviceType = sim.SelectSingleNode("SimDeviceType").InnerText,
                     DataPath = sim.SelectSingleNode("DataPath").InnerText,
@@ -144,7 +152,7 @@ public class SimulatorLoader : ISimulatorLoader
             foreach (XmlNode sim in sim_device_pairs)
             {
                 _availableDevicePairs.Add(new SimDevicePair(
-                    uDID: sim.Attributes["UDID"].Value,
+                    UDID: sim.Attributes["UDID"].Value,
                     companion: sim.SelectSingleNode("Companion").InnerText,
                     gizmo: sim.SelectSingleNode("Gizmo").InnerText));
             }
@@ -381,7 +389,7 @@ public class SimulatorLoader : ISimulatorLoader
 
         if (companionRuntime == null)
         {
-            simulator = devices.First();
+            simulator = _simulatorSelector.SelectSimulator(devices);
         }
         else
         {
