@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
+using System.IO;
 using System.Threading;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -17,12 +17,13 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests.Orchestration;
 
 public abstract class OrchestratorTestBase
 {
-    protected static readonly string s_appIdentifier = Guid.NewGuid().ToString();
     protected const string UDID = "8A450AA31EA94191AD6B02455F377CC1";
     protected const string SimulatorName = "iPhone X (13.5) - created by xharness";
     protected const string DeviceName = "iPhone X (14.4)";
     protected const string AppName = "System.Buffers.Tests";
     protected const string AppPath = "/tmp/apps/System.Buffers.Tests.app";
+    protected const string BundleIdentifier = "net.dot.System.Buffers.Tests";
+    protected const string BundleExecutable = "System.Buffers.Tests";
 
     protected readonly Mock<IDeviceFinder> _deviceFinder;
     protected readonly Mock<ISimulatorDevice> _simulator;
@@ -55,6 +56,8 @@ public abstract class OrchestratorTestBase
         _simulator.Setup(x => x.UDID).Returns(UDID);
         _simulator.Setup(x => x.Name).Returns(SimulatorName);
         _simulator.Setup(x => x.OSVersion).Returns("13.5");
+        _simulator.Setup(x => x.Boot(It.IsAny<ILog>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _simulator.Setup(x => x.GetAppBundlePath(It.IsAny<ILog>(), BundleIdentifier, It.IsAny<CancellationToken>())).ReturnsAsync(AppPath);
 
         _device = new();
         _device.Setup(x => x.UDID).Returns(UDID);
@@ -63,16 +66,17 @@ public abstract class OrchestratorTestBase
 
         _appBundleInformation = new AppBundleInformation(
             appName: AppName,
-            bundleIdentifier: s_appIdentifier,
+            bundleIdentifier: BundleIdentifier,
             appPath: AppPath,
             launchAppPath: AppPath,
             supports32b: false,
-            extension: null);
+            extension: null,
+            bundleExecutable: BundleExecutable);
 
         _appBundleInformationParser = new Mock<IAppBundleInformationParser>();
         _appBundleInformationParser
             .Setup(x => x.ParseFromAppBundle(
-                AppPath,
+                Path.GetFullPath(AppPath),
                 It.IsAny<TestTarget>(),
                 _mainLog.Object,
                 It.IsAny<CancellationToken>()))

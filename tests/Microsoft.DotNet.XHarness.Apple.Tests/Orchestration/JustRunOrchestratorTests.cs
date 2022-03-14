@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests.Orchestration;
 
 public class JustRunOrchestratorTests : OrchestratorTestBase
 {
-    private readonly JustRunOrchestrator _justRunOrchestrator;
+    private readonly IJustRunOrchestrator _justRunOrchestrator;
     private readonly Mock<IiOSExitCodeDetector> _iOSExitCodeDetector;
     private readonly Mock<IMacCatalystExitCodeDetector> _macCatalystExitCodeDetector;
     private readonly Mock<IAppRunner> _appRunner;
@@ -36,7 +36,8 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         _appInstaller.Reset();
         _appUninstaller.Reset();
 
-        _justRunOrchestrator = new(
+        _justRunOrchestrator = new JustRunOrchestrator(
+            _appBundleInformationParser.Object,
             _appInstaller.Object,
             _appUninstaller.Object,
             _appRunnerFactory.Object,
@@ -84,14 +85,13 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justRunOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
             TimeSpan.FromMinutes(3),
             expectedExitCode: 100,
             includeWirelessDevices: false,
-            resetSimulator: true,
             enableLldb: false,
             signalAppEnd: false,
             envVars,
@@ -148,14 +148,13 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justRunOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             DeviceName,
             TimeSpan.FromMinutes(30),
             TimeSpan.FromMinutes(3),
             expectedExitCode: 100,
             includeWirelessDevices: true,
-            resetSimulator: false,
             enableLldb: false,
             signalAppEnd: false,
             Array.Empty<(string, string)>(),
@@ -207,14 +206,13 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justRunOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
             TimeSpan.FromMinutes(3),
             expectedExitCode: 100,
             includeWirelessDevices: false,
-            resetSimulator: false,
             enableLldb: true,
             signalAppEnd: false,
             Array.Empty<(string, string)>(),
@@ -277,14 +275,13 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justRunOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             DeviceName,
             TimeSpan.FromMinutes(30),
             TimeSpan.FromMinutes(3),
             expectedExitCode: 100,
             includeWirelessDevices: true,
-            resetSimulator: false,
             enableLldb: false,
             signalAppEnd: true,
             Array.Empty<(string, string)>(),
@@ -342,14 +339,13 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justRunOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
             TimeSpan.FromMinutes(3),
             expectedExitCode: 100,
             includeWirelessDevices: false,
-            resetSimulator: true,
             enableLldb: false,
             signalAppEnd: true,
             envVars,

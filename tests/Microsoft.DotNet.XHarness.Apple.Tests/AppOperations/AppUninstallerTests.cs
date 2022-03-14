@@ -38,7 +38,7 @@ public class AppUninstallerTests
     [Fact]
     public async Task UninstallFromSimulatorTest()
     {
-        var simulator = Mock.Of<IDevice>(x => x.Name == DeviceName && x.UDID == UDID);
+        var simulator = Mock.Of<ISimulatorDevice>(x => x.Name == DeviceName && x.UDID == UDID);
 
         // Act
         var result = await _appUninstaller.UninstallSimulatorApp(simulator, AppBundleId);
@@ -59,7 +59,7 @@ public class AppUninstallerTests
     [Fact]
     public async Task UninstallFromDeviceTest()
     {
-        var device = Mock.Of<IDevice>(x => x.Name == DeviceName && x.UDID == UDID);
+        var device = Mock.Of<IHardwareDevice>(x => x.Name == DeviceName && x.UDID == UDID);
 
         // Act
         var result = await _appUninstaller.UninstallDeviceApp(device, AppBundleId);

@@ -14,8 +14,8 @@ namespace Microsoft.DotNet.XHarness.Apple;
 
 public interface IAppUninstaller
 {
-    Task<ProcessExecutionResult> UninstallSimulatorApp(IDevice simulator, string appBundleId, CancellationToken cancellationToken = default);
-    Task<ProcessExecutionResult> UninstallDeviceApp(IDevice device, string appBundleId, CancellationToken cancellationToken = default);
+    Task<ProcessExecutionResult> UninstallSimulatorApp(ISimulatorDevice simulator, string appBundleId, CancellationToken cancellationToken = default);
+    Task<ProcessExecutionResult> UninstallDeviceApp(IHardwareDevice device, string appBundleId, CancellationToken cancellationToken = default);
 }
 
 public class AppUninstaller : IAppUninstaller
@@ -29,7 +29,7 @@ public class AppUninstaller : IAppUninstaller
         _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
     }
 
-    public Task<ProcessExecutionResult> UninstallSimulatorApp(IDevice simulator, string appBundleId, CancellationToken cancellationToken = default)
+    public Task<ProcessExecutionResult> UninstallSimulatorApp(ISimulatorDevice simulator, string appBundleId, CancellationToken cancellationToken = default)
         => _processManager.ExecuteXcodeCommandAsync(
             "simctl",
             new[] { "uninstall", simulator.UDID, appBundleId },
@@ -37,7 +37,7 @@ public class AppUninstaller : IAppUninstaller
             TimeSpan.FromMinutes(3),
             cancellationToken: cancellationToken);
 
-    public Task<ProcessExecutionResult> UninstallDeviceApp(IDevice device, string appBundleId, CancellationToken cancellationToken = default)
+    public Task<ProcessExecutionResult> UninstallDeviceApp(IHardwareDevice device, string appBundleId, CancellationToken cancellationToken = default)
     {
         var args = new MlaunchArguments
             {

@@ -384,8 +384,8 @@ public abstract class BaseOrchestrator : IDisposable
         }
 
         ProcessExecutionResult uninstallResult = target.IsSimulator()
-            ? await _appUninstaller.UninstallSimulatorApp(device, bundleIdentifier, cancellationToken)
-            : await _appUninstaller.UninstallDeviceApp(device, bundleIdentifier, cancellationToken);
+            ? await _appUninstaller.UninstallSimulatorApp((ISimulatorDevice)device, bundleIdentifier, cancellationToken)
+            : await _appUninstaller.UninstallDeviceApp((IHardwareDevice)device, bundleIdentifier, cancellationToken);
 
         if (uninstallResult.Succeeded)
         {

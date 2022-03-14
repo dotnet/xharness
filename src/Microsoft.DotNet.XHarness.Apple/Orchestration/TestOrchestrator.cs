@@ -99,7 +99,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             singleMethodFilters,
             classMethodFilters,
             includeWirelessDevices,
-            resetSimulator: false, // No simulator reset for just- commands
+            resetSimulator: resetSimulator,
             enableLldb,
             signalAppEnd,
             environmentalVariables,

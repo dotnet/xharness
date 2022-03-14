@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Moq;
@@ -18,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests.Orchestration;
 
 public class JustTestOrchestratorTests : OrchestratorTestBase
 {
-    private readonly JustTestOrchestrator _justTestOrchestrator;
+    private readonly IJustTestOrchestrator _justTestOrchestrator;
     private readonly Mock<IAppTester> _appTester;
     private readonly Mock<IAppTesterFactory> _appTesterFactory;
 
@@ -34,7 +33,8 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
         _appInstaller.Reset();
         _appUninstaller.Reset();
 
-        _justTestOrchestrator = new(
+        _justTestOrchestrator = new JustTestOrchestrator(
+            _appBundleInformationParser.Object,
             _appInstaller.Object,
             _appUninstaller.Object,
             _appTesterFactory.Object,
@@ -75,7 +75,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justTestOrchestrator.OrchestrateTest(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
@@ -85,7 +85,6 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             Array.Empty<string>(),
             Array.Empty<string>(),
             includeWirelessDevices: false,
-            resetSimulator: true,
             enableLldb: false,
             signalAppEnd: false,
             envVars,
@@ -135,7 +134,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justTestOrchestrator.OrchestrateTest(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             DeviceName,
             TimeSpan.FromMinutes(30),
@@ -145,7 +144,6 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             Array.Empty<string>(),
             Array.Empty<string>(),
             includeWirelessDevices: true,
-            resetSimulator: false,
             enableLldb: false,
             signalAppEnd: false,
             Array.Empty<(string, string)>(),
@@ -199,7 +197,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justTestOrchestrator.OrchestrateTest(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
@@ -209,7 +207,6 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             Array.Empty<string>(),
             Array.Empty<string>(),
             includeWirelessDevices: false,
-            resetSimulator: false,
             enableLldb: true,
             signalAppEnd: false,
             Array.Empty<(string, string)>(),
@@ -260,7 +257,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justTestOrchestrator.OrchestrateTest(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             DeviceName,
             TimeSpan.FromMinutes(30),
@@ -270,7 +267,6 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             Array.Empty<string>(),
             Array.Empty<string>(),
             includeWirelessDevices: true,
-            resetSimulator: false,
             enableLldb: false,
             signalAppEnd: true,
             Array.Empty<(string, string)>(),
@@ -321,7 +317,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justTestOrchestrator.OrchestrateTest(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
@@ -331,7 +327,6 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             Array.Empty<string>(),
             Array.Empty<string>(),
             includeWirelessDevices: false,
-            resetSimulator: true,
             enableLldb: false,
             signalAppEnd: true,
             envVars,

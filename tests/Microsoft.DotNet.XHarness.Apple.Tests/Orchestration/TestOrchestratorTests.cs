@@ -44,6 +44,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
         }));
 
         _testOrchestrator = new(
+            _appBundleInformationParser.Object,
             _appInstaller.Object,
             _appUninstaller.Object,
             _appTesterFactory.Object,
@@ -84,7 +85,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _testOrchestrator.OrchestrateTest(
-            _appBundleInformation,
+            AppPath,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
@@ -147,7 +148,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _testOrchestrator.OrchestrateTest(
-            _appBundleInformation,
+            AppPath,
             testTarget,
             DeviceName,
             TimeSpan.FromMinutes(30),
@@ -214,7 +215,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _testOrchestrator.OrchestrateTest(
-            _appBundleInformation,
+            AppPath,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
@@ -278,7 +279,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _testOrchestrator.OrchestrateTest(
-            _appBundleInformation,
+            AppPath,
             testTarget,
             DeviceName,
             TimeSpan.FromMinutes(30),
@@ -342,7 +343,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _testOrchestrator.OrchestrateTest(
-            _appBundleInformation,
+            AppPath,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),

@@ -70,7 +70,7 @@ public class SimulatorResetOrchestrator : BaseOrchestrator, ISimulatorResetOrche
             includeWirelessDevices: false,
             resetSimulator: true,
             enableLldb: false,
-            (_, __) => Task.FromResult(string.Empty),
+            (_, __) => Task.FromResult("."),
             ExecuteMacCatalystApp,
             ExecuteApp,
             cancellationToken);
