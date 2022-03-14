@@ -66,6 +66,7 @@ Arguments:
             Arguments.TestAppCommand,
             Arguments.TestAppPath,
             Arguments.TestAppArguments,
+            Arguments.TestAppEnvironment,
             Arguments.OutputDirectory,
             Arguments.DeviceOutputFolder,
             Arguments.Timeout,
@@ -79,6 +80,7 @@ Arguments:
         string testAppCommand,
         string testAppPath,
         List<string> testAppArguments,
+        Dictionary<string, string> testAppEnvironment,
         string outputDirectory,
         string? deviceOutputFolder,
         TimeSpan timeout,
@@ -103,6 +105,7 @@ Arguments:
             testAppPath,
             testAppCommand,
             testAppArguments,
+            testAppEnvironment,
             timeout);
 
         bool processCrashed = false;

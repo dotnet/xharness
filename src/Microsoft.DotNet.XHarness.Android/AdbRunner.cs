@@ -955,7 +955,7 @@ public class AdbRunner
         }
     }
 
-    public ProcessExecutionResults RunHeadlessCommand(string testPath, string testCommand, List<string> args, TimeSpan timeout)
+    public ProcessExecutionResults RunHeadlessCommand(string testPath, string testCommand, List<string> args, Dictionary<string, string> env, TimeSpan timeout)
     {
         var localTestPath = Path.Combine(GlobalReadWriteDirectory, new DirectoryInfo(testPath).Name);
         var adbArgs = new List<string>
@@ -965,6 +965,7 @@ public class AdbRunner
 
         _log.LogInformation($"Starting {testCommand} from {localTestPath} (exit code 0 == success)");
         var fullTestPath = Path.Combine(localTestPath, testCommand);
+        adbArgs.AddRange(env.SelectMany(var => new[] {var.Key + "=" + var.Value}));
         adbArgs.Add(fullTestPath);
         adbArgs.AddRange(args);
         

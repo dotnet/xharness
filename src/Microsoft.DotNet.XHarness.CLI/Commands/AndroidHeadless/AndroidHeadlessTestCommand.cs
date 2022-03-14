@@ -69,6 +69,7 @@ Arguments:
                 testAppCommand: Arguments.TestAppCommand,
                 testAppPath: Arguments.TestAppPath,
                 testAppArguments: Arguments.TestAppArguments,
+                testAppEnvironment: Arguments.TestAppEnvironment,
                 outputDirectory: Arguments.OutputDirectory,
                 deviceOutputFolder: Arguments.DeviceOutputFolder,
                 timeout: Arguments.Timeout,

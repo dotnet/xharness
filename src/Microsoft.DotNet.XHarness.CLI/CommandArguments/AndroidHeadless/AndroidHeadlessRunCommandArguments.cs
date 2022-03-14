@@ -17,6 +17,7 @@ internal class AndroidHeadlessRunCommandArguments : XHarnessCommandArguments, IA
     public DeviceIdArgument DeviceId { get; } = new();
     public ApiVersionArgument ApiVersion { get; } = new();
     public TestAppArguments TestAppArguments { get; } = new();
+    public TestAppEnvironmentVariables TestAppEnvironment { get; } = new();
     public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
     public DeviceOutputFolderArgument DeviceOutputFolder { get; } = new();
     public WifiArgument Wifi { get; } = new();
@@ -31,6 +32,7 @@ internal class AndroidHeadlessRunCommandArguments : XHarnessCommandArguments, IA
         DeviceId,
         ApiVersion,
         TestAppArguments,
+        TestAppEnvironment,
         ExpectedExitCode,
         DeviceOutputFolder,
         Wifi,
