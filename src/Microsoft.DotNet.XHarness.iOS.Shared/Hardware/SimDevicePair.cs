@@ -12,9 +12,9 @@ public class SimDevicePair
     public string Companion { get; }
     public string Gizmo { get; }
 
-    public SimDevicePair(string uDID, string companion, string gizmo)
+    public SimDevicePair(string UDID, string companion, string gizmo)
     {
-        UDID = uDID;
+        this.UDID = UDID;
         Companion = companion;
         Gizmo = gizmo;
     }
