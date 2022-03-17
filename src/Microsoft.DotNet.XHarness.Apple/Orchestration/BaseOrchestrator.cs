@@ -454,8 +454,7 @@ public abstract class BaseOrchestrator : IDisposable
         {
             _logger.LogInformation($"Querying simulator for app bundle information..");
             await simulator.Boot(_mainLog, cancellationToken);
-            var appBundlePath = Path.GetFullPath(await simulator.GetAppBundlePath(_mainLog, bundleIdentifier, cancellationToken));
-            _logger.LogInformation($"Getting app bundle information from '{appBundlePath}'..");
+            var appBundlePath = await simulator.GetAppBundlePath(_mainLog, bundleIdentifier, cancellationToken);
             return await GetAppBundleFromPath(target, appBundlePath, cancellationToken);
         }
 
@@ -467,6 +466,7 @@ public abstract class BaseOrchestrator : IDisposable
 
     protected Task<AppBundleInformation> GetAppBundleFromPath(TestTargetOs target, string appBundlePath, CancellationToken cancellationToken)
     {
+        appBundlePath = Path.GetFullPath(appBundlePath);
         _logger.LogInformation($"Getting app bundle information from '{appBundlePath}'..");
         return _appBundleInformationParser.ParseFromAppBundle(appBundlePath, target.Platform, _mainLog, cancellationToken);
     }

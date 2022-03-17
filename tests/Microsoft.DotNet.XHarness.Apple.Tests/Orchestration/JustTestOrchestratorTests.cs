@@ -10,6 +10,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Moq;
 using Xunit;
 
@@ -104,6 +105,9 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
         _appTester.VerifyAll();
         _appInstaller.VerifyNoOtherCalls();
         _appUninstaller.VerifyNoOtherCalls();
+
+        _simulator.Verify(x => x.Boot(_mainLog.Object, It.IsAny<CancellationToken>()), Times.Once);
+        _simulator.Verify(x => x.GetAppBundlePath(_mainLog.Object, BundleIdentifier, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -227,6 +231,9 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
         _appTester.VerifyAll();
         _appInstaller.VerifyNoOtherCalls();
         _appUninstaller.VerifyNoOtherCalls();
+
+        _simulator.Verify(x => x.Boot(_mainLog.Object, It.IsAny<CancellationToken>()), Times.Once);
+        _simulator.Verify(x => x.GetAppBundlePath(_mainLog.Object, BundleIdentifier, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

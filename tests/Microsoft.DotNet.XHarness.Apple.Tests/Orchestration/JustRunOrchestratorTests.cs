@@ -113,6 +113,9 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         _appRunner.VerifyAll();
         _appInstaller.VerifyNoOtherCalls();
         _appUninstaller.VerifyNoOtherCalls();
+
+        _simulator.Verify(x => x.Boot(_mainLog.Object, It.IsAny<CancellationToken>()), Times.Once);
+        _simulator.Verify(x => x.GetAppBundlePath(_mainLog.Object, BundleIdentifier, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -234,6 +237,9 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         _appRunner.VerifyAll();
         _appInstaller.VerifyNoOtherCalls();
         _appUninstaller.VerifyNoOtherCalls();
+
+        _simulator.Verify(x => x.Boot(_mainLog.Object, It.IsAny<CancellationToken>()), Times.Once);
+        _simulator.Verify(x => x.GetAppBundlePath(_mainLog.Object, BundleIdentifier, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
