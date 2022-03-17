@@ -34,7 +34,6 @@ internal class AppleJustRunCommand : AppleAppCommand<AppleJustRunCommandArgument
                 Arguments.Timeout,
                 Arguments.ExpectedExitCode,
                 Arguments.IncludeWireless,
-                resetSimulator: false,
                 Arguments.EnableLldb,
                 Arguments.SignalAppEnd,
                 Arguments.EnvironmentalVariables.Value,

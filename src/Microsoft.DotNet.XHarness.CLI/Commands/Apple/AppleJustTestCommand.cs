@@ -36,7 +36,6 @@ internal class AppleJustTestCommand : AppleAppCommand<AppleJustTestCommandArgume
                 Arguments.SingleMethodFilters.Value,
                 Arguments.ClassMethodFilters.Value,
                 includeWirelessDevices: Arguments.IncludeWireless,
-                resetSimulator: false,
                 enableLldb: Arguments.EnableLldb,
                 signalAppEnd: Arguments.SignalAppEnd,
                 Arguments.EnvironmentalVariables.Value,

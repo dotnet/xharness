@@ -29,7 +29,6 @@ public interface IJustTestOrchestrator
         IEnumerable<string> singleMethodFilters,
         IEnumerable<string> classMethodFilters,
         bool includeWirelessDevices,
-        bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
         IReadOnlyCollection<(string, string)> environmentalVariables,
@@ -74,14 +73,13 @@ public class JustTestOrchestrator : TestOrchestrator, IJustTestOrchestrator
         IEnumerable<string> singleMethodFilters,
         IEnumerable<string> classMethodFilters,
         bool includeWirelessDevices,
-        bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
         => OrchestrateTest(
-            (device, cancellationToken) => GetAppBundlePath(device, bundleIdentifier, cancellationToken),
+            (target, device, ct) => GetAppBundleFromId(target, device, bundleIdentifier, ct),
             target,
             deviceName,
             timeout,

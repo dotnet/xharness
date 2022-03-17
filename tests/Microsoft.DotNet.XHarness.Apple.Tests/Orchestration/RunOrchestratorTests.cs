@@ -46,6 +46,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
         }));
 
         _runOrchestrator = new(
+            _appBundleInformationParser.Object,
             _appInstaller.Object,
             _appUninstaller.Object,
             _appRunnerFactory.Object,
@@ -93,7 +94,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _runOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            AppPath,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
@@ -159,7 +160,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _runOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            AppPath,
             testTarget,
             DeviceName,
             TimeSpan.FromMinutes(30),
@@ -220,7 +221,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _runOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            AppPath,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
@@ -292,7 +293,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _runOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            AppPath,
             testTarget,
             DeviceName,
             TimeSpan.FromMinutes(30),
@@ -359,7 +360,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _runOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            AppPath,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
@@ -420,7 +421,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _runOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            AppPath,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),

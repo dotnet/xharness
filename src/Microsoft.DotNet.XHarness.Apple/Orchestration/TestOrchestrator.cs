@@ -89,7 +89,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
         => OrchestrateTest(
-            (_, __) => Task.FromResult(appBundlePath),
+            (target, device, ct) => GetAppBundleFromPath(target, appBundlePath, ct),
             target,
             deviceName,
             timeout,
@@ -99,7 +99,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             singleMethodFilters,
             classMethodFilters,
             includeWirelessDevices,
-            resetSimulator: false, // No simulator reset for just- commands
+            resetSimulator: resetSimulator,
             enableLldb,
             signalAppEnd,
             environmentalVariables,
@@ -107,7 +107,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             cancellationToken);
 
     public virtual async Task<ExitCode> OrchestrateTest(
-        Func<IDevice, CancellationToken, Task<string>> getAppBundlePath,
+        GetAppBundleInfoFunc getAppBundlePath,
         TestTargetOs target,
         string? deviceName,
         TimeSpan timeout,

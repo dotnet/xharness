@@ -26,7 +26,6 @@ public interface IJustRunOrchestrator
         TimeSpan launchTimeout,
         int expectedExitCode,
         bool includeWirelessDevices,
-        bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
         IReadOnlyCollection<(string, string)> environmentalVariables,
@@ -67,14 +66,13 @@ public class JustRunOrchestrator : RunOrchestrator, IJustRunOrchestrator
         TimeSpan launchTimeout,
         int expectedExitCode,
         bool includeWirelessDevices,
-        bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
         => OrchestrateRun(
-            (device, cancellationToken) => GetAppBundlePath(device, bundleIdentifier, cancellationToken),
+            (target, device, cancellationToken) => GetAppBundleFromId(target, device, bundleIdentifier, cancellationToken),
             target,
             deviceName,
             timeout,
