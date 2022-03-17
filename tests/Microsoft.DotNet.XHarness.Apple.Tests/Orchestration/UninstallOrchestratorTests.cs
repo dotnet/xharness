@@ -130,7 +130,7 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
             Times.Never);
 
         _appUninstaller.Verify(
-            x => x.UninstallDeviceApp(_device.Object, AppName, It.IsAny<CancellationToken>()),
+            x => x.UninstallDeviceApp(_device.Object, BundleIdentifier, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

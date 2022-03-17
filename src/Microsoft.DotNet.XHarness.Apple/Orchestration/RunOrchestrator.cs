@@ -92,7 +92,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
         => OrchestrateRun(
-            (_, __) => Task.FromResult(appBundlePath),
+            (target, device, ct) => GetAppBundleFromPath(target, appBundlePath, ct),
             target,
             deviceName,
             timeout,
@@ -107,7 +107,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             cancellationToken);
 
     protected async Task<ExitCode> OrchestrateRun(
-        Func<IDevice, CancellationToken, Task<string>> getAppBundlePath,
+        GetAppBundleInfoFunc getAppBundleInfo,
         TestTargetOs target,
         string? deviceName,
         TimeSpan timeout,
@@ -188,7 +188,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             includeWirelessDevices,
             resetSimulator,
             enableLldb,
-            getAppBundlePath,
+            getAppBundleInfo,
             ExecuteMacCatalystApp,
             ExecuteApp,
             launchTimeoutCancellationToken.Token);

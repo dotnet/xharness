@@ -70,7 +70,7 @@ public class UninstallOrchestrator : BaseOrchestrator, IUninstallOrchestrator
             includeWirelessDevices,
             resetSimulator,
             enableLldb,
-            (device, cancellationToken) => GetAppBundlePath(device, bundleIdentifier, cancellationToken),
+            (target, device, cancellationToken) => GetAppBundleFromId(target, device, bundleIdentifier, cancellationToken),
             ExecuteMacCatalystApp,
             ExecuteApp,
             cancellationToken);

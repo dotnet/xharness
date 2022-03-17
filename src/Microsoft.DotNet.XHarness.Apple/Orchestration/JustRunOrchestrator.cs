@@ -72,7 +72,7 @@ public class JustRunOrchestrator : RunOrchestrator, IJustRunOrchestrator
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
         => OrchestrateRun(
-            (device, cancellationToken) => GetAppBundlePath(device, bundleIdentifier, cancellationToken),
+            (target, device, cancellationToken) => GetAppBundleFromId(target, device, bundleIdentifier, cancellationToken),
             target,
             deviceName,
             timeout,

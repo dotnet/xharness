@@ -116,7 +116,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
 
         _appTester
             .Setup(x => x.TestApp(
-                _appBundleInformation,
+                It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier),
                 testTarget,
                 _device.Object,
                 null,
@@ -239,7 +239,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
 
         _appTester
             .Setup(x => x.TestApp(
-                _appBundleInformation,
+                It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier),
                 testTarget,
                 _device.Object,
                 null,
@@ -302,7 +302,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
 
         _appTester
             .Setup(x => x.TestMacCatalystApp(
-                _appBundleInformation,
+                It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier),
                 TimeSpan.FromMinutes(30),
                 It.IsAny<TimeSpan>(),
                 true,

@@ -58,7 +58,7 @@ public class InstallOrchestrator : BaseOrchestrator, IInstallOrchestrator
         bool enableLldb,
         CancellationToken cancellationToken)
     {
-        Task<string> GetAppBundlePath(IDevice _, CancellationToken __) => Task.FromResult(appPackagePath);
+        Task<AppBundleInformation> GetAppBundleInfo(TestTargetOs target, IDevice device, CancellationToken ct) => GetAppBundleFromPath(target, appPackagePath, ct);
 
         static Task<ExitCode> ExecuteMacCatalystApp(AppBundleInformation appBundleInfo)
             => throw new InvalidOperationException("install command not available on maccatalyst");
@@ -72,7 +72,7 @@ public class InstallOrchestrator : BaseOrchestrator, IInstallOrchestrator
             includeWirelessDevices,
             resetSimulator,
             enableLldb,
-            GetAppBundlePath,
+            GetAppBundleInfo,
             ExecuteMacCatalystApp,
             ExecuteApp,
             cancellationToken);

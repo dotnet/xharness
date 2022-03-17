@@ -122,7 +122,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
 
         _iOSExitCodeDetector
-            .Setup(x => x.DetectExitCode(_appBundleInformation, It.IsAny<IReadableLog>()))
+            .Setup(x => x.DetectExitCode(It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier), It.IsAny<IReadableLog>()))
             .Returns(100)
             .Verifiable();
 
@@ -130,7 +130,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         _appRunner
             .Setup(x => x.RunApp(
-                _appBundleInformation,
+                It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier),
                 testTarget,
                 _device.Object,
                 null,
@@ -243,7 +243,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
 
         _iOSExitCodeDetector
-            .Setup(x => x.DetectExitCode(_appBundleInformation, It.IsAny<IReadableLog>()))
+            .Setup(x => x.DetectExitCode(It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier), It.IsAny<IReadableLog>()))
             .Returns(200)
             .Verifiable();
 
@@ -251,7 +251,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         _appRunner
             .Setup(x => x.RunApp(
-                _appBundleInformation,
+                It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier),
                 testTarget,
                 _device.Object,
                 null,
@@ -318,13 +318,13 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         var envVars = new[] { ("envVar1", "value1"), ("envVar2", "value2") };
 
         _macCatalystExitCodeDetector
-            .Setup(x => x.DetectExitCode(_appBundleInformation, It.IsAny<IReadableLog>()))
+            .Setup(x => x.DetectExitCode(It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier), It.IsAny<IReadableLog>()))
             .Returns(100)
             .Verifiable();
 
         _appRunner
             .Setup(x => x.RunMacCatalystApp(
-                _appBundleInformation,
+                It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier),
                 TimeSpan.FromMinutes(30),
                 true,
                 It.IsAny<IEnumerable<string>>(),

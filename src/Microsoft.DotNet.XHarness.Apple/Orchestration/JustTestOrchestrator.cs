@@ -79,7 +79,7 @@ public class JustTestOrchestrator : TestOrchestrator, IJustTestOrchestrator
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
         => OrchestrateTest(
-            (device, cancellationToken) => GetAppBundlePath(device, bundleIdentifier, cancellationToken),
+            (target, device, ct) => GetAppBundleFromId(target, device, bundleIdentifier, ct),
             target,
             deviceName,
             timeout,
