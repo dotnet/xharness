@@ -39,8 +39,6 @@ public class AppRunnerTests : AppRunTestBase
 
         SetupLogList(new[] { captureLog.Object, _stdoutLog, _stderrLog });
 
-        var appInformation = GetMockedAppBundleInfo();
-
         // Act
         var appRunner = new AppRunner(
             _processManager.Object,
@@ -52,7 +50,7 @@ public class AppRunnerTests : AppRunTestBase
             _helpers.Object);
 
         var result = await appRunner.RunApp(
-            appInformation,
+            _appBundleInfo,
             new TestTargetOs(TestTarget.Simulator_tvOS, null),
             _mockSimulator,
             null,
@@ -102,8 +100,6 @@ public class AppRunnerTests : AppRunTestBase
 
         var x = _logs.Object.First();
 
-        var appInformation = GetMockedAppBundleInfo();
-
         // Act
         var appRunner = new AppRunner(
             _processManager.Object,
@@ -115,7 +111,7 @@ public class AppRunnerTests : AppRunTestBase
             _helpers.Object);
 
         var result = await appRunner.RunApp(
-            appInformation,
+            _appBundleInfo,
             new TestTargetOs(TestTarget.Device_iOS, null),
             s_mockDevice,
             null,
@@ -172,8 +168,6 @@ public class AppRunnerTests : AppRunTestBase
             .Setup(x => x.GenerateGuid())
             .Returns(testEndSignal);
 
-        var appInformation = GetMockedAppBundleInfo();
-
         List<MlaunchArguments> mlaunchArguments = new();
         List<IFileBackedLog> appOutputLogs = new();
         List<CancellationToken> cancellationTokens = new();
@@ -216,7 +210,7 @@ public class AppRunnerTests : AppRunTestBase
             _helpers.Object);
 
         var runTask = appRunner.RunApp(
-            appInformation,
+            _appBundleInfo,
             new TestTargetOs(TestTarget.Device_iOS, null),
             s_mockDevice,
             null,
@@ -277,8 +271,6 @@ public class AppRunnerTests : AppRunTestBase
 
         SetupLogList(new[] { captureLog.Object });
 
-        var appInformation = GetMockedAppBundleInfo();
-
         // Act
         var appRunner = new AppRunner(
             _processManager.Object,
@@ -290,7 +282,7 @@ public class AppRunnerTests : AppRunTestBase
             _helpers.Object);
 
         var result = await appRunner.RunMacCatalystApp(
-            appInformation,
+            _appBundleInfo,
             timeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
@@ -316,15 +308,6 @@ public class AppRunnerTests : AppRunTestBase
 
         captureLog.Verify(x => x.StartCapture(), Times.AtLeastOnce);
     }
-
-    private static AppBundleInformation GetMockedAppBundleInfo() =>
-        new(
-            appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null);
 
     private string GetExpectedDeviceMlaunchArgs() =>
         "-argument=--foo=bar " +
