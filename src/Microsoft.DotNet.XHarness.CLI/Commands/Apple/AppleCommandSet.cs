@@ -33,6 +33,7 @@ internal class AppleCommandSet : CommandSet
 
         // Commands for getting information
         Add(new AppleDeviceCommand(services));
+        Add(new AppleMlaunchCommand(services));
         Add(new AppleStateCommand());
 
         // Commands for simulator management
