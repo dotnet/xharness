@@ -96,26 +96,26 @@ public static class Program
             return false;
         }
 
-        switch (args[0])
+        var platform = args[0];
+        var command = args[1];
+
+        return platform switch
         {
-            case "apple":
-                return args[1] switch
-                {
-                    "device" => true,
-                    "state" => args.Contains("--json"),
-                    _ => false,
-                };
-
-            case "android":
-                return args[1] switch
-                {
-                    "device" => true,
-                    "state" => args.Contains("--json"),
-                    "adb" => true,
-                    _ => false,
-                };
-        }
-
-        return false;
+            "apple" => command switch
+            {
+                "device" => true,
+                "state" => args.Contains("--json"),
+                "mlaunch" => true,
+                _ => false,
+            },
+            "android" => command switch
+            {
+                "device" => true,
+                "state" => args.Contains("--json"),
+                "adb" => true,
+                _ => false,
+            },
+            _ => false,
+        };
     }
 }
