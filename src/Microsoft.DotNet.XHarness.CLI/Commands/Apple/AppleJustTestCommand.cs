@@ -23,8 +23,8 @@ internal class AppleJustTestCommand : AppleAppCommand<AppleJustTestCommandArgume
     {
     }
 
-    protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken)
-        => serviceProvider.GetRequiredService<IJustTestOrchestrator>()
+    protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken) =>
+        serviceProvider.GetRequiredService<IJustTestOrchestrator>()
             .OrchestrateTest(
                 Arguments.BundleIdentifier,
                 Arguments.Target,

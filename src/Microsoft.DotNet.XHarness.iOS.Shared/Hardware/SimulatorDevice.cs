@@ -147,6 +147,7 @@ public class SimulatorDevice : ISimulatorDevice
         }
 
         var result = true;
+        bundleIdentifiers = bundleIdentifiers.Where(id => !string.IsNullOrEmpty(id)).ToArray();
         if (bundleIdentifiers.Any() && File.Exists(tccDB))
         {
             result &= await _tCCDatabase.AgreeToPromptsAsync(SimRuntime, tccDB, UDID, log, bundleIdentifiers);
