@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 /// </summary>
 internal class MlaunchArgument : Argument<string>
 {
-    public MlaunchArgument() : base("mlaunch=", "Path to the mlaunch binary", MacOSProcessManager.DetectMlaunchPath())
+    public MlaunchArgument() : base("mlaunch=", "Path to the mlaunch binary. Defaults to mlaunch bundled with the XHarness nupkg", MacOSProcessManager.DetectMlaunchPath())
     {
     }
 
