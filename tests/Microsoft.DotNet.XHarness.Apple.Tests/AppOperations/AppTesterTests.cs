@@ -18,7 +18,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 using Moq;
 using Xunit;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations;
 
 public class AppTesterTests : AppRunTestBase

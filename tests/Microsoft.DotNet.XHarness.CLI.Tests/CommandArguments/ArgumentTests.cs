@@ -7,7 +7,6 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Xunit;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.CLI.Tests.Arguments;
 
 public class ArgumentTests
@@ -28,10 +27,10 @@ public class ArgumentTests
 
         var exitCode = command.Invoke(new[]
         {
-                "-a",
-                "foo",
-                "-a=bar",
-            });
+            "-a",
+            "foo",
+            "-a=bar",
+        });
 
         Assert.Equal(0, exitCode);
         Assert.True(command.CommandRun);
@@ -54,8 +53,8 @@ public class ArgumentTests
 
         var exitCode = command.Invoke(new[]
         {
-                "-b",
-            });
+            "-b",
+        });
 
         Assert.Equal(0, exitCode);
         Assert.True(command.CommandRun);
@@ -70,8 +69,8 @@ public class ArgumentTests
 
         var exitCode = command.Invoke(new[]
         {
-                "-b",
-            });
+            "-b",
+        });
 
         Assert.Equal(0, exitCode);
         Assert.True(command.CommandRun);
@@ -86,8 +85,8 @@ public class ArgumentTests
 
         var exitCode = command.Invoke(new[]
         {
-                "-b=false",
-            });
+            "-b=false",
+        });
 
         Assert.Equal(0, exitCode);
         Assert.True(command.CommandRun);
@@ -102,8 +101,8 @@ public class ArgumentTests
 
         var exitCode = command.Invoke(new[]
         {
-                "-b=off",
-            });
+            "-b=off",
+        });
 
         Assert.Equal(0, exitCode);
         Assert.True(command.CommandRun);
@@ -126,9 +125,9 @@ public class ArgumentTests
 
         var exitCode = command.Invoke(new[]
         {
-                "-c",
-                "xyz",
-            });
+            "-c",
+            "xyz",
+        });
 
         Assert.Equal(0, exitCode);
         Assert.True(command.CommandRun);
@@ -175,9 +174,9 @@ public class ArgumentTests
 
         var exitCode = command.Invoke(new[]
         {
-                "-t",
-                "00:02:30",
-            });
+            "-t",
+            "00:02:30",
+        });
 
         Assert.Equal(0, exitCode);
         Assert.True(command.CommandRun);
