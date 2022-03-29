@@ -136,6 +136,18 @@ public class AppTesterTests : AppRunTestBase
                    It.IsAny<CancellationToken>()),
                 Times.Once);
 
+        _processManager
+            .Verify(
+                x => x.ExecuteXcodeCommandAsync(
+                   "simctl",
+                   It.Is<IList<string>>(args => args.Contains("log") && args.Contains(_mockSimulator.UDID) && args.Contains("stream") && args.Any(a => a.Contains(BundleExecutable))),
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
+                   It.IsAny<TimeSpan>(),
+                   It.IsAny<CancellationToken>()),
+                Times.Once);
+
         _listener.Verify(x => x.InitializeAndGetPort(), Times.AtLeastOnce);
         _listener.Verify(x => x.StartAsync(), Times.AtLeastOnce);
         _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
