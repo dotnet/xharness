@@ -9,7 +9,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 
@@ -19,7 +22,7 @@ public abstract class AppRunnerBase
 {
     private const string SystemLogPath = "/var/log/system.log";
 
-    private readonly IProcessManager _processManager;
+    private readonly IMlaunchProcessManager _processManager;
     private readonly ICaptureLogFactory _captureLogFactory;
     private readonly ILogs _logs;
     private readonly IHelpers _helpers;
@@ -28,7 +31,7 @@ public abstract class AppRunnerBase
     private bool _appEndSignalDetected = false;
 
     protected AppRunnerBase(
-        IProcessManager processManager,
+        IMlaunchProcessManager processManager,
         ICaptureLogFactory captureLogFactory,
         ILogs logs,
         IFileBackedLog mainLog,
@@ -79,10 +82,10 @@ public abstract class AppRunnerBase
         await _processManager.ExecuteCommandAsync(lsRegisterPath, new[] { "-f", appInfo.LaunchAppPath }, _mainLog, TimeSpan.FromSeconds(10), cancellationToken: cancellationToken);
 
         var arguments = new List<string>
-            {
-                "-W",
-                appInfo.LaunchAppPath
-            };
+        {
+            "-W", // Wait until the applications exit (even if they were already open)
+            appInfo.LaunchAppPath
+        };
 
         arguments.AddRange(extraArguments);
 
@@ -106,6 +109,63 @@ public abstract class AppRunnerBase
         }
     }
 
+    protected async Task<ProcessExecutionResult> RunSimulatorApp(
+        AppBundleInformation appInformation,
+        MlaunchArguments mlaunchArguments,
+        ICrashSnapshotReporter crashReporter,
+        ISimulatorDevice simulator,
+        ISimulatorDevice? companionSimulator,
+        TimeSpan timeout,
+        CancellationToken cancellationToken)
+    {
+        _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
+
+        var simulatorLog = _captureLogFactory.Create(
+            path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
+            systemLogPath: simulator.SystemLog,
+            entireFile: false,
+            LogType.SystemLog);
+
+        simulatorLog.StartCapture();
+        _logs.Add(simulatorLog);
+
+        var simulatorScanToken = await CaptureSimulatorLog(simulator, appInformation, cancellationToken);
+
+        using var systemLogs = new DisposableList<ICaptureLog>
+        {
+            simulatorLog
+        };
+
+        if (companionSimulator != null)
+        {
+            _mainLog.WriteLine("System log for the '{1}' companion simulator is: {0}", companionSimulator.SystemLog, companionSimulator.Name);
+
+            var companionLog = _captureLogFactory.Create(
+                path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
+                systemLogPath: companionSimulator.SystemLog,
+                entireFile: false,
+                LogType.CompanionSystemLog);
+
+            companionLog.StartCapture();
+            _logs.Add(companionLog);
+            systemLogs.Add(companionLog);
+
+            var companionScanToken = await CaptureSimulatorLog(companionSimulator, appInformation, cancellationToken);
+            if (companionScanToken != null)
+            {
+                simulatorScanToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, companionScanToken.Token);
+            }
+        }
+
+        await crashReporter.StartCaptureAsync();
+
+        _mainLog.WriteLine("Starting the app");
+
+        var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+        simulatorScanToken?.Cancel();
+        return result;
+    }
+
     /// <summary>
     /// User can pass additional arguments after the -- which get turned to environmental variables.
     /// </summary>
@@ -114,6 +174,7 @@ public abstract class AppRunnerBase
     protected void AddExtraEnvVars(Dictionary<string, string> envVariables, IEnumerable<(string, string)> variables)
     {
         using (var enumerator = variables.GetEnumerator())
+        {
             while (enumerator.MoveNext())
             {
                 var (name, value) = enumerator.Current;
@@ -125,6 +186,7 @@ public abstract class AppRunnerBase
 
                 envVariables[name] = value;
             }
+        }
     }
 
     protected string WatchForAppEndTag(
@@ -160,5 +222,49 @@ public abstract class AppRunnerBase
         }
 
         return result;
+    }
+
+    protected async Task<CancellationTokenSource?> CaptureSimulatorLog(
+        ISimulatorDevice simulator,
+        AppBundleInformation appInformation,
+        CancellationToken cancellationToken)
+    {
+        if (!await simulator.Boot(_mainLog, cancellationToken))
+        {
+            _mainLog.WriteLine($"Failed to boot simulator {simulator.Name} in time! Exit code detection might fail");
+        }
+
+        var appName = appInformation.BundleExecutable ?? appInformation.AppName;
+
+        var logReadTokenSource = new CancellationTokenSource();
+        var simulatorLog = _logs.Create($"{appName}.log", LogType.SystemLog.ToString(), timestamp: false);
+
+        _mainLog.WriteLine($"Scanning simulator log stream of {appName} into '{simulatorLog.FullPath}'..");
+
+        _processManager
+            .ExecuteXcodeCommandAsync(
+                "simctl",
+                new[]
+                {
+                    "spawn",
+                    simulator.UDID,
+                    "log",
+                    "stream",
+                    "--level=debug",
+                    "--color=none",
+                    "--style=compact",
+                    "--predicate",
+                    $"senderImagePath contains '{appName}'"
+                },
+                _mainLog,
+                simulatorLog,
+                simulatorLog,
+                TimeSpan.FromDays(1),
+                cancellationToken: CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, logReadTokenSource.Token).Token)
+            .DoNotAwait();
+
+        logReadTokenSource.Token.Register(simulatorLog.Dispose);
+
+        return logReadTokenSource;
     }
 }

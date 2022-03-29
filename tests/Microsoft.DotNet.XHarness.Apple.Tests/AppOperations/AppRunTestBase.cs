@@ -21,6 +21,7 @@ public abstract class AppRunTestBase : IDisposable
 {
     protected const string AppName = "System.Text.Json.Tests.app";
     protected const string AppBundleIdentifier = "net.dot.System.Text.Json.Tests";
+    protected const string BundleExecutable = "System.Text.Json.Tests";
     protected const string SimulatorDeviceName = "Test iPhone simulator";
     protected const string DeviceName = "Test iPhone";
 
@@ -38,6 +39,15 @@ public abstract class AppRunTestBase : IDisposable
         x.ProductType == "iPhone12,1" &&
         x.ProductVersion == "13.0");
 
+    protected readonly AppBundleInformation _appBundleInfo =
+        new(appName: AppName,
+            bundleIdentifier: AppBundleIdentifier,
+            appPath: s_appPath,
+            launchAppPath: s_appPath,
+            supports32b: false,
+            extension: null,
+            bundleExecutable: BundleExecutable);
+
     protected readonly string _simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
 
     protected readonly ISimulatorDevice _mockSimulator;
@@ -51,6 +61,7 @@ public abstract class AppRunTestBase : IDisposable
     protected readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
     protected readonly IFileBackedLog _stdoutLog;
     protected readonly IFileBackedLog _stderrLog;
+    protected readonly IFileBackedLog _appLog;
 
     protected AppRunTestBase()
     {
@@ -63,6 +74,8 @@ public abstract class AppRunTestBase : IDisposable
 
         _stdoutLog = Mock.Of<IFileBackedLog>(
             x => x.FullPath == $"./{AppBundleIdentifier}.log" && x.Description == LogType.ApplicationLog.ToString());
+        _appLog = Mock.Of<IFileBackedLog>(
+            x => x.FullPath == $"./{BundleExecutable}.log" && x.Description == LogType.ApplicationLog.ToString());
         _stderrLog = Mock.Of<IFileBackedLog>(
             x => x.FullPath == $"./{AppBundleIdentifier}.err.log" && x.Description == LogType.ApplicationLog.ToString());
 
@@ -82,6 +95,9 @@ public abstract class AppRunTestBase : IDisposable
         _logs
             .Setup(x => x.Create(AppBundleIdentifier + ".err.log", LogType.ApplicationLog.ToString(), It.IsAny<bool?>()))
             .Returns(_stderrLog);
+        _logs
+            .Setup(x => x.Create(BundleExecutable + ".log", It.IsAny<string>(), It.IsAny<bool?>()))
+            .Returns(_appLog);
 
         var factory2 = new Mock<ICrashSnapshotReporterFactory>();
         factory2.SetReturnsDefault(_snapshotReporter.Object);

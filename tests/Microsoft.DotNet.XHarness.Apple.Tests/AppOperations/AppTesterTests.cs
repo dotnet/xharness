@@ -108,16 +108,8 @@ public class AppTesterTests : AppRunTestBase
             _logs.Object,
             _helpers.Object);
 
-        var appInformation = new AppBundleInformation(
-            appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null);
-
         var (result, resultMessage) = await appTester.TestApp(
-            appInformation,
+            _appBundleInfo,
             new TestTargetOs(TestTarget.Simulator_tvOS, null),
             _mockSimulator,
             null,
@@ -141,6 +133,18 @@ public class AppTesterTests : AppRunTestBase
                    It.IsAny<TimeSpan>(),
                    It.IsAny<Dictionary<string, string>>(),
                    It.IsAny<int>(),
+                   It.IsAny<CancellationToken>()),
+                Times.Once);
+
+        _processManager
+            .Verify(
+                x => x.ExecuteXcodeCommandAsync(
+                   "simctl",
+                   It.Is<IList<string>>(args => args.Contains("log") && args.Contains(_mockSimulator.UDID) && args.Contains("stream") && args.Any(a => a.Contains(BundleExecutable))),
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
+                   It.IsAny<TimeSpan>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
 
@@ -201,16 +205,8 @@ public class AppTesterTests : AppRunTestBase
             _logs.Object,
             _helpers.Object);
 
-        var appInformation = new AppBundleInformation(
-            appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null);
-
         var (result, resultMessage) = await appTester.TestApp(
-            appInformation,
+            _appBundleInfo,
             new TestTargetOs(TestTarget.Device_iOS, null),
             s_mockDevice,
             null,
@@ -297,16 +293,8 @@ public class AppTesterTests : AppRunTestBase
             _logs.Object,
             _helpers.Object);
 
-        var appInformation = new AppBundleInformation(
-            appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null);
-
         var (result, resultMessage) = await appTester.TestApp(
-            appInformation,
+            _appBundleInfo,
             new TestTargetOs(TestTarget.Device_iOS, null),
             s_mockDevice,
             null,
@@ -386,16 +374,8 @@ public class AppTesterTests : AppRunTestBase
             _logs.Object,
             _helpers.Object);
 
-        var appInformation = new AppBundleInformation(
-            appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null);
-
         var (result, resultMessage) = await appTester.TestApp(
-            appInformation,
+            _appBundleInfo,
             new TestTargetOs(TestTarget.Device_iOS, null),
             s_mockDevice,
             null,
@@ -471,16 +451,8 @@ public class AppTesterTests : AppRunTestBase
             _logs.Object,
             _helpers.Object);
 
-        var appInformation = new AppBundleInformation(
-            appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null);
-
         var (result, resultMessage) = await appTester.TestMacCatalystApp(
-            appInformation,
+            _appBundleInfo,
             timeout: TimeSpan.FromSeconds(30),
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
@@ -580,14 +552,6 @@ public class AppTesterTests : AppRunTestBase
             })
             .Returns(mlaunchCompleted.Task);
 
-        var appInformation = new AppBundleInformation(
-            appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null);
-
         // Act
         var appTester = new AppTester(
             _processManager.Object,
@@ -602,7 +566,7 @@ public class AppTesterTests : AppRunTestBase
             _helpers.Object);
 
         var testTask = appTester.TestApp(
-            appInformation,
+            _appBundleInfo,
             new TestTargetOs(TestTarget.Device_iOS, null),
             s_mockDevice,
             null,

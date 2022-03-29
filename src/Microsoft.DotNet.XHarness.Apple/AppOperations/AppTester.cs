@@ -223,6 +223,7 @@ public class AppTester : AppRunnerBase, IAppTester
                     extraEnvVariables);
 
                 await RunSimulatorTests(
+                    appInformation,
                     mlaunchArguments,
                     crashReporter,
                     testReporter,
@@ -275,6 +276,7 @@ public class AppTester : AppRunnerBase, IAppTester
     }
 
     private async Task RunSimulatorTests(
+        AppBundleInformation appInformation,
         MlaunchArguments mlaunchArguments,
         ICrashSnapshotReporter crashReporter,
         ITestReporter testReporter,
@@ -283,42 +285,14 @@ public class AppTester : AppRunnerBase, IAppTester
         TimeSpan timeout,
         CancellationToken cancellationToken)
     {
-        _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
-
-        using var simulatorLog = _captureLogFactory.Create(
-            path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
-            systemLogPath: simulator.SystemLog,
-            entireFile: false,
-            LogType.SystemLog);
-
-        simulatorLog.StartCapture();
-        _logs.Add(simulatorLog);
-
-        using var systemLogs = new DisposableList<ICaptureLog>
-            {
-                simulatorLog
-            };
-
-        if (companionSimulator != null)
-        {
-            _mainLog.WriteLine("System log for the '{1}' companion simulator is: {0}", companionSimulator.SystemLog, companionSimulator.Name);
-
-            var companionLog = _captureLogFactory.Create(
-                path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
-                systemLogPath: companionSimulator.SystemLog,
-                entireFile: false,
-                LogType.CompanionSystemLog);
-
-            companionLog.StartCapture();
-            _logs.Add(companionLog);
-            systemLogs.Add(companionLog);
-        }
-
-        await crashReporter.StartCaptureAsync();
-
-        _mainLog.WriteLine("Starting test run");
-
-        var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+        var result = await RunSimulatorApp(
+            appInformation,
+            mlaunchArguments,
+            crashReporter,
+            simulator,
+            companionSimulator,
+            timeout,
+            cancellationToken);
 
         await testReporter.CollectSimulatorResult(result);
     }
