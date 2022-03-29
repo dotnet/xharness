@@ -140,9 +140,9 @@ public class AppBundleInformationParser : IAppBundleInformationParser
         {
             bundleExecutable = await GetPlistProperty(plistPath, PListExtensions.BundleExecutablePropertyName, log, cancellationToken);
         }
-        catch
+        catch (Exception e)
         {
-            log.WriteLine("Failed to locate the bundle executable property in Info.plist");
+            log.WriteLine("Failed to locate the bundle executable property in Info.plist: " + e.Message);
         }
 
         string launchAppPath = target.ToRunMode() == RunMode.WatchOS

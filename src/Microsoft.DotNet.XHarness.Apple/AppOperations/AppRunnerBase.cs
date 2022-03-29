@@ -83,7 +83,7 @@ public abstract class AppRunnerBase
 
         var arguments = new List<string>
         {
-            "-W",
+            "-W", // Wait until the applications exit (even if they were already open)
             appInfo.LaunchAppPath
         };
 
@@ -174,16 +174,18 @@ public abstract class AppRunnerBase
     protected void AddExtraEnvVars(Dictionary<string, string> envVariables, IEnumerable<(string, string)> variables)
     {
         using (var enumerator = variables.GetEnumerator())
-        while (enumerator.MoveNext())
         {
-            var (name, value) = enumerator.Current;
-            if (envVariables.ContainsKey(name))
+            while (enumerator.MoveNext())
             {
-                _mainLog.WriteLine($"Environmental variable {name} is already passed to the application to drive test run, skipping..");
-                continue;
-            }
+                var (name, value) = enumerator.Current;
+                if (envVariables.ContainsKey(name))
+                {
+                    _mainLog.WriteLine($"Environmental variable {name} is already passed to the application to drive test run, skipping..");
+                    continue;
+                }
 
-            envVariables[name] = value;
+                envVariables[name] = value;
+            }
         }
     }
 
