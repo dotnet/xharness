@@ -43,7 +43,7 @@ internal class AppleMlaunchCommand : AppleCommand<AppleMlaunchCommandArguments>
 
         try
         {
-            var processManagerLog = new CallbackLog(s => { });
+            var nullLog = new CallbackLog(s => { });
             var stdout = new CallbackLog(Console.Write);
             var stderr = new CallbackLog(Console.Error.Write);
 
@@ -54,8 +54,8 @@ internal class AppleMlaunchCommand : AppleCommand<AppleMlaunchCommandArguments>
 
             var result = await processManager.ExecuteCommandAsync(
                 args,
-                processManagerLog,
-                stdout,
+                Arguments.Verbosity < LogLevel.Information ? stdout : nullLog,
+                Arguments.Verbosity <= LogLevel.Warning ? stdout : nullLog,
                 stderr,
                 Arguments.Timeout,
                 Arguments.EnvironmentalVariables.Value.ToDictionary(t => t.Item1, t => t.Item2),
