@@ -70,7 +70,7 @@ public class SimulatorResetOrchestrator : BaseOrchestrator, ISimulatorResetOrche
             includeWirelessDevices: false,
             resetSimulator: true,
             enableLldb: false,
-            (_, __, ___) => Task.FromResult(new AppBundleInformation(string.Empty, string.Empty, string.Empty, string.Empty, false)), // This is not really needed for this command
+            (_, __, ___) => Task.FromResult(AppBundleInformation.FromBundleId(string.Empty)), // This is not really needed for this command
             ExecuteMacCatalystApp,
             ExecuteApp,
             cancellationToken);
