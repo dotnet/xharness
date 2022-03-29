@@ -153,9 +153,7 @@ public abstract class AppRunnerBase
             var companionScanToken = await CaptureSimulatorLog(companionSimulator, appInformation, cancellationToken);
             if (companionScanToken != null)
             {
-                simulatorScanToken = CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken,
-                companionScanToken.Token);
+                simulatorScanToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, companionScanToken.Token);
             }
         }
 
