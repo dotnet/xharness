@@ -76,6 +76,8 @@ internal class AppleMlaunchCommand : AppleCommand<AppleMlaunchCommandArguments>
         }
     }
 
+    // This is needed because ProcessManagers accepts MlaunchArguments only which are strong-typed args supported by mlaunch
+    // Since in this command, these are supplied by user, we need to forward them as-is
     private class SimpleMlaunchArgument : iOS.Shared.Execution.MlaunchArgument
     {
         private readonly string _argument;
@@ -85,6 +87,6 @@ internal class AppleMlaunchCommand : AppleCommand<AppleMlaunchCommandArguments>
             _argument = argument;
         }
 
-        public override string AsCommandLineArgument() => _argument;
+        public override string AsCommandLineArgument() => Escape(_argument);
     }
 }
