@@ -147,6 +147,7 @@ public class SimulatorDevice : ISimulatorDevice
         }
 
         var result = true;
+        bundleIdentifiers = bundleIdentifiers.Where(id => !string.IsNullOrEmpty(id)).ToArray();
         if (bundleIdentifiers.Any() && File.Exists(tccDB))
         {
             result &= await _tCCDatabase.AgreeToPromptsAsync(SimRuntime, tccDB, UDID, log, bundleIdentifiers);
@@ -200,5 +201,29 @@ public class SimulatorDevice : ISimulatorDevice
         State = DeviceState.Booted;
 
         return true;
+    }
+
+    public async Task<string> GetAppBundlePath(ILog log, string bundleIdentifier, CancellationToken cancellationToken)
+    {
+        log.WriteLine($"Querying '{Name}' for bundle path of '{bundleIdentifier}'..");
+
+        var output = new MemoryLog() { Timestamp = false };
+        var result = await _processManager.ExecuteXcodeCommandAsync(
+            "simctl",
+            new[] { "get_app_container", UDID, bundleIdentifier },
+            log,
+            output,
+            output,
+            TimeSpan.FromSeconds(30));
+
+        if (!result.Succeeded)
+        {
+            throw new Exception($"Failed to get information for '{bundleIdentifier}'. Please check the app is installed");
+        }
+
+        var bundlePath = output.ToString().Trim();
+        log.WriteLine($"Found installed app bundle at '{bundlePath}'");
+
+        return bundlePath;
     }
 }

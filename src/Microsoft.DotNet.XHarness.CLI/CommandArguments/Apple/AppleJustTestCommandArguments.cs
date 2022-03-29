@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.DotNet.XHarness.iOS.Shared;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 
@@ -28,21 +29,31 @@ internal class AppleJustTestCommandArguments : XHarnessCommandArguments, IAppleA
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
-            BundleIdentifier,
-            Target,
-            OutputDirectory,
-            Timeout,
-            LaunchTimeout,
-            XcodeRoot,
-            MlaunchPath,
-            DeviceName,
-            IncludeWireless,
-            CommunicationChannel,
-            XmlResultJargon,
-            SingleMethodFilters,
-            ClassMethodFilters,
-            EnableLldb,
-            SignalAppEnd,
-            EnvironmentalVariables,
+        BundleIdentifier,
+        Target,
+        OutputDirectory,
+        Timeout,
+        LaunchTimeout,
+        XcodeRoot,
+        MlaunchPath,
+        DeviceName,
+        IncludeWireless,
+        CommunicationChannel,
+        XmlResultJargon,
+        SingleMethodFilters,
+        ClassMethodFilters,
+        EnableLldb,
+        SignalAppEnd,
+        EnvironmentalVariables,
     };
+
+    public override void Validate()
+    {
+        base.Validate();
+
+        if (Target.Value.Platform == TestTarget.MacCatalyst)
+        {
+            throw new ArgumentException("This command is not supported with the maccatalyst target");
+        }
+    }
 }

@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Moq;
@@ -12,14 +11,12 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Hardware;
 
 public class DefaultSimulatorSelectorTests
 {
-    private readonly Mock<ILog> _log;
     private readonly Mock<IMlaunchProcessManager> _processManager;
     private readonly Mock<ITCCDatabase> _tccDatabase;
     private readonly DefaultSimulatorSelector _simulatorSelector;
 
     public DefaultSimulatorSelectorTests()
     {
-        _log = new Mock<ILog>();
         _processManager = new Mock<IMlaunchProcessManager>();
         _tccDatabase = new Mock<ITCCDatabase>();
         _simulatorSelector = new DefaultSimulatorSelector();

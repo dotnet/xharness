@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.Apple;
 public interface IRunOrchestrator
 {
     Task<ExitCode> OrchestrateRun(
-        AppBundleInformation appBundleInformation,
+        string appBundlePath,
         TestTargetOs target,
         string? deviceName,
         TimeSpan timeout,
@@ -51,6 +51,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
     private readonly IAppRunner _appRunner;
 
     public RunOrchestrator(
+        IAppBundleInformationParser appBundleInformationParser,
         IAppInstaller appInstaller,
         IAppUninstaller appUninstaller,
         IAppRunnerFactory appRunnerFactory,
@@ -63,7 +64,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         IErrorKnowledgeBase errorKnowledgeBase,
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
-        : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        : base(appBundleInformationParser, appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
         _iOSExitCodeDetector = iOSExitCodeDetector ?? throw new ArgumentNullException(nameof(iOSExitCodeDetector));
         _macCatalystExitCodeDetector = macCatalystExitCodeDetector ?? throw new ArgumentNullException(nameof(macCatalystExitCodeDetector));
@@ -76,8 +77,37 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         _appRunner = appRunnerFactory.Create(mainLog, logs, logCallback);
     }
 
-    public virtual async Task<ExitCode> OrchestrateRun(
-        AppBundleInformation appBundleInformation,
+    public Task<ExitCode> OrchestrateRun(
+        string appBundlePath,
+        TestTargetOs target,
+        string? deviceName,
+        TimeSpan timeout,
+        TimeSpan launchTimeout,
+        int expectedExitCode,
+        bool includeWirelessDevices,
+        bool resetSimulator,
+        bool enableLldb,
+        bool signalAppEnd,
+        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IEnumerable<string> passthroughArguments,
+        CancellationToken cancellationToken)
+        => OrchestrateRun(
+            (target, device, ct) => GetAppBundleFromPath(target, appBundlePath, ct),
+            target,
+            deviceName,
+            timeout,
+            launchTimeout,
+            expectedExitCode,
+            includeWirelessDevices,
+            resetSimulator,
+            enableLldb,
+            signalAppEnd,
+            environmentalVariables,
+            passthroughArguments,
+            cancellationToken);
+
+    protected async Task<ExitCode> OrchestrateRun(
+        GetAppBundleInfoFunc getAppBundleInfo,
         TestTargetOs target,
         string? deviceName,
         TimeSpan timeout,
@@ -158,7 +188,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             includeWirelessDevices,
             resetSimulator,
             enableLldb,
-            appBundleInformation,
+            getAppBundleInfo,
             ExecuteMacCatalystApp,
             ExecuteApp,
             launchTimeoutCancellationToken.Token);

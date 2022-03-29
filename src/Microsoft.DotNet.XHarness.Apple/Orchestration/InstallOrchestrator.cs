@@ -33,10 +33,6 @@ public interface IInstallOrchestrator
 /// </summary>
 public class InstallOrchestrator : BaseOrchestrator, IInstallOrchestrator
 {
-    private readonly IAppBundleInformationParser _appBundleInformationParser;
-    private readonly ILogger _consoleLogger;
-    private readonly IFileBackedLog _mainLog;
-
     public InstallOrchestrator(
         IAppInstaller appInstaller,
         IAppUninstaller appUninstaller,
@@ -48,11 +44,8 @@ public class InstallOrchestrator : BaseOrchestrator, IInstallOrchestrator
         IErrorKnowledgeBase errorKnowledgeBase,
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
-        : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        : base(appBundleInformationParser, appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
-        _appBundleInformationParser = appBundleInformationParser ?? throw new ArgumentNullException(nameof(appBundleInformationParser));
-        _consoleLogger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
-        _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
     }
 
     public async Task<ExitCode> OrchestrateInstall(
@@ -65,18 +58,7 @@ public class InstallOrchestrator : BaseOrchestrator, IInstallOrchestrator
         bool enableLldb,
         CancellationToken cancellationToken)
     {
-        _consoleLogger.LogInformation($"Getting app bundle information from '{appPackagePath}'");
-
-        AppBundleInformation appBundleInfo;
-        try
-        {
-            appBundleInfo = await _appBundleInformationParser.ParseFromAppBundle(appPackagePath, target.Platform, _mainLog, cancellationToken);
-        }
-        catch (Exception e)
-        {
-            _consoleLogger.LogError(e.Message);
-            return ExitCode.FAILED_TO_GET_BUNDLE_INFO;
-        }
+        Task<AppBundleInformation> GetAppBundleInfo(TestTargetOs target, IDevice device, CancellationToken ct) => GetAppBundleFromPath(target, appPackagePath, ct);
 
         static Task<ExitCode> ExecuteMacCatalystApp(AppBundleInformation appBundleInfo)
             => throw new InvalidOperationException("install command not available on maccatalyst");
@@ -84,7 +66,16 @@ public class InstallOrchestrator : BaseOrchestrator, IInstallOrchestrator
         static Task<ExitCode> ExecuteApp(AppBundleInformation appBundleInfo, IDevice device, IDevice? companionDevice)
             => Task.FromResult(ExitCode.SUCCESS); // no-op
 
-        var result = await OrchestrateOperation(target, deviceName, includeWirelessDevices, resetSimulator, enableLldb, appBundleInfo, ExecuteMacCatalystApp, ExecuteApp, cancellationToken);
+        var result = await OrchestrateOperation(
+            target,
+            deviceName,
+            includeWirelessDevices,
+            resetSimulator,
+            enableLldb,
+            GetAppBundleInfo,
+            ExecuteMacCatalystApp,
+            ExecuteApp,
+            cancellationToken);
 
         if (cancellationToken.IsCancellationRequested)
         {

@@ -23,6 +23,7 @@ public interface ISimulatorDevice : IDevice
     Task<bool> PrepareSimulator(ILog log, params string[] bundleIdentifiers);
     Task KillEverything(ILog log);
     Task<bool> Boot(ILog log, CancellationToken cancellationToken);
+    Task<string> GetAppBundlePath(ILog log, string bundleIdentifier, CancellationToken cancellationToken);
 }
 
 public enum DeviceState

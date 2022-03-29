@@ -41,7 +41,7 @@ public class SimulatorResetOrchestrator : BaseOrchestrator, ISimulatorResetOrche
         IErrorKnowledgeBase errorKnowledgeBase,
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
-        : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        : base(new FakeAppBundleInformationParser(), appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
         _consoleLogger = consoleLogger;
     }
@@ -70,7 +70,7 @@ public class SimulatorResetOrchestrator : BaseOrchestrator, ISimulatorResetOrche
             includeWirelessDevices: false,
             resetSimulator: true,
             enableLldb: false,
-            new AppBundleInformation(string.Empty, string.Empty, string.Empty, string.Empty, false),
+            (_, __, ___) => Task.FromResult(AppBundleInformation.FromBundleId(string.Empty)), // This is not really needed for this command
             ExecuteMacCatalystApp,
             ExecuteApp,
             cancellationToken);
@@ -84,4 +84,14 @@ public class SimulatorResetOrchestrator : BaseOrchestrator, ISimulatorResetOrche
 
     protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
         => Task.CompletedTask; // no-op - reset is enough, clean-up is not needed afterwards
+
+    // The reset-simulator command doesn't (as oposed to the others) work with any app bundle specifically so we have to work around this part
+    private class FakeAppBundleInformationParser : IAppBundleInformationParser
+    {
+        public Task<AppBundleInformation> ParseFromAppBundle(string appPackagePath, TestTarget target, ILog log, CancellationToken cancellationToken = default)
+            => Task.FromResult(new AppBundleInformation(string.Empty, string.Empty, string.Empty, string.Empty, false));
+
+        public Task<AppBundleInformation> ParseFromProject(string projectFilePath, TestTarget target, string buildConfiguration)
+            => Task.FromResult(new AppBundleInformation(string.Empty, string.Empty, string.Empty, string.Empty, false));
+    }
 }

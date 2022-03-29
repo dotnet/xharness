@@ -261,20 +261,20 @@ public class InstallOrchestratorTests : OrchestratorTestBase
 
     private void SetupUninstall(IDevice device, int exitCode = 0)
     {
-        if (device is ISimulatorDevice)
+        if (device is ISimulatorDevice simulator)
         {
             _appUninstaller
-                .Setup(x => x.UninstallSimulatorApp(device, s_appIdentifier, It.IsAny<CancellationToken>()))
+                .Setup(x => x.UninstallSimulatorApp(simulator, BundleIdentifier, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ProcessExecutionResult
                 {
                     ExitCode = exitCode,
                     TimedOut = false,
                 });
         }
-        else
+        else if (device is IHardwareDevice phone)
         {
             _appUninstaller
-                .Setup(x => x.UninstallDeviceApp(device, s_appIdentifier, It.IsAny<CancellationToken>()))
+                .Setup(x => x.UninstallDeviceApp(phone, BundleIdentifier, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ProcessExecutionResult
                 {
                     ExitCode = exitCode,

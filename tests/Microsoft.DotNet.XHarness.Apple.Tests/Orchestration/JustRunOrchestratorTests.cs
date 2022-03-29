@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XHarness.Apple.Tests.Orchestration;
 
 public class JustRunOrchestratorTests : OrchestratorTestBase
 {
-    private readonly JustRunOrchestrator _justRunOrchestrator;
+    private readonly IJustRunOrchestrator _justRunOrchestrator;
     private readonly Mock<IiOSExitCodeDetector> _iOSExitCodeDetector;
     private readonly Mock<IMacCatalystExitCodeDetector> _macCatalystExitCodeDetector;
     private readonly Mock<IAppRunner> _appRunner;
@@ -36,7 +36,8 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         _appInstaller.Reset();
         _appUninstaller.Reset();
 
-        _justRunOrchestrator = new(
+        _justRunOrchestrator = new JustRunOrchestrator(
+            _appBundleInformationParser.Object,
             _appInstaller.Object,
             _appUninstaller.Object,
             _appRunnerFactory.Object,
@@ -84,14 +85,13 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justRunOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
             TimeSpan.FromMinutes(3),
             expectedExitCode: 100,
             includeWirelessDevices: false,
-            resetSimulator: true,
             enableLldb: false,
             signalAppEnd: false,
             envVars,
@@ -113,6 +113,9 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         _appRunner.VerifyAll();
         _appInstaller.VerifyNoOtherCalls();
         _appUninstaller.VerifyNoOtherCalls();
+
+        _simulator.Verify(x => x.Boot(_mainLog.Object, It.IsAny<CancellationToken>()), Times.Once);
+        _simulator.Verify(x => x.GetAppBundlePath(_mainLog.Object, BundleIdentifier, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -122,7 +125,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
 
         _iOSExitCodeDetector
-            .Setup(x => x.DetectExitCode(_appBundleInformation, It.IsAny<IReadableLog>()))
+            .Setup(x => x.DetectExitCode(It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier), It.IsAny<IReadableLog>()))
             .Returns(100)
             .Verifiable();
 
@@ -130,7 +133,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         _appRunner
             .Setup(x => x.RunApp(
-                _appBundleInformation,
+                It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier),
                 testTarget,
                 _device.Object,
                 null,
@@ -148,14 +151,13 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justRunOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             DeviceName,
             TimeSpan.FromMinutes(30),
             TimeSpan.FromMinutes(3),
             expectedExitCode: 100,
             includeWirelessDevices: true,
-            resetSimulator: false,
             enableLldb: false,
             signalAppEnd: false,
             Array.Empty<(string, string)>(),
@@ -207,14 +209,13 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justRunOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
             TimeSpan.FromMinutes(3),
             expectedExitCode: 100,
             includeWirelessDevices: false,
-            resetSimulator: false,
             enableLldb: true,
             signalAppEnd: false,
             Array.Empty<(string, string)>(),
@@ -236,6 +237,9 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         _appRunner.VerifyAll();
         _appInstaller.VerifyNoOtherCalls();
         _appUninstaller.VerifyNoOtherCalls();
+
+        _simulator.Verify(x => x.Boot(_mainLog.Object, It.IsAny<CancellationToken>()), Times.Once);
+        _simulator.Verify(x => x.GetAppBundlePath(_mainLog.Object, BundleIdentifier, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -245,7 +249,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
 
         _iOSExitCodeDetector
-            .Setup(x => x.DetectExitCode(_appBundleInformation, It.IsAny<IReadableLog>()))
+            .Setup(x => x.DetectExitCode(It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier), It.IsAny<IReadableLog>()))
             .Returns(200)
             .Verifiable();
 
@@ -253,7 +257,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         _appRunner
             .Setup(x => x.RunApp(
-                _appBundleInformation,
+                It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier),
                 testTarget,
                 _device.Object,
                 null,
@@ -277,14 +281,13 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justRunOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             DeviceName,
             TimeSpan.FromMinutes(30),
             TimeSpan.FromMinutes(3),
             expectedExitCode: 100,
             includeWirelessDevices: true,
-            resetSimulator: false,
             enableLldb: false,
             signalAppEnd: true,
             Array.Empty<(string, string)>(),
@@ -321,13 +324,13 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         var envVars = new[] { ("envVar1", "value1"), ("envVar2", "value2") };
 
         _macCatalystExitCodeDetector
-            .Setup(x => x.DetectExitCode(_appBundleInformation, It.IsAny<IReadableLog>()))
+            .Setup(x => x.DetectExitCode(It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier), It.IsAny<IReadableLog>()))
             .Returns(100)
             .Verifiable();
 
         _appRunner
             .Setup(x => x.RunMacCatalystApp(
-                _appBundleInformation,
+                It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier),
                 TimeSpan.FromMinutes(30),
                 true,
                 It.IsAny<IEnumerable<string>>(),
@@ -342,14 +345,13 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _justRunOrchestrator.OrchestrateRun(
-            _appBundleInformation,
+            BundleIdentifier,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
             TimeSpan.FromMinutes(3),
             expectedExitCode: 100,
             includeWirelessDevices: false,
-            resetSimulator: true,
             enableLldb: false,
             signalAppEnd: true,
             envVars,
