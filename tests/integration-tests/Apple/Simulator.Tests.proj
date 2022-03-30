@@ -11,7 +11,7 @@
 
     <!-- apple run / ios-simlator-64 -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=HelloiOS.app;IncludesTestRunner=false;ExpectedExitCode=200</AdditionalProperties>
+      <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple test / maccatalyst -->
