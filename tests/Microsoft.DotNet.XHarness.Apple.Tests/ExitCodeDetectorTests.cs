@@ -100,6 +100,15 @@ public class ExitCodeDetectorTests : IDisposable
         {
             "[07:02:15.9749990] Xamarin.Hosting: Mounting developer image on 'DNCENGOSX-003'",
             "[07:02:15.9752160] Xamarin.Hosting: Mounted developer image on 'DNCENGOSX-003'",
+            "[07:02:16.5177370] Xamarin.Hosting: Launched net.dot.Some.Other.App with PID: 13942",
+            "[07:02:16.5181560] Launched application 'net.dot.Some.Other.App' on 'DNCENGOSX-003' with pid 13942",
+            "[07:02:16.6150270] 2022-03-30 07:02:16.601 Some.Other.App[13942:136284382] Done!",
+            "[07:02:21.6632630] Xamarin.Hosting: Process '13942' exited with exit code 143 or crashing signal .",
+            "[07:02:21.6637600] Application 'net.dot.Some.Other.App' terminated (with exit code '143' and/or crashing signal ').",
+
+            // We care about this run
+            "[07:02:15.9749990] Xamarin.Hosting: Mounting developer image on 'DNCENGOSX-003'",
+            "[07:02:15.9752160] Xamarin.Hosting: Mounted developer image on 'DNCENGOSX-003'",
             "[07:02:16.5177370] Xamarin.Hosting: Launched net.dot.iOS.Simulator.PInvoke.Test with PID: 83937",
             "[07:02:16.5181560] Launched application 'net.dot.iOS.Simulator.PInvoke.Test' on 'DNCENGOSX-003' with pid 83937",
             "[07:02:16.6150270] 2022-03-30 07:02:16.601 iOS.Simulator.PInvoke.Test[83937:136284382] Done!",

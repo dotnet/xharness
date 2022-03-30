@@ -82,7 +82,12 @@ public class iOSExitCodeDetector : ExitCodeDetector, IiOSExitCodeDetector
             return EoLExitCodeRegex.Match(logLine);
         }
 
-        return iOSDeviceExitCodeRegex.Match(logLine);
+        if (logLine.Contains(appBundleInfo.BundleIdentifier))
+        {
+            return iOSDeviceExitCodeRegex.Match(logLine);
+        }
+
+        return null;
     }
 
     // Example line coming from the system log
