@@ -3,6 +3,9 @@
 
   <ItemGroup>
     <HelixTargetQueue Include="osx.1015.amd64.open"/>
+    <HelixTargetQueue Include="osx.1100.amd64.open"/>
+    <HelixTargetQueue Include="osx.1200.amd64.open"/>
+    <HelixTargetQueue Include="osx.1200.arm64.open"/>
 
     <!-- apple test / ios-simulator-64 -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
