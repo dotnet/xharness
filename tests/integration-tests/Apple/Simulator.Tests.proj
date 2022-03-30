@@ -4,8 +4,9 @@
   <ItemGroup>
     <HelixTargetQueue Include="osx.1015.amd64.open"/>
     <HelixTargetQueue Include="osx.1100.amd64.open"/>
-    <HelixTargetQueue Include="osx.1200.amd64.open"/>
-    <HelixTargetQueue Include="osx.1200.arm64.open"/>
+    <!-- TODO (https://github.com/dotnet/xharness/issues/848): MacCatalyst exit code detection is failing on OSX 12.00 -->
+    <!-- <HelixTargetQueue Include="osx.1200.amd64.open"/> -->
+    <!-- <HelixTargetQueue Include="osx.1200.arm64.open"/> -->
 
     <!-- apple test / ios-simulator-64 -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
@@ -22,11 +23,10 @@
       <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.AppContext.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
 
-    <!-- TODO (https://github.com/dotnet/xharness/issues/848): MacCatalyst exit code detection is failing on OSX 12.00 -->
     <!-- apple run / maccatalyst -->
-    <!-- <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
       <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.Buffers.Tests.app;IncludesTestRunner=false;ExpectedExitCode=43</AdditionalProperties>
-    </XHarnessAppleProject> -->
+    </XHarnessAppleProject>
 
     <!-- apple test / tvos-simulator -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
