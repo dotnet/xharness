@@ -268,23 +268,31 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             return ExitCode.APP_LAUNCH_FAILURE;
         }
 
-        int? exitCode;
-
-        var systemLog = _logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
-        if (systemLog == null)
+        var logs = _logs.Where(log => log.Description == LogType.SystemLog.ToString()).ToList();
+        if (!logs.Any())
         {
             _logger.LogError("Application has finished but no system log found. Failed to determine the exit code!");
             return ExitCode.RETURN_CODE_NOT_SET;
         }
 
-        try
+        int? exitCode = null;
+        foreach (var log in logs)
         {
-            exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, systemLog);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError($"Failed to determine the exit code:{Environment.NewLine}{e}");
-            return ExitCode.RETURN_CODE_NOT_SET;
+            try
+            {
+                exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, log);
+                
+                if (exitCode.HasValue)
+                {
+                    break;
+                }
+
+                _logger.LogDebug($"Failed to determine the exit code from {log.FullPath}");
+            }
+            catch (Exception e)
+            {
+                _logger.LogDebug($"Failed to determine the exit code:{Environment.NewLine}{e}");
+            }
         }
 
         if (exitCode is null)

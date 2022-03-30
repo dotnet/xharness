@@ -25,20 +25,28 @@ public interface IMacCatalystExitCodeDetector : IExitCodeDetector
 
 public abstract class ExitCodeDetector : IExitCodeDetector
 {
-    public int? DetectExitCode(AppBundleInformation appBundleInfo, IReadableLog systemLog)
+    // This tag is logged by the dotnet/runtime Apple app wrapper
+    // https://github.com/dotnet/runtime/blob/a883caa0803778084167b978281c34db8e753246/src/tasks/AppleAppBuilder/Templates/runtime.m#L30
+    protected const string DotnetAppExitTag = "DOTNET.APP_EXIT_CODE:";
+
+    // This line is logged by MacOS
+    protected const string AbnormalExitMessage = "Service exited with abnormal code";
+
+    public int? DetectExitCode(AppBundleInformation appBundleInfo, IReadableLog log)
     {
         StreamReader reader;
 
         try
         {
-            reader = systemLog.GetReader();
+            reader = log.GetReader();
         }
         catch (FileNotFoundException e)
         {
-            throw new Exception("Failed to detect application's exit code. The system log was empty / not found at " + e.FileName);
+            throw new Exception("Failed to detect application's exit code. The log file was empty / not found at " + e.FileName);
         }
 
         using (reader)
+        {
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();
@@ -53,6 +61,7 @@ public abstract class ExitCodeDetector : IExitCodeDetector
                     }
                 }
             }
+        }
 
         return null;
     }
@@ -60,23 +69,31 @@ public abstract class ExitCodeDetector : IExitCodeDetector
     protected abstract bool IsSignalLine(AppBundleInformation appBundleInfo, string logLine);
 
     protected virtual Regex ExitCodeRegex { get; } = new Regex(" (\\-?[0-9]+)$", RegexOptions.Compiled);
+
+    // Example line coming from app's stdout log stream
+    // 2022-03-18 12:48:53.336 I  Microsoft.Extensions.Configuration.CommandLine.Tests[12477:10069] DOTNET.APP_EXIT_CODE: 0
+    protected static bool IsStdoutExitLine(AppBundleInformation appBundleInfo, string logLine) =>
+        logLine.Contains(DotnetAppExitTag) && logLine.Contains(appBundleInfo.BundleExecutable ?? appBundleInfo.BundleIdentifier);
 }
 
 public class iOSExitCodeDetector : ExitCodeDetector, IiOSExitCodeDetector
 {
-    // Example line
+    protected override bool IsSignalLine(AppBundleInformation appBundleInfo, string logLine)
+        => IsAbnormalExitLine(appBundleInfo, logLine) || IsStdoutExitLine(appBundleInfo, logLine);
+
+    // Example line coming from the system log
     // Nov 18 04:31:44 ML-MacVM com.apple.CoreSimulator.SimDevice.2E1EE736-5672-4220-89B5-B7C77DB6AF18[55655] (UIKitApplication:net.dot.HelloiOS[9a0b][rb-legacy][57331]): Service exited with abnormal code: 200
-    protected override bool IsSignalLine(AppBundleInformation appBundleInfo, string logLine) =>
-        logLine.Contains("UIKitApplication:") &&
-        logLine.Contains("Service exited with abnormal code") &&
-        (logLine.Contains(appBundleInfo.AppName) || logLine.Contains(appBundleInfo.BundleIdentifier));
+    private static bool IsAbnormalExitLine(AppBundleInformation appBundleInfo, string logLine) =>
+        logLine.Contains("UIKitApplication:") && logLine.Contains(AbnormalExitMessage) && (logLine.Contains(appBundleInfo.AppName) || logLine.Contains(appBundleInfo.BundleIdentifier));
 }
 
 public class MacCatalystExitCodeDetector : ExitCodeDetector, IMacCatalystExitCodeDetector
 {
+    protected override bool IsSignalLine(AppBundleInformation appBundleInfo, string logLine)
+        => IsAbnormalExitLine(appBundleInfo, logLine) || IsStdoutExitLine(appBundleInfo, logLine);
+
     // Example line
     // Feb 18 06:40:16 Admins-Mac-Mini com.apple.xpc.launchd[1] (net.dot.System.Buffers.Tests.15140[59229]): Service exited with abnormal code: 74
-    protected override bool IsSignalLine(AppBundleInformation appBundleInfo, string logLine) =>
-        logLine.Contains("Service exited with abnormal code") &&
-        (logLine.Contains(appBundleInfo.AppName) || logLine.Contains(appBundleInfo.BundleIdentifier));
+    protected static bool IsAbnormalExitLine(AppBundleInformation appBundleInfo, string logLine) =>
+        logLine.Contains(AbnormalExitMessage) && (logLine.Contains(appBundleInfo.AppName) || logLine.Contains(appBundleInfo.BundleIdentifier));
 }
