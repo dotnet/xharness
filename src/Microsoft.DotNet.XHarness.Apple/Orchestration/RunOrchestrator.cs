@@ -292,7 +292,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             }
             catch (Exception e)
             {
-                _logger.LogDebug($"Failed to determine the exit code:{Environment.NewLine}{e}");
+                _logger.LogDebug($"Failed to determine the exit code from {log.FullPath}:{Environment.NewLine}{e.Message}");
             }
         }
 

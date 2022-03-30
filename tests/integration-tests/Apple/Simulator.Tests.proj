@@ -22,10 +22,11 @@
       <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.AppContext.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
 
+    <!-- TODO (https://github.com/dotnet/xharness/issues/848): MacCatalyst exit code detection is failing on OSX 12.00 -->
     <!-- apple run / maccatalyst -->
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+    <!-- <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
       <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.Buffers.Tests.app;IncludesTestRunner=false;ExpectedExitCode=43</AdditionalProperties>
-    </XHarnessAppleProject>
+    </XHarnessAppleProject> -->
 
     <!-- apple test / tvos-simulator -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
