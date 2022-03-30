@@ -268,7 +268,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             return ExitCode.APP_LAUNCH_FAILURE;
         }
 
-        var logs = _logs.Where(log => log.Description == LogType.SystemLog.ToString()).ToList();
+        var logs = _logs.Where(log => log.Description == LogType.SystemLog.ToString() || log.Description == LogType.ApplicationLog.ToString()).ToList();
         if (!logs.Any())
         {
             _logger.LogError("Application has finished but no system log found. Failed to determine the exit code!");
@@ -284,6 +284,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
                 
                 if (exitCode.HasValue)
                 {
+                    _logger.LogDebug($"Detected exit code {exitCode.Value} from {log.FullPath}");
                     break;
                 }
 
