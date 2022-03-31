@@ -268,31 +268,39 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             return ExitCode.APP_LAUNCH_FAILURE;
         }
 
-        int? exitCode;
-
-        var systemLog = _logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
-        if (systemLog == null)
+        var logs = _logs.Where(log => log.Description == LogType.SystemLog.ToString() || log.Description == LogType.ApplicationLog.ToString()).ToList();
+        if (!logs.Any())
         {
             _logger.LogError("Application has finished but no system log found. Failed to determine the exit code!");
             return ExitCode.RETURN_CODE_NOT_SET;
         }
 
-        try
+        int? exitCode = null;
+        foreach (var log in logs)
         {
-            exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, systemLog);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError($"Failed to determine the exit code:{Environment.NewLine}{e}");
-            return ExitCode.RETURN_CODE_NOT_SET;
+            try
+            {
+                exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, log);
+                
+                if (exitCode.HasValue)
+                {
+                    _logger.LogDebug($"Detected exit code {exitCode.Value} from {log.FullPath}");
+                    break;
+                }
+
+                _logger.LogDebug($"Failed to determine the exit code from {log.FullPath}");
+            }
+            catch (Exception e)
+            {
+                _logger.LogDebug($"Failed to determine the exit code from {log.FullPath}:{Environment.NewLine}{e.Message}");
+            }
         }
 
         if (exitCode is null)
         {
             if (expectedExitCode != 0)
             {
-                _logger.LogError("Application has finished but XHarness failed to determine its exit code! " +
-                    "This is a known issue, please run the app again.");
+                _logger.LogError("Application has finished but XHarness failed to determine its exit code!");
                 return ExitCode.RETURN_CODE_NOT_SET;
             }
 
