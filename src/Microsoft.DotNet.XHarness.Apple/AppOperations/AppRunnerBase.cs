@@ -189,7 +189,6 @@ public abstract class AppRunnerBase
             return result;
         }
 
-        ILog log = _mainLog;
         TaskCompletionSource appLaunched = new();
         var scanLog = new ScanLog($"Launched {appInformation.BundleIdentifier} with pid", () =>
         {
@@ -199,7 +198,7 @@ public abstract class AppRunnerBase
 
         _mainLog.WriteLine("Waiting for the app to launch..");
 
-        var runTask = _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+        var runTask = _processManager.ExecuteCommandAsync(mlaunchArguments, Log.CreateAggregatedLog(_mainLog, scanLog), timeout, cancellationToken: cancellationToken);
         Task.WaitAny(
             new Task[]
             {
