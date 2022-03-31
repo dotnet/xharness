@@ -106,6 +106,7 @@ public abstract class AppRunnerBase
 
             if (!waitForExit)
             {
+                // TODO: Deal with --no-wait by waiting for some launch signal
                 await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
                 _mainLog.WriteLine("Not waiting for the app to exit");
                 return new ProcessExecutionResult
@@ -181,21 +182,44 @@ public abstract class AppRunnerBase
 
         _mainLog.WriteLine("Starting the app");
 
-        Task<ProcessExecutionResult> runTask = _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
-
-        if (!waitForExit)
+        if (waitForExit)
         {
-            await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
-            _mainLog.WriteLine("Not waiting for the app to exit");
-            return new ProcessExecutionResult
-            {
-                ExitCode = 0
-            };
+            var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+            simulatorScanToken?.Cancel();
+            return result;
         }
 
-        var result = await runTask;
-        simulatorScanToken?.Cancel();
-        return result;
+        ILog log = _mainLog;
+        TaskCompletionSource appLaunched = new();
+        var scanLog = new ScanLog($"Launched {appInformation.BundleIdentifier} with pid", () =>
+        {
+            _mainLog.WriteLine("App launch detected");
+            appLaunched.SetResult();
+        });
+
+        _mainLog.WriteLine("Waiting for the app to launch..");
+
+        var runTask = _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+        Task.WaitAny(
+            new Task[]
+            {
+                runTask,
+                appLaunched.Task
+            },
+            cancellationToken);
+
+        if (!appLaunched.Task.IsCompleted)
+        {
+            _mainLog.WriteLine("App launch was not detected in time");
+            return runTask.Result;
+        }
+
+        _mainLog.WriteLine("Not waiting for the app to exit");
+
+        return new ProcessExecutionResult
+        {
+            ExitCode = 0
+        };
     }
 
     /// <summary>

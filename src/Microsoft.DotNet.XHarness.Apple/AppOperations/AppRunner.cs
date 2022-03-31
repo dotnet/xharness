@@ -215,6 +215,8 @@ public class AppRunner : AppRunnerBase, IAppRunner
         var envVars = new Dictionary<string, string>();
         AddExtraEnvVars(envVars, extraEnvVariables);
 
+        // TODO: Deal with --no-wait by waiting for some launch signal
+        
         return await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
             mlaunchArguments,
             _mainLog,
