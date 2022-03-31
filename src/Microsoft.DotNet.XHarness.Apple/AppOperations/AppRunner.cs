@@ -174,12 +174,13 @@ public class AppRunner : AppRunnerBase, IAppRunner
             using (appOutputLog)
             {
                 var mlaunchArguments = GetDeviceArguments(
-                appInformation,
-                device,
-                target.Platform.IsWatchOSTarget(),
-                extraAppArguments,
-                extraEnvVariables,
-                appEndTag);
+                    appInformation,
+                    device,
+                    waitForExit: waitForExit,
+                    isWatchTarget: target.Platform.IsWatchOSTarget(),
+                    extraAppArguments,
+                    extraEnvVariables,
+                    appEndTag);
 
                 result = await RunDeviceApp(
                     mlaunchArguments,
@@ -215,8 +216,6 @@ public class AppRunner : AppRunnerBase, IAppRunner
         var envVars = new Dictionary<string, string>();
         AddExtraEnvVars(envVars, extraEnvVariables);
 
-        // TODO: Deal with --no-wait by waiting for some launch signal
-        
         return await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
             mlaunchArguments,
             _mainLog,
@@ -283,6 +282,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
     private MlaunchArguments GetDeviceArguments(
         AppBundleInformation appInformation,
         IDevice device,
+        bool waitForExit,
         bool isWatchTarget,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
@@ -314,7 +314,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
         {
             args.Add(new AttachNativeDebuggerArgument()); // this prevents the watch from backgrounding the app.
         }
-        else
+        else if (waitForExit)
         {
             args.Add(new WaitForExitArgument());
         }
