@@ -27,16 +27,17 @@ internal class AppleJustRunCommand : AppleAppCommand<AppleJustRunCommandArgument
     protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken) =>
         serviceProvider.GetRequiredService<IJustRunOrchestrator>()
             .OrchestrateRun(
-                Arguments.BundleIdentifier,
-                Arguments.Target,
-                Arguments.DeviceName,
-                Arguments.Timeout,
-                Arguments.Timeout,
-                Arguments.ExpectedExitCode,
-                Arguments.IncludeWireless,
-                Arguments.EnableLldb,
-                Arguments.SignalAppEnd,
-                Arguments.EnvironmentalVariables.Value,
-                PassThroughArguments,
+                bundleIdentifier: Arguments.BundleIdentifier,
+                target: Arguments.Target,
+                deviceName: Arguments.DeviceName,
+                timeout: Arguments.Timeout,
+                launchTimeout: Arguments.Timeout,
+                expectedExitCode: Arguments.ExpectedExitCode,
+                includeWirelessDevices: Arguments.IncludeWireless,
+                enableLldb: Arguments.EnableLldb,
+                signalAppEnd: Arguments.SignalAppEnd,
+                waitForExit: !Arguments.NoWait,
+                environmentalVariables: Arguments.EnvironmentalVariables.Value,
+                passthroughArguments: PassThroughArguments,
                 cancellationToken);
 }

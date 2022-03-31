@@ -4,14 +4,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
@@ -29,6 +27,7 @@ public interface IAppRunner
         IDevice? companionDevice,
         TimeSpan timeout,
         bool signalAppEnd,
+        bool waitForExit,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         CancellationToken cancellationToken = default);
@@ -37,6 +36,7 @@ public interface IAppRunner
         AppBundleInformation appInformation,
         TimeSpan timeout,
         bool signalAppEnd,
+        bool waitForExit,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         CancellationToken cancellationToken = default);
@@ -49,7 +49,6 @@ public class AppRunner : AppRunnerBase, IAppRunner
 {
     private readonly IMlaunchProcessManager _processManager;
     private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
-    private readonly ICaptureLogFactory _captureLogFactory;
     private readonly IDeviceLogCapturerFactory _deviceLogCapturerFactory;
     private readonly IFileBackedLog _mainLog;
     private readonly ILogs _logs;
@@ -68,7 +67,6 @@ public class AppRunner : AppRunnerBase, IAppRunner
     {
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         _snapshotReporterFactory = snapshotReporterFactory ?? throw new ArgumentNullException(nameof(snapshotReporterFactory));
-        _captureLogFactory = captureLogFactory ?? throw new ArgumentNullException(nameof(captureLogFactory));
         _deviceLogCapturerFactory = deviceLogCapturerFactory ?? throw new ArgumentNullException(nameof(deviceLogCapturerFactory));
         _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
         _logs = logs ?? throw new ArgumentNullException(nameof(logs));
@@ -79,6 +77,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
         AppBundleInformation appInformation,
         TimeSpan timeout,
         bool signalAppEnd,
+        bool waitForExit,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         CancellationToken cancellationToken = default)
@@ -101,6 +100,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
                 appInformation,
                 appOutputLog,
                 timeout,
+                waitForExit,
                 extraAppArguments ?? Enumerable.Empty<string>(),
                 envVariables,
                 cancellationToken));
@@ -114,6 +114,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
         IDevice? companionDevice,
         TimeSpan timeout,
         bool signalAppEnd,
+        bool waitForExit,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         CancellationToken cancellationToken = default)
@@ -158,6 +159,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
                 simulator,
                 companionSimulator,
                 timeout,
+                waitForExit,
                 cancellationToken);
         }
         else

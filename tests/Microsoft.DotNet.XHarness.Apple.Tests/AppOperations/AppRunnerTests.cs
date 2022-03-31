@@ -16,7 +16,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Moq;
 using Xunit;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations;
 
 public class AppRunnerTests : AppRunTestBase
@@ -56,6 +55,7 @@ public class AppRunnerTests : AppRunTestBase
             null,
             timeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
+            waitForExit: true,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
             extraEnvVariables: new[] { ("appArg1", "value1") });
 
@@ -129,6 +129,7 @@ public class AppRunnerTests : AppRunTestBase
             null,
             timeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
+            waitForExit: true,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
             extraEnvVariables: new[] { ("appArg1", "value1") });
 
@@ -228,6 +229,7 @@ public class AppRunnerTests : AppRunTestBase
             null,
             timeout: TimeSpan.FromSeconds(30),
             signalAppEnd: true,
+            waitForExit: true,
             Array.Empty<string>(),
             Array.Empty<(string, string)>());
 
@@ -297,6 +299,7 @@ public class AppRunnerTests : AppRunTestBase
             _appBundleInfo,
             timeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
+            waitForExit: true,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
             extraEnvVariables: new[] { ("appArg1", "value1") });
 

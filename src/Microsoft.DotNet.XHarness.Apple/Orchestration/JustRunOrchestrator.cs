@@ -28,6 +28,7 @@ public interface IJustRunOrchestrator
         bool includeWirelessDevices,
         bool enableLldb,
         bool signalAppEnd,
+        bool waitForExit,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken);
@@ -68,6 +69,7 @@ public class JustRunOrchestrator : RunOrchestrator, IJustRunOrchestrator
         bool includeWirelessDevices,
         bool enableLldb,
         bool signalAppEnd,
+        bool waitForExit,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
@@ -75,13 +77,14 @@ public class JustRunOrchestrator : RunOrchestrator, IJustRunOrchestrator
             (target, device, cancellationToken) => GetAppBundleFromId(target, device, bundleIdentifier, cancellationToken),
             target,
             deviceName,
-            timeout,
-            launchTimeout,
+            timeout: timeout,
+            launchTimeout: launchTimeout,
             expectedExitCode,
-            includeWirelessDevices,
+            includeWirelessDevices: includeWirelessDevices,
             resetSimulator: false, // No simulator reset for just- commands
-            enableLldb,
-            signalAppEnd,
+            enableLldb: enableLldb,
+            signalAppEnd: signalAppEnd,
+            waitForExit: waitForExit,
             environmentalVariables,
             passthroughArguments,
             cancellationToken);

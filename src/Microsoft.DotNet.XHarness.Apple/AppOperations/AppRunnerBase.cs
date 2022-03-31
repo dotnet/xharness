@@ -58,6 +58,7 @@ public abstract class AppRunnerBase
         AppBundleInformation appInfo,
         ILog appOutputLog,
         TimeSpan timeout,
+        bool waitForExit,
         IEnumerable<string> extraArguments,
         Dictionary<string, string> environmentVariables,
         CancellationToken cancellationToken)
@@ -93,7 +94,7 @@ public abstract class AppRunnerBase
 
         try
         {
-            return await _processManager.ExecuteCommandAsync(
+            var runTask = _processManager.ExecuteCommandAsync(
                 "open",
                 arguments,
                 _mainLog,
@@ -102,6 +103,18 @@ public abstract class AppRunnerBase
                 timeout,
                 environmentVariables,
                 cancellationToken);
+
+            if (!waitForExit)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+                _mainLog.WriteLine("Not waiting for the app to exit");
+                return new ProcessExecutionResult
+                {
+                    ExitCode = 0
+                };
+            }
+
+            return await runTask;
         }
         finally
         {
@@ -116,6 +129,7 @@ public abstract class AppRunnerBase
         ISimulatorDevice simulator,
         ISimulatorDevice? companionSimulator,
         TimeSpan timeout,
+        bool waitForExit,
         CancellationToken cancellationToken)
     {
         _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
@@ -159,9 +173,27 @@ public abstract class AppRunnerBase
 
         await crashReporter.StartCaptureAsync();
 
+        if (!waitForExit)
+        {
+            // Booting the simulator can take time and we want to fire&forget as close to the app launch as possible
+            await simulator.Boot(_mainLog, cancellationToken);
+        }
+
         _mainLog.WriteLine("Starting the app");
 
-        var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+        Task<ProcessExecutionResult> runTask = _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+
+        if (!waitForExit)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+            _mainLog.WriteLine("Not waiting for the app to exit");
+            return new ProcessExecutionResult
+            {
+                ExitCode = 0
+            };
+        }
+
+        var result = await runTask;
         simulatorScanToken?.Cancel();
         return result;
     }
