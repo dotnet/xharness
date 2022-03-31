@@ -247,6 +247,12 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             environmentalVariables,
             cancellationToken);
 
+        if (!waitForExit)
+        {
+            _logger.LogInformation("Not waiting for app to exit");
+            return ExitCode.SUCCESS;
+        }
+
         return ParseResult(_iOSExitCodeDetector, expectedExitCode, appBundleInfo, result);
     }
 
@@ -270,6 +276,12 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             passthroughArguments,
             environmentalVariables,
             cancellationToken: cancellationToken);
+
+        if (!waitForExit)
+        {
+            _logger.LogInformation("Not waiting for app to exit");
+            return ExitCode.SUCCESS;
+        }
 
         return ParseResult(_macCatalystExitCodeDetector, expectedExitCode, appBundleInfo, result);
     }
