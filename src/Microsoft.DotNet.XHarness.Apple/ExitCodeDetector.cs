@@ -68,7 +68,7 @@ public abstract class ExitCodeDetector : IExitCodeDetector
         return null;
     }
 
-    protected Regex EoLExitCodeRegex { get; } = new Regex(@" (?<exitCode>\-?[0-9]+)$", RegexOptions.Compiled);
+    protected Regex EoLExitCodeRegex { get; } = new Regex(@" (?<exitCode>-?[0-9]+)$", RegexOptions.Compiled);
 
     // Example line coming from app's stdout log stream
     // 2022-03-18 12:48:53.336 I  Microsoft.Extensions.Configuration.CommandLine.Tests[12477:10069] DOTNET.APP_EXIT_CODE: 0
@@ -85,16 +85,21 @@ public class iOSExitCodeDetector : ExitCodeDetector, IiOSExitCodeDetector
 {
     // Example line coming from the mlaunch log
     // [07:02:21.6637600] Application 'net.dot.iOS.Simulator.PInvoke.Test' terminated (with exit code '42' and/or crashing signal ').
-    private Regex DeviceExitCodeRegex { get; } = new Regex(@"terminated \(with exit code '(?<exitCode>\-?[0-9]+)' and/or crashing signal", RegexOptions.Compiled);
+    private Regex DeviceExitCodeRegex { get; } = new Regex(@"terminated \(with exit code '(?<exitCode>-?[0-9]+)' and/or crashing signal", RegexOptions.Compiled);
     
     protected override Match? IsSignalLine(AppBundleInformation appBundleInfo, string logLine)
     {
+        if (base.IsSignalLine(appBundleInfo, logLine) is Match match && match.Success)
+        {
+            return match;
+        }
+
         if (logLine.Contains(appBundleInfo.BundleIdentifier))
         {
             return DeviceExitCodeRegex.Match(logLine);
         }
 
-        return base.IsSignalLine(appBundleInfo, logLine);
+        return null;
     }
 }
 
