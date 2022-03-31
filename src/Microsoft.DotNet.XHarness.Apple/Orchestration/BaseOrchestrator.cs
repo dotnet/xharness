@@ -113,6 +113,12 @@ public abstract class BaseOrchestrator : IDisposable
             _logger.LogWarning("Including wireless devices while targeting a simulator has no effect");
         }
 
+        if (resetSimulator && !target.Platform.IsSimulator())
+        {
+            _logger.LogWarning("Targeting device but requesting simulator reset has no effect");
+            resetSimulator = false;
+        }
+
         ExitCode exitCode;
         IDevice device;
         IDevice? companionDevice;

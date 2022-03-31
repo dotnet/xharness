@@ -121,6 +121,16 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
     }
 
+    protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
+    {
+        if (!_waitForExit)
+        {
+            return Task.FromResult(ExitCode.SUCCESS);
+        }
+
+        return base.CleanUpSimulators(device, companionDevice);
+    }
+
     protected async Task<ExitCode> OrchestrateRun(
         GetAppBundleInfoFunc getAppBundleInfo,
         TestTargetOs target,
@@ -137,6 +147,11 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
     {
+        if (signalAppEnd && !waitForExit)
+        {
+            throw new InvalidOperationException("Cannot receive app end signal without waiting for it to exit");
+        }
+
         _waitForExit = waitForExit;
 
         // The --launch-timeout option must start counting now and not complete before we start running tests to succeed.
