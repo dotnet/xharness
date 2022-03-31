@@ -51,6 +51,8 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
     private readonly IErrorKnowledgeBase _errorKnowledgeBase;
     private readonly IAppRunner _appRunner;
 
+    private bool _waitForExit = true;
+
     public RunOrchestrator(
         IAppBundleInformationParser appBundleInformationParser,
         IAppInstaller appInstaller,
@@ -109,6 +111,16 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             passthroughArguments,
             cancellationToken);
 
+    protected override Task<ExitCode> UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
+    {
+        if (_waitForExit && !isPreparation)
+        {
+            return Task.FromResult(ExitCode.SUCCESS);
+        }
+
+        return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
+    }
+
     protected async Task<ExitCode> OrchestrateRun(
         GetAppBundleInfoFunc getAppBundleInfo,
         TestTargetOs target,
@@ -125,6 +137,8 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
     {
+        _waitForExit = waitForExit;
+
         // The --launch-timeout option must start counting now and not complete before we start running tests to succeed.
         // After then, this timeout must not interfere.
         // Tests start running inside of ExecuteApp() which means we have to time-constrain all operations happening inside
