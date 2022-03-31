@@ -113,7 +113,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
 
     protected override Task<ExitCode> UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
     {
-        if (_waitForExit && !isPreparation)
+        if (!_waitForExit && !isPreparation)
         {
             return Task.FromResult(ExitCode.SUCCESS);
         }
