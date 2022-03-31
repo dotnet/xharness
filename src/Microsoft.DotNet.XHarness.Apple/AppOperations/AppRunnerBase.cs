@@ -193,16 +193,16 @@ public abstract class AppRunnerBase
         _mainLog.WriteLine("Waiting for the app to launch..");
 
         var runTask = _processManager.ExecuteCommandAsync(mlaunchArguments, Log.CreateAggregatedLog(_mainLog, scanLog), timeout, cancellationToken: cancellationToken);
-        Task.WaitAny(
-            new Task[]
-            {
-                runTask,
-                appLaunched.Task
-            },
-            cancellationToken);
+        await Task.WhenAny(runTask, appLaunched.Task);
 
         if (!appLaunched.Task.IsCompleted)
         {
+            // In case the other task completes first, it is because one of these scenarios happened:
+            // - The app crashed and never launched
+            // - We missed the launch signal somehow and the app timed out
+            // - The app launched and quit immediately and race condition noticed that before the scan log did its job
+            // In all cases, we should return the result of the run task, it will be most likely 137 + Timeout (killed by us)
+            // If not, it will be a success because the app ran for a super short amount of time
             _mainLog.WriteLine("App launch was not detected in time");
             return runTask.Result;
         }

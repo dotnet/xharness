@@ -226,7 +226,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
             cancellationToken: cancellationToken));
     }
 
-    private MlaunchArguments GetCommonArguments(
+    private static MlaunchArguments GetCommonArguments(
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         string? appEndTag)
