@@ -174,13 +174,7 @@ public abstract class AppRunnerBase
 
         await crashReporter.StartCaptureAsync();
 
-        if (!waitForExit)
-        {
-            // Booting the simulator can take time and we want to fire&forget as close to the app launch as possible
-            await simulator.Boot(_mainLog, cancellationToken);
-        }
-
-        _mainLog.WriteLine("Starting the app");
+        _mainLog.WriteLine("Launching the app");
 
         if (waitForExit)
         {
