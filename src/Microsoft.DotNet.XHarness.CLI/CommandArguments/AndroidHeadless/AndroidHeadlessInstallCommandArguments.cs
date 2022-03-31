@@ -9,8 +9,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
 
 internal class AndroidHeadlessInstallCommandArguments : XHarnessCommandArguments, IAndroidHeadlessAppRunArguments
 {
-    public TestAppPathArgument TestAppPath { get; } = new();
-    public TestAppCommandArgument TestAppCommand { get; } = new();
+    public TestPathArgument TestPath { get; } = new();
+    public RuntimePathArgument RuntimePath { get; } = new();
+    public TestAssemblyArgument TestAssembly { get; } = new();
+    public TestScriptArgument TestScript { get; } = new();
     public OutputDirectoryArgument OutputDirectory { get; } = new();
     public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
     public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(5));
@@ -20,7 +22,10 @@ internal class AndroidHeadlessInstallCommandArguments : XHarnessCommandArguments
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
-        TestAppPath,
+        TestPath,
+        RuntimePath,
+        TestAssembly,
+        TestScript,
         OutputDirectory,
         Timeout,
         DeviceId,

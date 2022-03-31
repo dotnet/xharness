@@ -9,32 +9,32 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
 
 internal class AndroidHeadlessTestCommandArguments : XHarnessCommandArguments, IAndroidHeadlessAppRunArguments
 {
-    public TestAppPathArgument TestAppPath { get; } = new();
-    public TestAppCommandArgument TestAppCommand { get; } = new();
+    public TestPathArgument TestPath { get; } = new();
+    public RuntimePathArgument RuntimePath { get; } = new();
+    public TestAssemblyArgument TestAssembly { get; } = new();
+    public TestScriptArgument TestScript { get; } = new();
     public OutputDirectoryArgument OutputDirectory { get; } = new();
     public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
     public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(5));
     public DeviceIdArgument DeviceId { get; } = new();
     public DeviceArchitectureArgument DeviceArchitecture { get; } = new();
     public ApiVersionArgument ApiVersion { get; } = new();
-    public TestAppArguments TestAppArguments { get; } = new();
-    public TestAppEnvironmentVariables TestAppEnvironment { get; } = new();
     public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
     public DeviceOutputFolderArgument DeviceOutputFolder { get; } = new();
     public WifiArgument Wifi { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
-        TestAppPath,
-        TestAppCommand,
+        TestPath,
+        RuntimePath,
+        TestAssembly,
+        TestScript,
         OutputDirectory,
         Timeout,
         LaunchTimeout,
         DeviceArchitecture,
         DeviceId,
         ApiVersion,
-        TestAppArguments,
-        TestAppEnvironment,
         ExpectedExitCode,
         DeviceOutputFolder,
         Wifi,

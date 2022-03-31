@@ -39,7 +39,7 @@ Arguments:
                 loadArchitecture: true,
                 loadApiVersion: true,
                 requiredDeviceId: Arguments.DeviceId,
-                requiredInstalledApp: "filename:" + Arguments.TestAppPath);
+                requiredInstalledApp: "filename:" + Arguments.TestPath);
 
             if (device is null)
             {
@@ -50,7 +50,8 @@ Arguments:
 
             logger.LogDebug($"Working with {device.DeviceSerial} (API {device.ApiVersion})");
 
-            runner.DeleteHeadlessFolder(Arguments.TestAppPath);
+            runner.DeleteHeadlessFolder(Arguments.TestPath);
+            runner.DeleteHeadlessFolder("runtime");
             return ExitCode.SUCCESS;
         }
     }

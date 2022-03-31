@@ -30,9 +30,15 @@ Arguments:
 
     protected override ExitCode InvokeCommand(ILogger logger)
     {
-        if (!Directory.Exists(Arguments.TestAppPath))
+        if (!Directory.Exists(Arguments.TestPath))
         {
-            logger.LogCritical($"Couldn't find {Arguments.TestAppPath}!");
+            logger.LogCritical($"Couldn't find test {Arguments.TestPath}!");
+            return ExitCode.PACKAGE_NOT_FOUND;
+        }
+
+        if (!Directory.Exists(Arguments.RuntimePath))
+        {
+            logger.LogCritical($"Couldn't find shared runtime {Arguments.RuntimePath}!");
             return ExitCode.PACKAGE_NOT_FOUND;
         }
 
@@ -52,7 +58,8 @@ Arguments:
 
         return InvokeHelper(
             logger: logger,
-            testAppPath: Arguments.TestAppPath,
+            testPath: Arguments.TestPath,
+            runtimePath: Arguments.RuntimePath,
             testRequiredArchitecture: testRequiredArchitecture,
             deviceId: Arguments.DeviceId,
             apiVersion: Arguments.ApiVersion.Value,
@@ -63,7 +70,8 @@ Arguments:
 
     public static ExitCode InvokeHelper(
         ILogger logger,
-        string testAppPath,
+        string testPath,
+        string runtimePath,
         IEnumerable<string> testRequiredArchitecture,
         string? deviceId,
         int? apiVersion,
@@ -100,15 +108,20 @@ Arguments:
             // If anything changed about the app, Install will fail; uninstall it first.
             // (we'll ignore if it's not present)
             // This is where mismatched architecture APKs fail.
-            runner.DeleteHeadlessFolder(testAppPath);
-            if (runner.CopyHeadlessFolder(testAppPath) != 0)
+            runner.DeleteHeadlessFolder(testPath);
+            runner.DeleteHeadlessFolder("runtime");
+            if (runner.CopyHeadlessFolder(testPath) != 0)
             {
                 logger.LogCritical("Install failure: Test command cannot continue");
-                runner.DeleteHeadlessFolder(testAppPath);
+                runner.DeleteHeadlessFolder(testPath);
                 return ExitCode.PACKAGE_INSTALLATION_FAILURE;
             }
-
-            runner.KillProcess(nameof(testAppPath));
+            if (runner.CopyHeadlessFolder(runtimePath, true) != 0)
+            {
+                logger.LogCritical("Install failure: Test command cannot continue");
+                runner.DeleteHeadlessFolder("runtime");
+                return ExitCode.PACKAGE_INSTALLATION_FAILURE;
+            }
         }
         return ExitCode.SUCCESS;
     }

@@ -6,8 +6,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
 
 internal interface IAndroidHeadlessAppRunArguments
 {
-    TestAppPathArgument TestAppPath { get; }
-    TestAppCommandArgument TestAppCommand { get; }
+    TestPathArgument TestPath { get; }
+    RuntimePathArgument RuntimePath { get; }
+    TestAssemblyArgument TestAssembly { get; }
+    TestScriptArgument TestScript { get; }
     OutputDirectoryArgument OutputDirectory { get; }
     TimeoutArgument Timeout { get; }
     LaunchTimeoutArgument LaunchTimeout { get; }

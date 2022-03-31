@@ -34,16 +34,15 @@ Arguments:
 
     protected override ExitCode InvokeCommand(ILogger logger)
     {
-        if (!File.Exists(Arguments.TestAppPath))
+        if (!Directory.Exists(Arguments.TestPath))
         {
-            logger.LogCritical($"Couldn't find {Arguments.TestAppPath}!");
+            logger.LogCritical($"Couldn't find test {Arguments.TestPath}!");
             return ExitCode.PACKAGE_NOT_FOUND;
         }
-
-        if (string.IsNullOrEmpty(Arguments.TestAppCommand))
+        if (!Directory.Exists(Arguments.RuntimePath))
         {
-            logger.LogCritical($"Did not specify a test command");
-            return ExitCode.INVALID_ARGUMENTS;
+            logger.LogCritical($"Couldn't find shared runtime {Arguments.RuntimePath}!");
+            return ExitCode.PACKAGE_NOT_FOUND;
         }
 
         IEnumerable<string> testRequiredArchitecture = Arguments.DeviceArchitecture.Value;
@@ -54,7 +53,8 @@ Arguments:
 
         var exitCode = AndroidHeadlessInstallCommand.InvokeHelper(
             logger: logger,
-            testAppPath: Arguments.TestAppPath,
+            testPath: Arguments.TestPath,
+            runtimePath: Arguments.RuntimePath,
             testRequiredArchitecture: testRequiredArchitecture,
             deviceId: Arguments.DeviceId.Value,
             apiVersion: Arguments.ApiVersion.Value,
@@ -66,10 +66,10 @@ Arguments:
         {
             exitCode = AndroidHeadlessRunCommand.InvokeHelper(
                 logger: logger,
-                testAppCommand: Arguments.TestAppCommand,
-                testAppPath: Arguments.TestAppPath,
-                testAppArguments: Arguments.TestAppArguments,
-                testAppEnvironment: Arguments.TestAppEnvironment,
+                testPath: Arguments.TestPath,
+                runtimePath: Arguments.RuntimePath,
+                testAssembly: Arguments.TestAssembly,
+                testScript: Arguments.TestScript,
                 outputDirectory: Arguments.OutputDirectory,
                 deviceOutputFolder: Arguments.DeviceOutputFolder,
                 timeout: Arguments.Timeout,
@@ -78,7 +78,8 @@ Arguments:
                 runner: runner);
         }
 
-        runner.DeleteHeadlessFolder(Arguments.TestAppPath);
+        runner.DeleteHeadlessFolder(Arguments.TestPath);
+        runner.DeleteHeadlessFolder(Arguments.RuntimePath);
         return exitCode;
     }
 }

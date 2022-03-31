@@ -253,7 +253,7 @@ public class AdbRunner
 
     public void KillAdbServer() => RunAdbCommand(new[] { "kill-server" }).ThrowIfFailed("Error killing ADB Server");
 
-    public int CopyHeadlessFolder(string testPath)
+    public int CopyHeadlessFolder(string testPath, bool sharedRuntime = false)
     {
         _log.LogInformation($"Attempting to install {testPath}");
 
@@ -267,8 +267,13 @@ public class AdbRunner
             throw new FileNotFoundException($"Could not find {testPath}", testPath);
         }
 
-        var result = RunAdbCommand(new[] { "push", testPath, GlobalReadWriteDirectory });
         var targetDirectory = Path.Combine(GlobalReadWriteDirectory, new DirectoryInfo(testPath).Name);
+        if (sharedRuntime)
+        {
+            targetDirectory = Path.Combine(GlobalReadWriteDirectory, "runtime");
+        }
+        var result = RunAdbCommand(new[] { "push", testPath, targetDirectory });
+
 
         // Two possible retry scenarios, theoretically both can happen on the same run:
 
@@ -278,7 +283,7 @@ public class AdbRunner
             _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install");
             KillAdbServer();
             StartAdbServer();
-            result = RunAdbCommand(new[] { "push", testPath, GlobalReadWriteDirectory });
+            result = RunAdbCommand(new[] { "push", testPath, targetDirectory });
         }
 
         // 2. Installation cache on device is messed up; restarting the device reliably seems to unblock this (unless the device is actually full, if so this will error the same)
@@ -287,7 +292,7 @@ public class AdbRunner
             _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{Environment.NewLine}Output:{result}");
             RebootAndroidDevice();
             WaitForDevice();
-            result = RunAdbCommand(new[] { "push", testPath, GlobalReadWriteDirectory });
+            result = RunAdbCommand(new[] { "push", testPath, targetDirectory });
         }
 
         // 3. Installation timed out or failed with exception; restarting the ADB server, reboot the device and give more time for installation
@@ -299,7 +304,7 @@ public class AdbRunner
             StartAdbServer();
             RebootAndroidDevice();
             WaitForDevice();
-            result = RunAdbCommand(new[] { "push", testPath, GlobalReadWriteDirectory }, TimeSpan.FromMinutes(10));
+            result = RunAdbCommand(new[] { "push", testPath, targetDirectory }, TimeSpan.FromMinutes(10));
         }
 
         if (result.ExitCode != 0)
@@ -955,19 +960,19 @@ public class AdbRunner
         }
     }
 
-    public ProcessExecutionResults RunHeadlessCommand(string testPath, string testCommand, List<string> args, Dictionary<string, string> env, TimeSpan timeout)
+    public ProcessExecutionResults RunHeadlessCommand(string testPath, string runtimePath, string testAssembly, string testScript, TimeSpan timeout)
     {
-        var localTestPath = Path.Combine(GlobalReadWriteDirectory, new DirectoryInfo(testPath).Name);
+        var localTestPath = Path.Combine(GlobalReadWriteDirectory, new DirectoryInfo(testPath).Name, testScript);
+        var localRuntimePath = Path.Combine(GlobalReadWriteDirectory, "runtime", "dotnet");
         var adbArgs = new List<string>
         {
-            "shell"
+            "shell",
         };
 
-        _log.LogInformation($"Starting {testCommand} from {localTestPath} (exit code 0 == success)");
-        var fullTestPath = Path.Combine(localTestPath, testCommand);
-        adbArgs.AddRange(env.SelectMany(var => new[] {var.Key + "=" + var.Value}));
-        adbArgs.Add(fullTestPath);
-        adbArgs.AddRange(args);
+        _log.LogInformation($"Starting {testScript} from {localTestPath} (exit code 0 == success)");
+        adbArgs.Add(localTestPath);
+        adbArgs.Add("-r");
+        adbArgs.Add(localRuntimePath);
         
         var stopWatch = Stopwatch.StartNew();
         var result = RunAdbCommand(adbArgs, timeout);
@@ -975,15 +980,15 @@ public class AdbRunner
 
         if (result.ExitCode == (int)AdbExitCodes.COMMAND_NOT_FOUND)
         {
-            _log.LogInformation($"Could not find command {fullTestPath}");
+            _log.LogInformation($"Could not find command {localTestPath}");
         }
         else if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
         {
-            _log.LogInformation($"Running command {testCommand} timed out after waiting {stopWatch.Elapsed.TotalSeconds} seconds");
+            _log.LogInformation($"Running command {testScript} timed out after waiting {stopWatch.Elapsed.TotalSeconds} seconds");
         }
         else
         {
-            _log.LogInformation($"Running command {testCommand} took {stopWatch.Elapsed.TotalSeconds} seconds");
+            _log.LogInformation($"Running command {testScript} took {stopWatch.Elapsed.TotalSeconds} seconds");
         }
 
         _log.LogDebug(result.ToString());

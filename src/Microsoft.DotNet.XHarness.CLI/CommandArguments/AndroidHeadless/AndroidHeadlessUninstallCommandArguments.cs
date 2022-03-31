@@ -8,12 +8,14 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
 
 internal class AndroidHeadlessUninstallCommandArguments : XHarnessCommandArguments
 {
-    public TestAppPathArgument TestAppPath { get; } = new();
+    public TestPathArgument TestPath { get; } = new();
+    public RuntimePathArgument RuntimePath { get; } = new();
     public DeviceIdArgument DeviceId { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
-            TestAppPath,
+            TestPath,
+            RuntimePath,
             DeviceId,
     };
 }

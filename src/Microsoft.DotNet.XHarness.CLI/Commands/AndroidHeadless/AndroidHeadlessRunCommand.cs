@@ -25,7 +25,7 @@ internal class AndroidHeadlessRunCommand : AndroidHeadlessCommand<AndroidHeadles
 
     protected override AndroidHeadlessRunCommandArguments Arguments { get; } = new();
 
-    protected override string CommandUsage { get; } = "android-headless run --output-directory=... --test-command=... [OPTIONS]";
+    protected override string CommandUsage { get; } = "android-headless run --output-directory=... --test-assembly=... [OPTIONS]";
 
     private const string CommandHelp = "Run tests using an already installed executable on an Android device";
     protected override string CommandDescription { get; } = @$"
@@ -46,7 +46,7 @@ Arguments:
         runner.StartAdbServer();
 
         var device = string.IsNullOrEmpty(Arguments.DeviceId.Value)
-            ? runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredInstalledApp: "filename:" + Arguments.TestAppPath)
+            ? runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredInstalledApp: "filename:" + Arguments.TestPath)
             : runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredDeviceId: Arguments.DeviceId.Value);
 
         if (device is null)
@@ -63,10 +63,10 @@ Arguments:
 
         return InvokeHelper(
             logger,
-            Arguments.TestAppCommand,
-            Arguments.TestAppPath,
-            Arguments.TestAppArguments,
-            Arguments.TestAppEnvironment,
+            Arguments.TestPath,
+            Arguments.RuntimePath,
+            Arguments.TestAssembly,
+            Arguments.TestScript,
             Arguments.OutputDirectory,
             Arguments.DeviceOutputFolder,
             Arguments.Timeout,
@@ -77,10 +77,10 @@ Arguments:
 
     public static ExitCode InvokeHelper(
         ILogger logger,
-        string testAppCommand,
-        string testAppPath,
-        List<string> testAppArguments,
-        Dictionary<string, string> testAppEnvironment,
+        string testPath,
+        string runtimePath,
+        string testAssembly,
+        string testScript,
         string outputDirectory,
         string? deviceOutputFolder,
         TimeSpan timeout,
@@ -102,10 +102,10 @@ Arguments:
 
         // No class name = default Instrumentation
         ProcessExecutionResults? result = runner.RunHeadlessCommand(
-            testAppPath,
-            testAppCommand,
-            testAppArguments,
-            testAppEnvironment,
+            testPath,
+            runtimePath,
+            testAssembly,
+            testScript,
             timeout);
 
         bool processCrashed = false;
@@ -127,7 +127,7 @@ Arguments:
                         logger.LogInformation($"Found XML result file: '{resultValues[possibleResultKey]}'(key: {possibleResultKey})");
                         try
                         {
-                            runner.PullFiles(testAppCommand, resultValues[possibleResultKey], outputDirectory);
+                            runner.PullFiles(testAssembly, resultValues[possibleResultKey], outputDirectory);
                         }
                         catch (Exception toLog)
                         {
@@ -175,7 +175,7 @@ Arguments:
             {
                 try
                 {
-                    var logs = runner.PullFiles(testAppCommand, deviceOutputFolder, outputDirectory);
+                    var logs = runner.PullFiles(testAssembly, deviceOutputFolder, outputDirectory);
                     foreach (string log in logs)
                     {
                         logger.LogDebug($"Found output file: {log}");
@@ -188,11 +188,11 @@ Arguments:
                 }
             }
 
-            runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{testAppCommand}-default.log"));
+            runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{testAssembly}-default.log"));
 
             if (processCrashed)
             {
-                runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{testAppCommand}"));
+                runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{testAssembly}"));
             }
         }
 

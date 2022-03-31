@@ -4,10 +4,10 @@
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
 
-internal class TestAppCommandArgument : RequiredStringArgument
+internal class TestPathArgument : RequiredStringArgument
 {
-    public TestAppCommandArgument()
-        : base("test-command=|c=", "Command to start the test")
+    public TestPathArgument()
+        : base("test-path=|p=", "Path to the test base folder")
     {
     }
 }
