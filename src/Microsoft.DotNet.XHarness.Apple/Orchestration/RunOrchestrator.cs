@@ -300,8 +300,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         {
             if (expectedExitCode != 0)
             {
-                _logger.LogError("Application has finished but XHarness failed to determine its exit code! " +
-                    "This is a known issue, please run the app again.");
+                _logger.LogError("Application has finished but XHarness failed to determine its exit code!");
                 return ExitCode.RETURN_CODE_NOT_SET;
             }
 
