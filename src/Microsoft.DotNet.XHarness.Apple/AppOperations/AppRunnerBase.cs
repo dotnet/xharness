@@ -82,7 +82,10 @@ public abstract class AppRunnerBase
         var lsRegisterPath = @"/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister";
         await _processManager.ExecuteCommandAsync(lsRegisterPath, new[] { "-f", appInfo.LaunchAppPath }, _mainLog, TimeSpan.FromSeconds(10), cancellationToken: cancellationToken);
 
-        var arguments = new List<string>();
+        var arguments = new List<string>
+        {
+            "-n" // Open a new instance of the application(s) even if one is already running.
+        };
 
         if (waitForExit)
         {
