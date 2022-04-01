@@ -82,19 +82,22 @@ public abstract class AppRunnerBase
         var lsRegisterPath = @"/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister";
         await _processManager.ExecuteCommandAsync(lsRegisterPath, new[] { "-f", appInfo.LaunchAppPath }, _mainLog, TimeSpan.FromSeconds(10), cancellationToken: cancellationToken);
 
-        var arguments = new List<string>
-        {
-            "-W", // Wait until the applications exit (even if they were already open)
-            appInfo.LaunchAppPath
-        };
+        var arguments = new List<string>();
 
+        if (waitForExit)
+        {
+            // Wait until the applications exit (even if they were already open)
+            arguments.Add("-W");
+        }
+
+        arguments.Add(appInfo.LaunchAppPath);
         arguments.AddRange(extraArguments);
 
         systemLog.StartCapture();
 
         try
         {
-            var runTask = _processManager.ExecuteCommandAsync(
+            return await _processManager.ExecuteCommandAsync(
                 "open",
                 arguments,
                 _mainLog,
@@ -103,23 +106,13 @@ public abstract class AppRunnerBase
                 timeout,
                 environmentVariables,
                 cancellationToken);
-
-            if (!waitForExit)
-            {
-                // TODO: Deal with --no-wait by waiting for some launch signal
-                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
-                _mainLog.WriteLine("Not waiting for the app to exit");
-                return new ProcessExecutionResult
-                {
-                    ExitCode = 0
-                };
-            }
-
-            return await runTask;
         }
         finally
         {
-            systemLog.StopCapture(waitIfEmpty: TimeSpan.FromSeconds(10));
+            if (waitForExit)
+            {
+                systemLog.StopCapture(waitIfEmpty: TimeSpan.FromSeconds(10));
+            }
         }
     }
 

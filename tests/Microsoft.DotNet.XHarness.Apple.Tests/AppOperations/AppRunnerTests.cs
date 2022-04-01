@@ -597,6 +597,63 @@ public class AppRunnerTests : AppRunTestBase
         captureLog.Verify(x => x.StartCapture(), Times.AtLeastOnce);
     }
 
+    [Fact]
+    public async Task RunOnMacCatalystNoWaitTest()
+    {
+        var captureLog = new Mock<ICaptureLog>();
+        captureLog.SetupGet(x => x.FullPath).Returns(_simulatorLogPath);
+        captureLog.SetupGet(x => x.Description).Returns(LogType.SystemLog.ToString());
+
+        var captureLogFactory = new Mock<ICaptureLogFactory>();
+        captureLogFactory
+            .Setup(x => x.Create(
+               It.IsAny<string>(),
+               It.IsAny<string>(),
+               false,
+               LogType.SystemLog))
+            .Returns(captureLog.Object);
+
+        SetupLogList(new[] { captureLog.Object });
+
+        // Act
+        var appRunner = new AppRunner(
+            _processManager.Object,
+            _snapshotReporterFactory,
+            captureLogFactory.Object,
+            Mock.Of<IDeviceLogCapturerFactory>(),
+            _mainLog.Object,
+            _logs.Object,
+            _helpers.Object);
+
+        var result = await appRunner.RunMacCatalystApp(
+            _appBundleInfo,
+            timeout: TimeSpan.FromSeconds(30),
+            signalAppEnd: false,
+            waitForExit: false,
+            extraAppArguments: Array.Empty<string>(),
+            extraEnvVariables: Array.Empty<(string, string)>());
+
+        // Verify
+        Assert.True(result.Succeeded);
+
+        var expectedArgs = GetExpectedSimulatorMlaunchArgs();
+
+        _processManager
+            .Verify(
+                x => x.ExecuteCommandAsync(
+                   "open",
+                   It.Is<IList<string>>(args => args.Count == 1 && args[0] == s_appPath),
+                   _mainLog.Object,
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
+                   It.IsAny<TimeSpan>(),
+                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<CancellationToken>()),
+                Times.Once);
+
+        captureLog.Verify(x => x.StartCapture(), Times.AtLeastOnce);
+    }
+
     private static string GetExpectedDeviceMlaunchArgs() =>
         "-argument=--foo=bar " +
         "-argument=--xyz " +
