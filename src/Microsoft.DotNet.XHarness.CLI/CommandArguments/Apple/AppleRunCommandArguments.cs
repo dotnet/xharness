@@ -49,7 +49,7 @@ internal class AppleRunCommandArguments : XHarnessCommandArguments, IAppleAppRun
     {
         base.Validate();
 
-        if (SignalAppEnd && !NoWait)
+        if (SignalAppEnd && NoWait)
         {
             throw new ArgumentException("--signal-app-end cannot be used in combination with --no-wait");
         }

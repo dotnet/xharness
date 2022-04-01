@@ -51,7 +51,7 @@ internal class AppleJustRunCommandArguments : XHarnessCommandArguments, IAppleAp
             throw new ArgumentException("This command is not supported with the maccatalyst target");
         }
 
-        if (SignalAppEnd && !NoWait)
+        if (SignalAppEnd && NoWait)
         {
             throw new ArgumentException("--signal-app-end cannot be used in combination with --no-wait");
         }
