@@ -312,7 +312,7 @@ public class AppRunnerTests : AppRunTestBase
             .Verify(
                 x => x.ExecuteCommandAsync(
                    "open",
-                   It.Is<IList<string>>(args => args[0] == "-W" && args[1] == s_appPath),
+                   It.Is<IList<string>>(args => args[0] == "-n" && args[1] == "-W" && args[2] == s_appPath),
                    _mainLog.Object,
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
@@ -642,7 +642,7 @@ public class AppRunnerTests : AppRunTestBase
             .Verify(
                 x => x.ExecuteCommandAsync(
                    "open",
-                   It.Is<IList<string>>(args => args.Count == 1 && args[0] == s_appPath),
+                   It.Is<IList<string>>(args => args.Count == 2 && args[0] == "-n" && args[1] == s_appPath),
                    _mainLog.Object,
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
