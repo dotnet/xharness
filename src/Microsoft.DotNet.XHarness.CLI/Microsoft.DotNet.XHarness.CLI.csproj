@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
@@ -60,7 +60,7 @@
     <RemoveDir Directories="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/systrace" />
   </Target>
 
-  <Target Name="IncludeAdb" BeforeTargets="Build" DependsOnTargets="DownloadAdb">
+  <Target Name="IncludeAdb" BeforeTargets="DispatchToInnerBuilds" DependsOnTargets="DownloadAdb">
     <ItemGroup>
       <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb.exe" />
       <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/AdbWinApi.dll" />
@@ -86,7 +86,7 @@
   </Target>
 
   <!-- The ExtractMlaunch target comes from the Mlaunch NuGet package and places files in the obj/ dir -->
-  <Target Name="IncludeMlaunch" BeforeTargets="Build" DependsOnTargets="ExtractMlaunch">
+  <Target Name="IncludeMlaunch" BeforeTargets="Build" DependsOnTargets="ExtractMlaunch" Condition=" '$(TargetFramework)' == 'net7.0' ">
     <ItemGroup>
       <Content Include="$(BaseIntermediateOutputPath)/mlaunch/**/*.*">
         <Pack>true</Pack>
