@@ -171,11 +171,11 @@ The easiest way to get these at the moment for development purposes is to build 
 dotnet build src/Microsoft.DotNet.XHarness.CLI/Microsoft.DotNet.XHarness.CLI.csproj
 ```
 
-You can then find these dependencies in `artifacts/obj/Microsoft.DotNet.XHarness.CLI/Debug/net6.0`.
+You can then find these dependencies in `artifacts/obj/Microsoft.DotNet.XHarness.CLI/`.
 
 For iOS flows, you can further store the path to mlaunch to an environmental variable `XHARNESS_MLAUNCH_PATH`
 ```
-export XHARNESS_MLAUNCH_PATH='[xharness root]/artifacts/obj/Microsoft.DotNet.XHarness.CLI/Debug/net6.0/mlaunch/bin/mlaunch'
+export XHARNESS_MLAUNCH_PATH='[xharness root]/artifacts/obj/Microsoft.DotNet.XHarness.CLI/mlaunch/bin/mlaunch'
 ```
 and you won't have to specify the `--mlaunch` argument.
 
