@@ -86,7 +86,8 @@
   </Target>
 
   <!-- The ExtractMlaunch target comes from the Mlaunch NuGet package and places files in the obj/ dir -->
-  <Target Name="IncludeMlaunch" BeforeTargets="Build" DependsOnTargets="ExtractMlaunch" Condition=" '$(TargetFramework)' == 'net7.0' ">
+  <!-- This target used to depend on ExtractMlaunch but it broke when we started multi-targeting XHarness -->
+  <Target Name="IncludeMlaunch" BeforeTargets="_GetPackageFiles">
     <ItemGroup>
       <Content Include="$(BaseIntermediateOutputPath)/mlaunch/**/*.*">
         <Pack>true</Pack>
