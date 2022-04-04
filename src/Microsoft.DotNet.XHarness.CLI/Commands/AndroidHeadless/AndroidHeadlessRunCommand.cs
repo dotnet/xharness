@@ -88,8 +88,6 @@ Arguments:
         WifiStatus wifi,
         AdbRunner runner)
     {
-        int instrumentationExitCode = (int)ExitCode.GENERAL_FAILURE;
-
         logger.LogDebug($"Working with API {runner.GetAdbVersion()}");
 
         // Empty log as we'll be uploading the full logcat for this execution
@@ -115,77 +113,15 @@ Arguments:
         {
             if (result.ExitCode == (int)ExitCode.SUCCESS)
             {
-                Dictionary<string, string> resultValues;
-                // This is where test instrumentation can communicate outwardly that test execution failed
-                (resultValues, instrumentationExitCode) = ParseStandardOutput(logger, result.StandardOutput);
+                var testResultPath = Path.Combine(AdbRunner.GlobalReadWriteDirectory, new DirectoryInfo(testPath).Name, "testResults.xml");
 
-                // Pull XUnit result XMLs off the device
-                foreach (string possibleResultKey in s_xmlOutputVariableNames)
-                {
-                    if (resultValues.ContainsKey(possibleResultKey))
-                    {
-                        logger.LogInformation($"Found XML result file: '{resultValues[possibleResultKey]}'(key: {possibleResultKey})");
-                        try
-                        {
-                            runner.PullFiles(testAssembly, resultValues[possibleResultKey], outputDirectory);
-                        }
-                        catch (Exception toLog)
-                        {
-                            logger.LogError(toLog, "Hit error (typically permissions) trying to pull {filePathOnDevice}", resultValues[possibleResultKey]);
-                            failurePullingFiles = true;
-                        }
-                    }
-                }
-
-                if (resultValues.ContainsKey(TestRunSummaryVariableName))
-                {
-                    logger.LogInformation($"Test execution summary:{Environment.NewLine}{resultValues[TestRunSummaryVariableName]}");
-                }
-
-                if (resultValues.ContainsKey(ShortMessageVariableName))
-                {
-                    logger.LogInformation($"Short Message: {Environment.NewLine}{resultValues[ShortMessageVariableName]}");
-                    processCrashed = resultValues[ShortMessageVariableName].Contains(ProcessCrashedShortMessage);
-                }
-
-                // Due to the particulars of how instrumentations work, ADB will report a 0 exit code for crashed instrumentations
-                // We'll change that to a specific value and print a message explaining why.
-                if (resultValues.ContainsKey(ReturnCodeVariableName))
-                {
-                    if (int.TryParse(resultValues[ReturnCodeVariableName], out int bundleExitCode))
-                    {
-                        logger.LogInformation($"Instrumentation finished normally with exit code {bundleExitCode}");
-                        instrumentationExitCode = bundleExitCode;
-                    }
-                    else
-                    {
-                        logger.LogError($"Un-parse-able value for '{ReturnCodeVariableName}' : '{resultValues[ReturnCodeVariableName]}'");
-                        instrumentationExitCode = (int)ExitCode.RETURN_CODE_NOT_SET;
-                    }
-                }
-                else
-                {
-                    logger.LogError($"No value for '{ReturnCodeVariableName}' provided in instrumentation result.  This may indicate a crashed test (see log)");
-                    instrumentationExitCode = (int)ExitCode.RETURN_CODE_NOT_SET;
-                }
+                logger.LogInformation($"Trying to pull results file {testResultPath}");
+                runner.HeadlessPullFiles(testResultPath, outputDirectory);
             }
-
-            // Optionally copy off an entire folder
-            if (!string.IsNullOrEmpty(deviceOutputFolder))
+            else
             {
-                try
-                {
-                    var logs = runner.PullFiles(testAssembly, deviceOutputFolder, outputDirectory);
-                    foreach (string log in logs)
-                    {
-                        logger.LogDebug($"Found output file: {log}");
-                    }
-                }
-                catch (Exception toLog)
-                {
-                    logger.LogError(toLog, "Hit error (typically permissions) trying to pull {filePathOnDevice}", deviceOutputFolder);
-                    failurePullingFiles = true;
-                }
+                logger.LogError($"Non-success exit code: {result.ExitCode}, expected: {expectedExitCode}");
+                return ExitCode.TESTS_FAILED;
             }
 
             runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{testAssembly}-default.log"));
@@ -196,14 +132,9 @@ Arguments:
             }
         }
 
-        if (instrumentationExitCode != expectedExitCode)
+        if (failurePullingFiles)
         {
-            logger.LogError($"Non-success instrumentation exit code: {instrumentationExitCode}, expected: {expectedExitCode}");
-            return ExitCode.TESTS_FAILED;
-        }
-        else if (failurePullingFiles)
-        {
-            logger.LogError($"Received expected instrumentation exit code ({instrumentationExitCode}), but we hit errors pulling files from the device (see log for details.)");
+            logger.LogError($"Hit errors pulling files from the device (see log for details.)");
             return ExitCode.DEVICE_FILE_COPY_FAILURE;
         }
 

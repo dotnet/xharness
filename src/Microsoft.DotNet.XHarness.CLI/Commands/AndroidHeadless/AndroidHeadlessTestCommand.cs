@@ -79,7 +79,7 @@ Arguments:
         }
 
         runner.DeleteHeadlessFolder(Arguments.TestPath);
-        runner.DeleteHeadlessFolder(Arguments.RuntimePath);
+        runner.DeleteHeadlessFolder("runtime");
         return exitCode;
     }
 }

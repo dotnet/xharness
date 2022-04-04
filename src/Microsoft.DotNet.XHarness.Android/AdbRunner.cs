@@ -41,7 +41,7 @@ public class AdbRunner
     private const string AdbInstallBrokenPipeError = "Failure calling service package: Broken pipe";
     private const string AdbInstallException = "Exception occurred while executing 'install':";
 
-    private const string GlobalReadWriteDirectory = "/data/local/tmp";
+    public const string GlobalReadWriteDirectory = "/data/local/tmp";
 
     private readonly string _absoluteAdbExePath;
     private readonly ILogger _log;
@@ -564,6 +564,26 @@ public class AdbRunner
         }
     }
 
+        // Assumes the directory is empty so any files present after the pull are new.
+    public int HeadlessPullFiles(string devicePath, string localPath)
+    {
+        if (string.IsNullOrEmpty(localPath))
+        {
+            throw new ArgumentNullException(nameof(localPath));
+        }
+
+        Directory.CreateDirectory(localPath);
+        _log.LogInformation($"Attempting to pull contents of {devicePath} to {localPath}");
+
+        var result = RunAdbCommand(new[] { "pull", devicePath, localPath });
+
+        if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
+        {
+            _log.LogError($"Failed to pull file.");
+        }
+        return (int)AdbExitCodes.SUCCESS;
+    }
+
     /// <summary>
     /// Gets all attached devices and their properties.
     /// </summary>
@@ -973,18 +993,14 @@ public class AdbRunner
         adbArgs.Add(localTestPath);
         adbArgs.Add("-r");
         adbArgs.Add(localRuntimePath);
-        
+
         var stopWatch = Stopwatch.StartNew();
         var result = RunAdbCommand(adbArgs, timeout);
         stopWatch.Stop();
 
-        if (result.ExitCode == (int)AdbExitCodes.COMMAND_NOT_FOUND)
+        if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
         {
-            _log.LogInformation($"Could not find command {localTestPath}");
-        }
-        else if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
-        {
-            _log.LogInformation($"Running command {testScript} timed out after waiting {stopWatch.Elapsed.TotalSeconds} seconds");
+            _log.LogInformation($"An error occurred running {testScript}");
         }
         else
         {
