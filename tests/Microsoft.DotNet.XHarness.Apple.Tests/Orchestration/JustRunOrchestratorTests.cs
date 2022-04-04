@@ -73,6 +73,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
                 null,
                 TimeSpan.FromMinutes(30),
                 false,
+                true,
                 It.IsAny<IEnumerable<string>>(),
                 envVars,
                 It.IsAny<CancellationToken>()))
@@ -94,6 +95,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
             includeWirelessDevices: false,
             enableLldb: false,
             signalAppEnd: false,
+            waitForExit: true,
             envVars,
             Array.Empty<string>(),
             new CancellationToken());
@@ -139,6 +141,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
                 null,
                 TimeSpan.FromMinutes(30),
                 false,
+                true,
                 extraArguments,
                 It.IsAny<IEnumerable<(string, string)>>(),
                 It.IsAny<CancellationToken>()))
@@ -160,6 +163,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
             includeWirelessDevices: true,
             enableLldb: false,
             signalAppEnd: false,
+            waitForExit: true,
             Array.Empty<(string, string)>(),
             extraArguments,
             new CancellationToken());
@@ -195,6 +199,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
                 null,
                 TimeSpan.FromMinutes(30),
                 false,
+                true,
                 It.IsAny<IEnumerable<string>>(),
                 It.IsAny<IEnumerable<(string, string)>>(),
                 It.IsAny<CancellationToken>()))
@@ -218,6 +223,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
             includeWirelessDevices: false,
             enableLldb: true,
             signalAppEnd: false,
+            waitForExit: true,
             Array.Empty<(string, string)>(),
             Array.Empty<string>(),
             new CancellationToken());
@@ -263,6 +269,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
                 null,
                 TimeSpan.FromMinutes(30),
                 true,
+                true,
                 extraArguments,
                 It.IsAny<IEnumerable<(string, string)>>(),
                 It.IsAny<CancellationToken>()))
@@ -290,6 +297,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
             includeWirelessDevices: true,
             enableLldb: false,
             signalAppEnd: true,
+            waitForExit: true,
             Array.Empty<(string, string)>(),
             extraArguments,
             new CancellationToken());
@@ -333,6 +341,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
                 It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier),
                 TimeSpan.FromMinutes(30),
                 true,
+                true,
                 It.IsAny<IEnumerable<string>>(),
                 envVars,
                 It.IsAny<CancellationToken>()))
@@ -354,6 +363,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
             includeWirelessDevices: false,
             enableLldb: false,
             signalAppEnd: true,
+            waitForExit: true,
             envVars,
             Array.Empty<string>(),
             new CancellationToken());

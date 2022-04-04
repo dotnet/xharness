@@ -31,6 +31,7 @@ public interface IRunOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
+        bool waitForExit,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken);
@@ -49,6 +50,8 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
     private readonly ILogs _logs;
     private readonly IErrorKnowledgeBase _errorKnowledgeBase;
     private readonly IAppRunner _appRunner;
+
+    private bool _waitForExit = true;
 
     public RunOrchestrator(
         IAppBundleInformationParser appBundleInformationParser,
@@ -88,6 +91,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
+        bool waitForExit,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
@@ -95,16 +99,37 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             (target, device, ct) => GetAppBundleFromPath(target, appBundlePath, ct),
             target,
             deviceName,
-            timeout,
-            launchTimeout,
+            timeout: timeout,
+            launchTimeout: launchTimeout,
             expectedExitCode,
-            includeWirelessDevices,
-            resetSimulator,
-            enableLldb,
-            signalAppEnd,
+            includeWirelessDevices: includeWirelessDevices,
+            resetSimulator: resetSimulator,
+            enableLldb: enableLldb,
+            signalAppEnd: signalAppEnd,
+            waitForExit: waitForExit,
             environmentalVariables,
             passthroughArguments,
             cancellationToken);
+
+    protected override Task<ExitCode> UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
+    {
+        if (!_waitForExit && !isPreparation)
+        {
+            return Task.FromResult(ExitCode.SUCCESS);
+        }
+
+        return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
+    }
+
+    protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
+    {
+        if (!_waitForExit)
+        {
+            return Task.FromResult(ExitCode.SUCCESS);
+        }
+
+        return base.CleanUpSimulators(device, companionDevice);
+    }
 
     protected async Task<ExitCode> OrchestrateRun(
         GetAppBundleInfoFunc getAppBundleInfo,
@@ -117,10 +142,18 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
+        bool waitForExit,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
     {
+        if (signalAppEnd && !waitForExit)
+        {
+            throw new InvalidOperationException("Cannot receive app end signal without waiting for it to exit");
+        }
+
+        _waitForExit = waitForExit;
+
         // The --launch-timeout option must start counting now and not complete before we start running tests to succeed.
         // After then, this timeout must not interfere.
         // Tests start running inside of ExecuteApp() which means we have to time-constrain all operations happening inside
@@ -149,6 +182,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
                 timeout,
                 expectedExitCode,
                 signalAppEnd,
+                waitForExit,
                 environmentalVariables,
                 passthroughArguments,
                 cancellationToken);
@@ -176,7 +210,8 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
                 companionDevice,
                 timeout,
                 expectedExitCode,
-                signalAppEnd,
+                signalAppEnd: signalAppEnd,
+                waitForExit: waitForExit,
                 environmentalVariables,
                 passthroughArguments,
                 cancellationToken);
@@ -185,9 +220,9 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         return await OrchestrateOperation(
             target,
             deviceName,
-            includeWirelessDevices,
-            resetSimulator,
-            enableLldb,
+            includeWirelessDevices: includeWirelessDevices,
+            resetSimulator: resetSimulator,
+            enableLldb: enableLldb,
             getAppBundleInfo,
             ExecuteMacCatalystApp,
             ExecuteApp,
@@ -202,6 +237,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         TimeSpan timeout,
         int expectedExitCode,
         bool signalAppEnd,
+        bool waitForExit,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
@@ -212,7 +248,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             _logger.LogWarning("The --signal-app-end option is used for device tests and has no effect on simulators");
         }
 
-        _logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on '{device.Name}'");
+        _logger.LogInformation($"Starting '{appBundleInfo.AppName}' on '{device.Name}'");
 
         ProcessExecutionResult result = await _appRunner.RunApp(
             appBundleInfo,
@@ -220,10 +256,17 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             device,
             companionDevice,
             timeout,
-            signalAppEnd,
+            signalAppEnd: signalAppEnd,
+            waitForExit: waitForExit,
             passthroughArguments,
             environmentalVariables,
             cancellationToken);
+
+        if (!waitForExit)
+        {
+            _logger.LogInformation("Not waiting for app to exit");
+            return ExitCode.SUCCESS;
+        }
 
         return ParseResult(_iOSExitCodeDetector, expectedExitCode, appBundleInfo, result);
     }
@@ -233,6 +276,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         TimeSpan timeout,
         int expectedExitCode,
         bool signalAppEnd,
+        bool waitForExit,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
@@ -242,10 +286,17 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         ProcessExecutionResult result = await _appRunner.RunMacCatalystApp(
             appBundleInfo,
             timeout,
-            signalAppEnd,
+            signalAppEnd: signalAppEnd,
+            waitForExit: waitForExit,
             passthroughArguments,
             environmentalVariables,
             cancellationToken: cancellationToken);
+
+        if (!waitForExit)
+        {
+            _logger.LogInformation("Not waiting for app to exit");
+            return ExitCode.SUCCESS;
+        }
 
         return ParseResult(_macCatalystExitCodeDetector, expectedExitCode, appBundleInfo, result);
     }

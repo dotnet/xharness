@@ -58,6 +58,7 @@ public abstract class AppRunnerBase
         AppBundleInformation appInfo,
         ILog appOutputLog,
         TimeSpan timeout,
+        bool waitForExit,
         IEnumerable<string> extraArguments,
         Dictionary<string, string> environmentVariables,
         CancellationToken cancellationToken)
@@ -83,10 +84,16 @@ public abstract class AppRunnerBase
 
         var arguments = new List<string>
         {
-            "-W", // Wait until the applications exit (even if they were already open)
-            appInfo.LaunchAppPath
+            "-n" // Open a new instance of the application(s) even if one is already running.
         };
 
+        if (waitForExit)
+        {
+            // Wait until the applications exit (even if they were already open)
+            arguments.Add("-W");
+        }
+
+        arguments.Add(appInfo.LaunchAppPath);
         arguments.AddRange(extraArguments);
 
         systemLog.StartCapture();
@@ -105,7 +112,10 @@ public abstract class AppRunnerBase
         }
         finally
         {
-            systemLog.StopCapture(waitIfEmpty: TimeSpan.FromSeconds(10));
+            if (waitForExit)
+            {
+                systemLog.StopCapture(waitIfEmpty: TimeSpan.FromSeconds(10));
+            }
         }
     }
 
@@ -116,6 +126,7 @@ public abstract class AppRunnerBase
         ISimulatorDevice simulator,
         ISimulatorDevice? companionSimulator,
         TimeSpan timeout,
+        bool waitForExit,
         CancellationToken cancellationToken)
     {
         _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
@@ -159,11 +170,45 @@ public abstract class AppRunnerBase
 
         await crashReporter.StartCaptureAsync();
 
-        _mainLog.WriteLine("Starting the app");
+        _mainLog.WriteLine("Launching the app");
 
-        var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
-        simulatorScanToken?.Cancel();
-        return result;
+        if (waitForExit)
+        {
+            var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+            simulatorScanToken?.Cancel();
+            return result;
+        }
+
+        TaskCompletionSource appLaunched = new();
+        var scanLog = new ScanLog($"Launched {appInformation.BundleIdentifier} with pid", () =>
+        {
+            _mainLog.WriteLine("App launch detected");
+            appLaunched.SetResult();
+        });
+
+        _mainLog.WriteLine("Waiting for the app to launch..");
+
+        var runTask = _processManager.ExecuteCommandAsync(mlaunchArguments, Log.CreateAggregatedLog(_mainLog, scanLog), timeout, cancellationToken: cancellationToken);
+        await Task.WhenAny(runTask, appLaunched.Task);
+
+        if (!appLaunched.Task.IsCompleted)
+        {
+            // In case the other task completes first, it is because one of these scenarios happened:
+            // - The app crashed and never launched
+            // - We missed the launch signal somehow and the app timed out
+            // - The app launched and quit immediately and race condition noticed that before the scan log did its job
+            // In all cases, we should return the result of the run task, it will be most likely 137 + Timeout (killed by us)
+            // If not, it will be a success because the app ran for a super short amount of time
+            _mainLog.WriteLine("App launch was not detected in time");
+            return runTask.Result;
+        }
+
+        _mainLog.WriteLine("Not waiting for the app to exit");
+
+        return new ProcessExecutionResult
+        {
+            ExitCode = 0
+        };
     }
 
     /// <summary>

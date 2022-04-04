@@ -292,6 +292,7 @@ public class AppTester : AppRunnerBase, IAppTester
             simulator,
             companionSimulator,
             timeout,
+            waitForExit: true,
             cancellationToken);
 
         await testReporter.CollectSimulatorResult(result);
@@ -433,7 +434,7 @@ public class AppTester : AppRunnerBase, IAppTester
 
             await crashReporter.StartCaptureAsync();
 
-            var result = await RunMacCatalystApp(appInformation, appOutputLog, timeout, extraAppArguments, envVariables, combinedCancellationToken.Token);
+            var result = await RunMacCatalystApp(appInformation, appOutputLog, timeout, waitForExit: true, extraAppArguments, envVariables, combinedCancellationToken.Token);
             await testReporter.CollectSimulatorResult(result);
         }
         finally
