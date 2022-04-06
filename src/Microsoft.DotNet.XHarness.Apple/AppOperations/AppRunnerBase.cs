@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
@@ -55,7 +56,7 @@ public abstract class AppRunnerBase
     }
 
     protected async Task<ProcessExecutionResult> RunMacCatalystApp(
-        AppBundleInformation appInfo,
+        AppBundleInformation appInformation,
         ILog appOutputLog,
         TimeSpan timeout,
         bool waitForExit,
@@ -70,7 +71,7 @@ public abstract class AppRunnerBase
             LogType.SystemLog);
 
         // We need to make the binary executable
-        var binaryPath = Path.Combine(appInfo.AppPath, "Contents", "MacOS", appInfo.BundleExecutable ?? appInfo.AppName);
+        var binaryPath = Path.Combine(appInformation.AppPath, "Contents", "MacOS", appInformation.BundleExecutable ?? appInformation.AppName);
         if (File.Exists(binaryPath))
         {
             await _processManager.ExecuteCommandAsync("chmod", new[] { "+x", binaryPath }, _mainLog, TimeSpan.FromSeconds(10), cancellationToken: cancellationToken);
@@ -80,7 +81,7 @@ public abstract class AppRunnerBase
         // Force registration for the app by running
         // /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /path/to/app.app
         var lsRegisterPath = @"/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister";
-        await _processManager.ExecuteCommandAsync(lsRegisterPath, new[] { "-f", appInfo.LaunchAppPath }, _mainLog, TimeSpan.FromSeconds(10), cancellationToken: cancellationToken);
+        await _processManager.ExecuteCommandAsync(lsRegisterPath, new[] { "-f", appInformation.LaunchAppPath }, _mainLog, TimeSpan.FromSeconds(10), cancellationToken: cancellationToken);
 
         var arguments = new List<string>
         {
@@ -93,10 +94,12 @@ public abstract class AppRunnerBase
             arguments.Add("-W");
         }
 
-        arguments.Add(appInfo.LaunchAppPath);
+        arguments.Add(appInformation.LaunchAppPath);
         arguments.AddRange(extraArguments);
 
         systemLog.StartCapture();
+
+        var logStreamScanToken = CaptureMacCatalystLog(appInformation, cancellationToken);
 
         try
         {
@@ -116,6 +119,9 @@ public abstract class AppRunnerBase
             {
                 systemLog.StopCapture(waitIfEmpty: TimeSpan.FromSeconds(10));
             }
+
+            // Stop scanning the logs
+            logStreamScanToken.Cancel();
         }
     }
 
@@ -269,7 +275,10 @@ public abstract class AppRunnerBase
         return result;
     }
 
-    protected async Task<CancellationTokenSource?> CaptureSimulatorLog(
+    protected CancellationTokenSource CaptureMacCatalystLog(AppBundleInformation appInformation, CancellationToken cancellationToken) =>
+        CaptureLogStream(appInformation.BundleExecutable ?? appInformation.AppName, false, Array.Empty<string>(), cancellationToken);
+
+    protected async Task<CancellationTokenSource> CaptureSimulatorLog(
         ISimulatorDevice simulator,
         AppBundleInformation appInformation,
         CancellationToken cancellationToken)
@@ -281,34 +290,41 @@ public abstract class AppRunnerBase
 
         var appName = appInformation.BundleExecutable ?? appInformation.AppName;
 
+        return CaptureLogStream(appName, true, new[] { "spawn", simulator.UDID, "log" }, cancellationToken);
+    }
+
+    private CancellationTokenSource CaptureLogStream(string appName, bool useSimctl, IEnumerable<string> args, CancellationToken cancellationToken)
+    {
         var logReadTokenSource = new CancellationTokenSource();
-        var simulatorLog = _logs.Create($"{appName}.log", LogType.SystemLog.ToString(), timestamp: false);
+        var log = _logs.Create($"{appName}.log", LogType.SystemLog.ToString(), timestamp: false);
+        var logArgs = args.Concat(new[]
+        {
+            "stream",
+            "--level=debug",
+            "--color=none",
+            "--style=compact",
+            "--predicate",
+            $"senderImagePath contains '{appName}'"
+        }).ToArray();
 
-        _mainLog.WriteLine($"Scanning simulator log stream of {appName} into '{simulatorLog.FullPath}'..");
+        _mainLog.WriteLine($"Scanning log stream for {appName} into '{log.FullPath}'..");
 
-        _processManager
-            .ExecuteXcodeCommandAsync(
-                "simctl",
-                new[]
-                {
-                    "spawn",
-                    simulator.UDID,
-                    "log",
-                    "stream",
-                    "--level=debug",
-                    "--color=none",
-                    "--style=compact",
-                    "--predicate",
-                    $"senderImagePath contains '{appName}'"
-                },
-                _mainLog,
-                simulatorLog,
-                simulatorLog,
-                TimeSpan.FromDays(1),
-                cancellationToken: CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, logReadTokenSource.Token).Token)
-            .DoNotAwait();
+        var streamCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, logReadTokenSource.Token).Token;
 
-        logReadTokenSource.Token.Register(simulatorLog.Dispose);
+        if (useSimctl)
+        {
+            _processManager
+                .ExecuteXcodeCommandAsync("simctl", logArgs, _mainLog, log, log, TimeSpan.FromDays(1), cancellationToken: streamCancellation)
+                .DoNotAwait();
+        }
+        else
+        {
+            _processManager
+                .ExecuteCommandAsync("log", logArgs, _mainLog, log, log, TimeSpan.FromDays(1), cancellationToken: streamCancellation)
+                .DoNotAwait();
+        }
+
+        logReadTokenSource.Token.Register(log.Dispose);
 
         return logReadTokenSource;
     }

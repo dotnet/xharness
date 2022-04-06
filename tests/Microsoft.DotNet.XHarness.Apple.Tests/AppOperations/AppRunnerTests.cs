@@ -321,6 +321,19 @@ public class AppRunnerTests : AppRunTestBase
                    It.IsAny<CancellationToken>()),
                 Times.Once);
 
+        _processManager
+            .Verify(
+                x => x.ExecuteCommandAsync(
+                   "log",
+                   It.Is<IList<string>>(args => args.Contains("stream") && args.Any(a => a.Contains(BundleExecutable))),
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
+                   It.IsAny<TimeSpan>(),
+                   It.IsAny<Dictionary<string, string>?>(),
+                   It.IsAny<CancellationToken>()),
+                Times.Once);
+
         captureLog.Verify(x => x.StartCapture(), Times.AtLeastOnce);
     }
 
