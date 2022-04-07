@@ -275,9 +275,17 @@ public abstract class AppRunnerBase
         return result;
     }
 
+    /// <summary>
+    /// This method kicks off a process that scans a log stream coming from the running app and stores it into a log file.
+    /// This method does not wait for the scan process to end but returns a cancellation token that can be used to cancel the scan.
+    /// </summary>
     protected CancellationTokenSource CaptureMacCatalystLog(AppBundleInformation appInformation, CancellationToken cancellationToken) =>
         CaptureLogStream(appInformation.BundleExecutable ?? appInformation.AppName, false, Array.Empty<string>(), cancellationToken);
 
+    /// <summary>
+    /// This method kicks off a process that scans a log stream coming from the running app and stores it into a log file.
+    /// This method does not wait for the scan process to end but returns a cancellation token that can be used to cancel the scan.
+    /// </summary>
     protected async Task<CancellationTokenSource> CaptureSimulatorLog(
         ISimulatorDevice simulator,
         AppBundleInformation appInformation,
