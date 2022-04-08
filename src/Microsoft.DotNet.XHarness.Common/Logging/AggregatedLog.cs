@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.Common.Logging;
 
 public abstract partial class Log

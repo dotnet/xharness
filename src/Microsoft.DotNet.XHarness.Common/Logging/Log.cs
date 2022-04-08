@@ -5,7 +5,6 @@
 using System;
 using System.Text;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.Common.Logging;
 
 public abstract partial class Log : ILog

@@ -12,6 +12,7 @@ using Moq;
 using Xunit;
 using Xunit.Abstractions;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Tests.xUnit;
 
 public class XUnitFilterTests

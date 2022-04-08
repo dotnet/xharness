@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.Common.Utilities;
 
 public class DisposableList<T> : List<T>, IDisposable where T : IDisposable
