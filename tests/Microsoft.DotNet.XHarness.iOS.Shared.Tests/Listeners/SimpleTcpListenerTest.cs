@@ -33,7 +33,7 @@ public class SimpleTcpListenerTest
         {
             using (var resultStream = File.Create(tempResult))
             {// opening closing a lot, but for the test we do not care
-                    resultStream.Write(buffer, start, end);
+                resultStream.Write(buffer, start, end);
                 resultStream.Flush();
             }
         });

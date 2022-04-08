@@ -300,11 +300,11 @@ public abstract class ProcessManager : IProcessManager
             }
             catch
             {
-                    // Process.HasExited can sometimes throw exceptions, so
-                    // just ignore those and to be safe treat it as the
-                    // process didn't exit (the safe option being to not leave
-                    // processes behind).
-                }
+                // Process.HasExited can sometimes throw exceptions, so
+                // just ignore those and to be safe treat it as the
+                // process didn't exit (the safe option being to not leave
+                // processes behind).
+            }
 
             if (!hasExited)
             {
