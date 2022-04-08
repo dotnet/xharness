@@ -18,7 +18,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 using Moq;
 using Xunit;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations;
 
 public class AppTesterTests : AppRunTestBase
@@ -541,11 +540,11 @@ public class AppTesterTests : AppRunTestBase
                    Capture.In(cancellationTokens)))
             .Callback(() =>
             {
-                    // Signal we have started mlaunch
-                    appStarted.SetResult();
+                // Signal we have started mlaunch
+                appStarted.SetResult();
 
-                    // When mlaunch gets signalled to shut down, shut down even our fake mlaunch
-                    cancellationTokens.Last().Register(() => mlaunchCompleted.SetResult(new ProcessExecutionResult
+                // When mlaunch gets signalled to shut down, shut down even our fake mlaunch
+                cancellationTokens.Last().Register(() => mlaunchCompleted.SetResult(new ProcessExecutionResult
                 {
                     TimedOut = true,
                 }));

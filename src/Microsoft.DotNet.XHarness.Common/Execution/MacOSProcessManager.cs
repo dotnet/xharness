@@ -13,7 +13,6 @@ using System.Xml;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.Common.Execution;
 
 public class MacOSProcessManager : UnixProcessManager, IMacOSProcessManager

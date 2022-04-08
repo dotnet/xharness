@@ -1,12 +1,10 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Xml;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
 using Xunit;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared.Tests.Utilities;
 
 public class ProjectFileExtensionsTests
@@ -86,4 +84,3 @@ public class ProjectFileExtensionsTests
         Assert.Null(arch);
     }
 }
-

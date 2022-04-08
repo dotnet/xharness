@@ -855,7 +855,7 @@ public class AdbRunner
         int attempt = 0;
 
         T result;
-        while(true)
+        while (true)
         {
             result = action();
 

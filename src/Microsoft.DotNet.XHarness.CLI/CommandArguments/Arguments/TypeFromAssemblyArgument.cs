@@ -10,7 +10,7 @@ using System.Runtime.Loader;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments;
 
-internal class TypeFromAssemblyArgument<T>: Argument<IList<(string path, string? type)>>
+internal class TypeFromAssemblyArgument<T> : Argument<IList<(string path, string? type)>>
                     where T : class
 {
     private readonly bool _repeatable;

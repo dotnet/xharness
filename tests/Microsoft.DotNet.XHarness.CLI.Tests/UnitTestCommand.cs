@@ -11,7 +11,6 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.CLI.Tests;
 
 internal class UnitTestCommand

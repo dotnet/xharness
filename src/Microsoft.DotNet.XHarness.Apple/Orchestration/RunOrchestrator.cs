@@ -332,7 +332,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             try
             {
                 exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, log);
-                
+
                 if (exitCode.HasValue)
                 {
                     _logger.LogDebug($"Detected exit code {exitCode.Value} from {log.FullPath}");

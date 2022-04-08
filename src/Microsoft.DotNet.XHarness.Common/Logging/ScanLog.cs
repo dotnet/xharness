@@ -4,7 +4,6 @@
 
 using System;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.Common.Logging;
 
 /// <summary>

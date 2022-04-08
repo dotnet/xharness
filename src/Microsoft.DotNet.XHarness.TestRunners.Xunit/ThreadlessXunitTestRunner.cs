@@ -2,16 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.DotNet.XHarness.Common;
@@ -19,6 +14,7 @@ using Microsoft.DotNet.XHarness.TestRunners.Common;
 using Xunit;
 using Xunit.Abstractions;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
 internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
