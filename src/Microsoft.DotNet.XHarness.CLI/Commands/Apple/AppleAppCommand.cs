@@ -62,7 +62,7 @@ internal abstract class AppleAppCommand<TArguments> : AppleCommand<TArguments> w
         cts.CancelAfter(Arguments.Timeout);
         cts.Token.Register(() =>
         {
-            logger.LogError("Run timed out after {timeout} seconds", Math.Ceil(Arguments.Timeout.Value.TotalSeconds));
+            logger.LogError("Run timed out after {timeout} seconds", Math.Ceiling(Arguments.Timeout.Value.TotalSeconds));
         });
 
         return await InvokeInternal(serviceProvider, cts.Token);
