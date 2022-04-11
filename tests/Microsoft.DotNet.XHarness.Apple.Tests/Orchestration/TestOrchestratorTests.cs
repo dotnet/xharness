@@ -252,6 +252,70 @@ public class TestOrchestratorTests : OrchestratorTestBase
     }
 
     [Fact]
+    public async Task OrchestrateTimedOutSimulatorTestTest()
+    {
+        // Setup
+        var testTarget = new TestTargetOs(TestTarget.Simulator_iOS64, "13.5");
+
+        _appTester
+            .Setup(x => x.TestApp(
+                _appBundleInformation,
+                testTarget,
+                _simulator.Object,
+                null,
+                TimeSpan.FromMinutes(30),
+                It.IsAny<TimeSpan>(),
+                false,
+                It.IsAny<IEnumerable<string>>(),
+                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<XmlResultJargon>(),
+                It.IsAny<string[]?>(),
+                It.IsAny<string[]?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TestExecutingResult.Crashed, "App never reported back"))
+            .Verifiable();
+
+        var failure = new KnownIssue("Some failure", suggestedExitCode: (int)ExitCode.APP_CRASH);
+        _errorKnowledgeBase
+            .Setup(x => x.IsKnownTestIssue(It.IsAny<IFileBackedLog>(), out failure))
+            .Returns(true)
+            .Verifiable();
+
+        var cts = new CancellationTokenSource();
+
+        _deviceFinder.Reset();
+        _deviceFinder
+            .Setup(x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false))
+            .Callback(() => cts.Cancel())
+            .ReturnsAsync((_simulator.Object, null));
+
+        // Act
+        var result = await _testOrchestrator.OrchestrateTest(
+            AppPath,
+            testTarget,
+            null,
+            TimeSpan.FromMinutes(30),
+            TimeSpan.FromMinutes(3),
+            CommunicationChannel.UsbTunnel,
+            XmlResultJargon.xUnit,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
+            includeWirelessDevices: false,
+            resetSimulator: false,
+            enableLldb: true,
+            signalAppEnd: false,
+            Array.Empty<(string, string)>(),
+            Array.Empty<string>(),
+            cts.Token);
+
+        // Verify
+        Assert.Equal(ExitCode.APP_LAUNCH_TIMEOUT, result);
+
+        VerifySimulatorReset(false);
+        VerifySimulatorCleanUp(false);
+    }
+
+    [Fact]
     public async Task OrchestrateFailedDeviceTestTest()
     {
         // Setup
