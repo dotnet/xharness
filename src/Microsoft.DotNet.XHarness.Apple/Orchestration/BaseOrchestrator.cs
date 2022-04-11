@@ -91,6 +91,37 @@ public abstract class BaseOrchestrator : IDisposable
         ExecuteAppFunc executeApp,
         CancellationToken cancellationToken)
     {
+        try
+        {
+            return await OrchestrateOperationInternal(
+                target,
+                deviceName,
+                includeWirelessDevices,
+                resetSimulator,
+                enableLldb,
+                getAppBundle,
+                executeMacCatalystApp,
+                executeApp,
+                cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogError("Application failed to launch in time");
+            return ExitCode.APP_LAUNCH_TIMEOUT;
+        }
+    }
+
+    private async Task<ExitCode> OrchestrateOperationInternal(
+        TestTargetOs target,
+        string? deviceName,
+        bool includeWirelessDevices,
+        bool resetSimulator,
+        bool enableLldb,
+        GetAppBundleInfoFunc getAppBundle,
+        ExecuteMacCatalystAppFunc executeMacCatalystApp,
+        ExecuteAppFunc executeApp,
+        CancellationToken cancellationToken)
+    {
         _lldbFileCreated = false;
         var isLldbEnabled = IsLldbEnabled();
         if (isLldbEnabled && !enableLldb)
@@ -132,6 +163,7 @@ public abstract class BaseOrchestrator : IDisposable
             }
             catch (Exception e)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 _logger.LogError(e.Message);
                 return ExitCode.PACKAGE_NOT_FOUND;
             }
@@ -195,15 +227,20 @@ public abstract class BaseOrchestrator : IDisposable
             return ExitCode.DEVICE_NOT_FOUND;
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
+
         try
         {
             appBundleInfo = await getAppBundle(target, device, cancellationToken);
         }
         catch (Exception e)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             _logger.LogError(e.Message);
             return ExitCode.PACKAGE_NOT_FOUND;
         }
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (target.Platform.IsSimulator() && resetSimulator)
         {
@@ -231,6 +268,8 @@ public abstract class BaseOrchestrator : IDisposable
             }
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Note down the actual test target
         // For simulators (e.g. "iOS 13.4"), we strip the iOS part and keep the version only, for devices there's no OS
         _diagnosticsData.TargetOS = target.Platform.IsSimulator() ? device.OSVersion.Split(' ', 2).Last() : device.OSVersion;
@@ -240,6 +279,7 @@ public abstract class BaseOrchestrator : IDisposable
         if (!resetSimulator)
         {
             await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, isPreparation: true, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         exitCode = await InstallApp(appBundleInfo, device, target, cancellationToken);
@@ -344,11 +384,7 @@ public abstract class BaseOrchestrator : IDisposable
 
         if (!result.Succeeded)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                _logger.LogError($"Application installation timed out");
-                return ExitCode.PACKAGE_INSTALLATION_TIMEOUT;
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
             var exitCode = ExitCode.PACKAGE_INSTALLATION_FAILURE;
 
