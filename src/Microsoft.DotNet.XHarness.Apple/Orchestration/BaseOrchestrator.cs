@@ -104,9 +104,9 @@ public abstract class BaseOrchestrator : IDisposable
                 executeApp,
                 cancellationToken);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException e)
         {
-            _logger.LogError("Application failed to launch in time");
+            _logger.LogDebug(e.ToString());
             return ExitCode.APP_LAUNCH_TIMEOUT;
         }
     }

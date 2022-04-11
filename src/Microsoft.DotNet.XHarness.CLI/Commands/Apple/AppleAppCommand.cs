@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
@@ -59,6 +60,10 @@ internal abstract class AppleAppCommand<TArguments> : AppleCommand<TArguments> w
 
         var cts = new CancellationTokenSource();
         cts.CancelAfter(Arguments.Timeout);
+        cts.Token.Register(() =>
+        {
+            logger.LogError("Run timed out after {timeout} seconds", Math.Ceil(Arguments.Timeout.Value.TotalSeconds));
+        });
 
         return await InvokeInternal(serviceProvider, cts.Token);
     }

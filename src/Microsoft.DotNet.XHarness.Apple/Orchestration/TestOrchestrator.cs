@@ -136,6 +136,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         {
             if (!appRunStarted)
             {
+                _logger.LogError("Cancelling the run as application failed to launch in time");
                 launchTimeoutCancellation.Cancel();
             }
         });
