@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -29,7 +30,7 @@ public static class Program
 
         if (shouldOutput)
         {
-            var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+            var version = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion;
             Console.WriteLine($"[{version}] XHarness command issued: {string.Join(' ', args)}");
         }
 
