@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.Commands;
@@ -28,7 +29,8 @@ public static class Program
 
         if (shouldOutput)
         {
-            Console.WriteLine($"XHarness command issued: {string.Join(' ', args)}");
+            var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+            Console.WriteLine($"[{version}] XHarness command issued: {string.Join(' ', args)}");
         }
 
         if (args.Length > 0)
