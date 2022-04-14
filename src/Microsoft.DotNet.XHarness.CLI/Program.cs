@@ -28,7 +28,9 @@ public static class Program
 
         if (shouldOutput)
         {
-            Console.WriteLine($"XHarness command issued: {string.Join(' ', args)}");
+            Console.WriteLine(
+                $"[{XHarnessVersionCommand.GetAssemblyVersion().ProductVersion}] " +
+                "XHarness command issued: " + string.Join(' ', args));
         }
 
         if (args.Length > 0)
