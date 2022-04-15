@@ -15,7 +15,6 @@ using Microsoft.Extensions.Logging;
 using Mono.Options;
 using Xunit;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.CLI.Tests.CommandArguments;
 
 public class XHarnessCommandTests
@@ -34,10 +33,10 @@ public class XHarnessCommandTests
     {
         var exitCode = _command.Invoke(new[]
         {
-                "--number=50",
-                "--enum=Value2",
-                "--string=foobar",
-            });
+            "--number=50",
+            "--enum=Value2",
+            "--string=foobar",
+        });
 
         Assert.Equal(0, exitCode);
         Assert.True(_command.CommandRun);
@@ -51,13 +50,13 @@ public class XHarnessCommandTests
     {
         var exitCode = _command.Invoke(new[]
         {
-                "--number",
-                "50",
-                "--enum",
-                "Value2",
-                "-s",
-                "foobar",
-            });
+            "--number",
+            "50",
+            "--enum",
+            "Value2",
+            "-s",
+            "foobar",
+        });
 
         Assert.Equal(0, exitCode);
         Assert.True(_command.CommandRun);
@@ -71,11 +70,11 @@ public class XHarnessCommandTests
     {
         var exitCode = _command.Invoke(new[]
         {
-                "-n",
-                "200",
-                "--enum",
-                "Value2",
-            });
+            "-n",
+            "200",
+            "--enum",
+            "Value2",
+        });
 
         Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, exitCode);
         Assert.False(_command.CommandRun);
@@ -86,10 +85,10 @@ public class XHarnessCommandTests
     {
         var exitCode = _command.Invoke(new[]
         {
-                "-n",
-                "50",
-                "--verbosity=Warning",
-            });
+            "-n",
+            "50",
+            "--verbosity=Warning",
+        });
 
         Assert.Equal(0, exitCode);
         Assert.True(_command.CommandRun);
@@ -102,8 +101,8 @@ public class XHarnessCommandTests
     {
         var exitCode = _command.Invoke(new[]
         {
-                "--help",
-            });
+            "--help",
+        });
 
         Assert.Equal((int)ExitCode.HELP_SHOWN, exitCode);
         Assert.False(_command.CommandRun);
@@ -115,12 +114,12 @@ public class XHarnessCommandTests
     {
         var exitCode = _command.Invoke(new[]
         {
-                "-n",
-                "50",
-                "--enum",
-                "Value2",
-                "--invalid-arg=foo",
-            });
+            "-n",
+            "50",
+            "--enum",
+            "Value2",
+            "--invalid-arg=foo",
+        });
 
         Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, exitCode);
         Assert.False(_command.CommandRun);
@@ -133,14 +132,14 @@ public class XHarnessCommandTests
         var command = new UnitTestCommand<SampleUnitTestArguments>(arguments, true);
         var exitCode = command.Invoke(new[]
         {
-                "-n",
-                "50",
-                "--enum",
-                "Value2",
-                "some",
-                "other=1",
-                "args",
-            });
+            "-n",
+            "50",
+            "--enum",
+            "Value2",
+            "some",
+            "other=1",
+            "args",
+        });
 
         Assert.Equal(0, exitCode);
         Assert.True(command.CommandRun);
@@ -154,9 +153,9 @@ public class XHarnessCommandTests
     {
         var exitCode = _command.Invoke(new[]
         {
-                "--enum",
-                "Foo",
-            });
+            "--enum",
+            "Foo",
+        });
 
         Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, exitCode);
         Assert.False(_command.CommandRun);
@@ -167,9 +166,9 @@ public class XHarnessCommandTests
     {
         var exitCode = _command.Invoke(new[]
         {
-                "--enum",
-                "ForbiddenValue",
-            });
+            "--enum",
+            "ForbiddenValue",
+        });
 
         Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, exitCode);
         Assert.False(_command.CommandRun);
@@ -180,15 +179,15 @@ public class XHarnessCommandTests
     {
         var exitCode = _command.Invoke(new[]
         {
-                "-n",
-                "50",
-                "--enum",
-                "Value2",
-                Program.VerbatimArgumentPlaceholder,
-                "v8",
-                "--foo",
-                "runtime.js",
-            });
+            "-n",
+            "50",
+            "--enum",
+            "Value2",
+            Program.VerbatimArgumentPlaceholder,
+            "v8",
+            "--foo",
+            "runtime.js",
+        });
 
         Assert.Equal(0, exitCode);
         Assert.True(_command.CommandRun);
@@ -209,16 +208,16 @@ public class XHarnessCommandTests
 
         var exitCode = commandSet.Run(new[]
         {
-                "unit-test",
-                "-n",
-                "50",
-                "--enum",
-                "Value2",
-                Program.VerbatimArgumentPlaceholder,
-                "v8",
-                "--foo",
-                "runtime.js",
-            });
+            "unit-test",
+            "-n",
+            "50",
+            "--enum",
+            "Value2",
+            Program.VerbatimArgumentPlaceholder,
+            "v8",
+            "--foo",
+            "runtime.js",
+        });
 
         Assert.Equal(0, exitCode);
         Assert.True(command.CommandRun);
@@ -232,15 +231,15 @@ public class XHarnessCommandTests
     {
         var exitCode = _command.Invoke(new[]
         {
-                "v8",
-                "--foo",
-                "runtime.js",
-                Program.VerbatimArgumentPlaceholder,
-                "-n",
-                "50",
-                "--enum",
-                "--invalid-arg=foo",
-            });
+            "v8",
+            "--foo",
+            "runtime.js",
+            Program.VerbatimArgumentPlaceholder,
+            "-n",
+            "50",
+            "--enum",
+            "--invalid-arg=foo",
+        });
 
         Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, exitCode);
         Assert.False(_command.CommandRun);

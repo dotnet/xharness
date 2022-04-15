@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.DotNet.XHarness.Common.CLI;
+using Microsoft.DotNet.XHarness.iOS.Shared;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 
@@ -22,20 +23,37 @@ internal class AppleJustRunCommandArguments : XHarnessCommandArguments, IAppleAp
     public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
     public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
     public SignalAppEndArgument SignalAppEnd { get; } = new();
+    public NoWaitArgument NoWait { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
-            BundleIdentifier,
-            Target,
-            OutputDirectory,
-            DeviceName,
-            IncludeWireless,
-            Timeout,
-            ExpectedExitCode,
-            XcodeRoot,
-            MlaunchPath,
-            EnableLldb,
-            SignalAppEnd,
-            EnvironmentalVariables,
+        BundleIdentifier,
+        Target,
+        OutputDirectory,
+        DeviceName,
+        IncludeWireless,
+        Timeout,
+        ExpectedExitCode,
+        XcodeRoot,
+        MlaunchPath,
+        EnableLldb,
+        SignalAppEnd,
+        NoWait,
+        EnvironmentalVariables,
     };
+
+    public override void Validate()
+    {
+        base.Validate();
+
+        if (Target.Value.Platform == TestTarget.MacCatalyst)
+        {
+            throw new ArgumentException("This command is not supported with the maccatalyst target");
+        }
+
+        if (SignalAppEnd && NoWait)
+        {
+            throw new ArgumentException("--signal-app-end cannot be used in combination with --no-wait");
+        }
+    }
 }

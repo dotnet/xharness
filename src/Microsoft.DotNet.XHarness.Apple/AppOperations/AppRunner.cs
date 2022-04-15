@@ -4,14 +4,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
-using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
@@ -29,6 +27,7 @@ public interface IAppRunner
         IDevice? companionDevice,
         TimeSpan timeout,
         bool signalAppEnd,
+        bool waitForExit,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         CancellationToken cancellationToken = default);
@@ -37,6 +36,7 @@ public interface IAppRunner
         AppBundleInformation appInformation,
         TimeSpan timeout,
         bool signalAppEnd,
+        bool waitForExit,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         CancellationToken cancellationToken = default);
@@ -49,7 +49,6 @@ public class AppRunner : AppRunnerBase, IAppRunner
 {
     private readonly IMlaunchProcessManager _processManager;
     private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
-    private readonly ICaptureLogFactory _captureLogFactory;
     private readonly IDeviceLogCapturerFactory _deviceLogCapturerFactory;
     private readonly IFileBackedLog _mainLog;
     private readonly ILogs _logs;
@@ -68,7 +67,6 @@ public class AppRunner : AppRunnerBase, IAppRunner
     {
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         _snapshotReporterFactory = snapshotReporterFactory ?? throw new ArgumentNullException(nameof(snapshotReporterFactory));
-        _captureLogFactory = captureLogFactory ?? throw new ArgumentNullException(nameof(captureLogFactory));
         _deviceLogCapturerFactory = deviceLogCapturerFactory ?? throw new ArgumentNullException(nameof(deviceLogCapturerFactory));
         _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
         _logs = logs ?? throw new ArgumentNullException(nameof(logs));
@@ -79,6 +77,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
         AppBundleInformation appInformation,
         TimeSpan timeout,
         bool signalAppEnd,
+        bool waitForExit,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         CancellationToken cancellationToken = default)
@@ -101,6 +100,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
                 appInformation,
                 appOutputLog,
                 timeout,
+                waitForExit,
                 extraAppArguments ?? Enumerable.Empty<string>(),
                 envVariables,
                 cancellationToken));
@@ -114,6 +114,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
         IDevice? companionDevice,
         TimeSpan timeout,
         bool signalAppEnd,
+        bool waitForExit,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         CancellationToken cancellationToken = default)
@@ -152,11 +153,13 @@ public class AppRunner : AppRunnerBase, IAppRunner
                 extraEnvVariables);
 
             result = await RunSimulatorApp(
+                appInformation,
                 mlaunchArguments,
                 crashReporter,
                 simulator,
                 companionSimulator,
                 timeout,
+                waitForExit,
                 cancellationToken);
         }
         else
@@ -171,12 +174,13 @@ public class AppRunner : AppRunnerBase, IAppRunner
             using (appOutputLog)
             {
                 var mlaunchArguments = GetDeviceArguments(
-                appInformation,
-                device,
-                target.Platform.IsWatchOSTarget(),
-                extraAppArguments,
-                extraEnvVariables,
-                appEndTag);
+                    appInformation,
+                    device,
+                    waitForExit: waitForExit,
+                    isWatchTarget: target.Platform.IsWatchOSTarget(),
+                    extraAppArguments,
+                    extraEnvVariables,
+                    appEndTag);
 
                 result = await RunDeviceApp(
                     mlaunchArguments,
@@ -190,52 +194,6 @@ public class AppRunner : AppRunnerBase, IAppRunner
         }
 
         return result;
-    }
-
-    private async Task<ProcessExecutionResult> RunSimulatorApp(
-        MlaunchArguments mlaunchArguments,
-        ICrashSnapshotReporter crashReporter,
-        ISimulatorDevice simulator,
-        ISimulatorDevice? companionSimulator,
-        TimeSpan timeout,
-        CancellationToken cancellationToken)
-    {
-        _mainLog.WriteLine("System log for the '{1}' simulator is: {0}", simulator.SystemLog, simulator.Name);
-
-        var simulatorLog = _captureLogFactory.Create(
-            path: Path.Combine(_logs.Directory, simulator.Name + ".log"),
-            systemLogPath: simulator.SystemLog,
-            entireFile: false,
-            LogType.SystemLog);
-
-        simulatorLog.StartCapture();
-        _logs.Add(simulatorLog);
-
-        using var systemLogs = new DisposableList<ICaptureLog>
-            {
-                simulatorLog
-            };
-
-        if (companionSimulator != null)
-        {
-            _mainLog.WriteLine("System log for the '{1}' companion simulator is: {0}", companionSimulator.SystemLog, companionSimulator.Name);
-
-            var companionLog = _captureLogFactory.Create(
-                path: Path.Combine(_logs.Directory, companionSimulator.Name + ".log"),
-                systemLogPath: companionSimulator.SystemLog,
-                entireFile: false,
-                LogType.CompanionSystemLog);
-
-            companionLog.StartCapture();
-            _logs.Add(companionLog);
-            systemLogs.Add(companionLog);
-        }
-
-        await crashReporter.StartCaptureAsync();
-
-        _mainLog.WriteLine("Starting test run");
-
-        return await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
     }
 
     private async Task<ProcessExecutionResult> RunDeviceApp(
@@ -268,7 +226,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
             cancellationToken: cancellationToken));
     }
 
-    private MlaunchArguments GetCommonArguments(
+    private static MlaunchArguments GetCommonArguments(
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         string? appEndTag)
@@ -324,6 +282,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
     private MlaunchArguments GetDeviceArguments(
         AppBundleInformation appInformation,
         IDevice device,
+        bool waitForExit,
         bool isWatchTarget,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
@@ -355,7 +314,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
         {
             args.Add(new AttachNativeDebuggerArgument()); // this prevents the watch from backgrounding the app.
         }
-        else
+        else if (waitForExit)
         {
             args.Add(new WaitForExitArgument());
         }

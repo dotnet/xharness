@@ -115,9 +115,9 @@ public class TestReporter : ITestReporter
 
         CallbackLog = new CallbackLog(line =>
         {
-                // MT1111: Application launched successfully, but it's not possible to wait for the app to exit as
-                // requested because it's not possible to detect app termination when launching using gdbserver
-                _waitedForExit &= line?.Contains("MT1111: ") != true;
+            // MT1111: Application launched successfully, but it's not possible to wait for the app to exit as
+            // requested because it's not possible to detect app termination when launching using gdbserver
+            _waitedForExit &= line?.Contains("MT1111: ") != true;
             if (line?.Contains("error MT1007") == true)
             {
                 _launchFailure = true;
@@ -301,7 +301,7 @@ public class TestReporter : ITestReporter
             _mainLog.WriteLine("Test execution started");
             return;
         }
-        
+
         _cancellationTokenSource.Cancel();
         _timedout = true;
 

@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable enable
 using System;
 using System.IO;
 using System.Linq;
@@ -10,6 +9,7 @@ using System.Text;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 using Xunit.Abstractions;
 
+#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
 internal class XUnitFilter

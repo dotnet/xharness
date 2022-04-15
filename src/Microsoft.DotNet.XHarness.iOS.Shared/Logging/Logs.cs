@@ -21,10 +21,10 @@ public class Logs : List<IFileBackedLog>, ILogs
         Directory = directory ?? throw new ArgumentNullException(nameof(directory));
     }
 
-    public IFileBackedLog Create(string filename, string name, bool? timestamp = null)
+    public IFileBackedLog Create(string filename, string description, bool? timestamp = null)
     {
         System.IO.Directory.CreateDirectory(Directory);
-        var rv = new LogFile(name, Path.GetFullPath(Path.Combine(Directory, filename)));
+        var rv = new LogFile(description, Path.GetFullPath(Path.Combine(Directory, filename)));
         if (timestamp.HasValue)
         {
             rv.Timestamp = timestamp.Value;

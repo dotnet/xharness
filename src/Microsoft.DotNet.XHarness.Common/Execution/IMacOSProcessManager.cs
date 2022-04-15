@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Logging;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.Common.Execution;
 
 public interface IMacOSProcessManager : IProcessManager
@@ -21,6 +20,15 @@ public interface IMacOSProcessManager : IProcessManager
         string executable,
         IList<string> args,
         ILog log,
+        TimeSpan timeout,
+        CancellationToken cancellationToken = default);
+
+    Task<ProcessExecutionResult> ExecuteXcodeCommandAsync(
+        string executable,
+        IList<string> args,
+        ILog log,
+        ILog stdoutLog,
+        ILog stderrLog,
         TimeSpan timeout,
         CancellationToken cancellationToken = default);
 }

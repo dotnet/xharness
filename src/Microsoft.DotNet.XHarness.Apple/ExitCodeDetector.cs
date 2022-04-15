@@ -4,7 +4,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
@@ -25,58 +24,85 @@ public interface IMacCatalystExitCodeDetector : IExitCodeDetector
 
 public abstract class ExitCodeDetector : IExitCodeDetector
 {
-    public int? DetectExitCode(AppBundleInformation appBundleInfo, IReadableLog systemLog)
+    // This tag is logged by the dotnet/runtime Apple app wrapper
+    // https://github.com/dotnet/runtime/blob/a883caa0803778084167b978281c34db8e753246/src/tasks/AppleAppBuilder/Templates/runtime.m#L30
+    protected const string DotnetAppExitTag = "DOTNET.APP_EXIT_CODE:";
+
+    // This line is logged by MacOS
+    protected const string AbnormalExitMessage = "Service exited with abnormal code";
+
+    public int? DetectExitCode(AppBundleInformation appBundleInfo, IReadableLog log)
     {
         StreamReader reader;
 
         try
         {
-            reader = systemLog.GetReader();
+            reader = log.GetReader();
         }
         catch (FileNotFoundException e)
         {
-            throw new Exception("Failed to detect application's exit code. The system log was empty / not found at " + e.FileName);
+            throw new Exception("Failed to detect application's exit code. The log file was empty / not found at " + e.FileName);
         }
 
         using (reader)
-            while (!reader.EndOfStream)
+        while (!reader.EndOfStream)
+        {
+            if (reader.ReadLine() is string line
+                && IsSignalLine(appBundleInfo, line) is Match match && match.Success
+                && int.TryParse(match.Groups["exitCode"].Value, out var exitCode))
             {
-                var line = reader.ReadLine();
-
-                if (!string.IsNullOrEmpty(line) && IsSignalLine(appBundleInfo, line))
-                {
-                    var match = ExitCodeRegex.Match(line);
-
-                    if (match.Success && int.TryParse(match.Captures.First().Value, out var exitCode))
-                    {
-                        return exitCode;
-                    }
-                }
+                return exitCode;
             }
+        }
 
         return null;
     }
 
-    protected abstract bool IsSignalLine(AppBundleInformation appBundleInfo, string logLine);
+    protected virtual Match? IsSignalLine(AppBundleInformation appBundleInfo, string logLine)
+    {
+        if (IsAbnormalExitLine(appBundleInfo, logLine) || IsStdoutExitLine(appBundleInfo, logLine))
+        {
+            return EoLExitCodeRegex.Match(logLine);
+        }
 
-    protected virtual Regex ExitCodeRegex { get; } = new Regex(" (\\-?[0-9]+)$", RegexOptions.Compiled);
+        return null;
+    }
+
+    protected Regex EoLExitCodeRegex { get; } = new Regex(@" (?<exitCode>-?[0-9]+)$", RegexOptions.Compiled);
+
+    // Example line coming from app's stdout log stream
+    // 2022-03-18 12:48:53.336 I  Microsoft.Extensions.Configuration.CommandLine.Tests[12477:10069] DOTNET.APP_EXIT_CODE: 0
+    private static bool IsStdoutExitLine(AppBundleInformation appBundleInfo, string logLine) =>
+        logLine.Contains(DotnetAppExitTag) && logLine.Contains(appBundleInfo.BundleExecutable ?? appBundleInfo.BundleIdentifier);
+
+    // Example line
+    // Feb 18 06:40:16 Admins-Mac-Mini com.apple.xpc.launchd[1] (net.dot.System.Buffers.Tests.15140[59229]): Service exited with abnormal code: 74
+    private static bool IsAbnormalExitLine(AppBundleInformation appBundleInfo, string logLine) =>
+        logLine.Contains(AbnormalExitMessage) && (logLine.Contains(appBundleInfo.AppName) || logLine.Contains(appBundleInfo.BundleIdentifier));
 }
 
 public class iOSExitCodeDetector : ExitCodeDetector, IiOSExitCodeDetector
 {
-    // Example line
-    // Nov 18 04:31:44 ML-MacVM com.apple.CoreSimulator.SimDevice.2E1EE736-5672-4220-89B5-B7C77DB6AF18[55655] (UIKitApplication:net.dot.HelloiOS[9a0b][rb-legacy][57331]): Service exited with abnormal code: 200
-    protected override bool IsSignalLine(AppBundleInformation appBundleInfo, string logLine) =>
-        logLine.Contains("UIKitApplication:") &&
-        logLine.Contains("Service exited with abnormal code") &&
-        (logLine.Contains(appBundleInfo.AppName) || logLine.Contains(appBundleInfo.BundleIdentifier));
+    // Example line coming from the mlaunch log
+    // [07:02:21.6637600] Application 'net.dot.iOS.Simulator.PInvoke.Test' terminated (with exit code '42' and/or crashing signal ').
+    private Regex DeviceExitCodeRegex { get; } = new Regex(@"terminated \(with exit code '(?<exitCode>-?[0-9]+)' and/or crashing signal", RegexOptions.Compiled);
+    
+    protected override Match? IsSignalLine(AppBundleInformation appBundleInfo, string logLine)
+    {
+        if (base.IsSignalLine(appBundleInfo, logLine) is Match match && match.Success)
+        {
+            return match;
+        }
+
+        if (logLine.Contains(appBundleInfo.BundleIdentifier))
+        {
+            return DeviceExitCodeRegex.Match(logLine);
+        }
+
+        return null;
+    }
 }
 
 public class MacCatalystExitCodeDetector : ExitCodeDetector, IMacCatalystExitCodeDetector
 {
-    // Example line
-    // Feb 18 06:40:16 Admins-Mac-Mini com.apple.xpc.launchd[1] (net.dot.System.Buffers.Tests.15140[59229]): Service exited with abnormal code: 74
-    protected override bool IsSignalLine(AppBundleInformation appBundleInfo, string logLine) =>
-        logLine.Contains("Service exited with abnormal code") &&
-        (logLine.Contains(appBundleInfo.AppName) || logLine.Contains(appBundleInfo.BundleIdentifier));
 }

@@ -43,8 +43,8 @@ public class HardwareDeviceLoaderTests
         _processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
             .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, int, CancellationToken?, bool?>((p, args, log, t, env, verbosity, token, d) =>
             {
-                    // we are going set the used args to validate them later, will always return an error from this method
-                    processPath = p.StartInfo.FileName;
+                // we are going set the used args to validate them later, will always return an error from this method
+                processPath = p.StartInfo.FileName;
                 passedArguments = args;
                 if (!timeout)
                 {
@@ -83,8 +83,8 @@ public class HardwareDeviceLoaderTests
                 processPath = p.StartInfo.FileName;
                 passedArguments = args;
 
-                    // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListDevicesArgument).First().AsCommandLineArgument();
+                // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                var tempPath = args.Where(a => a is ListDevicesArgument).First().AsCommandLineArgument();
                 tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                 var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("devices.xml", StringComparison.Ordinal)).FirstOrDefault();
@@ -137,15 +137,15 @@ public class HardwareDeviceLoaderTests
 
                 if (calls == 1)
                 {
-                        // Mlaunch can sometimes time out and we are testing that a subsequent Load will trigger it again
-                        return Task.FromResult(new ProcessExecutionResult { ExitCode = 137, TimedOut = true });
+                    // Mlaunch can sometimes time out and we are testing that a subsequent Load will trigger it again
+                    return Task.FromResult(new ProcessExecutionResult { ExitCode = 137, TimedOut = true });
                 }
 
                 processPath = p.StartInfo.FileName;
                 passedArguments = args;
 
-                    // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListDevicesArgument).First().AsCommandLineArgument();
+                // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                var tempPath = args.Where(a => a is ListDevicesArgument).First().AsCommandLineArgument();
                 tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                 var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("devices.xml", StringComparison.Ordinal)).FirstOrDefault();

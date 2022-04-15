@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.XHarness.Apple;
 public interface IRunOrchestrator
 {
     Task<ExitCode> OrchestrateRun(
-        AppBundleInformation appBundleInformation,
+        string appBundlePath,
         TestTargetOs target,
         string? deviceName,
         TimeSpan timeout,
@@ -31,6 +31,7 @@ public interface IRunOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
+        bool waitForExit,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken);
@@ -50,7 +51,10 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
     private readonly IErrorKnowledgeBase _errorKnowledgeBase;
     private readonly IAppRunner _appRunner;
 
+    private bool _waitForExit = true;
+
     public RunOrchestrator(
+        IAppBundleInformationParser appBundleInformationParser,
         IAppInstaller appInstaller,
         IAppUninstaller appUninstaller,
         IAppRunnerFactory appRunnerFactory,
@@ -63,7 +67,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         IErrorKnowledgeBase errorKnowledgeBase,
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
-        : base(appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        : base(appBundleInformationParser, appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
         _iOSExitCodeDetector = iOSExitCodeDetector ?? throw new ArgumentNullException(nameof(iOSExitCodeDetector));
         _macCatalystExitCodeDetector = macCatalystExitCodeDetector ?? throw new ArgumentNullException(nameof(macCatalystExitCodeDetector));
@@ -76,8 +80,8 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         _appRunner = appRunnerFactory.Create(mainLog, logs, logCallback);
     }
 
-    public virtual async Task<ExitCode> OrchestrateRun(
-        AppBundleInformation appBundleInformation,
+    public Task<ExitCode> OrchestrateRun(
+        string appBundlePath,
         TestTargetOs target,
         string? deviceName,
         TimeSpan timeout,
@@ -87,10 +91,69 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
+        bool waitForExit,
+        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IEnumerable<string> passthroughArguments,
+        CancellationToken cancellationToken)
+        => OrchestrateRun(
+            (target, device, ct) => GetAppBundleFromPath(target, appBundlePath, ct),
+            target,
+            deviceName,
+            timeout: timeout,
+            launchTimeout: launchTimeout,
+            expectedExitCode,
+            includeWirelessDevices: includeWirelessDevices,
+            resetSimulator: resetSimulator,
+            enableLldb: enableLldb,
+            signalAppEnd: signalAppEnd,
+            waitForExit: waitForExit,
+            environmentalVariables,
+            passthroughArguments,
+            cancellationToken);
+
+    protected override Task<ExitCode> UninstallApp(TestTarget target, string bundleIdentifier, IDevice device, bool isPreparation, CancellationToken cancellationToken)
+    {
+        if (!_waitForExit && !isPreparation)
+        {
+            return Task.FromResult(ExitCode.SUCCESS);
+        }
+
+        return base.UninstallApp(target, bundleIdentifier, device, isPreparation, cancellationToken);
+    }
+
+    protected override Task CleanUpSimulators(IDevice device, IDevice? companionDevice)
+    {
+        if (!_waitForExit)
+        {
+            return Task.FromResult(ExitCode.SUCCESS);
+        }
+
+        return base.CleanUpSimulators(device, companionDevice);
+    }
+
+    protected async Task<ExitCode> OrchestrateRun(
+        GetAppBundleInfoFunc getAppBundleInfo,
+        TestTargetOs target,
+        string? deviceName,
+        TimeSpan timeout,
+        TimeSpan launchTimeout,
+        int expectedExitCode,
+        bool includeWirelessDevices,
+        bool resetSimulator,
+        bool enableLldb,
+        bool signalAppEnd,
+        bool waitForExit,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
     {
+        if (signalAppEnd && !waitForExit)
+        {
+            throw new InvalidOperationException("Cannot receive app end signal without waiting for it to exit");
+        }
+
+        _waitForExit = waitForExit;
+
         // The --launch-timeout option must start counting now and not complete before we start running tests to succeed.
         // After then, this timeout must not interfere.
         // Tests start running inside of ExecuteApp() which means we have to time-constrain all operations happening inside
@@ -103,6 +166,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         {
             if (!appRunStarted)
             {
+                _logger.LogError("Cancelling the run as application failed to launch in time");
                 launchTimeoutCancellation.Cancel();
             }
         });
@@ -119,6 +183,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
                 timeout,
                 expectedExitCode,
                 signalAppEnd,
+                waitForExit,
                 environmentalVariables,
                 passthroughArguments,
                 cancellationToken);
@@ -146,7 +211,8 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
                 companionDevice,
                 timeout,
                 expectedExitCode,
-                signalAppEnd,
+                signalAppEnd: signalAppEnd,
+                waitForExit: waitForExit,
                 environmentalVariables,
                 passthroughArguments,
                 cancellationToken);
@@ -155,10 +221,10 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         return await OrchestrateOperation(
             target,
             deviceName,
-            includeWirelessDevices,
-            resetSimulator,
-            enableLldb,
-            appBundleInformation,
+            includeWirelessDevices: includeWirelessDevices,
+            resetSimulator: resetSimulator,
+            enableLldb: enableLldb,
+            getAppBundleInfo,
             ExecuteMacCatalystApp,
             ExecuteApp,
             launchTimeoutCancellationToken.Token);
@@ -172,6 +238,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         TimeSpan timeout,
         int expectedExitCode,
         bool signalAppEnd,
+        bool waitForExit,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
@@ -182,7 +249,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             _logger.LogWarning("The --signal-app-end option is used for device tests and has no effect on simulators");
         }
 
-        _logger.LogInformation($"Starting application '{appBundleInfo.AppName}' on '{device.Name}'");
+        _logger.LogInformation($"Starting '{appBundleInfo.AppName}' on '{device.Name}'");
 
         ProcessExecutionResult result = await _appRunner.RunApp(
             appBundleInfo,
@@ -190,10 +257,17 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             device,
             companionDevice,
             timeout,
-            signalAppEnd,
+            signalAppEnd: signalAppEnd,
+            waitForExit: waitForExit,
             passthroughArguments,
             environmentalVariables,
             cancellationToken);
+
+        if (!waitForExit)
+        {
+            _logger.LogInformation("Not waiting for app to exit");
+            return ExitCode.SUCCESS;
+        }
 
         return ParseResult(_iOSExitCodeDetector, expectedExitCode, appBundleInfo, result);
     }
@@ -203,6 +277,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         TimeSpan timeout,
         int expectedExitCode,
         bool signalAppEnd,
+        bool waitForExit,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
@@ -212,10 +287,17 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         ProcessExecutionResult result = await _appRunner.RunMacCatalystApp(
             appBundleInfo,
             timeout,
-            signalAppEnd,
+            signalAppEnd: signalAppEnd,
+            waitForExit: waitForExit,
             passthroughArguments,
             environmentalVariables,
             cancellationToken: cancellationToken);
+
+        if (!waitForExit)
+        {
+            _logger.LogInformation("Not waiting for app to exit");
+            return ExitCode.SUCCESS;
+        }
 
         return ParseResult(_macCatalystExitCodeDetector, expectedExitCode, appBundleInfo, result);
     }
@@ -238,31 +320,39 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
             return ExitCode.APP_LAUNCH_FAILURE;
         }
 
-        int? exitCode;
-
-        var systemLog = _logs.FirstOrDefault(log => log.Description == LogType.SystemLog.ToString());
-        if (systemLog == null)
+        var logs = _logs.Where(log => log.Description == LogType.SystemLog.ToString() || log.Description == LogType.ApplicationLog.ToString()).ToList();
+        if (!logs.Any())
         {
             _logger.LogError("Application has finished but no system log found. Failed to determine the exit code!");
             return ExitCode.RETURN_CODE_NOT_SET;
         }
 
-        try
+        int? exitCode = null;
+        foreach (var log in logs)
         {
-            exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, systemLog);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError($"Failed to determine the exit code:{Environment.NewLine}{e}");
-            return ExitCode.RETURN_CODE_NOT_SET;
+            try
+            {
+                exitCode = exitCodeDetector.DetectExitCode(appBundleInfo, log);
+
+                if (exitCode.HasValue)
+                {
+                    _logger.LogDebug($"Detected exit code {exitCode.Value} from {log.FullPath}");
+                    break;
+                }
+
+                _logger.LogDebug($"Failed to determine the exit code from {log.FullPath}");
+            }
+            catch (Exception e)
+            {
+                _logger.LogDebug($"Failed to determine the exit code from {log.FullPath}:{Environment.NewLine}{e.Message}");
+            }
         }
 
         if (exitCode is null)
         {
             if (expectedExitCode != 0)
             {
-                _logger.LogError("Application has finished but XHarness failed to determine its exit code! " +
-                    "This is a known issue, please run the app again.");
+                _logger.LogError("Application has finished but XHarness failed to determine its exit code!");
                 return ExitCode.RETURN_CODE_NOT_SET;
             }
 

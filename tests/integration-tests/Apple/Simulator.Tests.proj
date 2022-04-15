@@ -3,6 +3,9 @@
 
   <ItemGroup>
     <HelixTargetQueue Include="osx.1015.amd64.open"/>
+    <HelixTargetQueue Include="osx.1100.amd64.open"/>
+    <HelixTargetQueue Include="osx.1200.amd64.open"/>
+    <HelixTargetQueue Include="osx.1200.arm64.open"/>
 
     <!-- apple test / ios-simulator-64 -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
@@ -11,7 +14,7 @@
 
     <!-- apple run / ios-simlator-64 -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=HelloiOS.app;IncludesTestRunner=false;ExpectedExitCode=200</AdditionalProperties>
+      <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple test / maccatalyst -->
@@ -21,7 +24,7 @@
 
     <!-- apple run / maccatalyst -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.Buffers.Tests.app;IncludesTestRunner=false;ExpectedExitCode=43</AdditionalProperties>
+      <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple test / tvos-simulator -->

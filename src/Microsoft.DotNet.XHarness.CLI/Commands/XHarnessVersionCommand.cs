@@ -12,18 +12,16 @@ internal class XHarnessVersionCommand : Command
 
     public override int Invoke(IEnumerable<string> arguments)
     {
-        // ignore arguments, print the name of the tool and the version number unix style, for example
-        // man --version
-        // man, version 1.6g
-        // gcc --version
+        // Print the name of the tool and the version number unix style
+        // Example:
         // Apple clang version 11.0.3 (clang-1103.0.32.29)
         // Target: x86_64-apple-darwin19.4.0
-        // Thread model: posix
         // InstalledDir: /Applications/Xcode114.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
-        var assembly = Assembly.GetExecutingAssembly();
-        var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-        Console.WriteLine($"xharness version {fvi.ProductVersion} ({fvi.OriginalFilename})");
-        Console.WriteLine($"InstalledDir: {fvi.FileName}");
+        var version = GetAssemblyVersion();
+        Console.WriteLine($"XHarness version {version.ProductVersion} ({version.OriginalFilename})");
+        Console.WriteLine($"InstalledDir: {version.FileName}");
         return 0;
     }
+
+    public static FileVersionInfo GetAssemblyVersion() => FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
 }

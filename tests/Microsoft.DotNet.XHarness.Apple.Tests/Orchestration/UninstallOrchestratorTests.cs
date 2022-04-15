@@ -22,6 +22,7 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
     public UninstallOrchestratorTests()
     {
         _uninstallOrchestrator = new(
+            _appBundleInformationParser.Object,
             _appInstaller.Object,
             _appUninstaller.Object,
             _deviceFinder.Object,
@@ -47,7 +48,7 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _uninstallOrchestrator.OrchestrateAppUninstall(
-            AppName,
+            BundleIdentifier,
             testTarget,
             SimulatorName,
             TimeSpan.FromMinutes(30),
@@ -72,12 +73,18 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
             Times.Never);
 
         _appUninstaller.Verify(
-            x => x.UninstallSimulatorApp(It.IsAny<IDevice>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            x => x.UninstallSimulatorApp(_simulator.Object, BundleIdentifier, It.IsAny<CancellationToken>()),
             Times.Once);
 
         _appUninstaller.Verify(
-            x => x.UninstallDeviceApp(It.IsAny<IDevice>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            x => x.UninstallDeviceApp(It.IsAny<IHardwareDevice>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
+
+        _simulator
+            .Verify(x => x.Boot(It.IsAny<ILog>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+
+        _simulator
+            .Verify(x => x.GetAppBundlePath(It.IsAny<ILog>(), BundleIdentifier, It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
     [Fact]
@@ -94,7 +101,7 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _uninstallOrchestrator.OrchestrateAppUninstall(
-            AppName,
+            BundleIdentifier,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
@@ -119,11 +126,11 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
             Times.Never);
 
         _appUninstaller.Verify(
-            x => x.UninstallSimulatorApp(It.IsAny<IDevice>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            x => x.UninstallSimulatorApp(It.IsAny<ISimulatorDevice>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
 
         _appUninstaller.Verify(
-            x => x.UninstallDeviceApp(_device.Object, AppName, It.IsAny<CancellationToken>()),
+            x => x.UninstallDeviceApp(_device.Object, BundleIdentifier, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -141,7 +148,7 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _uninstallOrchestrator.OrchestrateAppUninstall(
-            AppName,
+            BundleIdentifier,
             testTarget,
             SimulatorName,
             TimeSpan.FromMinutes(30),
@@ -167,11 +174,11 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
 
         // Verify that when resetting the device, we don't try to uninstall unnecessarily after
         _appUninstaller.Verify(
-            x => x.UninstallSimulatorApp(It.IsAny<IDevice>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            x => x.UninstallSimulatorApp(It.IsAny<ISimulatorDevice>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
 
         _appUninstaller.Verify(
-            x => x.UninstallDeviceApp(It.IsAny<IDevice>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            x => x.UninstallDeviceApp(It.IsAny<IHardwareDevice>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -187,7 +194,7 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
 
         // Act
         await _uninstallOrchestrator.OrchestrateAppUninstall(
-            AppName,
+            BundleIdentifier,
             testTarget,
             null,
             TimeSpan.FromMinutes(30),
@@ -222,7 +229,7 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
 
         // Act
         var result = await _uninstallOrchestrator.OrchestrateAppUninstall(
-            AppName,
+            BundleIdentifier,
             testTarget,
             deviceName: null,
             TimeSpan.FromMinutes(30),

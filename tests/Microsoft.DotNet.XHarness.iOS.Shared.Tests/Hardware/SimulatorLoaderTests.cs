@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -42,8 +41,8 @@ public class SimulatorLoaderTests
             .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
             .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
             {
-                    // we are going set the used args to validate them later, will always return an error from this method
-                    passedArguments = args;
+                // we are going set the used args to validate them later, will always return an error from this method
+                passedArguments = args;
                 return Task.FromResult(new ProcessExecutionResult
                 {
                     ExitCode = 1,
@@ -98,8 +97,8 @@ public class SimulatorLoaderTests
             {
                 passedArguments = args;
 
-                    // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                 tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                 CopySampleData(tempPath);
@@ -137,8 +136,8 @@ public class SimulatorLoaderTests
             {
                 passedArguments = args;
 
-                    // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                 tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                 CopySampleData(tempPath);
@@ -176,8 +175,8 @@ public class SimulatorLoaderTests
             {
                 passedArguments = args;
 
-                    // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                 tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                 CopySampleData(tempPath);
@@ -205,8 +204,8 @@ public class SimulatorLoaderTests
             {
                 passedArguments = args;
 
-                    // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                 tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                 CopySampleData(tempPath);
@@ -231,8 +230,8 @@ public class SimulatorLoaderTests
             .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
             .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
             {
-                    // We get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                // We get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                 tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                 CopySampleData(tempPath);
@@ -253,8 +252,8 @@ public class SimulatorLoaderTests
             .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
             .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
             {
-                    // We get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                // We get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                 tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                 CopySampleData(tempPath);
@@ -285,8 +284,8 @@ public class SimulatorLoaderTests
             .Setup(p => p.ExecuteCommandAsync(It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>()))
             .Returns<MlaunchArguments, ILog, TimeSpan, Dictionary<string, string>, int, CancellationToken?>((args, log, t, env, verbosity, token) =>
             {
-                    // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                 tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                 CopySampleData(tempPath);
@@ -319,8 +318,8 @@ public class SimulatorLoaderTests
                     return Task.FromResult(new ProcessExecutionResult { ExitCode = 137, TimedOut = true });
                 }
 
-                    // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                    var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
+                // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
+                var tempPath = args.Where(a => a is ListSimulatorsArgument).First().AsCommandLineArgument();
                 tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
 
                 CopySampleData(tempPath);

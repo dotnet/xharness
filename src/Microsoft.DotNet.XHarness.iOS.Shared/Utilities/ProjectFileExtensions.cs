@@ -1231,24 +1231,24 @@ public static class ProjectFileExtensions
             if (input[0] == '/')
             {
                 return input; // This is already a full path.
-                }
+            }
 
             input = input.Replace('\\', '/'); // make unix-style
 
-                if (rootDirectory != null)
+            if (rootDirectory != null)
             {
                 input = input.Replace("$(RootTestsDirectory)", rootDirectory);
             }
 
-                // Don't process anything that starts with a variable, it's either a full path already, or the variable will be updated according to the new location
-                if (input.StartsWith("$(", StringComparison.Ordinal))
+            // Don't process anything that starts with a variable, it's either a full path already, or the variable will be updated according to the new location
+            if (input.StartsWith("$(", StringComparison.Ordinal))
             {
                 return input;
             }
 
             input = Path.GetFullPath(Path.Combine(dir, input));
             input = input.Replace('/', '\\'); // make windows-style again
-                return input;
+            return input;
         };
 
         foreach (var key in nodes_with_paths)

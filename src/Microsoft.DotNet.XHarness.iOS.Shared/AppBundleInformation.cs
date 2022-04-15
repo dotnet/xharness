@@ -34,6 +34,12 @@ public class AppBundleInformation
         BundleExecutable = bundleExecutable;
     }
 
+    /// <summary>
+    /// In case we don't have the app bundle (Info.plist) but only the bundle ID, we can create an approximate version of the info object.
+    /// This is not ideal but "good enough" in most cases.
+    /// </summary>
+    /// <param name="bundleIdentifier">Bundle information</param>
+    /// <returns>Approximation of bundle information</returns>
     public static AppBundleInformation FromBundleId(string bundleIdentifier) =>
-        new(bundleIdentifier, bundleIdentifier, string.Empty, string.Empty, false);
+        new(bundleIdentifier, bundleIdentifier, string.Empty, string.Empty, false, bundleExecutable: bundleIdentifier);
 }

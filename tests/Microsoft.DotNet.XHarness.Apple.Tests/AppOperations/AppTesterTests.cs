@@ -18,7 +18,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
 using Moq;
 using Xunit;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.Apple.Tests.AppOperations;
 
 public class AppTesterTests : AppRunTestBase
@@ -108,16 +107,8 @@ public class AppTesterTests : AppRunTestBase
             _logs.Object,
             _helpers.Object);
 
-        var appInformation = new AppBundleInformation(
-            appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null);
-
         var (result, resultMessage) = await appTester.TestApp(
-            appInformation,
+            _appBundleInfo,
             new TestTargetOs(TestTarget.Simulator_tvOS, null),
             _mockSimulator,
             null,
@@ -141,6 +132,18 @@ public class AppTesterTests : AppRunTestBase
                    It.IsAny<TimeSpan>(),
                    It.IsAny<Dictionary<string, string>>(),
                    It.IsAny<int>(),
+                   It.IsAny<CancellationToken>()),
+                Times.Once);
+
+        _processManager
+            .Verify(
+                x => x.ExecuteXcodeCommandAsync(
+                   "simctl",
+                   It.Is<IList<string>>(args => args.Contains("log") && args.Contains(_mockSimulator.UDID) && args.Contains("stream") && args.Any(a => a.Contains(BundleExecutable))),
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
+                   It.IsAny<TimeSpan>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
 
@@ -201,16 +204,8 @@ public class AppTesterTests : AppRunTestBase
             _logs.Object,
             _helpers.Object);
 
-        var appInformation = new AppBundleInformation(
-            appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null);
-
         var (result, resultMessage) = await appTester.TestApp(
-            appInformation,
+            _appBundleInfo,
             new TestTargetOs(TestTarget.Device_iOS, null),
             s_mockDevice,
             null,
@@ -297,16 +292,8 @@ public class AppTesterTests : AppRunTestBase
             _logs.Object,
             _helpers.Object);
 
-        var appInformation = new AppBundleInformation(
-            appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null);
-
         var (result, resultMessage) = await appTester.TestApp(
-            appInformation,
+            _appBundleInfo,
             new TestTargetOs(TestTarget.Device_iOS, null),
             s_mockDevice,
             null,
@@ -386,16 +373,8 @@ public class AppTesterTests : AppRunTestBase
             _logs.Object,
             _helpers.Object);
 
-        var appInformation = new AppBundleInformation(
-            appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null);
-
         var (result, resultMessage) = await appTester.TestApp(
-            appInformation,
+            _appBundleInfo,
             new TestTargetOs(TestTarget.Device_iOS, null),
             s_mockDevice,
             null,
@@ -471,16 +450,8 @@ public class AppTesterTests : AppRunTestBase
             _logs.Object,
             _helpers.Object);
 
-        var appInformation = new AppBundleInformation(
-            appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null);
-
         var (result, resultMessage) = await appTester.TestMacCatalystApp(
-            appInformation,
+            _appBundleInfo,
             timeout: TimeSpan.FromSeconds(30),
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
@@ -569,24 +540,16 @@ public class AppTesterTests : AppRunTestBase
                    Capture.In(cancellationTokens)))
             .Callback(() =>
             {
-                    // Signal we have started mlaunch
-                    appStarted.SetResult();
+                // Signal we have started mlaunch
+                appStarted.SetResult();
 
-                    // When mlaunch gets signalled to shut down, shut down even our fake mlaunch
-                    cancellationTokens.Last().Register(() => mlaunchCompleted.SetResult(new ProcessExecutionResult
+                // When mlaunch gets signalled to shut down, shut down even our fake mlaunch
+                cancellationTokens.Last().Register(() => mlaunchCompleted.SetResult(new ProcessExecutionResult
                 {
                     TimedOut = true,
                 }));
             })
             .Returns(mlaunchCompleted.Task);
-
-        var appInformation = new AppBundleInformation(
-            appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null);
 
         // Act
         var appTester = new AppTester(
@@ -602,7 +565,7 @@ public class AppTesterTests : AppRunTestBase
             _helpers.Object);
 
         var testTask = appTester.TestApp(
-            appInformation,
+            _appBundleInfo,
             new TestTargetOs(TestTarget.Device_iOS, null),
             s_mockDevice,
             null,

@@ -13,7 +13,6 @@ using System.Xml;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 
-#nullable enable
 namespace Microsoft.DotNet.XHarness.Common.Execution;
 
 public class MacOSProcessManager : UnixProcessManager, IMacOSProcessManager
@@ -59,11 +58,21 @@ public class MacOSProcessManager : UnixProcessManager, IMacOSProcessManager
         }
     }
 
-    public Task<ProcessExecutionResult> ExecuteXcodeCommandAsync(string executable, IList<string> args, ILog log, TimeSpan timeout, CancellationToken cancellationToken = default)
+    public Task<ProcessExecutionResult> ExecuteXcodeCommandAsync(
+        string executable,
+        IList<string> args,
+        ILog log,
+        ILog stdoutLog,
+        ILog stderrLog,
+        TimeSpan timeout,
+        CancellationToken cancellationToken = default)
     {
         var filename = Path.Combine(XcodeRoot, "Contents", "Developer", "usr", "bin", executable);
-        return ExecuteCommandAsync(filename, args, log, timeout: timeout, cancellationToken: cancellationToken);
+        return ExecuteCommandAsync(filename, args, log, stdoutLog, stderrLog, timeout: timeout, cancellationToken: cancellationToken);
     }
+
+    public Task<ProcessExecutionResult> ExecuteXcodeCommandAsync(string executable, IList<string> args, ILog log, TimeSpan timeout, CancellationToken cancellationToken = default)
+        => ExecuteXcodeCommandAsync(executable, args, log, log, log, timeout, cancellationToken);
 
     #endregion
 

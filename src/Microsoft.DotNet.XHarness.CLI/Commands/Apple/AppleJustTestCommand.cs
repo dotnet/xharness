@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 using Microsoft.DotNet.XHarness.Common.CLI;
-using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple;
@@ -27,7 +26,7 @@ internal class AppleJustTestCommand : AppleAppCommand<AppleJustTestCommandArgume
     protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken) =>
         serviceProvider.GetRequiredService<IJustTestOrchestrator>()
             .OrchestrateTest(
-                AppBundleInformation.FromBundleId(Arguments.BundleIdentifier.Value),
+                Arguments.BundleIdentifier,
                 Arguments.Target,
                 Arguments.DeviceName,
                 Arguments.Timeout,
@@ -37,7 +36,6 @@ internal class AppleJustTestCommand : AppleAppCommand<AppleJustTestCommandArgume
                 Arguments.SingleMethodFilters.Value,
                 Arguments.ClassMethodFilters.Value,
                 includeWirelessDevices: Arguments.IncludeWireless,
-                resetSimulator: false,
                 enableLldb: Arguments.EnableLldb,
                 signalAppEnd: Arguments.SignalAppEnd,
                 Arguments.EnvironmentalVariables.Value,

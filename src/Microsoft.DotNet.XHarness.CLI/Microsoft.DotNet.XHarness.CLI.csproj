@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
@@ -10,7 +10,7 @@
     <RollForward>Major</RollForward>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>CS8002;</NoWarn>
-    
+
     <MlaunchDestinationDir>$(BaseIntermediateOutputPath)/mlaunch</MlaunchDestinationDir>
 
     <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
@@ -29,13 +29,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.Mlaunch" Version="13.2.0-22159.21.696db0a953">
+    <PackageReference Include="Microsoft.DotNet.Mlaunch" Version="13.3.0-22181.16.cf9f7409e9">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0-rc.1.20451.14" />
-    <PackageReference Include="Mono.Options" Version="6.6.0.161" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
+    <PackageReference Include="Mono.Options" Version="6.12.0.148" />
     <PackageReference Include="Selenium.WebDriver" Version="4.0.0-alpha05" />
   </ItemGroup>
 
@@ -60,7 +60,7 @@
     <RemoveDir Directories="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/systrace" />
   </Target>
 
-  <Target Name="IncludeAdb" BeforeTargets="Build" DependsOnTargets="DownloadAdb">
+  <Target Name="IncludeAdb" BeforeTargets="DispatchToInnerBuilds" DependsOnTargets="DownloadAdb">
     <ItemGroup>
       <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb.exe" />
       <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/AdbWinApi.dll" />
@@ -86,7 +86,8 @@
   </Target>
 
   <!-- The ExtractMlaunch target comes from the Mlaunch NuGet package and places files in the obj/ dir -->
-  <Target Name="IncludeMlaunch" BeforeTargets="Build" DependsOnTargets="ExtractMlaunch">
+  <!-- This target used to depend on ExtractMlaunch but it broke when we started multi-targeting XHarness -->
+  <Target Name="IncludeMlaunch" BeforeTargets="_GetPackageFiles">
     <ItemGroup>
       <Content Include="$(BaseIntermediateOutputPath)/mlaunch/**/*.*">
         <Pack>true</Pack>

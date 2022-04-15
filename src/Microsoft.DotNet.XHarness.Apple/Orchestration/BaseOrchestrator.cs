@@ -30,6 +30,8 @@ namespace Microsoft.DotNet.XHarness.Apple;
 public abstract class BaseOrchestrator : IDisposable
 {
     protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
+
+    private readonly IAppBundleInformationParser _appBundleInformationParser;
     private readonly IAppInstaller _appInstaller;
     private readonly IAppUninstaller _appUninstaller;
     private readonly IDeviceFinder _deviceFinder;
@@ -42,7 +44,20 @@ public abstract class BaseOrchestrator : IDisposable
 
     private bool _lldbFileCreated;
 
+    // This is needed because
+    // - For simulators, we query the simulator for Info.plist location and parse it
+    // - For full commands, we have path to Info.plist directly and parse it
+    // - For MacCatalyst or just- commands on devices, we don't even need it fully initialized
+    public delegate Task<AppBundleInformation> GetAppBundleInfoFunc(TestTargetOs target, IDevice device, CancellationToken cancellationToken);
+
+    // This is what different commands (run/test) use to inject the actual way how they want to run the MacCatalyst app
+    public delegate Task<ExitCode> ExecuteMacCatalystAppFunc(AppBundleInformation appBundleInfo);
+
+    // This is what different commands (run/test) use to inject the actual way how they want to run the simulator/device app
+    public delegate Task<ExitCode> ExecuteAppFunc(AppBundleInformation appBundleInfo, IDevice device, IDevice? companion);
+
     protected BaseOrchestrator(
+        IAppBundleInformationParser appBundleInformationParser,
         IAppInstaller appInstaller,
         IAppUninstaller appUninstaller,
         IDeviceFinder deviceFinder,
@@ -53,6 +68,7 @@ public abstract class BaseOrchestrator : IDisposable
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
     {
+        _appBundleInformationParser = appBundleInformationParser ?? throw new ArgumentNullException(nameof(appBundleInformationParser));
         _appInstaller = appInstaller ?? throw new ArgumentNullException(nameof(appInstaller));
         _appUninstaller = appUninstaller ?? throw new ArgumentNullException(nameof(appUninstaller));
         _deviceFinder = deviceFinder ?? throw new ArgumentNullException(nameof(deviceFinder));
@@ -70,9 +86,40 @@ public abstract class BaseOrchestrator : IDisposable
         bool includeWirelessDevices,
         bool resetSimulator,
         bool enableLldb,
-        AppBundleInformation appBundleInfo,
-        Func<AppBundleInformation, Task<ExitCode>> executeMacCatalystApp,
-        Func<AppBundleInformation, IDevice, IDevice?, Task<ExitCode>> executeApp,
+        GetAppBundleInfoFunc getAppBundle,
+        ExecuteMacCatalystAppFunc executeMacCatalystApp,
+        ExecuteAppFunc executeApp,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await OrchestrateOperationInternal(
+                target,
+                deviceName,
+                includeWirelessDevices,
+                resetSimulator,
+                enableLldb,
+                getAppBundle,
+                executeMacCatalystApp,
+                executeApp,
+                cancellationToken);
+        }
+        catch (OperationCanceledException e)
+        {
+            _logger.LogDebug(e.ToString());
+            return ExitCode.APP_LAUNCH_TIMEOUT;
+        }
+    }
+
+    private async Task<ExitCode> OrchestrateOperationInternal(
+        TestTargetOs target,
+        string? deviceName,
+        bool includeWirelessDevices,
+        bool resetSimulator,
+        bool enableLldb,
+        GetAppBundleInfoFunc getAppBundle,
+        ExecuteMacCatalystAppFunc executeMacCatalystApp,
+        ExecuteAppFunc executeApp,
         CancellationToken cancellationToken)
     {
         _lldbFileCreated = false;
@@ -97,12 +144,30 @@ public abstract class BaseOrchestrator : IDisposable
             _logger.LogWarning("Including wireless devices while targeting a simulator has no effect");
         }
 
+        if (resetSimulator && !target.Platform.IsSimulator())
+        {
+            _logger.LogWarning("Targeting device but requesting simulator reset has no effect");
+            resetSimulator = false;
+        }
+
         ExitCode exitCode;
         IDevice device;
         IDevice? companionDevice;
+        AppBundleInformation appBundleInfo;
 
         if (target.Platform == TestTarget.MacCatalyst)
         {
+            try
+            {
+                appBundleInfo = await getAppBundle(target, null!, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                _logger.LogError(e.Message);
+                return ExitCode.PACKAGE_NOT_FOUND;
+            }
+
             try
             {
                 return await executeMacCatalystApp(appBundleInfo);
@@ -155,8 +220,31 @@ public abstract class BaseOrchestrator : IDisposable
             {
                 _logger.LogInformation($"Found companion {(target.Platform.IsSimulator() ? "simulator" : "physical")} device '{companionDevice.Name}'");
             }
+        }
+        catch (NoDeviceFoundException e)
+        {
+            _logger.LogError(e.Message);
+            return ExitCode.DEVICE_NOT_FOUND;
+        }
 
-            if (target.Platform.IsSimulator() && resetSimulator)
+        cancellationToken.ThrowIfCancellationRequested();
+
+        try
+        {
+            appBundleInfo = await getAppBundle(target, device, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _logger.LogError(e.Message);
+            return ExitCode.PACKAGE_NOT_FOUND;
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (target.Platform.IsSimulator() && resetSimulator)
+        {
+            try
             {
                 var simulator = (ISimulatorDevice)device;
                 var bundleIds = appBundleInfo.BundleIdentifier == string.Empty ? Array.Empty<string>() : new[] { appBundleInfo.BundleIdentifier };
@@ -173,12 +261,14 @@ public abstract class BaseOrchestrator : IDisposable
 
                 _logger.LogInformation("Simulator reset finished");
             }
+            catch (Exception e)
+            {
+                _logger.LogError($"Failed to reset simulator: " + Environment.NewLine + e);
+                return ExitCode.SIMULATOR_FAILURE;
+            }
         }
-        catch (NoDeviceFoundException e)
-        {
-            _logger.LogError(e.Message);
-            return ExitCode.DEVICE_NOT_FOUND;
-        }
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         // Note down the actual test target
         // For simulators (e.g. "iOS 13.4"), we strip the iOS part and keep the version only, for devices there's no OS
@@ -189,6 +279,7 @@ public abstract class BaseOrchestrator : IDisposable
         if (!resetSimulator)
         {
             await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, isPreparation: true, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         exitCode = await InstallApp(appBundleInfo, device, target, cancellationToken);
@@ -293,11 +384,7 @@ public abstract class BaseOrchestrator : IDisposable
 
         if (!result.Succeeded)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                _logger.LogError($"Application installation timed out");
-                return ExitCode.PACKAGE_INSTALLATION_TIMEOUT;
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
             var exitCode = ExitCode.PACKAGE_INSTALLATION_FAILURE;
 
@@ -348,8 +435,8 @@ public abstract class BaseOrchestrator : IDisposable
         }
 
         ProcessExecutionResult uninstallResult = target.IsSimulator()
-            ? await _appUninstaller.UninstallSimulatorApp(device, bundleIdentifier, cancellationToken)
-            : await _appUninstaller.UninstallDeviceApp(device, bundleIdentifier, cancellationToken);
+            ? await _appUninstaller.UninstallSimulatorApp((ISimulatorDevice)device, bundleIdentifier, cancellationToken)
+            : await _appUninstaller.UninstallDeviceApp((IHardwareDevice)device, bundleIdentifier, cancellationToken);
 
         if (uninstallResult.Succeeded)
         {
@@ -400,6 +487,30 @@ public abstract class BaseOrchestrator : IDisposable
         {
             _logger.LogInformation("Simulators cleaned up");
         }
+    }
+
+    protected async Task<AppBundleInformation> GetAppBundleFromId(TestTargetOs target, IDevice device, string bundleIdentifier, CancellationToken cancellationToken)
+    {
+        // We can exchange bundle ID for path where the bundle is on the simulator and get that
+        if (device is ISimulatorDevice simulator)
+        {
+            _logger.LogInformation($"Querying simulator for app bundle information..");
+            await simulator.Boot(_mainLog, cancellationToken);
+            var appBundlePath = await simulator.GetAppBundlePath(_mainLog, bundleIdentifier, cancellationToken);
+            return await GetAppBundleFromPath(target, appBundlePath, cancellationToken);
+        }
+
+        // We're unable to do this for real devices / or MacCatalyst
+        // It is not ideal but doesn't matter much at the moment as we don't need the full list of properties there
+        _logger.LogDebug("Supplemented full app bundle information with bundle identifier");
+        return AppBundleInformation.FromBundleId(bundleIdentifier);
+    }
+
+    protected Task<AppBundleInformation> GetAppBundleFromPath(TestTargetOs target, string appBundlePath, CancellationToken cancellationToken)
+    {
+        appBundlePath = Path.GetFullPath(appBundlePath);
+        _logger.LogInformation($"Getting app bundle information from '{appBundlePath}'..");
+        return _appBundleInformationParser.ParseFromAppBundle(appBundlePath, target.Platform, _mainLog, cancellationToken);
     }
 
     protected static bool IsLldbEnabled() => File.Exists(s_mlaunchLldbConfigFile);
