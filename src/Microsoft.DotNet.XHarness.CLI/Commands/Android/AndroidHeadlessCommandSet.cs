@@ -2,10 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.DotNet.XHarness.CLI.Commands.AndroidHeadless;
+using Microsoft.DotNet.XHarness.CLI.Commands.Android;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI.AndroidHeadless;
+namespace Microsoft.DotNet.XHarness.CLI.Android;
 
 // Main Android command set that contains the plaform specific commands. 
 // This allows the command line to support different options in different platforms.
@@ -17,11 +17,8 @@ public class AndroidHeadlessCommandSet : CommandSet
     {
         // Common verbs shared with Android
         Add(new AndroidHeadlessTestCommand());
-        Add(new AndroidHeadlessDeviceCommand());
         Add(new AndroidHeadlessInstallCommand());
         Add(new AndroidHeadlessRunCommand());
         Add(new AndroidHeadlessUninstallCommand());
-        Add(new AndroidHeadlessAdbCommand());
-        Add(new AndroidHeadlessStateCommand());
     }
 }

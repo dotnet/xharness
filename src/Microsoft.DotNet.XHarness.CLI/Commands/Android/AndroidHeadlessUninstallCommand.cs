@@ -3,14 +3,14 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.DotNet.XHarness.Android;
-using Microsoft.DotNet.XHarness.CLI.AndroidHeadless;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
+using Microsoft.DotNet.XHarness.CLI.Android;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.AndroidHeadless;
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Android;
 
-internal class AndroidHeadlessUninstallCommand : AndroidHeadlessCommand<AndroidHeadlessUninstallCommandArguments>
+internal class AndroidHeadlessUninstallCommand : AndroidCommand<AndroidHeadlessUninstallCommandArguments>
 {
     protected override AndroidHeadlessUninstallCommandArguments Arguments { get; } = new();
 

@@ -4,7 +4,7 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
 internal class AndroidHeadlessUninstallCommandArguments : XHarnessCommandArguments
 {

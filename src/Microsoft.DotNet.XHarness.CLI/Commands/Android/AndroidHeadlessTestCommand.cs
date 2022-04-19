@@ -6,14 +6,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.DotNet.XHarness.Android;
-using Microsoft.DotNet.XHarness.CLI.AndroidHeadless;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
+using Microsoft.DotNet.XHarness.CLI.Android;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.AndroidHeadless;
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Android;
 
-internal class AndroidHeadlessTestCommand : AndroidHeadlessCommand<AndroidHeadlessTestCommandArguments>
+internal class AndroidHeadlessTestCommand : AndroidCommand<AndroidHeadlessTestCommandArguments>
 {
     private const string ReturnCodeVariableName = "return-code";
 

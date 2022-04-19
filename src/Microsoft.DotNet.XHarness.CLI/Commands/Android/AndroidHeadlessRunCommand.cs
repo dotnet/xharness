@@ -7,14 +7,14 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.Android.Execution;
-using Microsoft.DotNet.XHarness.CLI.AndroidHeadless;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
+using Microsoft.DotNet.XHarness.CLI.Android;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.AndroidHeadless;
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Android;
 
-internal class AndroidHeadlessRunCommand : AndroidHeadlessCommand<AndroidHeadlessRunCommandArguments>
+internal class AndroidHeadlessRunCommand : AndroidCommand<AndroidHeadlessRunCommandArguments>
 {
     // nunit2 one should go away eventually
     private static readonly string[] s_xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
