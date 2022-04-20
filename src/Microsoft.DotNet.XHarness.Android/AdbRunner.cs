@@ -990,12 +990,13 @@ public class AdbRunner
         var adbArgs = new List<string>
         {
             "shell",
+            localTestPath,
+            "-r",
+            localRuntimePath,
         };
 
         _log.LogInformation($"Starting {testScript} from {localTestPath} (exit code 0 == success)");
-        adbArgs.Add(localTestPath);
-        adbArgs.Add("-r");
-        adbArgs.Add(localRuntimePath);
+
 
         var stopWatch = Stopwatch.StartNew();
         var result = RunAdbCommand(adbArgs, timeout);
