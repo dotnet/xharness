@@ -473,7 +473,8 @@ public class AdbRunner
         var result = RunAdbCommand(new[] { "shell", "pkill", testName });
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
         {
-            _log.LogError($"Error:{Environment.NewLine}{result}");
+            _log.LogError($"Failed to kill process by name ({testName}):{Environment.NewLine}{result}");
+
         }
         else
         {
