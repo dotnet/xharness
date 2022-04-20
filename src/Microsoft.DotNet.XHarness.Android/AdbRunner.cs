@@ -478,7 +478,8 @@ public class AdbRunner
         }
         else
         {
-            _log.LogDebug($"Success!{Environment.NewLine}{result.StandardOutput}");
+            _log.LogDebug($"Process {testName} killed!{Environment.NewLine}{result.StandardOutput}");
+
         }
         return result.ExitCode;
     }
