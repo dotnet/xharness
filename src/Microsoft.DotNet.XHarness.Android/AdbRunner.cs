@@ -398,7 +398,7 @@ public class AdbRunner
 
             KillAdbServer();
             StartAdbServer();
-            result = RunAdbCommand(new[] { "rm", "-fr", fullTestPath });
+            result = RunAdbCommand(new[] { "shell", "rm", "-fr", fullTestPath });
         }
 
         if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
