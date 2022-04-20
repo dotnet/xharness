@@ -407,7 +407,8 @@ public class AdbRunner
         }
         else
         {
-            _log.LogError(message: $"Error: {result}");
+            _log.LogError(message: $"Failed to uninstall {fullTestPath}: {result}");
+
         }
 
         return result.ExitCode;
