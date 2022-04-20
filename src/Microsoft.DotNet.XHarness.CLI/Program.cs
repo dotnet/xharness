@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.DotNet.XHarness.CLI.Android;
+using Microsoft.DotNet.XHarness.CLI.AndroidHeadless;
 using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
@@ -81,6 +82,7 @@ public static class Program
 #endif
 
         commandSet.Add(new AndroidCommandSet());
+        commandSet.Add(new AndroidHeadlessCommandSet());
         commandSet.Add(new WasmCommandSet());
         commandSet.Add(new XHarnessHelpCommand());
         commandSet.Add(new XHarnessVersionCommand());
@@ -111,6 +113,13 @@ public static class Program
                 _ => false,
             },
             "android" => command switch
+            {
+                "device" => true,
+                "state" => args.Contains("--json"),
+                "adb" => true,
+                _ => false,
+            },
+            "android-headless" => command switch
             {
                 "device" => true,
                 "state" => args.Contains("--json"),

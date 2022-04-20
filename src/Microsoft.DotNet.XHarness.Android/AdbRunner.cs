@@ -41,6 +41,8 @@ public class AdbRunner
     private const string AdbInstallBrokenPipeError = "Failure calling service package: Broken pipe";
     private const string AdbInstallException = "Exception occurred while executing 'install':";
 
+    public const string GlobalReadWriteDirectory = "/data/local/tmp";
+
     private readonly string _absoluteAdbExePath;
     private readonly ILogger _log;
     private readonly IAdbProcessManager _processManager;
@@ -251,6 +253,72 @@ public class AdbRunner
 
     public void KillAdbServer() => RunAdbCommand(new[] { "kill-server" }).ThrowIfFailed("Error killing ADB Server");
 
+    public int CopyHeadlessFolder(string testPath, bool sharedRuntime = false)
+    {
+        _log.LogInformation($"Attempting to install {testPath}");
+
+        if (string.IsNullOrEmpty(testPath))
+        {
+            throw new ArgumentException($"No value supplied for {nameof(testPath)} ");
+        }
+
+        if (!Directory.Exists(testPath))
+        {
+            throw new FileNotFoundException($"Could not find {testPath}", testPath);
+        }
+
+        var targetDirectory = Path.Combine(GlobalReadWriteDirectory, new DirectoryInfo(testPath).Name);
+        if (sharedRuntime)
+        {
+            targetDirectory = Path.Combine(GlobalReadWriteDirectory, "runtime");
+        }
+        var result = RunAdbCommand(new[] { "push", testPath, targetDirectory });
+
+
+        // Two possible retry scenarios, theoretically both can happen on the same run:
+
+        // 1. Pipe between ADB server and emulator device is broken; restarting the ADB server helps
+        if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE || result.StandardError.Contains(AdbInstallBrokenPipeError))
+        {
+            _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install");
+            KillAdbServer();
+            StartAdbServer();
+            result = RunAdbCommand(new[] { "push", testPath, targetDirectory });
+        }
+
+        // 2. Installation cache on device is messed up; restarting the device reliably seems to unblock this (unless the device is actually full, if so this will error the same)
+        if (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbDeviceFullInstallFailureMessage))
+        {
+            _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{Environment.NewLine}Output:{result}");
+            RebootAndroidDevice();
+            WaitForDevice();
+            result = RunAdbCommand(new[] { "push", testPath, targetDirectory });
+        }
+
+        // 3. Installation timed out or failed with exception; restarting the ADB server, reboot the device and give more time for installation
+        // installer might hang up so we need to clean it up and free memory
+        if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT || (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbInstallException)))
+        {
+            _log.LogWarning($"Installation failed; Will make one attempt to restart ADB server and the device, then retry the install");
+            KillAdbServer();
+            StartAdbServer();
+            RebootAndroidDevice();
+            WaitForDevice();
+            result = RunAdbCommand(new[] { "push", testPath, targetDirectory }, TimeSpan.FromMinutes(10));
+        }
+
+        if (result.ExitCode != 0)
+        {
+            _log.LogError($"Error:{Environment.NewLine}{result}");
+        }
+        else
+        {
+            _log.LogInformation($"Successfully installed {testPath} to {targetDirectory}");
+        }
+
+        return result.ExitCode;
+    }
+
     public int InstallApk(string apkPath)
     {
         _log.LogInformation($"Attempting to install {apkPath}");
@@ -311,6 +379,41 @@ public class AdbRunner
         return result.ExitCode;
     }
 
+    public int DeleteHeadlessFolder(string testPath)
+    {
+        if (string.IsNullOrEmpty(testPath))
+        {
+            throw new ArgumentNullException(nameof(testPath));
+        }
+
+        var fullTestPath = Path.Combine(GlobalReadWriteDirectory, new DirectoryInfo(testPath).Name);
+
+        _log.LogInformation($"Attempting to remove folder '{fullTestPath}'..");
+        var result = RunAdbCommand(new[] { "shell", "rm", "-fr", fullTestPath });
+
+        // See note above in install()
+        if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE)
+        {
+            _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, and retry the uninstallation");
+
+            KillAdbServer();
+            StartAdbServer();
+            result = RunAdbCommand(new[] { "shell", "rm", "-fr", fullTestPath });
+        }
+
+        if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
+        {
+            _log.LogInformation($"Successfully uninstalled {fullTestPath}");
+        }
+        else
+        {
+            _log.LogError(message: $"Failed to uninstall {fullTestPath}: {result}");
+
+        }
+
+        return result.ExitCode;
+    }
+
     public int UninstallApk(string apkName)
     {
         if (string.IsNullOrEmpty(apkName))
@@ -360,6 +463,23 @@ public class AdbRunner
         else
         {
             _log.LogDebug($"Success!{Environment.NewLine}{result.StandardOutput}");
+        }
+        return result.ExitCode;
+    }
+
+    public int KillProcess(string testName)
+    {
+        _log.LogInformation($"Killing all running processes for '{testName}': ");
+        var result = RunAdbCommand(new[] { "shell", "pkill", testName });
+        if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
+        {
+            _log.LogError($"Failed to kill process by name ({testName}):{Environment.NewLine}{result}");
+
+        }
+        else
+        {
+            _log.LogDebug($"Process {testName} killed!{Environment.NewLine}{result.StandardOutput}");
+
         }
         return result.ExitCode;
     }
@@ -445,6 +565,26 @@ public class AdbRunner
         {
             Directory.Delete(tempFolder, true);
         }
+    }
+
+        // Assumes the directory is empty so any files present after the pull are new.
+    public int HeadlessPullFiles(string devicePath, string localPath)
+    {
+        if (string.IsNullOrEmpty(localPath))
+        {
+            throw new ArgumentNullException(nameof(localPath));
+        }
+
+        Directory.CreateDirectory(localPath);
+        _log.LogInformation($"Attempting to pull contents of {devicePath} to {localPath}");
+
+        var result = RunAdbCommand(new[] { "pull", devicePath, localPath });
+
+        if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
+        {
+            _log.LogError($"Failed to pull file.");
+        }
+        return (int)AdbExitCodes.SUCCESS;
     }
 
     /// <summary>
@@ -590,12 +730,29 @@ public class AdbRunner
 
         if (requiredInstalledApp != null)
         {
-            devices = devices.Where(device => device.InstalledApplications?.Any(app => app.Contains(requiredInstalledApp)) ?? false).ToList();
-
-            if (devices.Count == 0)
+            if (requiredInstalledApp.StartsWith("package:"))
             {
-                _log.LogError($"No attached device with app {requiredInstalledApp} installed");
-                return devices;
+                devices = devices.Where(device => device.InstalledApplications?.Any(app => app.Contains(requiredInstalledApp)) ?? false).ToList();
+
+                if (devices.Count == 0)
+                {
+                    _log.LogError($"No attached device with app {requiredInstalledApp} installed");
+                    return devices;
+                }
+            }
+            else if (requiredInstalledApp.StartsWith("filename:"))
+            {
+                devices = devices.Where(device => TestFileExists(requiredInstalledApp.Substring("filename:".Length), device.DeviceSerial)).ToList();
+
+                if (devices.Count == 0)
+                {
+                    _log.LogError($"No attached device with file {requiredInstalledApp} installed");
+                    return devices;
+                }
+            }
+            else
+            {
+                _log.LogError($"Could not understand required app \"{requiredInstalledApp}\"");
             }
         }
 
@@ -774,6 +931,43 @@ public class AdbRunner
         return result.StandardOutput.Trim();
     }
 
+    private bool TestFileExists(string path, string? deviceName = null)
+    {
+        var localTestPath = Path.Combine(GlobalReadWriteDirectory, new DirectoryInfo(path).Name);
+        IEnumerable<string> args = new string[] {"shell", "stat", localTestPath};
+
+        if (!string.IsNullOrEmpty(deviceName))
+        {
+            args = new[] { "-s", deviceName }.Concat(args);
+        }
+
+        // Assumption: All Devices on a machine running Xharness should attempt to be online or disconnected.
+        ProcessExecutionResults result = Retry(
+            action: () => RunAdbCommand(args, TimeSpan.FromSeconds(30)),
+            needsRetry: r =>
+            {
+                if (r.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
+                {
+                    _log.LogWarning($"Device {deviceName} is offline; retrying up to five minutes");
+                    return true;
+                }
+
+                return false;
+            },
+            retryInterval: TimeSpan.FromSeconds(10),
+            retryPeriod: TimeSpan.FromMinutes(5));
+
+        if (!result.Succeeded)
+        {
+            _log.LogError($"Failed to check existence of {localTestPath}. Check if a device is attached / emulator is started" +
+                Environment.NewLine + result.StandardError);
+
+            return false;
+        }
+
+        return (result.ExitCode == 0);
+    }
+
     public void SetActiveDevice(AndroidDevice? device)
     {
         _processManager.DeviceSerial = device?.DeviceSerial ?? string.Empty;
@@ -787,6 +981,39 @@ public class AdbRunner
         {
             _log.LogInformation($"Active Android device set to serial '{device.DeviceSerial}'");
         }
+    }
+
+    public ProcessExecutionResults RunHeadlessCommand(string testPath, string runtimePath, string testAssembly, string testScript, TimeSpan timeout)
+    {
+        var localTestPath = Path.Combine(GlobalReadWriteDirectory, new DirectoryInfo(testPath).Name, testScript);
+        var localRuntimePath = Path.Combine(GlobalReadWriteDirectory, "runtime", "dotnet");
+        var adbArgs = new List<string>
+        {
+            "shell",
+            localTestPath,
+            "-r",
+            localRuntimePath,
+        };
+
+        _log.LogInformation($"Starting {testScript} from {localTestPath} (exit code 0 == success)");
+
+
+        var stopWatch = Stopwatch.StartNew();
+        var result = RunAdbCommand(adbArgs, timeout);
+        stopWatch.Stop();
+
+        if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
+        {
+            _log.LogInformation($"An error occurred running {testScript}");
+        }
+        else
+        {
+            _log.LogInformation($"Running command {testScript} took {stopWatch.Elapsed.TotalSeconds} seconds");
+        }
+
+        _log.LogDebug(result.ToString());
+
+        return result;
     }
 
     public ProcessExecutionResults RunApkInstrumentation(string apkName, string? instrumentationClassName, Dictionary<string, string> args, TimeSpan timeout)
