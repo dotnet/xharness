@@ -8,11 +8,13 @@ using System.IO;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.Android.Execution;
 using Microsoft.DotNet.XHarness.CLI.Android;
+using Microsoft.DotNet.XHarness.CLI.AndroidHeadless;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.Android;
+namespace Microsoft.DotNet.XHarness.CLI.Commands.AndroidHeadless;
 
 internal class AndroidHeadlessRunCommand : AndroidCommand<AndroidHeadlessRunCommandArguments>
 {

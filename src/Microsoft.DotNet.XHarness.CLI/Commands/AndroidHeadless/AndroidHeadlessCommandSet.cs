@@ -3,9 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.DotNet.XHarness.CLI.Commands.Android;
+using Microsoft.DotNet.XHarness.CLI.Commands.AndroidHeadless;
 using Mono.Options;
 
-namespace Microsoft.DotNet.XHarness.CLI.Android;
+namespace Microsoft.DotNet.XHarness.CLI.AndroidHeadless;
 
 // Main Android command set that contains the plaform specific commands. 
 // This allows the command line to support different options in different platforms.

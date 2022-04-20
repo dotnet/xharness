@@ -4,10 +4,11 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
 
-internal class AndroidHeadlessInstallCommandArguments : XHarnessCommandArguments, IAndroidHeadlessAppRunArguments
+internal class AndroidHeadlessTestCommandArguments : XHarnessCommandArguments, IAndroidHeadlessAppRunArguments
 {
     public TestPathArgument TestPath { get; } = new();
     public RuntimePathArgument RuntimePath { get; } = new();
@@ -19,6 +20,9 @@ internal class AndroidHeadlessInstallCommandArguments : XHarnessCommandArguments
     public DeviceIdArgument DeviceId { get; } = new();
     public DeviceArchitectureArgument DeviceArchitecture { get; } = new();
     public ApiVersionArgument ApiVersion { get; } = new();
+    public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
+    public DeviceOutputFolderArgument DeviceOutputFolder { get; } = new();
+    public WifiArgument Wifi { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
@@ -28,9 +32,12 @@ internal class AndroidHeadlessInstallCommandArguments : XHarnessCommandArguments
         TestScript,
         OutputDirectory,
         Timeout,
-        DeviceId,
         LaunchTimeout,
         DeviceArchitecture,
+        DeviceId,
         ApiVersion,
+        ExpectedExitCode,
+        DeviceOutputFolder,
+        Wifi,
     };
 }

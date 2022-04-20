@@ -3,8 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
 
 internal class AndroidHeadlessUninstallCommandArguments : XHarnessCommandArguments
 {

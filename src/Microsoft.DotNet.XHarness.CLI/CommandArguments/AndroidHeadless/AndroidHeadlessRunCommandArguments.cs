@@ -4,10 +4,11 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
 
-internal class AndroidHeadlessTestCommandArguments : XHarnessCommandArguments, IAndroidHeadlessAppRunArguments
+internal class AndroidHeadlessRunCommandArguments : XHarnessCommandArguments, IAndroidHeadlessAppRunArguments
 {
     public TestPathArgument TestPath { get; } = new();
     public RuntimePathArgument RuntimePath { get; } = new();
@@ -17,7 +18,6 @@ internal class AndroidHeadlessTestCommandArguments : XHarnessCommandArguments, I
     public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
     public LaunchTimeoutArgument LaunchTimeout { get; } = new(TimeSpan.FromMinutes(5));
     public DeviceIdArgument DeviceId { get; } = new();
-    public DeviceArchitectureArgument DeviceArchitecture { get; } = new();
     public ApiVersionArgument ApiVersion { get; } = new();
     public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
     public DeviceOutputFolderArgument DeviceOutputFolder { get; } = new();
@@ -32,7 +32,6 @@ internal class AndroidHeadlessTestCommandArguments : XHarnessCommandArguments, I
         OutputDirectory,
         Timeout,
         LaunchTimeout,
-        DeviceArchitecture,
         DeviceId,
         ApiVersion,
         ExpectedExitCode,
