@@ -610,7 +610,7 @@ public class TestReporter : ITestReporter
         else
         {
             WrenchLog.WriteLine("AddSummary: <b><i>{0} crashed at startup (no log)</i></b><br/>", _runMode);
-            _mainLog.WriteLine("Test run crashed before it started (no log file produced)");
+            _mainLog.WriteLine("Test run started but crashed and no test results were reported");
             result.ResultMessage = "No test log file was produced";
             crashed = true;
             Success = false;
