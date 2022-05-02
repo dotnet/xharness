@@ -85,8 +85,7 @@ public class CrashSnapshotReporter : ICrashSnapshotReporter
                 }
                 else
                 {
-
-                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                    await Task.Delay(TimeSpan.FromSeconds(1));
                 }
 
                 continue;
@@ -124,7 +123,7 @@ public class CrashSnapshotReporter : ICrashSnapshotReporter
                         }
 
                         ++retry;
-                        Thread.Sleep(TimeSpan.FromSeconds(2 * retry));
+                        await Task.Delay(TimeSpan.FromSeconds(2 * retry));
                     }
                 }
             }
