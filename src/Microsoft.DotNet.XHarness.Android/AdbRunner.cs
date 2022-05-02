@@ -995,11 +995,15 @@ public class AdbRunner
             deviceRuntimePath,
         };
 
+        _log.LogInformation($"Setting executable permissions on {testScript} and runtime");
+        var result = RunAdbCommand(new[] { "shell", "chmod", "a+x", deviceTestPath, deviceRuntimePath });
+        result.ThrowIfFailed($"Failed setting permissions on {deviceTestPath} and {deviceRuntimePath}: {result}");
+
         _log.LogInformation($"Starting {testScript} from {deviceTestPath} (exit code 0 == success)");
 
 
         var stopWatch = Stopwatch.StartNew();
-        var result = RunAdbCommand(adbArgs, timeout);
+        result = RunAdbCommand(adbArgs, timeout);
         stopWatch.Stop();
 
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
