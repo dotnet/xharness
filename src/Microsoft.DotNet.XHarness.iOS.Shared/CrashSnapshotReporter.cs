@@ -101,22 +101,25 @@ public class CrashSnapshotReporter : ICrashSnapshotReporter
                 foreach (var path in newCrashFiles)
                 {
                     // It can happen that the crash log is still being written to so we have to retry
-                    int retry = 0;
+                    int retry = 1;
                     while (true)
                     {
                         try
                         {
-                            _logs.AddFile(path, $"Crash report: {Path.GetFileName(path)}");
+                            var fileName = Path.GetFileName(path);
+                            _log.WriteLine($"  - Adding {path}");
+                            _logs.AddFile(path, $"Crash report: {fileName}");
+                            _log.WriteLine($"    Successfully copied {fileName}");
                             break;
                         }
                         catch (Exception e)
                         {
-                            _log.WriteLine($"Failed to copy a crash report {path}: {e.Message}");
+                            _log.WriteLine($"    Attempt {retry} to copy a crash report failed: {e.Message}");
                         }
 
                         if (retry == 3)
                         {
-                            _log.WriteLine($"Failed to copy a crash report after {retry} retries, skipping {path}");
+                            _log.WriteLine($"    Failed to copy a crash report after {retry} retries");
                             break;
                         }
 
