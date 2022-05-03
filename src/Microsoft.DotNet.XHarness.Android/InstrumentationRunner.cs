@@ -4,6 +4,7 @@ using System.IO;
 using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.DotNet.XHarness.Common.CLI;
+using System.Linq;
 
 namespace Microsoft.DotNet.XHarness.Android;
 
@@ -16,6 +17,7 @@ public class InstrumentationRunner
     private const string TestRunSummaryVariableName = "test-execution-summary";
     private const string ShortMessageVariableName = "shortMsg";
     private const string ProcessCrashedShortMessage = "Process crashed";
+    private const string InstrumentationResultPrefix = "INSTRUMENTATION_RESULT:";
 
     private readonly ILogger _logger;
     private readonly AdbRunner _runner;
@@ -104,10 +106,8 @@ public class InstrumentationRunner
 
     private (int?, bool, bool) ParseInstrumentationResult(string apkPackageName, string outputDirectory, string result)
     {
-        int? instrumentationExitCode;
-        Dictionary<string, string> resultValues;
         // This is where test instrumentation can communicate outwardly that test execution failed
-        (resultValues, instrumentationExitCode) = ParseInstrumentationOutputs(result);
+        Dictionary<string, string> resultValues = ParseInstrumentationOutputs(result);
 
         // Pull XUnit result XMLs off the device
         bool failurePullingFiles = PullResultXMLs(apkPackageName, outputDirectory, resultValues)!;
@@ -126,23 +126,22 @@ public class InstrumentationRunner
 
         // Due to the particulars of how instrumentations work, ADB will report a 0 exit code for crashed instrumentations
         // We'll change that to a specific value and print a message explaining why.
+        int? instrumentationExitCode = null;
         if (resultValues.TryGetValue(ReturnCodeVariableName, out string? returnCode))
         {
-            if (int.TryParse(returnCode, out int bundleExitCode))
+            if (int.TryParse(returnCode, out int parsedExitCode))
             {
-                _logger.LogInformation($"Instrumentation finished normally with exit code {bundleExitCode}");
-                instrumentationExitCode = bundleExitCode;
+                _logger.LogInformation($"Instrumentation finished normally with exit code {parsedExitCode}");
+                instrumentationExitCode = parsedExitCode;
             }
             else
             {
                 _logger.LogError($"Un-parse-able value for '{ReturnCodeVariableName}' : '{returnCode}'");
-                instrumentationExitCode = null;
             }
         }
         else
         {
             _logger.LogError($"No value for '{ReturnCodeVariableName}' provided in instrumentation result. This may indicate a crashed test (see log)");
-            instrumentationExitCode ??= null;
         }
 
         return (instrumentationExitCode, processCrashed, failurePullingFiles);
@@ -175,51 +174,33 @@ public class InstrumentationRunner
         return success;
     }
 
-    private (Dictionary<string, string> values, int exitCode) ParseInstrumentationOutputs(string stdout)
+    private Dictionary<string, string> ParseInstrumentationOutputs(string stdout)
     {
-        // If ADB.exe's output changes (which we control when we take updates in this repo), we'll need to fix this.
-        string resultPrefix = "INSTRUMENTATION_RESULT:";
-        string exitCodePrefix = "INSTRUMENTATION_CODE:";
-        int exitCode = -1;
         var outputs = new Dictionary<string, string>();
         string[] lines = stdout.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        foreach (string line in lines)
+        foreach (string line in lines.Where(line => line.StartsWith(InstrumentationResultPrefix)))
         {
-            if (line.StartsWith(resultPrefix))
+            var subString = line.Substring(InstrumentationResultPrefix.Length);
+            string[] results = subString.Trim().Split('=');
+            if (results.Length == 2)
             {
-                var subString = line.Substring(resultPrefix.Length);
-                string[] results = subString.Trim().Split('=');
-                if (results.Length == 2)
+                if (outputs.ContainsKey(results[0]))
                 {
-                    if (outputs.ContainsKey(results[0]))
-                    {
-                        _logger.LogWarning($"Key '{results[0]}' defined more than once");
-                        outputs[results[0]] = results[1];
-                    }
-                    else
-                    {
-                        outputs.Add(results[0], results[1]);
-                    }
+                    _logger.LogWarning($"Key '{results[0]}' defined more than once");
+                    outputs[results[0]] = results[1];
                 }
                 else
                 {
-                    _logger.LogWarning($"Skipping output line due to key-value-pair parse failure: '{line}'");
+                    outputs.Add(results[0], results[1]);
                 }
             }
-            else if (line.StartsWith(exitCodePrefix))
+            else
             {
-                if (!int.TryParse(line.Substring(exitCodePrefix.Length).Trim(), out var ec))
-                {
-                    _logger.LogError($"Failure parsing ADB Exit code from line: '{line}'");
-                }
-                else
-                {
-                    exitCode = ec;
-                }
+                _logger.LogWarning($"Skipping output line due to key-value-pair parse failure: '{line}'");
             }
         }
 
-        return (outputs, exitCode);
+        return outputs;
     }
 }
