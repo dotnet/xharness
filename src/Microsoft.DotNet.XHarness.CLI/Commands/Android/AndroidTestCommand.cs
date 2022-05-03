@@ -64,22 +64,31 @@ Arguments:
             runner,
             DiagnosticsData);
 
-        if (exitCode == ExitCode.SUCCESS)
+        if (Arguments.Wifi != WifiStatus.Unknown)
         {
-            exitCode = AndroidRunCommand.InvokeHelper(
-                logger: logger,
-                apkPackageName: Arguments.PackageName,
-                instrumentationName: Arguments.InstrumentationName,
-                instrumentationArguments: Arguments.InstrumentationArguments,
-                outputDirectory: Arguments.OutputDirectory,
-                deviceOutputFolder: Arguments.DeviceOutputFolder,
-                timeout: Arguments.Timeout,
-                expectedExitCode: Arguments.ExpectedExitCode,
-                wifi: Arguments.Wifi,
-                runner: runner);
+            runner.EnableWifi(Arguments.Wifi == WifiStatus.Enable);
         }
 
-        runner.UninstallApk(Arguments.PackageName);
+        try
+        {
+            if (exitCode == ExitCode.SUCCESS)
+            {
+                var instrumentationRunner = new InstrumentationRunner(logger, runner);
+                exitCode = instrumentationRunner.RunApkInstrumentation(
+                    Arguments.PackageName,
+                    Arguments.InstrumentationName,
+                    Arguments.InstrumentationArguments,
+                    Arguments.OutputDirectory,
+                    Arguments.DeviceOutputFolder,
+                    Arguments.Timeout,
+                    Arguments.ExpectedExitCode);
+            }
+        }
+        finally
+        {
+            runner.UninstallApk(Arguments.PackageName);
+        }
+
         return exitCode;
     }
 }
