@@ -267,10 +267,10 @@ public class AdbRunner
             throw new FileNotFoundException($"Could not find {testPath}", testPath);
         }
 
-        var targetDirectory = Path.Combine(GlobalReadWriteDirectory, new DirectoryInfo(testPath).Name);
+        var targetDirectory = GlobalReadWriteDirectory + Path.AltDirectorySeparatorChar +  new DirectoryInfo(testPath).Name;
         if (sharedRuntime)
         {
-            targetDirectory = Path.Combine(GlobalReadWriteDirectory, "runtime");
+            targetDirectory = GlobalReadWriteDirectory + Path.AltDirectorySeparatorChar +  "runtime";
         }
         var result = RunAdbCommand(new[] { "push", testPath, targetDirectory });
 
@@ -386,7 +386,7 @@ public class AdbRunner
             throw new ArgumentNullException(nameof(testPath));
         }
 
-        var fullTestPath = Path.Combine(GlobalReadWriteDirectory, new DirectoryInfo(testPath).Name);
+        var fullTestPath = GlobalReadWriteDirectory + Path.AltDirectorySeparatorChar +  new DirectoryInfo(testPath).Name;
 
         _log.LogInformation($"Attempting to remove folder '{fullTestPath}'..");
         var result = RunAdbCommand(new[] { "shell", "rm", "-fr", fullTestPath });
@@ -933,8 +933,8 @@ public class AdbRunner
 
     private bool TestFileExists(string path, string? deviceName = null)
     {
-        var localTestPath = Path.Combine(GlobalReadWriteDirectory, new DirectoryInfo(path).Name);
-        IEnumerable<string> args = new string[] {"shell", "stat", localTestPath};
+        var deviceTestPath = GlobalReadWriteDirectory + Path.AltDirectorySeparatorChar + new DirectoryInfo(path).Name;
+        IEnumerable<string> args = new string[] {"shell", "stat", deviceTestPath};
 
         if (!string.IsNullOrEmpty(deviceName))
         {
@@ -959,7 +959,7 @@ public class AdbRunner
 
         if (!result.Succeeded)
         {
-            _log.LogError($"Failed to check existence of {localTestPath}. Check if a device is attached / emulator is started" +
+            _log.LogError($"Failed to check existence of {deviceTestPath}. Check if a device is attached / emulator is started" +
                 Environment.NewLine + result.StandardError);
 
             return false;
@@ -985,21 +985,25 @@ public class AdbRunner
 
     public ProcessExecutionResults RunHeadlessCommand(string testPath, string runtimePath, string testAssembly, string testScript, TimeSpan timeout)
     {
-        var localTestPath = Path.Combine(GlobalReadWriteDirectory, new DirectoryInfo(testPath).Name, testScript);
-        var localRuntimePath = Path.Combine(GlobalReadWriteDirectory, "runtime", "dotnet");
+        var deviceTestPath = GlobalReadWriteDirectory + Path.AltDirectorySeparatorChar + new DirectoryInfo(testPath).Name + Path.AltDirectorySeparatorChar + testScript;
+        var deviceRuntimePath = GlobalReadWriteDirectory + Path.AltDirectorySeparatorChar + "runtime" + Path.AltDirectorySeparatorChar + "dotnet";
         var adbArgs = new List<string>
         {
             "shell",
-            localTestPath,
+            deviceTestPath,
             "-r",
-            localRuntimePath,
+            deviceRuntimePath,
         };
 
-        _log.LogInformation($"Starting {testScript} from {localTestPath} (exit code 0 == success)");
+        _log.LogInformation($"Setting executable permissions on {testScript} and runtime");
+        var result = RunAdbCommand(new[] { "shell", "chmod", "a+x", deviceTestPath, deviceRuntimePath });
+        result.ThrowIfFailed($"Failed setting permissions on {deviceTestPath} and {deviceRuntimePath}: {result}");
+
+        _log.LogInformation($"Starting {testScript} from {deviceTestPath} (exit code 0 == success)");
 
 
         var stopWatch = Stopwatch.StartNew();
-        var result = RunAdbCommand(adbArgs, timeout);
+        result = RunAdbCommand(adbArgs, timeout);
         stopWatch.Stop();
 
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
