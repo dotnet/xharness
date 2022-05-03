@@ -7,8 +7,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.Android;
-using Microsoft.DotNet.XHarness.CLI.AndroidHeadless;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
@@ -17,8 +15,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.AndroidHeadless;
 
 internal class AndroidHeadlessTestCommand : AndroidCommand<AndroidHeadlessTestCommandArguments>
 {
-    private const string ReturnCodeVariableName = "return-code";
-
     protected override AndroidHeadlessTestCommandArguments Arguments { get; } = new();
 
     protected override string CommandUsage { get; } = "android-headless test --output-directory=... --test-folder=... --test-command=... [OPTIONS]";
@@ -73,7 +69,6 @@ Arguments:
                 testAssembly: Arguments.TestAssembly,
                 testScript: Arguments.TestScript,
                 outputDirectory: Arguments.OutputDirectory,
-                deviceOutputFolder: Arguments.DeviceOutputFolder,
                 timeout: Arguments.Timeout,
                 expectedExitCode: Arguments.ExpectedExitCode,
                 wifi: Arguments.Wifi,

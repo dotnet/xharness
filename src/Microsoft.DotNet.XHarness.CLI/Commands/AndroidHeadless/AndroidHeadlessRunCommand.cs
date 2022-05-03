@@ -3,12 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.Android.Execution;
 using Microsoft.DotNet.XHarness.CLI.Android;
-using Microsoft.DotNet.XHarness.CLI.AndroidHeadless;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
 using Microsoft.DotNet.XHarness.Common.CLI;
@@ -18,13 +16,6 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.AndroidHeadless;
 
 internal class AndroidHeadlessRunCommand : AndroidCommand<AndroidHeadlessRunCommandArguments>
 {
-    // nunit2 one should go away eventually
-    private static readonly string[] s_xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
-    private const string TestRunSummaryVariableName = "test-execution-summary";
-    private const string ShortMessageVariableName = "shortMsg";
-    private const string ReturnCodeVariableName = "return-code";
-    private const string ProcessCrashedShortMessage = "Process crashed";
-
     protected override AndroidHeadlessRunCommandArguments Arguments { get; } = new();
 
     protected override string CommandUsage { get; } = "android-headless run --output-directory=... --test-assembly=... [OPTIONS]";
@@ -70,7 +61,6 @@ Arguments:
             Arguments.TestAssembly,
             Arguments.TestScript,
             Arguments.OutputDirectory,
-            Arguments.DeviceOutputFolder,
             Arguments.Timeout,
             Arguments.ExpectedExitCode,
             Arguments.Wifi,
@@ -84,7 +74,6 @@ Arguments:
         string testAssembly,
         string testScript,
         string outputDirectory,
-        string? deviceOutputFolder,
         TimeSpan timeout,
         int expectedExitCode,
         WifiStatus wifi,
@@ -134,6 +123,11 @@ Arguments:
             }
         }
 
+        if (processCrashed)
+        {
+            return ExitCode.APP_CRASH;
+        }
+
         if (failurePullingFiles)
         {
             logger.LogError($"Hit errors pulling files from the device (see log for details.)");
@@ -141,49 +135,5 @@ Arguments:
         }
 
         return ExitCode.SUCCESS;
-    }
-
-    private static (Dictionary<string, string> values, int exitCode) ParseStandardOutput(ILogger logger, string stdOut)
-    {
-        // If ADB.exe's output changes (which we control when we take updates in this repo), we'll need to fix this.
-        string resultPrefix = "INSTRUMENTATION_RESULT:";
-        string exitCodePrefix = "INSTRUMENTATION_CODE:";
-        int exitCode = -1;
-        var outputs = new Dictionary<string, string>();
-        string[] lines = stdOut.Split(Environment.NewLine);
-
-        foreach (string line in lines)
-        {
-            if (line.StartsWith(resultPrefix))
-            {
-                var subString = line.Substring(resultPrefix.Length);
-                string[] results = subString.Trim().Split('=');
-                if (results.Length == 2)
-                {
-                    if (outputs.ContainsKey(results[0]))
-                    {
-                        logger.LogWarning($"Key '{results[0]}' defined more than once");
-                        outputs[results[0]] = results[1];
-                    }
-                    else
-                    {
-                        outputs.Add(results[0], results[1]);
-                    }
-                }
-                else
-                {
-                    logger.LogWarning($"Skipping output line due to key-value-pair parse failure: '{line}'");
-                }
-            }
-            else if (line.StartsWith(exitCodePrefix))
-            {
-                if (!int.TryParse(line.Substring(exitCodePrefix.Length).Trim(), out exitCode))
-                {
-                    logger.LogError($"Failure parsing ADB Exit code from line: '{line}'");
-                }
-            }
-        }
-
-        return (outputs, exitCode);
     }
 }
