@@ -108,10 +108,10 @@ public class InstrumentationRunner
         return ExitCode.SUCCESS;
     }
 
-    private (int?, bool, bool) ParseInstrumentationResult(string apkPackageName, string outputDirectory, string result)
+    private (int? ExitCode, bool Crashed, bool FilePullFailed) ParseInstrumentationResult(string apkPackageName, string outputDirectory, string result)
     {
         // This is where test instrumentation can communicate outwardly that test execution failed
-        Dictionary<string, string> resultValues = ParseInstrumentationOutputs(result);
+        IReadOnlyDictionary<string, string> resultValues = ParseInstrumentationOutputs(result);
 
         // Pull XUnit result XMLs off the device
         bool failurePullingFiles = PullResultXMLs(apkPackageName, outputDirectory, resultValues)!;
@@ -148,10 +148,10 @@ public class InstrumentationRunner
             _logger.LogError($"No value for '{ReturnCodeVariableName}' provided in instrumentation result. This may indicate a crashed test (see log)");
         }
 
-        return (instrumentationExitCode, processCrashed, failurePullingFiles);
+        return (ExitCode: instrumentationExitCode, Crashed: processCrashed, FilePullFailed: failurePullingFiles);
     }
 
-    private bool PullResultXMLs(string apkPackageName, string outputDirectory, Dictionary<string, string> resultValues)
+    private bool PullResultXMLs(string apkPackageName, string outputDirectory, IReadOnlyDictionary<string, string> resultValues)
     {
         bool success = false;
 
@@ -178,7 +178,7 @@ public class InstrumentationRunner
         return success;
     }
 
-    private Dictionary<string, string> ParseInstrumentationOutputs(string stdout)
+    private IReadOnlyDictionary<string, string> ParseInstrumentationOutputs(string stdout)
     {
         var outputs = new Dictionary<string, string>();
         string[] lines = stdout.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -189,14 +189,17 @@ public class InstrumentationRunner
             string[] results = subString.Trim().Split('=');
             if (results.Length == 2)
             {
-                if (outputs.ContainsKey(results[0]))
+                var key = results[0];
+                var value = results[1];
+
+                if (outputs.ContainsKey(key))
                 {
-                    _logger.LogWarning($"Key '{results[0]}' defined more than once");
-                    outputs[results[0]] = results[1];
+                    _logger.LogWarning($"Key '{key}' defined more than once");
+                    outputs[key] = value;
                 }
                 else
                 {
-                    outputs.Add(results[0], results[1]);
+                    outputs.Add(key, value);
                 }
             }
             else
