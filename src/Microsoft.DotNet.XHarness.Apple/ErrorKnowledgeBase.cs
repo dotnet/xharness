@@ -35,6 +35,11 @@ public class ErrorKnowledgeBase : IErrorKnowledgeBase
         ["LSOpenURLsWithRole() failed with error -10825"] =
             new("This application requires a newer version of MacOS",
                 suggestedExitCode: (int)ExitCode.GENERAL_FAILURE),
+
+        ["Failed to start launchd_sim: could not bind to session"] =
+            new("Failed to launch the Simulator as XHarness was most likely started from a user session without GUI capabilities (e.g. from a launchd daemon). " +
+                "Please start XHarness from a full user session or bind the run to one via `sudo launchctl asuser`",
+                suggestedExitCode: (int)ExitCode.APP_LAUNCH_FAILURE),
     };
 
     private static readonly Dictionary<string, KnownIssue> s_buildErrorMaps = new();
