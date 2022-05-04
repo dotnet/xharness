@@ -316,6 +316,43 @@ public class TestOrchestratorTests : OrchestratorTestBase
     }
 
     [Fact]
+    public async Task OrchestrateTimedOutSimulatorSearchTestTest()
+    {
+        // Setup
+        var testTarget = new TestTargetOs(TestTarget.Simulator_iOS64, "13.5");
+
+        _deviceFinder.Reset();
+        _deviceFinder
+            .Setup(x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new OperationCanceledException());
+
+        // Act
+        var result = await _testOrchestrator.OrchestrateTest(
+            AppPath,
+            testTarget,
+            null,
+            TimeSpan.FromMinutes(30),
+            TimeSpan.FromMinutes(3),
+            CommunicationChannel.UsbTunnel,
+            XmlResultJargon.xUnit,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
+            includeWirelessDevices: false,
+            resetSimulator: false,
+            enableLldb: true,
+            signalAppEnd: false,
+            Array.Empty<(string, string)>(),
+            Array.Empty<string>(),
+            new CancellationToken());
+
+        // Verify
+        Assert.Equal(ExitCode.APP_LAUNCH_TIMEOUT, result);
+
+        VerifySimulatorReset(false);
+        VerifySimulatorCleanUp(false);
+    }
+
+    [Fact]
     public async Task OrchestrateFailedDeviceTestTest()
     {
         // Setup
