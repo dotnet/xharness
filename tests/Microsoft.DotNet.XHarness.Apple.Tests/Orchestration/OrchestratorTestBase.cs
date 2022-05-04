@@ -90,7 +90,8 @@ public abstract class OrchestratorTestBase
                 It.Is<TestTargetOs>(t => t.Platform.IsSimulator()),
                 It.IsAny<string?>(),
                 It.IsAny<ILog>(),
-                It.IsAny<bool>()))
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync((_simulator.Object, null));
 
         _deviceFinder
@@ -98,7 +99,8 @@ public abstract class OrchestratorTestBase
                 It.Is<TestTargetOs>(t => !t.Platform.IsSimulator()),
                 It.IsAny<string?>(),
                 It.IsAny<ILog>(),
-                It.IsAny<bool>()))
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync((_device.Object, null));
     }
 

@@ -58,7 +58,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -94,7 +94,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), true),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(true);
@@ -134,7 +134,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
         VerifyDiagnosticData(testTarget);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
             Times.Once);
 
         _appInstaller.Verify(
@@ -172,7 +172,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.APP_NOT_SIGNED, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -207,7 +207,7 @@ public class InstallOrchestratorTests : OrchestratorTestBase
 
         // Verify
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, It.IsAny<string>(), It.IsAny<ILog>(), It.IsAny<bool>()),
+            x => x.FindDevice(testTarget, It.IsAny<string>(), It.IsAny<ILog>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()),
             Times.Never);
 
         VerifySimulatorReset(false);
@@ -228,7 +228,8 @@ public class InstallOrchestratorTests : OrchestratorTestBase
                 It.IsAny<TestTargetOs>(),
                 It.IsAny<string?>(),
                 It.IsAny<ILog>(),
-                It.IsAny<bool>()))
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
             .ThrowsAsync(new NoDeviceFoundException());
 
         var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");

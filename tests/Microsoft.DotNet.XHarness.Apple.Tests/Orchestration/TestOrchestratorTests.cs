@@ -106,7 +106,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(true);
@@ -169,7 +169,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true),
+            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -236,7 +236,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.APP_CRASH, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -285,7 +285,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
 
         _deviceFinder.Reset();
         _deviceFinder
-            .Setup(x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false))
+            .Setup(x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()))
             .Callback(() => cts.Cancel())
             .ReturnsAsync((_simulator.Object, null));
 
@@ -364,7 +364,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.TIMED_OUT, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true),
+            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);

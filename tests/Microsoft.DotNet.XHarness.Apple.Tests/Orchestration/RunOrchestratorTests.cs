@@ -114,7 +114,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(true);
@@ -182,7 +182,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true),
+            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -245,7 +245,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SIMULATOR_FAILURE, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -319,7 +319,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.DEVICE_FAILURE, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true),
+            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -508,7 +508,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true),
+            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -575,7 +575,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), true),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(true);

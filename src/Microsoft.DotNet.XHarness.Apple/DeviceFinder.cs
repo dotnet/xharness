@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -15,7 +16,12 @@ namespace Microsoft.DotNet.XHarness.Apple;
 
 public interface IDeviceFinder
 {
-    Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(TestTargetOs target, string? deviceName, ILog log, bool includeWirelessDevices = true);
+    Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(
+        TestTargetOs target,
+        string? deviceName,
+        ILog log,
+        bool includeWirelessDevices = true,
+        CancellationToken cancellationToken = default);
 }
 
 public class DeviceFinder : IDeviceFinder
@@ -29,7 +35,12 @@ public class DeviceFinder : IDeviceFinder
         _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
     }
 
-    public async Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(TestTargetOs target, string? deviceName, ILog log, bool includeWirelessDevices = true)
+    public async Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(
+        TestTargetOs target,
+        string? deviceName,
+        ILog log,
+        bool includeWirelessDevices = true,
+        CancellationToken cancellationToken = default)
     {
         IDevice? device;
         IDevice? companionDevice = null;
@@ -42,11 +53,11 @@ public class DeviceFinder : IDeviceFinder
         {
             if (deviceName == null)
             {
-                (device, companionDevice) = await _simulatorLoader.FindSimulators(target, log, 3);
+                (device, companionDevice) = await _simulatorLoader.FindSimulators(target, log, 3, cancellationToken: cancellationToken);
             }
             else
             {
-                await _simulatorLoader.LoadDevices(log, includeLocked: false);
+                await _simulatorLoader.LoadDevices(log, includeLocked: false, cancellationToken: cancellationToken);
 
                 device = _simulatorLoader.AvailableDevices.FirstOrDefault(IsMatchingDevice)
                     ?? throw new NoDeviceFoundException($"Failed to find a simulator '{deviceName}'");
@@ -56,7 +67,12 @@ public class DeviceFinder : IDeviceFinder
         {
             // The DeviceLoader.FindDevice will return the fist device of the type, but we want to make sure that
             // the device we use is of the correct arch, therefore, we will use the LoadDevices and handpick one
-            await _deviceLoader.LoadDevices(log, includeLocked: false, forceRefresh: false, includeWirelessDevices: includeWirelessDevices);
+            await _deviceLoader.LoadDevices(
+                log,
+                includeLocked: false,
+                forceRefresh: false,
+                includeWirelessDevices: includeWirelessDevices,
+                cancellationToken: cancellationToken);
 
             if (deviceName == null)
             {
@@ -71,7 +87,7 @@ public class DeviceFinder : IDeviceFinder
 
                 if (target.Platform.IsWatchOSTarget() && hardwareDevice != null)
                 {
-                    companionDevice = await _deviceLoader.FindCompanionDevice(log, hardwareDevice);
+                    companionDevice = await _deviceLoader.FindCompanionDevice(log, hardwareDevice, cancellationToken: cancellationToken);
                 }
 
                 device = hardwareDevice;

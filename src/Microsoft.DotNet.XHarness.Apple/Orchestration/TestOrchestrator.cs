@@ -133,14 +133,14 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         using var launchTimeoutCancellation = new CancellationTokenSource();
         var appRunStarted = false;
         var shorterTimeout = launchTimeout < timeout ? launchTimeout : timeout;
-        var task = Task.Delay(shorterTimeout).ContinueWith(t =>
+        var task = Task.Delay(shorterTimeout, cancellationToken).ContinueWith(t =>
         {
             if (!appRunStarted)
             {
                 _logger.LogError($"Cancelling the run after {Math.Ceiling(shorterTimeout.TotalSeconds)} seconds as application failed to launch in time");
                 launchTimeoutCancellation.Cancel();
             }
-        });
+        }, cancellationToken);
 
         // We also want to shrink the launch timeout by whatever elapsed before we get to ExecuteApp
         Stopwatch watch = Stopwatch.StartNew();
