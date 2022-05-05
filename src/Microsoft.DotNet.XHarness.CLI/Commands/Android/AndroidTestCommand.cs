@@ -43,7 +43,7 @@ Arguments:
             logger: logger,
             apkPackageName: Arguments.PackageName,
             appPackagePath: Arguments.AppPackagePath,
-            requiredArchitecture: Arguments.DeviceArchitecture.Value.ToList(),
+            requestedArchitectures: Arguments.DeviceArchitecture.Value.ToList(),
             deviceId: Arguments.DeviceId.Value,
             apiVersion: Arguments.ApiVersion.Value,
             bootTimeoutSeconds: Arguments.LaunchTimeout,

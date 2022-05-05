@@ -38,28 +38,11 @@ Arguments:
 
         var runner = new AdbRunner(logger);
 
-        List<string> apkRequiredArchitecture = new();
-
-        if (string.IsNullOrEmpty(Arguments.DeviceId))
-        {
-            // trying to choose suitable device
-            if (Arguments.DeviceArchitecture.Value.Any())
-            {
-                apkRequiredArchitecture = Arguments.DeviceArchitecture.Value.ToList();
-                logger.LogInformation($"Will attempt to run device on specified architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
-            }
-            else
-            {
-                apkRequiredArchitecture = ApkHelper.GetApkSupportedArchitectures(Arguments.AppPackagePath);
-                logger.LogInformation($"Will attempt to run device on detected architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
-            }
-        }
-
         return InvokeHelper(
             logger: logger,
             apkPackageName: Arguments.PackageName,
             appPackagePath: Arguments.AppPackagePath,
-            requiredArchitecture: Arguments.DeviceArchitecture.Value.ToList(),
+            requestedArchitectures: Arguments.DeviceArchitecture.Value.ToList(),
             deviceId: Arguments.DeviceId,
             apiVersion: Arguments.ApiVersion.Value,
             bootTimeoutSeconds: Arguments.LaunchTimeout,
@@ -71,7 +54,7 @@ Arguments:
         ILogger logger,
         string apkPackageName,
         string appPackagePath,
-        IReadOnlyCollection<string> requiredArchitecture,
+        IReadOnlyCollection<string> requestedArchitectures,
         string? deviceId,
         int? apiVersion,
         TimeSpan bootTimeoutSeconds,
@@ -80,26 +63,30 @@ Arguments:
     {
         using (logger.BeginScope("Initialization and setup of APK on device"))
         {
-            IEnumerable<string> apkRequiredArchitecture;
+            IReadOnlyCollection<string> requiredArchitectures;
             var apkSupportedArchitectures = ApkHelper.GetApkSupportedArchitectures(appPackagePath);
 
-            if (requiredArchitecture.Any())
+            if (requestedArchitectures.Any())
             {
-                if (!apkSupportedArchitectures.Intersect(requiredArchitecture).Any())
+                if (!apkSupportedArchitectures.Intersect(requestedArchitectures).Any())
                 {
-                    logger.LogError($"The APK at {appPackagePath} supports {string.Join(", ", apkSupportedArchitectures)} architectures " +
-                        $"which does not match any of the specified architectures ({string.Join(", ", requiredArchitecture)})");
+                    logger.LogError("The APK at {appPackagePath} supports {apkSupportedArchitectures} architectures " +
+                        "which does not match any of the specified architectures ({requestedArchitectures})",
+                        appPackagePath,
+                        string.Join(", ", apkSupportedArchitectures),
+                        string.Join(", ", requestedArchitectures));
                     return ExitCode.INVALID_ARGUMENTS;
                 }
 
-                apkRequiredArchitecture = requiredArchitecture;
+                requiredArchitectures = requestedArchitectures;
             }
             else
             {
-                apkRequiredArchitecture = apkSupportedArchitectures;
+                requiredArchitectures = apkSupportedArchitectures;
             }
 
-            logger.LogInformation($"Will attempt to find device supporting architectures: '{string.Join("', '", apkRequiredArchitecture)}'");
+            logger.LogInformation("Will attempt to find device supporting architectures: '{requiredArchitectures}'",
+                string.Join("', '", requiredArchitectures));
 
             // Make sure the adb server is started
             runner.StartAdbServer();
@@ -109,11 +96,11 @@ Arguments:
                 loadApiVersion: true,
                 deviceId,
                 apiVersion,
-                apkRequiredArchitecture);
+                requiredArchitectures);
 
             if (device is null)
             {
-                throw new NoDeviceFoundException($"Failed to find compatible device: {string.Join(", ", apkRequiredArchitecture)}");
+                throw new NoDeviceFoundException($"Failed to find compatible device: {string.Join(", ", requiredArchitectures)}");
             }
 
             diagnosticsData.CaptureDeviceInfo(device);
