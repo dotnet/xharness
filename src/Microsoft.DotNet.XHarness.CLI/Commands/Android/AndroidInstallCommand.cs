@@ -59,7 +59,7 @@ Arguments:
             logger: logger,
             apkPackageName: Arguments.PackageName,
             appPackagePath: Arguments.AppPackagePath,
-            apkRequiredArchitecture: apkRequiredArchitecture,
+            requiredArchitecture: Arguments.DeviceArchitecture.Value.ToList(),
             deviceId: Arguments.DeviceId,
             apiVersion: Arguments.ApiVersion.Value,
             bootTimeoutSeconds: Arguments.LaunchTimeout,
@@ -71,7 +71,7 @@ Arguments:
         ILogger logger,
         string apkPackageName,
         string appPackagePath,
-        IEnumerable<string> apkRequiredArchitecture,
+        IReadOnlyCollection<string> requiredArchitecture,
         string? deviceId,
         int? apiVersion,
         TimeSpan bootTimeoutSeconds,
@@ -80,6 +80,27 @@ Arguments:
     {
         using (logger.BeginScope("Initialization and setup of APK on device"))
         {
+            IEnumerable<string> apkRequiredArchitecture;
+            var apkSupportedArchitectures = ApkHelper.GetApkSupportedArchitectures(appPackagePath);
+
+            if (requiredArchitecture.Any())
+            {
+                if (!apkSupportedArchitectures.Intersect(requiredArchitecture).Any())
+                {
+                    logger.LogError($"The APK at {appPackagePath} supports {string.Join(", ", apkSupportedArchitectures)} architectures " +
+                        $"which does not match any of the specified architectures ({string.Join(", ", requiredArchitecture)})");
+                    return ExitCode.INVALID_ARGUMENTS;
+                }
+
+                apkRequiredArchitecture = requiredArchitecture;
+            }
+            else
+            {
+                apkRequiredArchitecture = apkSupportedArchitectures;
+            }
+
+            logger.LogInformation($"Will attempt to find device supporting architectures: '{string.Join("', '", apkRequiredArchitecture)}'");
+
             // Make sure the adb server is started
             runner.StartAdbServer();
 
@@ -117,6 +138,7 @@ Arguments:
 
             runner.KillApk(apkPackageName);
         }
+        
         return ExitCode.SUCCESS;
     }
 }

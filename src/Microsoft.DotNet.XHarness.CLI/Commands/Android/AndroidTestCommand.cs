@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.Android;
@@ -39,25 +37,13 @@ Arguments:
 
     protected override ExitCode InvokeCommand(ILogger logger)
     {
-        if (!File.Exists(Arguments.AppPackagePath))
-        {
-            logger.LogCritical($"Couldn't find {Arguments.AppPackagePath}!");
-            return ExitCode.PACKAGE_NOT_FOUND;
-        }
-
-        IEnumerable<string> apkRequiredArchitecture = Arguments.DeviceArchitecture.Value.Any()
-            ? Arguments.DeviceArchitecture.Value
-            : ApkHelper.GetApkSupportedArchitectures(Arguments.AppPackagePath);
-
-        logger.LogInformation($"Required architecture: '{string.Join("', '", apkRequiredArchitecture)}'");
-
         var runner = new AdbRunner(logger);
 
         var exitCode = AndroidInstallCommand.InvokeHelper(
             logger: logger,
             apkPackageName: Arguments.PackageName,
             appPackagePath: Arguments.AppPackagePath,
-            apkRequiredArchitecture: apkRequiredArchitecture,
+            requiredArchitecture: Arguments.DeviceArchitecture.Value.ToList(),
             deviceId: Arguments.DeviceId.Value,
             apiVersion: Arguments.ApiVersion.Value,
             bootTimeoutSeconds: Arguments.LaunchTimeout,
