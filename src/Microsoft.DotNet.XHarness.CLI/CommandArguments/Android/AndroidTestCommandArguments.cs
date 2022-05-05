@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
@@ -39,4 +40,14 @@ internal class AndroidTestCommandArguments : XHarnessCommandArguments, IAndroidA
         DeviceOutputFolder,
         Wifi,
     };
+
+    public override void Validate()
+    {
+        base.Validate();
+
+        if (!File.Exists(AppPackagePath))
+        {
+            throw new ArgumentException($"Couldn't find {AppPackagePath}!");
+        }
+    }
 }
