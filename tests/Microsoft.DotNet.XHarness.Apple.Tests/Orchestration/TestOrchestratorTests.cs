@@ -287,7 +287,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
         _deviceFinder
             .Setup(x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()))
             .Callback(() => cts.Cancel())
-            .ReturnsAsync((_simulator.Object, null));
+            .ReturnsAsync(new DevicePair(_simulator.Object, null));
 
         // Act
         var result = await _testOrchestrator.OrchestrateTest(

@@ -223,28 +223,28 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
         return companion.First();
     }
 
-    private Device GetDevice(XmlNode deviceNone)
+    private Device GetDevice(XmlNode deviceNode)
     {
         // get data, if we are missing some of them, we will return null, happens sometimes that we
         // have some empty nodes. We could do this with try/catch, but we want to throw the min amount
         // of exceptions. We do know that we will have issues with the parsing of the DeviceClass, check
         // the value, and if is there, get the rest, else return null
-        var usable = deviceNone.SelectSingleNode("IsUsableForDebugging")?.InnerText;
-        if (!Enum.TryParse<DeviceClass>(deviceNone.SelectSingleNode("DeviceClass")?.InnerText, true, out var deviceClass))
+        var usable = deviceNode.SelectSingleNode("IsUsableForDebugging")?.InnerText;
+        if (!Enum.TryParse<DeviceClass>(deviceNode.SelectSingleNode("DeviceClass")?.InnerText, true, out var deviceClass))
         {
             return null;
         }
 
         return new Device(
-            deviceIdentifier: deviceNone.SelectSingleNode("DeviceIdentifier")?.InnerText,
+            deviceIdentifier: deviceNode.SelectSingleNode("DeviceIdentifier")?.InnerText,
             deviceClass: deviceClass,
-            companionIdentifier: deviceNone.SelectSingleNode("CompanionIdentifier")?.InnerText,
-            name: deviceNone.SelectSingleNode("Name")?.InnerText,
-            buildVersion: deviceNone.SelectSingleNode("BuildVersion")?.InnerText,
-            productVersion: deviceNone.SelectSingleNode("ProductVersion")?.InnerText,
-            productType: deviceNone.SelectSingleNode("ProductType")?.InnerText,
-            interfaceType: deviceNone.SelectSingleNode("InterfaceType")?.InnerText,
+            companionIdentifier: deviceNode.SelectSingleNode("CompanionIdentifier")?.InnerText,
+            name: deviceNode.SelectSingleNode("Name")?.InnerText,
+            buildVersion: deviceNode.SelectSingleNode("BuildVersion")?.InnerText,
+            productVersion: deviceNode.SelectSingleNode("ProductVersion")?.InnerText,
+            productType: deviceNode.SelectSingleNode("ProductType")?.InnerText,
+            interfaceType: deviceNode.SelectSingleNode("InterfaceType")?.InnerText,
             isUsableForDebugging: usable == null ? (bool?)null : usable == "True",
-            isLocked: bool.TryParse(deviceNone.SelectSingleNode("IsLocked")?.InnerText, out var locked) && locked);
+            isLocked: bool.TryParse(deviceNode.SelectSingleNode("IsLocked")?.InnerText, out var locked) && locked);
     }
 }

@@ -92,7 +92,7 @@ public abstract class OrchestratorTestBase
                 It.IsAny<ILog>(),
                 It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((_simulator.Object, null));
+            .ReturnsAsync(new DevicePair(_simulator.Object, null));
 
         _deviceFinder
             .Setup(x => x.FindDevice(
@@ -101,7 +101,7 @@ public abstract class OrchestratorTestBase
                 It.IsAny<ILog>(),
                 It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((_device.Object, null));
+            .ReturnsAsync(new DevicePair(_device.Object, null));
     }
 
     protected void VerifySimulatorReset(bool shouldBeReset)

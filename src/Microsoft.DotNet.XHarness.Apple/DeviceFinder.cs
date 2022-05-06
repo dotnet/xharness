@@ -16,13 +16,15 @@ namespace Microsoft.DotNet.XHarness.Apple;
 
 public interface IDeviceFinder
 {
-    Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(
+    Task<DevicePair> FindDevice(
         TestTargetOs target,
         string? deviceName,
         ILog log,
         bool includeWirelessDevices = true,
         CancellationToken cancellationToken = default);
 }
+
+public record DevicePair(IDevice Device, IDevice? CompanionDevice);
 
 public class DeviceFinder : IDeviceFinder
 {
@@ -35,7 +37,7 @@ public class DeviceFinder : IDeviceFinder
         _simulatorLoader = simulatorLoader ?? throw new ArgumentNullException(nameof(simulatorLoader));
     }
 
-    public async Task<(IDevice Device, IDevice? CompanionDevice)> FindDevice(
+    public async Task<DevicePair> FindDevice(
         TestTargetOs target,
         string? deviceName,
         ILog log,
@@ -53,7 +55,7 @@ public class DeviceFinder : IDeviceFinder
         {
             if (deviceName == null)
             {
-                (device, companionDevice) = await _simulatorLoader.FindSimulators(target, log, 3, cancellationToken: cancellationToken);
+                (device, companionDevice) = await _simulatorLoader.FindSimulators(target, log, retryCount: 3, cancellationToken: cancellationToken);
             }
             else
             {
@@ -105,6 +107,6 @@ public class DeviceFinder : IDeviceFinder
             throw new NoDeviceFoundException($"Failed to find a suitable device for target {target.AsString()}");
         }
 
-        return (device, companionDevice);
+        return new DevicePair(device, companionDevice);
     }
 }
