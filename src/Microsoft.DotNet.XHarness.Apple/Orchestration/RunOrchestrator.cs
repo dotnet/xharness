@@ -162,14 +162,14 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         // we didn't manage to start the app run until then.
         using var launchTimeoutCancellation = new CancellationTokenSource();
         var appRunStarted = false;
-        var task = Task.Delay(launchTimeout < timeout ? launchTimeout : timeout).ContinueWith(t =>
+        var task = Task.Delay(launchTimeout < timeout ? launchTimeout : timeout, cancellationToken).ContinueWith(t =>
         {
             if (!appRunStarted)
             {
                 _logger.LogError("Cancelling the run as application failed to launch in time");
                 launchTimeoutCancellation.Cancel();
             }
-        });
+        }, cancellationToken);
 
         using var launchTimeoutCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
             launchTimeoutCancellation.Token,

@@ -90,16 +90,18 @@ public abstract class OrchestratorTestBase
                 It.Is<TestTargetOs>(t => t.Platform.IsSimulator()),
                 It.IsAny<string?>(),
                 It.IsAny<ILog>(),
-                It.IsAny<bool>()))
-            .ReturnsAsync((_simulator.Object, null));
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DevicePair(_simulator.Object, null));
 
         _deviceFinder
             .Setup(x => x.FindDevice(
                 It.Is<TestTargetOs>(t => !t.Platform.IsSimulator()),
                 It.IsAny<string?>(),
                 It.IsAny<ILog>(),
-                It.IsAny<bool>()))
-            .ReturnsAsync((_device.Object, null));
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DevicePair(_device.Object, null));
     }
 
     protected void VerifySimulatorReset(bool shouldBeReset)

@@ -212,7 +212,7 @@ public abstract class BaseOrchestrator : IDisposable
                 $"Looking for available {target.AsString()} {(target.Platform.IsSimulator() ? "simulators" : "devices")}. " +
                 $"Storing logs into {finderLogName}");
 
-            (device, companionDevice) = await _deviceFinder.FindDevice(target, deviceName, finderLog, includeWirelessDevices);
+            (device, companionDevice) = await _deviceFinder.FindDevice(target, deviceName, finderLog, includeWirelessDevices, cancellationToken);
 
             _logger.LogInformation($"Found {(target.Platform.IsSimulator() ? "simulator" : "physical")} device '{device.Name}'");
 

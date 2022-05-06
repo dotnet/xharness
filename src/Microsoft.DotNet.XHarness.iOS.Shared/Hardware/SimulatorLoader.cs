@@ -43,9 +43,17 @@ public class SimulatorLoader : ISimulatorLoader
         _simulatorSelector = simulatorSelector ?? new DefaultSimulatorSelector();
     }
 
-    public async Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false, bool _ = true)
+    public async Task LoadDevices(
+        ILog log,
+        bool includeLocked = false,
+        bool forceRefresh = false,
+        bool listExtraData = false,
+        bool includeWirelessDevices = true,
+        CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync();
+        await _semaphore.WaitAsync(cancellationToken);
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (_loaded)
         {
@@ -69,7 +77,9 @@ public class SimulatorLoader : ISimulatorLoader
                 new ListSimulatorsArgument(tmpfile),
                 new XmlOutputFormatArgument());
 
-            var result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromMinutes(6));
+            var result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromMinutes(6), cancellationToken: cancellationToken);
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             if (!result.Succeeded)
             {
@@ -178,7 +188,12 @@ public class SimulatorLoader : ISimulatorLoader
     }
 
     // Will return all devices that match the runtime + devicetype (even if a new device was created, any other devices will also be returned)
-    private async Task<IEnumerable<ISimulatorDevice>> FindOrCreateDevicesAsync(ILog log, string runtime, string devicetype, bool force = false)
+    private async Task<IEnumerable<ISimulatorDevice>> FindOrCreateDevicesAsync(
+        ILog log,
+        string runtime,
+        string devicetype,
+        bool force = false,
+        CancellationToken cancellationToken = default)
     {
         if (runtime is null)
         {
@@ -196,7 +211,7 @@ public class SimulatorLoader : ISimulatorLoader
         {
             if (!_loaded)
             {
-                await LoadDevices(log);
+                await LoadDevices(log, cancellationToken: cancellationToken);
             }
 
             devices = AvailableDevices.Where(v => v.SimRuntime == runtime && v.SimDeviceType == devicetype);
@@ -206,7 +221,8 @@ public class SimulatorLoader : ISimulatorLoader
             }
         }
 
-        var rv = await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "create", CreateName(devicetype, runtime), devicetype, runtime }, log, TimeSpan.FromMinutes(1));
+        var args = new[] { "create", CreateName(devicetype, runtime), devicetype, runtime };
+        var rv = await _processManager.ExecuteXcodeCommandAsync("simctl", args, log, TimeSpan.FromMinutes(1), cancellationToken);
         if (!rv.Succeeded)
         {
             var message = $"Could not create device{Environment.NewLine}" +
@@ -216,7 +232,7 @@ public class SimulatorLoader : ISimulatorLoader
             throw new NoDeviceFoundException(message);
         }
 
-        await LoadDevices(log, forceRefresh: true);
+        await LoadDevices(log, forceRefresh: true, cancellationToken: cancellationToken);
 
         devices = AvailableDevices.Where((ISimulatorDevice v) => v.SimRuntime == runtime && v.SimDeviceType == devicetype);
         if (!devices.Any())
@@ -231,12 +247,19 @@ public class SimulatorLoader : ISimulatorLoader
         return devices;
     }
 
-    private async Task<bool> CreateDevicePair(ILog log, ISimulatorDevice device, ISimulatorDevice companion_device, string runtime, string devicetype, bool createDevice)
+    private async Task<bool> CreateDevicePair(
+        ILog log,
+        ISimulatorDevice device,
+        ISimulatorDevice companion_device,
+        string runtime,
+        string devicetype,
+        bool createDevice,
+        CancellationToken cancellationToken = default)
     {
         if (createDevice)
         {
             // watch device is already paired to some other phone. Create a new watch device
-            var matchingDevices = await FindOrCreateDevicesAsync(log, runtime, devicetype, force: true);
+            var matchingDevices = await FindOrCreateDevicesAsync(log, runtime, devicetype, force: true, cancellationToken);
             var unPairedDevices = matchingDevices.Where(v => !AvailableDevicePairs.Any(p => p.Gizmo == v.UDID));
             if (device != null)
             {
@@ -261,7 +284,8 @@ public class SimulatorLoader : ISimulatorLoader
             capturedLog.Append(value);
         });
 
-        var rv = await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "pair", device.UDID, companion_device.UDID }, pairLog, TimeSpan.FromMinutes(1));
+        var args = new[] { "pair", device.UDID, companion_device.UDID };
+        var rv = await _processManager.ExecuteXcodeCommandAsync("simctl", args, pairLog, TimeSpan.FromMinutes(1), cancellationToken);
         if (!rv.Succeeded)
         {
             if (!createDevice)
@@ -284,7 +308,11 @@ public class SimulatorLoader : ISimulatorLoader
         return true;
     }
 
-    private async Task<SimDevicePair?> FindOrCreateDevicePairAsync(ILog log, IEnumerable<ISimulatorDevice> devices, IEnumerable<ISimulatorDevice> companionDevices)
+    private async Task<SimDevicePair?> FindOrCreateDevicePairAsync(
+        ILog log,
+        IEnumerable<ISimulatorDevice> devices,
+        IEnumerable<ISimulatorDevice> companionDevices,
+        CancellationToken cancellationToken = default)
     {
         // Check if we already have a device pair with the specified devices
         var pairs = AvailableDevicePairs.Where(pair =>
@@ -310,12 +338,19 @@ public class SimulatorLoader : ISimulatorLoader
             var unpairedDevice = unPairedDevices.FirstOrDefault();
             var companion_device = companionDevices.First();
             var device = devices.First();
-            if (!await CreateDevicePair(log, unpairedDevice, companion_device, device.SimRuntime, device.SimDeviceType, unpairedDevice == null))
+            if (!await CreateDevicePair(
+                    log,
+                    unpairedDevice,
+                    companion_device,
+                    device.SimRuntime,
+                    device.SimDeviceType,
+                    unpairedDevice == null,
+                    cancellationToken: cancellationToken))
             {
                 return null;
             }
 
-            await LoadDevices(log, forceRefresh: true);
+            await LoadDevices(log, forceRefresh: true, cancellationToken: cancellationToken);
 
             pairs = AvailableDevicePairs.Where((pair) =>
             {
@@ -340,7 +375,12 @@ public class SimulatorLoader : ISimulatorLoader
     /// This is a new implementation that respects also target OS version and if that one is specified, looks for that specific simulator.
     /// Old implementation of FindSimulators is kept intact because it is being used in Xamarin Mac/iOS.
     /// </summary>
-    public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, bool createIfNeeded = true, bool minVersion = false)
+    public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(
+        TestTargetOs target,
+        ILog log,
+        bool createIfNeeded = true,
+        bool minVersion = false,
+        CancellationToken cancellationToken = default)
     {
         var runtimePrefix = _simulatorSelector.GetRuntimePrefix(target);
 
@@ -350,7 +390,7 @@ public class SimulatorLoader : ISimulatorLoader
         {
             if (!_loaded)
             {
-                await LoadDevices(log);
+                await LoadDevices(log, cancellationToken: cancellationToken);
             }
 
             string? firstOsVersion = _supportedRuntimes
@@ -369,12 +409,12 @@ public class SimulatorLoader : ISimulatorLoader
         // TODO: Allow to specify companion runtime
         _simulatorSelector.GetCompanionRuntimeAndDeviceType(target, minVersion, out var companionRuntime, out var companionDeviceType);
 
-        var devices = await FindOrCreateDevicesAsync(log, simulatorRuntime, simulatorDeviceType);
+        var devices = await FindOrCreateDevicesAsync(log, simulatorRuntime, simulatorDeviceType, cancellationToken: cancellationToken);
         IEnumerable<ISimulatorDevice>? companionDevices = null;
 
         if (companionRuntime != null && companionDeviceType != null)
         {
-            companionDevices = await FindOrCreateDevicesAsync(log, companionRuntime, companionDeviceType);
+            companionDevices = await FindOrCreateDevicesAsync(log, companionRuntime, companionDeviceType, cancellationToken: cancellationToken);
         }
 
         if (devices?.Any() != true)
@@ -429,7 +469,12 @@ public class SimulatorLoader : ISimulatorLoader
         return (simulator, companionSimulator);
     }
 
-    public Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTarget target, ILog log, bool createIfNeeded = true, bool minVersion = false)
+    public Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(
+        TestTarget target,
+        ILog log,
+        bool createIfNeeded = true,
+        bool minVersion = false,
+        CancellationToken cancellationToken = default)
     {
         TestTargetOs testTarget = target switch
         {
@@ -441,16 +486,24 @@ public class SimulatorLoader : ISimulatorLoader
             _ => throw new Exception(string.Format("Invalid simulator target: {0}", target))
         };
 
-        return FindSimulators(testTarget, log, createIfNeeded: createIfNeeded, minVersion: minVersion);
+        return FindSimulators(testTarget, log, createIfNeeded: createIfNeeded, minVersion: minVersion, cancellationToken: cancellationToken);
     }
 
-    public ISimulatorDevice FindCompanionDevice(ILog log, ISimulatorDevice device)
+    public async Task<ISimulatorDevice> FindCompanionDevice(ILog log, ISimulatorDevice device, CancellationToken cancellationToken = default)
     {
+        await LoadDevices(log, forceRefresh: false, cancellationToken: cancellationToken);
+
         var pair = _availableDevicePairs.Where(v => v.Gizmo == device.UDID).Single();
         return _availableDevices.Single(v => v.UDID == pair.Companion);
     }
 
-    public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(TestTargetOs target, ILog log, int retryCount, bool createIfNeeded = true, bool minVersion = false)
+    public async Task<(ISimulatorDevice Simulator, ISimulatorDevice? CompanionSimulator)> FindSimulators(
+        TestTargetOs target,
+        ILog log,
+        int retryCount,
+        bool createIfNeeded = true,
+        bool minVersion = false,
+        CancellationToken cancellationToken = default)
     {
         if (retryCount < 1)
         {
@@ -462,7 +515,7 @@ public class SimulatorLoader : ISimulatorLoader
         {
             try
             {
-                return await FindSimulators(target, log);
+                return await FindSimulators(target, log, cancellationToken: cancellationToken);
             }
             catch (Exception e)
             {
@@ -480,8 +533,10 @@ public class SimulatorLoader : ISimulatorLoader
         }
     }
 
-    public IEnumerable<ISimulatorDevice?> SelectDevices(TestTarget target, ILog log, bool minVersion) => new SimulatorEnumerable(this, target, minVersion, log);
-    public IEnumerable<ISimulatorDevice?> SelectDevices(TestTargetOs target, ILog log, bool minVersion) => new SimulatorEnumerable(this, target, minVersion, log);
+    public IEnumerable<ISimulatorDevice?> SelectDevices(TestTarget target, ILog log, bool minVersion, CancellationToken cancellationToken = default)
+        => new SimulatorEnumerable(this, target, minVersion, log, cancellationToken);
+    public IEnumerable<ISimulatorDevice?> SelectDevices(TestTargetOs target, ILog log, bool minVersion, CancellationToken cancellationToken = default)
+        => new SimulatorEnumerable(this, target, minVersion, log, cancellationToken);
 
     private class SimulatorXmlNodeComparer : IEqualityComparer<XmlNode>
     {
@@ -520,15 +575,19 @@ public class SimulatorLoader : ISimulatorLoader
         private readonly Lazy<Task<(ISimulatorDevice, ISimulatorDevice?)>> _findTask;
         private readonly string _toString;
 
-        public SimulatorEnumerable(ISimulatorLoader simulators, TestTarget target, bool minVersion, ILog log)
+        public SimulatorEnumerable(ISimulatorLoader simulators, TestTarget target, bool minVersion, ILog log, CancellationToken cancellationToken = default)
         {
-            _findTask = new Lazy<Task<(ISimulatorDevice, ISimulatorDevice?)>>(() => simulators.FindSimulators(target, log, minVersion: minVersion), LazyThreadSafetyMode.ExecutionAndPublication);
+            _findTask = new Lazy<Task<(ISimulatorDevice, ISimulatorDevice?)>>(
+                () => simulators.FindSimulators(target, log, minVersion: minVersion, cancellationToken: cancellationToken),
+                LazyThreadSafetyMode.ExecutionAndPublication);
             _toString = $"Simulators for {target} (MinVersion: {minVersion})";
         }
 
-        public SimulatorEnumerable(ISimulatorLoader simulators, TestTargetOs target, bool minVersion, ILog log)
+        public SimulatorEnumerable(ISimulatorLoader simulators, TestTargetOs target, bool minVersion, ILog log, CancellationToken cancellationToken = default)
         {
-            _findTask = new Lazy<Task<(ISimulatorDevice, ISimulatorDevice?)>>(() => simulators.FindSimulators(target, log, minVersion: minVersion), LazyThreadSafetyMode.ExecutionAndPublication);
+            _findTask = new Lazy<Task<(ISimulatorDevice, ISimulatorDevice?)>>(
+                () => simulators.FindSimulators(target, log, minVersion: minVersion, cancellationToken: cancellationToken),
+                LazyThreadSafetyMode.ExecutionAndPublication);
             _toString = $"Simulators for {target} (MinVersion: {minVersion})";
         }
 

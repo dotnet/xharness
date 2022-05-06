@@ -106,7 +106,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(true);
@@ -169,7 +169,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true),
+            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -236,7 +236,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.APP_CRASH, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -285,9 +285,9 @@ public class TestOrchestratorTests : OrchestratorTestBase
 
         _deviceFinder.Reset();
         _deviceFinder
-            .Setup(x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false))
+            .Setup(x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()))
             .Callback(() => cts.Cancel())
-            .ReturnsAsync((_simulator.Object, null));
+            .ReturnsAsync(new DevicePair(_simulator.Object, null));
 
         // Act
         var result = await _testOrchestrator.OrchestrateTest(
@@ -307,6 +307,43 @@ public class TestOrchestratorTests : OrchestratorTestBase
             Array.Empty<(string, string)>(),
             Array.Empty<string>(),
             cts.Token);
+
+        // Verify
+        Assert.Equal(ExitCode.APP_LAUNCH_TIMEOUT, result);
+
+        VerifySimulatorReset(false);
+        VerifySimulatorCleanUp(false);
+    }
+
+    [Fact]
+    public async Task OrchestrateTimedOutSimulatorSearchTestTest()
+    {
+        // Setup
+        var testTarget = new TestTargetOs(TestTarget.Simulator_iOS64, "13.5");
+
+        _deviceFinder.Reset();
+        _deviceFinder
+            .Setup(x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new OperationCanceledException());
+
+        // Act
+        var result = await _testOrchestrator.OrchestrateTest(
+            AppPath,
+            testTarget,
+            null,
+            TimeSpan.FromMinutes(30),
+            TimeSpan.FromMinutes(3),
+            CommunicationChannel.UsbTunnel,
+            XmlResultJargon.xUnit,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
+            includeWirelessDevices: false,
+            resetSimulator: false,
+            enableLldb: true,
+            signalAppEnd: false,
+            Array.Empty<(string, string)>(),
+            Array.Empty<string>(),
+            new CancellationToken());
 
         // Verify
         Assert.Equal(ExitCode.APP_LAUNCH_TIMEOUT, result);
@@ -364,7 +401,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.TIMED_OUT, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true),
+            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);

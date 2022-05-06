@@ -27,9 +27,14 @@ public interface IHardwareDeviceLoader : IDeviceLoader
     IEnumerable<IHardwareDevice> ConnectedWatch { get; }
     IEnumerable<IHardwareDevice> ConnectedWatch32_64 { get; }
 
-    Task<IHardwareDevice> FindCompanionDevice(ILog log, IHardwareDevice device);
+    Task<IHardwareDevice> FindCompanionDevice(ILog log, IHardwareDevice device, CancellationToken cancellationToken = default);
 
-    Task<IHardwareDevice> FindDevice(RunMode runMode, ILog log, bool includeLocked, bool includeWirelessDevices = true);
+    Task<IHardwareDevice> FindDevice(
+        RunMode runMode,
+        ILog log,
+        bool includeLocked,
+        bool includeWirelessDevices = true,
+        CancellationToken cancellationToken = default);
 }
 
 public class HardwareDeviceLoader : IHardwareDeviceLoader
@@ -51,9 +56,15 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
     }
 
-    public async Task LoadDevices(ILog log, bool includeLocked = false, bool forceRefresh = false, bool listExtraData = false, bool includeWirelessDevices = true)
+    public async Task LoadDevices(
+        ILog log,
+        bool includeLocked = false,
+        bool forceRefresh = false,
+        bool listExtraData = false,
+        bool includeWirelessDevices = true,
+        CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync();
+        await _semaphore.WaitAsync(cancellationToken);
 
         if (_loaded)
         {
@@ -82,7 +93,7 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
                     arguments.Add(new ListExtraDataArgument());
                 }
 
-                var task = _processManager.RunAsync(process, arguments, log, timeout: TimeSpan.FromSeconds(120));
+                var task = _processManager.RunAsync(process, arguments, log, timeout: TimeSpan.FromSeconds(120), cancellationToken: cancellationToken);
                 log.WriteLine("Launching {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
 
                 var result = await task;
@@ -145,7 +156,12 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
         }
     }
 
-    public async Task<IHardwareDevice> FindDevice(RunMode runMode, ILog log, bool includeLocked, bool includeWirelessDevices = true)
+    public async Task<IHardwareDevice> FindDevice(
+        RunMode runMode,
+        ILog log,
+        bool includeLocked,
+        bool includeWirelessDevices = true,
+        CancellationToken cancellationToken = default)
     {
         DeviceClass[] deviceClasses = runMode switch
         {
@@ -155,7 +171,12 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
             _ => throw new ArgumentException(nameof(runMode)),
         };
 
-        await LoadDevices(log, includeLocked: false, forceRefresh: false, includeWirelessDevices: includeWirelessDevices);
+        await LoadDevices(
+            log,
+            includeLocked: false,
+            forceRefresh: false,
+            includeWirelessDevices: includeWirelessDevices,
+            cancellationToken: cancellationToken);
 
         IEnumerable<IHardwareDevice> compatibleDevices = ConnectedDevices.Where(v => deviceClasses.Contains(v.DeviceClass) && v.IsUsableForDebugging != false);
         IHardwareDevice device;
@@ -183,9 +204,9 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
         return device;
     }
 
-    public async Task<IHardwareDevice> FindCompanionDevice(ILog log, IHardwareDevice device)
+    public async Task<IHardwareDevice> FindCompanionDevice(ILog log, IHardwareDevice device, CancellationToken cancellationToken = default)
     {
-        await LoadDevices(log, false, false);
+        await LoadDevices(log, false, false, cancellationToken: cancellationToken);
 
         var companion = ConnectedDevices.Where((v) => v.DeviceIdentifier == device.CompanionIdentifier);
         var count = companion.Count();
@@ -202,30 +223,28 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
         return companion.First();
     }
 
-    private Device GetDevice(XmlNode deviceNone)
+    private Device GetDevice(XmlNode deviceNode)
     {
         // get data, if we are missing some of them, we will return null, happens sometimes that we
         // have some empty nodes. We could do this with try/catch, but we want to throw the min amount
         // of exceptions. We do know that we will have issues with the parsing of the DeviceClass, check
         // the value, and if is there, get the rest, else return null
-        var usable = deviceNone.SelectSingleNode("IsUsableForDebugging")?.InnerText;
-        if (Enum.TryParse<DeviceClass>(deviceNone.SelectSingleNode("DeviceClass")?.InnerText, true, out var deviceClass))
-        {
-            return new Device(
-                deviceIdentifier: deviceNone.SelectSingleNode("DeviceIdentifier")?.InnerText,
-                deviceClass: deviceClass,
-                companionIdentifier: deviceNone.SelectSingleNode("CompanionIdentifier")?.InnerText,
-                name: deviceNone.SelectSingleNode("Name")?.InnerText,
-                buildVersion: deviceNone.SelectSingleNode("BuildVersion")?.InnerText,
-                productVersion: deviceNone.SelectSingleNode("ProductVersion")?.InnerText,
-                productType: deviceNone.SelectSingleNode("ProductType")?.InnerText,
-                interfaceType: deviceNone.SelectSingleNode("InterfaceType")?.InnerText,
-                isUsableForDebugging: usable == null ? (bool?)null : usable == "True",
-                isLocked: bool.TryParse(deviceNone.SelectSingleNode("IsLocked")?.InnerText, out var locked) && locked);
-        }
-        else
+        var usable = deviceNode.SelectSingleNode("IsUsableForDebugging")?.InnerText;
+        if (!Enum.TryParse<DeviceClass>(deviceNode.SelectSingleNode("DeviceClass")?.InnerText, true, out var deviceClass))
         {
             return null;
         }
+
+        return new Device(
+            deviceIdentifier: deviceNode.SelectSingleNode("DeviceIdentifier")?.InnerText,
+            deviceClass: deviceClass,
+            companionIdentifier: deviceNode.SelectSingleNode("CompanionIdentifier")?.InnerText,
+            name: deviceNode.SelectSingleNode("Name")?.InnerText,
+            buildVersion: deviceNode.SelectSingleNode("BuildVersion")?.InnerText,
+            productVersion: deviceNode.SelectSingleNode("ProductVersion")?.InnerText,
+            productType: deviceNode.SelectSingleNode("ProductType")?.InnerText,
+            interfaceType: deviceNode.SelectSingleNode("InterfaceType")?.InnerText,
+            isUsableForDebugging: usable == null ? (bool?)null : usable == "True",
+            isLocked: bool.TryParse(deviceNode.SelectSingleNode("IsLocked")?.InnerText, out var locked) && locked);
     }
 }
