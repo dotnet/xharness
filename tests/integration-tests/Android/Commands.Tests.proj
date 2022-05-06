@@ -28,7 +28,7 @@
         <CustomCommands>
           set -ex;
           deviceId=`xharness android device --app="$app"`;
-          xharness android install --device-id="$deviceId" --output-directory="$output_directory" --package-name="$package_name" --app="$app";
+          xharness android install --device-id="$deviceId" --output-directory="$output_directory" --package-name="$package_name" --app="$app" --device-arch=x86;
           set +e;
           result=0;
           xharness android run --device-id="$deviceId" --output-directory="$output_directory" --package-name="$package_name";

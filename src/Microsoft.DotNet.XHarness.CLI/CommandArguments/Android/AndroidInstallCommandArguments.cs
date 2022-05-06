@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
@@ -29,4 +30,14 @@ internal class AndroidInstallCommandArguments : XHarnessCommandArguments, IAndro
         DeviceArchitecture,
         ApiVersion,
     };
+
+    public override void Validate()
+    {
+        base.Validate();
+
+        if (!File.Exists(AppPackagePath))
+        {
+            throw new ArgumentException($"Couldn't find {AppPackagePath}!");
+        }
+    }
 }
