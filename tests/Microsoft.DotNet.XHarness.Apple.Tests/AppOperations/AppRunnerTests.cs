@@ -681,8 +681,8 @@ public class AppRunnerTests : AppRunTestBase
         "-argument=--xyz " +
         "-setenv=appArg1=value1 " +
         $"--device=:v2:udid={_mockSimulator.UDID} " +
-        $"--stdout=./{AppBundleIdentifier}.log " +
-        $"--stderr=./{AppBundleIdentifier}.log " +
+        $"--stdout=./{AppBundleIdentifier}.stdout.log " +
+        $"--stderr=./{AppBundleIdentifier}.stderr.log " +
         $"--launchsimbundleid={AppBundleIdentifier}";
 
     private void SetupLogList(IEnumerable<IFileBackedLog> logs)

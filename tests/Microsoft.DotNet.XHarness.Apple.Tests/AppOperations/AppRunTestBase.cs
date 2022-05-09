@@ -72,12 +72,12 @@ public abstract class AppRunTestBase : IDisposable
 
         _snapshotReporter = new Mock<ICrashSnapshotReporter>();
 
-        _stdoutLog = Mock.Of<IFileBackedLog>(
-            x => x.FullPath == $"./{AppBundleIdentifier}.log" && x.Description == LogType.ApplicationLog.ToString());
         _appLog = Mock.Of<IFileBackedLog>(
             x => x.FullPath == $"./{BundleExecutable}.log" && x.Description == LogType.ApplicationLog.ToString());
+        _stdoutLog = Mock.Of<IFileBackedLog>(
+            x => x.FullPath == $"./{AppBundleIdentifier}.stdout.log" && x.Description == LogType.ApplicationLog.ToString());
         _stderrLog = Mock.Of<IFileBackedLog>(
-            x => x.FullPath == $"./{AppBundleIdentifier}.err.log" && x.Description == LogType.ApplicationLog.ToString());
+            x => x.FullPath == $"./{AppBundleIdentifier}.stderr.log" && x.Description == LogType.ApplicationLog.ToString());
 
         _logs = new Mock<ILogs>();
         _logs
@@ -87,16 +87,16 @@ public abstract class AppRunTestBase : IDisposable
             .Setup(x => x.CreateFile($"{AppBundleIdentifier}-mocked_timestamp.log", It.IsAny<LogType>()))
             .Returns($"./{AppBundleIdentifier}-mocked_timestamp.log");
         _logs
-            .Setup(x => x.CreateFile(AppBundleIdentifier + ".log", LogType.ApplicationLog))
+            .Setup(x => x.CreateFile(AppBundleIdentifier + ".stdout.log", LogType.ApplicationLog))
             .Returns(_stdoutLog.FullPath);
         _logs
-            .Setup(x => x.Create(AppBundleIdentifier + ".log", LogType.ApplicationLog.ToString(), It.IsAny<bool?>()))
-            .Returns(_stdoutLog);
-        _logs
-            .Setup(x => x.Create(AppBundleIdentifier + ".err.log", LogType.ApplicationLog.ToString(), It.IsAny<bool?>()))
-            .Returns(_stderrLog);
+            .Setup(x => x.CreateFile(AppBundleIdentifier + ".stderr.log", LogType.ApplicationLog))
+            .Returns(_stderrLog.FullPath);
         _logs
             .Setup(x => x.Create(BundleExecutable + ".log", It.IsAny<string>(), It.IsAny<bool?>()))
+            .Returns(_appLog);
+        _logs
+            .Setup(x => x.Create(AppBundleIdentifier + ".log", It.IsAny<string>(), It.IsAny<bool?>()))
             .Returns(_appLog);
 
         var factory2 = new Mock<ICrashSnapshotReporterFactory>();
