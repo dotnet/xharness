@@ -558,12 +558,6 @@ public class AppTester : AppRunnerBase, IAppTester
         args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"));
         args.Add(new SimulatorUDIDArgument(simulator));
 
-        var stdoutLog = _logs.CreateFile(appInformation.BundleIdentifier + ".stdout.log", LogType.ApplicationLog);
-        var stderrLog = _logs.CreateFile(appInformation.BundleIdentifier + ".stderr.log", LogType.ApplicationLog);
-
-        args.Add(new SetStdoutArgument(stdoutLog));
-        args.Add(new SetStderrArgument(stderrLog));
-
         if (appInformation.Extension.HasValue)
         {
             switch (appInformation.Extension)

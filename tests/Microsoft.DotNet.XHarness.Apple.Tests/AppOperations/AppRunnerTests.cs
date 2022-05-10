@@ -36,7 +36,7 @@ public class AppRunnerTests : AppRunTestBase
                LogType.SystemLog))
             .Returns(captureLog.Object);
 
-        SetupLogList(new[] { captureLog.Object, _stdoutLog, _stderrLog });
+        SetupLogList(new[] { captureLog.Object });
 
         // Act
         var appRunner = new AppRunner(
@@ -97,7 +97,7 @@ public class AppRunnerTests : AppRunTestBase
         deviceSystemLog.SetupGet(x => x.FullPath).Returns(AppBundleIdentifier + "system.log");
         deviceSystemLog.SetupGet(x => x.Description).Returns(LogType.SystemLog.ToString());
 
-        SetupLogList(new[] { deviceSystemLog.Object, _stdoutLog, _stderrLog });
+        SetupLogList(new[] { deviceSystemLog.Object });
 
         _logs
             .Setup(x => x.Create("device-" + DeviceName + "-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
@@ -163,7 +163,7 @@ public class AppRunnerTests : AppRunTestBase
         deviceSystemLog.SetupGet(x => x.FullPath).Returns(AppBundleIdentifier + "system.log");
         deviceSystemLog.SetupGet(x => x.Description).Returns(LogType.SystemLog.ToString());
 
-        SetupLogList(new[] { deviceSystemLog.Object, _stdoutLog, _stderrLog });
+        SetupLogList(new[] { deviceSystemLog.Object });
 
         _logs
             .Setup(x => x.Create("device-" + DeviceName + "-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
@@ -344,7 +344,7 @@ public class AppRunnerTests : AppRunTestBase
         deviceSystemLog.SetupGet(x => x.FullPath).Returns(AppBundleIdentifier + "system.log");
         deviceSystemLog.SetupGet(x => x.Description).Returns(LogType.SystemLog.ToString());
 
-        SetupLogList(new[] { deviceSystemLog.Object, _stdoutLog, _stderrLog });
+        SetupLogList(new[] { deviceSystemLog.Object });
 
         _logs
             .Setup(x => x.Create("device-" + DeviceName + "-mocked_timestamp.log", LogType.SystemLog.ToString(), It.IsAny<bool?>()))
@@ -419,7 +419,7 @@ public class AppRunnerTests : AppRunTestBase
                LogType.SystemLog))
             .Returns(captureLog.Object);
 
-        SetupLogList(new[] { captureLog.Object, _stdoutLog, _stderrLog });
+        SetupLogList(new[] { captureLog.Object });
 
         var expectedArgs = GetExpectedSimulatorMlaunchArgs();
 
@@ -522,7 +522,7 @@ public class AppRunnerTests : AppRunTestBase
                LogType.SystemLog))
             .Returns(captureLog.Object);
 
-        SetupLogList(new[] { captureLog.Object, _stdoutLog, _stderrLog });
+        SetupLogList(new[] { captureLog.Object });
 
         var expectedArgs = GetExpectedSimulatorMlaunchArgs();
 
@@ -681,8 +681,6 @@ public class AppRunnerTests : AppRunTestBase
         "-argument=--xyz " +
         "-setenv=appArg1=value1 " +
         $"--device=:v2:udid={_mockSimulator.UDID} " +
-        $"--stdout=./{AppBundleIdentifier}.stdout.log " +
-        $"--stderr=./{AppBundleIdentifier}.stderr.log " +
         $"--launchsimbundleid={AppBundleIdentifier}";
 
     private void SetupLogList(IEnumerable<IFileBackedLog> logs)

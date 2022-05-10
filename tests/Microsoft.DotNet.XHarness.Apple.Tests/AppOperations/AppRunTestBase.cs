@@ -59,8 +59,6 @@ public abstract class AppRunTestBase : IDisposable
     protected readonly Mock<IHelpers> _helpers;
 
     protected readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
-    protected readonly IFileBackedLog _stdoutLog;
-    protected readonly IFileBackedLog _stderrLog;
     protected readonly IFileBackedLog _appLog;
 
     protected AppRunTestBase()
@@ -74,10 +72,6 @@ public abstract class AppRunTestBase : IDisposable
 
         _appLog = Mock.Of<IFileBackedLog>(
             x => x.FullPath == $"./{BundleExecutable}.log" && x.Description == LogType.ApplicationLog.ToString());
-        _stdoutLog = Mock.Of<IFileBackedLog>(
-            x => x.FullPath == $"./{AppBundleIdentifier}.stdout.log" && x.Description == LogType.ApplicationLog.ToString());
-        _stderrLog = Mock.Of<IFileBackedLog>(
-            x => x.FullPath == $"./{AppBundleIdentifier}.stderr.log" && x.Description == LogType.ApplicationLog.ToString());
 
         _logs = new Mock<ILogs>();
         _logs
@@ -86,12 +80,6 @@ public abstract class AppRunTestBase : IDisposable
         _logs
             .Setup(x => x.CreateFile($"{AppBundleIdentifier}-mocked_timestamp.log", It.IsAny<LogType>()))
             .Returns($"./{AppBundleIdentifier}-mocked_timestamp.log");
-        _logs
-            .Setup(x => x.CreateFile(AppBundleIdentifier + ".stdout.log", LogType.ApplicationLog))
-            .Returns(_stdoutLog.FullPath);
-        _logs
-            .Setup(x => x.CreateFile(AppBundleIdentifier + ".stderr.log", LogType.ApplicationLog))
-            .Returns(_stderrLog.FullPath);
         _logs
             .Setup(x => x.Create(BundleExecutable + ".log", It.IsAny<string>(), It.IsAny<bool?>()))
             .Returns(_appLog);

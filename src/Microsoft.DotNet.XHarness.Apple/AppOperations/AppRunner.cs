@@ -255,12 +255,6 @@ public class AppRunner : AppRunnerBase, IAppRunner
 
         args.Add(new SimulatorUDIDArgument(simulator.UDID));
 
-        var stdoutLog = _logs.CreateFile(appInformation.BundleIdentifier + ".stdout.log", LogType.ApplicationLog);
-        var stderrLog = _logs.CreateFile(appInformation.BundleIdentifier + ".stderr.log", LogType.ApplicationLog);
-        
-        args.Add(new SetStdoutArgument(stdoutLog));
-        args.Add(new SetStderrArgument(stderrLog));
-
         if (appInformation.Extension.HasValue)
         {
             switch (appInformation.Extension)

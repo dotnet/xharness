@@ -644,7 +644,5 @@ public class AppTesterTests : AppRunTestBase
         "-argument=--xyz " +
         "-setenv=NUNIT_HOSTNAME=127.0.0.1 " +
         $"--device=:v2:udid={_mockSimulator.UDID} " +
-        $"--stdout=./{AppBundleIdentifier}.stdout.log " +
-        $"--stderr=./{AppBundleIdentifier}.stderr.log " +
         $"--launchsimbundleid={AppBundleIdentifier}";
 }
