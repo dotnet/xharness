@@ -558,10 +558,6 @@ public class AppTester : AppRunnerBase, IAppTester
         args.Add(new SetEnvVariableArgument(EnviromentVariables.HostName, "127.0.0.1"));
         args.Add(new SimulatorUDIDArgument(simulator));
 
-        var appLog = _logs.CreateFile(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog);
-        args.Add(new SetStdoutArgument(appLog));
-        args.Add(new SetStderrArgument(appLog)); // Seems like mlaunch only redirects stderr, stdout doesn't produce any data, however stderr captures stdout of the app too
-
         if (appInformation.Extension.HasValue)
         {
             switch (appInformation.Extension)

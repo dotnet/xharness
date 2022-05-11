@@ -40,6 +40,14 @@ public class ErrorKnowledgeBase : IErrorKnowledgeBase
             new("Failed to launch the Simulator as XHarness was most likely started from a user session without GUI capabilities (e.g. from a launchd daemon). " +
                 "Please start XHarness from a full user session or bind the run to one via `sudo launchctl asuser`",
                 suggestedExitCode: (int)ExitCode.APP_LAUNCH_FAILURE),
+
+        ["error HE0018: Could not launch the simulator application"] =
+            new("Failed to launch the Simulator, please try again. If the problem persists, try rebooting MacOS",
+                suggestedExitCode: (int)ExitCode.SIMULATOR_FAILURE),
+
+        ["error HE0042: Could not launch the app"] =
+            new("Failed to launch the application, please try again. If the problem persists, try rebooting MacOS",
+                suggestedExitCode: (int)ExitCode.APP_LAUNCH_FAILURE),
     };
 
     private static readonly Dictionary<string, KnownIssue> s_buildErrorMaps = new();

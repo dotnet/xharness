@@ -255,10 +255,6 @@ public class AppRunner : AppRunnerBase, IAppRunner
 
         args.Add(new SimulatorUDIDArgument(simulator.UDID));
 
-        var appLog = _logs.CreateFile(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog);
-        args.Add(new SetStdoutArgument(appLog));
-        args.Add(new SetStderrArgument(appLog)); // Seems like mlaunch only redirects stderr, stdout doesn't produce any data, however stderr captures stdout of the app too
-
         if (appInformation.Extension.HasValue)
         {
             switch (appInformation.Extension)
