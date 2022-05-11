@@ -97,41 +97,42 @@ Arguments:
             testScript,
             timeout);
 
-        bool processCrashed = false;
         bool failurePullingFiles = false;
 
         using (logger.BeginScope("Post-test copy and cleanup"))
         {
-            if (result.ExitCode == (int)ExitCode.SUCCESS)
+            // Optionally copy off an entire folder
+            if (!string.IsNullOrEmpty(outputDirectory))
             {
-                var testResultPath = Path.Combine(AdbRunner.GlobalReadWriteDirectory, new DirectoryInfo(testPath).Name, "testResults.xml");
+                var testResultPath = AdbRunner.GlobalReadWriteDirectory + Path.AltDirectorySeparatorChar + new DirectoryInfo(testPath).Name + Path.AltDirectorySeparatorChar + "testResults.xml";
 
-                logger.LogInformation($"Trying to pull results file {testResultPath}");
-                runner.HeadlessPullFiles(testResultPath, outputDirectory);
-            }
-            else
-            {
-                logger.LogError($"Non-success exit code: {result.ExitCode}, expected: {expectedExitCode}");
-                return ExitCode.TESTS_FAILED;
+                try
+                {
+                    var logs = runner.HeadlessPullFiles(testResultPath, outputDirectory);
+                    logger.LogDebug($"Found log file testResults.xml");
+                }
+                catch (Exception toLog)
+                {
+                    logger.LogError(toLog, "Hit error (typically permissions) trying to pull {testResultPath}", outputDirectory);
+                    failurePullingFiles = true;
+                }
             }
 
             runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{testAssembly}-default.log"));
-
-            if (processCrashed)
-            {
-                runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{testAssembly}"));
-            }
-        }
-
-        if (processCrashed)
-        {
-            return ExitCode.APP_CRASH;
         }
 
         if (failurePullingFiles)
         {
-            logger.LogError($"Hit errors pulling files from the device (see log for details.)");
+            logger.LogError($"Received expected exit code ({ExitCode.SUCCESS}), " +
+                             "but we hit errors pulling files from the device (see log for details.)");
             return ExitCode.DEVICE_FILE_COPY_FAILURE;
+        }
+
+        if (result.ExitCode != expectedExitCode)
+        {
+            logger.LogError($"Non-success exit code: {result.ExitCode}, expected: {expectedExitCode}");
+            runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{testAssembly}"));
+            return ExitCode.TESTS_FAILED;
         }
 
         return ExitCode.SUCCESS;
