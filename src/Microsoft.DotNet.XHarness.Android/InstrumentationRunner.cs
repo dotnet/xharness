@@ -48,6 +48,7 @@ public class InstrumentationRunner
 
         bool processCrashed = false;
         bool failurePullingFiles = false;
+        bool? logCatSucceeded = null;
 
         using (_logger.BeginScope("Post-test copy and cleanup"))
         {
@@ -74,12 +75,24 @@ public class InstrumentationRunner
                 }
             }
 
-            _runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log"));
+            logCatSucceeded = _runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log"));
 
             if (processCrashed)
             {
                 _runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{apkPackageName}"));
             }
+        }
+
+        if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
+        {
+            // In case emulator crashes halfway through, it sometimes manifests as a timeout too
+            // However, in this case, we usually fail to pull a log and it means the emulator did indeed crash
+            if (logCatSucceeded.HasValue && logCatSucceeded.Value)
+            {
+                return ExitCode.SIMULATOR_FAILURE;
+            }
+
+            return ExitCode.TIMED_OUT;
         }
 
         if (processCrashed)
