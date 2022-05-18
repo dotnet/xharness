@@ -76,7 +76,7 @@ public class AdbRunnerTests : IDisposable
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         string pathToDumpLogTo = Path.Join(s_scratchAndOutputPath, $"{Path.GetRandomFileName()}.log");
-        runner.DumpAdbLog(pathToDumpLogTo);
+        runner.TryDumpAdbLog(pathToDumpLogTo);
         VerifyAdbCall("logcat", "-d", "");
 
         Assert.Equal("Sample LogCat Output", File.ReadAllText(pathToDumpLogTo));

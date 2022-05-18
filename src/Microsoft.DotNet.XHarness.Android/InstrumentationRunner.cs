@@ -75,7 +75,7 @@ public class InstrumentationRunner
                 }
             }
 
-            logCatSucceeded = _runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log"));
+            logCatSucceeded = _runner.TryDumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log"));
 
             if (processCrashed)
             {

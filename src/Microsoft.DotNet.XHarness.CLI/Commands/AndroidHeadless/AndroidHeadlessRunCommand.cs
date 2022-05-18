@@ -118,7 +118,7 @@ Arguments:
                 }
             }
 
-            runner.DumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{testAssembly}-default.log"));
+            runner.TryDumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{testAssembly}-default.log"));
         }
 
         if (failurePullingFiles)

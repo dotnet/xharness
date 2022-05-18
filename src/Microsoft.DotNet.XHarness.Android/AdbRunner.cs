@@ -131,7 +131,7 @@ public class AdbRunner
     public void EnableWifi(bool enable) => RunAdbCommand("shell", "svc", "wifi", enable ? "enable" : "disable")
         .ThrowIfFailed($"Failed to {(enable ? "enable" : "disable")} WiFi on the device");
 
-    public bool DumpAdbLog(string outputFilePath, string filterSpec = "")
+    public bool TryDumpAdbLog(string outputFilePath, string filterSpec = "")
     {
         // Workaround: Doesn't seem to have a flush() function and sometimes it doesn't have the full log on emulators.
         Thread.Sleep(3000);
