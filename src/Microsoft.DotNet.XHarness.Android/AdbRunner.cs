@@ -131,7 +131,7 @@ public class AdbRunner
     public void EnableWifi(bool enable) => RunAdbCommand("shell", "svc", "wifi", enable ? "enable" : "disable")
         .ThrowIfFailed($"Failed to {(enable ? "enable" : "disable")} WiFi on the device");
 
-    public void DumpAdbLog(string outputFilePath, string filterSpec = "")
+    public bool TryDumpAdbLog(string outputFilePath, string filterSpec = "")
     {
         // Workaround: Doesn't seem to have a flush() function and sometimes it doesn't have the full log on emulators.
         Thread.Sleep(3000);
@@ -141,12 +141,14 @@ public class AdbRunner
         {
             // Could throw here, but it would tear down a possibly otherwise acceptable execution.
             _log.LogError($"Error getting ADB log:{Environment.NewLine}{result}");
+            return false;
         }
         else
         {
             Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath) ?? throw new ArgumentNullException(nameof(outputFilePath)));
             File.WriteAllText(outputFilePath, result.StandardOutput);
             _log.LogInformation($"Wrote current ADB log to {outputFilePath}");
+            return true;
         }
     }
 
@@ -1049,11 +1051,11 @@ public class AdbRunner
 
         if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
         {
-            _log.LogInformation($"Running instrumentation class {displayName} timed out after waiting {stopWatch.Elapsed.TotalSeconds} seconds");
+            _log.LogWarning("Running instrumentation class {name} timed out after waiting {seconds} seconds", displayName, stopWatch.Elapsed.TotalSeconds);
         }
         else
         {
-            _log.LogInformation($"Running instrumentation class {displayName} took {stopWatch.Elapsed.TotalSeconds} seconds");
+            _log.LogInformation("Running instrumentation class {name} took {seconds} seconds", displayName, stopWatch.Elapsed.TotalSeconds);
         }
 
         _log.LogDebug(result.ToString());
