@@ -87,7 +87,7 @@ public class InstrumentationRunner
         {
             // In case emulator crashes halfway through, it sometimes manifests as a timeout too
             // However, in this case, we usually fail to pull a log and it means the emulator did indeed crash
-            if (logCatSucceeded.HasValue && logCatSucceeded.Value)
+            if (logCatSucceeded.HasValue && !logCatSucceeded.Value)
             {
                 return ExitCode.SIMULATOR_FAILURE;
             }
