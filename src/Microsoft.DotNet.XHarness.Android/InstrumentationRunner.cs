@@ -48,7 +48,7 @@ public class InstrumentationRunner
 
         bool processCrashed = false;
         bool failurePullingFiles = false;
-        bool? logCatSucceeded = null;
+        bool logCatSucceeded;
 
         using (_logger.BeginScope("Post-test copy and cleanup"))
         {
@@ -87,7 +87,7 @@ public class InstrumentationRunner
         {
             // In case emulator crashes halfway through, it sometimes manifests as a timeout too
             // However, in this case, we usually fail to pull the log which means the emulator did indeed crash
-            if (logCatSucceeded.HasValue && !logCatSucceeded.Value)
+            if (!logCatSucceeded)
             {
                 return ExitCode.SIMULATOR_FAILURE;
             }
