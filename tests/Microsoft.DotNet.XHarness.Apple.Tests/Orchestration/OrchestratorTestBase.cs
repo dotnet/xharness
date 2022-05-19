@@ -82,7 +82,7 @@ public abstract class OrchestratorTestBase
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(_appBundleInformation);
 
-        _diagnosticsData = new CommandDiagnostics(Mock.Of<Extensions.Logging.ILogger>(), TargetPlatform.Apple, "install");
+        _diagnosticsData = new CommandDiagnostics(Mock.Of<Extensions.Logging.ILogger>(), TargetPlatform.Apple, "install", "43.43.43");
 
         _deviceFinder = new Mock<IDeviceFinder>();
         _deviceFinder

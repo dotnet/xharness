@@ -137,7 +137,7 @@ public abstract class XHarnessCommand<T> : Command where T : IXHarnessCommandArg
         {
             using var factory = CreateLoggerFactory(Arguments.Verbosity);
             ILogger logger = factory.CreateLogger(Name);
-            var diagnostics = new CommandDiagnostics(logger, _targetPlatform, Name);
+            var diagnostics = new CommandDiagnostics(logger, _targetPlatform, Name, XHarnessVersionCommand.XHarnessVersion);
 
             Services.TryAddSingleton(logger);
             Services.TryAddSingleton<IDiagnosticsData>(diagnostics);

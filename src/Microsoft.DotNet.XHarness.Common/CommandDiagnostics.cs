@@ -48,7 +48,9 @@ public class CommandDiagnostics : IDiagnosticsData
     public string Platform { get; }
 
     public string Command { get; }
-
+    
+    public string XHarnessVersion { get; }
+    
     [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
     public ExitCode ExitCode { get; set; }
 
@@ -66,7 +68,7 @@ public class CommandDiagnostics : IDiagnosticsData
 
     public int Duration => (int)Math.Round(_timer.Elapsed.TotalSeconds);
 
-    public CommandDiagnostics(ILogger logger, TargetPlatform platform, string command)
+    public CommandDiagnostics(ILogger logger, TargetPlatform platform, string command, FileVersionInfo xharnessVersion)
     {
         _logger = logger;
         Command = command;
@@ -77,6 +79,15 @@ public class CommandDiagnostics : IDiagnosticsData
             TargetPlatform.WASM => "wasm",
             _ => throw new ArgumentOutOfRangeException(nameof(platform)),
         };
+        XHarnessVersion = ProcessVersion(xharnessVersion);
+    }
+
+    private string ProcessVersion(FileVersionInfo xharnessVersion)
+    {
+        // Example version is: 1.0.0-prerelease.22269.1+6e87004b51c89c59ac4a34536e9bc22da0124f39
+        // Remove the commit SHA
+        var parts = xharnessVersion.ProductVersion.Split('+');
+        return parts[0];
     }
 
     /// <summary>

@@ -30,7 +30,7 @@ public static class Program
         if (shouldOutput)
         {
             Console.WriteLine(
-                $"[{XHarnessVersionCommand.GetAssemblyVersion().ProductVersion}] " +
+                $"[{XHarnessVersionCommand.XHarnessVersion.ProductVersion}] " +
                 "XHarness command issued: " + string.Join(' ', args));
         }
 

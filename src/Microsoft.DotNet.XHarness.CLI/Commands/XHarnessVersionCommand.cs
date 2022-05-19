@@ -8,6 +8,9 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands;
 
 internal class XHarnessVersionCommand : Command
 {
+    private static readonly Lazy<FileVersionInfo> s_versionInfo = new(
+        () => FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location));
+
     public XHarnessVersionCommand() : base("version") { }
 
     public override int Invoke(IEnumerable<string> arguments)
@@ -17,11 +20,10 @@ internal class XHarnessVersionCommand : Command
         // Apple clang version 11.0.3 (clang-1103.0.32.29)
         // Target: x86_64-apple-darwin19.4.0
         // InstalledDir: /Applications/Xcode114.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
-        var version = GetAssemblyVersion();
-        Console.WriteLine($"XHarness version {version.ProductVersion} ({version.OriginalFilename})");
-        Console.WriteLine($"InstalledDir: {version.FileName}");
+        Console.WriteLine($"XHarness version {XHarnessVersion.ProductVersion} ({XHarnessVersion.OriginalFilename})");
+        Console.WriteLine($"InstalledDir: {XHarnessVersion.FileName}");
         return 0;
     }
 
-    public static FileVersionInfo GetAssemblyVersion() => FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
+    public static FileVersionInfo XHarnessVersion => s_versionInfo.Value;
 }
