@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Microsoft.DotNet.XHarness.Common;
@@ -82,7 +83,8 @@ public abstract class OrchestratorTestBase
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(_appBundleInformation);
 
-        _diagnosticsData = new CommandDiagnostics(Mock.Of<Extensions.Logging.ILogger>(), TargetPlatform.Apple, "install", "43.43.43");
+        var version = FileVersionInfo.GetVersionInfo(typeof(OrchestratorTestBase).Assembly.Location);
+        _diagnosticsData = new CommandDiagnostics(Mock.Of<Extensions.Logging.ILogger>(), TargetPlatform.Apple, "install", version);
 
         _deviceFinder = new Mock<IDeviceFinder>();
         _deviceFinder

@@ -86,7 +86,7 @@ public class CommandDiagnostics : IDiagnosticsData
     {
         // Example version is: 1.0.0-prerelease.22269.1+6e87004b51c89c59ac4a34536e9bc22da0124f39
         // Remove the commit SHA
-        var parts = xharnessVersion.ProductVersion.Split('+');
+        var parts = xharnessVersion.ProductVersion!.Split('+');
         return parts[0];
     }
 
