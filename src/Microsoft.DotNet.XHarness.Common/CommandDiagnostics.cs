@@ -48,8 +48,8 @@ public class CommandDiagnostics : IDiagnosticsData
     public string Platform { get; }
 
     public string Command { get; }
-    
-    public string XHarnessVersion { get; }
+
+    public string Version { get; }
     
     [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
     public ExitCode ExitCode { get; set; }
@@ -79,7 +79,7 @@ public class CommandDiagnostics : IDiagnosticsData
             TargetPlatform.WASM => "wasm",
             _ => throw new ArgumentOutOfRangeException(nameof(platform)),
         };
-        XHarnessVersion = ProcessVersion(xharnessVersion);
+        Version = ProcessVersion(xharnessVersion);
     }
 
     private string ProcessVersion(FileVersionInfo xharnessVersion)
