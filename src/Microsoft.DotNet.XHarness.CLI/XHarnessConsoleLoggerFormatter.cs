@@ -46,7 +46,7 @@ internal class XHarnessConsoleLoggerFormatter : ConsoleFormatter
         _newLineWithMessagePadding = Environment.NewLine + _messagePadding;
     }
 
-    public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider scopeProvider, TextWriter textWriter)
+    public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider, TextWriter textWriter)
     {
         if (logEntry.Formatter == null)
         {
