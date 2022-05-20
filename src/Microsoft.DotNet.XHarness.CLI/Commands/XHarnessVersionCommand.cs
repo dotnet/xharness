@@ -15,19 +15,19 @@ internal class XHarnessVersionCommand : Command
     {
         var version = GetAssemblyVersion();
 
-        if (arguments.Contains("--full") || arguments.Contains("-f") || arguments.Contains("-v"))
+        if (!arguments.Contains("-v"))
         {
-            // Print the name of the tool and the version number unix style
-            // Example:
-            // Apple clang version 11.0.3 (clang-1103.0.32.29)
-            // Target: x86_64-apple-darwin19.4.0
-            // InstalledDir: /Applications/Xcode114.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
-            Console.WriteLine($"XHarness version {version.ProductVersion} ({version.OriginalFilename})");
-            Console.WriteLine($"InstalledDir: {version.FileName}");
+            Console.WriteLine(version.ProductVersion);
+            return 0;
         }
-
-        Console.WriteLine(version.ProductVersion);
-
+        
+        // Print the name of the tool and the version number unix style
+        // Example:
+        // Apple clang version 11.0.3 (clang-1103.0.32.29)
+        // Target: x86_64-apple-darwin19.4.0
+        // InstalledDir: /Applications/Xcode114.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+        Console.WriteLine($"XHarness version {version.ProductVersion} ({version.OriginalFilename})");
+        Console.WriteLine($"InstalledDir: {version.FileName}");
         return 0;
     }
 
