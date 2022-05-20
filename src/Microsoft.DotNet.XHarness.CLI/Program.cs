@@ -95,6 +95,11 @@ public static class Program
     /// </summary>
     private static bool IsOutputSensitive(string[] args)
     {
+        if (args.Length > 0 && args[0] == "version")
+        {
+            return true;
+        }
+
         if (args.Length < 2 || args.Contains("--help") || args.Contains("-h"))
         {
             return false;
