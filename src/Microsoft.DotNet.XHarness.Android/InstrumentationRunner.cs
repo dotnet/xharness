@@ -83,15 +83,15 @@ public class InstrumentationRunner
             }
         }
 
-        if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
-        {
-            return ExitCode.TIMED_OUT;
-        }
-
         // In case emulator crashes halfway through, we can tell by failing to pull ADB logs from it
         if (!logCatSucceeded)
         {
             return ExitCode.SIMULATOR_FAILURE;
+        }
+
+        if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
+        {
+            return ExitCode.TIMED_OUT;
         }
 
         if (processCrashed)
