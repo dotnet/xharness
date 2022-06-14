@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.DotNet.XHarness.Common;
@@ -56,10 +57,9 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
             Console.WriteLine($"Discovered:  {assemblyFileName} (found {testCasesToRun.Count} of {discoverySink.TestCases.Count} test cases)");
 
             var summaryTaskSource = new TaskCompletionSource<ExecutionSummary>();
-            var summarySink = new DelegatingExecutionSummarySink(testSink, () => false, (completed, summary) => summaryTaskSource.SetResult(summary));
             var resultsXmlAssembly = new XElement("assembly");
-            var resultsSink = new DelegatingXmlCreationSink(summarySink, resultsXmlAssembly);
-
+            var resultsSink = new DelegatingXmlCreationSink(new DelegatingExecutionSummarySink(testSink), resultsXmlAssembly);
+            var completionSink = new CompletionCallbackExecutionSink(resultsSink, summary => summaryTaskSource.SetResult(summary));
 
             if (Environment.GetEnvironmentVariable("XHARNESS_LOG_TEST_START") != null)
             {
@@ -85,9 +85,10 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
             testSink.Execution.TestAssemblyStartingEvent += args => { Console.WriteLine($"Starting:    {assemblyFileName}"); };
             testSink.Execution.TestAssemblyFinishedEvent += args => { Console.WriteLine($"Finished:    {assemblyFileName}"); };
 
-            controller.RunTests(testCasesToRun, resultsSink, testOptions);
+            controller.RunTests(testCasesToRun, completionSink, testOptions);
 
             totalSummary = Combine(totalSummary, await summaryTaskSource.Task);
+
             _assembliesElement.Add(resultsXmlAssembly);
         }
         TotalTests = totalSummary.Total;
@@ -119,13 +120,12 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
     {
         if (_oneLineResults)
         {
-
             using var ms = new MemoryStream();
             _assembliesElement.Save(ms);
-            var bytes = ms.ToArray();
+            ms.TryGetBuffer(out var bytes);
             var base64 = Convert.ToBase64String(bytes, Base64FormattingOptions.None);
-            Console.WriteLine($"STARTRESULTXML {bytes.Length} {base64} ENDRESULTXML");
-            Console.WriteLine($"Finished writing {bytes.Length} bytes of RESULTXML");
+            Console.WriteLine($"STARTRESULTXML {bytes.Count} {base64} ENDRESULTXML");
+            Console.WriteLine($"Finished writing {bytes.Count} bytes of RESULTXML");
         }
         else
         {
@@ -172,5 +172,30 @@ internal class ConsoleDiagnosticMessageSink : global::Xunit.Sdk.LongLivedMarshal
         }
 
         return true;
+    }
+}
+
+internal class CompletionCallbackExecutionSink : global::Xunit.Sdk.LongLivedMarshalByRefObject, IExecutionSink
+{
+    private readonly Action<ExecutionSummary> _completionCallback;
+    private readonly IExecutionSink _innerSink;
+
+    public ExecutionSummary ExecutionSummary => _innerSink.ExecutionSummary;
+
+    public ManualResetEvent Finished => _innerSink.Finished;
+
+    public CompletionCallbackExecutionSink(IExecutionSink innerSink, Action<ExecutionSummary> completionCallback)
+    {
+        _innerSink = innerSink;
+        _completionCallback = completionCallback;
+    }
+
+    public void Dispose() => _innerSink.Dispose();
+
+    public bool OnMessageWithTypes(IMessageSinkMessage message, HashSet<string> messageTypes)
+    {
+        var result = _innerSink.OnMessageWithTypes(message, messageTypes);
+        message.Dispatch<ITestAssemblyFinished>(messageTypes, args => _completionCallback(ExecutionSummary));
+        return result;
     }
 }
