@@ -23,7 +23,7 @@
     <ItemGroup>
       <XHarnessAppBundleToTest Include="$(TestAppDestinationDir)\$(TestAppBundleName).app">
         <TestTarget>ios-simulator-64</TestTarget>
-        <WorkItemTimeout>00:12:00</WorkItemTimeout>
+        <WorkItemTimeout>00:20:00</WorkItemTimeout>
         <TestTimeout>00:07:00</TestTimeout>
         <LaunchTimeout>00:03:30</LaunchTimeout>
         <CustomCommands>
