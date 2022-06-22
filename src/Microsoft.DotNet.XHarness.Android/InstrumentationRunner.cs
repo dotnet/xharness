@@ -83,15 +83,14 @@ public class InstrumentationRunner
             }
         }
 
+        // In case emulator crashes halfway through, we can tell by failing to pull ADB logs from it
+        if (!logCatSucceeded)
+        {
+            return ExitCode.SIMULATOR_FAILURE;
+        }
+
         if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
         {
-            // In case emulator crashes halfway through, it sometimes manifests as a timeout too
-            // However, in this case, we usually fail to pull the log which means the emulator did indeed crash
-            if (!logCatSucceeded)
-            {
-                return ExitCode.SIMULATOR_FAILURE;
-            }
-
             return ExitCode.TIMED_OUT;
         }
 
