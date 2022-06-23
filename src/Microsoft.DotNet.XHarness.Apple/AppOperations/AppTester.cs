@@ -59,7 +59,6 @@ public class AppTester : AppRunnerBase, IAppTester
     private readonly IMlaunchProcessManager _processManager;
     private readonly ISimpleListenerFactory _listenerFactory;
     private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
-    private readonly ICaptureLogFactory _captureLogFactory;
     private readonly IDeviceLogCapturerFactory _deviceLogCapturerFactory;
     private readonly ITestReporterFactory _testReporterFactory;
     private readonly IResultParser _resultParser;
@@ -84,7 +83,6 @@ public class AppTester : AppRunnerBase, IAppTester
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         _listenerFactory = simpleListenerFactory ?? throw new ArgumentNullException(nameof(simpleListenerFactory));
         _snapshotReporterFactory = snapshotReporterFactory ?? throw new ArgumentNullException(nameof(snapshotReporterFactory));
-        _captureLogFactory = captureLogFactory ?? throw new ArgumentNullException(nameof(captureLogFactory));
         _deviceLogCapturerFactory = deviceLogCapturerFactory ?? throw new ArgumentNullException(nameof(deviceLogCapturerFactory));
         _testReporterFactory = reporterFactory ?? throw new ArgumentNullException(nameof(reporterFactory));
         _resultParser = resultParser ?? throw new ArgumentNullException(nameof(resultParser));
@@ -198,7 +196,16 @@ public class AppTester : AppRunnerBase, IAppTester
 
             deviceListener.ConnectedTask
                 .TimeoutAfter(testLaunchTimeout)
-                .ContinueWith(testReporter.LaunchCallback, cancellationToken)
+                .ContinueWith(async (Task<bool> task) =>
+                {
+                    testReporter.LaunchCallback(task);
+
+                    // Stop listening so that TCP doesn't get connected before we evaluate why we failed
+                    // If no TCP happened, app didn't start in time => APP_LAUNCH_TIMEOUT
+                    // If we fail here and TCP just connected (a very narrow race condition), we would categorize it as TIMED_OUT
+                    // because we would consider the app run started but it actually timed out because --launch-timeout ended.
+                    await deviceListener.StopAsync();
+                }, cancellationToken)
                 .DoNotAwait();
 
             _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{device.Name}' ***");
@@ -409,7 +416,16 @@ public class AppTester : AppRunnerBase, IAppTester
 
         deviceListener.ConnectedTask
             .TimeoutAfter(testLaunchTimeout)
-            .ContinueWith(testReporter.LaunchCallback, cancellationToken)
+            .ContinueWith(async (Task<bool> task) =>
+            {
+                testReporter.LaunchCallback(task);
+
+                // Stop listening so that TCP doesn't get connected before we evaluate why we failed
+                // If no TCP happened, app didn't start in time => APP_LAUNCH_TIMEOUT
+                // If we fail here and TCP just connected (a very narrow race condition), we would categorize it as TIMED_OUT
+                // because we would consider the app run started but it actually timed out because --launch-timeout ended.
+                await deviceListener.StopAsync();
+            }, cancellationToken)
             .DoNotAwait();
 
         _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
