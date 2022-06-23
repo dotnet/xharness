@@ -204,7 +204,10 @@ public class AppTester : AppRunnerBase, IAppTester
                     // If no TCP happens, app didn't start in time => APP_LAUNCH_TIMEOUT
                     // If TCP connects during this method or right after - a very narrow race condition - we would categorize it as TIMED_OUT
                     // because we would consider the app run started and actually timing out.
-                    await deviceListener.StopAsync();
+                    if (!deviceListener.ConnectedTask.IsCompleted)
+                    {
+                        await deviceListener.StopAsync();
+                    }
                 }, cancellationToken)
                 .DoNotAwait();
 
@@ -424,7 +427,10 @@ public class AppTester : AppRunnerBase, IAppTester
                 // If no TCP happens, app didn't start in time => APP_LAUNCH_TIMEOUT
                 // If TCP connects during this method or right after - a very narrow race condition - we would categorize it as TIMED_OUT
                 // because we would consider the app run started and actually timing out.
-                await deviceListener.StopAsync();
+                if (!deviceListener.ConnectedTask.IsCompleted)
+                {
+                    await deviceListener.StopAsync();
+                }
             }, cancellationToken)
             .DoNotAwait();
 
