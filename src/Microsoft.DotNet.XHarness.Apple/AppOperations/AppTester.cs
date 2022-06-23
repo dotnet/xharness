@@ -200,10 +200,10 @@ public class AppTester : AppRunnerBase, IAppTester
                 {
                     testReporter.LaunchCallback(task);
 
-                    // Stop listening so that TCP doesn't get connected before we evaluate why we failed
-                    // If no TCP happened, app didn't start in time => APP_LAUNCH_TIMEOUT
-                    // If we fail here and TCP just connected (a very narrow race condition), we would categorize it as TIMED_OUT
-                    // because we would consider the app run started but it actually timed out because --launch-timeout ended.
+                    // Stop listening so that TCP doesn't get connected before here and when we evaluate why we failed
+                    // If no TCP happens, app didn't start in time => APP_LAUNCH_TIMEOUT
+                    // If TCP connects during this method or right after - a very narrow race condition - we would categorize it as TIMED_OUT
+                    // because we would consider the app run started and actually timing out.
                     await deviceListener.StopAsync();
                 }, cancellationToken)
                 .DoNotAwait();
@@ -420,10 +420,10 @@ public class AppTester : AppRunnerBase, IAppTester
             {
                 testReporter.LaunchCallback(task);
 
-                // Stop listening so that TCP doesn't get connected before we evaluate why we failed
-                // If no TCP happened, app didn't start in time => APP_LAUNCH_TIMEOUT
-                // If we fail here and TCP just connected (a very narrow race condition), we would categorize it as TIMED_OUT
-                // because we would consider the app run started but it actually timed out because --launch-timeout ended.
+                // Stop listening so that TCP doesn't get connected before here and when we evaluate why we failed
+                // If no TCP happens, app didn't start in time => APP_LAUNCH_TIMEOUT
+                // If TCP connects during this method or right after - a very narrow race condition - we would categorize it as TIMED_OUT
+                // because we would consider the app run started and actually timing out.
                 await deviceListener.StopAsync();
             }, cancellationToken)
             .DoNotAwait();
