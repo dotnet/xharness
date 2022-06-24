@@ -74,7 +74,7 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                 engineBinary = FindEngineInPath(engineBinary + ".cmd");
         }
 
-        var webServerCts = new CancellationTokenSource();
+        var cts = new CancellationTokenSource();
         try
         {
             ServerURLs? serverURLs = null;
@@ -85,8 +85,8 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                     null,
                     logger,
                     null,
-                    webServerCts.Token);
-                webServerCts.CancelAfter(Arguments.Timeout);
+                    cts.Token);
+                cts.CancelAfter(Arguments.Timeout);
             }
 
             var engineArgs = new List<string>();
@@ -139,14 +139,42 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                                                              logger,
                                                              Arguments.ErrorPatternsFile,
                                                              symbolicator);
-            var result = await processManager.ExecuteCommandAsync(
+            var logProcessorTask = Task.Run(() => logProcessor.RunAsync(cts.Token));
+
+            var processTask = processManager.ExecuteCommandAsync(
                 engineBinary,
                 engineArgs,
                 log: new CallbackLog(m => logger.LogInformation(m)),
-                stdoutLog: new CallbackLog(logProcessor.Invoke),
+                stdoutLog: new CallbackLog(msg => logProcessor.Invoke(msg)),
                 stderrLog: new CallbackLog(logProcessor.ProcessErrorMessage),
                 Arguments.Timeout);
 
+            var tasks = new Task[]
+            {
+                logProcessorTask,
+                processTask,
+                Task.Delay(Arguments.Timeout)
+            };
+
+            var task = await Task.WhenAny(tasks).ConfigureAwait(false);
+            if (task == tasks[^1] || cts.IsCancellationRequested || task.IsCanceled)
+            {
+                logger.LogError($"Tests timed out after {((TimeSpan)Arguments.Timeout).TotalSeconds}secs");
+                if (!cts.IsCancellationRequested)
+                    cts.Cancel();
+
+                return ExitCode.TIMED_OUT;
+            }
+
+            if (task.IsFaulted)
+            {
+                logger.LogDebug($"task faulted {task.Exception}");
+                throw task.Exception!;
+            }
+
+            // if the log processor completed without errors, then the
+            // process should be done too, or about to be done!
+            var result = await processTask;
             if (result.ExitCode != Arguments.ExpectedExitCode)
             {
                 logger.LogError($"Application has finished with exit code {result.ExitCode} but {Arguments.ExpectedExitCode} was expected");
@@ -172,9 +200,9 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
         }
         finally
         {
-            if (!webServerCts.IsCancellationRequested)
+            if (!cts.IsCancellationRequested)
             {
-                webServerCts.Cancel();
+                cts.Cancel();
             }
         }
     }
