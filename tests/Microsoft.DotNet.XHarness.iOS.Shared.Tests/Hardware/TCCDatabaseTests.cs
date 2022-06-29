@@ -84,13 +84,14 @@ public class TCCDatabaseTests
     [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-12-1", 3)]
     [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-10-1", 2)]
     [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-7-1", 1)]
-    public async Task AgreeToPropmtsAsyncSuccessTest(string runtime, int dbVersion)
+    public async Task AgreeToPromptsAsyncSuccessTest(string runtime, int dbVersion)
     {
         string bundleIdentifier = "my-bundle-identifier";
         var services = new string[] {
                     "kTCCServiceAll",
                     "kTCCServiceAddressBook",
                     "kTCCServiceCalendar",
+                    "kTCCServiceCamera",
                     "kTCCServicePhotos",
                     "kTCCServiceMediaLibrary",
                     "kTCCServiceMicrophone",

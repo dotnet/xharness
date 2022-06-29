@@ -105,6 +105,7 @@ public class TCCDatabase : ITCCDatabase
                 "kTCCServiceAll", // You'd think 'All' means all prompts, but some prompts still show up.
 				"kTCCServiceAddressBook",
                 "kTCCServiceCalendar",
+                "kTCCServiceCamera",
                 "kTCCServicePhotos",
                 "kTCCServiceMediaLibrary",
                 "kTCCServiceMicrophone",
