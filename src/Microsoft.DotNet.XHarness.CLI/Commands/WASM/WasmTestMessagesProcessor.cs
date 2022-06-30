@@ -6,6 +6,8 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.Extensions.Logging;
@@ -22,6 +24,9 @@ public class WasmTestMessagesProcessor
     private readonly ILogger _logger;
     private readonly Lazy<ErrorPatternScanner>? _errorScanner;
     private readonly WasmSymbolicatorBase? _symbolicator;
+    private readonly ChannelReader<(string, bool)> _channelReader;
+    private readonly ChannelWriter<(string, bool)> _channelWriter;
+    private bool _isRunning;
 
     public string? LineThatMatchedErrorPattern { get; private set; }
 
@@ -43,22 +48,35 @@ public class WasmTestMessagesProcessor
         }
 
         _symbolicator = symbolicator;
+
+        var channel = Channel.CreateUnbounded<(string, bool)>(new UnboundedChannelOptions { SingleReader = true });
+        _channelWriter = channel.Writer;
+        _channelReader = channel.Reader;
     }
 
-    public void Invoke(string message)
+    public async Task RunAsync(CancellationToken token)
     {
-        try
-        {
-            InvokeInternal(message);
-        }
-        catch (Exception ex) when (WasmExitReceivedTcs.Task.IsCompletedSuccessfully)
-        {
-            _logger.LogWarning($"Test has returned a result already, but the message processor threw {ex.GetType()},"
-                                + $" while logging the message: {message}{Environment.NewLine}{ex}");
-        }
+        _isRunning = true;
+        await foreach ((string line, bool isError) in _channelReader.ReadAllAsync())
+            ProcessMessage(line, isError);
+        _isRunning = false;
     }
 
-    private void InvokeInternal(string message)
+    public void Invoke(string message, bool isError = false)
+    {
+        if (!_isRunning)
+            throw new InvalidOperationException("Message processor is not running. Make sure to call RunAsync first");
+
+        if (!_channelWriter.TryWrite((message, isError)))
+            _logger.LogInformation($"Could not process message: {message}");
+    }
+
+    public Task InvokeAsync(string message, bool isError = false)
+        => _isRunning
+                ? _channelWriter.WriteAsync((message, false)).AsTask()
+                : throw new InvalidOperationException("Message processor is not running. Make sure to call RunAsync first");
+
+    private void ProcessMessage(string message, bool isError = false)
     {
         WasmLogMessage? logMessage = null;
         string line;
@@ -156,11 +174,5 @@ public class WasmTestMessagesProcessor
             LineThatMatchedErrorPattern = message;
     }
 
-    public void ProcessErrorMessage(string message)
-    {
-        message = message.TrimEnd();
-        message = Symbolicate(message);
-        _logger.LogError(message);
-        ScanMessageForErrorPatterns(message);
-    }
+    public void ProcessErrorMessage(string message) => Invoke(message, isError: true);
 }

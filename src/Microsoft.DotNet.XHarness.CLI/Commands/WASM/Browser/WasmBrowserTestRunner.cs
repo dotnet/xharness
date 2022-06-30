@@ -57,11 +57,12 @@ internal class WasmBrowserTestRunner
         try
         {
             var consolePumpTcs = new TaskCompletionSource<bool>();
+            var processorTask = Task.Run(() => _messagesProcessor.RunAsync(cts.Token));
             ServerURLs serverURLs = await WebServer.Start(
                 _arguments,
                 _arguments.AppPackagePath,
                 _logger,
-                socket => RunConsoleMessagesPump(socket, consolePumpTcs, cts.Token),
+                socket => RunConsoleMessagesPump(socket, cts.Token),
                 cts.Token);
 
             string testUrl = BuildUrl(serverURLs);
@@ -69,7 +70,7 @@ internal class WasmBrowserTestRunner
             var seleniumLogMessageTask = Task.Run(() => RunSeleniumLogMessagePump(driver, cts.Token), cts.Token);
             cts.CancelAfter(_arguments.Timeout);
 
-            _logger.LogTrace($"Opening in browser: {testUrl}");
+            _logger.LogDebug($"Opening in browser: {testUrl}");
             driver.Navigate().GoToUrl(testUrl);
 
             TaskCompletionSource<bool> wasmExitReceivedTcs = _messagesProcessor.WasmExitReceivedTcs;
@@ -78,6 +79,7 @@ internal class WasmBrowserTestRunner
                     wasmExitReceivedTcs.Task,
                     consolePumpTcs.Task,
                     seleniumLogMessageTask,
+                    processorTask,
                     Task.Delay(_arguments.Timeout)
             };
 
@@ -97,7 +99,7 @@ internal class WasmBrowserTestRunner
                     var p = Process.GetProcessById(pid);
                     if (p != null)
                     {
-                        _logger.LogDebug($"Tests timed out. Killing driver service pid {pid}");
+                        _logger.LogError($"Tests timed out. Killing driver service pid {pid}");
                         p.Kill(true);
                     }
                 }
@@ -139,7 +141,7 @@ internal class WasmBrowserTestRunner
         }
     }
 
-    private async Task RunConsoleMessagesPump(WebSocket socket, TaskCompletionSource<bool> tcs, CancellationToken token)
+    private async Task RunConsoleMessagesPump(WebSocket socket, CancellationToken token)
     {
         byte[] buff = new byte[4000];
         var mem = new MemoryStream();
@@ -150,16 +152,12 @@ internal class WasmBrowserTestRunner
                 if (socket.State != WebSocketState.Open)
                 {
                     _logger.LogError($"DevToolsProxy: Socket is no longer open.");
-                    tcs.SetResult(false);
                     return;
                 }
 
                 WebSocketReceiveResult result = await socket.ReceiveAsync(new ArraySegment<byte>(buff), token).ConfigureAwait(false);
                 if (result.MessageType == WebSocketMessageType.Close)
-                {
-                    tcs.SetResult(false);
                     return;
-                }
 
                 mem.Write(buff, 0, result.Count);
 
@@ -168,25 +166,20 @@ internal class WasmBrowserTestRunner
                     var line = Encoding.UTF8.GetString(mem.GetBuffer(), 0, (int)mem.Length);
                     line += Environment.NewLine;
 
-                    _messagesProcessor.Invoke(line);
+                    await _messagesProcessor.InvokeAsync(line);
                     mem.SetLength(0);
                     mem.Seek(0, SeekOrigin.Begin);
                 }
             }
-
-            // the result is not used
-            tcs.SetResult(false);
         }
         catch (OperationCanceledException oce)
         {
             if (!token.IsCancellationRequested)
                 _logger.LogDebug($"RunConsoleMessagesPump cancelled: {oce}");
-            tcs.SetResult(false);
         }
-        catch (Exception ex)
+        finally
         {
-            tcs.SetException(ex);
-            throw;
+            _logger.LogDebug($"Reading console messages from websocket stopped");
         }
     }
 
@@ -243,7 +236,6 @@ internal class WasmBrowserTestRunner
 
         if (_arguments.DebuggerPort.Value != null)
             sb.Append($"arg=--debug");
-
 
         foreach (var envVariable in _arguments.WebServerHttpEnvironmentVariables.Value)
         {
