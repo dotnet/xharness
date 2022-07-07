@@ -175,6 +175,8 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
             // if the log processor completed without errors, then the
             // process should be done too, or about to be done!
             var result = await processTask;
+            ExitCode logProcessorExitCode = await logProcessor.CompleteAndFlushAsync();
+
             if (result.ExitCode != Arguments.ExpectedExitCode)
             {
                 logger.LogError($"Application has finished with exit code {result.ExitCode} but {Arguments.ExpectedExitCode} was expected");
@@ -190,7 +192,8 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                 }
 
                 logger.LogInformation("Application has finished with exit code: " + result.ExitCode);
-                return ExitCode.SUCCESS;
+                // return SUCCESS if logProcess also returned SUCCESS
+                return logProcessorExitCode;
             }
         }
         catch (Win32Exception e) when (e.NativeErrorCode == 2)

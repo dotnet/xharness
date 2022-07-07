@@ -57,7 +57,7 @@ internal class WasmBrowserTestRunner
         try
         {
             var consolePumpTcs = new TaskCompletionSource<bool>();
-            var processorTask = Task.Run(() => _messagesProcessor.RunAsync(cts.Token));
+            var logProcessorTask = Task.Run(() => _messagesProcessor.RunAsync(cts.Token));
             ServerURLs serverURLs = await WebServer.Start(
                 _arguments,
                 _arguments.AppPackagePath,
@@ -79,7 +79,7 @@ internal class WasmBrowserTestRunner
                     wasmExitReceivedTcs.Task,
                     consolePumpTcs.Task,
                     seleniumLogMessageTask,
-                    processorTask,
+                    logProcessorTask,
                     Task.Delay(_arguments.Timeout)
             };
 
@@ -90,6 +90,11 @@ internal class WasmBrowserTestRunner
             }
 
             var task = await Task.WhenAny(tasks).ConfigureAwait(false);
+
+            ExitCode logProcessorExitCode = ExitCode.SUCCESS;
+            if (task != logProcessorTask && !task.IsFaulted)
+                logProcessorExitCode = await _messagesProcessor.CompleteAndFlushAsync();
+
             if (task == tasks[^1] || cts.IsCancellationRequested)
             {
                 if (driverService.IsRunning)
@@ -118,7 +123,14 @@ internal class WasmBrowserTestRunner
 
                 if (int.TryParse(testsDoneElement.Text, out var code))
                 {
-                    return (ExitCode)Enum.ToObject(typeof(ExitCode), code);
+                    var appExitCode = (ExitCode)Enum.ToObject(typeof(ExitCode), code);
+                    if (logProcessorExitCode != ExitCode.SUCCESS)
+                    {
+                        _logger.LogInformation($"Application has finished with exit code {appExitCode}. But the log processor failed with {logProcessorExitCode}.");
+                        return logProcessorExitCode;
+                    }
+
+                    return appExitCode;
                 }
 
                 return ExitCode.RETURN_CODE_NOT_SET;
