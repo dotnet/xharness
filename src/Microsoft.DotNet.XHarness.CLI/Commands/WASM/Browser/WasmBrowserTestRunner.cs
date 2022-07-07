@@ -73,7 +73,7 @@ internal class WasmBrowserTestRunner
             _logger.LogDebug($"Opening in browser: {testUrl}");
             driver.Navigate().GoToUrl(testUrl);
 
-            TaskCompletionSource<bool> wasmExitReceivedTcs = _messagesProcessor.WasmExitReceivedTcs;
+            TaskCompletionSource wasmExitReceivedTcs = _messagesProcessor.WasmExitReceivedTcs;
             var tasks = new Task[]
             {
                     wasmExitReceivedTcs.Task,

@@ -30,7 +30,8 @@ public class WasmTestMessagesProcessor
 
     public string? LineThatMatchedErrorPattern { get; private set; }
 
-    public TaskCompletionSource<bool> WasmExitReceivedTcs { get; } = new TaskCompletionSource<bool>();
+    // Set once `WASM EXIT` message is received
+    public TaskCompletionSource WasmExitReceivedTcs { get; } = new ();
 
     public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger, string? errorPatternsFile, WasmSymbolicatorBase? symbolicator)
     {
@@ -153,7 +154,7 @@ public class WasmTestMessagesProcessor
         if (line.StartsWith("WASM EXIT"))
         {
             _logger.LogDebug("Reached wasm exit");
-            WasmExitReceivedTcs.SetResult(true);
+            WasmExitReceivedTcs.SetResult();
         }
     }
 
