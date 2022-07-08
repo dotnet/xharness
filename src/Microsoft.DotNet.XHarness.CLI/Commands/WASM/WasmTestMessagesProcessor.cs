@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common;
+using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
 #nullable enable
@@ -20,6 +21,7 @@ public class WasmTestMessagesProcessor
     private static Regex xmlRx = new Regex(@"^STARTRESULTXML ([0-9]*) ([^ ]*) ENDRESULTXML", RegexOptions.Compiled | RegexOptions.CultureInvariant);
     private readonly StreamWriter _stdoutFileWriter;
     private readonly string _xmlResultsFilePath;
+    private static TimeSpan s_logMessagesTimeout = TimeSpan.FromMinutes(2);
 
     private readonly ILogger _logger;
     private readonly Lazy<ErrorPatternScanner>? _errorScanner;
@@ -27,10 +29,12 @@ public class WasmTestMessagesProcessor
     private readonly ChannelReader<(string, bool)> _channelReader;
     private readonly ChannelWriter<(string, bool)> _channelWriter;
     private bool _isRunning;
+    private readonly TaskCompletionSource _completed = new ();
 
     public string? LineThatMatchedErrorPattern { get; private set; }
 
-    public TaskCompletionSource<bool> WasmExitReceivedTcs { get; } = new TaskCompletionSource<bool>();
+    // Set once `WASM EXIT` message is received
+    public TaskCompletionSource WasmExitReceivedTcs { get; } = new ();
 
     public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger, string? errorPatternsFile, WasmSymbolicatorBase? symbolicator)
     {
@@ -56,10 +60,25 @@ public class WasmTestMessagesProcessor
 
     public async Task RunAsync(CancellationToken token)
     {
-        _isRunning = true;
-        await foreach ((string line, bool isError) in _channelReader.ReadAllAsync())
-            ProcessMessage(line, isError);
-        _isRunning = false;
+        try
+        {
+            _isRunning = true;
+            await foreach ((string line, bool isError) in _channelReader.ReadAllAsync(token))
+            {
+                ProcessMessage(line, isError);
+            }
+            _isRunning = false;
+            _completed.SetResult();
+        }
+        catch (Exception ex)
+        {
+            _channelWriter.TryComplete();
+
+            // surface the exception from task for this method
+            // and from _completed
+            _completed.SetException(ex);
+            throw;
+        }
     }
 
     public void Invoke(string message, bool isError = false)
@@ -75,6 +94,29 @@ public class WasmTestMessagesProcessor
         => _isRunning
                 ? _channelWriter.WriteAsync((message, false)).AsTask()
                 : throw new InvalidOperationException("Message processor is not running. Make sure to call RunAsync first");
+
+    public async Task<ExitCode> CompleteAndFlushAsync(TimeSpan? timeout = null)
+    {
+        timeout ??= s_logMessagesTimeout;
+        _logger.LogInformation($"Waiting to flush log messages with a timeout of {timeout.Value.TotalSeconds} secs ..");
+
+        try
+        {
+            _channelWriter.TryComplete();
+            await _completed.Task.WaitAsync(timeout.Value);
+            return ExitCode.SUCCESS;
+        }
+        catch (TimeoutException)
+        {
+            _logger.LogError($"Flushing log messages timed out after {s_logMessagesTimeout.TotalSeconds}secs");
+            return ExitCode.TIMED_OUT;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Flushing log messages failed with: {ex}. Ignoring.");
+            return ExitCode.GENERAL_FAILURE;
+        }
+    }
 
     private void ProcessMessage(string message, bool isError = false)
     {
@@ -153,7 +195,7 @@ public class WasmTestMessagesProcessor
         if (line.StartsWith("WASM EXIT"))
         {
             _logger.LogDebug("Reached wasm exit");
-            WasmExitReceivedTcs.SetResult(true);
+            WasmExitReceivedTcs.SetResult();
         }
     }
 
