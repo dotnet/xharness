@@ -822,34 +822,6 @@ internal class XUnitTestRunner : XunitTestRunnerBase
         log(message);
     }
 
-    private static async Task WaitForEvent(WaitHandle handle, TimeSpan timeout)
-    {
-        var tcs = new TaskCompletionSource<object>();
-        var registration = ThreadPool.RegisterWaitForSingleObject(handle, (_, timedOut) =>
-        {
-            if (timedOut)
-            {
-                tcs.TrySetCanceled();
-            }
-            else
-            {
-                tcs.TrySetResult(null);
-            }
-        }, tcs, timeout, true);
-
-        try
-        {
-            if (!tcs.Task.IsCompleted)
-            {
-                await tcs.Task.ConfigureAwait(false);
-            }
-        }
-        finally
-        {
-            registration.Unregister(handle);
-        }
-    }
-
     public override async Task Run(IEnumerable<TestAssemblyInfo> testAssemblies)
     {
         if (testAssemblies == null)
@@ -1108,20 +1080,20 @@ internal class XUnitTestRunner : XunitTestRunnerBase
                     testCases = discoverySink.TestCases;
                 }
 
-                var assemblyElement = new XElement("assembly");
-                IExecutionSink resultsSink = new DelegatingExecutionSummarySink(_messageSink, null, null);
-                resultsSink = new DelegatingXmlCreationSink(resultsSink, assemblyElement);
+                var summaryTaskSource = new TaskCompletionSource<ExecutionSummary>();
+                var resultsXmlAssembly = new XElement("assembly");
+                var resultsSink = new DelegatingXmlCreationSink(new DelegatingExecutionSummarySink(_messageSink), resultsXmlAssembly);
+                var completionSink = new CompletionCallbackExecutionSink(resultsSink, summary => summaryTaskSource.SetResult(summary));
+
                 ITestFrameworkExecutionOptions executionOptions = GetFrameworkOptionsForExecution(configuration);
                 executionOptions.SetDisableParallelization(!RunInParallel);
                 executionOptions.SetSynchronousMessageReporting(true);
                 executionOptions.SetMaxParallelThreads(MaxParallelThreads);
 
-                // set the wait for event cb first, then execute the tests
-                var resultTask = WaitForEvent(resultsSink.Finished, TimeSpan.FromDays(10)).ConfigureAwait(false);
-                frontController.RunTests(testCases, resultsSink, executionOptions);
-                await resultTask;
+                frontController.RunTests(testCases, completionSink, executionOptions);
+                await summaryTaskSource.Task.ConfigureAwait(false);
 
-                return assemblyElement;
+                return resultsXmlAssembly;
             }
         }
     }

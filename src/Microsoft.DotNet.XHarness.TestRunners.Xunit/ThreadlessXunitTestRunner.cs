@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.DotNet.XHarness.Common;
@@ -172,30 +171,5 @@ internal class ConsoleDiagnosticMessageSink : global::Xunit.Sdk.LongLivedMarshal
         }
 
         return true;
-    }
-}
-
-internal class CompletionCallbackExecutionSink : global::Xunit.Sdk.LongLivedMarshalByRefObject, IExecutionSink
-{
-    private readonly Action<ExecutionSummary> _completionCallback;
-    private readonly IExecutionSink _innerSink;
-
-    public ExecutionSummary ExecutionSummary => _innerSink.ExecutionSummary;
-
-    public ManualResetEvent Finished => _innerSink.Finished;
-
-    public CompletionCallbackExecutionSink(IExecutionSink innerSink, Action<ExecutionSummary> completionCallback)
-    {
-        _innerSink = innerSink;
-        _completionCallback = completionCallback;
-    }
-
-    public void Dispose() => _innerSink.Dispose();
-
-    public bool OnMessageWithTypes(IMessageSinkMessage message, HashSet<string> messageTypes)
-    {
-        var result = _innerSink.OnMessageWithTypes(message, messageTypes);
-        message.Dispatch<ITestAssemblyFinished>(messageTypes, args => _completionCallback(ExecutionSummary));
-        return result;
     }
 }
