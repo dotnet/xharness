@@ -20,7 +20,7 @@ Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "dotnet-
 
 Write-Host "Installing .NET SDK locally to " -NoNewline -ForegroundColor Cyan
 Write-Host ".dotnet" -ForegroundColor Yellow
-./dotnet-install.ps1 -InstallDir ./.dotnet -Version 7.0.100-preview.2.22153.17
+./dotnet-install.ps1 -InstallDir ./.dotnet -Version 7.0.100-preview.5.22301.12
 
 Write-Host ".NET installed" -ForegroundColor Cyan
 Write-Host "Installing XHarness in current folder" -ForegroundColor Cyan
