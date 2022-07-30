@@ -8,6 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Pin transitive package versions -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj" />
   </ItemGroup>
 
