@@ -131,8 +131,12 @@ Arguments:
         if (result.ExitCode != expectedExitCode)
         {
             logger.LogError($"Non-success exit code: {result.ExitCode}, expected: {expectedExitCode}");
-            runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{testAssembly}"));
-            return ExitCode.TESTS_FAILED;
+            if (result.ExitCode != (int)ExitCode.TESTS_FAILED)
+            {
+                logger.LogError($"Unexpected test runner failure, extracing detailed diagnostics");
+                runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{testAssembly}"));
+            }
+            return (ExitCode)result.ExitCode;
         }
 
         return ExitCode.SUCCESS;
