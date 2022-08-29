@@ -121,6 +121,6 @@ public abstract class OrchestratorTestBase
     protected void VerifyDiagnosticData(TestTargetOs target)
     {
         Assert.Equal(target.Platform.IsSimulator() ? _simulator.Object.Name : _device.Object.Name, _diagnosticsData.Device);
-        Assert.Contains(target.OSVersion, _diagnosticsData.TargetOS);
+        Assert.Contains(target.OSVersion!, _diagnosticsData.TargetOS);
     }
 }
