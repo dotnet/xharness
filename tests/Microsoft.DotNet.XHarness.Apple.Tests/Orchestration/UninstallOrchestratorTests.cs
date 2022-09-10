@@ -61,7 +61,7 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, SimulatorName, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
+            x => x.FindDevice(testTarget, SimulatorName, It.IsAny<ILog>(), false, true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -114,7 +114,7 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -161,7 +161,7 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, SimulatorName, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
+            x => x.FindDevice(testTarget, SimulatorName, It.IsAny<ILog>(), false, true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(true);
@@ -222,6 +222,7 @@ public class UninstallOrchestratorTests : OrchestratorTestBase
                 It.IsAny<TestTargetOs>(),
                 It.IsAny<string?>(),
                 It.IsAny<ILog>(),
+                It.IsAny<bool>(),
                 It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
             .ThrowsAsync(new NoDeviceFoundException());

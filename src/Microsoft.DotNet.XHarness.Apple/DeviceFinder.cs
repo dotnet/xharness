@@ -21,6 +21,7 @@ public interface IDeviceFinder
         string? deviceName,
         ILog log,
         bool includeWirelessDevices = true,
+        bool pairedDevicesOnly = true,
         CancellationToken cancellationToken = default);
 }
 
@@ -42,6 +43,7 @@ public class DeviceFinder : IDeviceFinder
         string? deviceName,
         ILog log,
         bool includeWirelessDevices = true,
+        bool pairedDevicesOnly = true,
         CancellationToken cancellationToken = default)
     {
         IDevice? device;
@@ -82,8 +84,8 @@ public class DeviceFinder : IDeviceFinder
                 IHardwareDevice? hardwareDevice = target.Platform switch
                 {
                     TestTarget.Simulator_iOS32 => _deviceLoader.Connected32BitIOS.FirstOrDefault(),
-                    TestTarget.Device_iOS => _deviceLoader.Connected64BitIOS.FirstOrDefault(d => d.IsPaired),
-                    TestTarget.Device_tvOS => _deviceLoader.ConnectedTV.FirstOrDefault(d => d.IsPaired),
+                    TestTarget.Device_iOS => _deviceLoader.Connected64BitIOS.FirstOrDefault(d => !pairedDevicesOnly || d.IsPaired),
+                    TestTarget.Device_tvOS => _deviceLoader.ConnectedTV.FirstOrDefault(d => !pairedDevicesOnly || d.IsPaired),
                     _ => throw new ArgumentOutOfRangeException(nameof(target), $"Unrecognized device platform {target.Platform}")
                 };
 
