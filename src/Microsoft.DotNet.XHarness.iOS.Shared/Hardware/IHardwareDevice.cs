@@ -15,6 +15,7 @@ public interface IHardwareDevice : IDevice
     string InterfaceType { get; }
     bool? IsUsableForDebugging { get; }
     bool IsLocked { get; }
+    bool IsPaired { get; }
     int DebugSpeed { get; }
     DevicePlatform DevicePlatform { get; }
     bool Supports64Bit { get; }

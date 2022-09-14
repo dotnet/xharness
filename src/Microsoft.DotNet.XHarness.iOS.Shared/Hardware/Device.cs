@@ -18,7 +18,8 @@ public enum DeviceClass
 
 public class Device : IHardwareDevice
 {
-    public Device(string deviceIdentifier,
+    public Device(
+        string deviceIdentifier,
         DeviceClass deviceClass,
         string name,
         string buildVersion,
@@ -27,7 +28,8 @@ public class Device : IHardwareDevice
         string interfaceType,
         string companionIdentifier = null,
         bool? isUsableForDebugging = null,
-        bool isLocked = false)
+        bool isLocked = false,
+        bool isPaired = false)
     {
         DeviceIdentifier = deviceIdentifier;
         DeviceClass = deviceClass;
@@ -39,6 +41,7 @@ public class Device : IHardwareDevice
         InterfaceType = interfaceType;
         IsUsableForDebugging = isUsableForDebugging;
         IsLocked = isLocked;
+        IsPaired = isPaired;
     }
 
     public string DeviceIdentifier { get; }
@@ -51,6 +54,7 @@ public class Device : IHardwareDevice
     public string InterfaceType { get; }
     public bool? IsUsableForDebugging { get; }
     public bool IsLocked { get; }
+    public bool IsPaired { get; }
 
     public string UDID => DeviceIdentifier;
 

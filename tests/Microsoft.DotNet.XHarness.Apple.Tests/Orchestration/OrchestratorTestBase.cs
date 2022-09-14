@@ -91,6 +91,7 @@ public abstract class OrchestratorTestBase
                 It.IsAny<string?>(),
                 It.IsAny<ILog>(),
                 It.IsAny<bool>(),
+                It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new DevicePair(_simulator.Object, null));
 
@@ -99,6 +100,7 @@ public abstract class OrchestratorTestBase
                 It.Is<TestTargetOs>(t => !t.Platform.IsSimulator()),
                 It.IsAny<string?>(),
                 It.IsAny<ILog>(),
+                It.IsAny<bool>(),
                 It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new DevicePair(_device.Object, null));

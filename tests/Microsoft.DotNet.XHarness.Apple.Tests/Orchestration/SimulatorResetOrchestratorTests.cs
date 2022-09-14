@@ -51,7 +51,7 @@ public class SimulatorResetOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, SimulatorName, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
+            x => x.FindDevice(testTarget, SimulatorName, It.IsAny<ILog>(), false, true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(true);

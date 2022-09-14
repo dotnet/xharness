@@ -245,6 +245,7 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
             productType: deviceNode.SelectSingleNode("ProductType")?.InnerText,
             interfaceType: deviceNode.SelectSingleNode("InterfaceType")?.InnerText,
             isUsableForDebugging: usable == null ? (bool?)null : usable == "True",
-            isLocked: bool.TryParse(deviceNode.SelectSingleNode("IsLocked")?.InnerText, out var locked) && locked);
+            isLocked: bool.TryParse(deviceNode.SelectSingleNode("IsLocked")?.InnerText, out var locked) && locked,
+            isPaired: bool.TryParse(deviceNode.SelectSingleNode("IsPaired")?.InnerText, out var isPaired) && isPaired);
     }
 }

@@ -95,7 +95,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -157,7 +157,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.SUCCESS, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true, It.IsAny<CancellationToken>()),
+            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true, true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -220,7 +220,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.APP_CRASH, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, It.IsAny<CancellationToken>()),
+            x => x.FindDevice(testTarget, null, It.IsAny<ILog>(), false, true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
@@ -283,7 +283,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
         Assert.Equal(ExitCode.TIMED_OUT, result);
 
         _deviceFinder.Verify(
-            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true, It.IsAny<CancellationToken>()),
+            x => x.FindDevice(testTarget, DeviceName, It.IsAny<ILog>(), true, true, It.IsAny<CancellationToken>()),
             Times.Once);
 
         VerifySimulatorReset(false);
