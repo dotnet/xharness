@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XHarness.Apple;
 /// </summary>
 public abstract class BaseOrchestrator : IDisposable
 {
-    protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".mtouch-launch-with-lldb");
+    protected static readonly string s_mlaunchLldbConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), ".mtouch-launch-with-lldb");
 
     private readonly IAppBundleInformationParser _appBundleInformationParser;
     private readonly IAppInstaller _appInstaller;
