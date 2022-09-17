@@ -200,17 +200,23 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
 
         options.AddArguments(new[]
         {
-                // added based on https://github.com/puppeteer/puppeteer/blob/main/src/node/Launcher.ts#L159-L181
-                "--allow-insecure-localhost",
-                "--disable-breakpad",
-                "--disable-component-extensions-with-background-pages",
-                "--disable-dev-shm-usage",
-                "--disable-extensions",
-                "--disable-features=TranslateUI",
-                "--disable-ipc-flooding-protection",
-                "--force-color-profile=srgb",
-                "--metrics-recording-only"
-            });
+            // added based on https://github.com/puppeteer/puppeteer/blob/main/src/node/Launcher.ts#L159-L181
+            "--allow-insecure-localhost",
+            "--disable-breakpad",
+            "--disable-component-extensions-with-background-pages",
+            "--disable-dev-shm-usage",
+            "--disable-extensions",
+            "--disable-features=TranslateUI",
+            "--disable-ipc-flooding-protection",
+            "--force-color-profile=srgb",
+            "--metrics-recording-only"
+        });
+
+        if (File.Exists("/.dockerenv"))
+        {
+            // Use --no-sandbox for containers, and codespaces
+            options.AddArguments("--no-sandbox");
+        }
 
         if (Arguments.NoQuit)
             options.LeaveBrowserRunning = true;

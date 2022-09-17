@@ -72,7 +72,7 @@ public class WasmTestMessagesProcessor
         }
         catch (Exception ex)
         {
-            _channelWriter.TryComplete();
+            _channelWriter.TryComplete(ex);
 
             // surface the exception from task for this method
             // and from _completed
@@ -195,7 +195,8 @@ public class WasmTestMessagesProcessor
         if (line.StartsWith("WASM EXIT"))
         {
             _logger.LogDebug("Reached wasm exit");
-            WasmExitReceivedTcs.SetResult();
+            if (!WasmExitReceivedTcs.TrySetResult())
+                _logger.LogDebug("Got a duplicate exit message.");
         }
     }
 
