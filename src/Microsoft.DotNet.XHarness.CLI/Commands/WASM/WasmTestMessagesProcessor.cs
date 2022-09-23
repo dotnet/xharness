@@ -83,11 +83,20 @@ public class WasmTestMessagesProcessor
 
     public void Invoke(string message, bool isError = false)
     {
-        if (!_isRunning)
-            throw new InvalidOperationException("Message processor is not running. Make sure to call RunAsync first");
+        string? logMsg = null;
 
-        if (!_channelWriter.TryWrite((message, isError)))
-            _logger.LogInformation($"Could not process message: {message}");
+        if (!_isRunning)
+            logMsg = $"{message} (this message could not be processed because the message processor isn't running)";
+        else if (!_channelWriter.TryWrite((message, isError)))
+            logMsg = $"{message} (Could not process message)";
+
+        if (logMsg is not null)
+        {
+            if (isError)
+                _logger.LogError(logMsg);
+            else
+                _logger.LogInformation(logMsg);
+        }
     }
 
     public Task InvokeAsync(string message, bool isError = false)
