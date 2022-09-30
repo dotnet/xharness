@@ -89,7 +89,6 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
     protected async Task<IEnumerable<Simulator>> GetAvailableSimulators()
     {
-        [return: NotNullIfNotNull("value")]
         static string? Replace(string? value, Dictionary<string, string> replacements)
         {
             if (value is null)
