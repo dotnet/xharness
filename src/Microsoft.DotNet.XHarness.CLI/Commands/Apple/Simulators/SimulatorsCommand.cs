@@ -89,19 +89,6 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
     protected async Task<IEnumerable<Simulator>> GetAvailableSimulators()
     {
-        [return: NotNullIfNotNull("value")]
-        static string? Replace(string? value, Dictionary<string, string> replacements)
-        {
-            if (value is null)
-                return null;
-
-            foreach (var kvp in replacements)
-            {
-                value = value.Replace($"$({kvp.Key})", kvp.Value);
-            }
-
-            return value;
-        }
 
         var doc = new XmlDocument();
         doc.LoadXml(await GetSimulatorIndexXml() ?? throw new FailedToGetIndexException());
@@ -133,14 +120,14 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
                     { VERSION_PLACEHOLDER, version },
                 };
 
-            var identifier = Replace(identifierNode.InnerText, dict);
+            var identifier = ReplaceStringUsingKey(identifierNode.InnerText, dict);
 
             dict.Add(IDENTIFIER_PLACEHOLDER, identifier);
 
             _ = double.TryParse(fileSizeNode?.InnerText, out var parsedFileSize);
 
-            var name = Replace(nameNode.InnerText, dict);
-            var installPrefix = Replace(installPrefixNode?.InnerText, dict);
+            var name = ReplaceStringUsingKey(nameNode.InnerText, dict);
+            var installPrefix = ReplaceStringUsingKey(installPrefixNode?.InnerText, dict);
             if (installPrefix is null)
             {
                 // This is just guesswork
@@ -150,14 +137,28 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
             simulators.Add(new Simulator(
                 name: name,
-                identifier: Replace(identifierNode.InnerText, dict),
+                identifier: ReplaceStringUsingKey(identifierNode.InnerText, dict),
                 version: versionNode.InnerText,
-                source: Replace(sourceNode.InnerText, dict),
+                source: ReplaceStringUsingKey(sourceNode.InnerText, dict),
                 installPrefix: installPrefix,
                 fileSize: (long)parsedFileSize));
         }
 
         return simulators;
+    }
+
+    [return: NotNullIfNotNull("value")]
+    static string? ReplaceStringUsingKey(string? value, Dictionary<string, string> replacements)
+    {
+        if (value is null)
+            return null;
+
+        foreach (var kvp in replacements)
+        {
+            value = value.Replace($"$({kvp.Key})", kvp.Value);
+        }
+
+        return value;
     }
 
     protected async Task<Version?> IsInstalled(string identifier)
