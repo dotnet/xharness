@@ -228,8 +228,6 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
     {
         var (xcodeVersion, xcodeUuid) = await GetXcodeInformation();
 
-        //  var url = string.Format(SimulatorIndexUrl, xcodeVersion, xcodeUuid);
-
         var indexName = $"index-{xcodeVersion}-{xcodeUuid}.dvtdownloadableindex";
 
         var urls = new string[] {
@@ -248,12 +246,10 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 					"https://devimages-cdn.apple.com/downloads/xcode/simulators/index2.dvtdownloadableindex",
                 };
 
-       // var uri = new Uri(url);
         var tmpfile = Path.Combine(TempDirectory, indexName);
         var anyFailures = false;
         if (!File.Exists(tmpfile))
         {
-           
             foreach (var url in urls)
             {
                 anyFailures = await DownloadFile(url, tmpfile, anyFailures);
