@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -88,8 +89,12 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
     protected async Task<IEnumerable<Simulator>> GetAvailableSimulators()
     {
-        static string Replace(string value, Dictionary<string, string> replacements)
+        [return: NotNullIfNotNull("value")]
+        static string? Replace(string? value, Dictionary<string, string> replacements)
         {
+            if (value is null)
+                return null;
+
             foreach (var kvp in replacements)
             {
                 value = value.Replace($"$({kvp.Key})", kvp.Value);
@@ -103,7 +108,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
         var simulators = new List<Simulator>();
 
-        var downloadables = doc.SelectNodes("//plist/dict/key[text()='downloadables']/following-sibling::array/dict");
+        var downloadables = doc.SelectNodes("//plist/dict/key[text()='downloadables']/following-sibling::array[1]/dict");
         foreach (XmlNode? downloadable in downloadables!)
         {
             if (downloadable == null)
@@ -134,12 +139,21 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
             _ = double.TryParse(fileSizeNode?.InnerText, out var parsedFileSize);
 
+            var name = Replace(nameNode.InnerText, dict);
+            var installPrefix = Replace(installPrefixNode?.InnerText, dict);
+            if (installPrefix is null)
+            {
+                // This is just guesswork
+                var simRuntimeName = name.Replace(" Simulator", ".simruntime");
+                installPrefix = $"/Library/Developer/CoreSimulator/Profiles/Runtimes/{simRuntimeName}";
+            }
+
             simulators.Add(new Simulator(
-                name: Replace(nameNode.InnerText, dict),
+                name: name,
                 identifier: Replace(identifierNode.InnerText, dict),
                 version: versionNode.InnerText,
                 source: Replace(sourceNode.InnerText, dict),
-                installPrefix: Replace(installPrefixNode.InnerText, dict),
+                installPrefix: installPrefix,
                 fileSize: (long)parsedFileSize));
         }
 
@@ -214,13 +228,36 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
     {
         var (xcodeVersion, xcodeUuid) = await GetXcodeInformation();
 
-        var url = string.Format(SimulatorIndexUrl, xcodeVersion, xcodeUuid);
-        var uri = new Uri(url);
-        var tmpfile = Path.Combine(TempDirectory, Path.GetFileName(uri.LocalPath));
+        //  var url = string.Format(SimulatorIndexUrl, xcodeVersion, xcodeUuid);
 
+        var indexName = $"index-{xcodeVersion}-{xcodeUuid}.dvtdownloadableindex";
+
+        var urls = new string[] {
+                    $"https://devimages-cdn.apple.com/downloads/xcode/simulators/{indexName}",
+					/*
+					 * The following url was found while debugging Xcode, the "index2" part is actually hardcoded:
+					 * 
+					 *	DVTFoundation`-[DVTDownloadableIndexSource identifier]:
+					 *		0x103db478d <+0>:  pushq  %rbp
+					 *		0x103db478e <+1>:  movq   %rsp, %rbp
+					 *		0x103db4791 <+4>:  leaq   0x53f008(%rip), %rax      ; @"index2"
+					 *		0x103db4798 <+11>: popq   %rbp
+					 *		0x103db4799 <+12>: retq
+					 * 
+					 */
+					"https://devimages-cdn.apple.com/downloads/xcode/simulators/index2.dvtdownloadableindex",
+                };
+
+       // var uri = new Uri(url);
+        var tmpfile = Path.Combine(TempDirectory, indexName);
+        var anyFailures = false;
         if (!File.Exists(tmpfile))
         {
-            await DownloadFile(url, tmpfile);
+           
+            foreach (var url in urls)
+            {
+                anyFailures = await DownloadFile(url, tmpfile, anyFailures);
+            }
         }
         else
         {
@@ -236,11 +273,14 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         return xmlResult;
     }
 
-    private async Task DownloadFile(string url, string destinationPath)
+    private async Task<bool> DownloadFile(string url, string destinationPath, bool anyFailures)
     {
         try
         {
             Logger.LogInformation($"Downloading {url}...");
+
+            if (anyFailures)
+                Logger.LogInformation($"Attempting fallback url '{url}'");
 
             var downloadTask = s_client.GetStreamAsync(url);
             using var fileStream = new FileStream(destinationPath, FileMode.Create);
@@ -259,9 +299,10 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             {
                 Logger.LogWarning($"Failed to download {url}: {e}");
             }
-
-            throw;
+            anyFailures = true;
         }
+
+        return anyFailures;
     }
 
     private async Task<(string XcodeVersion, string XcodeUuid)> GetXcodeInformation()
