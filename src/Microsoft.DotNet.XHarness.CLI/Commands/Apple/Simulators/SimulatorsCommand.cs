@@ -108,7 +108,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             var sourceNode = downloadable.SelectSingleNode("key[text()='source']/following-sibling::string") ?? throw new Exception("Source node not found");
             var identifierNode = downloadable.SelectSingleNode("key[text()='identifier']/following-sibling::string") ?? throw new Exception("Identifier node not found");
             var fileSizeNode = downloadable.SelectSingleNode("key[text()='fileSize']/following-sibling::integer|key[text()='fileSize']/following-sibling::real");
-            var installPrefixNode = downloadable.SelectSingleNode("key[text()='userInfo']/following-sibling::dict/key[text()='InstallPrefix']/following-sibling::string") ?? throw new Exception("InstallPrefix node not found");
+            var installPrefixNode = downloadable.SelectSingleNode("key[text()='userInfo']/following-sibling::dict/key[text()='InstallPrefix']/following-sibling::string");
 
             var version = versionNode.InnerText;
             var versions = version.Split('.');
