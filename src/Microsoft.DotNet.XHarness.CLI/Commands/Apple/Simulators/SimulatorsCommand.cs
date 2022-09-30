@@ -232,18 +232,18 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
         var urls = new string[] {
                     $"https://devimages-cdn.apple.com/downloads/xcode/simulators/{indexName}",
-					/*
-					 * The following url was found while debugging Xcode, the "index2" part is actually hardcoded:
-					 * 
-					 *	DVTFoundation`-[DVTDownloadableIndexSource identifier]:
-					 *		0x103db478d <+0>:  pushq  %rbp
-					 *		0x103db478e <+1>:  movq   %rsp, %rbp
-					 *		0x103db4791 <+4>:  leaq   0x53f008(%rip), %rax      ; @"index2"
-					 *		0x103db4798 <+11>: popq   %rbp
-					 *		0x103db4799 <+12>: retq
-					 * 
-					 */
-					"https://devimages-cdn.apple.com/downloads/xcode/simulators/index2.dvtdownloadableindex",
+                    /*
+                    * The following url was found while debugging Xcode, the "index2" part is actually hardcoded:
+                    * 
+                    *	DVTFoundation`-[DVTDownloadableIndexSource identifier]:
+                    *		0x103db478d <+0>:  pushq  %rbp
+                    *		0x103db478e <+1>:  movq   %rsp, %rbp
+                    *		0x103db4791 <+4>:  leaq   0x53f008(%rip), %rax      ; @"index2"
+                    *		0x103db4798 <+11>: popq   %rbp
+                    *		0x103db4799 <+12>: retq
+                    * 
+                    */
+                    "https://devimages-cdn.apple.com/downloads/xcode/simulators/index2.dvtdownloadableindex",
                 };
 
         var tmpfile = Path.Combine(TempDirectory, indexName);
