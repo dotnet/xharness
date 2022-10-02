@@ -178,7 +178,7 @@ internal class WasmBrowserTestRunner
                     var line = Encoding.UTF8.GetString(mem.GetBuffer(), 0, (int)mem.Length);
                     line += Environment.NewLine;
 
-                    await _messagesProcessor.InvokeAsync(line);
+                    await _messagesProcessor.InvokeAsync(line, token);
                     mem.SetLength(0);
                     mem.Seek(0, SeekOrigin.Begin);
                 }
