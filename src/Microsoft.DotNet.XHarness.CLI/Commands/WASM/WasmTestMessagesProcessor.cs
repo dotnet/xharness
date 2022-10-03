@@ -14,6 +14,7 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
 #nullable enable
+
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 
 public class WasmTestMessagesProcessor
@@ -28,8 +29,9 @@ public class WasmTestMessagesProcessor
     private readonly WasmSymbolicatorBase? _symbolicator;
     private readonly ChannelReader<(string, bool)> _channelReader;
     private readonly ChannelWriter<(string, bool)> _channelWriter;
-    private bool _isRunning;
     private readonly TaskCompletionSource _completed = new ();
+    private bool _isRunning => !_completed.Task.IsCompleted;
+    private bool _loggedProcessorStopped = false;
 
     public string? LineThatMatchedErrorPattern { get; private set; }
 
@@ -62,12 +64,10 @@ public class WasmTestMessagesProcessor
     {
         try
         {
-            _isRunning = true;
             await foreach ((string line, bool isError) in _channelReader.ReadAllAsync(token))
             {
                 ProcessMessage(line, isError);
             }
-            _isRunning = false;
             _completed.SetResult();
         }
         catch (Exception ex)
@@ -83,26 +83,50 @@ public class WasmTestMessagesProcessor
 
     public void Invoke(string message, bool isError = false)
     {
-        string? logMsg = null;
+        WarnOnceIfStopped();
 
-        if (!_isRunning)
-            logMsg = $"{message} (this message could not be processed because the message processor isn't running)";
-        else if (!_channelWriter.TryWrite((message, isError)))
-            logMsg = $"{message} (Could not process message)";
+        if (_isRunning && _channelWriter.TryWrite((message, isError)))
+            return;
 
-        if (logMsg is not null)
+        LogMessage(message.TrimEnd(), isError);
+    }
+
+    public Task InvokeAsync(string message, CancellationToken token, bool isError = false)
+    {
+        string? logMsg;
+        try
         {
-            if (isError)
-                _logger.LogError(logMsg);
-            else
-                _logger.LogInformation(logMsg);
+            WarnOnceIfStopped();
+            if (_isRunning)
+                return _channelWriter.WriteAsync((message, isError), token).AsTask();
+
+            logMsg = message.TrimEnd();
+        }
+        catch (ChannelClosedException cce)
+        {
+            logMsg = $"Failed to write to the channel - {cce.Message}. Message: {message}";
+        }
+
+        LogMessage(logMsg, isError);
+        return Task.CompletedTask;
+    }
+
+    private void WarnOnceIfStopped()
+    {
+        if (!_isRunning && !_loggedProcessorStopped)
+        {
+            _logger.LogWarning($"Message processor is not running anymore.");
+            _loggedProcessorStopped = true;
         }
     }
 
-    public Task InvokeAsync(string message, bool isError = false)
-        => _isRunning
-                ? _channelWriter.WriteAsync((message, false)).AsTask()
-                : throw new InvalidOperationException("Message processor is not running. Make sure to call RunAsync first");
+    private void LogMessage(string message, bool isError)
+    {
+        if (isError)
+            _logger.LogError(message);
+        else
+            _logger.LogInformation(message);
+    }
 
     public async Task<ExitCode> CompleteAndFlushAsync(TimeSpan? timeout = null)
     {
