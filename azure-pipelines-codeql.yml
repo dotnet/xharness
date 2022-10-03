@@ -79,6 +79,7 @@ stages:
           Publish-GdnArtifacts -GuardianCliLocation $(GuardianCliLocation) `
             -WorkingDirectory $(Build.SourcesDirectory)
         displayName: Publish results artifact
+        condition: succeededOrFailed()
 
       - pwsh: |
           . $(Build.SourcesDirectory)\eng\CodeQL.ps1
@@ -95,9 +96,11 @@ stages:
             -TsaIterationPath $(_TsaIterationPath) `
             -TsaPublish $true
         displayName: Publish results to TSA
+        condition: succeededOrFailed()
 
       - pwsh: |
           . $(Build.SourcesDirectory)\eng\codeql.ps1
           Invoke-GdnBuildBreak -GuardianCliLocation $(GuardianCliLocation) `
             -WorkingDirectory $(Build.SourcesDirectory)
         displayName: Break On Failures
+        condition: succeededOrFailed()
