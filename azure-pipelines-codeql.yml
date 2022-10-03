@@ -1,10 +1,9 @@
 variables:
-  - name: _TeamName
-    value: DotNetCore
-  - group: SDL_Settings
   - template: eng/common-variables.yml
   - name: Build.Repository.Clean
     value: true
+  - name: _BuildConfig
+    value: Release
 
 trigger: none
 
