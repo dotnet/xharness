@@ -30,8 +30,8 @@ public class WasmTestMessagesProcessor
     private readonly ChannelReader<(string, bool)> _channelReader;
     private readonly ChannelWriter<(string, bool)> _channelWriter;
     private readonly TaskCompletionSource _completed = new ();
-    private bool IsRunning => !_completed.Task.IsCompleted;
-    private bool loggedProcessorStopped = false;
+    private bool _isRunning => !_completed.Task.IsCompleted;
+    private bool _loggedProcessorStopped = false;
 
     public string? LineThatMatchedErrorPattern { get; private set; }
 
@@ -85,7 +85,7 @@ public class WasmTestMessagesProcessor
     {
         WarnOnceIfStopped();
 
-        if (IsRunning && _channelWriter.TryWrite((message, isError)))
+        if (_isRunning && _channelWriter.TryWrite((message, isError)))
             return;
 
         LogMessage(message.TrimEnd(), isError);
@@ -97,7 +97,7 @@ public class WasmTestMessagesProcessor
         try
         {
             WarnOnceIfStopped();
-            if (IsRunning)
+            if (_isRunning)
                 return _channelWriter.WriteAsync((message, isError), token).AsTask();
 
             logMsg = message.TrimEnd();
@@ -113,10 +113,10 @@ public class WasmTestMessagesProcessor
 
     private void WarnOnceIfStopped()
     {
-        if (!IsRunning && !loggedProcessorStopped)
+        if (!_isRunning && !_loggedProcessorStopped)
         {
             _logger.LogWarning($"Message processor is not running anymore.");
-            loggedProcessorStopped = true;
+            _loggedProcessorStopped = true;
         }
     }
 
