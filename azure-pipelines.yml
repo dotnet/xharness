@@ -21,7 +21,7 @@ pr:
 
 stages:
 - stage: Build_Windows_NT
-  displayName: Build Windows
+  displayName: Build Windows Test with Milena
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
