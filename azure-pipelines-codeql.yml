@@ -46,7 +46,6 @@ jobs:
   - script: eng/common/CIBuild.cmd
       -configuration $(_BuildConfig)
       -prepareMachine
-      $(_InternalBuildArgs)
       /p:Test=false
     name: Build
     displayName: Build
