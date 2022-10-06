@@ -1,0 +1,54 @@
+parameters:
+  # Optionally do not publish to TSA. Useful for e.g. verifying fixes before PR.
+- name: Codeql.TSAEnabled
+  displayName: Publish results to TSA
+  type: boolean
+  default: true
+
+variables:
+  # CG is handled in the primary CI pipeline
+- name: skipComponentGovernanceDetection
+  value: true
+  # Force CodeQL enabled so it may be run on any branch
+- name: Codeql.Enabled
+  value: true
+  # Do not let CodeQL 3000 Extension gate scan frequency
+- name: Codeql.Cadence
+  value: 0
+- template: eng/common-variables.yml
+- name: Build.Repository.Clean
+  value: true
+- name: _BuildConfig
+  value: Release
+
+trigger: none
+
+schedules:
+  - cron: 0 12 * * 1
+    displayName: Weekly Monday CodeQL/Semmle run
+    branches:
+      include:
+      - main
+    always: true
+
+jobs:
+- job: CodeQL
+  timeoutInMinutes: 90
+  pool: 
+    name: NetCore1ESPool-Internal
+    demands: ImageOverride -equals 1es-windows-2019
+  displayName: "CodeQL Scan"
+
+  steps:
+  - task: CodeQL3000Init@0
+    displayName: CodeQL Initialize
+
+  - script: eng/common/CIBuild.cmd
+      -configuration $(_BuildConfig)
+      -prepareMachine
+      /p:Test=false
+    name: Build
+    displayName: Build
+
+  - task: CodeQL3000Finalize@0
+    displayName: CodeQL Finalize
