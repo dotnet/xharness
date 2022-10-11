@@ -1,6 +1,6 @@
 parameters:
   # Optionally do not publish to TSA. Useful for e.g. verifying fixes before PR.
-- name: Codeql.TSAEnabled
+- name: TSAEnabled
   displayName: Publish results to TSA
   type: boolean
   default: true
@@ -15,6 +15,9 @@ variables:
   # Do not let CodeQL 3000 Extension gate scan frequency
 - name: Codeql.Cadence
   value: 0
+  # CodeQL needs this plumbed along as a variable to enable TSA
+- name: Codeql.TSAEnabled
+  value: ${{ parameters.TSAEnabled }}
 - template: eng/common-variables.yml
 - name: Build.Repository.Clean
   value: true
