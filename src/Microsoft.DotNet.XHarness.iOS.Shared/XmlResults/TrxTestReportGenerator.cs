@@ -20,7 +20,7 @@ public class TrxTestReportGenerator : TestReportGenerator
     public override void GenerateTestReport(TextWriter writer, XmlReader reader)
     {
         var tests = TrxResultParser.ParseTrxXml(reader);
-        var failedTests = tests.Where(v => v.Outcome != "Passed");
+        var failedTests = tests.Where(v => v.Outcome != "Passed" && v.Outcome != "NotExecuted");
 
         if (failedTests.Any())
         {
