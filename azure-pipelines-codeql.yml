@@ -6,6 +6,7 @@ parameters:
   default: true
 
 variables:
+- template: /eng/common/templates/variables/pool-providers.yml
   # CG is handled in the primary CI pipeline
 - name: skipComponentGovernanceDetection
   value: true
@@ -38,7 +39,7 @@ jobs:
 - job: CodeQL
   timeoutInMinutes: 90
   pool: 
-    name: NetCore1ESPool-Internal
+    name: $(DncEngInternalBuildPool)
     demands: ImageOverride -equals 1es-windows-2019
   displayName: "CodeQL Scan"
 
