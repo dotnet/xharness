@@ -56,7 +56,7 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
     {
         var processManager = ProcessManagerFactory.CreateProcessManager();
 
-        var engineBinary = Arguments.Engine.Value switch
+        string engineBinary = Arguments.Engine.Value switch
         {
             JavaScriptEngine.V8 => "v8",
             JavaScriptEngine.JavaScriptCore => "jsc",
@@ -65,14 +65,24 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
             _ => throw new ArgumentException("Engine not set")
         };
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (!string.IsNullOrEmpty(Arguments.EnginePath.Value))
         {
-            if (engineBinary.Equals("node"))
-                engineBinary = FindEngineInPath(engineBinary + ".exe"); // NodeJS ships as .exe rather than .cmd
-
-            else
-                engineBinary = FindEngineInPath(engineBinary + ".cmd");
+            engineBinary = Arguments.EnginePath.Value;
+            if (Path.IsPathRooted(engineBinary) && !File.Exists(engineBinary))
+                throw new ArgumentException($"Could not find js engine at the specified path - {engineBinary}");
         }
+        else
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                if (engineBinary.Equals("node"))
+                    engineBinary = FindEngineInPath(engineBinary + ".exe"); // NodeJS ships as .exe rather than .cmd
+                else
+                    engineBinary = FindEngineInPath(engineBinary + ".cmd");
+            }
+        }
+
+        logger.LogInformation($"Using js engine {Arguments.Engine.Value} from path {engineBinary}");
 
         var cts = new CancellationTokenSource();
         try
@@ -168,7 +178,7 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
 
             if (task.IsFaulted)
             {
-                logger.LogDebug($"task faulted {task.Exception}");
+                logger.LogError($"task faulted {task.Exception}");
                 throw task.Exception!;
             }
 
