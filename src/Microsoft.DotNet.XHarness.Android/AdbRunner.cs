@@ -130,7 +130,7 @@ public class AdbRunner
     {
         RunAdbCommand("logcat", "-b", "all", "-c");
 
-        // Android logs can unnecessarily hide log entires, so disable
+        // Android logs can unnecessarily hide log entries, so disable
         DisableChatty();
     }
 
@@ -1075,7 +1075,7 @@ public class AdbRunner
 
         if (!result.Succeeded)
         {
-            _log.LogWarning($"Unable to disable chatty. Logcat may hide what it finds to be repeating entires.");
+            _log.LogWarning($"Unable to disable chatty. Logcat may hide what it finds to be repeating entries.");
         }
     }
 
