@@ -83,6 +83,7 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
         }
 
         logger.LogInformation($"Using js engine {Arguments.Engine.Value} from path {engineBinary}");
+        await PrintVersionAsync(Arguments.Engine.Value.Value, engineBinary);
 
         var cts = new CancellationTokenSource();
         try
@@ -218,5 +219,22 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                 cts.Cancel();
             }
         }
+
+        Task PrintVersionAsync(JavaScriptEngine engine, string engineBinary)
+        {
+            if (engine is JavaScriptEngine.V8)
+            {
+                return processManager.ExecuteCommandAsync(
+                            engineBinary,
+                            new[] { "-e", "console.log(`V8 version: ${this.version()}`)" },
+                            log: new CallbackLog(m => logger.LogDebug(m.Trim())),
+                            stdoutLog: new CallbackLog(msg => logger.LogInformation(msg.Trim())),
+                            stderrLog: new CallbackLog(msg => logger.LogError(msg.Trim())),
+                            TimeSpan.FromSeconds(10));
+            }
+
+            return Task.CompletedTask;
+        }
     }
+
 }
