@@ -39,6 +39,8 @@ Arguments:
     {
         var runner = new AdbRunner(logger);
 
+        runner.ClearAdbLog();
+
         var exitCode = AndroidInstallCommand.InvokeHelper(
             logger: logger,
             apkPackageName: Arguments.PackageName,

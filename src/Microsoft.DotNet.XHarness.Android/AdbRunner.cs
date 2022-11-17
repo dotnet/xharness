@@ -126,7 +126,7 @@ public class AdbRunner
         return result.StandardOutput;
     }
 
-    public void ClearAdbLog() => RunAdbCommand("logcat", "-c");
+    public void ClearAdbLog() => RunAdbCommand("logcat", "-b", "all", "-c");
 
     public void EnableWifi(bool enable) => RunAdbCommand("shell", "svc", "wifi", enable ? "enable" : "disable")
         .ThrowIfFailed($"Failed to {(enable ? "enable" : "disable")} WiFi on the device");
@@ -251,6 +251,9 @@ public class AdbRunner
         {
             throw new AdbFailureException("Failed to start the ADB server");
         }
+
+        // Android logs can unnecessarily hide log entires, so disable
+        DisableChatty();
     }
 
     public void KillAdbServer() => RunAdbCommand(new[] { "kill-server" }).ThrowIfFailed("Error killing ADB Server");
@@ -1061,6 +1064,16 @@ public class AdbRunner
         _log.LogDebug(result.ToString());
 
         return result;
+    }
+
+    private void DisableChatty()
+    {
+        var result = RunAdbCommand(new[] { "shell", "logcat", "-P", "'\"\"'" }, TimeSpan.FromMinutes(1));
+
+        if (!result.Succeeded)
+        {
+            _log.LogWarning($"Unable to disable chatty. Logcat may hide what it finds to be repeating entires.");
+        }
     }
 
     #endregion
