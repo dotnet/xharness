@@ -69,7 +69,7 @@ public class AdbRunnerTests : IDisposable
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
         runner.ClearAdbLog();
-        VerifyAdbCall("logcat", "-c");
+        VerifyAdbCall("logcat", "-b", "all", "-c");
     }
     [Fact]
     public void DumpAdbLog()

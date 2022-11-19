@@ -59,6 +59,8 @@ Arguments:
         {
             if (exitCode == ExitCode.SUCCESS)
             {
+                runner.ClearAdbLog();
+
                 var instrumentationRunner = new InstrumentationRunner(logger, runner);
                 exitCode = instrumentationRunner.RunApkInstrumentation(
                     Arguments.PackageName,

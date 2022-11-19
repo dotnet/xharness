@@ -126,7 +126,13 @@ public class AdbRunner
         return result.StandardOutput;
     }
 
-    public void ClearAdbLog() => RunAdbCommand("logcat", "-c");
+    public void ClearAdbLog()
+    {
+        RunAdbCommand("logcat", "-b", "all", "-c");
+
+        // Android logs can unnecessarily hide log entries, so disable
+        DisableChatty();
+    }
 
     public void EnableWifi(bool enable) => RunAdbCommand("shell", "svc", "wifi", enable ? "enable" : "disable")
         .ThrowIfFailed($"Failed to {(enable ? "enable" : "disable")} WiFi on the device");
@@ -1061,6 +1067,16 @@ public class AdbRunner
         _log.LogDebug(result.ToString());
 
         return result;
+    }
+
+    private void DisableChatty()
+    {
+        var result = RunAdbCommand(new[] { "logcat", "-P", "'\"\"'" }, TimeSpan.FromMinutes(1));
+
+        if (!result.Succeeded)
+        {
+            _log.LogWarning($"Unable to disable chatty. Logcat may hide what it finds to be repeating entries.");
+        }
     }
 
     #endregion
