@@ -13,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 //TODO check if needed same for WASI
-using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
@@ -35,7 +35,7 @@ internal class WasiBrowserTestRunner
     // Eg. `foo` becomes `http://localhost:8000/xyz.js 0:12 "foo"
     static readonly Regex s_consoleLogRegex = new(@"^\s*[a-z]*://[^\s]+\s+\d+:\d+\s+""(.*)""\s*$", RegexOptions.Compiled);
 
-    public WasiBrowserTestRunner(WasmTestBrowserCommandArguments arguments, IEnumerable<string> passThroughArguments,
+    public WasiBrowserTestRunner(WasiTestBrowserCommandArguments arguments, IEnumerable<string> passThroughArguments,
                                         WasiTestMessagesProcessor messagesProcessor, ILogger logger)
     {
         _arguments = arguments;
@@ -58,7 +58,7 @@ internal class WasiBrowserTestRunner
         {
             var consolePumpTcs = new TaskCompletionSource<bool>();
             var logProcessorTask = Task.Run(() => _messagesProcessor.RunAsync(cts.Token));
-            ServerURLs serverURLs = await WebServer.Start(
+            ServerURLs serverURLs = await WebServerWasi.Start(
                 _arguments,
                 _arguments.AppPackagePath,
                 _logger,

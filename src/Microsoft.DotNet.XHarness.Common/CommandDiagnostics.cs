@@ -75,6 +75,7 @@ public class CommandDiagnostics : IDiagnosticsData
             TargetPlatform.Android => "android",
             TargetPlatform.Apple => "apple",
             TargetPlatform.WASM => "wasm",
+            TargetPlatform.WASI => "wasi",
             _ => throw new ArgumentOutOfRangeException(nameof(platform)),
         };
     }

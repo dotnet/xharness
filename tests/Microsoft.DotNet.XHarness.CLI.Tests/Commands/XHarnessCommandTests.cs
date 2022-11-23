@@ -10,6 +10,7 @@ using Microsoft.DotNet.XHarness.CLI.CommandArguments;
 using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
+using Microsoft.DotNet.XHarness.CLI.Commands.Wasi;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
@@ -273,6 +274,7 @@ public class XHarnessCommandTests
                 new AppleCommandSet(),
                 new AndroidCommandSet(),
                 new WasmCommandSet(),
+                new WasiCommandSet(),
                 new XHarnessHelpCommand(),
                 new XHarnessVersionCommand()
             };

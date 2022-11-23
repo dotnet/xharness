@@ -8,7 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,15 +22,15 @@ using OpenQA.Selenium.Safari;
 using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasi;
-// TODO check WasmTestBrowserCommandArguments for WASI
-internal class WasiTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandArguments>
+// TODO check WasiTestBrowserCommandArguments for WASI
+internal class WasiTestBrowserCommand : XHarnessCommand<WasiTestBrowserCommandArguments>
 {
     private const string CommandHelp = "Executes tests on WASI using a browser";
 
     protected override string CommandUsage { get; } = "wasi test-browser [OPTIONS] -- [BROWSER OPTIONS]";
     protected override string CommandDescription { get; } = CommandHelp;
-//TODO check WasmTestBrowserCommandArguments for WASI
-    protected override WasmTestBrowserCommandArguments Arguments { get; } = new();
+//TODO check WasiTestBrowserCommandArguments for WASI
+    protected override WasiTestBrowserCommandArguments Arguments { get; } = new();
 
     public WasiTestBrowserCommand()
         : base(TargetPlatform.WASI, "test-browser", allowsExtraArgs: true, new ServiceCollection(), CommandHelp)

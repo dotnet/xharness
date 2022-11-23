@@ -10,6 +10,7 @@ using Microsoft.DotNet.XHarness.CLI.AndroidHeadless;
 using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
+using Microsoft.DotNet.XHarness.CLI.Commands.Wasi;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Mono.Options;
 
@@ -84,6 +85,7 @@ public static class Program
         commandSet.Add(new AndroidCommandSet());
         commandSet.Add(new AndroidHeadlessCommandSet());
         commandSet.Add(new WasmCommandSet());
+        commandSet.Add(new WasiCommandSet());
         commandSet.Add(new XHarnessHelpCommand());
         commandSet.Add(new XHarnessVersionCommand());
 

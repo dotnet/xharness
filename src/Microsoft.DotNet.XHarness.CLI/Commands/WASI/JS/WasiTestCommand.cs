@@ -1,5 +1,25 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
+using Microsoft.DotNet.XHarness.Common;
+using Microsoft.DotNet.XHarness.Common.CLI;
+using Microsoft.DotNet.XHarness.Common.Execution;
+using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasi;
-internal class WasiTestCommand : XHarnessCommand<WasmTestCommandArguments>
+internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
 {
     private const string CommandHelp = "Executes tests on WASI using a selected JavaScript engine";
 
@@ -67,7 +87,7 @@ internal class WasiTestCommand : XHarnessCommand<WasmTestCommandArguments>
             ServerURLs? serverURLs = null;
             if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
             {
-                serverURLs = await WebServer.Start(
+                serverURLs = await WebServerWasi.Start(
                     Arguments,
                     null,
                     logger,
@@ -115,7 +135,7 @@ internal class WasiTestCommand : XHarnessCommand<WasmTestCommandArguments>
                                                            Arguments.SymbolicatePatternsFileArgument,
                                                            logger);
 
-            var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath,
+            var logProcessor = new WasiTestMessagesProcessor(xmlResultsFilePath,
                                                              stdoutFilePath,
                                                              logger,
                                                              Arguments.ErrorPatternsFile,
@@ -192,13 +212,16 @@ internal class WasiTestCommand : XHarnessCommand<WasmTestCommandArguments>
 
         Task PrintVersionAsync(JavaScriptEngine engine, string engineBinary)
         {
-            return processManager.ExecuteCommandAsync(
+            if (engine is JavaScriptEngine.V8)
+            {
+                return processManager.ExecuteCommandAsync(
                             engineBinary,
                             new[] { "-e", "console.log(`V8 version: ${this.version()}`)" },
                             log: new CallbackLog(m => logger.LogDebug(m.Trim())),
                             stdoutLog: new CallbackLog(msg => logger.LogInformation(msg.Trim())),
                             stderrLog: new CallbackLog(msg => logger.LogError(msg.Trim())),
                             TimeSpan.FromSeconds(10));
+            }
 
             return Task.CompletedTask;
         }
