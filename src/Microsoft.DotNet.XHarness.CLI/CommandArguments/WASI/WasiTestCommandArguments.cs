@@ -4,27 +4,20 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using Microsoft.DotNet.XHarness.Common.CLI;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 
-internal class WasiTestBrowserCommandArguments : XHarnessCommandArguments, IWebServerArguments
+internal class WasiTestCommandArguments : XHarnessCommandArguments, IWebServerArguments
 {
-    public AppPathArgument AppPackagePath { get; } = new();
-    public BrowserArgument Browser { get; } = new();
-    public BrowserLocationArgument BrowserLocation { get; } = new();
-    public BrowserArguments BrowserArgs { get; } = new();
-    public HTMLFileArgument HTMLFile { get; } = new("index.html");
+    public WasmEngineArgument Engine { get; } = new();
+    //TODO rename js files
+    public WasmEngineLocationArgument EnginePath { get; } = new();
+    public WasmEngineArguments EngineArgs { get; } = new();
+    public WasmFileArgument WasmFile { get; } = new("artifacts/bin/native/net7.0-wasi-Debug-wasm/dotnet.wasm");
     public ErrorPatternsFileArgument ErrorPatternsFile { get; } = new();
-    public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
+    public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
     public OutputDirectoryArgument OutputDirectory { get; } = new();
     public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
-    public DebuggerPortArgument DebuggerPort { get; set; } = new();
-    public NoIncognitoArgument NoIncognito { get; } = new();
-    public NoHeadlessArgument NoHeadless { get; } = new();
-    public NoQuitArgument NoQuit { get; } = new();
-    public BackgroundThrottlingArgument BackgroundThrottling { get; } = new();
 
     public SymbolMapFileArgument SymbolMapFileArgument { get; } = new();
     public SymbolicatePatternsFileArgument SymbolicatePatternsFileArgument { get; } = new();
@@ -36,22 +29,18 @@ internal class WasiTestBrowserCommandArguments : XHarnessCommandArguments, IWebS
     public WebServerUseCorsArguments WebServerUseCors { get; } = new();
     public WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; } = new();
 
+    public string SubCommand{ get; } = "run";
+
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
-            AppPackagePath,
-            Browser,
-            BrowserLocation,
-            BrowserArgs,
-            HTMLFile,
+            Engine,
+            EnginePath,
+            EngineArgs,
+            WasmFile,
             ErrorPatternsFile,
-            ExpectedExitCode,
             OutputDirectory,
             Timeout,
-            DebuggerPort,
-            NoIncognito,
-            NoHeadless,
-            NoQuit,
-            BackgroundThrottling,
+            ExpectedExitCode,
             SymbolMapFileArgument,
             SymbolicatePatternsFileArgument,
             SymbolicatorArgument,
@@ -62,27 +51,4 @@ internal class WasiTestBrowserCommandArguments : XHarnessCommandArguments, IWebS
             WebServerUseCors,
             WebServerUseCrossOriginPolicy,
     };
-
-    public override void Validate()
-    {
-        base.Validate();
-
-        if (!string.IsNullOrEmpty(BrowserLocation))
-        {
-            if (Browser == Wasi.Browser.Safari)
-            {
-                throw new ArgumentException("Safari driver doesn't support custom browser path");
-            }
-
-            if (!File.Exists(BrowserLocation))
-            {
-                throw new ArgumentException($"Could not find browser at {BrowserLocation}");
-            }
-        }
-
-        if (DebuggerPort.Value != null || NoQuit)
-        {
-            NoHeadless.Set(true);
-        }
-    }
 }

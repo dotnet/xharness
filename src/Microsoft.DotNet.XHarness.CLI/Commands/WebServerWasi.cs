@@ -114,8 +114,8 @@ public class WebServerWasi
         public void Configure(IApplicationBuilder app, IOptionsMonitor<TestWebServerOptions> optionsAccessor)
         {
             var provider = new FileExtensionContentTypeProvider();
-            //provider.Mappings[".wasm"] = "application/wasm";
-            provider.Mappings[".wasi"] = "application/wasi";
+            provider.Mappings[".wasm"] = "application/wasm";
+            //provider.Mappings[".wasi"] = "application/wasi";
             provider.Mappings[".cjs"] = "text/javascript";
             provider.Mappings[".mjs"] = "text/javascript";
 

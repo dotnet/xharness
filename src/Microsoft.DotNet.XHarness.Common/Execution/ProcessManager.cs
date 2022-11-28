@@ -284,9 +284,7 @@ public abstract class ProcessManager : IProcessManager
         // Separate process calls in logs
         log.WriteLine(string.Empty);
         log.WriteLine(sb.ToString());
-stderr.WriteLine($"log before exception{sb.ToString()}");
         process.Start();
-        stderr.WriteLine($"log after process start");
         var pid = process.Id;
 
         process.BeginErrorReadLine();

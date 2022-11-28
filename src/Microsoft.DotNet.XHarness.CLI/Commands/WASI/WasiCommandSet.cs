@@ -14,6 +14,5 @@ public class WasiCommandSet : CommandSet
     public WasiCommandSet() : base("wasi")
     {
         Add(new WasiTestCommand());
-        Add(new WasiTestBrowserCommand());
     }
 }

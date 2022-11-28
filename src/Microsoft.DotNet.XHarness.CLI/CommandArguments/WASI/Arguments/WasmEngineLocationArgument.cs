@@ -4,9 +4,9 @@
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 
-internal class JavaScriptEngineLocationArgument : StringArgument
+internal class WasmEngineLocationArgument : StringArgument
 {
-    public JavaScriptEngineLocationArgument() : base("js-engine-path=", "Path to the JS engine to be used. This must correspond to the engine specified with -e")
+    public WasmEngineLocationArgument() : base("js-engine-path=", "Path to the JS engine to be used. This must correspond to the engine specified with -e")
     {
     }
 }

@@ -4,10 +4,10 @@
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 
-internal class JavaScriptFileArgument : RequiredStringArgument
+internal class WasmEngineArguments : RepeatableArgument
 {
-    public JavaScriptFileArgument(string defaultValue)
-        : base("js-file=", "Main JavaScript file to be run on the JavaScript engine. Default is " + defaultValue, defaultValue)
+    public WasmEngineArguments()
+        : base("engine-arg=", "Argument to pass to the WASM engine")
     {
     }
 }

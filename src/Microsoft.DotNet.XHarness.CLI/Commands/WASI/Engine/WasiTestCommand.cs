@@ -57,7 +57,7 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
 
         string engineBinary = Arguments.Engine.Value switch
         {
-            JavaScriptEngine.V8 => "v8",
+            WasmEngine.WasmTime => "wasmtime",
             _ => throw new ArgumentException("Engine not set")
         };
 
@@ -65,7 +65,7 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
         {
             engineBinary = Arguments.EnginePath.Value;
             if (Path.IsPathRooted(engineBinary) && !File.Exists(engineBinary))
-                throw new ArgumentException($"Could not find js engine at the specified path - {engineBinary}");
+                throw new ArgumentException($"Could not find wasm engine at the specified path - {engineBinary}");
         }
         /*else
         {
@@ -78,7 +78,7 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             }
         }*/
 
-        logger.LogInformation($"Using js engine {Arguments.Engine.Value} from path {engineBinary}");
+        logger.LogInformation($"Using wasm engine {Arguments.Engine.Value} from path {engineBinary}");
         await PrintVersionAsync(Arguments.Engine.Value.Value, engineBinary);
 
         var cts = new CancellationTokenSource();
@@ -98,14 +98,17 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
 
             var engineArgs = new List<string>();
             
-            // v8 needs this flag to enable WASI support
-            engineArgs.Add("--expose_wasi");
+            // wasmtime needs this flag to enable WASM support
+         // comment out as there is a exception
+           // engineArgs.Add("--expose_wasm");
 
-            engineArgs.AddRange(Arguments.EngineArgs.Value);
-            engineArgs.Add(Arguments.JSFile);
+            //engineArgs.AddRange(Arguments.EngineArgs.Value);
+           //engineArgs.Add(Arguments.WasmFile);
 
-            // v8 want arguments to the script separated by "--", others don't
-            engineArgs.Add("--");
+            // wasmtime want arguments to the script separated by "--", others don't
+           // engineArgs.Add("--dir .");
+            engineArgs.Add(Arguments.WasmFile);
+
 
             if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
             {
@@ -210,13 +213,14 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             }
         }
 
-        Task PrintVersionAsync(JavaScriptEngine engine, string engineBinary)
+        Task PrintVersionAsync(WasmEngine engine, string engineBinary)
         {
-            if (engine is JavaScriptEngine.V8)
+            if (engine is WasmEngine.WasmTime)
             {
                 return processManager.ExecuteCommandAsync(
                             engineBinary,
-                            new[] { "-e", "console.log(`V8 version: ${this.version()}`)" },
+                            new[] { "--version" },
+                            //new[] { "-e", "console.log(`wasmtime version: ${this.version()}`)" },
                             log: new CallbackLog(m => logger.LogDebug(m.Trim())),
                             stdoutLog: new CallbackLog(msg => logger.LogInformation(msg.Trim())),
                             stderrLog: new CallbackLog(msg => logger.LogError(msg.Trim())),
