@@ -284,6 +284,7 @@ public abstract class ProcessManager : IProcessManager
         // Separate process calls in logs
         log.WriteLine(string.Empty);
         log.WriteLine(sb.ToString());
+
         process.Start();
         var pid = process.Id;
 

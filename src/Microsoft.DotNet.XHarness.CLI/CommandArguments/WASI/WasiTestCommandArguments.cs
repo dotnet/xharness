@@ -12,7 +12,7 @@ internal class WasiTestCommandArguments : XHarnessCommandArguments, IWebServerAr
     public WasmEngineArgument Engine { get; } = new();
     public WasmEngineLocationArgument EnginePath { get; } = new();
     public WasmEngineArguments EngineArgs { get; } = new();
-    public WasmFileArgument WasmFile { get; } = new("artifacts/bin/native/net7.0-wasi-Debug-wasm/dotnet.wasm");  
+    public WasmFileArgument WasmFile { get; } = new("src/mono/sample/wasi/console/bin/publish/runtime/native/dotnet.wasm");  
     public LibraryArgument LibFile { get; } = new("src/mono/sample/wasi/console/bin/Wasi.Console.Sample.dll");  
     public ErrorPatternsFileArgument ErrorPatternsFile { get; } = new();
     public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
