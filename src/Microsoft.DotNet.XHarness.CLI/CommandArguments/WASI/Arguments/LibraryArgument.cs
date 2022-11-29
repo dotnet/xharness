@@ -4,9 +4,10 @@
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 
-internal class WasmEngineLocationArgument : StringArgument
+internal class LibraryArgument : RequiredStringArgument
 {
-    public WasmEngineLocationArgument() : base("wasm-engine-path=", "Path to the wasm engine to be used. This must correspond to the engine specified with -e")
+    public LibraryArgument(string defaultValue)
+        : base("dll-file=", "Main dll file to be run on the wasmtime engine. Default is " + defaultValue, defaultValue)
     {
     }
 }

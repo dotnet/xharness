@@ -21,7 +21,7 @@ using Microsoft.Extensions.Logging;
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasi;
 internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
 {
-    private const string CommandHelp = "Executes tests on WASI using a selected JavaScript engine";
+    private const string CommandHelp = "Executes tests on WASI using a selected engine";
 
     protected override WasiTestCommandArguments Arguments { get; } = new();
     protected override string CommandUsage { get; } = "wasi test [OPTIONS] -- [ENGINE OPTIONS]";
@@ -30,7 +30,7 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
     public WasiTestCommand() : base(TargetPlatform.WASI, "test", true, new ServiceCollection(), CommandHelp)
     {
     }
-//didn't check yet
+
     private static string FindEngineInPath(string engineBinary)
     {
         if (File.Exists(engineBinary) || Path.IsPathRooted(engineBinary))
@@ -67,17 +67,7 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             if (Path.IsPathRooted(engineBinary) && !File.Exists(engineBinary))
                 throw new ArgumentException($"Could not find wasm engine at the specified path - {engineBinary}");
         }
-        /*else
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                if (engineBinary.Equals("node"))
-                    engineBinary = FindEngineInPath(engineBinary + ".exe"); // NodeJS ships as .exe rather than .cmd
-                else
-                    engineBinary = FindEngineInPath(engineBinary + ".cmd");
-            }
-        }*/
-
+      
         logger.LogInformation($"Using wasm engine {Arguments.Engine.Value} from path {engineBinary}");
         await PrintVersionAsync(Arguments.Engine.Value.Value, engineBinary);
 
@@ -98,16 +88,8 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
 
             var engineArgs = new List<string>();
             
-            // wasmtime needs this flag to enable WASM support
-         // comment out as there is a exception
-           // engineArgs.Add("--expose_wasm");
-
-            //engineArgs.AddRange(Arguments.EngineArgs.Value);
-           //engineArgs.Add(Arguments.WasmFile);
-
-            // wasmtime want arguments to the script separated by "--", others don't
-           // engineArgs.Add("--dir .");
             engineArgs.Add(Arguments.WasmFile);
+            engineArgs.Add(Arguments.LibFile);
 
 
             if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)

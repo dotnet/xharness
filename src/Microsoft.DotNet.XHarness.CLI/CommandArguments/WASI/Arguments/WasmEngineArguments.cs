@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 internal class WasmEngineArguments : RepeatableArgument
 {
     public WasmEngineArguments()
-        : base("engine-arg=", "Argument to pass to the WASM engine")
+        : base("engine-arg=", "Argument to pass to the wasm engine")
     {
     }
 }

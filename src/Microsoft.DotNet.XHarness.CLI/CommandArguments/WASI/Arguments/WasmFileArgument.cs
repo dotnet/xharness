@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 internal class WasmFileArgument : RequiredStringArgument
 {
     public WasmFileArgument(string defaultValue)
-        : base("js-file=", "Main JavaScript file to be run on the JavaScript engine. Default is " + defaultValue, defaultValue)
+        : base("wasm-file=", "Main wasm file to be run on the wasmtime engine. Default is " + defaultValue, defaultValue)
     {
     }
 }

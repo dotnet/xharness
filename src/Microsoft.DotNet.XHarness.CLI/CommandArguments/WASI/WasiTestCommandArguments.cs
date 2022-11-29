@@ -10,10 +10,10 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 internal class WasiTestCommandArguments : XHarnessCommandArguments, IWebServerArguments
 {
     public WasmEngineArgument Engine { get; } = new();
-    //TODO rename js files
     public WasmEngineLocationArgument EnginePath { get; } = new();
     public WasmEngineArguments EngineArgs { get; } = new();
-    public WasmFileArgument WasmFile { get; } = new("artifacts/bin/native/net7.0-wasi-Debug-wasm/dotnet.wasm");
+    public WasmFileArgument WasmFile { get; } = new("artifacts/bin/native/net7.0-wasi-Debug-wasm/dotnet.wasm");  
+    public LibraryArgument LibFile { get; } = new("src/mono/sample/wasi/console/bin/Wasi.Console.Sample.dll");  
     public ErrorPatternsFileArgument ErrorPatternsFile { get; } = new();
     public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
     public OutputDirectoryArgument OutputDirectory { get; } = new();

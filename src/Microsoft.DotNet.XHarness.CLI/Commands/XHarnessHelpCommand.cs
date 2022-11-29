@@ -69,11 +69,10 @@ internal class XHarnessHelpCommand : HelpCommand
                 PrintCommandHelp(new WasmCommandSet(), subCommand);
                 break;
             case "wasi":
-            //TODO add WasiCommandSet
                 PrintCommandHelp(new WasiCommandSet(), subCommand);
                 break;
             default:
-                Console.WriteLine($"No help available for command '{command}'. Allowed commands are 'apple', 'wasm' and 'android'");
+                Console.WriteLine($"No help available for command '{command}'. Allowed commands are 'apple', 'wasm', 'wasi' and 'android'");
                 break;
         }
 

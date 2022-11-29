@@ -26,7 +26,7 @@ internal class WasmEngineArgument : Argument<WasmEngine?>
 }
 
 /// <summary>
-/// Specifies a name of a Wasm engine used to run WASI application.
+/// Specifies a name of a wasm engine used to run WASI application.
 /// </summary>
 internal enum WasmEngine
 {
