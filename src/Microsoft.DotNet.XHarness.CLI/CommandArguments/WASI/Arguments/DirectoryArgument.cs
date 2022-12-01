@@ -4,10 +4,10 @@
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 
-internal class NoQuitArgument : SwitchArgument
+internal class DirectoryArgument : RequiredStringArgument
 {
-    public NoQuitArgument()
-        : base("no-quit", "Don't quit the xharness process after the tests are done running. Implies --no-headless", false)
+    public DirectoryArgument(string defaultValue)
+        : base("dir=", "List the contents of a directory. Default is " + defaultValue, defaultValue)
     {
     }
 }

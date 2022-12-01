@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 internal class SymbolicatePatternsFileArgument : StringArgument
 {
     private const string HelpMessage =
-                            @"File containing .net regex patterns for replacing wasi-function numbers with the corresponding names." +
+                            @"File containing .net regex patterns for replacing wasm-function numbers with the corresponding names." +
                             @" The regex must contain a group named `funcNum` for getting the function number." +
                             @" And an optional group named `replaceSection` for matching the part of the string to be replaced by the name.";
     public SymbolicatePatternsFileArgument()

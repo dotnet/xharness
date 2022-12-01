@@ -87,7 +87,9 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             }
 
             var engineArgs = new List<string>();
-            
+            engineArgs.Add(Arguments.SubCommand);
+            engineArgs.Add("--dir");
+            engineArgs.Add(Arguments.Directory);
             engineArgs.Add(Arguments.WasmFile);
             engineArgs.Add(Arguments.LibFile);
 
@@ -201,8 +203,8 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             {
                 return processManager.ExecuteCommandAsync(
                             engineBinary,
-                            new[] { "--version" },
-                            //new[] { "-e", "console.log(`wasmtime version: ${this.version()}`)" },
+                            //new[] { "--version" },
+                            new[] { "-e", "console.log(`wasmtime version: ${this.version()}`)" },
                             log: new CallbackLog(m => logger.LogDebug(m.Trim())),
                             stdoutLog: new CallbackLog(msg => logger.LogInformation(msg.Trim())),
                             stderrLog: new CallbackLog(msg => logger.LogError(msg.Trim())),

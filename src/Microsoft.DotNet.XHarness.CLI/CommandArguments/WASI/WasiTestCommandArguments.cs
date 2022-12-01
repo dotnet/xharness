@@ -12,8 +12,9 @@ internal class WasiTestCommandArguments : XHarnessCommandArguments, IWebServerAr
     public WasmEngineArgument Engine { get; } = new();
     public WasmEngineLocationArgument EnginePath { get; } = new();
     public WasmEngineArguments EngineArgs { get; } = new();
-    public WasmFileArgument WasmFile { get; } = new("src/mono/sample/wasi/console/bin/publish/runtime/native/dotnet.wasm");  
-    public LibraryArgument LibFile { get; } = new("src/mono/sample/wasi/console/bin/Wasi.Console.Sample.dll");  
+    public WasmFileArgument WasmFile { get; } = new("dotnet.wasm");  
+    public LibraryArgument LibFile { get; } = new("Wasi.Console.Sample.dll"); 
+    public DirectoryArgument Directory{ get; } = new(".");
     public ErrorPatternsFileArgument ErrorPatternsFile { get; } = new();
     public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
     public OutputDirectoryArgument OutputDirectory { get; } = new();
@@ -30,13 +31,13 @@ internal class WasiTestCommandArguments : XHarnessCommandArguments, IWebServerAr
     public WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; } = new();
 
     public string SubCommand{ get; } = "run";
-
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
             Engine,
             EnginePath,
             EngineArgs,
             WasmFile,
+            Directory,
             ErrorPatternsFile,
             OutputDirectory,
             Timeout,

@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 internal class LibraryArgument : RequiredStringArgument
 {
     public LibraryArgument(string defaultValue)
-        : base("dll-file=", "Main dll file to be run on the wasmtime engine. Default is " + defaultValue, defaultValue)
+        : base("lib-file=", "Main dll file to be run on the wasmtime engine. Default is " + defaultValue, defaultValue)
     {
     }
 }
