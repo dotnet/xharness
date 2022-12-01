@@ -77,7 +77,7 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             ServerURLs? serverURLs = null;
             if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
             {
-                serverURLs = await WebServerWasi.Start(
+                serverURLs = await WebServer.Start(
                     Arguments,
                     null,
                     logger,
@@ -203,8 +203,8 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             {
                 return processManager.ExecuteCommandAsync(
                             engineBinary,
-                            //new[] { "--version" },
-                            new[] { "-e", "console.log(`wasmtime version: ${this.version()}`)" },
+                            new[] { "--version" },
+                            //new[] { "-e", "console.log(`wasmtime version: ${this.version()}`)" },
                             log: new CallbackLog(m => logger.LogDebug(m.Trim())),
                             stdoutLog: new CallbackLog(msg => logger.LogInformation(msg.Trim())),
                             stderrLog: new CallbackLog(msg => logger.LogError(msg.Trim())),
