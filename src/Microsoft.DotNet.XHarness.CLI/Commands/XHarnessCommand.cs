@@ -141,7 +141,6 @@ public abstract class XHarnessCommand<T> : Command where T : IXHarnessCommandArg
 
             Services.TryAddSingleton(logger);
             Services.TryAddSingleton<IDiagnosticsData>(diagnostics);
-            logger.LogInformation($"Logging before calling {Name} command");
 
             var result = InvokeInternal(logger).GetAwaiter().GetResult();
 
