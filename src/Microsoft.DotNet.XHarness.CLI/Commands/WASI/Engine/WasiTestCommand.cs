@@ -31,26 +31,6 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
     {
     }
 
-    private static string FindEngineInPath(string engineBinary)
-    {
-        if (File.Exists(engineBinary) || Path.IsPathRooted(engineBinary))
-            return engineBinary;
-
-        var path = Environment.GetEnvironmentVariable("PATH");
-
-        if (path == null)
-            return engineBinary;
-
-        foreach (var folder in path.Split(Path.PathSeparator))
-        {
-            var fullPath = Path.Combine(folder, engineBinary);
-            if (File.Exists(fullPath))
-                return fullPath;
-        }
-
-        return engineBinary;
-    }
-
     protected override async Task<ExitCode> InvokeInternal(ILogger logger)
     {
         var processManager = ProcessManagerFactory.CreateProcessManager();
@@ -117,12 +97,12 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             var stdoutFilePath = Path.Combine(Arguments.OutputDirectory, "wasi-console.log");
             File.Delete(stdoutFilePath);
 
-            var symbolicator = WasiSymbolicatorBase.Create(Arguments.SymbolicatorArgument.GetLoadedTypes().FirstOrDefault(),
+            var symbolicator = SymbolicatorBase.Create(Arguments.SymbolicatorArgument.GetLoadedTypes().FirstOrDefault(),
                                                            Arguments.SymbolMapFileArgument,
                                                            Arguments.SymbolicatePatternsFileArgument,
                                                            logger);
 
-            var logProcessor = new WasiTestMessagesProcessor(xmlResultsFilePath,
+            var logProcessor = new TestMessagesProcessor(xmlResultsFilePath,
                                                              stdoutFilePath,
                                                              logger,
                                                              Arguments.ErrorPatternsFile,

@@ -5,7 +5,7 @@
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments;
 
 internal class SymbolicatePatternsFileArgument : StringArgument
 {

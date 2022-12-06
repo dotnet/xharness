@@ -15,9 +15,9 @@ using Microsoft.Extensions.Logging;
 
 #nullable enable
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
+namespace Microsoft.DotNet.XHarness.CLI.Commands;
 
-public class WasmTestMessagesProcessor
+public class TestMessagesProcessor
 {
     private static Regex xmlRx = new Regex(@"^STARTRESULTXML ([0-9]*) ([^ ]*) ENDRESULTXML", RegexOptions.Compiled | RegexOptions.CultureInvariant);
     private readonly StreamWriter _stdoutFileWriter;
@@ -26,7 +26,7 @@ public class WasmTestMessagesProcessor
 
     private readonly ILogger _logger;
     private readonly Lazy<ErrorPatternScanner>? _errorScanner;
-    private readonly WasmSymbolicatorBase? _symbolicator;
+    private readonly SymbolicatorBase? _symbolicator;
     private readonly ChannelReader<(string, bool)> _channelReader;
     private readonly ChannelWriter<(string, bool)> _channelWriter;
     private readonly TaskCompletionSource _completed = new ();
@@ -38,7 +38,7 @@ public class WasmTestMessagesProcessor
     // Set once `WASM EXIT` message is received
     public TaskCompletionSource WasmExitReceivedTcs { get; } = new ();
 
-    public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger, string? errorPatternsFile, WasmSymbolicatorBase? symbolicator)
+    public TestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger, string? errorPatternsFile, SymbolicatorBase? symbolicator)
     {
         _xmlResultsFilePath = xmlResultsFilePath;
         _stdoutFileWriter = File.CreateText(stdoutFilePath);
@@ -153,14 +153,14 @@ public class WasmTestMessagesProcessor
 
     private void ProcessMessage(string message, bool isError = false)
     {
-        WasmLogMessage? logMessage = null;
+        LogMessage? logMessage = null;
         string line;
 
         if (message.StartsWith("{"))
         {
             try
             {
-                logMessage = JsonSerializer.Deserialize<WasmLogMessage>(message);
+                logMessage = JsonSerializer.Deserialize<LogMessage>(message);
                 line = logMessage?.payload ?? message.TrimEnd();
             }
             catch (JsonException)

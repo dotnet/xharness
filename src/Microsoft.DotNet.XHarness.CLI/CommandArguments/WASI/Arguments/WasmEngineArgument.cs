@@ -20,7 +20,8 @@ internal class WasmEngineArgument : Argument<WasmEngine?>
     {
         if (Value == null)
         {
-            throw new ArgumentException("Engine not specified");
+            // Set WasmTime as default engine
+            Value = WasmEngine.WasmTime;
         }
     }
 }

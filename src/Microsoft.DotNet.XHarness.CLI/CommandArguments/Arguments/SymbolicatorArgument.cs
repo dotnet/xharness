@@ -4,14 +4,14 @@
 
 using Microsoft.DotNet.XHarness.Common;
 
-namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
+namespace Microsoft.DotNet.XHarness.CLI.CommandArguments;
 
-internal class SymbolicatorArgument : TypeFromAssemblyArgument<WasiSymbolicatorBase>
+internal class SymbolicatorArgument : TypeFromAssemblyArgument<SymbolicatorBase>
 {
     public SymbolicatorArgument()
         : base(
               "symbolicator=",
-              $"<path>,<typeName> to assembly, and type which contains the wasi symbolicator",
+              $"<path>,<typeName> to assembly, and type which contains the wasm symbolicator",
               repeatable: false)
     {
     }

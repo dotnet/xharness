@@ -1,6 +1,6 @@
-namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasi;
+namespace Microsoft.DotNet.XHarness.CLI.Commands;
 
-class WasiLogMessage
+class LogMessage
 {
     public string? method { get; set; }
     public string? payload { get; set; }
