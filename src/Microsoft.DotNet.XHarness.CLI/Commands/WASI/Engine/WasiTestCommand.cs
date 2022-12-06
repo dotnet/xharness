@@ -54,40 +54,12 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
         var cts = new CancellationTokenSource();
         try
         {
-            ServerURLs? serverURLs = null;
-            if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
-            {
-                serverURLs = await WebServer.Start(
-                    Arguments,
-                    null,
-                    logger,
-                    null,
-                    cts.Token);
-                cts.CancelAfter(Arguments.Timeout);
-            }
-
             var engineArgs = new List<string>();
             engineArgs.Add(Arguments.SubCommand);
             engineArgs.Add("--dir");
             engineArgs.Add(Arguments.Directory);
             engineArgs.Add(Arguments.WasmFile);
             engineArgs.Add(Arguments.LibFile);
-
-
-            if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
-            {
-                foreach (var envVariable in Arguments.WebServerHttpEnvironmentVariables.Value)
-                {
-                    engineArgs.Add($"--setenv={envVariable}={serverURLs!.Http}");
-                }
-                if (Arguments.WebServerUseHttps)
-                {
-                    foreach (var envVariable in Arguments.WebServerHttpsEnvironmentVariables.Value)
-                    {
-                        engineArgs.Add($"--setenv={envVariable}={serverURLs!.Https}");
-                    }
-                }
-            }
 
             engineArgs.AddRange(PassThroughArguments);
 

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 
-internal class WasiTestCommandArguments : XHarnessCommandArguments, IWebServerArguments
+internal class WasiTestCommandArguments : XHarnessCommandArguments
 {
     public WasmEngineArgument Engine { get; } = new();
     public WasmEngineLocationArgument EnginePath { get; } = new();
@@ -22,13 +22,7 @@ internal class WasiTestCommandArguments : XHarnessCommandArguments, IWebServerAr
 
     public SymbolMapFileArgument SymbolMapFileArgument { get; } = new();
     public SymbolicatePatternsFileArgument SymbolicatePatternsFileArgument { get; } = new();
-    public SymbolicatorArgument SymbolicatorArgument { get; } = new();
-    public WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; } = new();
-    public WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; } = new();
-    public WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; } = new();
-    public WebServerUseHttpsArguments WebServerUseHttps { get; } = new();
-    public WebServerUseCorsArguments WebServerUseCors { get; } = new();
-    public WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; } = new();
+    public SymbolicatorArgument SymbolicatorArgument { get; } = new();    
 
     public string SubCommand{ get; } = "run";
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
@@ -45,11 +39,5 @@ internal class WasiTestCommandArguments : XHarnessCommandArguments, IWebServerAr
             SymbolMapFileArgument,
             SymbolicatePatternsFileArgument,
             SymbolicatorArgument,
-            WebServerMiddlewarePathsAndTypes,
-            WebServerHttpEnvironmentVariables,
-            WebServerHttpsEnvironmentVariables,
-            WebServerUseHttps,
-            WebServerUseCors,
-            WebServerUseCrossOriginPolicy,
     };
 }
