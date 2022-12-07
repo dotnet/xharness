@@ -107,7 +107,6 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             else
             {
                 logger.LogInformation("Application has finished with exit code: " + result.ExitCode);
-                // return SUCCESS if logProcess also returned SUCCESS
                 return ExitCode.SUCCESS;
             }
         }
@@ -126,18 +125,6 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
 
         Task PrintVersionAsync(WasmEngine engine, string engineBinary)
         {
-            if (engine is WasmEngine.WasmTime)
-            {
-                return processManager.ExecuteCommandAsync(
-                            engineBinary,
-                            new[] { "--version" },
-                            //new[] { "-e", "console.log(`wasmtime version: ${this.version()}`)" },
-                            log: new CallbackLog(m => logger.LogDebug(m.Trim())),
-                            stdoutLog: new CallbackLog(msg => logger.LogInformation(msg.Trim())),
-                            stderrLog: new CallbackLog(msg => logger.LogError(msg.Trim())),
-                            TimeSpan.FromSeconds(10));
-            }
-
             return Task.CompletedTask;
         }
     }
