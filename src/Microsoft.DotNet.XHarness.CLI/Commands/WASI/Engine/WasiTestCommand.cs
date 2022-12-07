@@ -60,7 +60,7 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             engineArgs.Add("--dir");
             engineArgs.Add(".");
             engineArgs.Add(Arguments.WasmFile);
-
+            engineArgs.AddRange(Arguments.EngineArgs.Value);
             engineArgs.AddRange(PassThroughArguments);
 
             var xmlResultsFilePath = Path.Combine(Arguments.OutputDirectory, "testResults.xml");
