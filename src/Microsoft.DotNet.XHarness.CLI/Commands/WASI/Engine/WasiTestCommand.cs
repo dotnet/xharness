@@ -58,9 +58,8 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             var engineArgs = new List<string>();
             engineArgs.Add(Arguments.SubCommand);
             engineArgs.Add("--dir");
-            engineArgs.Add(Arguments.Directory);
+            engineArgs.Add(".");
             engineArgs.Add(Arguments.WasmFile);
-            engineArgs.Add(Arguments.LibFile);
 
             engineArgs.AddRange(PassThroughArguments);
 

@@ -9,12 +9,11 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 
 internal class WasiTestCommandArguments : XHarnessCommandArguments
 {
+    public AppPathArgument AppPackagePath { get; } = new();
     public WasmEngineArgument Engine { get; } = new();
     public WasmEngineLocationArgument EnginePath { get; } = new();
     public WasmEngineArguments EngineArgs { get; } = new();
     public WasmFileArgument WasmFile { get; } = new("dotnet.wasm");  
-    public LibraryArgument LibFile { get; } = new("Wasi.Console.Sample.dll"); 
-    public DirectoryArgument Directory{ get; } = new(".");
     public ErrorPatternsFileArgument ErrorPatternsFile { get; } = new();
     public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
     public OutputDirectoryArgument OutputDirectory { get; } = new();
@@ -27,11 +26,10 @@ internal class WasiTestCommandArguments : XHarnessCommandArguments
     public string SubCommand{ get; } = "run";
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
+            AppPackagePath,
             Engine,
             EnginePath,
             EngineArgs,
-            WasmFile,
-            Directory,
             ErrorPatternsFile,
             OutputDirectory,
             Timeout,
