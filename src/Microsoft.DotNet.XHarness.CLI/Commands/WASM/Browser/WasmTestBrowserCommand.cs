@@ -45,12 +45,12 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
         var stdoutFilePath = Path.Combine(Arguments.OutputDirectory, "wasm-console.log");
         File.Delete(stdoutFilePath);
 
-        var symbolicator = SymbolicatorBase.Create(Arguments.SymbolicatorArgument.GetLoadedTypes().FirstOrDefault(),
+        var symbolicator = WasmSymbolicatorBase.Create(Arguments.SymbolicatorArgument.GetLoadedTypes().FirstOrDefault(),
                                                        Arguments.SymbolMapFileArgument,
                                                        Arguments.SymbolicatePatternsFileArgument,
                                                        logger);
 
-        var logProcessor = new TestMessagesProcessor(xmlResultsFilePath,
+        var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath,
                                                          stdoutFilePath,
                                                          logger,
                                                          Arguments.ErrorPatternsFile,

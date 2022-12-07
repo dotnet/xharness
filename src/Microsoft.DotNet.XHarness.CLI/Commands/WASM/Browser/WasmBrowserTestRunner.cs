@@ -29,14 +29,14 @@ internal class WasmBrowserTestRunner
     private readonly WasmTestBrowserCommandArguments _arguments;
     private readonly ILogger _logger;
     private readonly IEnumerable<string> _passThroughArguments;
-    private readonly TestMessagesProcessor _messagesProcessor;
+    private readonly WasmTestMessagesProcessor _messagesProcessor;
 
     // Messages from selenium prepend the url, and location where the message originated
     // Eg. `foo` becomes `http://localhost:8000/xyz.js 0:12 "foo"
     static readonly Regex s_consoleLogRegex = new(@"^\s*[a-z]*://[^\s]+\s+\d+:\d+\s+""(.*)""\s*$", RegexOptions.Compiled);
 
     public WasmBrowserTestRunner(WasmTestBrowserCommandArguments arguments, IEnumerable<string> passThroughArguments,
-                                        TestMessagesProcessor messagesProcessor, ILogger logger)
+                                        WasmTestMessagesProcessor messagesProcessor, ILogger logger)
     {
         _arguments = arguments;
         _logger = logger;

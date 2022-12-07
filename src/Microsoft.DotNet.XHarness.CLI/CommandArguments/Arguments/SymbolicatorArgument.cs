@@ -6,7 +6,7 @@ using Microsoft.DotNet.XHarness.Common;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments;
 
-internal class SymbolicatorArgument : TypeFromAssemblyArgument<SymbolicatorBase>
+internal class SymbolicatorArgument : TypeFromAssemblyArgument<WasmSymbolicatorBase>
 {
     public SymbolicatorArgument()
         : base(

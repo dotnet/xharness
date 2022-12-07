@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
+using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
@@ -69,12 +70,12 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             var stdoutFilePath = Path.Combine(Arguments.OutputDirectory, "wasi-console.log");
             File.Delete(stdoutFilePath);
 
-            var symbolicator = SymbolicatorBase.Create(Arguments.SymbolicatorArgument.GetLoadedTypes().FirstOrDefault(),
+            var symbolicator = WasmSymbolicatorBase.Create(Arguments.SymbolicatorArgument.GetLoadedTypes().FirstOrDefault(),
                                                            Arguments.SymbolMapFileArgument,
                                                            Arguments.SymbolicatePatternsFileArgument,
                                                            logger);
 
-            var logProcessor = new TestMessagesProcessor(xmlResultsFilePath,
+            var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath,
                                                              stdoutFilePath,
                                                              logger,
                                                              Arguments.ErrorPatternsFile,

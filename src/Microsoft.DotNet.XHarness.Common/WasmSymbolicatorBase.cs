@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Common;
 
-public abstract class SymbolicatorBase
+public abstract class WasmSymbolicatorBase
 {
     public string? SymbolsFile { get; private set; }
     public string? SymbolsPatternFile { get; private set; }
@@ -20,7 +20,7 @@ public abstract class SymbolicatorBase
         return true;
     }
 
-    public static SymbolicatorBase? Create(Type? symbolicatorType, string? symbolMapFile, string? symbolsPatternFile, ILogger logger)
+    public static WasmSymbolicatorBase? Create(Type? symbolicatorType, string? symbolMapFile, string? symbolsPatternFile, ILogger logger)
     {
         if (symbolicatorType is null && symbolMapFile is null && symbolsPatternFile is null)
             return null;
@@ -31,11 +31,11 @@ public abstract class SymbolicatorBase
             return null;
         }
 
-        var symbolicator = Activator.CreateInstance(symbolicatorType) as SymbolicatorBase;
+        var symbolicator = Activator.CreateInstance(symbolicatorType) as WasmSymbolicatorBase;
         if (symbolicator is null)
         {
             // should not happen
-            logger.LogError($"Symbolicator '{symbolicatorType}' is not of SymbolicatorBase type.");
+            logger.LogError($"Symbolicator '{symbolicatorType}' is not of WasmSymbolicatorBase type.");
             return null;
         }
 
