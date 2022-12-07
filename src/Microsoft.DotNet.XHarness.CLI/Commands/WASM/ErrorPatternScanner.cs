@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 #nullable enable
 
-namespace Microsoft.DotNet.XHarness.CLI.Commands;
+namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 
 public class ErrorPatternScanner
 {

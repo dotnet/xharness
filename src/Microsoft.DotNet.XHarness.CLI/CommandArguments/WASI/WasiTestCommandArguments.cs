@@ -14,14 +14,9 @@ internal class WasiTestCommandArguments : XHarnessCommandArguments
     public WasmEngineLocationArgument EnginePath { get; } = new();
     public WasmEngineArguments EngineArgs { get; } = new();
     public WasmFileArgument WasmFile { get; } = new("dotnet.wasm");  
-    public ErrorPatternsFileArgument ErrorPatternsFile { get; } = new();
     public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
     public OutputDirectoryArgument OutputDirectory { get; } = new();
     public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
-
-    public SymbolMapFileArgument SymbolMapFileArgument { get; } = new();
-    public SymbolicatePatternsFileArgument SymbolicatePatternsFileArgument { get; } = new();
-    public SymbolicatorArgument SymbolicatorArgument { get; } = new();    
 
     public string SubCommand{ get; } = "run";
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
@@ -30,12 +25,8 @@ internal class WasiTestCommandArguments : XHarnessCommandArguments
             Engine,
             EnginePath,
             EngineArgs,
-            ErrorPatternsFile,
             OutputDirectory,
             Timeout,
             ExpectedExitCode,
-            SymbolMapFileArgument,
-            SymbolicatePatternsFileArgument,
-            SymbolicatorArgument,
     };
 }

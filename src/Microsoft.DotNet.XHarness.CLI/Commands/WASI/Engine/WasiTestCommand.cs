@@ -69,29 +69,14 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             var stdoutFilePath = Path.Combine(Arguments.OutputDirectory, "wasi-console.log");
             File.Delete(stdoutFilePath);
 
-            var symbolicator = WasmSymbolicatorBase.Create(Arguments.SymbolicatorArgument.GetLoadedTypes().FirstOrDefault(),
-                                                           Arguments.SymbolMapFileArgument,
-                                                           Arguments.SymbolicatePatternsFileArgument,
-                                                           logger);
-
-            var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath,
-                                                             stdoutFilePath,
-                                                             logger,
-                                                             Arguments.ErrorPatternsFile,
-                                                             symbolicator);
-            var logProcessorTask = Task.Run(() => logProcessor.RunAsync(cts.Token));
-
             var processTask = processManager.ExecuteCommandAsync(
                 engineBinary,
                 engineArgs,
                 log: new CallbackLog(m => logger.LogInformation(m)),
-                stdoutLog: new CallbackLog(msg => logProcessor.Invoke(msg)),
-                stderrLog: new CallbackLog(logProcessor.ProcessErrorMessage),
                 Arguments.Timeout);
 
             var tasks = new Task[]
             {
-                logProcessorTask,
                 processTask,
                 Task.Delay(Arguments.Timeout)
             };
@@ -112,10 +97,7 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
                 throw task.Exception!;
             }
 
-            // if the log processor completed without errors, then the
-            // process should be done too, or about to be done!
             var result = await processTask;
-            ExitCode logProcessorExitCode = await logProcessor.CompleteAndFlushAsync();
 
             if (result.ExitCode != Arguments.ExpectedExitCode)
             {
@@ -124,16 +106,9 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             }
             else
             {
-                if (logProcessor.LineThatMatchedErrorPattern != null)
-                {
-                    logger.LogError("Application exited with the expected exit code: {result.ExitCode}."
-                                    + $" But found a line matching an error pattern: {logProcessor.LineThatMatchedErrorPattern}");
-                    return ExitCode.APP_CRASH;
-                }
-
                 logger.LogInformation("Application has finished with exit code: " + result.ExitCode);
                 // return SUCCESS if logProcess also returned SUCCESS
-                return logProcessorExitCode;
+                return ExitCode.SUCCESS;
             }
         }
         catch (Win32Exception e) when (e.NativeErrorCode == 2)
