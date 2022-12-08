@@ -16,14 +16,8 @@ internal class WasmEngineArgument : Argument<WasmEngine?>
     public override void Action(string argumentValue) =>
         Value = ParseArgument<WasmEngine>("engine", argumentValue);
 
-    public override void Validate()
-    {
-        if (Value == null)
-        {
-            // Set WasmTime as default engine
-            Value = WasmEngine.WasmTime;
-        }
-    }
+    // Set WasmTime as default engine
+    public override void Validate() => Value ??= WasmEngine.WasmTime;
 }
 
 /// <summary>

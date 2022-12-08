@@ -16,6 +16,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -46,7 +47,14 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
         {
             engineBinary = Arguments.EnginePath.Value;
             if (Path.IsPathRooted(engineBinary) && !File.Exists(engineBinary))
-                throw new ArgumentException($"Could not find wasm engine at the specified path - {engineBinary}");
+                throw new ArgumentException($"Could not find js engine at the specified path - {engineBinary}");
+        }
+        else
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {                
+                engineBinary = FileUtils.FindFileInPath(engineBinary + ".cmd");
+            }
         }
       
         logger.LogInformation($"Using wasm engine {Arguments.Engine.Value} from path {engineBinary}");
@@ -56,10 +64,6 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
         try
         {
             var engineArgs = new List<string>();
-            engineArgs.Add(Arguments.SubCommand);
-            engineArgs.Add("--dir");
-            engineArgs.Add(".");
-            engineArgs.Add(Arguments.WasmFile);
             engineArgs.AddRange(Arguments.EngineArgs.Value);
             engineArgs.AddRange(PassThroughArguments);
 
@@ -69,14 +73,24 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             var stdoutFilePath = Path.Combine(Arguments.OutputDirectory, "wasi-console.log");
             File.Delete(stdoutFilePath);
 
+            var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath,
+                                                             stdoutFilePath,
+                                                             logger,
+                                                             null,
+                                                             null);
+            var logProcessorTask = Task.Run(() => logProcessor.RunAsync(cts.Token));
+
             var processTask = processManager.ExecuteCommandAsync(
                 engineBinary,
                 engineArgs,
-                log: new CallbackLog(m => logger.LogInformation(m)),
+                log: new CallbackLog(m => logger.LogInformation(m.Trim())),
+                stdoutLog: new CallbackLog(msg => logProcessor.Invoke(msg)),
+                stderrLog: new CallbackLog(logProcessor.ProcessErrorMessage),
                 Arguments.Timeout);
 
             var tasks = new Task[]
             {
+                logProcessorTask,
                 processTask,
                 Task.Delay(Arguments.Timeout)
             };
@@ -97,7 +111,10 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
                 throw task.Exception!;
             }
 
+            // if the log processor completed without errors, then the
+            // process should be done too, or about to be done!
             var result = await processTask;
+            ExitCode logProcessorExitCode = await logProcessor.CompleteAndFlushAsync();
 
             if (result.ExitCode != Arguments.ExpectedExitCode)
             {
@@ -106,8 +123,16 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             }
             else
             {
+                if (logProcessor.LineThatMatchedErrorPattern != null)
+                {
+                    logger.LogError("Application exited with the expected exit code: {result.ExitCode}."
+                                    + $" But found a line matching an error pattern: {logProcessor.LineThatMatchedErrorPattern}");
+                    return ExitCode.APP_CRASH;
+                }
+
                 logger.LogInformation("Application has finished with exit code: " + result.ExitCode);
-                return ExitCode.SUCCESS;
+                // return SUCCESS if logProcess also returned SUCCESS
+                return logProcessorExitCode;
             }
         }
         catch (Win32Exception e) when (e.NativeErrorCode == 2)
@@ -125,8 +150,13 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
 
         Task PrintVersionAsync(WasmEngine engine, string engineBinary)
         {
-            return Task.CompletedTask;
+            return processManager.ExecuteCommandAsync(
+                        engineBinary,
+                        new[] { "--version" },
+                        log: new CallbackLog(m => logger.LogDebug(m.Trim())),
+                        stdoutLog: new CallbackLog(msg => logger.LogInformation(msg.Trim())),
+                        stderrLog: new CallbackLog(msg => logger.LogError(msg.Trim())),
+                        TimeSpan.FromSeconds(10));
         }
     }
-
 }
