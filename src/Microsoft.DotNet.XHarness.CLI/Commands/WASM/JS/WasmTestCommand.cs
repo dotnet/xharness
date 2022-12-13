@@ -63,12 +63,12 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
             }
         }
 
-        logger.LogInformation($"Using js engine {Arguments.Engine.Value} from path {engineBinary}");
-        await PrintVersionAsync(Arguments.Engine.Value.Value, engineBinary);
-
         var cts = new CancellationTokenSource();
         try
         {
+            logger.LogInformation($"Using js engine {Arguments.Engine.Value} from path {engineBinary}");
+            await PrintVersionAsync(Arguments.Engine.Value.Value, engineBinary);
+            
             ServerURLs? serverURLs = null;
             if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
             {

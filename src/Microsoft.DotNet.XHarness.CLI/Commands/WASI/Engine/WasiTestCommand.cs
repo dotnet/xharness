@@ -56,13 +56,13 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
                 engineBinary = FileUtils.FindFileInPath(engineBinary + ".cmd");
             }
         }
-      
-        logger.LogInformation($"Using wasm engine {Arguments.Engine.Value} from path {engineBinary}");
-        await PrintVersionAsync(Arguments.Engine.Value.Value, engineBinary);
 
         var cts = new CancellationTokenSource();
         try
         {
+            logger.LogInformation($"Using wasm engine {Arguments.Engine.Value} from path {engineBinary}");
+            await PrintVersionAsync(Arguments.Engine.Value.Value, engineBinary);
+
             var engineArgs = new List<string>();
             engineArgs.AddRange(Arguments.EngineArgs.Value);
             engineArgs.AddRange(PassThroughArguments);
@@ -75,9 +75,7 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
 
             var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath,
                                                              stdoutFilePath,
-                                                             logger,
-                                                             null,
-                                                             null);
+                                                             logger);
             var logProcessorTask = Task.Run(() => logProcessor.RunAsync(cts.Token));
 
             var processTask = processManager.ExecuteCommandAsync(
@@ -123,13 +121,6 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             }
             else
             {
-                if (logProcessor.LineThatMatchedErrorPattern != null)
-                {
-                    logger.LogError("Application exited with the expected exit code: {result.ExitCode}."
-                                    + $" But found a line matching an error pattern: {logProcessor.LineThatMatchedErrorPattern}");
-                    return ExitCode.APP_CRASH;
-                }
-
                 logger.LogInformation("Application has finished with exit code: " + result.ExitCode);
                 // return SUCCESS if logProcess also returned SUCCESS
                 return logProcessorExitCode;
