@@ -15,6 +15,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -30,27 +31,7 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
 
     public WasmTestCommand() : base(TargetPlatform.WASM, "test", true, new ServiceCollection(), CommandHelp)
     {
-    }
-
-    private static string FindEngineInPath(string engineBinary)
-    {
-        if (File.Exists(engineBinary) || Path.IsPathRooted(engineBinary))
-            return engineBinary;
-
-        var path = Environment.GetEnvironmentVariable("PATH");
-
-        if (path == null)
-            return engineBinary;
-
-        foreach (var folder in path.Split(Path.PathSeparator))
-        {
-            var fullPath = Path.Combine(folder, engineBinary);
-            if (File.Exists(fullPath))
-                return fullPath;
-        }
-
-        return engineBinary;
-    }
+    }    
 
     protected override async Task<ExitCode> InvokeInternal(ILogger logger)
     {
@@ -76,18 +57,18 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 if (engineBinary.Equals("node"))
-                    engineBinary = FindEngineInPath(engineBinary + ".exe"); // NodeJS ships as .exe rather than .cmd
+                    engineBinary = FileUtils.FindFileInPath(engineBinary + ".exe"); // NodeJS ships as .exe rather than .cmd
                 else
-                    engineBinary = FindEngineInPath(engineBinary + ".cmd");
+                    engineBinary = FileUtils.FindFileInPath(engineBinary + ".cmd");
             }
         }
-
-        logger.LogInformation($"Using js engine {Arguments.Engine.Value} from path {engineBinary}");
-        await PrintVersionAsync(Arguments.Engine.Value.Value, engineBinary);
 
         var cts = new CancellationTokenSource();
         try
         {
+            logger.LogInformation($"Using js engine {Arguments.Engine.Value} from path {engineBinary}");
+            await PrintVersionAsync(Arguments.Engine.Value.Value, engineBinary);
+            
             ServerURLs? serverURLs = null;
             if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
             {

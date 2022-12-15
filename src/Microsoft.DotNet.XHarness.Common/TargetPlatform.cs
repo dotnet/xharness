@@ -9,4 +9,5 @@ public enum TargetPlatform
     Android,
     Apple,
     WASM,
+    WASI,
 }

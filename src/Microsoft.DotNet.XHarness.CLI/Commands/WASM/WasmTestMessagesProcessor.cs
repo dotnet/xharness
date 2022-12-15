@@ -38,7 +38,7 @@ public class WasmTestMessagesProcessor
     // Set once `WASM EXIT` message is received
     public TaskCompletionSource WasmExitReceivedTcs { get; } = new ();
 
-    public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger, string? errorPatternsFile, WasmSymbolicatorBase? symbolicator)
+    public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger, string? errorPatternsFile = null, WasmSymbolicatorBase? symbolicator = null)
     {
         _xmlResultsFilePath = xmlResultsFilePath;
         _stdoutFileWriter = File.CreateText(stdoutFilePath);

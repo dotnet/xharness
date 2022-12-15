@@ -10,6 +10,7 @@ using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
+using Microsoft.DotNet.XHarness.CLI.Commands.Wasi;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Mono.Options;
 
@@ -67,8 +68,11 @@ internal class XHarnessHelpCommand : HelpCommand
             case "wasm":
                 PrintCommandHelp(new WasmCommandSet(), subCommand);
                 break;
+            case "wasi":
+                PrintCommandHelp(new WasiCommandSet(), subCommand);
+                break;
             default:
-                Console.WriteLine($"No help available for command '{command}'. Allowed commands are 'apple', 'wasm' and 'android'");
+                Console.WriteLine($"No help available for command '{command}'. Allowed commands are 'apple', 'wasm', 'wasi' and 'android'");
                 break;
         }
 
