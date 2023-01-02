@@ -39,9 +39,9 @@ stages:
               --restore
               --test
               --projects ${{ parameters.testProject }}
+              --warnAsError false
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/${{ parameters.name }}.binlog
               /p:RestoreUsingNuGetTargets=false
-              /p:TreatWarningsAsErrors=false
             displayName: Run tests in Helix
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
