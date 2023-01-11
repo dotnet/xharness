@@ -31,6 +31,7 @@ public class SimpleTcpListener : SimpleListener, ITunnelListener
     public TaskCompletionSource<bool> TunnelHoleThrough { get; } = new TaskCompletionSource<bool>();
 
     public int Port { get; private set; }
+    public bool IsTunnelListening { get; private set; }
 
     public SimpleTcpListener(ILog log, IFileBackedLog testLog, bool autoExit, bool tunnel = false) : base(log, testLog)
     {
@@ -151,6 +152,7 @@ public class SimpleTcpListener : SimpleListener, ITunnelListener
                     // Let the device know we are ready!
                     var ping = Encoding.UTF8.GetBytes("ping");
                     stream.Write(ping, 0, ping.Length);
+                    IsTunnelListening = true;
 
                     break;
 
@@ -195,6 +197,7 @@ public class SimpleTcpListener : SimpleListener, ITunnelListener
             {
                 Log.WriteLine($"Failed to read TCP data: {e}");
             }
+            IsTunnelListening = false;
         }
         finally
         {
@@ -217,7 +220,7 @@ public class SimpleTcpListener : SimpleListener, ITunnelListener
     private bool Processing(TcpClient client)
     {
         Connected(client.Client.RemoteEndPoint.ToString());
-
+       
         // now simply copy what we receive
         int i;
         int total = 0;
