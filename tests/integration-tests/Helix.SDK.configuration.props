@@ -14,7 +14,7 @@
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
-    <DotNetCliVersion>7.0.100</DotNetCliVersion>
+    <DotNetCliVersion>8.0.100</DotNetCliVersion>
 
     <!-- Pick up the nupkg from this repo for testing purposes -->
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
