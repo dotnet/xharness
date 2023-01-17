@@ -17,8 +17,6 @@ public interface ITunnelListener : ISimpleListener
     TaskCompletionSource<bool> TunnelHoleThrough { get; }
 
     int Port { get; }
-
-    bool IsTunnelListening { get; }
 }
 
 // interface implemented by a tcp tunnel between the host and the device.
@@ -95,11 +93,6 @@ public class TcpTunnel : ITcpTunnel
                 // exited, if that is the case, we do not want to make the app wait, therefore, set the hole to false
                 // which will throw an exception from the listener.
                 simpleListener.TunnelHoleThrough.TrySetResult(task.Result.Succeeded);
-
-                if (!simpleListener.IsTunnelListening)
-                {
-                    mainLog.WriteLine($"TCP Tunnel Connection Failed");
-                }
             });
         }
     }

@@ -48,10 +48,10 @@ public class ErrorKnowledgeBase : IErrorKnowledgeBase
         ["error HE0042: Could not launch the app"] =
             new("Failed to launch the application, please try again. If the problem persists, try rebooting MacOS",
                 suggestedExitCode: (int)ExitCode.APP_LAUNCH_FAILURE),
-
-        [$"TCP Tunnel Connection Failed"] =
-            new("TCP Tunnel Connection Failed to connect to TCP port",
-                suggestedExitCode: (int)ExitCode.TCP_CONNECTION_FAILED),
+       
+        ["[TCP tunnel] Xamarin.Hosting: Failed to connect to port"] = new(
+            "TCP Tunnel Connection Failed to connect to TCP port",
+            suggestedExitCode: (int)ExitCode.TCP_CONNECTION_FAILED),
     };
 
     private static readonly Dictionary<string, KnownIssue> s_buildErrorMaps = new();
