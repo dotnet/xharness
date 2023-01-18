@@ -19,6 +19,8 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands;
 
@@ -129,8 +131,8 @@ public class WebServer
             {
                 app.Use((context, next) =>
                 {
-                    context.Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
-                    context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
+                    context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
+                    context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
                     return next();
                 });
             }
