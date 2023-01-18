@@ -295,6 +295,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
     {
         string newLine = Environment.NewLine;
         const string checkLogsMessage = "Check logs for more information";
+        bool tcpErrorFound = false;
 
         ExitCode LogProblem(string message, ExitCode defaultExitCode)
         {
@@ -302,8 +303,16 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             {
                 if (_errorKnowledgeBase.IsKnownTestIssue(log, out var issue))
                 {
-                    _logger.LogError(message + newLine + issue.HumanMessage);
-                    return issue.SuggestedExitCode.HasValue ? (ExitCode)issue.SuggestedExitCode.Value : defaultExitCode;
+                    if (issue.SuggestedExitCode.HasValue && (ExitCode)issue.SuggestedExitCode.Value == ExitCode.TCP_CONNECTION_FAILED)
+                    {
+                        tcpErrorFound = true;
+                    }
+
+                    else
+                    {
+                        _logger.LogError(message + newLine + issue.HumanMessage);
+                        return issue.SuggestedExitCode.HasValue ? (ExitCode)issue.SuggestedExitCode.Value : defaultExitCode;
+                    }
                 }
             }
 
@@ -314,6 +323,13 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             else
             {
                 _logger.LogError(message + newLine + checkLogsMessage);
+            }
+
+            //TCP errors are encounter all the time but they are not always the cause of the failure
+            //If the app crashed, TCP_CONNECTION_FAILED and there was not other exit code we will return TCP_CONNECTION_FAILED
+            if (defaultExitCode == ExitCode.APP_CRASH && tcpErrorFound)
+            {
+                return ExitCode.TCP_CONNECTION_FAILED;
             }
 
             return defaultExitCode;

@@ -111,4 +111,10 @@ public enum ExitCode
     /// Failure when calling ADB
     /// </summary>
     ADB_FAILURE = 91,
+
+    /// <summary>
+    /// Failure when TCP tunnel between XHarness and the device fail
+    /// or the device cannot connect to TCP tunnel
+    /// </summary>
+    TCP_CONNECTION_FAILED = 92
 }
