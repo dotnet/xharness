@@ -120,7 +120,7 @@ public class WebServer
             provider.Mappings[".cjs"] = "text/javascript";
             provider.Mappings[".mjs"] = "text/javascript";
 
-            foreach (var extn in new string[] { ".dll", ".pdb", ".dat", ".blat" })
+            foreach (var extn in new string[] { ".dll", ".pdb", ".dat", ".blat", ".webcil" })
             {
                 provider.Mappings[extn] = "application/octet-stream";
             }
