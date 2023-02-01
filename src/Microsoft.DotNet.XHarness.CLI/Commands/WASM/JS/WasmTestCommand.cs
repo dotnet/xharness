@@ -54,12 +54,11 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
         }
         else
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            (engineBinary, string? errorMessage) = FileUtils.FindExecutableInPATH(engineBinary);
+            if (errorMessage is not null)
             {
-                if (engineBinary.Equals("node"))
-                    engineBinary = FileUtils.FindFileInPath(engineBinary + ".exe"); // NodeJS ships as .exe rather than .cmd
-                else
-                    engineBinary = FileUtils.FindFileInPath(engineBinary + ".cmd");
+                logger.LogCritical($"The engine binary `{engineBinary}` was not found. {errorMessage}");
+                return ExitCode.APP_LAUNCH_FAILURE;
             }
         }
 

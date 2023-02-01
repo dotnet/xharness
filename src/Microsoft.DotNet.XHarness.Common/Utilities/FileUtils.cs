@@ -3,30 +3,42 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.DotNet.XHarness.Common.Utilities;
 
 public static class FileUtils
 {
-    public static string FindFileInPath(string engineBinary)
+    private static readonly string[] s_extensions = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                                                        ? new[] { ".exe", ".cmd", ".bat" }
+                                                        : new[] { "" };
+
+    public static (string fullPath, string? errorMessage) FindExecutableInPATH(string filename)
     {
-        if (File.Exists(engineBinary) || Path.IsPathRooted(engineBinary))
-            return engineBinary;
+        if (File.Exists(filename) || Path.IsPathRooted(filename))
+            return (filename, null);
 
         var path = Environment.GetEnvironmentVariable("PATH");
 
         if (path == null)
-            return engineBinary;
+            return (filename, null);
 
-        foreach (var folder in path.Split(Path.PathSeparator))
+        List<string> filenamesTried = new(s_extensions.Length);
+        foreach (string extn in s_extensions)
         {
-            var fullPath = Path.Combine(folder, engineBinary);
-            if (File.Exists(fullPath))
-                return fullPath;
+            string filenameWithExtn = filename + extn;
+            filenamesTried.Add(filenameWithExtn);
+            foreach (var folder in path.Split(Path.PathSeparator))
+            {
+                var fullPath = Path.Combine(folder, filenameWithExtn);
+                if (File.Exists(fullPath))
+                    return (fullPath, null);
+            }
         }
 
-        return engineBinary;
+        // Could not find the path
+        return (filename, $"Tried to look for {string.Join(", ", filenamesTried)} .");
     }
 }
