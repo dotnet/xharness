@@ -19,4 +19,8 @@
     <PackageReference Include="Mono.Options" Version="6.12.0.148" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)\src\Microsoft.DotNet.XHarness.iOS.Shared\Compatibility\Nullable.cs" />
+  </ItemGroup>
+
 </Project>

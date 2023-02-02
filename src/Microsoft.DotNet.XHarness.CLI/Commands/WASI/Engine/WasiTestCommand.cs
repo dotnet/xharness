@@ -51,12 +51,12 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
         }
         else
         {
-            (engineBinary, string? errorMessage) = FileUtils.FindExecutableInPATH(engineBinary);
-            if (errorMessage is not null)
+            if (!FileUtils.TryFindExecutableInPATH(engineBinary, out string? foundBinary, out string? errorMessage))
             {
                 logger.LogCritical($"The engine binary `{engineBinary}` was not found. {errorMessage}");
                 return ExitCode.APP_LAUNCH_FAILURE;
             }
+            engineBinary = foundBinary;
         }
 
         var cts = new CancellationTokenSource();

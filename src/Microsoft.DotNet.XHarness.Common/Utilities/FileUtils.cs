@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.DotNet.XHarness.Common.Utilities;
 
@@ -15,30 +16,54 @@ public static class FileUtils
                                                         ? new[] { ".exe", ".cmd", ".bat" }
                                                         : new[] { "" };
 
-    public static (string fullPath, string? errorMessage) FindExecutableInPATH(string filename)
+    public static bool TryFindExecutableInPATH(string filename, [NotNullWhen(true)] out string? fullPath, [NotNullWhen(false)] out string? errorMessage)
     {
-        if (File.Exists(filename) || Path.IsPathRooted(filename))
-            return (filename, null);
+        errorMessage = null;
+        fullPath = null;
+        if (File.Exists(filename))
+        {
+            fullPath = Path.GetFullPath(filename);
+            return true;
+        }
+
+        if (Path.IsPathRooted(filename))
+        {
+            fullPath = filename;
+            return true;
+        }
 
         var path = Environment.GetEnvironmentVariable("PATH");
+        if (string.IsNullOrEmpty(path))
+        {
+            errorMessage = "Could not find environment variable PATH";
+            return false;
+        }
 
-        if (path == null)
-            return (filename, null);
+        string[] searchPaths = path.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+        if (searchPaths.Length == 0)
+        {
+            errorMessage = $"No paths set in environment variable PATH";
+            return false;
+        }
 
         List<string> filenamesTried = new(s_extensions.Length);
         foreach (string extn in s_extensions)
         {
             string filenameWithExtn = filename + extn;
             filenamesTried.Add(filenameWithExtn);
-            foreach (var folder in path.Split(Path.PathSeparator))
+            foreach (string searchPath in searchPaths)
             {
-                var fullPath = Path.Combine(folder, filenameWithExtn);
-                if (File.Exists(fullPath))
-                    return (fullPath, null);
+                var pathToCheck = Path.Combine(searchPath, filenameWithExtn);
+                if (File.Exists(pathToCheck))
+                {
+                    fullPath = pathToCheck;
+                    return true;
+                }
             }
         }
 
         // Could not find the path
-        return (filename, $"Tried to look for {string.Join(", ", filenamesTried)} .");
+        errorMessage = $"Tried to look for {string.Join(", ", filenamesTried)} in PATH: {string.Join(", ", searchPaths)} .";
+        return false;
     }
 }
