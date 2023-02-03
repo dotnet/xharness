@@ -31,7 +31,7 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
 
     public WasmTestCommand() : base(TargetPlatform.WASM, "test", true, new ServiceCollection(), CommandHelp)
     {
-    }    
+    }
 
     protected override async Task<ExitCode> InvokeInternal(ILogger logger)
     {
@@ -54,13 +54,12 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
         }
         else
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (!FileUtils.TryFindExecutableInPATH(engineBinary, out string? foundBinary, out string? errorMessage))
             {
-                if (engineBinary.Equals("node"))
-                    engineBinary = FileUtils.FindFileInPath(engineBinary + ".exe"); // NodeJS ships as .exe rather than .cmd
-                else
-                    engineBinary = FileUtils.FindFileInPath(engineBinary + ".cmd");
+                logger.LogCritical($"The engine binary `{engineBinary}` was not found. {errorMessage}");
+                return ExitCode.APP_LAUNCH_FAILURE;
             }
+            engineBinary = foundBinary;
         }
 
         var cts = new CancellationTokenSource();
@@ -68,7 +67,7 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
         {
             logger.LogInformation($"Using js engine {Arguments.Engine.Value} from path {engineBinary}");
             await PrintVersionAsync(Arguments.Engine.Value.Value, engineBinary);
-            
+
             ServerURLs? serverURLs = null;
             if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
             {

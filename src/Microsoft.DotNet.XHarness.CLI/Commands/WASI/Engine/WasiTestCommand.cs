@@ -47,14 +47,16 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
         {
             engineBinary = Arguments.EnginePath.Value;
             if (Path.IsPathRooted(engineBinary) && !File.Exists(engineBinary))
-                throw new ArgumentException($"Could not find js engine at the specified path - {engineBinary}");
+                throw new ArgumentException($"Could not find wasi engine at the specified path - {engineBinary}");
         }
         else
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {                
-                engineBinary = FileUtils.FindFileInPath(engineBinary + ".cmd");
+            if (!FileUtils.TryFindExecutableInPATH(engineBinary, out string? foundBinary, out string? errorMessage))
+            {
+                logger.LogCritical($"The engine binary `{engineBinary}` was not found. {errorMessage}");
+                return ExitCode.APP_LAUNCH_FAILURE;
             }
+            engineBinary = foundBinary;
         }
 
         var cts = new CancellationTokenSource();

@@ -3,30 +3,67 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.DotNet.XHarness.Common.Utilities;
 
 public static class FileUtils
 {
-    public static string FindFileInPath(string engineBinary)
+    private static readonly string[] s_extensions = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                                                        ? new[] { ".exe", ".cmd", ".bat" }
+                                                        : new[] { "" };
+
+    public static bool TryFindExecutableInPATH(string filename, [NotNullWhen(true)] out string? fullPath, [NotNullWhen(false)] out string? errorMessage)
     {
-        if (File.Exists(engineBinary) || Path.IsPathRooted(engineBinary))
-            return engineBinary;
-
-        var path = Environment.GetEnvironmentVariable("PATH");
-
-        if (path == null)
-            return engineBinary;
-
-        foreach (var folder in path.Split(Path.PathSeparator))
+        errorMessage = null;
+        fullPath = null;
+        if (File.Exists(filename))
         {
-            var fullPath = Path.Combine(folder, engineBinary);
-            if (File.Exists(fullPath))
-                return fullPath;
+            fullPath = Path.GetFullPath(filename);
+            return true;
         }
 
-        return engineBinary;
+        if (Path.IsPathRooted(filename))
+        {
+            fullPath = filename;
+            return true;
+        }
+
+        var path = Environment.GetEnvironmentVariable("PATH");
+        if (string.IsNullOrEmpty(path))
+        {
+            errorMessage = "Could not find environment variable PATH";
+            return false;
+        }
+
+        string[] searchPaths = path.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+        if (searchPaths.Length == 0)
+        {
+            errorMessage = $"No paths set in environment variable PATH";
+            return false;
+        }
+
+        List<string> filenamesTried = new(s_extensions.Length);
+        foreach (string extn in s_extensions)
+        {
+            string filenameWithExtn = filename + extn;
+            filenamesTried.Add(filenameWithExtn);
+            foreach (string searchPath in searchPaths)
+            {
+                var pathToCheck = Path.Combine(searchPath, filenameWithExtn);
+                if (File.Exists(pathToCheck))
+                {
+                    fullPath = pathToCheck;
+                    return true;
+                }
+            }
+        }
+
+        // Could not find the path
+        errorMessage = $"Tried to look for {string.Join(", ", filenamesTried)} in PATH: {string.Join(", ", searchPaths)} .";
+        return false;
     }
 }
