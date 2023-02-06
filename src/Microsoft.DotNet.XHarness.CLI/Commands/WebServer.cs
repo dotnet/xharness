@@ -21,7 +21,6 @@ using Microsoft.Extensions.Options;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands;
 
@@ -66,10 +65,6 @@ public class WebServer
                     }
                 });
             })
-            .UseConfiguration(
-                new ConfigurationBuilder()
-                .AddEnvironmentVariables(prefix: "BROWSER_")
-                .Build())
             .UseUrls(urls);
 
         if (contentRoot != null)
