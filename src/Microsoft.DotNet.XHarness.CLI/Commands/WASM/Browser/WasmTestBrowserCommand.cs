@@ -72,7 +72,7 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
             _ => throw new ArgumentException($"Unknown browser : {Arguments.Browser}")
         };
         // Browser respects LANGUAGE in the first place, only if empty it checks LANG
-        Environment.SetEnvironmentVariable("LANGUAGE", Arguments.Locale);
+        Environment.SetEnvironmentVariable("BROWSER_LANGUAGE", Arguments.Locale);
 
         try
         {
