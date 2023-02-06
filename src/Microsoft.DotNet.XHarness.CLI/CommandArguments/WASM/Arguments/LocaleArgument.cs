@@ -5,9 +5,9 @@
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using System;
 
-internal class LocaleArgument : StringArgument
+internal class LocaleArgument : RequiredStringArgument
 {
     public LocaleArgument(string defaultValue)
-        : base("locale=", $"Sets LANG environment variable, default value {defaultValue}")
+        : base("locale=", $"Sets LANG environment variable, default value {defaultValue}", defaultValue)
     {}
 }
