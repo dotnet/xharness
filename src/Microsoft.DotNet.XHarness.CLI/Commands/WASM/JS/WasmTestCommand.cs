@@ -113,6 +113,8 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
             }
 
             engineArgs.AddRange(PassThroughArguments);
+            // Node respects LANG only, ignores LANGUAGE
+            Environment.SetEnvironmentVariable("LANG", Arguments.Locale);
 
             var xmlResultsFilePath = Path.Combine(Arguments.OutputDirectory, "testResults.xml");
             File.Delete(xmlResultsFilePath);
