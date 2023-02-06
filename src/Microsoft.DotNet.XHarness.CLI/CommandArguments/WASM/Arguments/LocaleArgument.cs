@@ -8,6 +8,6 @@ using System;
 internal class LocaleArgument : RequiredStringArgument
 {
     public LocaleArgument(string defaultValue)
-        : base("locale=", $"Sets LANG environment variable, default value {defaultValue}", defaultValue)
+        : base("locale=", $"Sets the browser's/node's language through an environment variable, default value {defaultValue}", defaultValue)
     {}
 }
