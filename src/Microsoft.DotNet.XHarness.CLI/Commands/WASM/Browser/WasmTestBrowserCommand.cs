@@ -63,10 +63,10 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
 
         (DriverService driverService, IWebDriver driver) = Arguments.Browser.Value switch
         {
-            Browser.Chrome => GetChromeDriver(logger),
+            Browser.Chrome => GetChromeDriver(Arguments.Locale, logger),
             Browser.Safari => GetSafariDriver(logger),
             Browser.Firefox => GetFirefoxDriver(logger),
-            Browser.Edge => GetEdgeDriver(logger),
+            Browser.Edge => GetEdgeDriver(Arguments.Locale, logger),
 
             // shouldn't reach here
             _ => throw new ArgumentException($"Unknown browser : {Arguments.Browser}")
@@ -142,14 +142,16 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                     (driverService) => new FirefoxDriver(driverService, options, Arguments.Timeout));
     }
 
-    private (DriverService, IWebDriver) GetChromeDriver(ILogger logger)
+    private (DriverService, IWebDriver) GetChromeDriver(string sessionLanguage, ILogger logger)
         => GetChromiumDriver<ChromeOptions, ChromeDriver, ChromeDriverService>(
+                    sessionLanguage,
                     "chromedriver",
                     options => ChromeDriverService.CreateDefaultService(),
                     logger);
 
-    private (DriverService, IWebDriver) GetEdgeDriver(ILogger logger)
+    private (DriverService, IWebDriver) GetEdgeDriver(string sessionLanguage, ILogger logger)
         => GetChromiumDriver<EdgeOptions, EdgeDriver, EdgeDriverService>(
+                    sessionLanguage,
                     "edgedriver",
                     options =>
                     {
@@ -158,7 +160,7 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                     }, logger);
 
     private (DriverService, IWebDriver) GetChromiumDriver<TDriverOptions, TDriver, TDriverService>(
-        string driverName, Func<TDriverOptions, TDriverService> getDriverService, ILogger logger)
+        string driverName, string sessionLanguage, Func<TDriverOptions, TDriverService> getDriverService, ILogger logger)
         where TDriver : ChromiumDriver
         where TDriverOptions : ChromiumOptions
         where TDriverService : ChromiumDriverService
@@ -251,6 +253,11 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
             try
             {
                 driverService = getDriverService(options);
+                driverService.DriverProcessStarting += (object? sender, DriverProcessStartingEventArgs e) =>
+                {
+                    // Browser respects LANGUAGE in the first place, only if empty it checks LANG
+                    e.DriverServiceProcessStartInfo.EnvironmentVariables["LANGUAGE"] = sessionLanguage;
+                };
 
                 driverService.EnableAppendLog = false;
                 driverService.EnableVerboseLogging = true;

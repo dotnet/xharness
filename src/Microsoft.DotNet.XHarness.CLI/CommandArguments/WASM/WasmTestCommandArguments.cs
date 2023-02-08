@@ -17,6 +17,7 @@ internal class WasmTestCommandArguments : XHarnessCommandArguments, IWebServerAr
     public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
     public OutputDirectoryArgument OutputDirectory { get; } = new();
     public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
+    public LocaleArgument Locale { get; } = new("en-US");
 
     public SymbolMapFileArgument SymbolMapFileArgument { get; } = new();
     public SymbolicatePatternsFileArgument SymbolicatePatternsFileArgument { get; } = new();

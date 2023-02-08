@@ -138,7 +138,11 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                 log: new CallbackLog(m => logger.LogInformation(m)),
                 stdoutLog: new CallbackLog(msg => logProcessor.Invoke(msg)),
                 stderrLog: new CallbackLog(logProcessor.ProcessErrorMessage),
-                Arguments.Timeout);
+                Arguments.Timeout,
+                // Node respects LANG only, ignores LANGUAGE
+                environmentVariables: Arguments.Engine.Value == JavaScriptEngine.NodeJS ?
+                                    new Dictionary<string, string>() { {"LANG", Arguments.Locale} } :
+                                    null);
 
             var tasks = new Task[]
             {

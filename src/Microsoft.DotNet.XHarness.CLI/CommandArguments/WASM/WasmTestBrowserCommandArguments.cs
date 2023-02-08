@@ -25,6 +25,7 @@ internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebS
     public NoHeadlessArgument NoHeadless { get; } = new();
     public NoQuitArgument NoQuit { get; } = new();
     public BackgroundThrottlingArgument BackgroundThrottling { get; } = new();
+    public LocaleArgument Locale { get; } = new("en-US");
 
     public SymbolMapFileArgument SymbolMapFileArgument { get; } = new();
     public SymbolicatePatternsFileArgument SymbolicatePatternsFileArgument { get; } = new();
