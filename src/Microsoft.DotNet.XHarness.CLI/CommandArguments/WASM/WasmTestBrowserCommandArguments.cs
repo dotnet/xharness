@@ -53,6 +53,7 @@ internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebS
             NoHeadless,
             NoQuit,
             BackgroundThrottling,
+            Locale,
             SymbolMapFileArgument,
             SymbolicatePatternsFileArgument,
             SymbolicatorArgument,
