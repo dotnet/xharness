@@ -144,15 +144,15 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
 
     private (DriverService, IWebDriver) GetChromeDriver(string sessionLanguage, ILogger logger)
         => GetChromiumDriver<ChromeOptions, ChromeDriver, ChromeDriverService>(
-                    sessionLanguage,
                     "chromedriver",
+                    sessionLanguage,
                     options => ChromeDriverService.CreateDefaultService(),
                     logger);
 
     private (DriverService, IWebDriver) GetEdgeDriver(string sessionLanguage, ILogger logger)
         => GetChromiumDriver<EdgeOptions, EdgeDriver, EdgeDriverService>(
-                    sessionLanguage,
                     "edgedriver",
+                    sessionLanguage,
                     options =>
                     {
                         options.UseChromium = true;
