@@ -39,6 +39,7 @@ internal class WasmTestCommandArguments : XHarnessCommandArguments, IWebServerAr
             OutputDirectory,
             Timeout,
             ExpectedExitCode,
+            Locale,
             SymbolMapFileArgument,
             SymbolicatePatternsFileArgument,
             SymbolicatorArgument,
