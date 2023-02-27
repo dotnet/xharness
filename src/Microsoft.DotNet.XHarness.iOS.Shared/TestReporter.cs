@@ -76,7 +76,7 @@ public class TestReporter : ITestReporter
 
     public bool ResultsUseXml => _xmlJargon != XmlResultJargon.Missing;
 
-    private bool TestExecutionStarted => _listener.ConnectedTask.Status == TaskStatus.RanToCompletion && _listener.ConnectedTask.Result;
+    private bool TestExecutionStarted => _listener.ConnectedTask.IsCompleted && _listener.ConnectedTask.Result;
 
     public TestReporter(
         IMlaunchProcessManager processManager,
