@@ -137,6 +137,10 @@ public class WebServer
                 });
             }
 
+            app.UseDefaultFiles(new DefaultFilesOptions
+            {
+                FileProvider = new PhysicalFileProvider(_hostingEnvironment.ContentRootPath)
+            });
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(_hostingEnvironment.ContentRootPath),

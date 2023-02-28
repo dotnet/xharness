@@ -15,5 +15,6 @@ public class WasmCommandSet : CommandSet
     {
         Add(new WasmTestCommand());
         Add(new WasmTestBrowserCommand());
+        Add(new WebServerCommand());
     }
 }
