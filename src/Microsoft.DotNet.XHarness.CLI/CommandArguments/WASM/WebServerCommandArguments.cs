@@ -17,18 +17,20 @@ internal class WebServerCommandArguments : XHarnessCommandArguments, IWebServerA
     public WebServerUseHttpsArguments WebServerUseHttps { get; } = new();
     public WebServerUseCorsArguments WebServerUseCors { get; } = new();
     public WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; } = new();
+    public WebServerUseDefaultFilesArguments WebServerUseDefaultFiles { get; } = new();
 
     public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
-            AppPackagePath,
-            Timeout,
-            WebServerMiddlewarePathsAndTypes,
-            WebServerHttpEnvironmentVariables,
-            WebServerHttpsEnvironmentVariables,
-            WebServerUseHttps,
-            WebServerUseCors,
-            WebServerUseCrossOriginPolicy,
+        AppPackagePath,
+        Timeout,
+        WebServerMiddlewarePathsAndTypes,
+        WebServerHttpEnvironmentVariables,
+        WebServerHttpsEnvironmentVariables,
+        WebServerUseHttps,
+        WebServerUseCors,
+        WebServerUseCrossOriginPolicy,
+        WebServerUseDefaultFiles,
     };
 }

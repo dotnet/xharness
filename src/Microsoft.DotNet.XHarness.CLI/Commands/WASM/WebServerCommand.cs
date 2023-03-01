@@ -5,6 +5,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
+using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,11 +30,11 @@ internal class WebServerCommand : XHarnessCommand<WebServerCommandArguments>
     protected override async Task<ExitCode> InvokeInternal(ILogger logger)
     {
         var cts = new CancellationTokenSource();
+        var webServerOptions = WebServer.TestWebServerOptions.FromArguments(Arguments);
+        webServerOptions.ContentRoot = Arguments.AppPackagePath;
         ServerURLs serverURLs = await WebServer.Start(
-            Arguments,
-            Arguments.AppPackagePath,
+            webServerOptions,
             logger,
-            null,
             cts.Token);
 
         logger.LogInformation($"Now listening on: http://{serverURLs.Http}");

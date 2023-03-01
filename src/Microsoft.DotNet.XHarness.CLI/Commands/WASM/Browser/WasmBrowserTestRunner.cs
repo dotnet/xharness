@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
+using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
@@ -58,11 +59,13 @@ internal class WasmBrowserTestRunner
         {
             var consolePumpTcs = new TaskCompletionSource<bool>();
             var logProcessorTask = Task.Run(() => _messagesProcessor.RunAsync(cts.Token));
+
+            var webServerOptions = WebServer.TestWebServerOptions.FromArguments(_arguments);
+            webServerOptions.ContentRoot = _arguments.AppPackagePath;
+            webServerOptions.OnConsoleConnected = socket => RunConsoleMessagesPump(socket, cts.Token);
             ServerURLs serverURLs = await WebServer.Start(
-                _arguments,
-                _arguments.AppPackagePath,
+                webServerOptions,
                 _logger,
-                socket => RunConsoleMessagesPump(socket, cts.Token),
                 cts.Token);
 
             string testUrl = BuildUrl(serverURLs);
