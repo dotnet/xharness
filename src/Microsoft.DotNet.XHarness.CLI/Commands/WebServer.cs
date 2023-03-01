@@ -26,9 +26,16 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands;
 
 public class WebServer
 {
-    internal static async Task<ServerURLs> Start(IWebServerArguments arguments, string? contentRoot, ILogger logger, Func<WebSocket, Task>? onConsoleConnected, CancellationToken token)
+    internal static Task<ServerURLs> Start(IWebServerArguments arguments, ILogger logger, CancellationToken token, Func<WebSocket, Task>? onConsoleConnected = null)
     {
-        var urls = arguments.WebServerUseHttps
+        var options = TestWebServerOptions.FromArguments(arguments);
+        options.OnConsoleConnected = onConsoleConnected;
+        return Start(options, logger, token);
+    }
+
+    internal static async Task<ServerURLs> Start(TestWebServerOptions webServerOptions, ILogger logger, CancellationToken token)
+    {
+        var urls = webServerOptions.UseHttps
                 ? new string[] { "http://127.0.0.1:0", "https://127.0.0.1:0" }
                 : new string[] { "http://127.0.0.1:0" };
 
@@ -41,7 +48,7 @@ public class WebServer
             })
             .ConfigureServices((ctx, services) =>
             {
-                if (arguments.WebServerUseCors)
+                if (webServerOptions.UseCors)
                 {
                     services.AddCors(o => o.AddPolicy("AnyCors", builder =>
                         {
@@ -56,20 +63,14 @@ public class WebServer
                 services.Configure<TestWebServerOptions>(ctx.Configuration);
                 services.Configure<TestWebServerOptions>(options =>
                 {
-                    options.WebServerUseCors = arguments.WebServerUseCors;
-                    options.WebServerUseCrossOriginPolicy = arguments.WebServerUseCrossOriginPolicy;
-                    options.OnConsoleConnected = onConsoleConnected;
-                    foreach (var middlewareType in arguments.WebServerMiddlewarePathsAndTypes.GetLoadedTypes())
-                    {
-                        options.EchoServerMiddlewares.Add(middlewareType);
-                    }
+                    webServerOptions.CopyTo(options);
                 });
             })
             .UseUrls(urls);
 
-        if (contentRoot != null)
+        if (webServerOptions.ContentRoot != null)
         {
-            builder.UseContentRoot(contentRoot);
+            builder.UseContentRoot(webServerOptions.ContentRoot);
         }
 
         var host = builder.Build();
@@ -84,7 +85,7 @@ public class WebServer
             .Select(uri => $"{uri.Host}:{uri.Port}")
             .FirstOrDefault();
 
-        var ipAddressSecure = arguments.WebServerUseHttps
+        var ipAddressSecure = webServerOptions.UseHttps
             ? host.ServerFeatures
                 .Get<IServerAddressesFeature>()?
                 .Addresses
@@ -94,7 +95,7 @@ public class WebServer
                 .FirstOrDefault()
             : null;
 
-        if (ipAddress == null || (arguments.WebServerUseHttps && ipAddressSecure == null))
+        if (ipAddress == null || (webServerOptions.UseHttps && ipAddressSecure == null))
         {
             throw new InvalidOperationException("Failed to determine web server's IP address or port");
         }
@@ -127,13 +128,21 @@ public class WebServer
 
             var options = optionsAccessor.CurrentValue;
 
-            if (options.WebServerUseCrossOriginPolicy)
+            if (options.UseCrossOriginPolicy)
             {
                 app.Use((context, next) =>
                 {
                     context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
                     context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
                     return next();
+                });
+            }
+
+            if (options.UseDefaultFiles)
+            {
+                app.UseDefaultFiles(new DefaultFilesOptions
+                {
+                    FileProvider = new PhysicalFileProvider(_hostingEnvironment.ContentRootPath)
                 });
             }
 
@@ -144,7 +153,7 @@ public class WebServer
                 ServeUnknownFileTypes = true
             });
 
-            if (options.WebServerUseCors)
+            if (options.UseCors)
             {
                 app.UseCors("AnyCors");
             }
@@ -175,12 +184,40 @@ public class WebServer
         }
     }
 
-    private class TestWebServerOptions
+    internal class TestWebServerOptions
     {
         public Func<WebSocket, Task>? OnConsoleConnected { get; set; }
         public IList<Type> EchoServerMiddlewares { get; set; } = new List<Type>();
-        public bool WebServerUseCors { get; set; }
-        public bool WebServerUseCrossOriginPolicy { get; set; }
+        public bool UseCors { get; set; }
+        public bool UseHttps { get; set; }
+        public bool UseCrossOriginPolicy { get; set; }
+        public bool UseDefaultFiles { get; set; }
+        public string? ContentRoot { get; set; }
+
+        public void CopyTo(TestWebServerOptions otherOptions)
+        {
+            otherOptions.OnConsoleConnected = OnConsoleConnected;
+            otherOptions.EchoServerMiddlewares = EchoServerMiddlewares;
+            otherOptions.UseCors = UseCors;
+            otherOptions.UseHttps = UseHttps;
+            otherOptions.UseCrossOriginPolicy = UseCrossOriginPolicy;
+            otherOptions.UseDefaultFiles = UseDefaultFiles;
+            otherOptions.ContentRoot = ContentRoot;
+        }
+
+        public static TestWebServerOptions FromArguments(IWebServerArguments arguments)
+        {
+            TestWebServerOptions options = new();
+            options.UseCors = arguments.WebServerUseCors;
+            options.UseHttps = arguments.WebServerUseHttps;
+            options.UseCrossOriginPolicy = arguments.WebServerUseCrossOriginPolicy;
+            options.UseDefaultFiles = arguments.WebServerUseDefaultFiles;
+            foreach (var middlewareType in arguments.WebServerMiddlewarePathsAndTypes.GetLoadedTypes())
+            {
+                options.EchoServerMiddlewares.Add(middlewareType);
+            }
+            return options;
+        }
     }
 }
 

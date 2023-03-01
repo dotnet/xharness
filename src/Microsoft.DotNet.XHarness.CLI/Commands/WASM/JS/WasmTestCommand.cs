@@ -73,9 +73,7 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
             {
                 serverURLs = await WebServer.Start(
                     Arguments,
-                    null,
                     logger,
-                    null,
                     cts.Token);
                 cts.CancelAfter(Arguments.Timeout);
             }

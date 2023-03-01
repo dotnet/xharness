@@ -28,6 +28,7 @@ internal class WasmTestCommandArguments : XHarnessCommandArguments, IWebServerAr
     public WebServerUseHttpsArguments WebServerUseHttps { get; } = new();
     public WebServerUseCorsArguments WebServerUseCors { get; } = new();
     public WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; } = new();
+    public WebServerUseDefaultFilesArguments WebServerUseDefaultFiles { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
@@ -49,5 +50,6 @@ internal class WasmTestCommandArguments : XHarnessCommandArguments, IWebServerAr
             WebServerUseHttps,
             WebServerUseCors,
             WebServerUseCrossOriginPolicy,
+            WebServerUseDefaultFiles,
     };
 }
