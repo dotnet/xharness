@@ -250,7 +250,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
 
-        return ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+        return ParseResult(testResult, resultMessage);
     }
 
     private async Task<ExitCode> ExecuteMacCatalystApp(
@@ -280,7 +280,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
 
-        return ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+        return ParseResult(testResult, resultMessage);
     }
 
     private IAppTester GetAppTester(CommunicationChannel communicationChannel, bool isSimulator)
@@ -291,7 +291,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         return _appTesterFactory.Create(communicationChannel, isSimulator, _mainLog, _logs, logCallback);
     }
 
-    private ExitCode ParseResult(TestExecutingResult testResult, string resultMessage, bool listenerConnected)
+    private ExitCode ParseResult(TestExecutingResult testResult, string resultMessage)
     {
         string newLine = Environment.NewLine;
         const string checkLogsMessage = "Check logs for more information";
@@ -303,10 +303,11 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             {
                 if (_errorKnowledgeBase.IsKnownTestIssue(log, out var issue))
                 {
-                    if (!listenerConnected && issue.SuggestedExitCode.HasValue && (ExitCode)issue.SuggestedExitCode.Value == ExitCode.TCP_CONNECTION_FAILED)
+                    if (issue.SuggestedExitCode.HasValue && (ExitCode)issue.SuggestedExitCode.Value == ExitCode.TCP_CONNECTION_FAILED)
                     {
                         tcpErrorFound = true;
                     }
+
                     else
                     {
                         _logger.LogError(message + newLine + issue.HumanMessage);
@@ -324,8 +325,8 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
                 _logger.LogError(message + newLine + checkLogsMessage);
             }
 
-            // TCP errors are encounter all the time but they are not always the cause of the failure
-            // If the app crashed, TCP_CONNECTION_FAILED and there was not other exit code we will return TCP_CONNECTION_FAILED
+            //TCP errors are encounter all the time but they are not always the cause of the failure
+            //If the app crashed, TCP_CONNECTION_FAILED and there was not other exit code we will return TCP_CONNECTION_FAILED
             if (defaultExitCode == ExitCode.APP_CRASH && tcpErrorFound)
             {
                 return ExitCode.TCP_CONNECTION_FAILED;
