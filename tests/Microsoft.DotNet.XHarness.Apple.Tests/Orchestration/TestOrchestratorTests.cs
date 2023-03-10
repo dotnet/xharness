@@ -472,4 +472,62 @@ public class TestOrchestratorTests : OrchestratorTestBase
         _appInstaller.VerifyNoOtherCalls();
         _appUninstaller.VerifyNoOtherCalls();
     }
+
+    [Fact]
+    public async Task OrchestrateDeviceTestWithFailingTcpTest()
+    {
+        // Setup
+        var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
+
+        var extraArguments = new[] { "--some arg1", "--some arg2" };
+
+        _appTester
+            .Setup(x => x.TestApp(
+                _appBundleInformation,
+                testTarget,
+                _device.Object,
+                null,
+                TimeSpan.FromMinutes(30),
+                It.IsAny<TimeSpan>(),
+                false,
+                extraArguments,
+                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<XmlResultJargon>(),
+                It.IsAny<string[]?>(),
+                It.IsAny<string[]?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TestExecutingResult.Crashed, "Test execution timed out"))
+            .Verifiable();
+
+        _appTester
+            .SetupGet(x => x.ListenerConnected)
+            .Returns(false);
+
+        KnownIssue? issue = new KnownIssue("App crashed", null, (int)ExitCode.TCP_CONNECTION_FAILED);
+        _errorKnowledgeBase
+            .Setup(x => x.IsKnownTestIssue(It.IsAny<IFileBackedLog>(), out issue))
+            .Returns(true);
+
+        // Act
+        var result = await _testOrchestrator.OrchestrateTest(
+            AppPath,
+            testTarget,
+            DeviceName,
+            TimeSpan.FromMinutes(30),
+            TimeSpan.FromMinutes(3),
+            CommunicationChannel.UsbTunnel,
+            XmlResultJargon.xUnit,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
+            includeWirelessDevices: true,
+            resetSimulator: false,
+            enableLldb: false,
+            signalAppEnd: false,
+            Array.Empty<(string, string)>(),
+            extraArguments,
+            new CancellationToken());
+
+        // Verify
+        Assert.Equal(ExitCode.TCP_CONNECTION_FAILED, result);
+    }
 }
