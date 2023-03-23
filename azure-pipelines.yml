@@ -4,6 +4,10 @@ variables:
     value: true
   - template: /eng/common/templates/variables/pool-providers.yml
 
+  # disable CodeQL here, we have a separate pipeline for it
+  - name: Codeql.Enabled
+    value: false
+
 # CI and PR triggers
 trigger:
   batch: true
