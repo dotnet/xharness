@@ -22,6 +22,8 @@ namespace Microsoft.DotNet.XHarness.Apple;
 
 public interface IAppTester
 {
+    bool ListenerConnected { get; }
+
     Task<(TestExecutingResult Result, string ResultMessage)> TestApp(
         AppBundleInformation appInformation,
         TestTargetOs target,
@@ -66,6 +68,12 @@ public class AppTester : AppRunnerBase, IAppTester
     private readonly ILogs _logs;
     private readonly IHelpers _helpers;
 
+    /// <summary>
+    /// Denotes whether we had a successful connection over TCP during the run.
+    /// This is used later to determine if a cause for a failed run is a failing TCP connection.
+    /// </summary>
+    public bool ListenerConnected { get; private set; }
+
     public AppTester(
         IMlaunchProcessManager processManager,
         ISimpleListenerFactory simpleListenerFactory,
@@ -106,6 +114,7 @@ public class AppTester : AppRunnerBase, IAppTester
         var testLog = _logs.Create($"test-{TestTarget.MacCatalyst.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
         var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
 
+        ListenerConnected = false;
         var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
             RunMode.MacOS,
             log: _mainLog,
@@ -163,6 +172,7 @@ public class AppTester : AppRunnerBase, IAppTester
 
         var testLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
 
+        ListenerConnected = false;
         var (deviceListenerTransport, deviceListener, deviceListenerTmpFile) = _listenerFactory.Create(
             runMode,
             log: _mainLog,
@@ -207,6 +217,10 @@ public class AppTester : AppRunnerBase, IAppTester
                     if (!deviceListener.ConnectedTask.IsCompleted)
                     {
                         await deviceListener.StopAsync();
+                    }
+                    else if (task.IsCompleted && task.Result)
+                    {
+                        ListenerConnected = true;
                     }
                 }, cancellationToken)
                 .DoNotAwait();
@@ -430,6 +444,10 @@ public class AppTester : AppRunnerBase, IAppTester
                 if (!deviceListener.ConnectedTask.IsCompleted)
                 {
                     await deviceListener.StopAsync();
+                }
+                else if (task.IsCompleted && task.Result)
+                {
+                    ListenerConnected = true;
                 }
             }, cancellationToken)
             .DoNotAwait();
