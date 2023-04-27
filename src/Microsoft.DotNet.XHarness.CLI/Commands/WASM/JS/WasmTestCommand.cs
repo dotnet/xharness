@@ -142,8 +142,10 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                                     new Dictionary<string, string>() { {"LANG", Arguments.Locale} } :
                                     null);
 
+            TaskCompletionSource wasmExitReceivedTcs = logProcessor.WasmExitReceivedTcs;
             var tasks = new Task[]
             {
+                wasmExitReceivedTcs.Task,
                 logProcessorTask,
                 processTask,
                 Task.Delay(Arguments.Timeout)
@@ -177,6 +179,11 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
             }
             else
             {
+                if(!wasmExitReceivedTcs.Task.IsCompletedSuccessfully)
+                {
+                    logger.LogError("Application exited without sending a wasm exit message.");
+                    return ExitCode.RETURN_CODE_NOT_SET;
+                }
                 if (logProcessor.LineThatMatchedErrorPattern != null)
                 {
                     logger.LogError("Application exited with the expected exit code: {result.ExitCode}."
