@@ -6,7 +6,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <TestPayloadUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/wasm/System.Reflection.Extensions.Tests.zip</TestPayloadUrl>
+    <TestPayloadUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/wasm/Common.Tests.zip</TestPayloadUrl>
   </PropertyGroup>
 
   <Target Name="TestWasm" BeforeTargets="CoreTest">
@@ -18,7 +18,7 @@
 
     <ItemGroup>
       <HelixWorkItem Include="System.Reflection.Extensions.Tests">
-        <Command>cd "$HELIX_WORKITEM_PAYLOAD/System.Reflection.Extensions.Tests" &amp;&amp; dotnet exec $XHARNESS_CLI_PATH wasm test --engine=V8 --js-file=runtime.js -v --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" -- --enable-gc --run WasmTestRunner.dll System.Reflection.Extensions.Tests.dll -notrait category=IgnoreForCI -notrait category=OuterLoop -notrait category=failing</Command>
+        <Command>cd "$HELIX_WORKITEM_PAYLOAD/Common.Tests" &amp;&amp; dotnet exec $XHARNESS_CLI_PATH wasm test --engine=V8 --js-file=test-main.js -v --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" -- --run WasmTestRunner.dll Common.Tests.dll -notrait category=IgnoreForCI -notrait category=OuterLoop -notrait category=failing</Command>
         <PayloadArchive>@(TestPayloadArchive)</PayloadArchive>
         <Timeout>00:10:00</Timeout>
       </HelixWorkItem>
