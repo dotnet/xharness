@@ -18,7 +18,7 @@
 
     <ItemGroup>
       <HelixWorkItem Include="Common.Tests">
-        <Command>cd "$HELIX_WORKITEM_PAYLOAD/Common.Tests" &amp;&amp; dotnet exec $XHARNESS_CLI_PATH wasm test --engine=V8 --js-file=test-main.js -v --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" -- --run WasmTestRunner.dll Common.Tests.dll -notrait category=IgnoreForCI -notrait category=OuterLoop -notrait category=failing</Command>
+        <Command>dotnet exec "$XHARNESS_CLI_PATH" wasm test --engine=V8 --js-file=test-main.js -v --output-directory="$HELIX_WORKITEM_UPLOAD_ROOT" -- --run WasmTestRunner.dll Common.Tests.dll -notrait category=IgnoreForCI -notrait category=OuterLoop -notrait category=failing</Command>
         <PayloadArchive>@(TestPayloadArchive)</PayloadArchive>
         <Timeout>00:10:00</Timeout>
       </HelixWorkItem>
