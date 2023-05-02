@@ -10,12 +10,16 @@ trigger:
     include:
     - main
     - xcode/*
+    - release/*
+    - internal/release/*
 
 pr:
   branches:
     include:
     - main
     - xcode/*
+    - release/*
+    - internal/release/*
 
 # Build
 
