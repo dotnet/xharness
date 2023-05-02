@@ -2,8 +2,8 @@
     <Import Project="../Helix.SDK.configuration.props"/>
 
     <ItemGroup>
-        <HelixTargetQueue Include="osx.1015.amd64.appletv.open"/>
-        <HelixTargetQueue Include="osx.1100.amd64.appletv.open"/>
+        <HelixTargetQueue Include="osx.13.amd64.appletv.open"/>
+        <HelixTargetQueue Include="osx.13.amd64.appletv.open"/>
 
         <!-- apple test / tvos-device -->
         <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
