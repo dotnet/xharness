@@ -298,44 +298,31 @@ function InstallDotNet([string] $dotnetRoot,
   if ($skipNonVersionedFiles) { $installParameters.SkipNonVersionedFiles = $skipNonVersionedFiles }
   if ($noPath) { $installParameters.NoPath = $True }
 
-  $variations = @()
-  $variations += @($installParameters)
-
-  $dotnetBuilds = $installParameters.Clone()
-  $dotnetbuilds.AzureFeed = "https://dotnetbuilds.azureedge.net/public"
-  $variations += @($dotnetBuilds)
-
-  if ($runtimeSourceFeed) {
-    $runtimeSource = $installParameters.Clone()
-    $runtimeSource.AzureFeed = $runtimeSourceFeed
-    if ($runtimeSourceFeedKey) {
-      $decodedBytes = [System.Convert]::FromBase64String($runtimeSourceFeedKey)
-      $decodedString = [System.Text.Encoding]::UTF8.GetString($decodedBytes)
-      $runtimeSource.FeedCredential = $decodedString
-    }
-    $variations += @($runtimeSource)
+  try {
+    & $installScript @installParameters
   }
+  catch {
+    if ($runtimeSourceFeed -or $runtimeSourceFeedKey) {
+      Write-Host "Failed to install dotnet from public location. Trying from '$runtimeSourceFeed'"
+      if ($runtimeSourceFeed) { $installParameters.AzureFeed = $runtimeSourceFeed }
 
-  $installSuccess = $false
-  foreach ($variation in $variations) {
-    if ($variation | Get-Member AzureFeed) {
-      $location = $variation.AzureFeed
+      if ($runtimeSourceFeedKey) {
+        $decodedBytes = [System.Convert]::FromBase64String($runtimeSourceFeedKey)
+        $decodedString = [System.Text.Encoding]::UTF8.GetString($decodedBytes)
+        $installParameters.FeedCredential = $decodedString
+      }
+
+      try {
+        & $installScript @installParameters
+      }
+      catch {
+        Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Failed to install dotnet from custom location '$runtimeSourceFeed'."
+        ExitWithExitCode 1
+      }
     } else {
-      $location = "public location";
+      Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Failed to install dotnet from public location."
+      ExitWithExitCode 1
     }
-    Write-Host "Attempting to install dotnet from $location."
-    try {
-      & $installScript @variation
-      $installSuccess = $true
-      break
-    }
-    catch {
-      Write-Host "Failed to install dotnet from $location."
-    }
-  }
-  if (-not $installSuccess) {
-    Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Failed to install dotnet from any of the specified locations."
-    ExitWithExitCode 1
   }
 }
 
@@ -365,17 +352,10 @@ function InitializeVisualStudioMSBuild([bool]$install, [object]$vsRequirements =
 
   # If the version of msbuild is going to be xcopied,
   # use this version. Version matches a package here:
-  # https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&package=RoslynTools.MSBuild&protocolType=NuGet&version=17.4.1&view=overview
-  $defaultXCopyMSBuildVersion = '17.4.1'
+  # https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&package=RoslynTools.MSBuild&protocolType=NuGet&version=16.10.0-preview2&view=overview
+  $defaultXCopyMSBuildVersion = '16.10.0-preview2'
 
-  if (!$vsRequirements) {
-    if (Get-Member -InputObject $GlobalJson.tools -Name 'vs') {
-      $vsRequirements = $GlobalJson.tools.vs
-    }
-    else {
-      $vsRequirements = New-Object PSObject -Property @{ version = $vsMinVersionReqdStr }
-    }
-  }
+  if (!$vsRequirements) { $vsRequirements = $GlobalJson.tools.vs }
   $vsMinVersionStr = if ($vsRequirements.version) { $vsRequirements.version } else { $vsMinVersionReqdStr }
   $vsMinVersion = [Version]::new($vsMinVersionStr)
 
@@ -413,7 +393,6 @@ function InitializeVisualStudioMSBuild([bool]$install, [object]$vsRequirements =
       if($vsMinVersion -lt $vsMinVersionReqd){
         Write-Host "Using xcopy-msbuild version of $defaultXCopyMSBuildVersion since VS version $vsMinVersionStr provided in global.json is not compatible"
         $xcopyMSBuildVersion = $defaultXCopyMSBuildVersion
-        $vsMajorVersion = $xcopyMSBuildVersion.Split('.')[0]
       }
       else{
         # If the VS version IS compatible, look for an xcopy msbuild package
@@ -581,7 +560,7 @@ function InitializeBuildTool() {
       ExitWithExitCode 1
     }
     $dotnetPath = Join-Path $dotnetRoot (GetExecutableFileName 'dotnet')
-    $buildTool = @{ Path = $dotnetPath; Command = 'msbuild'; Tool = 'dotnet'; Framework = 'net8.0' }
+    $buildTool = @{ Path = $dotnetPath; Command = 'msbuild'; Tool = 'dotnet'; Framework = 'netcoreapp3.1' }
   } elseif ($msbuildEngine -eq "vs") {
     try {
       $msbuildPath = InitializeVisualStudioMSBuild -install:$restore
@@ -642,10 +621,6 @@ function InitializeNativeTools() {
       $nativeArgs = @{
         InstallDirectory = "$ToolsDir"
       }
-    }
-    if ($env:NativeToolsOnMachine) {
-      Write-Host "Variable NativeToolsOnMachine detected, enabling native tool path promotion..."
-      $nativeArgs += @{ PathPromotion = $true }
     }
     & "$PSScriptRoot/init-tools-native.ps1" @nativeArgs
   }
@@ -731,8 +706,6 @@ function MSBuild() {
       Write-PipelineSetVariable -Name 'NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS' -Value '20'
     }
 
-    Enable-Nuget-EnhancedRetry
-
     $toolsetBuildProject = InitializeToolset
     $basePath = Split-Path -parent $toolsetBuildProject
     $possiblePaths = @(
@@ -741,10 +714,6 @@ function MSBuild() {
       (Join-Path $basePath (Join-Path $buildTool.Framework 'Microsoft.DotNet.Arcade.Sdk.dll')),
       (Join-Path $basePath (Join-Path netcoreapp2.1 'Microsoft.DotNet.ArcadeLogging.dll')),
       (Join-Path $basePath (Join-Path netcoreapp2.1 'Microsoft.DotNet.Arcade.Sdk.dll'))
-      (Join-Path $basePath (Join-Path netcoreapp3.1 'Microsoft.DotNet.ArcadeLogging.dll')),
-      (Join-Path $basePath (Join-Path netcoreapp3.1 'Microsoft.DotNet.Arcade.Sdk.dll'))
-      (Join-Path $basePath (Join-Path net7.0 'Microsoft.DotNet.ArcadeLogging.dll')),
-      (Join-Path $basePath (Join-Path net7.0 'Microsoft.DotNet.Arcade.Sdk.dll'))
     )
     $selectedPath = $null
     foreach ($path in $possiblePaths) {
@@ -781,8 +750,6 @@ function MSBuild-Core() {
     }
   }
 
-  Enable-Nuget-EnhancedRetry
-
   $buildTool = InitializeBuildTool
 
   $cmdArgs = "$($buildTool.Command) /m /nologo /clp:Summary /v:$verbosity /nr:$nodeReuse /p:ContinuousIntegrationBuild=$ci"
@@ -817,8 +784,7 @@ function MSBuild-Core() {
       Write-Host "See log: $buildLog" -ForegroundColor DarkGray
     }
 
-    # When running on Azure Pipelines, override the returned exit code to avoid double logging.
-    if ($ci -and $env:SYSTEM_TEAMPROJECT -ne $null) {
+    if ($ci) {
       Write-PipelineSetResult -Result "Failed" -Message "msbuild execution failed."
       # Exiting with an exit code causes the azure pipelines task to log yet another "noise" error
       # The above Write-PipelineSetResult will cause the task to be marked as failure without adding yet another error
@@ -905,21 +871,4 @@ if (!$disableConfigureToolsetImport) {
       }
     }
   }
-}
-
-#
-# If $ci flag is set, turn on (and log that we did) special environment variables for improved Nuget client retry logic.
-#
-function Enable-Nuget-EnhancedRetry() {
-    if ($ci) {
-      Write-Host "Setting NUGET enhanced retry environment variables"
-      $env:NUGET_ENABLE_ENHANCED_HTTP_RETRY = 'true'
-      $env:NUGET_ENHANCED_MAX_NETWORK_TRY_COUNT = 6
-      $env:NUGET_ENHANCED_NETWORK_RETRY_DELAY_MILLISECONDS = 1000
-      $env:NUGET_RETRY_HTTP_429 = 'true'
-      Write-PipelineSetVariable -Name 'NUGET_ENABLE_ENHANCED_HTTP_RETRY' -Value 'true'
-      Write-PipelineSetVariable -Name 'NUGET_ENHANCED_MAX_NETWORK_TRY_COUNT' -Value '6'
-      Write-PipelineSetVariable -Name 'NUGET_ENHANCED_NETWORK_RETRY_DELAY_MILLISECONDS' -Value '1000'
-      Write-PipelineSetVariable -Name 'NUGET_RETRY_HTTP_429' -Value 'true'
-    }
 }

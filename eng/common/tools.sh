@@ -178,7 +178,7 @@ function InstallDotNetSdk {
   if [[ $# -ge 3 ]]; then
     architecture=$3
   fi
-  InstallDotNet "$root" "$version" $architecture 'sdk' 'true' $runtime_source_feed $runtime_source_feed_key
+  InstallDotNet "$root" "$version" $architecture 'sdk' 'false' $runtime_source_feed $runtime_source_feed_key
 }
 
 function InstallDotNet {
@@ -188,29 +188,28 @@ function InstallDotNet {
   GetDotNetInstallScript "$root"
   local install_script=$_GetDotNetInstallScript
 
-  local installParameters=(--version $version --install-dir "$root")
-
+  local archArg=''
   if [[ -n "${3:-}" ]] && [ "$3" != 'unset' ]; then
-    installParameters+=(--architecture $3)
+    archArg="--architecture $3"
   fi
+  local runtimeArg=''
   if [[ -n "${4:-}" ]] && [ "$4" != 'sdk' ]; then
-    installParameters+=(--runtime $4)
+    runtimeArg="--runtime $4"
   fi
+  local skipNonVersionedFilesArg=""
   if [[ "$#" -ge "5" ]] && [[ "$5" != 'false' ]]; then
-    installParameters+=(--skip-non-versioned-files)
+    skipNonVersionedFilesArg="--skip-non-versioned-files"
   fi
+  bash "$install_script" --version $version --install-dir "$root" $archArg $runtimeArg $skipNonVersionedFilesArg || {
+    local exit_code=$?
+    echo "Failed to install dotnet SDK from public location (exit code '$exit_code')."
 
-  local variations=() # list of variable names with parameter arrays in them
+    local runtimeSourceFeed=''
+    if [[ -n "${6:-}" ]]; then
+      runtimeSourceFeed="--azure-feed $6"
+    fi
 
-  local public_location=("${installParameters[@]}")
-  variations+=(public_location)
-
-  local dotnetbuilds=("${installParameters[@]}" --azure-feed "https://dotnetbuilds.azureedge.net/public")
-  variations+=(dotnetbuilds)
-
-  if [[ -n "${6:-}" ]]; then
-    variations+=(private_feed)
-    local private_feed=("${installParameters[@]}" --azure-feed $6)
+    local runtimeSourceFeedKey=''
     if [[ -n "${7:-}" ]]; then
       # The 'base64' binary on alpine uses '-d' and doesn't support '--decode'
       # '-d'. To work around this, do a simple detection and switch the parameter
@@ -220,27 +219,22 @@ function InstallDotNet {
           decodeArg="-d"
       fi
       decodedFeedKey=`echo $7 | base64 $decodeArg`
-      private_feed+=(--feed-credential $decodedFeedKey)
-    fi
-  fi
-
-  local installSuccess=0
-  for variationName in "${variations[@]}"; do
-    local name="$variationName[@]"
-    local variation=("${!name}")
-    echo "Attempting to install dotnet from $variationName."
-    bash "$install_script" "${variation[@]}" && installSuccess=1
-    if [[ "$installSuccess" -eq 1 ]]; then
-      break
+      runtimeSourceFeedKey="--feed-credential $decodedFeedKey"
     fi
 
-    echo "Failed to install dotnet from $variationName."
-  done
-
-  if [[ "$installSuccess" -eq 0 ]]; then
-    Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to install dotnet SDK from any of the specified locations."
-    ExitWithExitCode 1
-  fi
+    if [[ -n "$runtimeSourceFeed" || -n "$runtimeSourceFeedKey" ]]; then
+      bash "$install_script" --version $version --install-dir "$root" $archArg $runtimeArg $skipNonVersionedFilesArg $runtimeSourceFeed $runtimeSourceFeedKey || {
+        local exit_code=$?
+        Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to install dotnet SDK from custom location '$runtimeSourceFeed' (exit code '$exit_code')."
+        ExitWithExitCode $exit_code
+      }
+    else
+      if [[ $exit_code != 0 ]]; then
+        Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to install dotnet SDK from public location (exit code '$exit_code')."
+      fi
+      ExitWithExitCode $exit_code
+    fi
+  }
 }
 
 function with_retries {
@@ -312,7 +306,7 @@ function InitializeBuildTool {
   # return values
   _InitializeBuildTool="$_InitializeDotNetCli/dotnet"
   _InitializeBuildToolCommand="msbuild"
-  _InitializeBuildToolFramework="net8.0"
+  _InitializeBuildToolFramework="netcoreapp3.1"
 }
 
 # Set RestoreNoCache as a workaround for https://github.com/NuGet/Home/issues/3116
@@ -426,10 +420,6 @@ function MSBuild {
     possiblePaths+=( "$toolset_dir/$_InitializeBuildToolFramework/Microsoft.DotNet.Arcade.Sdk.dll" )
     possiblePaths+=( "$toolset_dir/netcoreapp2.1/Microsoft.DotNet.ArcadeLogging.dll" )
     possiblePaths+=( "$toolset_dir/netcoreapp2.1/Microsoft.DotNet.Arcade.Sdk.dll" )
-    possiblePaths+=( "$toolset_dir/netcoreapp3.1/Microsoft.DotNet.ArcadeLogging.dll" )
-    possiblePaths+=( "$toolset_dir/netcoreapp3.1/Microsoft.DotNet.Arcade.Sdk.dll" )
-    possiblePaths+=( "$toolset_dir/net7.0/Microsoft.DotNet.ArcadeLogging.dll" )
-    possiblePaths+=( "$toolset_dir/net7.0/Microsoft.DotNet.Arcade.Sdk.dll" )
     for path in "${possiblePaths[@]}"; do
       if [[ -f $path ]]; then
         selectedPath=$path
@@ -474,9 +464,7 @@ function MSBuild-Core {
       # We should not Write-PipelineTaskError here because that message shows up in the build summary
       # The build already logged an error, that's the reason it failed. Producing an error here only adds noise.
       echo "Build failed with exit code $exit_code. Check errors above."
-
-      # When running on Azure Pipelines, override the returned exit code to avoid double logging.
-      if [[ "$ci" == "true" && -n ${SYSTEM_TEAMPROJECT:-} ]]; then
+      if [[ "$ci" == "true" ]]; then
         Write-PipelineSetResult -result "Failed" -message "msbuild execution failed."
         # Exiting with an exit code causes the azure pipelines task to log yet another "noise" error
         # The above Write-PipelineSetResult will cause the task to be marked as failure without adding yet another error
@@ -488,17 +476,6 @@ function MSBuild-Core {
   }
 
   RunBuildTool "$_InitializeBuildToolCommand" /m /nologo /clp:Summary /v:$verbosity /nr:$node_reuse $warnaserror_switch /p:TreatWarningsAsErrors=$warn_as_error /p:ContinuousIntegrationBuild=$ci "$@"
-}
-
-function GetDarc {
-    darc_path="$temp_dir/darc"
-    version="$1"
-
-    if [[ -n "$version" ]]; then
-      version="--darcversion $version"
-    fi
-
-    "$eng_root/common/darc-init.sh" --toolpath "$darc_path" $version
 }
 
 ResolvePath "${BASH_SOURCE[0]}"
@@ -519,7 +496,7 @@ global_json_file="${repo_root}global.json"
 # determine if global.json contains a "runtimes" entry
 global_json_has_runtimes=false
 if command -v jq &> /dev/null; then
-  if jq -e '.tools | has("runtimes")' "$global_json_file" &> /dev/null; then
+  if jq -er '. | select(has("runtimes"))' "$global_json_file" &> /dev/null; then
     global_json_has_runtimes=true
   fi
 elif [[ "$(cat "$global_json_file")" =~ \"runtimes\"[[:space:]\:]*\{ ]]; then

@@ -17,15 +17,9 @@ $global:RepoFiles = @{}
 $MaxParallelJobs = 16
 
 $MaxRetries = 5
-$RetryWaitTimeInSeconds = 30
 
 # Wait time between check for system load
 $SecondsBetweenLoadChecks = 10
-
-if (!$InputPath -or !(Test-Path $InputPath)){
-  Write-Host "No files to validate."
-  ExitWithExitCode 0
-}
 
 $ValidatePackage = {
   param( 
@@ -105,25 +99,21 @@ $ValidatePackage = {
                     $Status = 200
                     $Cache = $using:RepoFiles
 
-                    $attempts = 0
+                    $totalRetries = 0
 
-                    while ($attempts -lt $using:MaxRetries) {
+                    while ($totalRetries -lt $using:MaxRetries) {
                       if ( !($Cache.ContainsKey($FilePath)) ) {
                         try {
                           $Uri = $Link -as [System.URI]
                         
-                          if ($Link -match "submodules") {
-                            # Skip submodule links until sourcelink properly handles submodules
-                            $Status = 200
-                          }
-                          elseif ($Uri.AbsoluteURI -ne $null -and ($Uri.Host -match 'github' -or $Uri.Host -match 'githubusercontent')) {
-                            # Only GitHub links are valid
+                          # Only GitHub links are valid
+                          if ($Uri.AbsoluteURI -ne $null -and ($Uri.Host -match 'github' -or $Uri.Host -match 'githubusercontent')) {
                             $Status = (Invoke-WebRequest -Uri $Link -UseBasicParsing -Method HEAD -TimeoutSec 5).StatusCode
                           }
                           else {
                             # If it's not a github link, we want to break out of the loop and not retry.
                             $Status = 0
-                            $attempts = $using:MaxRetries
+                            $totalRetries = $using:MaxRetries
                           }
                         }
                         catch {
@@ -133,15 +123,9 @@ $ValidatePackage = {
                       }
 
                       if ($Status -ne 200) {
-                        $attempts++
+                        $totalRetries++
                         
-                        if  ($attempts -lt $using:MaxRetries)
-                        {
-                          $attemptsLeft = $using:MaxRetries - $attempts
-                          Write-Warning "Download failed, $attemptsLeft attempts remaining, will retry in $using:RetryWaitTimeInSeconds seconds"
-                          Start-Sleep -Seconds $using:RetryWaitTimeInSeconds
-                        }
-                        else {
+                        if ($totalRetries -ge $using:MaxRetries) {
                           if ($NumFailedLinks -eq 0) {
                             if ($FailedFiles.Value -eq 0) {
                               Write-Host
