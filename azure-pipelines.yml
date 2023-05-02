@@ -1,6 +1,5 @@
 variables:
   - template: eng/common-variables.yml
-  - template: eng/common/templates/variables/pool-providers.yml
   - name: Build.Repository.Clean
     value: true
 
@@ -41,7 +40,7 @@ stages:
       - job: Windows_NT
         pool:
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: $(DncEngInternalBuildPool)
+            name: NetCore1ESPool-Svc-Internal
             demands: ImageOverride -equals Build.Server.Amd64.VS2019
           ${{ if eq(variables._RunAsPublic, True) }}:
             vmImage: windows-2019
