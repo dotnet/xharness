@@ -137,7 +137,7 @@ stages:
               displayName: Build and run tests
               condition: succeeded()
 
-            - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.*-ci.nupkg
+            - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.8.0.0-ci.nupkg
               artifact: Microsoft.DotNet.XHarness.CLI.$(_BuildConfig)
               displayName: Publish XHarness CLI for Helix Testing
               condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
