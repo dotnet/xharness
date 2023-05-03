@@ -45,7 +45,7 @@ if (-not(Test-Path -Path $TestProject -PathType Leaf)) {
 if ($SkipBuild) {
     Write-Host -ForegroundColor Cyan "> Skipping build"
 } else {
-    Write-Host -ForegroundColor Cyan "> Building Microsoft.DotNet.XHarness.CLI.1.0.0-dev.nupkg"
+    Write-Host -ForegroundColor Cyan "> Building Microsoft.DotNet.XHarness.CLI NuGet package"
 
     Remove-Item -Recurse -ErrorAction SilentlyContinue "$repoRoot\artifacts\tmp\Debug\Microsoft.DotNet.XHarness.CLI"
     Remove-Item -Recurse -ErrorAction SilentlyContinue "$repoRoot\artifacts\artifacts\packages"
