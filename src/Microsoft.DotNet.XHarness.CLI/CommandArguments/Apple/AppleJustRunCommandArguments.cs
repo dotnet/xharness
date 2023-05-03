@@ -23,6 +23,9 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
         public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)ExitCode.SUCCESS);
         public SignalAppEndArgument SignalAppEnd { get; } = new();
 
+        // Not used in XHarness but added into release/6.0 branch for backwards compatibility with 6.0 Helix SDK
+        public LaunchTimeoutArgument LaunchTimeout { get; set; } = new(TimeSpan.FromMinutes(5));
+
         protected override IEnumerable<Argument> GetArguments() => new Argument[]
         {
             BundleIdentifier,
@@ -31,6 +34,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple
             DeviceName,
             IncludeWireless,
             Timeout,
+            LaunchTimeout,
             ExpectedExitCode,
             XcodeRoot,
             MlaunchPath,

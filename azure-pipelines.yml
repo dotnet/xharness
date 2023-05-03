@@ -10,12 +10,16 @@ trigger:
     include:
     - main
     - xcode/*
+    - release/*
+    - internal/release/*
 
 pr:
   branches:
     include:
     - main
     - xcode/*
+    - release/*
+    - internal/release/*
 
 # Build
 
@@ -36,8 +40,8 @@ stages:
       - job: Windows_NT
         pool:
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCoreInternal-Pool
-            queue: BuildPool.Server.Amd64.VS2019
+            name: NetCore1ESPool-Svc-Internal
+            demands: ImageOverride -equals Build.Server.Amd64.VS2019
           ${{ if eq(variables._RunAsPublic, True) }}:
             vmImage: windows-2019
         strategy:
@@ -99,7 +103,7 @@ stages:
         jobs:
         - job: OSX
           pool:
-            name: Hosted macOS
+            vmImage: macOS-11
           strategy:
             matrix:
               Release:
@@ -127,7 +131,7 @@ stages:
               displayName: Build and run tests
               condition: succeeded()
 
-            - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.1.0.0-ci.nupkg
+            - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.6.0.0-ci.nupkg
               artifact: Microsoft.DotNet.XHarness.CLI.$(_BuildConfig)
               displayName: Publish XHarness CLI for Helix Testing
               condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
