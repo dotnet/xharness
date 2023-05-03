@@ -17,7 +17,7 @@
     <DotNetCliVersion>8.0.100</DotNetCliVersion>
 
     <!-- Pick up the nupkg from this repo for testing purposes -->
-    <MicrosoftDotNetXHarnessCLIVersion>8.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>$(VersionPrefix)-ci</MicrosoftDotNetXHarnessCLIVersion>
 
     <!-- Upload the diagnostics.json with other results -->
     <IsPosixShell Condition=" '$(IsPosixShell)' != 'false' ">true</IsPosixShell>
