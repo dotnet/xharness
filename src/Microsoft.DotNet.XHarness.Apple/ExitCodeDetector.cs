@@ -19,6 +19,12 @@ namespace Microsoft.DotNet.XHarness.Apple
         public int DetectExitCode(AppBundleInformation appBundleInfo, IReadableLog systemLog)
         {
             using var reader = systemLog.GetReader();
+
+            if (reader == null)
+            {
+                return 0;
+            }
+
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();
