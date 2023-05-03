@@ -40,7 +40,7 @@ stages:
       - job: Windows_NT
         pool:
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: $(DncEngInternalBuildPool)
+            name: NetCore1ESPool-Svc-Internal
             demands: ImageOverride -equals windows.vs2019.amd64
           ${{ if eq(variables._RunAsPublic, True) }}:
             vmImage: windows-2019
