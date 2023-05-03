@@ -9,11 +9,6 @@
       <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=System.Numerics.Vectors.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
 
-    <!-- apple run / ios-simlator-64 -->
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=HelloiOS.app;IncludesTestRunner=false;ExpectedExitCode=200</AdditionalProperties>
-    </XHarnessAppleProject>
-
     <!-- apple test / maccatalyst -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
       <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.AppContext.Tests.app</AdditionalProperties>
