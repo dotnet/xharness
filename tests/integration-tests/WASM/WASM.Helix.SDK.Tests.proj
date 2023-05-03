@@ -2,7 +2,7 @@
   <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>
-    <HelixTargetQueue Include="ubuntu.2004.amd64.open"/>
+    <HelixTargetQueue Include="ubuntu-20.04-helix-wasm-amd64"/>
   </ItemGroup>
 
   <PropertyGroup>
