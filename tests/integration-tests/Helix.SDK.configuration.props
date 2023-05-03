@@ -15,7 +15,7 @@
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
     <!-- Pick up the nupkg from this repo for testing purposes -->
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-ci</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>$(VersionPrefix)-ci</MicrosoftDotNetXHarnessCLIVersion>
 
     <!-- Upload the diagnostics.json with other results -->
     <IsPosixShell Condition=" '$(IsPosixShell)' != 'false' ">true</IsPosixShell>
@@ -26,7 +26,7 @@
   <!-- For non-ci local runs -->
   <PropertyGroup Condition=" '$(AGENT_JOBNAME)' == '' ">
     <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-dev</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>$(VersionPrefix)-dev</MicrosoftDotNetXHarnessCLIVersion>
   </PropertyGroup>
 
   <PropertyGroup>

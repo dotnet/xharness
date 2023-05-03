@@ -79,7 +79,7 @@ done
 set -e
 
 if [ "true" != "$skip_build" ]; then
-  highlight "> Building Microsoft.DotNet.XHarness.CLI.1.0.0-dev.nupkg"
+  highlight "> Building Microsoft.DotNet.XHarness.CLI NuGet package"
   rm -rf "$repo_root/artifacts/tmp/Debug/Microsoft.DotNet.XHarness.CLI" "$repo_root/artifacts/packages"
   "$repo_root/build.sh" -build -pack --projects "$repo_root/src/Microsoft.DotNet.XHarness.CLI/Microsoft.DotNet.XHarness.CLI.csproj"
 else
