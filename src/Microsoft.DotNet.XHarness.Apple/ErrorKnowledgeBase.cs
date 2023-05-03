@@ -78,6 +78,12 @@ namespace Microsoft.DotNet.XHarness.Apple
             }
 
             using var reader = log.GetReader();
+
+            if (reader == null)
+            {
+                return false;
+            }
+
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();
