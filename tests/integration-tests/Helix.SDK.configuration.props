@@ -37,4 +37,9 @@
   <PropertyGroup>
     <Language>msbuild</Language>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Pin transitive package versions -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
 </Project>
