@@ -40,8 +40,8 @@ stages:
       - job: Windows_NT
         pool:
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCore1ESPool-Svc-Internal
-            demands: ImageOverride -equals Build.Server.Amd64.VS2019
+            name: $(DncEngInternalBuildPool)
+            demands: ImageOverride -equals windows.vs2019.amd64
           ${{ if eq(variables._RunAsPublic, True) }}:
             vmImage: windows-2019
         strategy:
@@ -231,6 +231,6 @@ stages:
         -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
         -TsaBugAreaPath $(_TsaBugAreaPath)
         -TsaIterationPath $(_TsaIterationPath)
-        -TsaRepositoryName "Arcade"
-        -TsaCodebaseName "Arcade"
+        -TsaRepositoryName "dotnet-xharness"
+        -TsaCodebaseName "dotnet-xharness"
         -TsaPublish $True'
