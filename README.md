@@ -46,7 +46,7 @@ To install the latest version of the tool run (in bash):
 dotnet tool install Microsoft.DotNet.XHarness.CLI                                                   \
     --global                                                                                        \
     --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json \
-    --version "1.0.0-prerelease*"
+    --version "8.0.0-prerelease*"
 ```
 
 Or run (in PowerShell):
@@ -55,7 +55,7 @@ Or run (in PowerShell):
 dotnet tool install Microsoft.DotNet.XHarness.CLI                                                   `
     --global                                                                                        `
     --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
-    --version "1.0.0-prerelease*"
+    --version "8.0.0-prerelease*"
 ```
 
 You can get a specific version from [the dotnet-eng feed](https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&view=versions&package=Microsoft.DotNet.XHarness.CLI&protocolType=NuGet) where it is published.
