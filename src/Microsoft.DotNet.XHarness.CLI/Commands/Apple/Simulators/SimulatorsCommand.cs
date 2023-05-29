@@ -345,9 +345,5 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         public FailedToGetIndexException(string? message, Exception? innerException) : base(message, innerException)
         {
         }
-
-        protected FailedToGetIndexException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
     }
 }
