@@ -180,7 +180,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
         foreach (string argument in ExtraArguments)
         {
-            if (argument.StartsWith("com.apple.pkg."))
+            if (argument.StartsWith("com.apple.pkg.") || argument.StartsWith("com.apple.dmg."))
             {
                 simulators.Add(argument);
                 continue;
