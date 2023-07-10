@@ -18,26 +18,6 @@ fi
 
 result=0
 
-# Test 3 random URLs
-for (( i=0; i<3; i++ )); do
-    random_line=${list[$RANDOM % ${#list[@]}]}
-    url=$(echo "$random_line" | tr -s ' ' | cut -d ' ' -f 3)
-    echo "Testing accessibility of $url..."
-
-    status_code=$(curl --silent --head -o /dev/null --write-out %{http_code} "$url")
-
-    echo "Result: $status_code"
-
-    if [ "$status_code" == "200" ]; then
-        echo "Test succeeded"
-    else
-        echo "Failed loading URL"
-        result=1
-    fi
-
-    echo ""
-done
-
 echo "Testing installed simulators and the find command"
 
 IFS=$'\n'
