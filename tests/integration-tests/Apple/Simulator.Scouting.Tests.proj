@@ -2,7 +2,7 @@
   <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.1200.amd64.scouting.open"/>
+    <HelixTargetQueue Include="osx.amd64.scouting.open"/>
 
     <!-- apple test / ios-simulator-64 -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
