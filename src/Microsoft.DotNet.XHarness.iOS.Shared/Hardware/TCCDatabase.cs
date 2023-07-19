@@ -38,59 +38,40 @@ public class TCCDatabase : ITCCDatabase
         if (simRuntime.StartsWith(IOSSimRuntimePrefix, StringComparison.Ordinal))
         {
             var v = Version.Parse(simRuntime.Substring(IOSSimRuntimePrefix.Length).Replace('-', '.'));
-            if (v.Major >= 14)
+            return v.Major switch
             {
-                return 4;
-            }
-            else if (v.Major >= 12)
-            {
-                return 3;
-            }
-            else if (v.Major >= 9)
-            {
-                return 2;
-            }
-            else
-            {
-                return 1;
-            }
+                >= 17 => 5,
+                >= 14 => 4,
+                >= 12 => 3,
+                >= 9 => 2,
+                _ => 1
+            };
         }
-        else if (simRuntime.StartsWith(TvOSSimRuntimePrefix, StringComparison.Ordinal))
+
+        if (simRuntime.StartsWith(TvOSSimRuntimePrefix, StringComparison.Ordinal))
         {
             var v = Version.Parse(simRuntime.Substring(TvOSSimRuntimePrefix.Length).Replace('-', '.'));
-            if (v.Major >= 14)
+            return v.Major switch
             {
-                return 4;
-            }
-            else if (v.Major >= 12)
-            {
-                return 3;
-            }
-            else
-            {
-                return 2;
-            }
+                >= 17 => 5,
+                >= 14 => 4,
+                >= 12 => 3,
+                _ => 2
+            };
         }
-        else if (simRuntime.StartsWith(WatchOSRuntimePrefix, StringComparison.Ordinal))
+
+        if (simRuntime.StartsWith(WatchOSRuntimePrefix, StringComparison.Ordinal))
         {
             var v = Version.Parse(simRuntime.Substring(WatchOSRuntimePrefix.Length).Replace('-', '.'));
-            if (v.Major >= 7)
+            return v.Major switch
             {
-                return 4;
-            }
-            else if (v.Major >= 5)
-            {
-                return 3;
-            }
-            else
-            {
-                return 2;
-            }
+                >= 10 => 5,
+                >= 7 => 4,
+                >= 5 => 3,
+                _ => 2
+            };
         }
-        else
-        {
-            throw new NotImplementedException();
-        }
+        throw new NotImplementedException();
     }
     public async Task<bool> AgreeToPromptsAsync(string simRuntime, string TCCDb, string udid, ILog log, params string[] bundleIdentifiers)
     {
@@ -120,17 +101,52 @@ public class TCCDatabase : ITCCDatabase
         var format = GetTCCFormat(simRuntime);
         if (format >= 4)
         {
-            // We don't care if booting fails (it'll fail if it's already booted for instance)
-            await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "boot", udid }, log, TimeSpan.FromMinutes(1));
 
-            // execute 'simctl privacy <udid> grant all <bundle identifier>' for each bundle identifier
-            foreach (var bundle_identifier in bundleIdentifiers)
+            // the following was added due to a bug in Xcode 15 beta 4 and later in which the simulator will
+            // not honor the permissions given by the simctl tool. The issue is as follows, when the permission is
+            // granted via the dialog we find the following record in the TCC.db:
+            //
+            // kTCCServiceAddressBook|com.xamarin.monotouch-test|0|2|2
+            //
+            // while when we use the simtcl tool, we have the following:
+            //
+            // kTCCServiceAddressBook|com.manuel.test|0|2|4|1|0|UNUSED0|1689713989|||UNUSED|1689713989
+            //
+            // you can tell that the difference is in the auth_reason, where 2 means the dialog and 4 means the
+            // simtcl tool. The bug is probably in the iOS SDK that is not recognizing the 4 reason. To fix that
+            // we create a trigger in the simulator tcc db that will update the value from 4 to 2 for each inserted row
+            // where 4 was used.
+            if (format >= 5)
             {
-                foreach (var bundle_id in new[] { bundle_identifier, bundle_identifier + ".watchkitapp" })
+                var args = new List<string>();
+                var sql = new System.Text.StringBuilder("\n");
+                args.Add(TCCDb);
+                sql.AppendFormat("CREATE TRIGGER auth_method_update AFTER INSERT ON access FOR " +
+                                 "EACH ROW WHEN new.auth_reason = 4 BEGIN " +
+                                 "UPDATE access SET auth_reason = 2 WHERE client=new.client;" +
+                                 "END;");
+                var rv = await _processManager.ExecuteCommandAsync("sqlite3", args, log, TimeSpan.FromSeconds(5));
+
+                if (!rv.Succeeded)
                 {
-                    foreach (var service in sim_services)
+                    failure = true;
+                }
+            }
+
+            if (!failure)
+            {
+                // We don't care if booting fails (it'll fail if it's already booted for instance)
+                await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "boot", udid }, log,
+                    TimeSpan.FromMinutes(1));
+
+                // execute 'simctl privacy <udid> grant all <bundle identifier>' for each bundle identifier
+                foreach (var bundle_identifier in bundleIdentifiers)
+                {
+                    foreach (var bundle_id in new[] { bundle_identifier, bundle_identifier + ".watchkitapp" })
                     {
-                        var args = new List<string>
+                        foreach (var service in sim_services)
+                        {
+                            var args = new List<string>
                             {
                                 "privacy",
                                 udid,
@@ -138,18 +154,20 @@ public class TCCDatabase : ITCCDatabase
                                 service,
                                 bundle_id
                             };
-                        var rv = await _processManager.ExecuteXcodeCommandAsync("simctl", args, log, TimeSpan.FromSeconds(30));
-                        if (!rv.Succeeded)
-                        {
-                            failure = true;
-                            break;
+                            var rv = await _processManager.ExecuteXcodeCommandAsync("simctl", args, log,
+                                TimeSpan.FromSeconds(30));
+                            if (!rv.Succeeded)
+                            {
+                                failure = true;
+                                break;
+                            }
                         }
                     }
-                }
 
-                if (failure)
-                {
-                    break;
+                    if (failure)
+                    {
+                        break;
+                    }
                 }
             }
         }
