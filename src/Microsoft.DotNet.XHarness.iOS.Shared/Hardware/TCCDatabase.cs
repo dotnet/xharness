@@ -125,7 +125,7 @@ public class TCCDatabase : ITCCDatabase
                                  "EACH ROW WHEN new.auth_reason = 4 BEGIN " +
                                  "UPDATE access SET auth_reason = 2 WHERE client=new.client;" +
                                  "END;");
-                var rv = await _processManager.ExecuteCommandAsync("sqlite3", args, log, TimeSpan.FromSeconds(5));
+                var rv = await _processManager.ExecuteCommandAsync("sqlite3", args, log, TimeSpan.FromSeconds(60));
 
                 if (!rv.Succeeded)
                 {
