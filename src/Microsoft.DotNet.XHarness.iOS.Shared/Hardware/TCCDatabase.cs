@@ -101,7 +101,6 @@ public class TCCDatabase : ITCCDatabase
         var format = GetTCCFormat(simRuntime);
         if (format >= 4)
         {
-
             // the following was added due to a bug in Xcode 15 beta 4 and later in which the simulator will
             // not honor the permissions given by the simctl tool. The issue is as follows, when the permission is
             // granted via the dialog we find the following record in the TCC.db:
@@ -129,45 +128,43 @@ public class TCCDatabase : ITCCDatabase
 
                 if (!rv.Succeeded)
                 {
-                    failure = true;
+                    // print a warning, but do not set it to failure and how that the simctl privacy command will work
+                    log.WriteLine("Failed to create trigger on TCC.db, some tests might timeout.");
                 }
             }
 
-            if (!failure)
-            {
-                // We don't care if booting fails (it'll fail if it's already booted for instance)
-                await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "boot", udid }, log,
-                    TimeSpan.FromMinutes(1));
+            // We don't care if booting fails (it'll fail if it's already booted for instance)
+            await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "boot", udid }, log,
+                TimeSpan.FromMinutes(1));
 
-                // execute 'simctl privacy <udid> grant all <bundle identifier>' for each bundle identifier
-                foreach (var bundle_identifier in bundleIdentifiers)
+            // execute 'simctl privacy <udid> grant all <bundle identifier>' for each bundle identifier
+            foreach (var bundle_identifier in bundleIdentifiers)
+            {
+                foreach (var bundle_id in new[] { bundle_identifier, bundle_identifier + ".watchkitapp" })
                 {
-                    foreach (var bundle_id in new[] { bundle_identifier, bundle_identifier + ".watchkitapp" })
+                    foreach (var service in sim_services)
                     {
-                        foreach (var service in sim_services)
+                        var args = new List<string>
                         {
-                            var args = new List<string>
-                            {
-                                "privacy",
-                                udid,
-                                "grant",
-                                service,
-                                bundle_id
-                            };
-                            var rv = await _processManager.ExecuteXcodeCommandAsync("simctl", args, log,
-                                TimeSpan.FromSeconds(30));
-                            if (!rv.Succeeded)
-                            {
-                                failure = true;
-                                break;
-                            }
+                            "privacy",
+                            udid,
+                            "grant",
+                            service,
+                            bundle_id
+                        };
+                        var rv = await _processManager.ExecuteXcodeCommandAsync("simctl", args, log,
+                            TimeSpan.FromSeconds(30));
+                        if (!rv.Succeeded)
+                        {
+                            failure = true;
+                            break;
                         }
                     }
+                }
 
-                    if (failure)
-                    {
-                        break;
-                    }
+                if (failure)
+                {
+                    break;
                 }
             }
         }
