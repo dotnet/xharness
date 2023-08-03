@@ -128,7 +128,7 @@ public class TCCDatabase : ITCCDatabase
 
                 if (!rv.Succeeded)
                 {
-                    // print a warning, but do not set it to failure and how that the simctl privacy command will work
+                    // print a warning, but do not set it to failure and hope that the simctl privacy command will work
                     log.WriteLine("Failed to create trigger on TCC.db, some tests might timeout.");
                 }
             }
