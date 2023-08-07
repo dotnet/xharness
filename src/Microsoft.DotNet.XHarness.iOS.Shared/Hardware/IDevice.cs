@@ -24,6 +24,7 @@ public enum DevicePlatform
     iOS,
     tvOS,
     watchOS,
+    xrOS,
     macOS,
 }
 
@@ -41,6 +42,7 @@ public static class DevicePlatformExtensions
         DevicePlatform.iOS => "iOS",
         DevicePlatform.tvOS => "tvOS",
         DevicePlatform.watchOS => "watchOS",
+        DevicePlatform.xrOS => "xrOS",
         DevicePlatform.macOS => "macOS",
         _ => throw new Exception($"Unknown platform: {value}"),
     };

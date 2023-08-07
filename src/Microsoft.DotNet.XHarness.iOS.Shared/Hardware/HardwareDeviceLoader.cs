@@ -50,6 +50,7 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
     public IEnumerable<IHardwareDevice> ConnectedTV => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.tvOS);
     public IEnumerable<IHardwareDevice> ConnectedWatch => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.watchOS && x.Architecture == Architecture.ARMv7k);
     public IEnumerable<IHardwareDevice> ConnectedWatch32_64 => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.watchOS && x.Architecture == Architecture.ARM64_32);
+    public IEnumerable<IHardwareDevice> ConnectedxrOS => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.xrOS);
 
     public HardwareDeviceLoader(IMlaunchProcessManager processManager)
     {
@@ -167,7 +168,8 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
         {
             RunMode.iOS => new[] { DeviceClass.iPhone, DeviceClass.iPad, DeviceClass.iPod },
             RunMode.WatchOS => new[] { DeviceClass.Watch },
-            RunMode.TvOS => new[] { DeviceClass.AppleTV },// Untested
+            RunMode.TvOS => new[] { DeviceClass.AppleTV },
+            RunMode.xrOS => new[] { DeviceClass.xrOS },// Untested
             _ => throw new ArgumentException(nameof(runMode)),
         };
 

@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 /// </summary>
 internal class AppleRunCommand : AppleAppCommand<AppleRunCommandArguments>
 {
-    private const string CommandHelp = "Installs, runs and uninstalls a given iOS/tvOS/watchOS/MacCatalyst application bundle " +
+    private const string CommandHelp = "Installs, runs and uninstalls a given iOS/tvOS/watchOS/xrOS/MacCatalyst application bundle " +
         "in a target device/simulator and tries to detect the exit code.";
 
     protected override AppleRunCommandArguments Arguments { get; } = new();

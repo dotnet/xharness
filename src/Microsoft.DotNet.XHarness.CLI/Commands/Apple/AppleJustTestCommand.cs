@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 
 internal class AppleJustTestCommand : AppleAppCommand<AppleJustTestCommandArguments>
 {
-    private const string CommandHelp = "Runs an already installed iOS/tvOS/watchOS/MacCatalyst test application containing a TestRunner in a target device/simulator.";
+    private const string CommandHelp = "Runs an already installed iOS/tvOS/watchOS/xrOS/MacCatalyst test application containing a TestRunner in a target device/simulator.";
 
     protected override string CommandUsage { get; } = "apple just-test --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
     protected override string CommandDescription { get; } = CommandHelp;

@@ -6,6 +6,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml;
@@ -63,7 +64,7 @@ internal class InstallCommand : SimulatorsCommand
                 continue;
             }
 
-            var installedVersion = await IsInstalled(simulator.Identifier);
+            var installedVersion = await IsInstalled(simulator);
             var shouldInstall = false;
 
             if (installedVersion == null)
@@ -143,168 +144,223 @@ internal class InstallCommand : SimulatorsCommand
 
         if (download)
         {
-            var watch = Stopwatch.StartNew();
+            await DownloadSimulator(simulator, downloadPath);
+        }
 
-            using (var response = await s_client.GetAsync(simulator.Source, HttpCompletionOption.ResponseHeadersRead))
+        return await InstallSimulator(simulator, downloadPath, filename);
+    }
+
+    private async Task DownloadSimulator(Simulator simulator, string downloadPath)
+    {
+        var watch = Stopwatch.StartNew();
+        var httpClient = s_client;
+
+        if (simulator.IsDmgFormat)
+        {
+            CookieContainer cookies = new();
+
+            // we need to first get the cookie from ADC
+            var path = Uri.TryCreate(simulator.Source, UriKind.Absolute, out var simulatorUri)
+                ? simulatorUri.AbsolutePath
+                : throw new InvalidOperationException($"Could not parse the simulator URL: {simulator.Source}");
+
+            httpClient = new HttpClient(new HttpClientHandler() { CookieContainer = cookies });
+            httpClient.DefaultRequestHeaders.Add("User-Agent", $"dotnet/xharness {XHarnessVersionCommand.GetAssemblyVersion().ProductVersion}"); // otherwise we get a 401 Unauthorized
+
+            var adcDownloadUrl = $"https://developerservices2.apple.com/services/download?path={path}";
+            using (var response = await httpClient.GetAsync(adcDownloadUrl, HttpCompletionOption.ResponseHeadersRead))
             {
                 response.EnsureSuccessStatusCode();
 
-                using var fileStream = File.Create(downloadPath);
-
-                if (Arguments.HideProgress)
+                foreach (Cookie cookie in cookies.GetAllCookies())
                 {
-                    await response.Content.CopyToAsync(fileStream);
-                }
-                else
-                {
-                    var progressMessage = $"Starting the download..";
-                    Console.Write(progressMessage);
-
-                    void ShowProgress(long totalBytesDownloaded)
+                    if (cookie.Name == "ADCDownloadAuth")
                     {
-                        var previousLength = progressMessage.Length;
-                        progressMessage = $"[{watch.Elapsed:hh\\:mm\\:ss}] {totalBytesDownloaded / 1024.0 / 1024.0:N2} / {simulator.FileSize / 1024.0 / 1024.0:N2} MB\t\t{(int)(100 * totalBytesDownloaded / simulator.FileSize),3}%";
-                        Console.Write("\r" + progressMessage.PadRight(previousLength));
-                    }
-
-                    var totalBytesDownloaded = 0L;
-                    var buffer = new byte[8192];
-                    var lastUpdate = DateTime.Now;
-                    var updateFrequency = TimeSpan.FromMilliseconds(400);
-
-                    using var responseStream = await response.Content.ReadAsStreamAsync();
-                    while (true)
-                    {
-                        var bytesRead = await responseStream.ReadAsync(buffer);
-                        if (bytesRead == 0)
-                        {
-                            Console.Write("\r" + " ".PadRight(progressMessage.Length) + "\r");
-                            break;
-                        }
-
-                        await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead));
-
-                        totalBytesDownloaded += bytesRead;
-
-                        if (DateTime.Now - lastUpdate > updateFrequency)
-                        {
-                            ShowProgress(totalBytesDownloaded);
-                            lastUpdate = DateTime.Now;
-                        }
+                        // transfer this cookie to the simulator download URI
+                        cookies.Add(simulatorUri, new Cookie(cookie.Name, cookie.Value));
                     }
                 }
             }
-
-            watch.Stop();
-
-            var size = new FileInfo(downloadPath).Length;
-            Logger.LogInformation($"Downloaded {size / 1024.0 / 1024.0:N1} MB in {watch.Elapsed:hh\\:mm\\:ss}");
         }
 
-        var mount_point = Path.Combine(TempDirectory, filename + "-mount");
-        Directory.CreateDirectory(mount_point);
-        try
+        using (var response = await httpClient.GetAsync(simulator.Source, HttpCompletionOption.ResponseHeadersRead))
         {
-            Logger.LogInformation($"Mounting '{downloadPath}' into '{mount_point}'...");
-            var (succeeded, stdout) = await ExecuteCommand("hdiutil", TimeSpan.FromMinutes(1), "attach", downloadPath, "-mountpoint", mount_point, "-quiet", "-nobrowse");
+            response.EnsureSuccessStatusCode();
+
+            using var fileStream = File.Create(downloadPath);
+
+            if (Arguments.HideProgress)
+            {
+                await response.Content.CopyToAsync(fileStream);
+            }
+            else
+            {
+                var progressMessage = $"Starting the download..";
+                Console.Write(progressMessage);
+
+                void ShowProgress(long totalBytesDownloaded)
+                {
+                    var previousLength = progressMessage.Length;
+                    progressMessage = $"[{watch.Elapsed:hh\\:mm\\:ss}] {totalBytesDownloaded / 1024.0 / 1024.0:N2} / {simulator.FileSize / 1024.0 / 1024.0:N2} MB\t\t{(int)(100 * totalBytesDownloaded / simulator.FileSize),3}%";
+                    Console.Write("\r" + progressMessage.PadRight(previousLength));
+                }
+
+                var totalBytesDownloaded = 0L;
+                var buffer = new byte[8192];
+                var lastUpdate = DateTime.Now;
+                var updateFrequency = TimeSpan.FromMilliseconds(400);
+
+                using var responseStream = await response.Content.ReadAsStreamAsync();
+                while (true)
+                {
+                    var bytesRead = await responseStream.ReadAsync(buffer);
+                    if (bytesRead == 0)
+                    {
+                        Console.Write("\r" + " ".PadRight(progressMessage.Length) + "\r");
+                        break;
+                    }
+
+                    await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead));
+
+                    totalBytesDownloaded += bytesRead;
+
+                    if (DateTime.Now - lastUpdate > updateFrequency)
+                    {
+                        ShowProgress(totalBytesDownloaded);
+                        lastUpdate = DateTime.Now;
+                    }
+                }
+            }
+        }
+
+        watch.Stop();
+
+        var size = new FileInfo(downloadPath).Length;
+        Logger.LogInformation($"Downloaded {size / 1024.0 / 1024.0:N1} MB in {watch.Elapsed:hh\\:mm\\:ss}");
+    }
+
+    private async Task<bool> InstallSimulator(Simulator simulator, string downloadPath, string filename)
+    {
+        if (simulator.IsDmgFormat)
+        {
+            Logger.LogInformation($"Installing simulator '{downloadPath}' using simctl...");
+            var (succeeded, stdout) = await ExecuteCommand("xcrun", TimeSpan.FromMinutes(15), "simctl", "runtime", "add", downloadPath);
             if (!succeeded)
             {
-                Logger.LogError("Mount failure!" + Environment.NewLine + stdout);
+                Logger.LogError("Installation failure!" + Environment.NewLine + stdout);
                 return false;
             }
 
+            File.Delete(downloadPath);
+            return true;
+        }
+        else
+        {
+            var mount_point = Path.Combine(TempDirectory, filename + "-mount");
+            Directory.CreateDirectory(mount_point);
             try
             {
-                var packages = Directory.GetFiles(mount_point, "*.pkg");
-                if (packages.Length == 0)
-                {
-                    Logger.LogError("Found no *.pkg files in the dmg.");
-                    return false;
-                }
-                else if (packages.Length > 1)
-                {
-                    Logger.LogError("Found more than one *.pkg file in the dmg:\n\t{0}", string.Join("\n\t", packages));
-                    return false;
-                }
-
-                // According to the package manifest, the package's install location is /.
-                // That's obviously not where it's installed, but I have no idea how Apple does it
-                // So instead decompress the package, modify the package manifest, re-create the package, and then install it.
-                var expanded_path = Path.Combine(TempDirectory + "-expanded-pkg");
-                if (Directory.Exists(expanded_path))
-                {
-                    Directory.Delete(expanded_path, true);
-                }
-
-                Logger.LogInformation($"Expanding '{packages[0]}' into '{expanded_path}'...");
-                (succeeded, stdout) = await ExecuteCommand("pkgutil", TimeSpan.FromMinutes(1), "--expand", packages[0], expanded_path);
+                Logger.LogInformation($"Mounting '{downloadPath}' into '{mount_point}'...");
+                var (succeeded, stdout) = await ExecuteCommand("hdiutil", TimeSpan.FromMinutes(1), "attach", downloadPath, "-mountpoint", mount_point, "-quiet", "-nobrowse");
                 if (!succeeded)
                 {
-                    Logger.LogError($"Failed to expand {packages[0]}:" + Environment.NewLine + stdout);
+                    Logger.LogError("Mount failure!" + Environment.NewLine + stdout);
                     return false;
                 }
 
                 try
                 {
-                    var packageInfoPath = Path.Combine(expanded_path, "PackageInfo");
-                    var packageInfoDoc = new XmlDocument();
-                    packageInfoDoc.Load(packageInfoPath);
-                    // Add the install-location attribute to the pkg-info node
-                    var attr = packageInfoDoc.CreateAttribute("install-location");
-                    attr.Value = simulator.InstallPrefix;
-                    packageInfoDoc.SelectSingleNode("/pkg-info")?.Attributes?.Append(attr);
-                    packageInfoDoc.Save(packageInfoPath);
-
-                    var fixed_path = Path.Combine(Path.GetDirectoryName(downloadPath)!, Path.GetFileNameWithoutExtension(downloadPath) + "-fixed.pkg");
-                    if (File.Exists(fixed_path))
+                    var packages = Directory.GetFiles(mount_point, "*.pkg");
+                    if (packages.Length == 0)
                     {
-                        File.Delete(fixed_path);
+                        Logger.LogError("Found no *.pkg files in the dmg.");
+                        return false;
+                    }
+                    else if (packages.Length > 1)
+                    {
+                        Logger.LogError("Found more than one *.pkg file in the dmg:\n\t{0}", string.Join("\n\t", packages));
+                        return false;
+                    }
+
+                    // According to the package manifest, the package's install location is /.
+                    // That's obviously not where it's installed, but I have no idea how Apple does it
+                    // So instead decompress the package, modify the package manifest, re-create the package, and then install it.
+                    var expanded_path = Path.Combine(TempDirectory + "-expanded-pkg");
+                    if (Directory.Exists(expanded_path))
+                    {
+                        Directory.Delete(expanded_path, true);
+                    }
+
+                    Logger.LogInformation($"Expanding '{packages[0]}' into '{expanded_path}'...");
+                    (succeeded, stdout) = await ExecuteCommand("pkgutil", TimeSpan.FromMinutes(1), "--expand", packages[0], expanded_path);
+                    if (!succeeded)
+                    {
+                        Logger.LogError($"Failed to expand {packages[0]}:" + Environment.NewLine + stdout);
+                        return false;
                     }
 
                     try
                     {
-                        Logger.LogInformation($"Creating fixed package '{fixed_path}' from '{expanded_path}'...");
+                        var packageInfoPath = Path.Combine(expanded_path, "PackageInfo");
+                        var packageInfoDoc = new XmlDocument();
+                        packageInfoDoc.Load(packageInfoPath);
+                        // Add the install-location attribute to the pkg-info node
+                        var attr = packageInfoDoc.CreateAttribute("install-location");
+                        attr.Value = simulator.InstallPrefix;
+                        packageInfoDoc.SelectSingleNode("/pkg-info")?.Attributes?.Append(attr);
+                        packageInfoDoc.Save(packageInfoPath);
 
-                        (succeeded, stdout) = await ExecuteCommand("pkgutil", TimeSpan.FromMinutes(2), "--flatten", expanded_path, fixed_path);
-                        if (!succeeded)
-                        {
-                            Logger.LogError("Failed to create fixed package:" + Environment.NewLine + stdout);
-                            return false;
-                        }
-
-                        Logger.LogInformation($"Installing '{fixed_path}'...");
-                        (succeeded, stdout) = await ExecuteCommand("sudo", TimeSpan.FromMinutes(15), "installer", "-pkg", fixed_path, "-target", "/", "-verbose", "-dumplog");
-                        if (!succeeded)
-                        {
-                            Logger.LogError("Failed to install package:" + Environment.NewLine + stdout);
-                            return false;
-                        }
-                    }
-                    finally
-                    {
+                        var fixed_path = Path.Combine(Path.GetDirectoryName(downloadPath)!, Path.GetFileNameWithoutExtension(downloadPath) + "-fixed.pkg");
                         if (File.Exists(fixed_path))
                         {
                             File.Delete(fixed_path);
                         }
+
+                        try
+                        {
+                            Logger.LogInformation($"Creating fixed package '{fixed_path}' from '{expanded_path}'...");
+
+                            (succeeded, stdout) = await ExecuteCommand("pkgutil", TimeSpan.FromMinutes(2), "--flatten", expanded_path, fixed_path);
+                            if (!succeeded)
+                            {
+                                Logger.LogError("Failed to create fixed package:" + Environment.NewLine + stdout);
+                                return false;
+                            }
+
+                            Logger.LogInformation($"Installing '{fixed_path}'...");
+                            (succeeded, stdout) = await ExecuteCommand("sudo", TimeSpan.FromMinutes(15), "installer", "-pkg", fixed_path, "-target", "/", "-verbose", "-dumplog");
+                            if (!succeeded)
+                            {
+                                Logger.LogError("Failed to install package:" + Environment.NewLine + stdout);
+                                return false;
+                            }
+                        }
+                        finally
+                        {
+                            if (File.Exists(fixed_path))
+                            {
+                                File.Delete(fixed_path);
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        Directory.Delete(expanded_path, true);
                     }
                 }
                 finally
                 {
-                    Directory.Delete(expanded_path, true);
+                    await ExecuteCommand("hdiutil", TimeSpan.FromMinutes(5), "detach", mount_point, "-quiet");
                 }
             }
             finally
             {
-                await ExecuteCommand("hdiutil", TimeSpan.FromMinutes(5), "detach", mount_point, "-quiet");
+                Directory.Delete(mount_point, true);
             }
-        }
-        finally
-        {
-            Directory.Delete(mount_point, true);
-        }
 
-        File.Delete(downloadPath);
-
-        return true;
+            File.Delete(downloadPath);
+            return true;
+        }
     }
 }
+

@@ -39,7 +39,7 @@ internal class ListCommand : SimulatorsCommand
             output.Append($"  Version: {simulator.Version}");
 
             string? installStatus = null;
-            var installedVersion = await IsInstalled(simulator.Identifier);
+            var installedVersion = await IsInstalled(simulator);
             if (installedVersion == null)
             {
                 if (Arguments.ListInstalledOnly)

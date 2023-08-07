@@ -4,7 +4,7 @@ This repo contains the code to build the **XHarness dotnet tool** and a **TestRu
 
 ## What is XHarness
 
-XHarness is primarily a command line tool that enables running xUnit like tests on Android, Apple iOS / tvOS / WatchOS / Mac Catalyst, WASI and desktop browsers (WASM).
+XHarness is primarily a command line tool that enables running xUnit like tests on Android, Apple iOS / tvOS / WatchOS / xrOS / Mac Catalyst, WASI and desktop browsers (WASM).
 It can
 - locate devices/emulators
 - install a given application, run it and collect results uninstalling it after,

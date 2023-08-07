@@ -12,5 +12,6 @@ public enum RunMode
     iOS,
     TvOS,
     WatchOS,
+    xrOS,
     MacOS,
 }
