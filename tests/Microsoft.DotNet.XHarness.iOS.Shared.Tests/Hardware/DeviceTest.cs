@@ -55,6 +55,7 @@ public class DeviceTest
                         (deviceClass: DeviceClass.iPad, result: DevicePlatform.iOS),
                         (deviceClass: DeviceClass.AppleTV, result: DevicePlatform.tvOS),
                         (deviceClass: DeviceClass.Watch, result: DevicePlatform.watchOS),
+                        (deviceClass: DeviceClass.xrOS, result: DevicePlatform.xrOS),
                         (deviceClass: DeviceClass.Unknown, result: DevicePlatform.Unknown),
                     };
 

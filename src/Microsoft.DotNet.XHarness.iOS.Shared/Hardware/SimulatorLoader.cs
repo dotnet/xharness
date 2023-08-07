@@ -483,6 +483,7 @@ public class SimulatorLoader : ISimulatorLoader
             TestTarget.Simulator_iOS => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator),
             TestTarget.Simulator_tvOS => new TestTargetOs(target, minVersion ? SdkVersions.MinTVOSSimulator : SdkVersions.MaxTVOSSimulator),
             TestTarget.Simulator_watchOS => new TestTargetOs(target, minVersion ? SdkVersions.MinWatchOSSimulator : SdkVersions.MaxWatchOSSimulator),
+            TestTarget.Simulator_xrOS => new TestTargetOs(target, minVersion ? SdkVersions.MinxrOSSimulator : SdkVersions.MaxxrOSSimulator),
             _ => throw new Exception(string.Format("Invalid simulator target: {0}", target))
         };
 

@@ -22,6 +22,7 @@ public class TCCDatabase : ITCCDatabase
     private const string IOSSimRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.iOS-";
     private const string TvOSSimRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.tvOS-";
     private const string WatchOSRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.watchOS-";
+    private const string xrOSRuntimePrefix = "com.apple.CoreSimulator.SimRuntime.xrOS-";
     private readonly IMlaunchProcessManager _processManager;
 
     public TCCDatabase(IMlaunchProcessManager processManager)
@@ -71,8 +72,15 @@ public class TCCDatabase : ITCCDatabase
                 _ => 2
             };
         }
+
+        if (simRuntime.StartsWith(xrOSRuntimePrefix, StringComparison.Ordinal))
+        {
+            return 5;
+        }
+
         throw new NotImplementedException();
     }
+
     public async Task<bool> AgreeToPromptsAsync(string simRuntime, string TCCDb, string udid, ILog log, params string[] bundleIdentifiers)
     {
         if (bundleIdentifiers == null || bundleIdentifiers.Length == 0)

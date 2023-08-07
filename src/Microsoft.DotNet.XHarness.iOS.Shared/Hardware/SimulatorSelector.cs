@@ -29,6 +29,7 @@ public class DefaultSimulatorSelector : ISimulatorSelector
             TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimRuntime.iOS-",
             TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimRuntime.tvOS-",
             TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimRuntime.watchOS-",
+            TestTarget.Simulator_xrOS => "com.apple.CoreSimulator.SimRuntime.xrOS-",
             _ => throw new Exception(string.Format("Invalid simulator target: {0}", target))
         };
     }
@@ -42,6 +43,7 @@ public class DefaultSimulatorSelector : ISimulatorSelector
             TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X"),
             TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p",
             TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "Apple-Watch-38mm" : "Apple-Watch-Series-3-38mm"),
+            TestTarget.Simulator_xrOS => "com.apple.CoreSimulator.SimDeviceType.Apple-Vision-Pro",
             _ => throw new Exception(string.Format("Invalid simulator target: {0}", target))
         };
     }

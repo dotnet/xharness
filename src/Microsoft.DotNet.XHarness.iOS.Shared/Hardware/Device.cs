@@ -14,6 +14,7 @@ public enum DeviceClass
     iPod,
     Watch,
     AppleTV,
+    xrOS,
 }
 
 public class Device : IHardwareDevice
@@ -74,6 +75,7 @@ public class Device : IHardwareDevice
         _ when DeviceClass == DeviceClass.iPhone || DeviceClass == DeviceClass.iPod || DeviceClass == DeviceClass.iPad => DevicePlatform.iOS,
         _ when DeviceClass == DeviceClass.AppleTV => DevicePlatform.tvOS,
         _ when DeviceClass == DeviceClass.Watch => DevicePlatform.watchOS,
+        _ when DeviceClass == DeviceClass.xrOS => DevicePlatform.xrOS,
         _ => DevicePlatform.Unknown,
     };
 
@@ -84,6 +86,7 @@ public class Device : IHardwareDevice
         DevicePlatform.iOS => Version.Parse(ProductVersion).Major < 11,
         DevicePlatform.tvOS => false,
         DevicePlatform.watchOS => true,
+        DevicePlatform.xrOS => false,
         _ => throw new NotImplementedException()
     };
 

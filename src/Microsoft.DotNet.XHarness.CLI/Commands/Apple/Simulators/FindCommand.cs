@@ -59,7 +59,7 @@ internal class FindCommand : SimulatorsCommand
         // We output a list of simulators that were supplied and not installed
         foreach (var simulator in simulators)
         {
-            var installedVersion = await IsInstalled(simulator.Identifier);
+            var installedVersion = await IsInstalled(simulator);
 
             if (installedVersion == null && searchedSimulators.Any(identifier => simulator.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
             {

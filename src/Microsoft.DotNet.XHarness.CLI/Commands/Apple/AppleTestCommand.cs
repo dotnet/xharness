@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 /// </summary>
 internal class AppleTestCommand : AppleAppCommand<AppleTestCommandArguments>
 {
-    private const string CommandHelp = "Installs, runs and uninstalls a given iOS/tvOS/watchOS/MacCatalyst test application bundle containing TestRunner " +
+    private const string CommandHelp = "Installs, runs and uninstalls a given iOS/tvOS/watchOS/xrOS/MacCatalyst test application bundle containing TestRunner " +
         "in a target device/simulator.";
 
     protected override string CommandUsage { get; } = "apple test --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";

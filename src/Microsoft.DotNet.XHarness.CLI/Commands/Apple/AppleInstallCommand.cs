@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 
 internal class AppleInstallCommand : AppleAppCommand<AppleInstallCommandArguments>
 {
-    private const string CommandHelp = "Installs a given iOS/tvOS/watchOS/MacCatalyst application bundle in a target device/simulator";
+    private const string CommandHelp = "Installs a given iOS/tvOS/watchOS/xrOS/MacCatalyst application bundle in a target device/simulator";
 
     protected override AppleInstallCommandArguments Arguments { get; } = new();
 

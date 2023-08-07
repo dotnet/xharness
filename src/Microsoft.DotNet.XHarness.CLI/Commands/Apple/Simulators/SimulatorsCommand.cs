@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.Serialization;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple.Simulators;
@@ -30,15 +31,15 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
     private const string VERSION_PLACEHOLDER = "DOWNLOADABLE_VERSION";
     private const string IDENTIFIER_PLACEHOLDER = "DOWNLOADABLE_IDENTIFIER";
 
-    private const string SimulatorIndexUrl = "https://devimages-cdn.apple.com/downloads/xcode/simulators/index-{0}-{1}.dvtdownloadableindex";
-
     protected const string SimulatorHelpString =
         "Accepts a list of simulator IDs to install. The ID can be a fully qualified string, " +
         "e.g. com.apple.pkg.AppleTVSimulatorSDK14_2 or you can use the format in which you specify " +
-        "apple targets for XHarness tests (ios-simulator, tvos-simulator, watchos-simulator).";
+        "apple targets for XHarness tests (ios-simulator, tvos-simulator, watchos-simulator, xros-simulator).";
 
     private static readonly HttpClient s_client = new();
     private readonly MacOSProcessManager _processManager = new();
+    private string? _xcodeVersion;
+    private string? _xcodeUuid;
 
     protected ILogger Logger { get; set; } = null!;
 
@@ -130,7 +131,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             var installPrefix = ReplaceStringUsingKey(installPrefixNode?.InnerText, dict);
             if (installPrefix is null)
             {
-                // This is just guesswork
+                // newer simulators aren't installed anymore, provide a dummy value here
                 var simRuntimeName = name.Replace(" Simulator", ".simruntime");
                 installPrefix = $"/Library/Developer/CoreSimulator/Profiles/Runtimes/{simRuntimeName}";
             }
@@ -161,17 +162,89 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         return value;
     }
 
-    protected async Task<Version?> IsInstalled(string identifier)
+    protected async Task<Version?> IsInstalled(Simulator simulator)
     {
-        var (succeeded, pkgInfo) = await ExecuteCommand($"pkgutil", TimeSpan.FromMinutes(1), "--pkg-info", identifier);
-        if (!succeeded)
+        string xcodeVersionString = (await GetXcodeInformation()).XcodeVersion;
+        bool isXcode14 = Version.TryParse(xcodeVersionString, out var xcodeVersion) && xcodeVersion.Major >= 14;
+
+        if (simulator.Identifier.StartsWith("com.apple.dmg.") && isXcode14)
         {
+            var (succeeded, json) = await ExecuteCommand($"xcrun", TimeSpan.FromMinutes(1), "simctl", "runtime", "list", "-j");
+            if (!succeeded)
+            {
+                return null;
+            }
+            string simulatorRuntime = "";
+            string simulatorVersion = "";
+
+            if (simulator.Identifier.StartsWith("com.apple.dmg.iPhoneSimulatorSDK")) {
+                simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-";
+                simulatorVersion = simulator.Identifier.Substring("com.apple.dmg.iPhoneSimulatorSDK".Length);
+            }
+            else if (simulator.Identifier.StartsWith("com.apple.dmg.AppleTVSimulatorSDK")) {
+                simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.tvOS-";
+                simulatorVersion = simulator.Identifier.Substring("com.apple.dmg.AppleTVSimulatorSDK".Length);
+            }
+            else if (simulator.Identifier.StartsWith("com.apple.dmg.WatchSimulatorSDK")) {
+                simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.watchOS-";
+                simulatorVersion = simulator.Identifier.Substring("com.apple.dmg.WatchSimulatorSDK".Length);
+            }
+            else if (simulator.Identifier.StartsWith("com.apple.dmg.xrSimulatorSDK")) {
+                simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.xrOS-";
+                simulatorVersion = simulator.Identifier.Substring("com.apple.dmg.xrSimulatorSDK".Length);
+            }
+            else {
+                Logger.LogWarning($"Unknown simulator type: {simulator.Identifier}");
+            }
+
+            // trim away any beta suffix
+            string simulatorBetaVersion = "";
+            if (simulatorVersion.Contains("_b")) {
+                simulatorBetaVersion = simulatorVersion.Substring(simulatorVersion.LastIndexOf("_b") + "_b".Length);
+                simulatorVersion = simulatorVersion.Substring(0, simulatorVersion.LastIndexOf("_b"));
+            }
+
+            var runtimeIdentifier = simulatorRuntime + simulatorVersion.Replace('_', '-');
+            var simulators = JsonDocument.Parse(json);
+
+            foreach(JsonProperty sim in simulators.RootElement.EnumerateObject())
+            {
+                if (sim.Value.GetProperty("runtimeIdentifier").GetString() == runtimeIdentifier)
+                { 
+                    var version = sim.Value.GetProperty("version").GetString();
+                    if (version == null)
+                        return null;
+
+                    // make sure we have a proper major.minor.build.revision version
+                    // and if we have a beta version, add it to the version as the revision parameter
+                    if (version.Count(c => c == '.') == 1)
+                        version += simulatorBetaVersion == "" ? ".0.0" : $".0.{simulatorBetaVersion}";
+                    else if (version.Count(c => c == '.') == 2)
+                        version += simulatorBetaVersion == "" ? ".0" : $".{simulatorBetaVersion}";
+
+                    // TODO: the version returned by simctl and index2.dvtdownloadableindex for dmg packages is not a unique version like for pkg but just major.minor.0.0,
+                    // we could use the "build" key from simctl to compare with the "buildUpdate" in the index2.dvtdownloadableindex
+
+                    return Version.TryParse(version, out var parsedVersion) ? parsedVersion : null;
+                }
+            }
+
             return null;
         }
+        else if (simulator.Identifier.StartsWith("com.apple.pkg."))
+        {
+            var (succeeded, pkgInfo) = await ExecuteCommand($"pkgutil", TimeSpan.FromMinutes(1), "--pkg-info", simulator.Identifier);
+            if (!succeeded)
+            {
+                return null;
+            }
 
-        var lines = pkgInfo.Split('\n');
-        var version = lines.First(v => v.StartsWith("version: ", StringComparison.Ordinal)).Substring("version: ".Length);
-        return Version.Parse(version);
+            var lines = pkgInfo.Split('\n');
+            var version = lines.First(v => v.StartsWith("version: ", StringComparison.Ordinal)).Substring("version: ".Length);
+            return Version.Parse(version);
+        }
+
+        return null;
     }
 
     protected IEnumerable<string> ParseSimulatorIds()
@@ -180,7 +253,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
         foreach (string argument in ExtraArguments)
         {
-            if (argument.StartsWith("com.apple.pkg."))
+            if (argument.StartsWith("com.apple.pkg.") || argument.StartsWith("com.apple.dmg."))
             {
                 simulators.Add(argument);
                 continue;
@@ -194,7 +267,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             catch (ArgumentOutOfRangeException)
             {
                 throw new ArgumentException(
-                    $"Failed to parse simulator '{argument}'. Available values are ios-simulator, tvos-simulator and watchos-simulator." +
+                    $"Failed to parse simulator '{argument}'. Available values are ios-simulator, tvos-simulator, watchos-simulator and xros-simulator." +
                     Environment.NewLine + Environment.NewLine +
                     "You need to also specify the version. Example: ios-simulator_13.4");
             }
@@ -205,21 +278,24 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
                     $"You need to specify the exact version. Example: ios-simulator_13.4");
             }
 
-            string simulatorName = target.Platform switch
+            var testTargetVersion = Version.Parse(target.OSVersion);
+
+            (string simulatorName, string simulatorFormat) = target.Platform switch
             {
-                TestTarget.Simulator_iOS => "iPhone",
-                TestTarget.Simulator_iOS32 => "iPhone",
-                TestTarget.Simulator_iOS64 => "iPhone",
-                TestTarget.Simulator_tvOS => "AppleTV",
-                TestTarget.Simulator_watchOS => "Watch",
+                TestTarget.Simulator_iOS => ("iPhone", testTargetVersion.Major >= 16 ? "dmg" : "pkg"),
+                TestTarget.Simulator_iOS32 => ("iPhone", "pkg"),
+                TestTarget.Simulator_iOS64 => ("iPhone", testTargetVersion.Major >= 16 ? "dmg" : "pkg"),
+                TestTarget.Simulator_tvOS => ("AppleTV", testTargetVersion.Major >= 16 ? "dmg" : "pkg"),
+                TestTarget.Simulator_watchOS => ("Watch", testTargetVersion.Major >= 9 ? "dmg" : "pkg"),
+                TestTarget.Simulator_xrOS => ("xrOS", "dmg"),
                 _ => throw new ArgumentException($"Failed to parse simulator '{argument}'. " +
-                    "Available values are ios-simulator, tvos-simulator and watchos-simulator." +
+                    "Available values are ios-simulator, tvos-simulator, watchos-simulator and xros-simulator." +
                     Environment.NewLine + Environment.NewLine +
                     "You need to also specify the version. Example: ios-simulator_13.4"),
             };
 
             // e.g. com.apple.pkg.AppleTVSimulatorSDK14_3
-            simulators.Add($"com.apple.pkg.{simulatorName}SimulatorSDK{target.OSVersion.Replace(".", "_")}");
+            simulators.Add($"com.apple.{simulatorFormat}.{simulatorName}SimulatorSDK{target.OSVersion.Replace(".", "_")}");
         }
 
         return simulators;
@@ -230,31 +306,33 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         var (xcodeVersion, xcodeUuid) = await GetXcodeInformation();
 
         var indexName = $"index-{xcodeVersion}-{xcodeUuid}.dvtdownloadableindex";
+        var indexUrl = "";
 
-        var urls = new string[] {
-                    $"https://devimages-cdn.apple.com/downloads/xcode/simulators/{indexName}",
-                    /*
-                    * The following url was found while debugging Xcode, the "index2" part is actually hardcoded:
-                    * 
-                    *	DVTFoundation`-[DVTDownloadableIndexSource identifier]:
-                    *		0x103db478d <+0>:  pushq  %rbp
-                    *		0x103db478e <+1>:  movq   %rsp, %rbp
-                    *		0x103db4791 <+4>:  leaq   0x53f008(%rip), %rax      ; @"index2"
-                    *		0x103db4798 <+11>: popq   %rbp
-                    *		0x103db4799 <+12>: retq
-                    * 
-                    */
-                    "https://devimages-cdn.apple.com/downloads/xcode/simulators/index2.dvtdownloadableindex",
-                };
+        if (Version.Parse(xcodeVersion).Major >= 14)
+        {
+            /*
+            * The following url was found while debugging Xcode, the "index2" part is actually hardcoded:
+            * 
+            *	DVTFoundation`-[DVTDownloadableIndexSource identifier]:
+            *		0x103db478d <+0>:  pushq  %rbp
+            *		0x103db478e <+1>:  movq   %rsp, %rbp
+            *		0x103db4791 <+4>:  leaq   0x53f008(%rip), %rax      ; @"index2"
+            *		0x103db4798 <+11>: popq   %rbp
+            *		0x103db4799 <+12>: retq
+            * 
+            */
+            indexUrl = "https://devimages-cdn.apple.com/downloads/xcode/simulators/index2.dvtdownloadableindex";
+        }
+        else
+        {
+            indexUrl = $"https://devimages-cdn.apple.com/downloads/xcode/simulators/{indexName}";
+        }
 
         var tmpfile = Path.Combine(TempDirectory, indexName);
-        var anyFailures = false;
         if (!File.Exists(tmpfile))
         {
-            foreach (var url in urls)
-            {
-                anyFailures = await DownloadFile(url, tmpfile, anyFailures);
-            }
+            if (!await DownloadFile(indexUrl, tmpfile))
+                return null;
         }
         else
         {
@@ -270,19 +348,17 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         return xmlResult;
     }
 
-    private async Task<bool> DownloadFile(string url, string destinationPath, bool anyFailures)
+    private async Task<bool> DownloadFile(string url, string destinationPath)
     {
         try
         {
             Logger.LogInformation($"Downloading {url}...");
 
-            if (anyFailures)
-                Logger.LogInformation($"Attempting fallback url '{url}'");
-
             var downloadTask = s_client.GetStreamAsync(url);
             using var fileStream = new FileStream(destinationPath, FileMode.Create);
             using var bodyStream = await downloadTask;
             await bodyStream.CopyToAsync(fileStream);
+            return true;
         }
         catch (HttpRequestException e)
         {
@@ -296,14 +372,18 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             {
                 Logger.LogWarning($"Failed to download {url}: {e}");
             }
-            anyFailures = true;
         }
 
-        return anyFailures;
+        return false;
     }
 
     private async Task<(string XcodeVersion, string XcodeUuid)> GetXcodeInformation()
     {
+        if (_xcodeVersion is not null && _xcodeUuid is not null)
+        {
+            return (_xcodeVersion, _xcodeUuid);
+        }
+
         string xcodeRoot = Arguments.XcodeRoot.Value ?? new MacOSProcessManager().XcodeRoot;
         var plistPath = Path.Combine(xcodeRoot, "Contents", "Info.plist");
 
@@ -328,7 +408,10 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         xcodeVersion = xcodeVersion.Insert(xcodeVersion.Length - 2, ".");
         xcodeVersion = xcodeVersion.Insert(xcodeVersion.Length - 1, ".");
 
-        return (xcodeVersion, xcodeUuid);
+        _xcodeVersion = xcodeVersion;
+        _xcodeUuid = xcodeUuid;
+
+        return (_xcodeVersion, _xcodeUuid);
     }
 
     [Serializable]

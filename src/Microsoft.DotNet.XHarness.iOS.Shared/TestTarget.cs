@@ -16,10 +16,12 @@ public enum TestTarget
     Simulator_iOS64,
     Simulator_tvOS,
     Simulator_watchOS,
+    Simulator_xrOS,
 
     Device_iOS,
     Device_tvOS,
     Device_watchOS,
+    Device_xrOS,
 
     MacCatalyst,
 }
@@ -54,10 +56,12 @@ public static class TestTargetExtensions
         TestTarget.Simulator_iOS64 => RunMode.Sim64,
         TestTarget.Simulator_tvOS => RunMode.TvOS,
         TestTarget.Simulator_watchOS => RunMode.WatchOS,
+        TestTarget.Simulator_xrOS => RunMode.xrOS,
 
         TestTarget.Device_iOS => RunMode.iOS,
         TestTarget.Device_tvOS => RunMode.TvOS,
         TestTarget.Device_watchOS => RunMode.WatchOS,
+        TestTarget.Device_xrOS => RunMode.xrOS,
 
         TestTarget.MacCatalyst => RunMode.MacOS,
 
@@ -71,10 +75,12 @@ public static class TestTargetExtensions
         TestTarget.Simulator_iOS64 => true,
         TestTarget.Simulator_tvOS => true,
         TestTarget.Simulator_watchOS => true,
+        TestTarget.Simulator_xrOS => true,
 
         TestTarget.Device_iOS => false,
         TestTarget.Device_tvOS => false,
         TestTarget.Device_watchOS => false,
+        TestTarget.Device_xrOS => false,
 
         TestTarget.MacCatalyst => true,
 
