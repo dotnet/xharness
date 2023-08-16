@@ -2,7 +2,7 @@
   <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.1200.amd64.open"/>
+    <HelixTargetQueue Include="osx.13.amd64.open"/>
   </ItemGroup>
 
   <PropertyGroup>
