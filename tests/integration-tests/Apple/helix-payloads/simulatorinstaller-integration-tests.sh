@@ -34,7 +34,7 @@ if [ "$length" != "0" ]; then
     do
         pkg_name=$(echo $i | tr -s ' ' | cut -d ' ' -f 3)
         echo "  $pkg_name"
-        simulator_args="--simulator=$pkg_name $simulator_args"
+        simulator_args="$simulator_args $pkg_name"
     done
 
     echo ""
