@@ -6,5 +6,6 @@
     "iterationPath": "DevDiv",
     "notificationAliases": [ "dnceng@microsoft.com" ],
     "repositoryName":"dotnet-xharness",
-    "codebaseName": "dotnet-xharness"
+    "codebaseName": "dotnet-xharness",
+    "serviceTreeId": "4cac191f-8b27-4d55-abee-2eafb6470803"
 }
