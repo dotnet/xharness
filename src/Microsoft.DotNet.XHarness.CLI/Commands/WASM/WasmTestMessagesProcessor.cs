@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -161,17 +162,26 @@ public class WasmTestMessagesProcessor
             try
             {
                 logMessage = JsonSerializer.Deserialize<WasmLogMessage>(message);
-                line = logMessage?.payload ?? message.TrimEnd();
+                if (logMessage != null)
+                {
+                    line = logMessage.payload + " " + string.Join(" ", logMessage.arguments ?? Enumerable.Empty<object>());
+                }
+                else
+                {
+                    line = message;
+                }
             }
             catch (JsonException)
             {
-                line = message.TrimEnd();
+                line = message;
             }
         }
         else
         {
-            line = message.TrimEnd();
+            line = message;
         }
+
+        line = line.TrimEnd();
 
         var match = xmlRx.Match(line);
         if (match.Success)
