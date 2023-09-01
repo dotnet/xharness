@@ -35,6 +35,17 @@ public interface IDiagnosticsData
     /// True when the target is a real HW device, false for simulators, maccatalyst..
     /// </summary>
     bool? IsDevice { get; set; }
+
+    /// <summary>
+    /// Name, or path of the wasm engine used
+    /// </summary>
+    string? WasmEngine { get; set; }
+
+    /// <summary>
+    /// Version for the wasm engine
+    /// </summary>
+    string? WasmEngineVersion { get; set; }
+
 }
 
 /// <summary>
@@ -63,6 +74,12 @@ public class CommandDiagnostics : IDiagnosticsData
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? IsDevice { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? WasmEngine { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? WasmEngineVersion { get; set; }
 
     public int Duration => (int)Math.Round(_timer.Elapsed.TotalSeconds);
 

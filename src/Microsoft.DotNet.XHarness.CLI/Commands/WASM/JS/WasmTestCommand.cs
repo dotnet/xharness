@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
@@ -62,11 +63,16 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
             engineBinary = foundBinary;
         }
 
+        var serviceProvider = Services.BuildServiceProvider();
+        var diagnosticsData = serviceProvider.GetRequiredService<IDiagnosticsData>();
+        diagnosticsData.WasmEngine = engineBinary;
+
         var cts = new CancellationTokenSource();
         try
         {
             logger.LogInformation($"Using js engine {Arguments.Engine.Value} from path {engineBinary}");
-            await PrintVersionAsync(Arguments.Engine.Value.Value, engineBinary);
+            string? versionString = await GetVersionAsync(Arguments.Engine.Value.Value, engineBinary);
+            diagnosticsData.WasmEngineVersion = versionString;
 
             ServerURLs? serverURLs = null;
             if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
@@ -202,20 +208,35 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
             }
         }
 
-        Task PrintVersionAsync(JavaScriptEngine engine, string engineBinary)
+        async Task<string?> GetVersionAsync(JavaScriptEngine engine, string engineBinary)
         {
-            if (engine is JavaScriptEngine.V8)
+            string[] args;
+            switch (engine)
             {
-                return processManager.ExecuteCommandAsync(
-                            engineBinary,
-                            new[] { "-e", "console.log(`V8 version: ${this.version()}`)" },
-                            log: new CallbackLog(m => logger.LogDebug(m.Trim())),
-                            stdoutLog: new CallbackLog(msg => logger.LogInformation(msg.Trim())),
-                            stderrLog: new CallbackLog(msg => logger.LogError(msg.Trim())),
-                            TimeSpan.FromSeconds(10));
-            }
+                case JavaScriptEngine.V8:
+                    args = new[] { "-e", "console.log(this.version())" };
+                    break;
+                case JavaScriptEngine.NodeJS:
+                    args = new[] { "--version" };
+                    break;
+                default:
+                    return null;
+            };
 
-            return Task.CompletedTask;
+            StringBuilder output = new();
+            await processManager.ExecuteCommandAsync(
+                        engineBinary,
+                        args,
+                        log: new CallbackLog(m => logger.LogDebug(m.Trim())),
+                        stdoutLog: new CallbackLog(msg =>
+                        {
+                            logger.LogInformation(msg.Trim());
+                            output.Append(msg.Trim());
+                        }),
+                        stderrLog: new CallbackLog(msg => logger.LogError(msg.Trim())),
+                        TimeSpan.FromSeconds(10));
+
+            return output.ToString();
         }
     }
 
