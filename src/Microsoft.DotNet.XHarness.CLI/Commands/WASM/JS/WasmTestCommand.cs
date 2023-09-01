@@ -65,14 +65,14 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
 
         var serviceProvider = Services.BuildServiceProvider();
         var diagnosticsData = serviceProvider.GetRequiredService<IDiagnosticsData>();
-        diagnosticsData.WasmEngine = engineBinary;
+        diagnosticsData.Target = engineBinary;
 
         var cts = new CancellationTokenSource();
         try
         {
             logger.LogInformation($"Using js engine {Arguments.Engine.Value} from path {engineBinary}");
             string? versionString = await GetVersionAsync(Arguments.Engine.Value.Value, engineBinary);
-            diagnosticsData.WasmEngineVersion = versionString;
+            diagnosticsData.TargetOS = versionString;
 
             ServerURLs? serverURLs = null;
             if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)

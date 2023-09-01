@@ -64,7 +64,7 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                             logProcessor,
                             logger);
 
-        diagnosticsData.WasmEngine = Arguments.Browser.Value.ToString();
+        diagnosticsData.Target = Arguments.Browser.Value.ToString();
         (DriverService driverService, IWebDriver driver) = Arguments.Browser.Value switch
         {
             Browser.Chrome => GetChromeDriver(Arguments.Locale, logger),
