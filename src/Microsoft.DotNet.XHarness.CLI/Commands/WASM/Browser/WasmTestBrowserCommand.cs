@@ -50,6 +50,9 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                                                        Arguments.SymbolicatePatternsFileArgument,
                                                        logger);
 
+        var serviceProvider = Services.BuildServiceProvider();
+        var diagnosticsData = serviceProvider.GetRequiredService<IDiagnosticsData>();
+
         var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath,
                                                          stdoutFilePath,
                                                          logger,
@@ -61,6 +64,7 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                             logProcessor,
                             logger);
 
+        diagnosticsData.Target = Arguments.Browser.Value.ToString();
         (DriverService driverService, IWebDriver driver) = Arguments.Browser.Value switch
         {
             Browser.Chrome => GetChromeDriver(Arguments.Locale, logger),
