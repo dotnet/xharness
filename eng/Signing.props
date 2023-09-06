@@ -7,6 +7,7 @@
     <FileSignInfo Include="Xamarin.Hosting.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Xamarin.Localization.Mlaunch.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Xamarin.Localization.Mlaunch.resources.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Microsoft.macOS.dll" CertificateName="3PartySHA2" />
   </ItemGroup>
 
 </Project>
