@@ -21,6 +21,7 @@ internal class AndroidTestCommandArguments : XHarnessCommandArguments, IAndroidA
     public InstrumentationNameArgument InstrumentationName { get; } = new();
     public InstrumentationArguments InstrumentationArguments { get; } = new();
     public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
+    public EnableRelayArgument EnableRelay { get; } = new();
     public DeviceOutputFolderArgument DeviceOutputFolder { get; } = new();
     public WifiArgument Wifi { get; } = new();
 
