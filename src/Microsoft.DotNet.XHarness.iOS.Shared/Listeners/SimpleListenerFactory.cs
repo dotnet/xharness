@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -12,6 +12,7 @@ public enum ListenerTransport
     Tcp,
     Http,
     File,
+    Relay,
 }
 
 public interface ISimpleListenerFactory
@@ -22,7 +23,8 @@ public interface ISimpleListenerFactory
         IFileBackedLog testLog,
         bool isSimulator,
         bool autoExit,
-        bool xmlOutput);
+        bool xmlOutput,
+        bool relay);
 
     ITunnelBore TunnelBore { get; }
     bool UseTunnel { get; }
@@ -44,7 +46,8 @@ public class SimpleListenerFactory : ISimpleListenerFactory
         IFileBackedLog testLog,
         bool isSimulator,
         bool autoExit,
-        bool xmlOutput)
+        bool xmlOutput,
+        bool relay)
     {
         string listenerTempFile = null;
         ISimpleListener listener;
@@ -61,6 +64,9 @@ public class SimpleListenerFactory : ISimpleListenerFactory
 
         switch (transport)
         {
+            case ListenerTransport.Relay:
+                listener = new SimpleTcpListener(log, testLog, autoExit, UseTunnel);
+                break;
             case ListenerTransport.File:
                 listenerTempFile = testLog.FullPath + ".tmp";
                 listener = new SimpleFileListener(listenerTempFile, log, testLog, xmlOutput);

@@ -43,6 +43,7 @@ internal class AppleTestCommand : AppleAppCommand<AppleTestCommandArguments>
                 resetSimulator: Arguments.ResetSimulator,
                 enableLldb: Arguments.EnableLldb,
                 signalAppEnd: Arguments.SignalAppEnd,
+                enableRelay: Arguments.EnableRelay,
                 Arguments.EnvironmentalVariables.Value,
                 PassThroughArguments,
                 cancellationToken);

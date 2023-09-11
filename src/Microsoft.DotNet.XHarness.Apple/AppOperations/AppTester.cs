@@ -32,6 +32,7 @@ public interface IAppTester
         TimeSpan timeout,
         TimeSpan testLaunchTimeout,
         bool signalAppEnd,
+        bool enableRelay,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
@@ -44,6 +45,7 @@ public interface IAppTester
         TimeSpan timeout,
         TimeSpan testLaunchTimeout,
         bool signalAppEnd,
+        bool enableRelay,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
@@ -104,6 +106,7 @@ public class AppTester : AppRunnerBase, IAppTester
         TimeSpan timeout,
         TimeSpan testLaunchTimeout,
         bool signalAppEnd,
+        bool enableRelay,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
@@ -121,7 +124,8 @@ public class AppTester : AppRunnerBase, IAppTester
             testLog: testLog,
             isSimulator: true,
             autoExit: true,
-            xmlOutput: true);
+            xmlOutput: true,
+            enableRelay);
 
         string? appEndTag = null;
         if (signalAppEnd)
@@ -160,6 +164,7 @@ public class AppTester : AppRunnerBase, IAppTester
         TimeSpan timeout,
         TimeSpan testLaunchTimeout,
         bool signalAppEnd,
+        bool enableRelay,
         IEnumerable<string> extraAppArguments,
         IEnumerable<(string, string)> extraEnvVariables,
         XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
@@ -179,7 +184,8 @@ public class AppTester : AppRunnerBase, IAppTester
             testLog: testLog,
             isSimulator: isSimulator,
             autoExit: true,
-            xmlOutput: true); // cli always uses xml
+            xmlOutput: true,
+            enableRelay); // cli always uses xml
 
         using (testLog)
         using (deviceListener)

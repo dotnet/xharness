@@ -115,6 +115,7 @@ public class AppTesterTests : AppRunTestBase
             TimeSpan.FromSeconds(30),
             TimeSpan.FromSeconds(30),
             signalAppEnd: false,
+            enableRelay: false,
             extraAppArguments: new string[] { "--foo=bar", "--xyz" },
             extraEnvVariables: new[] { ("appArg1", "value1") });
 
@@ -212,6 +213,7 @@ public class AppTesterTests : AppRunTestBase
             timeout: TimeSpan.FromSeconds(30),
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
+            enableRelay: false,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
             extraEnvVariables: new[] { ("appArg1", "value1") });
 
@@ -300,6 +302,7 @@ public class AppTesterTests : AppRunTestBase
             timeout: TimeSpan.FromSeconds(30),
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
+            enableRelay: false,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
             extraEnvVariables: new[] { ("appArg1", "value1") },
             skippedMethods: skippedTests);
@@ -383,6 +386,7 @@ public class AppTesterTests : AppRunTestBase
             timeout: TimeSpan.FromSeconds(30),
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
+            enableRelay: false,
             skippedTestClasses: skippedClasses);
 
         // Verify
@@ -455,6 +459,7 @@ public class AppTesterTests : AppRunTestBase
             timeout: TimeSpan.FromSeconds(30),
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
+            enableRelay: false,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
             extraEnvVariables: new[] { ("appArg1", "value1") });
 
@@ -572,6 +577,7 @@ public class AppTesterTests : AppRunTestBase
             timeout: TimeSpan.FromMinutes(30),
             testLaunchTimeout: TimeSpan.FromMinutes(30),
             signalAppEnd: true,
+            false,
             Array.Empty<string>(),
             Array.Empty<(string, string)>());
 

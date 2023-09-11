@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -34,6 +34,7 @@ public interface ITestOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
+        bool enableRelay,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken);
@@ -85,6 +86,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
+        bool enableRelay,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
@@ -102,6 +104,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             resetSimulator: resetSimulator,
             enableLldb,
             signalAppEnd,
+            enableRelay: enableRelay,
             environmentalVariables,
             passthroughArguments,
             cancellationToken);
@@ -120,6 +123,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
+        bool enableRelay,
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
@@ -163,6 +167,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
                 environmentalVariables,
                 passthroughArguments,
                 signalAppEnd,
+                enableRelay,
                 cancellationToken); // This cancellation token doesn't include the launch-timeout one
         }
 
@@ -183,6 +188,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
                 environmentalVariables,
                 passthroughArguments,
                 signalAppEnd,
+                enableRelay,
                 cancellationToken); // This cancellation token doesn't include the launch-timeout one
         }
 
@@ -212,6 +218,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         bool signalAppEnd,
+        bool enableRelay,
         CancellationToken cancellationToken)
     {
         var runMode = target.Platform.ToRunMode();
@@ -243,6 +250,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             timeout,
             launchTimeout,
             signalAppEnd,
+            enableRelay: enableRelay,
             passthroughArguments,
             environmentalVariables,
             xmlResultJargon,
@@ -264,6 +272,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         IReadOnlyCollection<(string, string)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         bool signalAppEnd,
+        bool enableRelay,
         CancellationToken cancellationToken)
     {
         var appTester = GetAppTester(communicationChannel, TestTarget.MacCatalyst.IsSimulator());
@@ -273,6 +282,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             timeout,
             launchTimeout,
             signalAppEnd,
+            enableRelay: enableRelay,
             passthroughArguments,
             environmentalVariables,
             xmlResultJargon,

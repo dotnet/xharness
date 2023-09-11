@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -26,22 +26,33 @@ public class SimpleListenerFactoryTest
         _ = new SimpleListenerFactory(null); // if it throws, test fails ;)
     }
 
-    [Fact]
-    public void CreateNotWatchListener()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CreateNotWatchListener(bool isRelay)
     {
-        var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.iOS, _log.Object, _log.Object, true, true, true);
+        var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.iOS, _log.Object, _log.Object, true, true, true, isRelay);
         Assert.Equal(ListenerTransport.Tcp, transport);
-        Assert.IsType<SimpleTcpListener>(listener);
+        if (isRelay)
+        {
+            Assert.IsType<SimpleTcpListener>(listener);
+        }
+        else
+        {
+            Assert.IsType<SimpleTcpListener>(listener);
+        }
         Assert.Null(listenerTmpFile);
     }
 
-    [Fact]
-    public void CreateWatchOSSimulator()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CreateWatchOSSimulator(bool isRelay)
     {
         var logFullPath = "myfullpath.txt";
         _ = _log.Setup(l => l.FullPath).Returns(logFullPath);
 
-        var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.WatchOS, _log.Object, _log.Object, true, true, true);
+        var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.WatchOS, _log.Object, _log.Object, true, true, true, relay: isRelay);
         Assert.Equal(ListenerTransport.File, transport);
         Assert.IsType<SimpleFileListener>(listener);
         Assert.NotNull(listenerTmpFile);
@@ -54,7 +65,7 @@ public class SimpleListenerFactoryTest
     [Fact]
     public void CreateWatchOSDevice()
     {
-        var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.WatchOS, _log.Object, _log.Object, false, true, true);
+        var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.WatchOS, _log.Object, _log.Object, false, true, true, false);
         Assert.Equal(ListenerTransport.Http, transport);
         Assert.IsType<SimpleHttpListener>(listener);
         Assert.Null(listenerTmpFile);

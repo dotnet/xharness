@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -64,6 +64,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
                 TimeSpan.FromMinutes(30),
                 It.IsAny<TimeSpan>(),
                 false,
+                It.IsAny<bool>(),
                 It.IsAny<IEnumerable<string>>(),
                 envVars,
                 It.IsAny<XmlResultJargon>(),
@@ -87,6 +88,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             includeWirelessDevices: false,
             enableLldb: false,
             signalAppEnd: false,
+            enableRelay: false,
             envVars,
             Array.Empty<string>(),
             new CancellationToken());
@@ -126,6 +128,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
                 TimeSpan.FromMinutes(30),
                 It.IsAny<TimeSpan>(),
                 false,
+                false,
                 extraArguments,
                 It.IsAny<IEnumerable<(string, string)>>(),
                 It.IsAny<XmlResultJargon>(),
@@ -149,6 +152,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             includeWirelessDevices: true,
             enableLldb: false,
             signalAppEnd: false,
+            enableRelay: false,
             Array.Empty<(string, string)>(),
             extraArguments,
             new CancellationToken());
@@ -183,6 +187,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
                 TimeSpan.FromMinutes(30),
                 It.IsAny<TimeSpan>(),
                 false,
+                false,
                 It.IsAny<IEnumerable<string>>(),
                 It.IsAny<IEnumerable<(string, string)>>(),
                 It.IsAny<XmlResultJargon>(),
@@ -212,6 +217,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             includeWirelessDevices: false,
             enableLldb: true,
             signalAppEnd: false,
+            enableRelay: false,
             Array.Empty<(string, string)>(),
             Array.Empty<string>(),
             new CancellationToken());
@@ -252,6 +258,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
                 TimeSpan.FromMinutes(30),
                 It.IsAny<TimeSpan>(),
                 true,
+                false,
                 extraArguments,
                 It.IsAny<IEnumerable<(string, string)>>(),
                 It.IsAny<XmlResultJargon>(),
@@ -275,6 +282,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             includeWirelessDevices: true,
             enableLldb: false,
             signalAppEnd: true,
+            enableRelay: false,
             Array.Empty<(string, string)>(),
             extraArguments,
             new CancellationToken());
@@ -312,6 +320,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
                 TimeSpan.FromMinutes(30),
                 It.IsAny<TimeSpan>(),
                 true,
+                false,
                 It.IsAny<IEnumerable<string>>(),
                 envVars,
                 It.IsAny<XmlResultJargon>(),
@@ -335,6 +344,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             includeWirelessDevices: false,
             enableLldb: false,
             signalAppEnd: true,
+            enableRelay: false,
             envVars,
             Array.Empty<string>(),
             new CancellationToken());
