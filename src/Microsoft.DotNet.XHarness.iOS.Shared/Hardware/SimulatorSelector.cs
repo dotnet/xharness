@@ -68,16 +68,10 @@ public class DefaultSimulatorSelector : ISimulatorSelector
 
     string GetiOSDeviceType(Version iOSVersion)
     {
-        if (iOSVersion.Major < 13)
-            return "com.apple.CoreSimulator.SimDeviceType.iPhone-7";
-        if (iOSVersion.Major < 14)
-            return "com.apple.CoreSimulator.SimDeviceType.iPhone-8";
-        if (iOSVersion.Major < 15)
-            return "com.apple.CoreSimulator.SimDeviceType.iPhone-X";
         if (iOSVersion.Major < 16)
-            return "com.apple.CoreSimulator.SimDeviceType.iPhone-11";
-
-        return "com.apple.CoreSimulator.SimDeviceType.iPhone-14";
+            return "com.apple.CoreSimulator.SimDeviceType.iPhone-X";
+        
+        return "com.apple.CoreSimulator.SimDeviceType.iPhone-15";
     }
 
     string GetWatchOSDeviceType(Version watchOSVersion)
