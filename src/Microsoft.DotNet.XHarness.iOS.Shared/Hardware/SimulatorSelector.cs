@@ -38,8 +38,8 @@ public class DefaultSimulatorSelector : ISimulatorSelector
     {
         return target.Platform switch
         {
-            TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimDeviceType.iPhone-5s",
-            TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimDeviceType.iPhone-5s",
+            TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
+            TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
             TestTarget.Simulator_iOS64 => GetiOSDeviceType(Version.Parse(target.OSVersion)),
             TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p",
             TestTarget.Simulator_watchOS => GetWatchOSDeviceType(Version.Parse(target.OSVersion)),
@@ -80,6 +80,6 @@ public class DefaultSimulatorSelector : ISimulatorSelector
             return "com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-3-38mm";
         if (watchOSVersion.Major < 8)
             return "com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-4-40mm";
-        return "com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-7-41mm";
+        return "com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-38mm";
     }
 }
