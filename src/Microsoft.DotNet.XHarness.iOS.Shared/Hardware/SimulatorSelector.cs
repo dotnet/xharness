@@ -68,7 +68,7 @@ public class DefaultSimulatorSelector : ISimulatorSelector
 
     string GetiOSDeviceType(Version iOSVersion)
     {
-        if (iOSVersion.Major < 16)
+        if (iOSVersion.Major < 17)
             return "com.apple.CoreSimulator.SimDeviceType.iPhone-X";
         
         return "com.apple.CoreSimulator.SimDeviceType.iPhone-15";
