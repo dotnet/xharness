@@ -628,7 +628,7 @@ public class XUnitFilterTests
                 filter = XUnitFilter.CreateClassFilter("foo", true);
                 break;
             default:
-                Assert.True(false, "Unexpected filter type");
+                Assert.Fail("Unexpected filter type");
                 break;
         }
         var assebly = new TestAssemblyInfo(Assembly.GetAssembly(typeof(XUnitFilterType)), "path");
