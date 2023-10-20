@@ -198,12 +198,6 @@ stages:
 
   - template: eng/e2e-test.yml
     parameters:
-      name: E2E_Apple_Simulator_Mgmt
-      displayName: Apple - Simulator management
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/SimulatorInstaller.Tests.proj
-
-  - template: eng/e2e-test.yml
-    parameters:
       name: E2E_WASM
       displayName: WASM
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/WASM/WASM.Helix.SDK.Tests.proj
