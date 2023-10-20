@@ -595,7 +595,7 @@ public class AppTesterTests : AppRunTestBase
 
         Assert.True(testTask.IsCompleted, "Test tag wasn't detected");
 
-        var (result, resultMessage) = testTask.Result;
+        var (result, resultMessage) = await testTask;
 
         // Verify
         Assert.Equal(TestExecutingResult.Succeeded, result);
