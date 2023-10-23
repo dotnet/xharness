@@ -6,7 +6,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <!-- Workaround changes from newer MSBuild requiring additional properties, see https://github.com/dotnet/arcade/pull/5996 -->
-    <TargetFrameworkVersion>3.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>8.0</TargetFrameworkVersion>
     <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
     <HelixType>test/product/</HelixType>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
