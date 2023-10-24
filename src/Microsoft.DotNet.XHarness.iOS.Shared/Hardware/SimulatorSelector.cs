@@ -40,7 +40,7 @@ public class DefaultSimulatorSelector : ISimulatorSelector
         {
             TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
             TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
-            TestTarget.Simulator_iOS64 => GetiOSDeviceType(Version.Parse(target.OSVersion),minVersion),
+            TestTarget.Simulator_iOS64 => GetiOSDeviceType(target, minVersion),
             TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p",
             TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "Apple-Watch-38mm" : "Apple-Watch-Series-3-38mm"),
             TestTarget.Simulator_xrOS => "com.apple.CoreSimulator.SimDeviceType.Apple-Vision-Pro",
@@ -68,11 +68,19 @@ public class DefaultSimulatorSelector : ISimulatorSelector
         return simulators.OrderByDescending(s => s.State).First();
     }
 
-    string GetiOSDeviceType(Version iOSVersion, bool minVersion)
+    string GetiOSDeviceType(TestTargetOs testTargetOs, bool minVersion)
     {
-        if (iOSVersion.Major >= 17)
+        //default to version 16? 
+        var iOSversion = new Version(16, 0);
+        //case ios-simulator-64
+        if (testTargetOs.OSVersion != null)
+        {
+            Version.TryParse(testTargetOs.OSVersion, out iOSversion);
+        }
+        if (iOSversion.Major >= 17)
+        {
             return "com.apple.CoreSimulator.SimDeviceType.iPhone-15";
-
-        return  "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X");
+        }
+        return "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X");
     }
 }
