@@ -68,19 +68,17 @@ public class DefaultSimulatorSelector : ISimulatorSelector
         return simulators.OrderByDescending(s => s.State).First();
     }
 
-    string GetiOSDeviceType(TestTargetOs testTargetOs, bool minVersion)
+    private static string GetiOSDeviceType(TestTargetOs testTargetOs, bool minVersion)
     {
-        //default to version 16? 
-        var iOSversion = new Version(16, 0);
+        //default to version
+        var iOSVersion = Version.Parse(SdkVersions.iOS);
         //case ios-simulator-64
         if (testTargetOs.OSVersion != null)
         {
-            Version.TryParse(testTargetOs.OSVersion, out iOSversion);
+            Version.TryParse(testTargetOs.OSVersion, out iOSVersion);
         }
-        if (iOSversion.Major >= 17)
-        {
-            return "com.apple.CoreSimulator.SimDeviceType.iPhone-15";
-        }
-        return "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X");
+        return iOSVersion.Major >= 17
+            ? "com.apple.CoreSimulator.SimDeviceType.iPhone-15"
+            : "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-X");
     }
 }
