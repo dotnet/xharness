@@ -1,18 +1,15 @@
-<Project DefaultTargets="Test">
-  <Import Project="../Helix.SDK.configuration.props"/>
+<Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
     <HelixTargetQueue Include="ubuntu.2204.amd64.android.29.open"/>
     
-    <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)TestApks.proj">
+    <XHarnessAndroidProject Include="TestApks.proj">
       <AdditionalProperties>TestArch=x86;TestPackageName=net.dot.System.Buffers.Tests;TestInstrumentationName=net.dot.MonoRunner;TestFileName=System.Buffers.Tests-x86</AdditionalProperties>
     </XHarnessAndroidProject>
 
-    <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)TestApks.proj">
+    <XHarnessAndroidProject Include="TestApks.proj">
       <AdditionalProperties>TestArch=x86_64;TestPackageName=net.dot.System.Buffers.Tests;TestInstrumentationName=net.dot.MonoRunner;TestFileName=System.Buffers.Tests-x64</AdditionalProperties>
     </XHarnessAndroidProject>
-
   </ItemGroup>
 
-  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
 </Project>

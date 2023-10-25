@@ -1,10 +1,14 @@
-<Project>
+<Project DefaultTargets="Test">
 
-  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/>
+  <Import Project="..\..\Directory.Build.props" />
   <Import Project="Storage.props"/>
 
   <PropertyGroup>
     <TargetFramework>$(NetCurrent)</TargetFramework>
+    <!-- Workaround changes from newer MSBuild requiring additional properties, see https://github.com/dotnet/arcade/pull/5996 -->
+    <TargetFrameworkVersion>8.0</TargetFrameworkVersion>
+    <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
+
     <HelixType>test/product/</HelixType>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <EnableXHarnessTelemetry>true</EnableXHarnessTelemetry>
@@ -15,11 +19,6 @@
 
     <!-- Pick up the nupkg from this repo for testing purposes -->
     <MicrosoftDotNetXHarnessCLIVersion>$(VersionPrefix)-ci</MicrosoftDotNetXHarnessCLIVersion>
-
-    <!-- Upload the diagnostics.json with other results -->
-    <IsPosixShell Condition=" '$(IsPosixShell)' != 'false' ">true</IsPosixShell>
-    <HelixPostCommands Condition=" '$(IsPosixShell)' == 'true' ">cp diagnostics.json "$HELIX_WORKITEM_UPLOAD_ROOT";$(HelixPostCommands)</HelixPostCommands>
-    <HelixPostCommands Condition=" '$(IsPosixShell)' == 'false' ">copy diagnostics.json "%HELIX_WORKITEM_UPLOAD_ROOT%";$(HelixPostCommands)</HelixPostCommands>
   </PropertyGroup>
 
   <!-- For non-ci local runs -->
