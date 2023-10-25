@@ -1,13 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project>
+
   <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/>
   <Import Project="Storage.props"/>
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <!-- Workaround changes from newer MSBuild requiring additional properties, see https://github.com/dotnet/arcade/pull/5996 -->
-    <TargetFrameworkVersion>8.0</TargetFrameworkVersion>
-    <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
     <HelixType>test/product/</HelixType>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <EnableXHarnessTelemetry>true</EnableXHarnessTelemetry>
@@ -46,8 +43,4 @@
     <Language>msbuild</Language>
   </PropertyGroup>
 
-  <ItemGroup>
-    <!-- Pin transitive package versions -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-  </ItemGroup>
 </Project>

@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>$(NetMinimum);netstandard2.1</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <!-- Mono.Options is apparently not strong-name signed -->
-    <NoWarn>CS8002;</NoWarn>
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
     <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NUnit" Version="3.12.0" />
-    <PackageReference Include="NUnit.Engine" Version="3.11.1" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit.Engine" />
   </ItemGroup>
 
   <ItemGroup>

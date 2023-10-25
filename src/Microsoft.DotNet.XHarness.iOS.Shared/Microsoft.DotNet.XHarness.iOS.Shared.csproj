@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
-    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <Nullable>disable</Nullable>
   </PropertyGroup>
 
