@@ -1,5 +1,4 @@
-<Project DefaultTargets="Test">
-  <Import Project="../Helix.SDK.configuration.props"/>
+<Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
     <HelixTargetQueue Include="ubuntu.2204.amd64.android.29.open"/>
@@ -43,5 +42,4 @@
     </ItemGroup>
   </Target>
 
-  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
 </Project>

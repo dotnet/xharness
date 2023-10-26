@@ -1,16 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <IsPackable>false</IsPackable>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
     <!-- Mono.Options is apparently not strong-name signed -->
-    <NoWarn>CS8002;</NoWarn>
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
   </PropertyGroup>
-
-  <ItemGroup>
-    <!-- Pin transitive package versions -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj" />

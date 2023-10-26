@@ -1,20 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <IsPackable>false</IsPackable>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Moq" Version="4.16.1" />
-
-    <!-- Pin transitive package versions -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Moq" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <None Remove="Samples\devices.xml" />
     <None Remove="Samples\Info.plist" />
@@ -34,6 +31,7 @@
     <None Remove="Samples\xUnitSample.xml" />
     <None Remove="Samples\Issue95.xml" />
   </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="Samples\devices.xml" />
     <EmbeddedResource Include="Samples\Info.plist" />
@@ -54,14 +52,12 @@
     <EmbeddedResource Include="Samples\xUnitSample.xml" />
     <EmbeddedResource Include="Samples\Issue95.xml" />
   </ItemGroup>
+  
   <ItemGroup>
-    <None Include="Samples\TestProject\SystemXunit.csproj">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Include="Samples\TestProject\SystemXunit.csproj"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Samples\TestProject\Info.plist"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-  <ItemGroup>
-    <None Update="Samples\TestProject\Info.plist">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+
 </Project>

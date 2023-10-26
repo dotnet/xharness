@@ -1,28 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Moq" Version="4.13.1" />
-    <PackageReference Include="xunit.runner.utility" Version="2.4.1" />
-
-    <!-- Pin transitive package versions -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="xunit.runner.utility" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\xUnit\NUnit3Xml.xslt">
-      <Link>xUnit\NUnit3Xml.xslt</Link>
-    </Content>
-    <Content Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\xUnit\NUnitXml.xslt">
-      <Link>xUnit\NUnitXml.xslt</Link>
-    </Content>
-    <EmbeddedResource Include="..\Microsoft.DotNet.XHarness.iOS.Shared.Tests\Samples\NUnitV3Sample.xml">
-      <Link>NUnit/NUnitV3Sample.xml</Link>
-    </EmbeddedResource>
+    <Content Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\xUnit\NUnit3Xml.xslt"
+             Link="xUnit\NUnit3Xml.xslt" />
+    <Content Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\xUnit\NUnitXml.xslt"
+             Link="xUnit\NUnitXml.xslt" />
+    <EmbeddedResource Include="..\Microsoft.DotNet.XHarness.iOS.Shared.Tests\Samples\NUnitV3Sample.xml"
+                      Link="NUnit/NUnitV3Sample.xml" />
   </ItemGroup>
 
   <ItemGroup>

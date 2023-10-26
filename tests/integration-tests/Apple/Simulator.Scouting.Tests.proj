@@ -1,34 +1,32 @@
-<Project DefaultTargets="Test">
-  <Import Project="../Helix.SDK.configuration.props"/>
+<Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
     <HelixTargetQueue Include="osx.amd64.scouting.open"/>
 
     <!-- apple test / ios-simulator-64 -->
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+    <XHarnessAppleProject Include="TestAppBundle.proj">
       <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=System.Numerics.Vectors.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple run / ios-simlator-64 -->
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+    <XHarnessAppleProject Include="TestAppBundle.proj">
       <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple test / maccatalyst -->
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+    <XHarnessAppleProject Include="TestAppBundle.proj">
       <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.AppContext.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple run / maccatalyst -->
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+    <XHarnessAppleProject Include="TestAppBundle.proj">
       <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple test / tvos-simulator -->
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
+    <XHarnessAppleProject Include="TestAppBundle.proj">
       <AdditionalProperties>TestTarget=tvos-simulator;TestAppBundleName=Microsoft.Extensions.Configuration.Ini.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
   </ItemGroup>
 
-  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
 </Project>
