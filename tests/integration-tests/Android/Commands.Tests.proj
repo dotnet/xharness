@@ -2,7 +2,7 @@
   <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>
-    <HelixTargetQueue Include="ubuntu.1804.amd64.android.29.open.svc"/>
+    <HelixTargetQueue Include="ubuntu.2204.amd64.android.29.open.svc"/>
   </ItemGroup>
 
   <PropertyGroup>
