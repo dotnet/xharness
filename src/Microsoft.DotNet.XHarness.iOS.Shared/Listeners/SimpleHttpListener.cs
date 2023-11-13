@@ -125,7 +125,7 @@ public class SimpleHttpListener : SimpleListener
                 break;
             default:
                 Log.WriteLine("Unknown upload url: {0}", request.RawUrl);
-                response = $"Unknown upload url: {request.RawUrl}";
+                response = $"Unknown upload url: {request.RawUrl}"; // CodeQL [SM02175] False Positive: This is a plain-text API response
                 break;
         }
 
