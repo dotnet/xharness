@@ -36,7 +36,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         "e.g. com.apple.pkg.AppleTVSimulatorSDK14_2 or you can use the format in which you specify " +
         "apple targets for XHarness tests (ios-simulator, tvos-simulator, watchos-simulator, xros-simulator).";
 
-    private static readonly HttpClient s_client = new();
+    private static readonly HttpClient s_client = new(new HttpClientHandler { CheckCertificateRevocationList = true });
     private readonly MacOSProcessManager _processManager = new();
     private string? _xcodeVersion;
     private string? _xcodeUuid;

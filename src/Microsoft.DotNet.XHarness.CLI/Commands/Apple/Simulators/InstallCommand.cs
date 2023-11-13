@@ -20,7 +20,7 @@ internal class InstallCommand : SimulatorsCommand
 {
     private const string CommandName = "install";
     private const string CommandHelp = "Installs given simulators";
-    private static readonly HttpClient s_client = new();
+    private static readonly HttpClient s_client = new(new HttpClientHandler { CheckCertificateRevocationList = true });
 
     protected override string CommandUsage => CommandName + " [OPTIONS] [SIMULATOR] [SIMULATOR] ..";
 
@@ -164,7 +164,7 @@ internal class InstallCommand : SimulatorsCommand
                 ? simulatorUri.AbsolutePath
                 : throw new InvalidOperationException($"Could not parse the simulator URL: {simulator.Source}");
 
-            httpClient = new HttpClient(new HttpClientHandler() { CookieContainer = cookies });
+            httpClient = new HttpClient(new HttpClientHandler() { CookieContainer = cookies, CheckCertificateRevocationList = true });
             httpClient.DefaultRequestHeaders.Add("User-Agent", $"dotnet/xharness {XHarnessVersionCommand.GetAssemblyVersion().ProductVersion}"); // otherwise we get a 401 Unauthorized
 
             var adcDownloadUrl = $"https://developerservices2.apple.com/services/download?path={path}";
