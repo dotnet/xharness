@@ -2,9 +2,9 @@
     "instanceUrl": "https://devdiv.visualstudio.com/",
     "template": "TFSDEVDIV",
     "projectName": "DEVDIV",
-    "areaPath": "DevDiv\\NET Fundamentals\\Infrastructure\\Arcade\\SDL",
+    "areaPath": "DevDiv\\Mono",
     "iterationPath": "DevDiv",
-    "notificationAliases": [ "dnceng@microsoft.com" ],
+    "notificationAliases": [ "runtimerepo-infra@microsoft.com" ],
     "repositoryName":"dotnet-xharness",
     "codebaseName": "dotnet-xharness",
     "serviceTreeId": "4cac191f-8b27-4d55-abee-2eafb6470803"
