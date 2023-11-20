@@ -53,7 +53,10 @@ Arguments:
         runner.TimeToWaitForBootCompletion = Arguments.LaunchTimeout;
 
         // Wait till at least device(s) are ready
-        runner.WaitForDevice();
+        if (!runner.WaitForDevice())
+        {
+            return ExitCode.DEVICE_NOT_FOUND;
+        }
 
         logger.LogDebug($"Working with API {runner.GetAdbVersion()}");
 
