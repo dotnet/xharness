@@ -188,7 +188,7 @@ public class AdbRunner
         return apiVersion;
     }
 
-    public void WaitForDevice()
+    public bool WaitForDevice()
     {
         // This command waits for ANY kind of device to be available (emulator or real)
         // Needed because emulators start up asynchronously and take a while.
@@ -215,10 +215,12 @@ public class AdbRunner
         if (bootCompleted)
         {
             _log.LogDebug($"Waited {(int)watch.Elapsed.TotalSeconds} seconds for device boot completion");
+            return true;
         }
         else
         {
-            _log.LogWarning($"Did not detect boot completion variable on device; device may be in a bad state");
+            _log.LogError($"Did not detect boot completion variable on device; device may be in a bad state");
+            return false;
         }
     }
 
