@@ -85,7 +85,13 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
             testSink.Execution.TestAssemblyFinishedEvent += args => { Console.WriteLine($"Finished:    {assemblyFileName}"); };
 
             controller.RunTests(testCasesToRun, completionSink, testOptions);
-
+            while (!summaryTaskSource.Task.IsCompleted)
+            {
+                // schedule a timer in the browser to make sure we
+                // don't get stuck waiting on the task without returning
+                // control to the browser
+                await Task.Delay(1);
+            }
             totalSummary = Combine(totalSummary, await summaryTaskSource.Task);
 
             _assembliesElement.Add(resultsXmlAssembly);
