@@ -1,6 +1,10 @@
 <Project>
   <PropertyGroup>
-    <!-- change xharness_version in tools/install-xharness.sh and .ps1 when changing this-->
+    <!-- change the following places when changing the VersionPrefix:
+           - README.md
+           - azure-pipelines.yml
+           - tools/install-xharness.sh and .ps1
+    -->
     <VersionPrefix>9.0.0</VersionPrefix>
     <PreReleaseVersionLabel>prerelease</PreReleaseVersionLabel>
   </PropertyGroup>
