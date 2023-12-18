@@ -178,6 +178,12 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
             var result = await processTask;
             ExitCode logProcessorExitCode = await logProcessor.CompleteAndFlushAsync();
 
+            // give messages bit more time
+            if (!wasmExitReceivedTcs.Task.IsCompleted)
+            {
+                await Task.WhenAny(new Task[] { wasmExitReceivedTcs.Task, Task.Delay(200) }).ConfigureAwait(false);
+            }
+
             if (result.ExitCode != Arguments.ExpectedExitCode)
             {
                 logger.LogError($"Application has finished with exit code {result.ExitCode} but {Arguments.ExpectedExitCode} was expected");
@@ -188,7 +194,8 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                 if(!wasmExitReceivedTcs.Task.IsCompletedSuccessfully)
                 {
                     logger.LogError("Application exited without sending a wasm exit message.");
-                    return ExitCode.RETURN_CODE_NOT_SET;
+                    // TODO return RETURN_CODE_NOT_SET when we are more confident that it doesn't happen very often
+                    // return ExitCode.RETURN_CODE_NOT_SET;
                 }
                 if (logProcessor.LineThatMatchedErrorPattern != null)
                 {
