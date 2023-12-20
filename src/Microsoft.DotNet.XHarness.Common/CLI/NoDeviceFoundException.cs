@@ -20,8 +20,4 @@ public class NoDeviceFoundException : Exception
     public NoDeviceFoundException(string message, Exception innerException) : base(message, innerException)
     {
     }
-
-    protected NoDeviceFoundException(SerializationInfo info, StreamingContext context) : base(info, context)
-    {
-    }
 }
