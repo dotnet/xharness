@@ -23,11 +23,11 @@ public class Device : IHardwareDevice
         string deviceIdentifier,
         DeviceClass deviceClass,
         string name,
-        string buildVersion,
-        string productVersion,
-        string productType,
+        string? buildVersion,
+        string? productVersion,
+        string? productType,
         string interfaceType,
-        string companionIdentifier = null,
+        string? companionIdentifier = null,
         bool? isUsableForDebugging = null,
         bool isLocked = false,
         bool isPaired = false)
@@ -47,11 +47,11 @@ public class Device : IHardwareDevice
 
     public string DeviceIdentifier { get; }
     public DeviceClass DeviceClass { get; }
-    public string CompanionIdentifier { get; }
+    public string? CompanionIdentifier { get; }
     public string Name { get; }
-    public string BuildVersion { get; }
-    public string ProductVersion { get; }
-    public string ProductType { get; }
+    public string? BuildVersion { get; }
+    public string? ProductVersion { get; }
+    public string? ProductType { get; }
     public string InterfaceType { get; }
     public bool? IsUsableForDebugging { get; }
     public bool IsLocked { get; }
@@ -59,7 +59,7 @@ public class Device : IHardwareDevice
 
     public string UDID => DeviceIdentifier;
 
-    public string OSVersion => ProductVersion;
+    public string? OSVersion => ProductVersion;
 
     // Add a speed property that can be used to sort a list of devices according to speed.
     public int DebugSpeed => InterfaceType?.ToLowerInvariant() switch
@@ -83,7 +83,7 @@ public class Device : IHardwareDevice
 
     public bool Supports32Bit => DevicePlatform switch
     {
-        DevicePlatform.iOS => Version.Parse(ProductVersion).Major < 11,
+        DevicePlatform.iOS => ProductVersion != null && Version.Parse(ProductVersion).Major < 11,
         DevicePlatform.tvOS => false,
         DevicePlatform.watchOS => true,
         DevicePlatform.xrOS => false,
@@ -95,6 +95,11 @@ public class Device : IHardwareDevice
         get
         {
             var model = ProductType;
+
+            if (model == null)
+            {
+                return Architecture.Unknown;
+            }
 
             // https://www.theiphonewiki.com/wiki/Models
             if (model.StartsWith("iPhone", StringComparison.Ordinal))

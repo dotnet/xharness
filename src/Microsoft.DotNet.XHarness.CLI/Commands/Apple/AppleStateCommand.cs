@@ -30,13 +30,15 @@ internal class AppleStateCommand : GetStateCommand<AppleStateCommandArguments>
         public string UDID { get; }
         public string Type { get; }
         public string OSVersion { get; }
+        public bool IsPaired { get; }
 
-        public DeviceInfo(string name, string uDID, string type, string oSVersion)
+        public DeviceInfo(string name, string uDID, string type, string oSVersion, bool isPaired = true)
         {
             Name = name;
             UDID = uDID;
             Type = type;
             OSVersion = oSVersion;
+            IsPaired = isPaired;
         }
     }
 
@@ -129,7 +131,8 @@ internal class AppleStateCommand : GetStateCommand<AppleStateCommandArguments>
             foreach (var dev in info.Devices)
             {
                 var uuid = Arguments.ShowDevicesUUID ? $" {dev.UDID}   " : "";
-                Console.WriteLine($"  {dev.Name.PadRight(maxLength)}{uuid} {dev.OSVersion,-13} {dev.Type}");
+                var notPaired = dev.IsPaired ? "" : "(not paired) ";
+                Console.WriteLine($"  {notPaired}{dev.Name.PadRight(maxLength)}{uuid} {dev.OSVersion,-13} {dev.Type}");
             }
         }
         else
@@ -213,7 +216,8 @@ internal class AppleStateCommand : GetStateCommand<AppleStateCommandArguments>
                 name: dev.Name,
                 uDID: dev.DeviceIdentifier,
                 type: $"{dev.DeviceClass} {dev.DevicePlatform}",
-                oSVersion: dev.OSVersion));
+                oSVersion: dev.OSVersion,
+                isPaired: dev.IsPaired));
         }
 
         if (Arguments.UseJson)
