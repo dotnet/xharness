@@ -8,10 +8,10 @@ public interface IHardwareDevice : IDevice
 {
     string DeviceIdentifier { get; }
     DeviceClass DeviceClass { get; }
-    string CompanionIdentifier { get; }
-    string BuildVersion { get; }
-    string ProductVersion { get; }
-    string ProductType { get; }
+    string? CompanionIdentifier { get; }
+    string? BuildVersion { get; }
+    string? ProductVersion { get; }
+    string? ProductType { get; }
     string InterfaceType { get; }
     bool? IsUsableForDebugging { get; }
     bool IsLocked { get; }
