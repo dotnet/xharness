@@ -42,10 +42,10 @@ public class NUnitV3TestReportGenerator : TestReportGenerator
                     {
                         case "Error":
                         case "Failed":
-                            var name = reader["name"];
+                            string name = reader["name"] ?? throw new InvalidOperationException();
                             var subtree = reader.ReadSubtree();
                             subtree.ReadToDescendant("message");
-                            var message = subtree.ReadElementContentAsString();
+                            string message = subtree.ReadElementContentAsString();
                             while (subtree.Read()) { } // read to end of subtree
                             failedTests.Add((name, message));
                             break;

@@ -8,6 +8,7 @@
     <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
     <DisableImplicitNamespaceImports_DotNet>true</DisableImplicitNamespaceImports_DotNet>
     <Copyright>$(CopyrightNetFoundation)</Copyright>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
 </Project>

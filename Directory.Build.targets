@@ -2,4 +2,15 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
+  <ItemGroup>
+    <!-- Upgrade xunit's transitive NETStandard.Library dependency to avoid .NET Standard 1.x dependencies. -->
+    <PackageReference Include="NETStandard.Library"
+                      IsImplicitlyDefined="false"
+                      PrivateAssets="all"
+                      ExcludeAssets="runtime"
+                      VersionOverride="2.0.3"
+                      Condition="'$(TargetFrameworkIdentifier)' != '.NETStandard' and
+                                 '$(SkipNETStandardLibraryPackageAutoInclude)' != 'true'" />
+  </ItemGroup>
+
 </Project>

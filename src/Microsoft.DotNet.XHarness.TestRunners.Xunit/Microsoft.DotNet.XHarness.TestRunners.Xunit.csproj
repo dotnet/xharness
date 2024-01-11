@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetMinimum);netstandard2.1</TargetFrameworks>
+    <TargetFramework>$(NetMinimum)</TargetFramework>
     <IsPackable>true</IsPackable>
     <Nullable>disable</Nullable>
   </PropertyGroup>
@@ -11,15 +11,11 @@
     <PackageReference Include="xunit.extensibility.execution" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == '$(NetMinimum)'">
+  <ItemGroup>
     <!-- Reference xunit.runner.utility directly via PackageDownload+Reference to avoid its netstandard1.x dependencies. -->
     <PackageDownload Include="xunit.runner.utility" Version="[$(XUnitVersion)]" />
     <Reference Include="$(NuGetPackageRoot)xunit.runner.utility\$(XUnitVersion)\lib\netcoreapp1.0\xunit.runner.utility.netcoreapp10.dll" />
     <TfmSpecificPackageFile Include="@(Reference->WithMetadataValue('Filename', 'xunit.runner.utility.netcoreapp10'))" PackagePath="lib/$(NetMinimum)/" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-    <PackageReference Include="xunit.runner.utility" />
   </ItemGroup>
 
   <ItemGroup>

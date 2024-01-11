@@ -155,13 +155,13 @@ public class SimpleTcpListener : SimpleListener, ITunnelListener
                     break;
 
                 }
-                catch (SocketException ex)
+                catch (SocketException)
                 {
                     // Give up after some time
                     if (watch.Elapsed > _timeoutAfter)
                     {
                         Log.WriteLine($"TCP connection hasn't started in time ({_timeoutAfter:hh\\:mm\\:ss}). Stopped listening.");
-                        throw ex;
+                        throw;
                     }
 
                     // Switch to a 250 ms timeout after 20 seconds

@@ -14,8 +14,6 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
-#nullable enable
-
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 
 public class WasmTestMessagesProcessor
