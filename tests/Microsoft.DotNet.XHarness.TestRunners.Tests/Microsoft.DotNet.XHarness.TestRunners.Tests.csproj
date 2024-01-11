@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <PackageReference Include="Moq" />
-    <PackageReference Include="xunit.runner.utility" />
   </ItemGroup>
 
   <ItemGroup>
