@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>$(NetCurrent);$(NetPrevious);$(NetMinimum)</TargetFrameworks>
     <IsPackable>true</IsPackable>
-    <nullable>enable</nullable>
     <RootNamespace>Microsoft.DotNet.XHarness.TestRunners.Xunit</RootNamespace>
   </PropertyGroup>
 

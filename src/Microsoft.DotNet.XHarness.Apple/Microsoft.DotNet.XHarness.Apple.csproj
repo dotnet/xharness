@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>$(NetMinimum)</TargetFramework>
-    <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 

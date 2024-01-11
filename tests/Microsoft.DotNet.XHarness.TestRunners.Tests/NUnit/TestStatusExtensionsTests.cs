@@ -8,7 +8,7 @@ using Microsoft.DotNet.XHarness.TestRunners.NUnit;
 using NUnit.Framework.Interfaces;
 using Xunit;
 
-#nullable  enable
+#nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Tests.NUnit;
 
 public class TestStatusExtensionsTests

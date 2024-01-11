@@ -74,9 +74,9 @@ public class XUnitTestReportGenerator : TestReportGenerator
                 switch (status)
                 {
                     case "Fail":
-                        var name = reader["name"];
+                        string name = reader["name"] ?? throw new InvalidOperationException();
                         reader.ReadToDescendant("message");
-                        var message = reader.ReadElementContentAsString();
+                        string message = reader.ReadElementContentAsString();
                         failedTests.Add((name, message));
                         break;
                 }

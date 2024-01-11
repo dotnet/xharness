@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>$(NetMinimum)</TargetFramework>
-    <nullable>enable</nullable>
   </PropertyGroup>
 
   <ItemGroup>
