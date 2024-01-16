@@ -53,7 +53,7 @@ public class DefaultSimulatorSelector : ISimulatorSelector
         if (target.Platform == TestTarget.Simulator_watchOS)
         {
             companionRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-" + (minVersion ? SdkVersions.MinWatchOSCompanionSimulator : SdkVersions.MaxWatchOSCompanionSimulator).Replace('.', '-');
-            companionDeviceType = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6s" : "iPhone-X");
+            companionDeviceType = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6s" : "iPhone-XS");
         }
         else
         {
@@ -79,6 +79,6 @@ public class DefaultSimulatorSelector : ISimulatorSelector
         }
         return iOSVersion.Major >= 17
             ? "com.apple.CoreSimulator.SimDeviceType.iPhone-15"
-            : "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6s" : "iPhone-X");
+            : "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6s" : "iPhone-XS");
     }
 }
