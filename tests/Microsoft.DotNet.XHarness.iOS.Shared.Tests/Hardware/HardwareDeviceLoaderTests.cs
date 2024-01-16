@@ -34,7 +34,7 @@ public class HardwareDeviceLoaderTests
     [Theory]
     [InlineData(false)] // no timeout
     [InlineData(true)] // timeoout
-    public void LoadAsyncProcessErrorTest(bool timeout)
+    public async Task LoadAsyncProcessErrorTest(bool timeout)
     {
         string processPath = null;
         MlaunchArguments passedArguments = null;
@@ -56,7 +56,7 @@ public class HardwareDeviceLoaderTests
                 }
             });
 
-        Assert.ThrowsAsync<Exception>(async () =>
+        await Assert.ThrowsAsync<Exception>(async () =>
         {
             await _devices.LoadDevices(_executionLog.Object);
         });

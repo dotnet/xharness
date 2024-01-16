@@ -504,7 +504,7 @@ public class XUnitFilterTests
     [InlineData("TestMethod", "TestAssembly", true)]
     [InlineData("TestMethod", "TestAssembly", false)]
     [InlineData("TestMethod", null, false)]
-    public void CreateSingleFilter(string methodName, string assemblyName, bool excluded)
+    public void CreateSingleFilter(string methodName, string? assemblyName, bool excluded)
     {
         var filter = XUnitFilter.CreateSingleFilter(methodName, excluded, assemblyName);
         Assert.Equal(methodName, filter.SelectorValue);
@@ -547,7 +547,7 @@ public class XUnitFilterTests
     [InlineData("MyNameSpace", "MyAssembly", true)]
     [InlineData("MyNameSpace", "MyAssembly", false)]
     [InlineData("MyNameSpace", null, false)]
-    public void CreateNamespaceFilter(string nameSpace, string assemblyName, bool excluded)
+    public void CreateNamespaceFilter(string nameSpace, string? assemblyName, bool excluded)
     {
         var filter = XUnitFilter.CreateNamespaceFilter(nameSpace, excluded, assemblyName);
         Assert.Equal(nameSpace, filter.SelectorValue);
@@ -567,7 +567,7 @@ public class XUnitFilterTests
     [InlineData("MyClass", "MyAssembly", true)]
     [InlineData("MyClass", "MyAssembly", false)]
     [InlineData("MyClass", null, false)]
-    public void CreateClassFilter(string className, string assemblyName, bool excluded)
+    public void CreateClassFilter(string className, string? assemblyName, bool excluded)
     {
         var filter = XUnitFilter.CreateClassFilter(className, excluded, assemblyName);
         Assert.Equal(className, filter.SelectorValue);
@@ -587,7 +587,7 @@ public class XUnitFilterTests
     [InlineData("MyTrait", "MyTraitValue", true)]
     [InlineData("MyTrait", "MyTraitValue", false)]
     [InlineData("MyTrait", null, false)]
-    public void CreateTraitFilter(string trait, string traitValue, bool excluded)
+    public void CreateTraitFilter(string trait, string? traitValue, bool excluded)
     {
         var filter = XUnitFilter.CreateTraitFilter(trait, traitValue, excluded);
         Assert.Equal(trait, filter.SelectorName);

@@ -7,15 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit.analyzers" VersionOverride="$(XUnitAnalyzersVersion)" />
     <PackageReference Include="xunit.extensibility.execution" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Reference xunit.runner.utility directly via PackageDownload+Reference to avoid its netstandard1.x dependencies. -->
-    <PackageDownload Include="xunit.runner.utility" Version="[$(XUnitVersion)]" />
-    <Reference Include="$(NuGetPackageRoot)xunit.runner.utility\$(XUnitVersion)\lib\netcoreapp1.0\xunit.runner.utility.netcoreapp10.dll" />
-    <TfmSpecificPackageFile Include="@(Reference->WithMetadataValue('Filename', 'xunit.runner.utility.netcoreapp10'))" PackagePath="lib/$(NetMinimum)/" />
+    <PackageReference Include="xunit.runner.utility" />
   </ItemGroup>
 
   <ItemGroup>
