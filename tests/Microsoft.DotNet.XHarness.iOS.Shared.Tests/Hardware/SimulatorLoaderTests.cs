@@ -113,7 +113,7 @@ public class SimulatorLoaderTests
         MlaunchArgument outputFormatArg = passedArguments.Where(a => a is XmlOutputFormatArgument).FirstOrDefault();
         Assert.NotNull(outputFormatArg);
 
-        Assert.Equal(75, _simulatorLoader.AvailableDevices.Count());
+        Assert.Equal(76, _simulatorLoader.AvailableDevices.Count());
     }
 
     [Theory]
