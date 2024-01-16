@@ -243,8 +243,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
     {
-        var runMode = target.Platform.ToRunMode();
-        if (signalAppEnd && (runMode == RunMode.Sim64 || runMode == RunMode.Sim32))
+        if (signalAppEnd && target.Platform.IsSimulator())
         {
             _logger.LogWarning("The --signal-app-end option is used for device tests and has no effect on simulators");
         }

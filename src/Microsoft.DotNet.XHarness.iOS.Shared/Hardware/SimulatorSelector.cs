@@ -24,9 +24,7 @@ public class DefaultSimulatorSelector : ISimulatorSelector
     {
         return target.Platform switch
         {
-            TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimRuntime.iOS-",
             TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimRuntime.iOS-",
-            TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimRuntime.iOS-",
             TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimRuntime.tvOS-",
             TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimRuntime.watchOS-",
             TestTarget.Simulator_xrOS => "com.apple.CoreSimulator.SimRuntime.xrOS-",
@@ -38,9 +36,7 @@ public class DefaultSimulatorSelector : ISimulatorSelector
     {
         return target.Platform switch
         {
-            TestTarget.Simulator_iOS => GetiOSDeviceType(target, minVersion),
-            TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
-            TestTarget.Simulator_iOS64 => GetiOSDeviceType(target, minVersion),
+            TestTarget.Simulator_iOS64 => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6s" : "iPhone-XS"),
             TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p",
             TestTarget.Simulator_watchOS => "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "Apple-Watch-38mm" : "Apple-Watch-Series-3-38mm"),
             TestTarget.Simulator_xrOS => "com.apple.CoreSimulator.SimDeviceType.Apple-Vision-Pro",
@@ -66,19 +62,5 @@ public class DefaultSimulatorSelector : ISimulatorSelector
     {
         // Put Booted/Booting in front of Shutdown/Unknown
         return simulators.OrderByDescending(s => s.State).First();
-    }
-
-    private static string GetiOSDeviceType(TestTargetOs testTargetOs, bool minVersion)
-    {
-        //default to version
-        var iOSVersion = Version.Parse(SdkVersions.iOS);
-        //case ios-simulator-64
-        if (testTargetOs.OSVersion != null)
-        {
-            Version.TryParse(testTargetOs.OSVersion, out iOSVersion);
-        }
-        return iOSVersion.Major >= 17
-            ? "com.apple.CoreSimulator.SimDeviceType.iPhone-15"
-            : "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6s" : "iPhone-XS");
     }
 }

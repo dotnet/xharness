@@ -282,8 +282,6 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
             (string simulatorName, string simulatorFormat) = target.Platform switch
             {
-                TestTarget.Simulator_iOS => ("iPhone", testTargetVersion.Major >= 16 ? "dmg" : "pkg"),
-                TestTarget.Simulator_iOS32 => ("iPhone", "pkg"),
                 TestTarget.Simulator_iOS64 => ("iPhone", testTargetVersion.Major >= 16 ? "dmg" : "pkg"),
                 TestTarget.Simulator_tvOS => ("AppleTV", testTargetVersion.Major >= 16 ? "dmg" : "pkg"),
                 TestTarget.Simulator_watchOS => ("Watch", testTargetVersion.Major >= 9 ? "dmg" : "pkg"),
