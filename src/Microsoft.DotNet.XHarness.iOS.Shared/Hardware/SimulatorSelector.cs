@@ -38,7 +38,7 @@ public class DefaultSimulatorSelector : ISimulatorSelector
     {
         return target.Platform switch
         {
-            TestTarget.Simulator_iOS => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
+            TestTarget.Simulator_iOS => GetiOSDeviceType(target, minVersion),
             TestTarget.Simulator_iOS32 => "com.apple.CoreSimulator.SimDeviceType.iPhone-5",
             TestTarget.Simulator_iOS64 => GetiOSDeviceType(target, minVersion),
             TestTarget.Simulator_tvOS => "com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p",
@@ -53,7 +53,7 @@ public class DefaultSimulatorSelector : ISimulatorSelector
         if (target.Platform == TestTarget.Simulator_watchOS)
         {
             companionRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-" + (minVersion ? SdkVersions.MinWatchOSCompanionSimulator : SdkVersions.MaxWatchOSCompanionSimulator).Replace('.', '-');
-            companionDeviceType = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-SE-3rd-generation");
+            companionDeviceType = "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6s" : "iPhone-X");
         }
         else
         {
@@ -79,6 +79,6 @@ public class DefaultSimulatorSelector : ISimulatorSelector
         }
         return iOSVersion.Major >= 17
             ? "com.apple.CoreSimulator.SimDeviceType.iPhone-15"
-            : "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6" : "iPhone-SE-3rd-generation");
+            : "com.apple.CoreSimulator.SimDeviceType." + (minVersion ? "iPhone-6s" : "iPhone-X");
     }
 }
