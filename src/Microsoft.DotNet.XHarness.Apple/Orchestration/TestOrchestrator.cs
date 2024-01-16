@@ -214,11 +214,9 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         bool signalAppEnd,
         CancellationToken cancellationToken)
     {
-        var runMode = target.Platform.ToRunMode();
-
         // iOS 14+ devices do not allow local network access and won't work unless the user confirms a dialog on the screen
         // https://developer.apple.com/forums/thread/663858
-        if (Version.TryParse(device.OSVersion, out var version) && version.Major >= 14 && runMode == RunMode.iOS && communicationChannel == CommunicationChannel.Network)
+        if (Version.TryParse(device.OSVersion, out var version) && version.Major >= 14 && target.Platform.ToRunMode() == RunMode.iOS && communicationChannel == CommunicationChannel.Network)
         {
             _logger.LogWarning(
                 "Applications need user permission for communication over local network on iOS 14 and newer." + Environment.NewLine +
@@ -226,7 +224,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
                 "Test run might fail if permission is not granted. Permission is valid until app is uninstalled.");
         }
 
-        if (signalAppEnd && (runMode == RunMode.Sim64 || runMode == RunMode.Sim32))
+        if (signalAppEnd && target.Platform.IsSimulator())
         {
             _logger.LogWarning("The --signal-app-end option is used for device tests and has no effect on simulators");
         }

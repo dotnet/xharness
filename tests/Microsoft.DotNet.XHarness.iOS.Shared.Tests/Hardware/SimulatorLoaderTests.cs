@@ -118,7 +118,6 @@ public class SimulatorLoaderTests
 
     [Theory]
     [InlineData(TestTarget.Simulator_iOS64, false)]
-    [InlineData(TestTarget.Simulator_iOS32, false)]
     [InlineData(TestTarget.Simulator_tvOS, false)]
     [InlineData(TestTarget.Simulator_watchOS, true)]
     public async Task FindAsyncDoNotCreateTest(TestTarget target, bool shouldFindCompanion)
@@ -220,7 +219,6 @@ public class SimulatorLoaderTests
 
     // This tests the SimulatorEnumerable
     [Theory]
-    [InlineData(TestTarget.Simulator_iOS32)]
     [InlineData(TestTarget.Simulator_iOS64)]
     [InlineData(TestTarget.Simulator_tvOS)]
     public void SelectDevicesDeviceOnlyTest(TestTarget testTarget)

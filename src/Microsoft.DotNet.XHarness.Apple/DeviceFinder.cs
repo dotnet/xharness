@@ -83,7 +83,6 @@ public class DeviceFinder : IDeviceFinder
 
                 IHardwareDevice? hardwareDevice = target.Platform switch
                 {
-                    TestTarget.Simulator_iOS32 => _deviceLoader.Connected32BitIOS.FirstOrDefault(),
                     TestTarget.Device_iOS => _deviceLoader.Connected64BitIOS.FirstOrDefault(d => !pairedDevicesOnly || d.IsPaired),
                     TestTarget.Device_tvOS => _deviceLoader.ConnectedTV.FirstOrDefault(d => !pairedDevicesOnly || d.IsPaired),
                     _ => throw new ArgumentOutOfRangeException(nameof(target), $"Unrecognized device platform {target.Platform}")

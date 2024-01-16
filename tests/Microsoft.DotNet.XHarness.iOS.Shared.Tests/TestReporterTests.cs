@@ -83,7 +83,7 @@ public class TestReporterTests : IDisposable
             _listener.Object,
             _parser,
             _appInformation,
-            RunMode.Sim64,
+            RunMode.iOS,
             XmlResultJargon.NUnitV3,
             _deviceName,
             TimeSpan.FromSeconds(2));

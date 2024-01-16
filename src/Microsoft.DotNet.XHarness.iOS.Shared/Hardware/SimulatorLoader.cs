@@ -478,9 +478,7 @@ public class SimulatorLoader : ISimulatorLoader
     {
         TestTargetOs testTarget = target switch
         {
-            TestTarget.Simulator_iOS32 => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : "10.3"),
             TestTarget.Simulator_iOS64 => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator),
-            TestTarget.Simulator_iOS => new TestTargetOs(target, minVersion ? SdkVersions.MiniOSSimulator : SdkVersions.MaxiOSSimulator),
             TestTarget.Simulator_tvOS => new TestTargetOs(target, minVersion ? SdkVersions.MinTVOSSimulator : SdkVersions.MaxTVOSSimulator),
             TestTarget.Simulator_watchOS => new TestTargetOs(target, minVersion ? SdkVersions.MinWatchOSSimulator : SdkVersions.MaxWatchOSSimulator),
             TestTarget.Simulator_xrOS => new TestTargetOs(target, minVersion ? SdkVersions.MinxrOSSimulator : SdkVersions.MaxxrOSSimulator),
