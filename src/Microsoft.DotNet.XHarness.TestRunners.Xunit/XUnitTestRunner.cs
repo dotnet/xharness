@@ -35,6 +35,8 @@ internal class XUnitTestRunner : XunitTestRunnerBase
 
     private XElement _assembliesElement;
 
+    internal XElement AssembliesElement => _assembliesElement;
+
     public AppDomainSupport AppDomainSupport { get; set; } = AppDomainSupport.Denied;
     protected override string ResultsFileName { get; set; } = "TestResults.xUnit.xml";
 
