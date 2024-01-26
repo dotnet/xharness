@@ -121,12 +121,7 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
     {
         if (_oneLineResults)
         {
-            using var ms = new MemoryStream();
-            _assembliesElement.Save(ms);
-            ms.TryGetBuffer(out var bytes);
-            var base64 = Convert.ToBase64String(bytes, Base64FormattingOptions.None);
-            Console.WriteLine($"STARTRESULTXML {bytes.Count} {base64} ENDRESULTXML");
-            Console.WriteLine($"Finished writing {bytes.Count} bytes of RESULTXML");
+            WasmXmlResultWriter.WriteOnSingleLine(_assembliesElement);
         }
         else
         {
