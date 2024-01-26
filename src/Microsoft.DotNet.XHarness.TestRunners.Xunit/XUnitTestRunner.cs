@@ -124,6 +124,14 @@ internal class XUnitTestRunner : XunitTestRunnerBase
         }
     }
 
+    private string GetThreadIdForLog()
+    {
+        if (Environment.GetEnvironmentVariable("XHARNESS_LOG_THREAD_ID") == null)
+            return string.Empty;
+
+        return $"[{Thread.CurrentThread.ManagedThreadId}]";
+    }
+
     private void HandleTestStarting(MessageHandlerArgs<ITestStarting> args)
     {
         if (args == null || args.Message == null)
@@ -133,7 +141,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
 
         if (Environment.GetEnvironmentVariable("XHARNESS_LOG_TEST_START") != null)
         {
-            OnInfo($"\t[STRT] {args.Message.Test.DisplayName}");
+            OnInfo($"\t[STRT]{GetThreadIdForLog()} {args.Message.Test.DisplayName}");
         }
 
         OnDebug("Test starting");
@@ -159,7 +167,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
         }
 
         PassedTests++;
-        OnInfo($"\t[PASS] {args.Message.TestCase.DisplayName}");
+        OnInfo($"\t[PASS]{GetThreadIdForLog()} {args.Message.TestCase.DisplayName}");
         LogTestDetails(args.Message.Test, log: OnDebug);
         LogTestOutput(args.Message, log: OnDiagnostic);
         ReportTestCases("   Associated", args.Message.TestCases, log: OnDiagnostic);
@@ -244,7 +252,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
 
         FailedTests++;
         string assemblyInfo = GetAssemblyInfo(args.Message.TestAssembly);
-        var sb = new StringBuilder($"\t[FAIL] {args.Message.TestCase.DisplayName}");
+        var sb = new StringBuilder($"\t[FAIL]{GetThreadIdForLog()} {args.Message.TestCase.DisplayName}");
         LogTestDetails(args.Message.Test, OnError, sb);
         sb.AppendLine();
         if (!string.IsNullOrEmpty(assemblyInfo))
@@ -281,7 +289,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
             TestName = args.Message.Test?.DisplayName,
             Message = sb.ToString()
         });
-        OnInfo($"\t[FAIL] {args.Message.Test.TestCase.DisplayName}");
+        OnInfo($"\t[FAIL]{GetThreadIdForLog()} {args.Message.Test.TestCase.DisplayName}");
         OnInfo(sb.ToString());
         OnTestCompleted((
             TestName: args.Message.Test.DisplayName,
