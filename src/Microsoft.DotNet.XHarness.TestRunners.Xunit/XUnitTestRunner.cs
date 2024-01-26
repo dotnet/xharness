@@ -129,6 +129,11 @@ internal class XUnitTestRunner : XunitTestRunnerBase
             return;
         }
 
+        if (Environment.GetEnvironmentVariable("XHARNESS_LOG_TEST_START") != null)
+        {
+            OnInfo($"\t[STRT] {args.Message.Test.DisplayName}");
+        }
+
         OnDebug("Test starting");
         LogTestDetails(args.Message.Test, log: OnDebug);
         ReportTestCases("   Associated", args.Message.TestCases, args.Message.TestCase, OnDiagnostic);
