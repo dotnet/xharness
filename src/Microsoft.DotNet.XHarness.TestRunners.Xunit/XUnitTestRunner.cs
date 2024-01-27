@@ -126,10 +126,10 @@ internal class XUnitTestRunner : XunitTestRunnerBase
 
     private string GetThreadIdForLog()
     {
-        if (Environment.GetEnvironmentVariable("XHARNESS_LOG_THREAD_ID") == null)
-            return string.Empty;
+        if (EnvironmentVariables.IsLogThreadId())
+            return $"[{Thread.CurrentThread.ManagedThreadId}]";
 
-        return $"[{Thread.CurrentThread.ManagedThreadId}]";
+        return string.Empty;
     }
 
     private void HandleTestStarting(MessageHandlerArgs<ITestStarting> args)
@@ -139,7 +139,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
             return;
         }
 
-        if (Environment.GetEnvironmentVariable("XHARNESS_LOG_TEST_START") != null)
+        if (EnvironmentVariables.IsLogTestStart())
         {
             OnInfo($"\t[STRT]{GetThreadIdForLog()} {args.Message.Test.DisplayName}");
         }

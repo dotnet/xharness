@@ -62,7 +62,7 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
 #pragma warning restore
             var completionSink = new CompletionCallbackExecutionSink(resultsSink, summary => summaryTaskSource.SetResult(summary));
 
-            if (Environment.GetEnvironmentVariable("XHARNESS_LOG_TEST_START") != null)
+            if (EnvironmentVariables.IsLogTestStart())
             {
                 testSink.Execution.TestStartingEvent += args => { Console.WriteLine($"[STRT] {args.Message.Test.DisplayName}"); };
             }
