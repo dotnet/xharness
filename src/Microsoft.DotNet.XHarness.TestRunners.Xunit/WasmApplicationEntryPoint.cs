@@ -22,9 +22,14 @@ public abstract class WasmApplicationEntryPoint : WasmApplicationEntryPointBase
 
     protected override bool IsXunit => true;
 
+    protected bool IsThreadless { get; set; } = true;
+
     protected override TestRunner GetTestRunner(LogWriter logWriter)
     {
-        var runner = new ThreadlessXunitTestRunner(logWriter, true);
+        XunitTestRunnerBase runner = IsThreadless
+            ? new ThreadlessXunitTestRunner(logWriter, true)
+            : new WasmThreadedTestRunner(logWriter);
+
         ConfigureRunnerFilters(runner, ApplicationOptions.Current);
 
         runner.SkipCategories(ExcludedTraits);
