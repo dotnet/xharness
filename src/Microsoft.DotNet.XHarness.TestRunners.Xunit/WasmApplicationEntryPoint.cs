@@ -28,7 +28,7 @@ public abstract class WasmApplicationEntryPoint : WasmApplicationEntryPointBase
     {
         XunitTestRunnerBase runner = IsThreadless
             ? new ThreadlessXunitTestRunner(logWriter, true)
-            : new WasmThreadedTestRunner(logWriter);
+            : new WasmThreadedTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
 
         ConfigureRunnerFilters(runner, ApplicationOptions.Current);
 
