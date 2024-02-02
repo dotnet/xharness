@@ -185,7 +185,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
             return;
         }
 
-        OnInfo(args.Message.Output);
+        OnDebug(args.Message.Output);
     }
 
     private void HandleTestMethodStarting(MessageHandlerArgs<ITestMethodStarting> args)
