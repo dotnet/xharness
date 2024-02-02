@@ -19,5 +19,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit
             Console.WriteLine($"STARTRESULTXML {bytes.Count} {base64} ENDRESULTXML");
             Console.WriteLine($"Finished writing {bytes.Count} bytes of RESULTXML");
         }
+
+        public static string EscapeNewLines(string message) => message.Replace("\r", "\\r").Replace("\n", "\\n");
     }
 }

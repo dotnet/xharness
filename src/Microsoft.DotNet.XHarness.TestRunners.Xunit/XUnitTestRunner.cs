@@ -40,6 +40,8 @@ internal class XUnitTestRunner : XunitTestRunnerBase
     public AppDomainSupport AppDomainSupport { get; set; } = AppDomainSupport.Denied;
     protected override string ResultsFileName { get; set; } = "TestResults.xUnit.xml";
 
+    protected string TestStagePrefix { get; init; } = "\t";
+
     public XUnitTestRunner(LogWriter logger) : base(logger)
     {
         _messageSink = new TestMessageSink();
@@ -141,7 +143,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
 
         if (EnvironmentVariables.IsLogTestStart())
         {
-            OnInfo($"\t[STRT]{GetThreadIdForLog()} {args.Message.Test.DisplayName}");
+            OnInfo($"{TestStagePrefix}[STRT]{GetThreadIdForLog()} {args.Message.Test.DisplayName}");
         }
 
         OnDebug("Test starting");
@@ -167,7 +169,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
         }
 
         PassedTests++;
-        OnInfo($"\t[PASS]{GetThreadIdForLog()} {args.Message.TestCase.DisplayName}");
+        OnInfo($"{TestStagePrefix}[PASS]{GetThreadIdForLog()} {args.Message.TestCase.DisplayName}");
         LogTestDetails(args.Message.Test, log: OnDebug);
         LogTestOutput(args.Message, log: OnDiagnostic);
         ReportTestCases("   Associated", args.Message.TestCases, log: OnDiagnostic);
@@ -250,24 +252,29 @@ internal class XUnitTestRunner : XunitTestRunnerBase
             return;
         }
 
+        HandleTestFailed(args.Message);
+    }
+
+    protected virtual void HandleTestFailed(ITestFailed msg)
+    {
         FailedTests++;
-        string assemblyInfo = GetAssemblyInfo(args.Message.TestAssembly);
-        var sb = new StringBuilder($"\t[FAIL]{GetThreadIdForLog()} {args.Message.TestCase.DisplayName}");
-        LogTestDetails(args.Message.Test, OnError, sb);
+        string assemblyInfo = GetAssemblyInfo(msg.TestAssembly);
+        var sb = new StringBuilder($"{TestStagePrefix}[FAIL]{GetThreadIdForLog()} {msg.TestCase.DisplayName}");
+        LogTestDetails(msg.Test, OnError, sb);
         sb.AppendLine();
         if (!string.IsNullOrEmpty(assemblyInfo))
         {
             sb.AppendLine($"   Assembly: {assemblyInfo}");
         }
 
-        LogSourceInformation(args.Message.TestCase.SourceInformation, OnError, sb);
-        LogFailureInformation(args.Message, OnError, sb);
+        LogSourceInformation(msg.TestCase.SourceInformation, OnError, sb);
+        LogFailureInformation(msg, OnError, sb);
         sb.AppendLine();
-        LogTestOutput(args.Message, OnError, sb);
+        LogTestOutput(msg, OnError, sb);
         sb.AppendLine();
-        if (args.Message.TestCase.Traits != null && args.Message.TestCase.Traits.Count > 0)
+        if (msg.TestCase.Traits != null && msg.TestCase.Traits.Count > 0)
         {
-            foreach (var kvp in args.Message.TestCase.Traits)
+            foreach (var kvp in msg.TestCase.Traits)
             {
                 string message = $"   Test trait name: {kvp.Key}";
                 OnError(message);
@@ -282,17 +289,17 @@ internal class XUnitTestRunner : XunitTestRunnerBase
             }
             sb.AppendLine();
         }
-        ReportTestCases("   Associated", args.Message.TestCases, args.Message.TestCase, OnDiagnostic);
+        ReportTestCases("   Associated", msg.TestCases, msg.TestCase, OnDiagnostic);
 
         FailureInfos.Add(new TestFailureInfo
         {
-            TestName = args.Message.Test?.DisplayName,
+            TestName = msg.Test?.DisplayName,
             Message = sb.ToString()
         });
-        OnInfo($"\t[FAIL]{GetThreadIdForLog()} {args.Message.Test.TestCase.DisplayName}");
+        OnInfo($"{TestStagePrefix}[FAIL]{GetThreadIdForLog()} {msg.Test.TestCase.DisplayName}");
         OnInfo(sb.ToString());
         OnTestCompleted((
-            TestName: args.Message.Test.DisplayName,
+            TestName: msg.Test.DisplayName,
             TestResult: TestResult.Failed
         ));
     }
@@ -667,7 +674,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
     private void RaiseTestSkippedCase(ITestResultMessage message, IEnumerable<ITestCase> testCases, ITestCase testCase)
     {
         SkippedTests++;
-        OnInfo($"\t[IGNORED] {testCase.DisplayName}");
+        OnInfo($"{TestStagePrefix}[IGNORED] {testCase.DisplayName}");
         LogTestDetails(message.Test, log: OnDebug);
         LogTestOutput(message, log: OnDiagnostic);
         ReportTestCases("   Associated", testCases, log: OnDiagnostic);

@@ -68,17 +68,17 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
             }
             testSink.Execution.TestPassedEvent += args =>
             {
-                OnDebug($"[PASS] {EscapeNewLines(args.Message.Test.DisplayName)}");
+                OnDebug($"[PASS] {WasmXmlResultWriter.EscapeNewLines(args.Message.Test.DisplayName)}");
                 PassedTests++;
             };
             testSink.Execution.TestSkippedEvent += args =>
             {
-                OnDebug($"[SKIP] {EscapeNewLines(args.Message.Test.DisplayName)}");
+                OnDebug($"[SKIP] {WasmXmlResultWriter.EscapeNewLines(args.Message.Test.DisplayName)}");
                 SkippedTests++;
             };
             testSink.Execution.TestFailedEvent += args =>
             {
-                OnError($"[FAIL] {EscapeNewLines(args.Message.Test.DisplayName)}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}");
+                OnError($"[FAIL] {WasmXmlResultWriter.EscapeNewLines(args.Message.Test.DisplayName)}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}");
                 FailedTests++;
             };
             testSink.Execution.TestFinishedEvent += args => ExecutedTests++;
@@ -93,9 +93,6 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
             _assembliesElement.Add(resultsXmlAssembly);
         }
         TotalTests = totalSummary.Total;
-        OnInfo($"{Environment.NewLine}=== TEST EXECUTION SUMMARY ==={Environment.NewLine}Total: {totalSummary.Total}, Errors: 0, Failed: {totalSummary.Failed}, Skipped: {totalSummary.Skipped}, Time: {TimeSpan.FromSeconds((double)totalSummary.Time).TotalSeconds}s{Environment.NewLine}");
-
-        static string EscapeNewLines(string message) => message.Replace("\r", "\\r").Replace("\n", "\\n");
     }
 
     private ExecutionSummary Combine(ExecutionSummary aggregateSummary, ExecutionSummary assemblySummary)
