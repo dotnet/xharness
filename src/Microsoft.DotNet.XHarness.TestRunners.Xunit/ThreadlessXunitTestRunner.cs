@@ -34,7 +34,7 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
         var configuration = new TestAssemblyConfiguration() { ShadowCopy = false, ParallelizeAssembly = false, ParallelizeTestCollections = false, MaxParallelThreads = 1, PreEnumerateTheories = false };
         var discoveryOptions = TestFrameworkOptions.ForDiscovery(configuration);
         var discoverySink = new TestDiscoverySink();
-        var diagnosticSink = new ConsoleDiagnosticMessageSink();
+        var diagnosticSink = new ConsoleDiagnosticMessageSink(Logger);
         var testOptions = TestFrameworkOptions.ForExecution(configuration);
         var testSink = new TestMessageSink();
 
@@ -47,13 +47,13 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
             discoveryOptions.SetSynchronousMessageReporting(true);
             testOptions.SetSynchronousMessageReporting(true);
 
-            Console.WriteLine($"Discovering: {assemblyFileName} (method display = {discoveryOptions.GetMethodDisplayOrDefault()}, method display options = {discoveryOptions.GetMethodDisplayOptionsOrDefault()})");
+            OnInfo($"Discovering: {assemblyFileName} (method display = {discoveryOptions.GetMethodDisplayOrDefault()}, method display options = {discoveryOptions.GetMethodDisplayOptionsOrDefault()})");
             var assemblyInfo = new global::Xunit.Sdk.ReflectionAssemblyInfo(testAsmInfo.Assembly);
             var discoverer = new ThreadlessXunitDiscoverer(assemblyInfo, new NullSourceInformationProvider(), discoverySink);
 
             discoverer.FindWithoutThreads(includeSourceInformation: false, discoverySink, discoveryOptions);
             var testCasesToRun = discoverySink.TestCases.Where(t => !_filters.IsExcluded(t)).ToList();
-            Console.WriteLine($"Discovered:  {assemblyFileName} (found {testCasesToRun.Count} of {discoverySink.TestCases.Count} test cases)");
+            OnInfo($"Discovered:  {assemblyFileName} (found {testCasesToRun.Count} of {discoverySink.TestCases.Count} test cases)");
 
             var summaryTaskSource = new TaskCompletionSource<ExecutionSummary>();
             var resultsXmlAssembly = new XElement("assembly");
@@ -64,21 +64,21 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
 
             if (EnvironmentVariables.IsLogTestStart())
             {
-                testSink.Execution.TestStartingEvent += args => { Console.WriteLine($"[STRT] {args.Message.Test.DisplayName}"); };
+                testSink.Execution.TestStartingEvent += args => { OnInfo($"[STRT] {args.Message.Test.DisplayName}"); };
             }
             testSink.Execution.TestPassedEvent += args =>
             {
-                Console.WriteLine($"[PASS] {EscapeNewLines(args.Message.Test.DisplayName)}");
+                OnDebug($"[PASS] {EscapeNewLines(args.Message.Test.DisplayName)}");
                 PassedTests++;
             };
             testSink.Execution.TestSkippedEvent += args =>
             {
-                Console.WriteLine($"[SKIP] {EscapeNewLines(args.Message.Test.DisplayName)}");
+                OnDebug($"[SKIP] {EscapeNewLines(args.Message.Test.DisplayName)}");
                 SkippedTests++;
             };
             testSink.Execution.TestFailedEvent += args =>
             {
-                Console.WriteLine($"[FAIL] {EscapeNewLines(args.Message.Test.DisplayName)}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}");
+                OnError($"[FAIL] {EscapeNewLines(args.Message.Test.DisplayName)}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}");
                 FailedTests++;
             };
             testSink.Execution.TestFinishedEvent += args => ExecutedTests++;
@@ -93,7 +93,7 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
             _assembliesElement.Add(resultsXmlAssembly);
         }
         TotalTests = totalSummary.Total;
-        Console.WriteLine($"{Environment.NewLine}=== TEST EXECUTION SUMMARY ==={Environment.NewLine}Total: {totalSummary.Total}, Errors: 0, Failed: {totalSummary.Failed}, Skipped: {totalSummary.Skipped}, Time: {TimeSpan.FromSeconds((double)totalSummary.Time).TotalSeconds}s{Environment.NewLine}");
+        OnInfo($"{Environment.NewLine}=== TEST EXECUTION SUMMARY ==={Environment.NewLine}Total: {totalSummary.Total}, Errors: 0, Failed: {totalSummary.Failed}, Skipped: {totalSummary.Skipped}, Time: {TimeSpan.FromSeconds((double)totalSummary.Time).TotalSeconds}s{Environment.NewLine}");
 
         static string EscapeNewLines(string message) => message.Replace("\r", "\\r").Replace("\n", "\\n");
     }
@@ -158,13 +158,13 @@ internal class ThreadlessXunitDiscoverer : global::Xunit.Sdk.XunitTestFrameworkD
     }
 }
 
-internal class ConsoleDiagnosticMessageSink : global::Xunit.Sdk.LongLivedMarshalByRefObject, IMessageSink
+internal class ConsoleDiagnosticMessageSink(LogWriter logger) : global::Xunit.Sdk.LongLivedMarshalByRefObject, IMessageSink
 {
     public bool OnMessage(IMessageSinkMessage message)
     {
         if (message is IDiagnosticMessage diagnosticMessage)
         {
-            Console.WriteLine(diagnosticMessage.Message);
+            logger.OnDebug(diagnosticMessage.Message);
         }
 
         return true;
