@@ -229,7 +229,7 @@ public abstract class ApplicationEntryPoint
 
         WriteResults(runner, options, logger, resultsFile ?? Console.Out);
 
-        logger.Info($"Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests} Skipped: {runner.SkippedTests}");
+        logger.Info($"{Environment.NewLine}=== TEST EXECUTION SUMMARY ==={Environment.NewLine}Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests} Skipped: {runner.SkippedTests}{Environment.NewLine}");
 
         if (options.AppEndTag != null)
         {
