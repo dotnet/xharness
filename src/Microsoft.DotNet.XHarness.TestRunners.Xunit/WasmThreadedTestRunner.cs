@@ -24,7 +24,7 @@ internal class WasmThreadedTestRunner : XUnitTestRunner
 
     protected override void HandleTestFailed(ITestFailed msg)
     {
-        OnError($"[FAIL] {StringUtils.EscapeNewLines(msg.Test.DisplayName)}{Environment.NewLine}{ExceptionUtility.CombineMessages(msg)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(msg)}");
+        OnError($"[FAIL] {msg.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(msg)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(msg)}");
         FailedTests++;
     }
 

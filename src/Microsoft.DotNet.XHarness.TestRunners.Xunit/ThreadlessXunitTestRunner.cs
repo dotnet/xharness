@@ -68,17 +68,17 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
             }
             testSink.Execution.TestPassedEvent += args =>
             {
-                OnDebug($"[PASS] {StringUtils.EscapeNewLines(args.Message.Test.DisplayName)}");
+                OnDebug($"[PASS] {args.Message.Test.DisplayName}");
                 PassedTests++;
             };
             testSink.Execution.TestSkippedEvent += args =>
             {
-                OnDebug($"[SKIP] {StringUtils.EscapeNewLines(args.Message.Test.DisplayName)}");
+                OnDebug($"[SKIP] {args.Message.Test.DisplayName}");
                 SkippedTests++;
             };
             testSink.Execution.TestFailedEvent += args =>
             {
-                OnError($"[FAIL] {StringUtils.EscapeNewLines(args.Message.Test.DisplayName)}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}");
+                OnError($"[FAIL] {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}");
                 FailedTests++;
             };
             testSink.Execution.TestFinishedEvent += args => ExecutedTests++;
