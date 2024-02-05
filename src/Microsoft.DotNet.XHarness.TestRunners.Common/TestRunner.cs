@@ -144,8 +144,6 @@ public abstract class TestRunner
             return;
         }
 
-        Console.WriteLine($"MF LogFailureSummary {FailureInfos.Count}");
-
         OnInfo("Failed tests:");
         for (int i = 1; i <= FailureInfos.Count; i++)
         {
