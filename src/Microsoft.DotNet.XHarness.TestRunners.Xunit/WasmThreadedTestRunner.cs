@@ -9,6 +9,8 @@ using Microsoft.DotNet.XHarness.TestRunners.Common;
 using Xunit;
 using Xunit.Abstractions;
 
+#nullable enable
+
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
 internal class WasmThreadedTestRunner : XUnitTestRunner
@@ -22,7 +24,7 @@ internal class WasmThreadedTestRunner : XUnitTestRunner
 
     protected override void HandleTestFailed(ITestFailed msg)
     {
-        OnError($"[FAIL] {WasmXmlResultWriter.EscapeNewLines(msg.Test.DisplayName)}{Environment.NewLine}{ExceptionUtility.CombineMessages(msg)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(msg)}");
+        OnError($"[FAIL] {StringUtils.EscapeNewLines(msg.Test.DisplayName)}{Environment.NewLine}{ExceptionUtility.CombineMessages(msg)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(msg)}");
         FailedTests++;
     }
 

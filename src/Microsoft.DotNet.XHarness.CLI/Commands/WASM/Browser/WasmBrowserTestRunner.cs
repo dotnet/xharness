@@ -281,18 +281,18 @@ internal class WasmBrowserTestRunner
         if (sb.Length > 0)
             sb.Append('&');
 
-        sb.Append($"arg=-verbosity&arg={HttpUtility.UrlEncode($"{VerbosityToString()}")}");
+        sb.Append($"arg=-verbosity&arg={VerbosityToString()}");
 
         uriBuilder.Query = sb.ToString();
         return uriBuilder.ToString();
     }
 
-    //MinimumLogLevel.Critical,
-    //MinimumLogLevel.Error,
-    //MinimumLogLevel.Warning,
-    //MinimumLogLevel.Info,
-    //MinimumLogLevel.Debug,
-    //MinimumLogLevel.Verbose
+    // MinimumLogLevel.Critical,
+    // MinimumLogLevel.Error,
+    // MinimumLogLevel.Warning,
+    // MinimumLogLevel.Info,
+    // MinimumLogLevel.Debug,
+    // MinimumLogLevel.Verbose
     private string VerbosityToString() => _arguments.Verbosity.Value switch
     {
         LogLevel.Trace => "Verbose",
