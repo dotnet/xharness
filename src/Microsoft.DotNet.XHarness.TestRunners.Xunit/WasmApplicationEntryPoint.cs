@@ -23,6 +23,7 @@ public abstract class WasmApplicationEntryPoint : WasmApplicationEntryPointBase
     protected override bool IsXunit => true;
 
     protected bool IsThreadless { get; set; } = true;
+    protected bool RunInParallel { get; set; } = false;
 
     protected override TestRunner GetTestRunner(LogWriter logWriter)
     {
@@ -31,6 +32,8 @@ public abstract class WasmApplicationEntryPoint : WasmApplicationEntryPointBase
             : new WasmThreadedTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
 
         ConfigureRunnerFilters(runner, ApplicationOptions.Current);
+
+        runner.RunInParallel = RunInParallel;
 
         runner.SkipCategories(ExcludedTraits);
         runner.SkipCategories(IncludedTraits, isExcluded: false);
