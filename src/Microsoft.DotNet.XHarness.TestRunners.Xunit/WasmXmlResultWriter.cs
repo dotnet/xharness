@@ -10,7 +10,7 @@ using System.Xml.Linq;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
-public class WasmXmlResultWriter
+internal class WasmXmlResultWriter
 {
     public static void WriteOnSingleLine(XElement assembliesElement)
     {

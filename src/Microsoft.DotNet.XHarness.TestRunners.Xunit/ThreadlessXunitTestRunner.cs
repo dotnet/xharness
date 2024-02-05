@@ -22,6 +22,7 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
     public ThreadlessXunitTestRunner(LogWriter logger, bool oneLineResults = false) : base(logger)
     {
         _oneLineResults = oneLineResults;
+        ShowFailureInfos = false;
     }
 
     protected override string ResultsFileName { get => string.Empty; set => throw new InvalidOperationException("This runner outputs its results to stdout."); }
@@ -31,6 +32,8 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
 
     public override async Task Run(IEnumerable<TestAssemblyInfo> testAssemblies)
     {
+        OnInfo("Using threadless Xunit runner");
+
         var configuration = new TestAssemblyConfiguration() { ShadowCopy = false, ParallelizeAssembly = false, ParallelizeTestCollections = false, MaxParallelThreads = 1, PreEnumerateTheories = false };
         var discoveryOptions = TestFrameworkOptions.ForDiscovery(configuration);
         var discoverySink = new TestDiscoverySink();

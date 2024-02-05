@@ -3,7 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 using Xunit;
@@ -18,14 +20,15 @@ internal class WasmThreadedTestRunner : XUnitTestRunner
     public WasmThreadedTestRunner(LogWriter logger) : base(logger)
     {
         TestStagePrefix = string.Empty;
+        ShowFailureInfos = false;
     }
 
     protected override string ResultsFileName { get => string.Empty; set => throw new InvalidOperationException("This runner outputs its results to stdout."); }
 
-    protected override void HandleTestFailed(ITestFailed msg)
+    public override Task Run(IEnumerable<TestAssemblyInfo> testAssemblies)
     {
-        OnError($"[FAIL] {msg.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(msg)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(msg)}");
-        FailedTests++;
+        OnInfo("Using threaded Xunit runner");
+        return base.Run(testAssemblies);
     }
 
     public override void WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)

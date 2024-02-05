@@ -126,7 +126,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
         }
     }
 
-    private string GetThreadIdForLog()
+    protected string GetThreadIdForLog()
     {
         if (EnvironmentVariables.IsLogThreadId())
             return $"[{Thread.CurrentThread.ManagedThreadId}]";
@@ -252,54 +252,49 @@ internal class XUnitTestRunner : XunitTestRunnerBase
             return;
         }
 
-        HandleTestFailed(args.Message);
-    }
-
-    protected virtual void HandleTestFailed(ITestFailed msg)
-    {
         FailedTests++;
-        string assemblyInfo = GetAssemblyInfo(msg.TestAssembly);
-        var sb = new StringBuilder($"{TestStagePrefix}[FAIL]{GetThreadIdForLog()} {msg.TestCase.DisplayName}");
-        LogTestDetails(msg.Test, OnError, sb);
+        string assemblyInfo = GetAssemblyInfo(args.Message.TestAssembly);
+        var sb = new StringBuilder($"{TestStagePrefix}[FAIL]{GetThreadIdForLog()} {args.Message.TestCase.DisplayName}");
+        LogTestDetails(args.Message.Test, OnDebug, sb);
         sb.AppendLine();
         if (!string.IsNullOrEmpty(assemblyInfo))
         {
             sb.AppendLine($"   Assembly: {assemblyInfo}");
         }
 
-        LogSourceInformation(msg.TestCase.SourceInformation, OnError, sb);
-        LogFailureInformation(msg, OnError, sb);
+        LogSourceInformation(args.Message.TestCase.SourceInformation, OnDebug, sb);
+        LogFailureInformation(args.Message, OnDebug, sb);
         sb.AppendLine();
-        LogTestOutput(msg, OnError, sb);
+        LogTestOutput(args.Message, OnDebug, sb);
         sb.AppendLine();
-        if (msg.TestCase.Traits != null && msg.TestCase.Traits.Count > 0)
+        if (args.Message.TestCase.Traits != null && args.Message.TestCase.Traits.Count > 0)
         {
-            foreach (var kvp in msg.TestCase.Traits)
+            foreach (var kvp in args.Message.TestCase.Traits)
             {
                 string message = $"   Test trait name: {kvp.Key}";
-                OnError(message);
+                OnDebug(message);
                 sb.AppendLine(message);
 
                 foreach (string v in kvp.Value)
                 {
                     message = $"      value: {v}";
-                    OnError(message);
+                    OnDebug(message);
                     sb.AppendLine(message);
                 }
             }
             sb.AppendLine();
         }
-        ReportTestCases("   Associated", msg.TestCases, msg.TestCase, OnDiagnostic);
+        ReportTestCases("   Associated", args.Message.TestCases, args.Message.TestCase, OnDiagnostic);
 
         FailureInfos.Add(new TestFailureInfo
         {
-            TestName = msg.Test?.DisplayName,
+            TestName = args.Message.Test?.DisplayName,
             Message = sb.ToString()
         });
-        OnInfo($"{TestStagePrefix}[FAIL]{GetThreadIdForLog()} {msg.Test.TestCase.DisplayName}");
-        OnInfo(sb.ToString());
+        OnError($"{TestStagePrefix}[FAIL]{GetThreadIdForLog()} {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}");
+        OnDebug(sb.ToString());
         OnTestCompleted((
-            TestName: msg.Test.DisplayName,
+            TestName: args.Message.Test.DisplayName,
             TestResult: TestResult.Failed
         ));
     }
