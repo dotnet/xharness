@@ -23,14 +23,17 @@ public abstract class WasmApplicationEntryPoint : WasmApplicationEntryPointBase
     protected override bool IsXunit => true;
 
     protected bool IsThreadless { get; set; } = true;
+    protected bool RunInParallel { get; set; } = false;
 
     protected override TestRunner GetTestRunner(LogWriter logWriter)
     {
         XunitTestRunnerBase runner = IsThreadless
             ? new ThreadlessXunitTestRunner(logWriter, true)
-            : new WasmThreadedTestRunner(logWriter);
+            : new WasmThreadedTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
 
         ConfigureRunnerFilters(runner, ApplicationOptions.Current);
+
+        runner.RunInParallel = RunInParallel;
 
         runner.SkipCategories(ExcludedTraits);
         runner.SkipCategories(IncludedTraits, isExcluded: false);

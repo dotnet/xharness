@@ -22,6 +22,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 
 using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 
@@ -277,7 +278,30 @@ internal class WasmBrowserTestRunner
             sb.Append($"arg={HttpUtility.UrlEncode(arg)}");
         }
 
+        if (sb.Length > 0)
+            sb.Append('&');
+
+        sb.Append($"arg=-verbosity&arg={VerbosityToString()}");
+
         uriBuilder.Query = sb.ToString();
         return uriBuilder.ToString();
     }
+
+    // MinimumLogLevel.Critical,
+    // MinimumLogLevel.Error,
+    // MinimumLogLevel.Warning,
+    // MinimumLogLevel.Info,
+    // MinimumLogLevel.Debug,
+    // MinimumLogLevel.Verbose
+    private string VerbosityToString() => _arguments.Verbosity.Value switch
+    {
+        LogLevel.Trace => "Verbose",
+        LogLevel.Debug => "Debug",
+        LogLevel.Information => "Info",
+        LogLevel.Warning => "Warning",
+        LogLevel.Error => "Error",
+        LogLevel.Critical => "Critical",
+        LogLevel.None => "Critical",
+        _ => throw new NotSupportedException($"The value '{_arguments.Verbosity.Value}' is not supported in conversion to MinimumLogLevel")
+    };
 }

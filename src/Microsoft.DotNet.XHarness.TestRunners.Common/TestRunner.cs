@@ -90,9 +90,11 @@ public abstract class TestRunner
     public TextWriter Writer { get; set; }
 
     /// <summary>
-    /// List that contains all the failured that occured in the test run.
+    /// List that contains all the failures that occurred in the test run.
     /// </summary>
     public List<TestFailureInfo> FailureInfos { get; } = new List<TestFailureInfo>();
+
+    public bool ShowFailureInfos { get; set; } = true;
 
     /// <summary>
     /// Logging object.
@@ -137,7 +139,7 @@ public abstract class TestRunner
 
     protected void LogFailureSummary()
     {
-        if (FailureInfos == null || FailureInfos.Count == 0)
+        if (!ShowFailureInfos || FailureInfos == null || FailureInfos.Count == 0)
         {
             return;
         }

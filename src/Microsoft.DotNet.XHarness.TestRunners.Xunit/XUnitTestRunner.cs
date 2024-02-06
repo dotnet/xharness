@@ -40,6 +40,8 @@ internal class XUnitTestRunner : XunitTestRunnerBase
     public AppDomainSupport AppDomainSupport { get; set; } = AppDomainSupport.Denied;
     protected override string ResultsFileName { get; set; } = "TestResults.xUnit.xml";
 
+    protected string TestStagePrefix { get; init; } = "\t";
+
     public XUnitTestRunner(LogWriter logger) : base(logger)
     {
         _messageSink = new TestMessageSink();
@@ -124,7 +126,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
         }
     }
 
-    private string GetThreadIdForLog()
+    protected string GetThreadIdForLog()
     {
         if (EnvironmentVariables.IsLogThreadId())
             return $"[{Thread.CurrentThread.ManagedThreadId}]";
@@ -141,7 +143,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
 
         if (EnvironmentVariables.IsLogTestStart())
         {
-            OnInfo($"\t[STRT]{GetThreadIdForLog()} {args.Message.Test.DisplayName}");
+            OnInfo($"{TestStagePrefix}[STRT]{GetThreadIdForLog()} {args.Message.Test.DisplayName}");
         }
 
         OnDebug("Test starting");
@@ -167,7 +169,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
         }
 
         PassedTests++;
-        OnInfo($"\t[PASS]{GetThreadIdForLog()} {args.Message.TestCase.DisplayName}");
+        OnInfo($"{TestStagePrefix}[PASS]{GetThreadIdForLog()} {args.Message.TestCase.DisplayName}");
         LogTestDetails(args.Message.Test, log: OnDebug);
         LogTestOutput(args.Message, log: OnDiagnostic);
         ReportTestCases("   Associated", args.Message.TestCases, log: OnDiagnostic);
@@ -185,7 +187,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
             return;
         }
 
-        OnInfo(args.Message.Output);
+        OnDebug(args.Message.Output);
     }
 
     private void HandleTestMethodStarting(MessageHandlerArgs<ITestMethodStarting> args)
@@ -252,31 +254,31 @@ internal class XUnitTestRunner : XunitTestRunnerBase
 
         FailedTests++;
         string assemblyInfo = GetAssemblyInfo(args.Message.TestAssembly);
-        var sb = new StringBuilder($"\t[FAIL]{GetThreadIdForLog()} {args.Message.TestCase.DisplayName}");
-        LogTestDetails(args.Message.Test, OnError, sb);
+        var sb = new StringBuilder($"{TestStagePrefix}[FAIL]{GetThreadIdForLog()} {args.Message.TestCase.DisplayName}");
+        LogTestDetails(args.Message.Test, OnDebug, sb);
         sb.AppendLine();
         if (!string.IsNullOrEmpty(assemblyInfo))
         {
             sb.AppendLine($"   Assembly: {assemblyInfo}");
         }
 
-        LogSourceInformation(args.Message.TestCase.SourceInformation, OnError, sb);
-        LogFailureInformation(args.Message, OnError, sb);
+        LogSourceInformation(args.Message.TestCase.SourceInformation, OnDebug, sb);
+        LogFailureInformation(args.Message, OnDebug, sb);
         sb.AppendLine();
-        LogTestOutput(args.Message, OnError, sb);
+        LogTestOutput(args.Message, OnDebug, sb);
         sb.AppendLine();
         if (args.Message.TestCase.Traits != null && args.Message.TestCase.Traits.Count > 0)
         {
             foreach (var kvp in args.Message.TestCase.Traits)
             {
                 string message = $"   Test trait name: {kvp.Key}";
-                OnError(message);
+                OnDebug(message);
                 sb.AppendLine(message);
 
                 foreach (string v in kvp.Value)
                 {
                     message = $"      value: {v}";
-                    OnError(message);
+                    OnDebug(message);
                     sb.AppendLine(message);
                 }
             }
@@ -289,8 +291,8 @@ internal class XUnitTestRunner : XunitTestRunnerBase
             TestName = args.Message.Test?.DisplayName,
             Message = sb.ToString()
         });
-        OnInfo($"\t[FAIL]{GetThreadIdForLog()} {args.Message.Test.TestCase.DisplayName}");
-        OnInfo(sb.ToString());
+        OnError($"{TestStagePrefix}[FAIL]{GetThreadIdForLog()} {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}");
+        OnDebug(sb.ToString());
         OnTestCompleted((
             TestName: args.Message.Test.DisplayName,
             TestResult: TestResult.Failed
@@ -667,7 +669,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
     private void RaiseTestSkippedCase(ITestResultMessage message, IEnumerable<ITestCase> testCases, ITestCase testCase)
     {
         SkippedTests++;
-        OnInfo($"\t[IGNORED] {testCase.DisplayName}");
+        OnInfo($"{TestStagePrefix}[IGNORED] {testCase.DisplayName}");
         LogTestDetails(message.Test, log: OnDebug);
         LogTestOutput(message, log: OnDiagnostic);
         ReportTestCases("   Associated", testCases, log: OnDiagnostic);

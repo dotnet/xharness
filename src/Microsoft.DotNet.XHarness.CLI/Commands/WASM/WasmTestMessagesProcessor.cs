@@ -201,29 +201,17 @@ public class WasmTestMessagesProcessor
         }
         else
         {
-            if (line.StartsWith("[PASS]") || line.StartsWith("[SKIP]"))
-            {
-                _logger.LogDebug(line);
-            }
-            else if (line.StartsWith("[FAIL]"))
-            {
-                _logger.LogError(line);
-            }
-            else
-            {
-                ScanMessageForErrorPatterns(line);
-                line = Symbolicate(line);
+            ScanMessageForErrorPatterns(line);
+            line = Symbolicate(line);
 
-                switch (logMessage?.method?.ToLowerInvariant())
-                {
-                    case "console.debug": _logger.LogDebug(line); break;
-                    case "console.error": _logger.LogError(line); break;
-                    case "console.warn": _logger.LogWarning(line); break;
-                    case "console.trace": _logger.LogTrace(line); break;
-
-                    case "console.log":
-                    default: _logger.LogInformation(line); break;
-                }
+            switch (logMessage?.method?.ToLowerInvariant())
+            {
+                case "console.debug": _logger.LogDebug(line); break;
+                case "console.error": _logger.LogError(line); break;
+                case "console.warn": _logger.LogWarning(line); break;
+                case "console.trace": _logger.LogTrace(line); break;
+                case "console.log":
+                default: _logger.LogInformation(line); break;
             }
 
             if (_stdoutFileWriter.BaseStream.CanWrite)
