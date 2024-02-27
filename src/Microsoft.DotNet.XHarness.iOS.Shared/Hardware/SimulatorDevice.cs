@@ -134,7 +134,7 @@ public class SimulatorDevice : ISimulatorDevice
         if (!File.Exists(tccDB))
         {
             log.WriteLine("Opening simulator to create TCC.db");
-            await OpenSimulator(log);
+            await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "boot", UDID }, log, TimeSpan.FromMinutes(1));
 
             var tccCreationTimeout = 60;
             var watch = new Stopwatch();
