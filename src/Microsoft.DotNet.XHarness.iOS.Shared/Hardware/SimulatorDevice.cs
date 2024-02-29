@@ -129,11 +129,10 @@ public class SimulatorDevice : ISimulatorDevice
         // We shutdown and erase all simulators.
         await Erase(log);
 
-        // Edit the permissions to prevent dialog boxes in the test app
         var tccDB = Path.Combine(DataPath, "data", "Library", "TCC", "TCC.db");
         if (!File.Exists(tccDB))
         {
-            log.WriteLine("Opening simulator to create TCC.db");
+            log.WriteLine("Booting the simulator to create TCC.db");
             await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "boot", UDID }, log, TimeSpan.FromMinutes(1));
 
             var tccCreationTimeout = 60;
@@ -147,14 +146,19 @@ public class SimulatorDevice : ISimulatorDevice
         }
 
         var result = true;
-        bundleIdentifiers = bundleIdentifiers.Where(id => !string.IsNullOrEmpty(id)).ToArray();
-        if (bundleIdentifiers.Any() && File.Exists(tccDB))
+        if (File.Exists(tccDB))
         {
-            result &= await _tCCDatabase.AgreeToPromptsAsync(SimRuntime, tccDB, UDID, log, bundleIdentifiers);
+            log.WriteLine("TCC.db found for the simulator {0} (SimRuntime={1} and SimDeviceType={1})", UDID, SimRuntime, SimDeviceType);
+            bundleIdentifiers = bundleIdentifiers.Where(id => !string.IsNullOrEmpty(id)).ToArray();
+            if (bundleIdentifiers.Any())
+            {
+                log.WriteLine($"Storing adequate permissions in TCC.db to prevent dialog boxes in the test apps: {string.Join(", ", bundleIdentifiers)}", UDID);
+                result &= await _tCCDatabase.AgreeToPromptsAsync(SimRuntime, tccDB, UDID, log, bundleIdentifiers);
+            }
         }
         else
         {
-            log.WriteLine("No TCC.db found for the simulator {0} (SimRuntime={1} and SimDeviceType={1})", UDID, SimRuntime, SimDeviceType);
+            log.WriteLine("TCC.db not found for the simulator {0} (SimRuntime={1} and SimDeviceType={1})", UDID, SimRuntime, SimDeviceType);
         }
 
         // Make sure we're in a clean state
