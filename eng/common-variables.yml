@@ -18,6 +18,8 @@ variables:
       value: True
     - name: _SignType
       value: real
+    - name: _BuildConfig
+      value: Release
     # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
     # DotNet-HelixApi-Access provides: HelixApiAccessToken
     - group: Publish-Build-Assets

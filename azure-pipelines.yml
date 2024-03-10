@@ -1,14 +1,14 @@
 variables:
-  - template: eng/common-variables.yml
-  - name: Build.Repository.Clean
-    value: true
-  - template: /eng/common/templates/variables/pool-providers.yml
+- template: /eng/common-variables.yml@self
+- name: Build.Repository.Clean
+  value: true
+- template: /eng/common/templates-official/variables/pool-providers.yml@self
 
-  # disable CodeQL here, we have a separate pipeline for it
-  - name: Codeql.Enabled
-    value: false
+# disable CodeQL here, we have a separate pipeline for it
+- name: Codeql.Enabled
+  value: false
 
-# CI and PR triggers
+# CI triggers
 trigger:
   batch: true
   branches:
@@ -18,225 +18,44 @@ trigger:
     - release/*
     - internal/release/*
 
-pr:
-  branches:
-    include:
-    - main
-    - xcode/*
-    - release/*
-    - internal/release/*
+pr: none
 
-# Build
+resources:
+  repositories:
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
 
-stages:
-- stage: Build_Windows_NT
-  displayName: Build Windows
-  jobs:
-  - template: /eng/common/templates/jobs/jobs.yml
-    parameters:
-      enableTelemetry: true
-      enablePublishBuildArtifacts: true
-      enableMicrobuild: true
-      enablePublishUsingPipelines: true
-      enablePublishBuildAssets: true
-      helixRepo: dotnet/xharness
-
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    pool:
+      name: $(DncEngInternalBuildPool)
+      image: 1es-windows-2022-pt
+      os: windows
+    stages:
+    - stage: Build
       jobs:
-      - job: Windows_NT
-        pool:
-          ${{ if eq(variables._RunAsInternal, True) }}:
-            name: $(DncEngInternalBuildPool)
-            demands: ImageOverride -equals windows.vs2019.amd64
-          ${{ if eq(variables._RunAsPublic, True) }}:
-            vmImage: windows-2019
-        strategy:
-          matrix:
-            Release:
-              _BuildConfig: Release
-            ${{ if eq(variables._RunAsPublic, True) }}:
-              Debug:
-                _BuildConfig: Debug
-        steps:
-        - ${{ if eq(variables._RunAsPublic, False) }}:
-          - script: eng\common\CIBuild.cmd
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              $(_InternalBuildArgs)
-              /p:Test=false
-            name: Build
-            displayName: Build
-            condition: succeeded()
+      - template: /eng/common/templates-official/jobs/jobs.yml@self
+        parameters:
+          enableTelemetry: true
+          enablePublishBuildArtifacts: true
+          enableMicrobuild: true
+          enablePublishUsingPipelines: true
+          enablePublishBuildAssets: true
+          helixRepo: dotnet/xharness
+          componentGovernanceIgnoreDirectories: '$(Build.SourcesDirectory)/.packages,$(Build.SourcesDirectory)/artifacts/obj/Microsoft.DotNet.XHarness.CLI/android-tools-unzipped'
+          jobs:
+          - job: Windows_NT
+            displayName: Build Windows
+            steps:
+              - script: eng\common\CIBuild.cmd -configuration $(_BuildConfig) -prepareMachine $(_InternalBuildArgs) /p:Test=false
+                name: Build
+                displayName: Build
+                condition: succeeded()
 
-        - ${{ if eq(variables._RunAsPublic, True) }}:
-          - script: eng\common\CIBuild.cmd
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              $(_InternalBuildArgs)
-            name: Build
-            displayName: Build and run tests
-            condition: succeeded()
-
-          - task: PublishTestResults@2
-            displayName: 'Publish Unit Test Results'
-            inputs:
-              testResultsFormat: xUnit
-              testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
-              mergeTestResults: true
-              searchFolder: $(system.defaultworkingdirectory)
-              testRunTitle: XHarness unit tests - $(Agent.JobName)
-            condition: succeededOrFailed()
-
-        - ${{ if eq(variables._RunAsPublic, False) }}:
-          - task: ComponentGovernanceComponentDetection@0
-            displayName: Component Governance scan
-            inputs:
-              ignoreDirectories: '$(Build.SourcesDirectory)/.packages,$(Build.SourcesDirectory)/artifacts/obj/Microsoft.DotNet.XHarness.CLI/android-tools-unzipped'
-
-- ${{ if eq(variables._RunAsPublic, True) }}:
-  - stage: Build_OSX
-    displayName: Build OSX
-    dependsOn:
-    jobs:
-    - template: /eng/common/templates/jobs/jobs.yml
+    - template: /eng/common/templates-official/post-build/post-build.yml@self
       parameters:
-        enableTelemetry: true
-        enablePublishBuildArtifacts: true
-        enableMicrobuild: true
-        enablePublishUsingPipelines: true
-        enablePublishBuildAssets: true
-        helixRepo: dotnet/xharness
-
-        jobs:
-        - job: OSX
-          pool:
-            vmImage: macOS-11
-          strategy:
-            matrix:
-              Release:
-                _BuildConfig: Release
-              ${{ if eq(variables._RunAsPublic, True) }}:
-                Debug:
-                  _BuildConfig: Debug
-          steps:
-          - ${{ if eq(variables._RunAsPublic, False) }}:
-            - script: eng/common/cibuild.sh
-                --configuration $(_BuildConfig)
-                --prepareMachine
-                $(_InternalBuildArgs)
-                /p:Test=false
-              name: Build
-              displayName: Build
-              condition: succeeded()
-
-          - ${{ if eq(variables._RunAsPublic, True) }}:
-            - script: eng/common/cibuild.sh
-                --configuration $(_BuildConfig)
-                --prepareMachine
-                $(_InternalBuildArgs)
-              name: Build
-              displayName: Build and run tests
-              condition: succeeded()
-
-            - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.8.0.0-ci.nupkg
-              artifact: Microsoft.DotNet.XHarness.CLI.$(_BuildConfig)
-              displayName: Publish XHarness CLI for Helix Testing
-              condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))
-
-            - task: PublishTestResults@2
-              displayName: 'Publish Unit Test Results'
-              inputs:
-                testResultsFormat: xUnit
-                testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
-                mergeTestResults: true
-                searchFolder: $(system.defaultworkingdirectory)
-                testRunTitle: XHarness unit tests - $(Agent.JobName)
-              condition: succeededOrFailed()
-
-# E2E tests
-
-  - template: eng/e2e-test.yml
-    parameters:
-      name: E2E_Android_Simulators
-      displayName: Android - Simulators
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Simulator.Tests.proj
-
-  - template: eng/e2e-test.yml
-    parameters:
-      name: E2E_Android_Devices
-      displayName: Android - Devices
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Device.Tests.proj
-
-  - template: eng/e2e-test.yml
-    parameters:
-      name: E2E_Android_Manual_Commands
-      displayName: Android - Manual Commands
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Commands.Tests.proj
-
-  - template: eng/e2e-test.yml
-    parameters:
-      name: E2E_Apple_Simulators
-      displayName: Apple - Simulators
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Tests.proj
-
-  - template: eng/e2e-test.yml
-    parameters:
-      name: E2E_iOS_Devices
-      displayName: Apple - iOS devices
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.iOS.Tests.proj
-
-  - template: eng/e2e-test.yml
-    parameters:
-      name: E2E_tvOS_Devices
-      displayName: Apple - tvOS devices
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.tvOS.Tests.proj
-
-  - template: eng/e2e-test.yml
-    parameters:
-      name: E2E_Apple_Simulator_Commands
-      displayName: Apple - Simulator Commands
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Commands.Tests.proj
-
-  - template: eng/e2e-test.yml
-    parameters:
-      name: E2E_Apple_Device_Commands
-      displayName: Apple - Device Commands
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Commands.Tests.proj
-
-  - template: eng/e2e-test.yml
-    parameters:
-      name: E2E_Apple_Simulator_Mgmt
-      displayName: Apple - Simulator management
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/SimulatorInstaller.Tests.proj
-
-  - template: eng/e2e-test.yml
-    parameters:
-      name: E2E_WASM
-      displayName: WASM
-      testProject: $(Build.SourcesDirectory)/tests/integration-tests/WASM/WASM.Helix.SDK.Tests.proj
-
-# NuGet publishing
-
-- ${{ if eq(variables._RunAsInternal, True) }}:
-  - template: eng\common\templates\post-build\post-build.yml
-    parameters:
-      publishingInfraVersion: 3
-      enableSymbolValidation: true
-      enableSourceLinkValidation: true
-      validateDependsOn:
-      - Build_Windows_NT
-      publishDependsOn:
-      - Validate
-      # This is to enable SDL runs part of Post-Build Validation Stage
-      SDLValidationParameters:
-        enable: false
-        continueOnError: false
-        params: ' -SourceToolsList @("policheck","credscan")
-        -TsaInstanceURL $(_TsaInstanceURL)
-        -TsaProjectName $(_TsaProjectName)
-        -TsaNotificationEmail $(_TsaNotificationEmail)
-        -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
-        -TsaBugAreaPath $(_TsaBugAreaPath)
-        -TsaIterationPath $(_TsaIterationPath)
-        -TsaRepositoryName "dotnet-xharness"
-        -TsaCodebaseName "dotnet-xharness"
-        -TsaPublish $True'
+        enableSymbolValidation: true
+        enableSourceLinkValidation: true
