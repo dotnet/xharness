@@ -2,7 +2,6 @@ variables:
 - template: /eng/common-variables.yml@self
 - name: Build.Repository.Clean
   value: true
-- template: /eng/common/templates-official/variables/pool-providers.yml@self
 
 # disable CodeQL here, we have a separate pipeline for it
 - name: Codeql.Enabled
@@ -31,7 +30,7 @@ extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
     pool:
-      name: $(DncEngInternalBuildPool)
+      name: NetCore1ESPool-Svc-Internal
       image: 1es-windows-2022-pt
       os: windows
     stages:

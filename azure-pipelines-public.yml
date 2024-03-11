@@ -2,7 +2,6 @@ variables:
 - template: /eng/common-variables.yml
 - name: Build.Repository.Clean
   value: true
-- template: /eng/common/templates/variables/pool-providers.yml
 
 # disable CodeQL here, we have a separate pipeline for it
 - name: Codeql.Enabled
@@ -42,7 +41,7 @@ stages:
       jobs:
       - job: Windows_NT
         pool:
-            name: $(DncEngPublicBuildPool)
+            name: NetCore-Svc-Public
             demands: ImageOverride -equals windows.vs2019.amd64.open
             vmImage: windows-2019
         strategy:
