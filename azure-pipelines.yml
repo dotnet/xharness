@@ -42,7 +42,6 @@ extends:
           enablePublishUsingPipelines: true
           enablePublishBuildAssets: true
           helixRepo: dotnet/xharness
-          componentGovernanceIgnoreDirectories: '$(Build.SourcesDirectory)/.packages,$(Build.SourcesDirectory)/artifacts/obj/Microsoft.DotNet.XHarness.CLI/android-tools-unzipped'
           jobs:
           - job: Windows_NT
             displayName: Build Windows
