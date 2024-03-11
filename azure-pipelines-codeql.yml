@@ -20,10 +20,6 @@ variables:
 - name: Codeql.TSAEnabled
   value: ${{ parameters.TSAEnabled }}
 - template: eng/common-variables.yml
-- name: Build.Repository.Clean
-  value: true
-- name: _BuildConfig
-  value: Release
 
 trigger: none
 
@@ -40,7 +36,7 @@ jobs:
   timeoutInMinutes: 90
   pool: 
     name: $(DncEngInternalBuildPool)
-    demands: ImageOverride -equals windows.vs2019.amd64
+    demands: ImageOverride -equals windows.vs2022.amd64
   displayName: "CodeQL Scan"
 
   steps:
