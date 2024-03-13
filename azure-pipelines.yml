@@ -1,7 +1,5 @@
 variables:
 - template: /eng/common-variables.yml@self
-- name: Build.Repository.Clean
-  value: true
 - template: /eng/common/templates-official/variables/pool-providers.yml@self
 
 # disable CodeQL here, we have a separate pipeline for it
@@ -14,7 +12,6 @@ trigger:
   branches:
     include:
     - main
-    - xcode/*
     - release/*
     - internal/release/*
 
@@ -32,7 +29,7 @@ extends:
   parameters:
     pool:
       name: $(DncEngInternalBuildPool)
-      image: 1es-windows-2022-pt
+      image: 1es-windows-2022
       os: windows
     stages:
     - stage: Build
@@ -45,7 +42,6 @@ extends:
           enablePublishUsingPipelines: true
           enablePublishBuildAssets: true
           helixRepo: dotnet/xharness
-          componentGovernanceIgnoreDirectories: '$(Build.SourcesDirectory)/.packages,$(Build.SourcesDirectory)/artifacts/obj/Microsoft.DotNet.XHarness.CLI/android-tools-unzipped'
           jobs:
           - job: Windows_NT
             displayName: Build Windows
