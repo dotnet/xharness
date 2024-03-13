@@ -29,7 +29,7 @@ extends:
   parameters:
     pool:
       name: $(DncEngInternalBuildPool)
-      image: 1es-windows-2022-pt
+      image: 1es-windows-2022
       os: windows
     stages:
     - stage: Build

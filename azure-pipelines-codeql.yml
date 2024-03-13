@@ -36,7 +36,7 @@ jobs:
   timeoutInMinutes: 90
   pool: 
     name: $(DncEngInternalBuildPool)
-    demands: ImageOverride -equals windows.vs2022.amd64
+    demands: ImageOverride -equals 1es-windows-2022
   displayName: "CodeQL Scan"
 
   steps:
