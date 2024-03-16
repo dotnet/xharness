@@ -164,7 +164,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
     protected async Task<Version?> IsInstalled(Simulator simulator)
     {
-        string xcodeVersionString = (await GetXcodeInformation()).XcodeVersion;
+        string xcodeVersionString = await GetXcodeVersion();
         bool isXcode14 = Version.TryParse(xcodeVersionString, out var xcodeVersion) && xcodeVersion.Major >= 14;
 
         if (simulator.Identifier.StartsWith("com.apple.dmg.") && isXcode14)
@@ -301,10 +301,8 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
     private async Task<string?> GetSimulatorIndexXml()
     {
-        var (xcodeVersion, xcodeUuid) = await GetXcodeInformation();
-
-        var indexName = $"index-{xcodeVersion}-{xcodeUuid}.dvtdownloadableindex";
-        var indexUrl = "";
+        var xcodeVersion = await GetXcodeVersion();
+        string indexUrl, indexName;
 
         if (Version.Parse(xcodeVersion).Major >= 14)
         {
@@ -319,10 +317,14 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             *		0x103db4799 <+12>: retq
             * 
             */
+            indexName = $"index-{xcodeVersion}.dvtdownloadableindex";
             indexUrl = "https://devimages-cdn.apple.com/downloads/xcode/simulators/index2.dvtdownloadableindex";
         }
         else
         {
+            var xcodeUuid = await GetXcodeUuid();
+            indexName = $"index-{xcodeVersion}-{xcodeUuid}.dvtdownloadableindex";
+
             indexUrl = $"https://devimages-cdn.apple.com/downloads/xcode/simulators/{indexName}";
         }
 
@@ -375,11 +377,11 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         return false;
     }
 
-    private async Task<(string XcodeVersion, string XcodeUuid)> GetXcodeInformation()
+    private async Task<string> GetXcodeVersion()
     {
-        if (_xcodeVersion is not null && _xcodeUuid is not null)
+        if (_xcodeVersion is not null)
         {
-            return (_xcodeVersion, _xcodeUuid);
+            return _xcodeVersion;
         }
 
         string xcodeRoot = Arguments.XcodeRoot.Value ?? new MacOSProcessManager().XcodeRoot;
@@ -393,23 +395,33 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
         xcodeVersion = xcodeVersion.Trim();
 
-        string xcodeUuid;
-
-        (succeeded, xcodeUuid) = await ExecuteCommand("/usr/libexec/PlistBuddy", TimeSpan.FromSeconds(5), "-c", "Print :DVTPlugInCompatibilityUUID", plistPath);
-        if (!succeeded)
-        {
-            throw new Exception("Failed to detect Xcode UUID!");
-        }
-
-        xcodeUuid = xcodeUuid.Trim();
-
         xcodeVersion = xcodeVersion.Insert(xcodeVersion.Length - 2, ".");
         xcodeVersion = xcodeVersion.Insert(xcodeVersion.Length - 1, ".");
 
         _xcodeVersion = xcodeVersion;
-        _xcodeUuid = xcodeUuid;
 
-        return (_xcodeVersion, _xcodeUuid);
+        return _xcodeVersion;
+    }
+
+    private async Task<string> GetXcodeUuid()
+    {
+        if (_xcodeUuid is not null)
+        {
+            return _xcodeUuid;
+        }
+
+        string xcodeRoot = Arguments.XcodeRoot.Value ?? new MacOSProcessManager().XcodeRoot;
+        var plistPath = Path.Combine(xcodeRoot, "Contents", "Info.plist");
+
+        var (succeeded, xcodeUuid) = await ExecuteCommand("/usr/libexec/PlistBuddy", TimeSpan.FromSeconds(5), "-c", "Print :DVTPlugInCompatibilityUUID", plistPath);
+        if (!succeeded)
+        {
+            throw new Exception("Failed to detect Xcode UUID! This is only available on Xcode < 15.3.");
+        }
+
+        _xcodeUuid = xcodeUuid.Trim();
+
+        return _xcodeUuid;
     }
 
     [Serializable]
