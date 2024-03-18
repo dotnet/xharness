@@ -395,6 +395,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
         xcodeVersion = xcodeVersion.Trim();
 
+        // the first two digits of DTXcode are the major version, then minor and revision so e.g. 1520 would translate to 15.2.0
         xcodeVersion = xcodeVersion.Insert(xcodeVersion.Length - 2, ".");
         xcodeVersion = xcodeVersion.Insert(xcodeVersion.Length - 1, ".");
 
