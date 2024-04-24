@@ -137,7 +137,7 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
             options.AddArguments("--headless");
 
         if (!Arguments.NoIncognito)
-            options.AddArguments("--incognito");
+            options.AddArguments("-private-window");
 
         logger.LogInformation($"Starting Firefox with args: {string.Join(' ', options.ToCapabilities())}");
 
