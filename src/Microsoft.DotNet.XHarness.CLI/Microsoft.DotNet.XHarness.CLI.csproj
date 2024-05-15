@@ -12,13 +12,13 @@
     <MlaunchDestinationDir Condition="'$(TargetFrameworks)' == '' OR $(TargetFrameworks.EndsWith($(TargetFramework)))">$(BaseIntermediateOutputPath)/mlaunch</MlaunchDestinationDir>
 
     <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
-    <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-windows.zip</WindowsAndroidSdkUrl>
+    <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r32.0.0-windows.zip</WindowsAndroidSdkUrl>
     <WindowsAndroidSdkFileName>windows-android-platform-tools.zip</WindowsAndroidSdkFileName>
 
-    <LinuxAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-linux.zip</LinuxAndroidSdkUrl>
+    <LinuxAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r32.0.0-linux.zip</LinuxAndroidSdkUrl>
     <LinuxAndroidSdkFileName>linux-android-platform-tools.zip</LinuxAndroidSdkFileName>
 
-    <MacOsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r29.0.6-darwin.zip</MacOsAndroidSdkUrl>
+    <MacOsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r32.0.0-darwin.zip</MacOsAndroidSdkUrl>
     <MacOsAndroidSdkFileName>macos-android-platform-tools.zip</MacOsAndroidSdkFileName>
   </PropertyGroup>
 
