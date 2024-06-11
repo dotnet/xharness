@@ -106,8 +106,16 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
             var nameNode = downloadable.SelectSingleNode("key[text()='name']/following-sibling::string") ?? throw new Exception("Name node not found");
             var versionNode = downloadable.SelectSingleNode("key[text()='version']/following-sibling::string") ?? throw new Exception("Version node not found");
-            var sourceNode = downloadable.SelectSingleNode("key[text()='source']/following-sibling::string") ?? throw new Exception("Source node not found");
             var identifierNode = downloadable.SelectSingleNode("key[text()='identifier']/following-sibling::string") ?? throw new Exception("Identifier node not found");
+            var sourceNode = downloadable.SelectSingleNode("key[text()='source']/following-sibling::string");
+            if (sourceNode is null)
+            {
+                // It seems that Apple can list beta simulators in the index file, but they do not provide a source for downloading them (eg: iOS 18.0 beta Simulator Runtime).
+                // In such cases log a warning and skip trying to download such simulator as they are not publicly available.
+                Logger.LogWarning($"Simulator with name: '{nameNode.InnerText}' version: '{versionNode.InnerText}' identifier: '{identifierNode.InnerText}' has no source for download, skipping...");
+                continue;
+            }
+
             var fileSizeNode = downloadable.SelectSingleNode("key[text()='fileSize']/following-sibling::integer|key[text()='fileSize']/following-sibling::real");
             var installPrefixNode = downloadable.SelectSingleNode("key[text()='userInfo']/following-sibling::dict/key[text()='InstallPrefix']/following-sibling::string");
 
