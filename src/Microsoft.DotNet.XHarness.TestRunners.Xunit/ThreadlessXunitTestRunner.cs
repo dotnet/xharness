@@ -142,7 +142,9 @@ internal class ThreadlessXunitDiscoverer : global::Xunit.Sdk.XunitTestFrameworkD
 
     public void FindWithoutThreads(bool includeSourceInformation, IMessageSink discoveryMessageSink, ITestFrameworkDiscoveryOptions discoveryOptions)
     {
+#pragma warning disable CS0618 // SynchronousMessageBus ctor is marked obsolete
         using (var messageBus = new global::Xunit.Sdk.SynchronousMessageBus(discoveryMessageSink))
+#pragma warning restore
         {
             foreach (var type in AssemblyInfo.GetTypes(includePrivateTypes: false).Where(IsValidTestClass))
             {
