@@ -103,7 +103,18 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                 token.WaitHandle.WaitOne();
             }
 
-            driver.Quit();  // Firefox driver hangs if Quit is not issued.
+            // close all tabs before quit is a workaround for broken Selenium - GeckoDriver communication in Firefox
+            // https://github.com/dotnet/runtime/issues/101617
+            while (driver.WindowHandles.Count > 1)
+            {
+                driver.Navigate().GoToUrl("about:config");
+                driver.Navigate().GoToUrl("about:blank");
+                driver.Close(); //Close Tab
+                driver.SwitchTo().Window(driver.WindowHandles.Last());
+            }
+            driver.Navigate().GoToUrl("about:config");
+            driver.Navigate().GoToUrl("about:blank");
+            driver.Quit(); // Firefox driver hangs if Quit is not issued.
             driverService.Dispose();
             driver.Dispose();
         }
