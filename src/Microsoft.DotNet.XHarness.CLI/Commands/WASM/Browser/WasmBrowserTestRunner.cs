@@ -188,6 +188,11 @@ internal class WasmBrowserTestRunner
                 }
             }
         }
+        catch (WebSocketException wse)
+        {
+            // this could happen when WebWorker is closed or when browser died
+            _logger.LogDebug($"RunConsoleMessagesPump failed: {wse}");
+        }
         catch (OperationCanceledException oce)
         {
             if (!token.IsCancellationRequested)
