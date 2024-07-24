@@ -98,8 +98,7 @@ public class DeviceFinder : IDeviceFinder
             else
             {
                 device = _deviceLoader.ConnectedDevices.FirstOrDefault(IsMatchingDevice)
-                    ?? throw new NoDeviceFoundException($"Failed to find a device '{deviceName}'. " +
-                                                        "Please make sure the device is connected and unlocked.");
+                    ?? throw new NoDeviceFoundException($"Failed to find a device '{deviceName}'. Please make sure the device is connected and unlocked.");
             }
         }
 
