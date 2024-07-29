@@ -124,11 +124,14 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                 }
                 if (driverService.IsRunning)
                 {
-                    driver.Navigate().GoToUrl("about:config");
-                    driver.Navigate().GoToUrl("about:blank");
+                    if (!cts.IsCancellationRequested)
+                    {
+                        driver.Navigate().GoToUrl("about:config");
+                        driver.Navigate().GoToUrl("about:blank");
+                    }
                     driver.Quit(); // Firefox driver hangs if Quit is not issued.
-                    driverService.Dispose();
                     driver.Dispose();
+                    driverService.Dispose();
                 }
             }
             catch (Exception e)
