@@ -108,24 +108,33 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
             logger.LogInformation($"Closing {driver.WindowHandles.Count} browser tabs before setting the main tab to config page and quitting.");
             var cts = new CancellationTokenSource();
             cts.CancelAfter(10000);
-
-            while (driver.WindowHandles.Count > 1)
+            try
             {
-                if (cts.IsCancellationRequested)
+                while (driver.WindowHandles.Count > 1 && driverService.IsRunning)
                 {
-                    logger.LogInformation($"Timeout while trying to close tabs, {driver.WindowHandles.Count} is left open before quitting.");
-                    break;
+                    if (cts.IsCancellationRequested)
+                    {
+                        logger.LogInformation($"Timeout while trying to close tabs, {driver.WindowHandles.Count} is left open before quitting.");
+                        break;
+                    }
+                    driver.Navigate().GoToUrl("about:config");
+                    driver.Navigate().GoToUrl("about:blank");
+                    driver.Close(); //Close Tab
+                    driver.SwitchTo().Window(driver.WindowHandles.Last());
                 }
-                driver.Navigate().GoToUrl("about:config");
-                driver.Navigate().GoToUrl("about:blank");
-                driver.Close(); //Close Tab
-                driver.SwitchTo().Window(driver.WindowHandles.Last());
+                if (driverService.IsRunning)
+                {
+                    driver.Navigate().GoToUrl("about:config");
+                    driver.Navigate().GoToUrl("about:blank");
+                    driver.Quit(); // Firefox driver hangs if Quit is not issued.
+                    driverService.Dispose();
+                    driver.Dispose();
+                }
             }
-            driver.Navigate().GoToUrl("about:config");
-            driver.Navigate().GoToUrl("about:blank");
-            driver.Quit(); // Firefox driver hangs if Quit is not issued.
-            driverService.Dispose();
-            driver.Dispose();
+            catch (Exception e)
+            {
+                logger.LogError($"Error while closing browser: {e}");
+            }
         }
     }
 
