@@ -4,10 +4,11 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasi;
 
-internal class WasiTestCommandArguments : XHarnessCommandArguments
+internal class WasiTestCommandArguments : XHarnessCommandArguments, IWebServerArguments
 {
     public WasmEngineArgument Engine { get; } = new();
     public WasmEngineLocationArgument EnginePath { get; } = new();
@@ -15,6 +16,14 @@ internal class WasiTestCommandArguments : XHarnessCommandArguments
     public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
     public OutputDirectoryArgument OutputDirectory { get; } = new();
     public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
+
+    public WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; } = new();
+    public WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; } = new();
+    public WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; } = new();
+    public WebServerUseHttpsArguments WebServerUseHttps { get; } = new();
+    public WebServerUseCorsArguments WebServerUseCors { get; } = new();
+    public WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; } = new();
+    public WebServerUseDefaultFilesArguments WebServerUseDefaultFiles { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
@@ -24,5 +33,13 @@ internal class WasiTestCommandArguments : XHarnessCommandArguments
             OutputDirectory,
             Timeout,
             ExpectedExitCode,
+
+            WebServerMiddlewarePathsAndTypes,
+            WebServerHttpEnvironmentVariables,
+            WebServerHttpsEnvironmentVariables,
+            WebServerUseHttps,
+            WebServerUseCors,
+            WebServerUseCrossOriginPolicy,
+            WebServerUseDefaultFiles,
     };
 }

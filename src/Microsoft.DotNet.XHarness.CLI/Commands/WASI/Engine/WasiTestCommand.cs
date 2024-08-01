@@ -65,8 +65,36 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             logger.LogInformation($"Using wasm engine {Arguments.Engine.Value} from path {engineBinary}");
             await PrintVersionAsync(Arguments.Engine.Value.Value, engineBinary);
 
+            ServerURLs? serverURLs = null;
+            if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
+            {
+                serverURLs = await WebServer.Start(
+                    Arguments,
+                    logger,
+                    cts.Token);
+                cts.CancelAfter(Arguments.Timeout);
+            }
+
             var engineArgs = new List<string>();
             engineArgs.AddRange(Arguments.EngineArgs.Value);
+
+            if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
+            {
+                foreach (var envVariable in Arguments.WebServerHttpEnvironmentVariables.Value)
+                {
+                    engineArgs.Add($"--env");
+                    engineArgs.Add($"{envVariable}={serverURLs!.Http}");
+                }
+                if (Arguments.WebServerUseHttps)
+                {
+                    foreach (var envVariable in Arguments.WebServerHttpsEnvironmentVariables.Value)
+                    {
+                        engineArgs.Add($"--env");
+                        engineArgs.Add($"{envVariable}={serverURLs!.Https}");
+                    }
+                }
+            }
+            
             engineArgs.AddRange(PassThroughArguments);
 
             var xmlResultsFilePath = Path.Combine(Arguments.OutputDirectory, "testResults.xml");
@@ -115,6 +143,11 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             // process should be done too, or about to be done!
             var result = await processTask;
             ExitCode logProcessorExitCode = await logProcessor.CompleteAndFlushAsync();
+            if (logProcessor.ForwardedExitCode != null)
+            {
+                // until WASI can work with unix exit code https://github.com/WebAssembly/wasi-cli/pull/44
+                result.ExitCode = logProcessor.ForwardedExitCode.Value;
+            }
 
             if (result.ExitCode != Arguments.ExpectedExitCode)
             {

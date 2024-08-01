@@ -36,6 +36,7 @@ public class WasmTestMessagesProcessor
 
     // Set once `WASM EXIT` message is received
     public TaskCompletionSource WasmExitReceivedTcs { get; } = new ();
+    public int? ForwardedExitCode {get; private set; }
 
     public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger, string? errorPatternsFile = null, WasmSymbolicatorBase? symbolicator = null)
     {
@@ -224,6 +225,12 @@ public class WasmTestMessagesProcessor
         if (line.StartsWith("WASM EXIT"))
         {
             _logger.LogDebug("Reached wasm exit");
+
+            // until WASI can work with unix exit code https://github.com/WebAssembly/wasi-cli/pull/44
+            if (line.Length > 10)
+            {
+                ForwardedExitCode = int.Parse(line.Substring(10));
+            }
             if (!WasmExitReceivedTcs.TrySetResult())
                 _logger.LogDebug("Got a duplicate exit message.");
         }
