@@ -229,6 +229,8 @@ public class WasmTestMessagesProcessor
             // until WASI can work with unix exit code https://github.com/WebAssembly/wasi-cli/pull/44
             if (line.Length > 10)
             {
+                // the message on WASI looks like WASM EXIT 123
+                // here we strip the first 10 characters and parse the rest
                 ForwardedExitCode = int.Parse(line.Substring(10));
             }
             if (!WasmExitReceivedTcs.TrySetResult())
