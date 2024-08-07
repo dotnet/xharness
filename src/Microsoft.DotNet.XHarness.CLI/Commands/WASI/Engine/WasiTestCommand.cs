@@ -66,7 +66,7 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             await PrintVersionAsync(Arguments.Engine.Value.Value, engineBinary);
 
             ServerURLs? serverURLs = null;
-            if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
+            if (Arguments.IsWebServerEnabled)
             {
                 serverURLs = await WebServer.Start(
                     Arguments,
@@ -78,7 +78,7 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
             var engineArgs = new List<string>();
             engineArgs.AddRange(Arguments.EngineArgs.Value);
 
-            if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
+            if (Arguments.IsWebServerEnabled)
             {
                 foreach (var envVariable in Arguments.WebServerHttpEnvironmentVariables.Value)
                 {
