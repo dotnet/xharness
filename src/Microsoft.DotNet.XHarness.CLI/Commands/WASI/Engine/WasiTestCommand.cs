@@ -72,7 +72,6 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
                     Arguments,
                     logger,
                     cts.Token);
-                cts.CancelAfter(Arguments.Timeout);
             }
 
             var engineArgs = new List<string>();

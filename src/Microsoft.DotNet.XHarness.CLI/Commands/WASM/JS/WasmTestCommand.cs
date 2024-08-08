@@ -81,7 +81,6 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                     Arguments,
                     logger,
                     cts.Token);
-                cts.CancelAfter(Arguments.Timeout);
             }
 
             var engineArgs = new List<string>();
