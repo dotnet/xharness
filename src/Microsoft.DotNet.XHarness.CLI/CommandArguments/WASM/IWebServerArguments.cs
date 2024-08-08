@@ -6,6 +6,7 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 
 internal interface IWebServerArguments
 {
+    bool IsWebServerEnabled { get; }
     WebServerMiddlewareArgument WebServerMiddlewarePathsAndTypes { get; }
     WebServerHttpEnvironmentVariables WebServerHttpEnvironmentVariables { get; }
     WebServerHttpsEnvironmentVariables WebServerHttpsEnvironmentVariables { get; }
