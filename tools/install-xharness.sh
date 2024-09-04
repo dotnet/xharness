@@ -25,7 +25,7 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-xharness_version="9.0.0-prerelease.$version"
+xharness_version="10.0.0-prerelease.$version"
 
 here=$(pwd)
 dotnet_install="$here/dotnet-install.sh"
