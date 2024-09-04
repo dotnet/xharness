@@ -75,13 +75,12 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
             diagnosticsData.TargetOS = versionString;
 
             ServerURLs? serverURLs = null;
-            if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
+            if (Arguments.IsWebServerEnabled)
             {
                 serverURLs = await WebServer.Start(
                     Arguments,
                     logger,
                     cts.Token);
-                cts.CancelAfter(Arguments.Timeout);
             }
 
             var engineArgs = new List<string>();
@@ -101,7 +100,7 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                 engineArgs.Add("--");
             }
 
-            if (Arguments.WebServerMiddlewarePathsAndTypes.Value.Count > 0)
+            if (Arguments.IsWebServerEnabled)
             {
                 foreach (var envVariable in Arguments.WebServerHttpEnvironmentVariables.Value)
                 {
