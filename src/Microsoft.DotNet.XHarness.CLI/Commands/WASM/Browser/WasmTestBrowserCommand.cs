@@ -121,11 +121,10 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                     driver.Navigate().GoToUrl("about:blank");
                     driver.Close(); //Close Tab
 
-                    // this is not redundant, it prevents "System.InvalidOperationException: Sequence contains no elements"
-                    var windowHandles = driver.WindowHandles.ToList();
-                    if (windowHandles.Any())
+                    var lastWindowHandle = driver.WindowHandles.LastOrDefault();
+                    if (lastWindowHandle != null)
                     {
-                        driver.SwitchTo().Window(windowHandles.Last());
+                        driver.SwitchTo().Window(lastWindowHandle);
                     }
                 }
                 if (driverService.IsRunning)
