@@ -120,7 +120,12 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                     driver.Navigate().GoToUrl("about:config");
                     driver.Navigate().GoToUrl("about:blank");
                     driver.Close(); //Close Tab
-                    driver.SwitchTo().Window(driver.WindowHandles.Last());
+
+                    var lastWindowHandle = driver.WindowHandles.LastOrDefault();
+                    if (lastWindowHandle != null)
+                    {
+                        driver.SwitchTo().Window(lastWindowHandle);
+                    }
                 }
                 if (driverService.IsRunning)
                 {
