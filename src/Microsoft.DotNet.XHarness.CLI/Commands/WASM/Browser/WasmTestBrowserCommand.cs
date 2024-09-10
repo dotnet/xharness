@@ -123,7 +123,7 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
 
                     var lastWindowHandle = driver.WindowHandles.LastOrDefault();
                     if (lastWindowHandle != null)
-                    {   
+                    {
                         driver.SwitchTo().Window(lastWindowHandle);
                     }
                 }
