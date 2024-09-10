@@ -127,9 +127,10 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                         driver.SwitchTo().Window(lastWindowHandle);
                     }
                 }
+                await Task.Delay(TimeSpan.FromSeconds(1), cts.Token);
                 if (driverService.IsRunning)
                 {
-                    if (!cts.IsCancellationRequested)
+                    if (!cts.IsCancellationRequested && driver.WindowHandles.Count != 0)
                     {
                         driver.Navigate().GoToUrl("about:config");
                         driver.Navigate().GoToUrl("about:blank");
