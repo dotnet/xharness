@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using OpenQA.Selenium;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments;
 
@@ -281,6 +282,32 @@ public abstract class SwitchArgument : Argument<bool>
     }
 
     public override string ToString() => Value ? "true" : "false";
+}
+
+public abstract class EnumPageLoadStrategyArgument : Argument<PageLoadStrategy>
+{
+    private readonly PageLoadStrategy _defaultValue;
+
+    public EnumPageLoadStrategyArgument(string prototype, string description, PageLoadStrategy defaultValue)
+        : base(prototype, description, defaultValue)
+    {
+        _defaultValue = defaultValue;
+    }
+
+    public override void Action(string argumentValue)
+    {
+        if (string.IsNullOrEmpty(argumentValue))
+        {
+            Value = _defaultValue;
+        }
+        else
+        {
+            Value = argumentValue.ToLower().Equals("none") ? PageLoadStrategy.None :
+                argumentValue.ToLower().Equals("eager") ? PageLoadStrategy.Eager :
+                argumentValue.ToLower().Equals("normal") ? PageLoadStrategy.Normal :
+                _defaultValue;
+        }
+    }
 }
 
 public abstract class RepeatableArgument : Argument<IEnumerable<string>>
