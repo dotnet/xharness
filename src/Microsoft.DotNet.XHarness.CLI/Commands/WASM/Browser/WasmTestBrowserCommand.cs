@@ -105,11 +105,11 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
 
             // close all tabs before quit is a workaround for broken Selenium - GeckoDriver communication in Firefox
             // https://github.com/dotnet/runtime/issues/101617
-            logger.LogInformation($"Closing {driver.WindowHandles.Count} browser tabs before setting the main tab to config page and quitting.");
             var cts = new CancellationTokenSource();
             cts.CancelAfter(10000);
             try
             {
+                logger.LogInformation($"Closing {driver.WindowHandles.Count} browser tabs before setting the main tab to config page and quitting.");
                 while (driver.WindowHandles.Count > 1 && driverService.IsRunning)
                 {
                     if (cts.IsCancellationRequested)
@@ -265,7 +265,7 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
         if (Arguments.NoQuit)
             options.LeaveBrowserRunning = true;
 
-        logger.LogInformation($"Starting {driverName} with args: {string.Join(' ', options.Arguments)}");
+                logger.LogInformation($"Starting {driverName} with args: {string.Join(' ', options.Arguments)}");
 
         // We want to explicitly specify a timeout here. This is for for the
         // driver commands, like getLog. The default is 60s, which ends up
