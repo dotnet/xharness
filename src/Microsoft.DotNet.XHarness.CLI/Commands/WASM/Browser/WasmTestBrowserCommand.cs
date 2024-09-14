@@ -105,11 +105,11 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
 
             // close all tabs before quit is a workaround for broken Selenium - GeckoDriver communication in Firefox
             // https://github.com/dotnet/runtime/issues/101617
-            logger.LogInformation($"Closing {driver.WindowHandles.Count} browser tabs before setting the main tab to config page and quitting.");
             var cts = new CancellationTokenSource();
             cts.CancelAfter(10000);
             try
             {
+                logger.LogInformation($"Closing {driver.WindowHandles.Count} browser tabs before setting the main tab to config page and quitting.");
                 while (driver.WindowHandles.Count > 1 && driverService.IsRunning)
                 {
                     if (cts.IsCancellationRequested)
