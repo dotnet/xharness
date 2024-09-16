@@ -177,7 +177,9 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
         if (!Arguments.NoIncognito)
             options.AddArguments("-private-window");
 
-        logger.LogInformation($"Starting Firefox with args: {string.Join(' ', options.ToCapabilities())}");
+        options.PageLoadStrategy = Arguments.PageLoadStrategy.Value;
+
+        logger.LogInformation($"Starting Firefox with args: {string.Join(' ', options.ToCapabilities())} and load strategy: {Arguments.PageLoadStrategy.Value}");
 
         return CreateWebDriver(
                     () => FirefoxDriverService.CreateDefaultService(),
@@ -265,7 +267,12 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
         if (Arguments.NoQuit)
             options.LeaveBrowserRunning = true;
 
-        logger.LogInformation($"Starting {driverName} with args: {string.Join(' ', options.Arguments)}");
+        if (options is ChromeOptions chromeOptions)
+            chromeOptions.PageLoadStrategy = Arguments.PageLoadStrategy.Value;
+        if (options is EdgeOptions edgeOptions)
+            edgeOptions.PageLoadStrategy = Arguments.PageLoadStrategy.Value;
+
+        logger.LogInformation($"Starting {driverName} with args: {string.Join(' ', options.Arguments)} and load strategy: {Arguments.PageLoadStrategy.Value}");
 
         // We want to explicitly specify a timeout here. This is for for the
         // driver commands, like getLog. The default is 60s, which ends up
