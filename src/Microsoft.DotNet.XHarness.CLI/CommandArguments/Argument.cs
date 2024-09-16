@@ -302,9 +302,9 @@ public abstract class EnumPageLoadStrategyArgument : Argument<PageLoadStrategy>
         }
         else
         {
-            Value = argumentValue.ToLower().Equals("none") ? PageLoadStrategy.None :
-                argumentValue.ToLower().Equals("eager") ? PageLoadStrategy.Eager :
-                argumentValue.ToLower().Equals("normal") ? PageLoadStrategy.Normal :
+            Value = argumentValue.Equals("none", StringComparison.OrdinalIgnoreCase) ? PageLoadStrategy.None :
+                argumentValue.Equals("eager", StringComparison.OrdinalIgnoreCase) ? PageLoadStrategy.Eager :
+                argumentValue.Equals("normal", StringComparison.OrdinalIgnoreCase) ? PageLoadStrategy.Normal :
                 _defaultValue;
         }
     }
