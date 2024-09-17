@@ -2,10 +2,10 @@
     "instanceUrl": "https://devdiv.visualstudio.com/",
     "template": "TFSDEVDIV",
     "projectName": "DEVDIV",
-    "areaPath": "DevDiv\\Mono",
+    "areaPath": "DevDiv\\NET Fundamentals\\Infrastructure\\XHarness",
     "iterationPath": "DevDiv",
     "notificationAliases": [ "runtimerepo-infra@microsoft.com" ],
     "repositoryName":"dotnet-xharness",
     "codebaseName": "dotnet-xharness",
-    "serviceTreeId": "4cac191f-8b27-4d55-abee-2eafb6470803"
+    "serviceTreeId": "97d8e3f4-a4c4-4c48-8ce1-d6b3342c16f1"
 }
