@@ -121,6 +121,26 @@ internal class InstallCommand : SimulatorsCommand
 
     private async Task<bool> Install(Simulator simulator)
     {
+        if (simulator.Source is null)
+        {
+            var xcodeVersion = await GetXcodeVersion();
+            if (!simulator.IsCryptexDiskImage || Version.Parse(xcodeVersion).Major < 16)
+            {
+                throw new Exception($"Cannot download simulator: {simulator.Name} from source nor through Xcode: {xcodeVersion}");
+            }
+            else
+            {
+                Logger.LogInformation($"Downloading and installing simulator: {simulator.Name} through xcodebuild with Xcode: {xcodeVersion}");
+                var (succeeded, stdout) = await ExecuteCommand("xcodebuild", TimeSpan.FromMinutes(15), "-downloadPlatform", simulator.Platform);
+                if (!succeeded)
+                {
+                    Logger.LogError($"Download and installation failed through xcodebuild for simulator: {simulator.Name} with Xcode: {xcodeVersion}!" + Environment.NewLine + stdout);
+                    return false;
+                }
+                return true;
+            }
+        }
+
         var filename = Path.GetFileName(simulator.Source);
         var downloadPath = Path.Combine(TempDirectory, filename);
         var download = true;
