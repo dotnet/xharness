@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.DotNet.Helix.Sdk">
+
+  <ItemGroup>
+    <!-- Adjust to the desired souting queue. -->
+    <HelixTargetQueue Include="osx.amd64.iphone.scouting.open"/>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- 
+      Change to specify the exact Xcode version for testing.
+      In the CustomCommands below we can probe installed Xcode versions on Helix with `ls -al /Applications` and then choosing the write path.
+    -->
+    <XcodeVersionUnderTest>Xcode_16_beta_6</XcodeVersionUnderTest>
+    <iOSSimulatorVersionUnderTest>18.0</iOSSimulatorVersionUnderTest>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TestAppBundleName>System.Numerics.Vectors.Tests</TestAppBundleName>
+    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app/ios-simulator-64/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\ios-simulator-64</TestAppDestinationDir>
+  </PropertyGroup>
+
+  <Target Name="TestApple" BeforeTargets="CoreTest">
+    <DownloadFile SourceUrl="$(XHarnessTestAppBundleUrl)" DestinationFolder="$(TestAppDestinationDir)" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle" />
+    </DownloadFile>
+
+    <Message Text="Downloaded $(TestAppBundleName) from @(ZippedAppBundle). Extracting..." Importance="High" />
+    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(TestAppDestinationDir)" />
+    <Message Text="Extracted to $(TestAppDestinationDir)" Importance="High" />
+
+    <ItemGroup>
+      <XHarnessAppBundleToTest Include="$(TestAppDestinationDir)\$(TestAppBundleName).app">
+        <TestTarget>ios-simulator-64_$(iOSSimulatorVersionUnderTest)</TestTarget>
+        <WorkItemTimeout>00:20:00</WorkItemTimeout>
+        <TestTimeout>00:07:00</TestTimeout>
+        <LaunchTimeout>00:03:30</LaunchTimeout>
+        <CustomCommands>
+        <![CDATA[
+          set -ex
+          xharness apple simulators install $target --verbosity=Debug --xcode /Applications/$(XcodeVersionUnderTest).app
+          xharness apple simulators reset-simulator --output-directory="$output_directory" --target=$target --verbosity=Debug --xcode /Applications/$(XcodeVersionUnderTest).app
+          deviceId=`xharness apple device $target`
+          xharness apple install -t=$target --device="$deviceId" -o="$output_directory" --app="$app" --timeout=$launch_timeout -v --xcode /Applications/$(XcodeVersionUnderTest).app
+          set +e
+          result=0
+          xharness apple just-test -t=$target --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" --launch-timeout=$launch_timeout --timeout=$timeout -v --xcode /Applications/$(XcodeVersionUnderTest).app
+          ((result|=$?))
+          xharness apple uninstall -t=$target --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" -v --xcode /Applications/$(XcodeVersionUnderTest).app
+          ((result|=$?))
+          exit $result
+        ]]>
+        </CustomCommands>
+      </XHarnessAppBundleToTest>
+    </ItemGroup>
+  </Target>
+
+</Project>
