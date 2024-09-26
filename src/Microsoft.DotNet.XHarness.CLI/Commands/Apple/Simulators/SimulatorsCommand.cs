@@ -213,6 +213,8 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             {
                 return null;
             }
+            Logger.LogDebug($"Listing runtime disk images via returned: {json}");
+
             string simulatorRuntime = "";
             string simulatorVersion = "";
 

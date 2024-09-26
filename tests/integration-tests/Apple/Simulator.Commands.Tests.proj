@@ -29,6 +29,8 @@
         <![CDATA[
           set -ex
           deviceId=`xharness apple device $target`
+          xharness apple simulators install $target --verbosity=Debug
+          xharness apple simulators reset-simulator --output-directory="$output_directory" --target=$target --verbosity=Debug
           xharness apple install -t=$target --device="$deviceId" -o="$output_directory" --app="$app" --timeout=$launch_timeout -v
           set +e
           result=0
