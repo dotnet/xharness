@@ -131,13 +131,17 @@ internal class InstallCommand : SimulatorsCommand
             else
             {
                 Logger.LogInformation($"Downloading and installing simulator: {simulator.Name} through xcodebuild with Xcode: {xcodeVersion}");
-                var (succeeded, stdout) = await ExecuteCommand("xcodebuild", TimeSpan.FromMinutes(15), "-downloadPlatform", simulator.Platform);
+                var (succeeded, stdout) = await ExecuteCommand("xcodebuild", TimeSpan.FromMinutes(15), "-downloadPlatform", simulator.Platform, "-verbose");
                 if (!succeeded)
                 {
                     Logger.LogError($"Download and installation failed through xcodebuild for simulator: {simulator.Name} with Xcode: {xcodeVersion}!" + Environment.NewLine + stdout);
                     return false;
                 }
-                return true;
+                else
+                {
+                    Logger.LogDebug(stdout);
+                    return true;
+                }
             }
         }
 
