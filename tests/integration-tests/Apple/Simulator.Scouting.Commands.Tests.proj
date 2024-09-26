@@ -1,12 +1,17 @@
-<Project DefaultTargets="Test">
-  <Import Project="../Helix.SDK.configuration.props"/>
+<Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.13.amd64.open"/>
+    <!-- Adjust to the desired souting queue. -->
+    <HelixTargetQueue Include="osx.amd64.iphone.scouting.open"/>
   </ItemGroup>
 
   <PropertyGroup>
-    <iOSSimulatorVersionUnderTest>16.4</iOSSimulatorVersionUnderTest>
+    <!-- 
+      Change to specify the exact Xcode version for testing.
+      In the CustomCommands below we can probe installed Xcode versions on Helix with `ls -al /Applications` and then choosing the write path.
+    -->
+    <XcodeVersionUnderTest>Xcode_16_beta_6</XcodeVersionUnderTest>
+    <iOSSimulatorVersionUnderTest>18.0</iOSSimulatorVersionUnderTest>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -33,15 +38,15 @@
         <CustomCommands>
         <![CDATA[
           set -ex
-          xharness apple simulators install $target --verbosity=Debug
-          xharness apple simulators reset-simulator --output-directory="$output_directory" --target=$target --verbosity=Debug
+          xharness apple simulators install $target --verbosity=Debug --xcode /Applications/$(XcodeVersionUnderTest).app
+          xharness apple simulators reset-simulator --output-directory="$output_directory" --target=$target --verbosity=Debug --xcode /Applications/$(XcodeVersionUnderTest).app
           deviceId=`xharness apple device $target`
-          xharness apple install -t=$target --device="$deviceId" -o="$output_directory" --app="$app" --timeout=$launch_timeout -v
+          xharness apple install -t=$target --device="$deviceId" -o="$output_directory" --app="$app" --timeout=$launch_timeout -v --xcode /Applications/$(XcodeVersionUnderTest).app
           set +e
           result=0
-          xharness apple just-test -t=$target --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" --launch-timeout=$launch_timeout --timeout=$timeout -v
+          xharness apple just-test -t=$target --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" --launch-timeout=$launch_timeout --timeout=$timeout -v --xcode /Applications/$(XcodeVersionUnderTest).app
           ((result|=$?))
-          xharness apple uninstall -t=$target --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" -v
+          xharness apple uninstall -t=$target --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" -v --xcode /Applications/$(XcodeVersionUnderTest).app
           ((result|=$?))
           exit $result
         ]]>
@@ -50,5 +55,4 @@
     </ItemGroup>
   </Target>
 
-  <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/>
 </Project>

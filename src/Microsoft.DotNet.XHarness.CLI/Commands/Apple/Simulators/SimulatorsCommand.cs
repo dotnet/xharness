@@ -108,13 +108,6 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             var versionNode = downloadable.SelectSingleNode("key[text()='version']/following-sibling::string") ?? throw new Exception("Version node not found");
             var identifierNode = downloadable.SelectSingleNode("key[text()='identifier']/following-sibling::string") ?? throw new Exception("Identifier node not found");
             var sourceNode = downloadable.SelectSingleNode("key[text()='source']/following-sibling::string");
-            if (sourceNode is null)
-            {
-                // It seems that Apple can list beta simulators in the index file, but they do not provide a source for downloading them (eg: iOS 18.0 beta Simulator Runtime).
-                // In such cases log a warning and skip trying to download such simulator as they are not publicly available.
-                Logger.LogWarning($"Simulator with name: '{nameNode.InnerText}' version: '{versionNode.InnerText}' identifier: '{identifierNode.InnerText}' has no source for download, skipping...");
-                continue;
-            }
 
             var fileSizeNode = downloadable.SelectSingleNode("key[text()='fileSize']/following-sibling::integer|key[text()='fileSize']/following-sibling::real");
             var installPrefixNode = downloadable.SelectSingleNode("key[text()='userInfo']/following-sibling::dict/key[text()='InstallPrefix']/following-sibling::string");
@@ -144,13 +137,51 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
                 installPrefix = $"/Library/Developer/CoreSimulator/Profiles/Runtimes/{simRuntimeName}";
             }
 
+            var platform = name.Split(' ').FirstOrDefault();
+            if (platform is null)
+            {
+                Logger.LogWarning($"Platform name could not be parsed from simulator name: '{nameNode.InnerText}' version: '{versionNode.InnerText}' identifier: '{identifierNode.InnerText}' skipping...");
+                continue;
+            }
+
+            var source = ReplaceStringUsingKey(sourceNode?.InnerText, dict);
+            var isCryptexDiskImage = false;
+            if (source is null)
+            {
+                // We allow source to be missing for newer simulators (e.g., iOS 18+ available from Xcode 16) that use cryptographically-sealed archives.
+                // Eg.:
+                // <dict>
+                //     <key>category</key>
+                //     <string>simulator</string>
+                //     <key>contentType</key>
+                //     <string>cryptexDiskImage</string>
+                //     ...
+                // These images are downloaded and installed through xcodebuild instead.
+                // https://developer.apple.com/documentation/xcode/installing-additional-simulator-runtimes#Install-and-manage-Simulator-runtimes-from-the-command-line
+                var contentTypeNode = downloadable.SelectSingleNode("key[text()='contentType']/following-sibling::string") ?? throw new Exception("ContentType node not found");
+                var contentType = contentTypeNode.InnerText;
+                if (contentType.Equals("cryptexDiskImage", StringComparison.OrdinalIgnoreCase))
+                {
+                    isCryptexDiskImage = true;
+                    Logger.LogInformation($"Simulator with name: '{nameNode.InnerText}' version: '{versionNode.InnerText}' identifier: '{identifierNode.InnerText}' has no source but it is a cryptex disk image which can be downloaded through xcodebuild.");
+                }
+                else
+                {
+                    Logger.LogWarning($"Simulator with name: '{nameNode.InnerText}' version: '{versionNode.InnerText}' identifier: '{identifierNode.InnerText}' has no source for download nor it is a cryptex disk image, skipping...");
+                    continue;
+                }
+            }
+
             simulators.Add(new Simulator(
                 name: name,
+                platform: platform,
                 identifier: ReplaceStringUsingKey(identifierNode.InnerText, dict),
                 version: versionNode.InnerText,
-                source: ReplaceStringUsingKey(sourceNode.InnerText, dict),
+                source: source,
                 installPrefix: installPrefix,
-                fileSize: (long)parsedFileSize));
+                fileSize: (long)parsedFileSize,
+                isCryptexDiskImage: isCryptexDiskImage
+                ));
         }
 
         return simulators;
@@ -182,6 +213,8 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             {
                 return null;
             }
+            Logger.LogDebug($"Listing runtime disk images via returned: {json}");
+
             string simulatorRuntime = "";
             string simulatorVersion = "";
 
@@ -387,7 +420,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         return false;
     }
 
-    private async Task<string> GetXcodeVersion()
+    protected async Task<string> GetXcodeVersion()
     {
         if (_xcodeVersion is not null)
         {

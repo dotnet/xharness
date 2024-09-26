@@ -360,3 +360,5 @@ MigrationBackup/
 
 # some ide stuff
 .idea
+
+.vscode/
