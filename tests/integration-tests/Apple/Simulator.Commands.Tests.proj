@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <HelixTargetQueue Include="osx.13.amd64.open"/>
+    <iOSSimulatorVersionUnderTest>16.4</iOSSimulatorVersionUnderTest>
   </ItemGroup>
 
   <PropertyGroup>
@@ -21,7 +22,7 @@
 
     <ItemGroup>
       <XHarnessAppBundleToTest Include="$(TestAppDestinationDir)\$(TestAppBundleName).app">
-        <TestTarget>ios-simulator-64</TestTarget>
+        <TestTarget>ios-simulator-64_$(iOSSimulatorVersionUnderTest)</TestTarget>
         <WorkItemTimeout>00:20:00</WorkItemTimeout>
         <TestTimeout>00:07:00</TestTimeout>
         <LaunchTimeout>00:03:30</LaunchTimeout>
