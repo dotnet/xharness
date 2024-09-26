@@ -148,7 +148,7 @@ stages:
   parameters:
     name: E2E_Apple_Simulator_Commands
     displayName: Apple - Simulator Commands
-    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Scouting.Commands.Tests.proj
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Commands.Tests.proj
 
 - template: eng/e2e-test.yml
   parameters:
