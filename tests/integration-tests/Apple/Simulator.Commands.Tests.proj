@@ -2,8 +2,11 @@
 
   <ItemGroup>
     <HelixTargetQueue Include="osx.13.amd64.open"/>
-    <iOSSimulatorVersionUnderTest>16.4</iOSSimulatorVersionUnderTest>
   </ItemGroup>
+
+  <PropertyGroup>
+    <iOSSimulatorVersionUnderTest>16.4</iOSSimulatorVersionUnderTest>
+  </PropertyGroup>
 
   <PropertyGroup>
     <TestAppBundleName>System.Numerics.Vectors.Tests</TestAppBundleName>
