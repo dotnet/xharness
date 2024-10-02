@@ -46,6 +46,20 @@ internal class WasmBrowserTestRunner
         _messagesProcessor = messagesProcessor;
     }
 
+    public string GetTestUrl()
+    {
+        var webServerOptions = WebServer.TestWebServerOptions.FromArguments(_arguments);
+        webServerOptions.ContentRoot = _arguments.AppPackagePath;
+        // do we still need this socket action in playwright?
+        webServerOptions.OnConsoleConnected = socket => RunConsoleMessagesPump(socket, cts.Token);
+        ServerURLs serverURLs = await WebServer.Start(
+                webServerOptions,
+                _logger,
+                cts.Token);
+
+        return BuildUrl(serverURLs);
+    }
+
     public async Task<ExitCode> RunTestsWithWebDriver(DriverService driverService, IWebDriver driver)
     {
         var htmlFilePath = Path.Combine(_arguments.AppPackagePath, _arguments.HTMLFile.Value);

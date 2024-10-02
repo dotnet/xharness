@@ -4,10 +4,9 @@
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 
-using OpenQA.Selenium;
 using System;
 
-internal class PageLoadStrategyArgument : EnumPageLoadStrategyArgument
+internal class PageLoadStrategyArgument : StringArgument
 {
     private const string HelpMessage =
         $@"Decides how long WebDriver will hold off on completing a navigation method.
@@ -15,7 +14,7 @@ internal class PageLoadStrategyArgument : EnumPageLoadStrategyArgument
         EAGER: DOM access is ready, but other resources like images may still be loading. Ready state: interactive.
         NONE: Does not block WebDriver at all. Ready state: any.";
 
-    public PageLoadStrategyArgument(PageLoadStrategy defaultValue)
+    public PageLoadStrategyArgument(string defaultValue)
         : base("pageLoadStrategy=", HelpMessage, defaultValue)
     {}
 }
