@@ -26,7 +26,6 @@ internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebS
     public NoQuitArgument NoQuit { get; } = new();
     public BackgroundThrottlingArgument BackgroundThrottling { get; } = new();
     public LocaleArgument Locale { get; } = new("en-US");
-    public PageLoadStrategyArgument PageLoadStrategy { get; } = new("normal");
 
     public SymbolMapFileArgument SymbolMapFileArgument { get; } = new();
     public SymbolicatePatternsFileArgument SymbolicatePatternsFileArgument { get; } = new();
@@ -57,7 +56,6 @@ internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebS
             NoQuit,
             BackgroundThrottling,
             Locale,
-            PageLoadStrategy,
             SymbolMapFileArgument,
             SymbolicatePatternsFileArgument,
             SymbolicatorArgument,

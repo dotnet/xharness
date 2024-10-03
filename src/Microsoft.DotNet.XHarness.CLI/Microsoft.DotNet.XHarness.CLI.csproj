@@ -28,7 +28,6 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" />
     <PackageReference Include="Mono.Options" />
-    <!-- should we add the version to be able to conciously track the it and thus, the version of chrome? -->
     <PackageReference Include="Microsoft.Playwright" />
   </ItemGroup>
 

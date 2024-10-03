@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,7 +14,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsft.Playwright;
+using Microsoft.Playwright;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 
@@ -52,19 +53,14 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                                                          logger,
                                                          Arguments.ErrorPatternsFile,
                                                          symbolicator);
-        var runner = new WasmBrowserTestRunner(
-                            Arguments,
-                            PassThroughArguments,
-                            logProcessor,
-                            logger);
 
         diagnosticsData.Target = Arguments.Browser.Value.ToString();
-        (IBrowser browser, IBrowserContext context) = Arguments.Browser.Value switch
+        (IBrowser? browser, IBrowserContext? context) = Arguments.Browser.Value switch
         {
-            Browser.Chrome => await GetChromiumBrowserAsync(logger, "chrome"),
-            Browser.Safari => await GetSafariBrowserAsync(logger),
+            Browser.Chrome => await GetChromiumBrowserAsync(logger, "chrome", Arguments.Locale),
+            // Browser.Safari => await GetSafariBrowserAsync(logger), // ToDo: fix compilation error
             Browser.Firefox => await GetFirefoxBrowserAsync(logger),
-            Browser.Edge => await GetChromiumBrowserAsync(logger, "msedge"),
+            Browser.Edge => await GetChromiumBrowserAsync(logger, "msedge", Arguments.Locale),
 
             // shouldn't reach here
             _ => throw new ArgumentException($"Unknown browser : {Arguments.Browser}")
@@ -76,29 +72,25 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                 browser = null;
                 logger.LogWarning("Browser has been disconnected");
             };
-            var page = await browser.NewPageAsync();
+            var runner = new WasmBrowserTestRunner(
+                            Arguments,
+                            PassThroughArguments,
+                            logProcessor,
+                            logger);
+            var exitCode = await runner.RunTestsWithPlaywright(browser, context);
 
-            // Log console messages
-            page.Console += (_, msg) => { logger.LogInformation($"Console message: {msg}"); };
-            page.PageError += (_, msg) => { logger.LogError($"Page error: {msg}"); };
-            page.FrameDetached += (_, msg) => { logger.LogError($"Frame detached: {msg}"); };
-
-            string testUrl = runner.GetTestUrl(); // HERE we have to start the server most probably
-            logger.LogDebug($"Opening in browser: {testUrl}");
-        
-            await page.GotoAsync(testUrl);
-            await WaitForPageLoadStateAsync(page, Arguments.PageLoadStrategy.Value);
-
-            // ToDo: these codes might be useful for the server
-            //     logger.LogError($"Application has finished with exit code {exitCode} but {Arguments.ExpectedExitCode} was expected");
-            //     return ExitCode.GENERAL_FAILURE;
-            // if (logProcessor.LineThatMatchedErrorPattern != null)
-            // {
-            //     logger.LogError("Application exited with the expected exit code: {exitCode}."
-            //                     + $" But found a line matching an error pattern: {logProcessor.LineThatMatchedErrorPattern}");
-            //     return ExitCode.APP_CRASH;
-            // }
-            // return ExitCode.SUCCESS;
+            if ((int)exitCode != Arguments.ExpectedExitCode)
+            {
+                logger.LogError($"Application has finished with exit code {exitCode} but {Arguments.ExpectedExitCode} was expected");
+                return ExitCode.GENERAL_FAILURE;
+            }
+            if (logProcessor.LineThatMatchedErrorPattern != null)
+            {
+                logger.LogError($@"Application exited with the expected exit code: {exitCode}.
+                                But found a line matching an error pattern: {logProcessor.LineThatMatchedErrorPattern}");
+                return ExitCode.APP_CRASH;
+            }
+            return ExitCode.SUCCESS;
         }
         finally
         {
@@ -109,19 +101,13 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                 token.WaitHandle.WaitOne();
             }
 
-            // close all tabs before quit is a workaround for broken Selenium - GeckoDriver communication in Firefox
-            // https://github.com/dotnet/runtime/issues/101617
-            // most probably it will not be needed with playwright but we will keep an equivalent of it for now
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(10000);
             try
             {
-                await CloseAllTabs(context, cts.Token);
-                await browser.CloseAsync();
-                if (browser is not null)
+                if (browser != null)
                 {
-                    await Browser.DisposeAsync();
-                    Browser = null;
+                    await browser.CloseAsync();
+                    await browser.DisposeAsync();
+                    browser = null;
                 }
             }
             catch (Exception e)
@@ -131,43 +117,12 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
         }
     }
 
-    private async Task CloseAllTabs(IBrowserContext context, CancellationToken cancellationToken
-    {
-        var pages = context.Pages;
-        logger.LogInformation($"Closing {pages.Count} browser tabs before quitting.");
-        foreach (var page in pages)
-        {
-            if (cts.IsCancellationRequested)
-            {
-                logger.LogInformation($"Timeout while trying to close tabs, {context.Pages.Count} is left open before quitting.");
-                break;
-            }
-            await page.CloseAsync();
-        }
-    }
-
-    private async Task WaitForPageLoadStateAsync(IPage page, string pageLoadStrategy)
-    {
-        // Translation of selenium PageLoadStrategy
-        // If pageLoadStrategy is "none", do not wait for any load state
-        int timeout = 1 * 60 * 1000;
-        if (pageLoadStrategy == "normal")
-        {
-            await page.WaitForLoadStateAsync(LoadState.Load, new () { Timeout = timeout });
-        }
-        else if (pageLoadStrategy == "eager")
-        {
-            await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded, new () { Timeout = timeout });
-        }
-    }
-
-    private BrowserTypeLaunchOptions GetLaunchOptions(ILogger logger, IEnumerable<string> args)
+    private BrowserTypeLaunchOptions GetLaunchOptions(IEnumerable<string> args, ILogger logger)
     {
         var launchOptions = new BrowserTypeLaunchOptions
         {
             Headless = !Arguments.NoHeadless && !Arguments.BackgroundThrottling,
-            Args = args,
-            Logger = new PlaywrightLogger(LogLevel.Trace)
+            Args = args
         };
 
         if (!string.IsNullOrEmpty(Arguments.BrowserLocation))
@@ -179,9 +134,9 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
         return launchOptions;
     }
 
-    private BrowserTypeLaunchOptions GetChromiumLaunchOptions(ILogger logger, IEnumerable<string> args, string channel)
+    private BrowserTypeLaunchOptions GetChromiumLaunchOptions(ILogger logger, IEnumerable<string> browserArgs, string channel)
     {
-        var args = new List<string>(args);
+        var args = new List<string>(browserArgs);
         args.AddRange(new[]
         {
             "--allow-insecure-localhost",
@@ -220,54 +175,62 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
             args.Add("--no-sandbox");
         }
 
-        var launchOptions = GetLaunchOptions(logger, args);
+        var launchOptions = GetLaunchOptions(args, logger);
 
         launchOptions.Channel = channel;
         return launchOptions;
     }
 
-    private async Task<(IBrowser, IBrowserContext)> GetSafariBrowserAsync(ILogger logger)
+    // cannot find WebKit. WHY? docs use same logic:
+    // https://github.com/microsoft/playwright/blob/3c5967d4f56139a3f1bdd2837a896ed90d9b33de/docs/src/api/class-playwright.md?plain=1#L169
+    // 'IPlaywright' does not contain a definition for 'WebKit' and no accessible extension method 'WebKit' accepting a first argument of type 'IPlaywright' could be found
+    // private async Task<(IBrowser, IBrowserContext?)> GetSafariBrowserAsync(ILogger logger)
+    // {
+    //     var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+    //     var arguments = Arguments.BrowserArgs.Value;
+    //     var launchOptions = GetLaunchOptions(arguments, logger);
+
+    //     logger.LogInformation($"Starting Safari with args: {string.Join(' ', arguments)}");
+    //     var browser = await playwright.WebKit.LaunchAsync(launchOptions);
+
+    //     // new context is an equivalent of incognito mode
+    //     if (Arguments.NoIncognito)
+    //     {
+    //         return (browser, null);
+    //     }
+    //     var contextOptions = new BrowserNewContextOptions();
+    //     var context = await browser.NewContextAsync(contextOptions);
+    //     return (browser, context);
+    // }
+
+    private async Task<(IBrowser, IBrowserContext?)> GetFirefoxBrowserAsync(ILogger logger)
     {
-        var playwright = await Playwright.CreateAsync();
+        var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
         var arguments = Arguments.BrowserArgs.Value;
-        var launchOptions = GetLaunchOptions(logger, arguments);
+        var launchOptions = GetLaunchOptions(arguments, logger);
 
-        logger.LogInformation($"Starting Safari with args: {string.Join(' ', arguments)}");
-        var browser = await playwright.WebKit.LaunchAsync(launchOptions);
-
-        // Safari does not support IsIncognito option
-        var contextOptions = new BrowserNewContextOptions();
-        var context = await browser.NewContextAsync(contextOptions);
-        return (browser, context);
-    }
-
-    private async Task<(IBrowser, IBrowserContext)> GetFirefoxBrowserAsync(ILogger logger)
-    {
-        var playwright = await Playwright.CreateAsync();
-        var arguments = Arguments.BrowserArgs.Value;
-        var launchOptions = GetLaunchOptions(logger, arguments);
-
-        logger.LogInformation($"Starting Firefox with args: {string.Join(' ', arguments)} and load strategy: {Arguments.PageLoadStrategy.Value}");
+        logger.LogInformation($"Starting Firefox with args: {string.Join(' ', arguments)}");
         var browser = await playwright.Firefox.LaunchAsync(launchOptions);
 
-        var contextOptions = new BrowserNewContextOptions();
-        if (!Arguments.NoIncognito)
+        // new context is an equivalent of incognito mode
+        if (Arguments.NoIncognito)
         {
-            contextOptions.IsIncognito = true;
+            return (browser, null);
         }
+        var contextOptions = new BrowserNewContextOptions();
         var context = await browser.NewContextAsync(contextOptions);
         return (browser, context);
     }
 
-    private async Task<(IBrowser, IBrowserContext)> GetChromiumBrowserAsync(ILogger logger, string channel)
+    private async Task<(IBrowser, IBrowserContext?)> GetChromiumBrowserAsync(ILogger logger, string channel, string sessionLanguage)
     {
-        var playwright = await Playwright.CreateAsync();
+        var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
         var launchOptions = GetChromiumLaunchOptions(logger, Arguments.BrowserArgs.Value, channel);
 
         foreach (var file in Directory.EnumerateFiles(Arguments.OutputDirectory, "chromedriver-*.log"))
             File.Delete(file);
 
-        logger.LogInformation($"Starting chromium with args: {string.Join(' ', Arguments.BrowserArgs.Value)} and load strategy: {Arguments.PageLoadStrategy.Value}");
+        logger.LogInformation($"Starting chromium with args: {string.Join(' ', Arguments.BrowserArgs.Value)}");
 
         int max_retries = 3;
         for (int retry_num = 0; retry_num < max_retries; retry_num++)
@@ -276,14 +239,30 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
             {
                 logger.LogInformation($"Attempt #{retry_num} out of {max_retries}");
                 var browser = await playwright.Chromium.LaunchAsync(launchOptions);
-                var contextOptions = new BrowserNewContextOptions(
-                    Locale = sessionLanguage
-                );
+
+                var headers = new Dictionary<string, string> {
+                    { "Accept-Language", sessionLanguage }
+                };
+
+                // new context is an equivalent of incognito mode
                 if (!Arguments.NoIncognito)
                 {
-                    contextOptions.IsIncognito = true;
+                    var incognitoContext = await browser.NewContextAsync(new() {
+                        // Locale = sessionLanguage,
+                        ExtraHTTPHeaders = headers
+                    });
+                    return (browser, incognitoContext);
                 }
-                var context = await browser.NewContextAsync(contextOptions);
+                
+                var context = browser.Contexts.FirstOrDefault();
+                if (context == null)
+                {
+                    logger.LogWarning("No default browser context available. To set the session language a new context will be created and incognito mode will be used");
+                    context = await browser.NewContextAsync(new () {
+                        ExtraHTTPHeaders = headers
+                    });
+                }
+                await context.SetExtraHTTPHeadersAsync(headers);
                 return (browser, context);
             }
             catch (Exception ex)

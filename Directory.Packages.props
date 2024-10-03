@@ -13,8 +13,9 @@
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
     <PackageVersion Include="Mono.Options" Version="6.12.0.148" />
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageVersion Include="Selenium.WebDriver" Version="4.0.0-alpha05" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />    
+    <!-- version of Playwright defines the version of chrome used in tests -->
+    <PackageVersion Include="Microsoft.Playwright" Version="1.47.0" />
     <PackageVersion Include="Microsoft.Tools.Mlaunch" Version="1.0.96" />
     <PackageVersion Include="NUnit" Version="3.13.0" />
     <PackageVersion Include="NUnit.Engine" Version="3.13.0" />
