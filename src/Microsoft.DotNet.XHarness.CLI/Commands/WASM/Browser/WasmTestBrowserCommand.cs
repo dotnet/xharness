@@ -55,6 +55,8 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                                                          symbolicator);
 
         diagnosticsData.Target = Arguments.Browser.Value.ToString();
+
+        // We're missing "npx playwright install --with-deps" to be run before we start using playwright
         (IBrowser? browser, IBrowserContext? context) = Arguments.Browser.Value switch
         {
             Browser.Chrome => await GetChromiumBrowserAsync(logger, "chrome", Arguments.Locale),
@@ -106,9 +108,12 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                 if (browser != null)
                 {
                     await browser.CloseAsync();
-                    await browser.DisposeAsync();
-                    browser = null;
                 }
+                if (browser != null)
+                {
+                    await browser.DisposeAsync();
+                }
+                browser = null;
             }
             catch (Exception e)
             {
@@ -122,7 +127,7 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
         var launchOptions = new BrowserTypeLaunchOptions
         {
             Headless = !Arguments.NoHeadless && !Arguments.BackgroundThrottling,
-            Args = args
+            Args = args,
         };
 
         if (!string.IsNullOrEmpty(Arguments.BrowserLocation))
@@ -177,7 +182,7 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
 
         var launchOptions = GetLaunchOptions(args, logger);
 
-        launchOptions.Channel = channel;
+        // launchOptions.Channel = channel;
         return launchOptions;
     }
 
