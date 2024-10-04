@@ -16,7 +16,7 @@
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />    
     <!-- version of Playwright defines the version of chrome used in tests -->
     <PackageVersion Include="Microsoft.Playwright" Version="1.47.0" />
-    <PackageVersion Include="Microsoft.Tools.Mlaunch" Version="1.0.96" />
+    <PackageVersion Include="Microsoft.Tools.Mlaunch" Version="1.0.256" />
     <PackageVersion Include="NUnit" Version="3.13.0" />
     <PackageVersion Include="NUnit.Engine" Version="3.13.0" />
     <PackageVersion Include="xunit.extensibility.execution" Version="$(XUnitVersion)" />
