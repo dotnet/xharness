@@ -188,6 +188,62 @@ public class AdbRunner
         return apiVersion;
     }
 
+    private static int? GetSettingValue (string value)
+    {
+        if (int.TryParse(value, out int result))
+        {
+            return result;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    private int? ReadPackageVerificationSettingValue(string settingName)
+    {
+        _log.LogInformation($"Reading {settingName} setting");
+        var result = RunAdbCommand(new[] { "shell", "settings", "get", "global", settingName });
+        var settingValue = GetSettingValue(result.StandardOutput.Trim());
+        _log.LogInformation($"{settingName} = {settingValue}");
+        return settingValue;
+    }
+
+    public bool AdjustPackageVerificationSettings()
+    {
+        _log.LogInformation("Read current adb install and/or package verification settings");
+
+        var adbInstallVerifierSetting = ReadPackageVerificationSettingValue("verifier_verify_adb_installs");
+        if (adbInstallVerifierSetting != 0)
+        {
+            _log.LogInformation($"verifier_verify_adb_installs needs to be set to '0' so that debug APKs can be installed");
+            RunAdbCommand(new[] { "shell", "settings", "put", "global", "verifier_verify_adb_installs", "0"})
+                .ThrowIfFailed("Error setting verifier_verify_adb_installs to '0'");
+            adbInstallVerifierSetting = ReadPackageVerificationSettingValue("verifier_verify_adb_installs");
+            if (adbInstallVerifierSetting != 0)
+            {
+                _log.LogError($"Failed to set verifier_verify_adb_installs to '0'");
+                return false;
+            }
+        }
+
+        var packageVerifierSetting = ReadPackageVerificationSettingValue("package_verifier_enable");
+        if (packageVerifierSetting != 0)
+        {
+            _log.LogInformation($"package_verifier_enable needs to be set to '0' so that debug APKs can be installed");
+            RunAdbCommand(new[] { "shell", "settings", "put", "global", "package_verifier_enable", "0"})
+                .ThrowIfFailed("Error setting package_verifier_enable to '0'");
+            packageVerifierSetting = ReadPackageVerificationSettingValue("package_verifier_enable");
+            if (packageVerifierSetting != 0)
+            {
+                _log.LogError($"Failed to set packageVerifierSetting to '0'");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public bool WaitForDevice()
     {
         // This command waits for ANY kind of device to be available (emulator or real)

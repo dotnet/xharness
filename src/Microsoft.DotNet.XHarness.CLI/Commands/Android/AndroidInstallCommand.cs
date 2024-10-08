@@ -115,6 +115,9 @@ Arguments:
 
             logger.LogDebug($"Working with {device.DeviceSerial} (API {device.ApiVersion})");
 
+            if (!runner.AdjustPackageVerificationSettings())
+                return ExitCode.PACKAGE_INSTALLATION_FAILURE;
+
             // If anything changed about the app, Install will fail; uninstall it first.
             // (we'll ignore if it's not present)
             // This is where mismatched architecture APKs fail.
@@ -128,7 +131,6 @@ Arguments:
 
             runner.KillApk(apkPackageName);
         }
-        
         return ExitCode.SUCCESS;
     }
 }
