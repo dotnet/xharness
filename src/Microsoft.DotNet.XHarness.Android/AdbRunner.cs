@@ -200,48 +200,22 @@ public class AdbRunner
         }
     }
 
-    private int? ReadPackageVerificationSettingValue(string settingName)
+    private void VerifyPackageVerificationSettingValue(string settingName, int expectedValue)
     {
-        _log.LogInformation($"Reading {settingName} setting");
         var result = RunAdbCommand(new[] { "shell", "settings", "get", "global", settingName });
         var settingValue = GetSettingValue(result.StandardOutput.Trim());
-        _log.LogInformation($"{settingName} = {settingValue}");
-        return settingValue;
+        _log.LogDebug($"{settingName} = {settingValue}");
+
+        if (settingValue != expectedValue)
+            _log.LogWarning($"Installing debug apks on a device might be rejected with INSTALL_FAILED_VERIFICATION_FAILURE. Make sure to set '{settingName}' to '{expectedValue}'");
     }
 
-    public bool AdjustPackageVerificationSettings()
+    public void CheckPackageVerificationSettings()
     {
-        _log.LogInformation("Read current adb install and/or package verification settings");
+        _log.LogDebug("Check current adb install and/or package verification settings");
 
-        var adbInstallVerifierSetting = ReadPackageVerificationSettingValue("verifier_verify_adb_installs");
-        if (adbInstallVerifierSetting != 0)
-        {
-            _log.LogInformation($"verifier_verify_adb_installs needs to be set to '0' so that debug APKs can be installed");
-            RunAdbCommand(new[] { "shell", "settings", "put", "global", "verifier_verify_adb_installs", "0"})
-                .ThrowIfFailed("Error setting verifier_verify_adb_installs to '0'");
-            adbInstallVerifierSetting = ReadPackageVerificationSettingValue("verifier_verify_adb_installs");
-            if (adbInstallVerifierSetting != 0)
-            {
-                _log.LogError($"Failed to set verifier_verify_adb_installs to '0'");
-                return false;
-            }
-        }
-
-        var packageVerifierSetting = ReadPackageVerificationSettingValue("package_verifier_enable");
-        if (packageVerifierSetting != 0)
-        {
-            _log.LogInformation($"package_verifier_enable needs to be set to '0' so that debug APKs can be installed");
-            RunAdbCommand(new[] { "shell", "settings", "put", "global", "package_verifier_enable", "0"})
-                .ThrowIfFailed("Error setting package_verifier_enable to '0'");
-            packageVerifierSetting = ReadPackageVerificationSettingValue("package_verifier_enable");
-            if (packageVerifierSetting != 0)
-            {
-                _log.LogError($"Failed to set packageVerifierSetting to '0'");
-                return false;
-            }
-        }
-
-        return true;
+        VerifyPackageVerificationSettingValue("verifier_verify_adb_installs", expectedValue: 0);
+        VerifyPackageVerificationSettingValue("package_verifier_enable", expectedValue: 0);
     }
 
     public bool WaitForDevice()
