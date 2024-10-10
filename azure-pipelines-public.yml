@@ -19,46 +19,46 @@ pr:
 # Build
 
 stages:
-# - stage: Build_Windows_NT
-#   displayName: Build Windows
-#   jobs:
-#   - template: /eng/common/templates/jobs/jobs.yml
-#     parameters:
-#       enableTelemetry: true
-#       enablePublishBuildArtifacts: true
-#       enableMicrobuild: true
-#       enablePublishUsingPipelines: true
-#       enablePublishBuildAssets: true
-#       helixRepo: dotnet/xharness
+- stage: Build_Windows_NT
+  displayName: Build Windows
+  jobs:
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableTelemetry: true
+      enablePublishBuildArtifacts: true
+      enableMicrobuild: true
+      enablePublishUsingPipelines: true
+      enablePublishBuildAssets: true
+      helixRepo: dotnet/xharness
 
-#       jobs:
-#       - job: Windows_NT
-#         pool:
-#             name: $(DncEngPublicBuildPool)
-#             demands: ImageOverride -equals 1es-windows-2022-open
-#         strategy:
-#           matrix:
-#             Release:
-#               _BuildConfig: Release
-#             Debug:
-#               _BuildConfig: Debug
-#         steps:
-#         - script: eng\common\CIBuild.cmd
-#             -configuration $(_BuildConfig)
-#             -prepareMachine
-#           name: Build
-#           displayName: Build and run tests
-#           condition: succeeded()
+      jobs:
+      - job: Windows_NT
+        pool:
+            name: $(DncEngPublicBuildPool)
+            demands: ImageOverride -equals 1es-windows-2022-open
+        strategy:
+          matrix:
+            Release:
+              _BuildConfig: Release
+            Debug:
+              _BuildConfig: Debug
+        steps:
+        - script: eng\common\CIBuild.cmd
+            -configuration $(_BuildConfig)
+            -prepareMachine
+          name: Build
+          displayName: Build and run tests
+          condition: succeeded()
 
-#         - task: PublishTestResults@2
-#           displayName: 'Publish Unit Test Results'
-#           inputs:
-#             testResultsFormat: xUnit
-#             testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
-#             mergeTestResults: true
-#             searchFolder: $(system.defaultworkingdirectory)
-#             testRunTitle: XHarness unit tests - $(Agent.JobName)
-#           condition: succeededOrFailed()
+        - task: PublishTestResults@2
+          displayName: 'Publish Unit Test Results'
+          inputs:
+            testResultsFormat: xUnit
+            testResultsFiles: '$(Build.SourcesDirectory)/artifacts/TestResults/**/*.xml'
+            mergeTestResults: true
+            searchFolder: $(system.defaultworkingdirectory)
+            testRunTitle: XHarness unit tests - $(Agent.JobName)
+          condition: succeededOrFailed()
 
 - stage: Build_OSX
   displayName: Build OSX
@@ -108,11 +108,11 @@ stages:
 
 # E2E tests
 
-# - template: eng/e2e-test.yml
-#   parameters:
-#     name: E2E_Android_Simulators
-#     displayName: Android - Simulators
-#     testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Simulator.Tests.proj
+- template: eng/e2e-test.yml
+  parameters:
+    name: E2E_Android_Simulators
+    displayName: Android - Simulators
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Simulator.Tests.proj
 
 - template: eng/e2e-test.yml
   parameters:
@@ -120,50 +120,50 @@ stages:
     displayName: Android - Devices
     testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Device.Tests.proj
 
-# - template: eng/e2e-test.yml
-#   parameters:
-#     name: E2E_Android_Manual_Commands
-#     displayName: Android - Manual Commands
-#     testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Commands.Tests.proj
+- template: eng/e2e-test.yml
+  parameters:
+    name: E2E_Android_Manual_Commands
+    displayName: Android - Manual Commands
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Commands.Tests.proj
 
-# - template: eng/e2e-test.yml
-#   parameters:
-#     name: E2E_Apple_Simulators
-#     displayName: Apple - Simulators
-#     testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Tests.proj
+- template: eng/e2e-test.yml
+  parameters:
+    name: E2E_Apple_Simulators
+    displayName: Apple - Simulators
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Tests.proj
 
-# - template: eng/e2e-test.yml
-#   parameters:
-#     name: E2E_iOS_Devices
-#     displayName: Apple - iOS devices
-#     testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.iOS.Tests.proj
+- template: eng/e2e-test.yml
+  parameters:
+    name: E2E_iOS_Devices
+    displayName: Apple - iOS devices
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.iOS.Tests.proj
 
-# - template: eng/e2e-test.yml
-#   parameters:
-#     name: E2E_tvOS_Devices
-#     displayName: Apple - tvOS devices
-#     testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.tvOS.Tests.proj
+- template: eng/e2e-test.yml
+  parameters:
+    name: E2E_tvOS_Devices
+    displayName: Apple - tvOS devices
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.tvOS.Tests.proj
 
-# - template: eng/e2e-test.yml
-#   parameters:
-#     name: E2E_Apple_Simulator_Commands
-#     displayName: Apple - Simulator Commands
-#     testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Commands.Tests.proj
+- template: eng/e2e-test.yml
+  parameters:
+    name: E2E_Apple_Simulator_Commands
+    displayName: Apple - Simulator Commands
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Commands.Tests.proj
 
-# - template: eng/e2e-test.yml
-#   parameters:
-#     name: E2E_Apple_Device_Commands
-#     displayName: Apple - Device Commands
-#     testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Commands.Tests.proj
+- template: eng/e2e-test.yml
+  parameters:
+    name: E2E_Apple_Device_Commands
+    displayName: Apple - Device Commands
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Commands.Tests.proj
 
-# - template: eng/e2e-test.yml
-#   parameters:
-#     name: E2E_Apple_Simulator_Mgmt
-#     displayName: Apple - Simulator management
-#     testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/SimulatorInstaller.Tests.proj
+- template: eng/e2e-test.yml
+  parameters:
+    name: E2E_Apple_Simulator_Mgmt
+    displayName: Apple - Simulator management
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/SimulatorInstaller.Tests.proj
 
-# - template: eng/e2e-test.yml
-#   parameters:
-#     name: E2E_WASM
-#     displayName: WASM
-#     testProject: $(Build.SourcesDirectory)/tests/integration-tests/WASM/WASM.Helix.SDK.Tests.proj
+- template: eng/e2e-test.yml
+  parameters:
+    name: E2E_WASM
+    displayName: WASM
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/WASM/WASM.Helix.SDK.Tests.proj
