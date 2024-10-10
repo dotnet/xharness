@@ -7,21 +7,20 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.WebSockets;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.Playwright;
 
 using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
 
-using OpenQA.Selenium;
-using OpenQA.Selenium.Support.UI;
-
-using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
@@ -36,6 +35,9 @@ internal class WasmBrowserTestRunner
     // Messages from selenium prepend the url, and location where the message originated
     // Eg. `foo` becomes `http://localhost:8000/xyz.js 0:12 "foo"
     static readonly Regex s_consoleLogRegex = new(@"^\s*[a-z]*://[^\s]+\s+\d+:\d+\s+""(.*)""\s*$", RegexOptions.Compiled);
+    private static readonly Regex s_payloadRegex = new Regex("\"payload\":\"(?<payload>[^\"]*)\"", RegexOptions.Compiled);
+    private static readonly Regex s_exitRegex = new Regex("WASM EXIT (?<exitCode>-?[0-9]+)$");
+    
 
     public WasmBrowserTestRunner(WasmTestBrowserCommandArguments arguments, IEnumerable<string> passThroughArguments,
                                         WasmTestMessagesProcessor messagesProcessor, ILogger logger)
@@ -45,8 +47,7 @@ internal class WasmBrowserTestRunner
         _passThroughArguments = passThroughArguments;
         _messagesProcessor = messagesProcessor;
     }
-
-    public async Task<ExitCode> RunTestsWithWebDriver(DriverService driverService, IWebDriver driver)
+    public async Task<ExitCode> RunTestsWithPlaywright(IBrowser browser, IBrowserContext? context)
     {
         var htmlFilePath = Path.Combine(_arguments.AppPackagePath, _arguments.HTMLFile.Value);
         if (!File.Exists(htmlFilePath))
@@ -56,61 +57,52 @@ internal class WasmBrowserTestRunner
         }
 
         var cts = new CancellationTokenSource();
+        var cancellationToken = cts.Token;
         try
         {
-            var consolePumpTcs = new TaskCompletionSource<bool>();
             var logProcessorTask = Task.Run(() => _messagesProcessor.RunAsync(cts.Token));
-
             var webServerOptions = WebServer.TestWebServerOptions.FromArguments(_arguments);
             webServerOptions.ContentRoot = _arguments.AppPackagePath;
-            webServerOptions.OnConsoleConnected = socket => RunConsoleMessagesPump(socket, cts.Token);
             ServerURLs serverURLs = await WebServer.Start(
                 webServerOptions,
                 _logger,
                 cts.Token);
 
             string testUrl = BuildUrl(serverURLs);
-
-            var seleniumLogMessageTask = Task.Run(() => RunSeleniumLogMessagePump(driver, cts.Token), cts.Token);
+            
+            var page = await browser.NewPageAsync();
+            var exitCodeTcs = new TaskCompletionSource<int>();
+            SetupPageLogs(page, exitCodeTcs, cancellationToken);
             cts.CancelAfter(_arguments.Timeout);
 
             _logger.LogDebug($"Opening in browser: {testUrl}");
-            driver.Navigate().GoToUrl(testUrl);
+        
+            await page.GotoAsync(testUrl);
 
-            TaskCompletionSource wasmExitReceivedTcs = _messagesProcessor.WasmExitReceivedTcs;
             var tasks = new Task[]
             {
-                    wasmExitReceivedTcs.Task,
-                    consolePumpTcs.Task,
-                    seleniumLogMessageTask,
-                    logProcessorTask,
-                    Task.Delay(_arguments.Timeout)
+                exitCodeTcs.Task,
+                Task.Delay(_arguments.Timeout),
             };
-
-            if (_arguments.BackgroundThrottling)
-            {
-                // throttling only happens when the page is not visible
-                driver.Manage().Window.Minimize();
-            }
 
             var task = await Task.WhenAny(tasks).ConfigureAwait(false);
 
-            ExitCode logProcessorExitCode = ExitCode.SUCCESS;
-            if (task != logProcessorTask && !task.IsFaulted)
-                logProcessorExitCode = await _messagesProcessor.CompleteAndFlushAsync();
-
             if (task == tasks[^1] || cts.IsCancellationRequested)
             {
-                if (driverService.IsRunning)
+                try
                 {
-                    // Selenium isn't able to kill chrome in this case :/
-                    int pid = driverService.ProcessId;
-                    var p = Process.GetProcessById(pid);
-                    if (p != null)
+                    if (context is not null)
                     {
-                        _logger.LogError($"Tests timed out. Killing driver service pid {pid}");
-                        p.Kill(true);
+                        var ctsCloseTabs = new CancellationTokenSource();
+                        ctsCloseTabs.CancelAfter(10000);
+                        await CloseAllTabs(context, ctsCloseTabs);
                     }
+                    await browser.CloseAsync();
+                    await browser.DisposeAsync();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError($"Tests timed out. Error while closing browser: {e}");
                 }
 
                 // timed out
@@ -119,34 +111,22 @@ internal class WasmBrowserTestRunner
                 return ExitCode.TIMED_OUT;
             }
 
-            if (task == wasmExitReceivedTcs.Task && wasmExitReceivedTcs.Task.IsCompletedSuccessfully)
-            {
-                _logger.LogTrace($"Looking for `tests_done` element, to get the exit code");
-                var testsDoneElement = new WebDriverWait(driver, TimeSpan.FromSeconds(30))
-                                            .Until(e => e.FindElement(By.Id("tests_done")));
-
-                if (int.TryParse(testsDoneElement.Text, out var code))
-                {
-                    var appExitCode = (ExitCode)Enum.ToObject(typeof(ExitCode), code);
-                    if (logProcessorExitCode != ExitCode.SUCCESS)
-                    {
-                        _logger.LogInformation($"Application has finished with exit code {appExitCode}. But the log processor failed with {logProcessorExitCode}.");
-                        return logProcessorExitCode;
-                    }
-
-                    return appExitCode;
-                }
-
-                return ExitCode.RETURN_CODE_NOT_SET;
-            }
-
             if (task.IsFaulted)
             {
                 _logger.LogDebug($"task faulted {task.Exception}");
                 throw task.Exception!;
             }
 
-            return ExitCode.TIMED_OUT;
+            try
+            {
+                var exitCode = await exitCodeTcs.Task;
+                return (ExitCode)exitCode;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Error while processing exit code: {e}");
+                return ExitCode.GENERAL_FAILURE;
+            }
         }
         finally
         {
@@ -156,98 +136,83 @@ internal class WasmBrowserTestRunner
             }
         }
     }
-
-    private async Task RunConsoleMessagesPump(WebSocket socket, CancellationToken token)
+    
+    private async Task CloseAllTabs(IBrowserContext context, CancellationTokenSource cts)
     {
-        byte[] buff = new byte[4000];
-        var mem = new MemoryStream();
-        try
+        var pages = context.Pages;
+        _logger.LogInformation($"Closing {pages.Count} browser tabs before quitting.");
+        foreach (var page in pages)
         {
-            while (!token.IsCancellationRequested)
+            if (cts.IsCancellationRequested)
             {
-                if (socket.State != WebSocketState.Open)
-                {
-                    _logger.LogError($"DevToolsProxy: Socket is no longer open.");
-                    return;
-                }
-
-                WebSocketReceiveResult result = await socket.ReceiveAsync(new ArraySegment<byte>(buff), token).ConfigureAwait(false);
-                if (result.MessageType == WebSocketMessageType.Close)
-                    return;
-
-                mem.Write(buff, 0, result.Count);
-
-                if (result.EndOfMessage)
-                {
-                    var line = Encoding.UTF8.GetString(mem.GetBuffer(), 0, (int)mem.Length);
-                    line += Environment.NewLine;
-
-                    await _messagesProcessor.InvokeAsync(line, token);
-                    mem.SetLength(0);
-                    mem.Seek(0, SeekOrigin.Begin);
-                }
+                _logger.LogInformation($"Timeout while trying to close tabs, {context.Pages.Count} is left open before quitting.");
+                break;
             }
-        }
-        catch (WebSocketException wse)
-        {
-            // this could happen when WebWorker is closed or when browser died
-            _logger.LogDebug($"RunConsoleMessagesPump failed: {wse}");
-        }
-        catch (OperationCanceledException oce)
-        {
-            if (!token.IsCancellationRequested)
-                _logger.LogDebug($"RunConsoleMessagesPump cancelled: {oce}");
-        }
-        finally
-        {
-            _logger.LogDebug($"Reading console messages from websocket stopped");
+            await page.CloseAsync();
         }
     }
 
-    // This listens for any `console.log` messages.
-    // Since we pipe messages from managed code, and console.* to the websocket,
-    // this wouldn't normally get much. But listening on this to catch any messages
-    // that we miss piping to the websocket.
-    private void RunSeleniumLogMessagePump(IWebDriver driver, CancellationToken token)
+    private void SetupPageLogs(IPage page, TaskCompletionSource<int> exitCodeTcs, CancellationToken token)
     {
-        try
+        page.Console += (_, msg) =>
         {
-            ILogs logs = driver.Manage().Logs;
-            while (!token.IsCancellationRequested)
+            try
             {
-                foreach (var logType in logs.AvailableLogTypes)
+                if (token.IsCancellationRequested || string.IsNullOrEmpty(msg.Text))
                 {
-                    foreach (var logEntry in logs.GetLog(logType))
-                    {
-                        if (logEntry.Level == SeleniumLogLevel.Severe)
-                        {
-                            // These are errors from the browser, some of which might be
-                            // thrown as part of tests. So, we can't differentiate when
-                            // it is an error that we can ignore, vs one that should stop
-                            // the execution completely.
-                            //
-                            // Note: these could be received out-of-order as compared to
-                            // console messages via the websocket.
-                            //
-                            // (see commit message for more info)
-                            _logger.LogError($"[out of order message from the {logType}]: {logEntry.Message}");
-                            continue;
-                        }
+                    return;
+                }
 
-                        var match = s_consoleLogRegex.Match(Regex.Unescape(logEntry.Message));
-                        string msg = match.Success ? match.Groups[1].Value : logEntry.Message;
-                        _messagesProcessor.Invoke(msg);
+                string message = msg.Text;
+                if (msg.Type == "error")
+                {
+                    _logger.LogError($"[out of order message from the console]: {message}");
+                    return;
+                }
+
+                // console.logs and console.infos are in json format
+                string payload = TryGetPayloadFromJson(message);
+                if (msg.Type == "log")
+                {
+                    int? exitCode = GetExitCode(payload);
+                    if (exitCode is not null)
+                    {
+                        exitCodeTcs.TrySetResult(exitCode.Value);
+                        return;
                     }
                 }
+                else if (msg.Type == "debug")
+                {
+                    _logger.LogDebug($"Debug: {payload}");
+                    return;
+                }
+
+                _messagesProcessor.Invoke(payload);
             }
-        }
-        catch (WebDriverException wde) when (wde.Message.Contains("timed out after"))
-        { }
-        catch (Exception ex)
-        {
-            _logger.LogDebug($"Failed trying to read log messages via selenium: {ex}");
-            throw;
-        }
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"Failed trying to read log messages via Playwright: {ex}");
+                throw;
+            }
+        };
+        page.PageError += (_, msg) => {
+            _logger.LogError($"Page error: {msg}");
+        };
+        page.FrameDetached += (_, msg) => {
+            _logger.LogError($"Frame detached: {msg.Name}");
+        };
+    }
+
+    private string TryGetPayloadFromJson(string message)
+    {
+        Match match = s_payloadRegex.Match(message);
+        return match.Success ? match.Groups["payload"].Value : message;
+    }
+
+    private int? GetExitCode(string message)
+    {
+        Match m = s_exitRegex.Match(message);
+        return m.Success ? int.Parse(m.Groups["exitCode"].Value) : null;
     }
 
     private string BuildUrl(ServerURLs serverURLs)

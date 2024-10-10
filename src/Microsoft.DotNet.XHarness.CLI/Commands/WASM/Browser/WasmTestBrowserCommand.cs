@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,13 +14,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Chromium;
-using OpenQA.Selenium.Edge;
-using OpenQA.Selenium.Firefox;
-using OpenQA.Selenium.Safari;
-using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
+using Microsoft.Playwright;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 
@@ -58,40 +53,45 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                                                          logger,
                                                          Arguments.ErrorPatternsFile,
                                                          symbolicator);
-        var runner = new WasmBrowserTestRunner(
-                            Arguments,
-                            PassThroughArguments,
-                            logProcessor,
-                            logger);
 
         diagnosticsData.Target = Arguments.Browser.Value.ToString();
-        (DriverService driverService, IWebDriver driver) = Arguments.Browser.Value switch
+
+        // We're missing "npx playwright install --with-deps" to be run before we start using playwright
+        (IBrowser? browser, IBrowserContext? context) = Arguments.Browser.Value switch
         {
-            Browser.Chrome => GetChromeDriver(Arguments.Locale, logger),
-            Browser.Safari => GetSafariDriver(logger),
-            Browser.Firefox => GetFirefoxDriver(logger),
-            Browser.Edge => GetEdgeDriver(Arguments.Locale, logger),
+            Browser.Chrome => await GetChromiumBrowserAsync(logger, "chrome", Arguments.Locale),
+            // Browser.Safari => await GetSafariBrowserAsync(logger), // ToDo: fix compilation error
+            Browser.Firefox => await GetFirefoxBrowserAsync(logger),
+            Browser.Edge => await GetChromiumBrowserAsync(logger, "msedge", Arguments.Locale),
 
             // shouldn't reach here
             _ => throw new ArgumentException($"Unknown browser : {Arguments.Browser}")
         };
-
         try
         {
-            var exitCode = await runner.RunTestsWithWebDriver(driverService, driver);
+            browser.Disconnected += (sender, e) =>
+            {
+                browser = null;
+                logger.LogWarning("Browser has been disconnected");
+            };
+            var runner = new WasmBrowserTestRunner(
+                            Arguments,
+                            PassThroughArguments,
+                            logProcessor,
+                            logger);
+            var exitCode = await runner.RunTestsWithPlaywright(browser, context);
+
             if ((int)exitCode != Arguments.ExpectedExitCode)
             {
                 logger.LogError($"Application has finished with exit code {exitCode} but {Arguments.ExpectedExitCode} was expected");
                 return ExitCode.GENERAL_FAILURE;
             }
-
             if (logProcessor.LineThatMatchedErrorPattern != null)
             {
-                logger.LogError("Application exited with the expected exit code: {exitCode}."
-                                + $" But found a line matching an error pattern: {logProcessor.LineThatMatchedErrorPattern}");
+                logger.LogError($@"Application exited with the expected exit code: {exitCode}.
+                                But found a line matching an error pattern: {logProcessor.LineThatMatchedErrorPattern}");
                 return ExitCode.APP_CRASH;
             }
-
             return ExitCode.SUCCESS;
         }
         finally
@@ -103,42 +103,17 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                 token.WaitHandle.WaitOne();
             }
 
-            // close all tabs before quit is a workaround for broken Selenium - GeckoDriver communication in Firefox
-            // https://github.com/dotnet/runtime/issues/101617
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(10000);
             try
             {
-                logger.LogInformation($"Closing {driver.WindowHandles.Count} browser tabs before setting the main tab to config page and quitting.");
-                while (driver.WindowHandles.Count > 1 && driverService.IsRunning)
+                if (browser != null)
                 {
-                    if (cts.IsCancellationRequested)
-                    {
-                        logger.LogInformation($"Timeout while trying to close tabs, {driver.WindowHandles.Count} is left open before quitting.");
-                        break;
-                    }
-                    driver.Navigate().GoToUrl("about:config");
-                    driver.Navigate().GoToUrl("about:blank");
-                    driver.Close(); //Close Tab
-
-                    var lastWindowHandle = driver.WindowHandles.LastOrDefault();
-                    if (lastWindowHandle != null)
-                    {
-                        driver.SwitchTo().Window(lastWindowHandle);
-                    }
+                    await browser.CloseAsync();
                 }
-                await Task.Delay(TimeSpan.FromSeconds(1), cts.Token);
-                if (driverService.IsRunning)
+                if (browser != null)
                 {
-                    if (!cts.IsCancellationRequested && driver.WindowHandles.Count != 0)
-                    {
-                        driver.Navigate().GoToUrl("about:config");
-                        driver.Navigate().GoToUrl("about:blank");
-                    }
-                    driver.Quit(); // Firefox driver hangs if Quit is not issued.
-                    driver.Dispose();
-                    driverService.Dispose();
+                    await browser.DisposeAsync();
                 }
+                browser = null;
             }
             catch (Exception e)
             {
@@ -147,106 +122,28 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
         }
     }
 
-    private (DriverService, IWebDriver) GetSafariDriver(ILogger logger)
+    private BrowserTypeLaunchOptions GetLaunchOptions(IEnumerable<string> args, ILogger logger)
     {
-        var options = new SafariOptions();
-        options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
-
-        logger.LogInformation("Starting Safari");
-
-        return CreateWebDriver(
-                    () => SafariDriverService.CreateDefaultService(),
-                    driverService => new SafariDriver(driverService, options, Arguments.Timeout));
-    }
-
-    private (DriverService, IWebDriver) GetFirefoxDriver(ILogger logger)
-    {
-        var options = new FirefoxOptions();
-        options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
+        var launchOptions = new BrowserTypeLaunchOptions
+        {
+            Headless = !Arguments.NoHeadless && !Arguments.BackgroundThrottling,
+            Args = args,
+        };
 
         if (!string.IsNullOrEmpty(Arguments.BrowserLocation))
         {
-            options.BrowserExecutableLocation = Arguments.BrowserLocation;
-            logger.LogInformation($"Using Firefox from {Arguments.BrowserLocation}");
+            launchOptions.ExecutablePath = Arguments.BrowserLocation;
+            logger.LogInformation($"Using browser from {Arguments.BrowserLocation}");
         }
 
-        options.AddArguments(Arguments.BrowserArgs.Value);
-        if (!Arguments.NoHeadless)
-            options.AddArguments("--headless");
-
-        if (!Arguments.NoIncognito)
-            options.AddArguments("-private-window");
-
-        options.PageLoadStrategy = Arguments.PageLoadStrategy.Value;
-
-        logger.LogInformation($"Starting Firefox with args: {string.Join(' ', options.ToCapabilities())} and load strategy: {Arguments.PageLoadStrategy.Value}");
-
-        return CreateWebDriver(
-                    () => FirefoxDriverService.CreateDefaultService(),
-                    (driverService) => new FirefoxDriver(driverService, options, Arguments.Timeout));
+        return launchOptions;
     }
 
-    private (DriverService, IWebDriver) GetChromeDriver(string sessionLanguage, ILogger logger)
-        => GetChromiumDriver<ChromeOptions, ChromeDriver, ChromeDriverService>(
-                    "chromedriver",
-                    sessionLanguage,
-                    options => ChromeDriverService.CreateDefaultService(),
-                    logger);
-
-    private (DriverService, IWebDriver) GetEdgeDriver(string sessionLanguage, ILogger logger)
-        => GetChromiumDriver<EdgeOptions, EdgeDriver, EdgeDriverService>(
-                    "edgedriver",
-                    sessionLanguage,
-                    options =>
-                    {
-                        options.UseChromium = true;
-                        return EdgeDriverService.CreateDefaultServiceFromOptions(options);
-                    }, logger);
-
-    private (DriverService, IWebDriver) GetChromiumDriver<TDriverOptions, TDriver, TDriverService>(
-        string driverName, string sessionLanguage, Func<TDriverOptions, TDriverService> getDriverService, ILogger logger)
-        where TDriver : ChromiumDriver
-        where TDriverOptions : ChromiumOptions
-        where TDriverService : ChromiumDriverService
+    private BrowserTypeLaunchOptions GetChromiumLaunchOptions(ILogger logger, IEnumerable<string> browserArgs, string channel)
     {
-        var options = Activator.CreateInstance<TDriverOptions>();
-        options.SetLoggingPreference(LogType.Browser, SeleniumLogLevel.All);
-
-        if (!string.IsNullOrEmpty(Arguments.BrowserLocation))
+        var args = new List<string>(browserArgs);
+        args.AddRange(new[]
         {
-            options.BinaryLocation = Arguments.BrowserLocation;
-            logger.LogInformation($"Using Chrome from {Arguments.BrowserLocation}");
-        }
-
-        options.AddArguments(Arguments.BrowserArgs.Value);
-
-        if (!Arguments.NoHeadless && !Arguments.BackgroundThrottling)
-            options.AddArguments("--headless");
-
-        if (Arguments.DebuggerPort.Value != null)
-            options.AddArguments($"--remote-debugging-port={Arguments.DebuggerPort}");
-
-        if (!Arguments.NoIncognito)
-            options.AddArguments("--incognito");
-
-        if (!Arguments.BackgroundThrottling)
-        {
-            options.AddArguments(new[]
-            {
-                    "--disable-background-timer-throttling",
-                    "--disable-backgrounding-occluded-windows",
-                    "--disable-renderer-backgrounding",
-                    "--enable-features=NetworkService,NetworkServiceInProcess",
-                });
-        }
-        else
-        {
-            options.AddArguments(@"--enable-features=IntensiveWakeUpThrottling:grace_period_seconds/1");
-        }
-
-        options.AddArguments(new[]
-        {
-            // added based on https://github.com/puppeteer/puppeteer/blob/main/src/node/Launcher.ts#L159-L181
             "--allow-insecure-localhost",
             "--disable-breakpad",
             "--disable-component-extensions-with-background-pages",
@@ -258,104 +155,126 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
             "--metrics-recording-only"
         });
 
+        if (Arguments.DebuggerPort.Value != null)
+        {
+            args.Add($"--remote-debugging-port={Arguments.DebuggerPort}");
+        }
+
+        if (!Arguments.BackgroundThrottling)
+        {
+            args.AddRange(new[]
+            {
+                "--disable-background-timer-throttling",
+                "--disable-backgrounding-occluded-windows",
+                "--disable-renderer-backgrounding",
+                "--enable-features=NetworkService,NetworkServiceInProcess"
+            });
+        }
+        else
+        {
+            args.Add("--enable-features=IntensiveWakeUpThrottling:grace_period_seconds/1");
+        }
+
         if (File.Exists("/.dockerenv"))
         {
-            // Use --no-sandbox for containers, and codespaces
-            options.AddArguments("--no-sandbox");
+            args.Add("--no-sandbox");
         }
 
-        if (Arguments.NoQuit)
-            options.LeaveBrowserRunning = true;
+        var launchOptions = GetLaunchOptions(args, logger);
 
-        if (options is ChromeOptions chromeOptions)
-            chromeOptions.PageLoadStrategy = Arguments.PageLoadStrategy.Value;
-        if (options is EdgeOptions edgeOptions)
-            edgeOptions.PageLoadStrategy = Arguments.PageLoadStrategy.Value;
-
-        logger.LogInformation($"Starting {driverName} with args: {string.Join(' ', options.Arguments)} and load strategy: {Arguments.PageLoadStrategy.Value}");
-
-        // We want to explicitly specify a timeout here. This is for for the
-        // driver commands, like getLog. The default is 60s, which ends up
-        // timing out when getLog() is waiting, and doesn't receive anything
-        // for 60s.
-        //
-        // Since, we almost all the output gets written via the websocket now,
-        // getLog() might not see anything for long durations!
-        //
-        // So -> use a larger timeout!
-
-        string[] err_snippets = new[]
-        {
-                "exited abnormally",
-                "Cannot start the driver service",
-                "failed to start"
-            };
-
-        foreach (var file in Directory.EnumerateFiles(Arguments.OutputDirectory, $"{driverName}-*.log"))
-            File.Delete(file);
-
-        int max_retries = 3;
-        int retry_num = 0;
-        while (true)
-        {
-            TDriverService? driverService = null;
-            try
-            {
-                driverService = getDriverService(options);
-                driverService.DriverProcessStarting += (object? sender, DriverProcessStartingEventArgs e) =>
-                {
-                    // Browser respects LANGUAGE in the first place, only if empty it checks LANG
-                    e.DriverServiceProcessStartInfo.EnvironmentVariables["LANGUAGE"] = sessionLanguage;
-                };
-
-                driverService.EnableAppendLog = false;
-                driverService.EnableVerboseLogging = true;
-                driverService.LogPath = Path.Combine(Arguments.OutputDirectory, $"{driverName}-{retry_num}.log");
-
-                if (Activator.CreateInstance(typeof(TDriver), driverService, options, Arguments.Timeout.Value) is not TDriver driver)
-                {
-                    throw new ArgumentException($"Failed to create instance of {typeof(TDriver)}");
-                }
-
-                return (driverService, driver);
-            }
-            catch (TargetInvocationException tie) when
-                        (tie.InnerException is WebDriverException wde
-                            && err_snippets.Any(s => wde.ToString().Contains(s)) && retry_num < max_retries - 1)
-            {
-                // chrome can sometimes crash on startup when launching from chromedriver.
-                // As a *workaround*, let's retry that a few times
-                // Example error seen:
-                //     [12:41:07] crit: OpenQA.Selenium.WebDriverException: unknown error: Chrome failed to start: exited abnormally.
-                //    (chrome not reachable)
-
-                // Log on max-1 tries, and rethrow on the last one
-                logger.LogWarning($"Failed to start the browser, attempt #{retry_num}: {wde}");
-
-                driverService?.Dispose();
-            }
-            catch
-            {
-                driverService?.Dispose();
-                throw;
-            }
-
-            retry_num++;
-        }
+        // launchOptions.Channel = channel;
+        return launchOptions;
     }
 
-    private static (DriverService, IWebDriver) CreateWebDriver<TDriverService>(Func<TDriverService> getDriverService, Func<TDriverService, IWebDriver> getDriver)
-        where TDriverService : DriverService
+    // cannot find WebKit. WHY? docs use same logic:
+    // https://github.com/microsoft/playwright/blob/3c5967d4f56139a3f1bdd2837a896ed90d9b33de/docs/src/api/class-playwright.md?plain=1#L169
+    // 'IPlaywright' does not contain a definition for 'WebKit' and no accessible extension method 'WebKit' accepting a first argument of type 'IPlaywright' could be found
+    // private async Task<(IBrowser, IBrowserContext?)> GetSafariBrowserAsync(ILogger logger)
+    // {
+    //     var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+    //     var arguments = Arguments.BrowserArgs.Value;
+    //     var launchOptions = GetLaunchOptions(arguments, logger);
+
+    //     logger.LogInformation($"Starting Safari with args: {string.Join(' ', arguments)}");
+    //     var browser = await playwright.WebKit.LaunchAsync(launchOptions);
+
+    //     // new context is an equivalent of incognito mode
+    //     if (Arguments.NoIncognito)
+    //     {
+    //         return (browser, null);
+    //     }
+    //     var contextOptions = new BrowserNewContextOptions();
+    //     var context = await browser.NewContextAsync(contextOptions);
+    //     return (browser, context);
+    // }
+
+    private async Task<(IBrowser, IBrowserContext?)> GetFirefoxBrowserAsync(ILogger logger)
     {
-        var driverService = getDriverService();
-        try
+        var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+        var arguments = Arguments.BrowserArgs.Value;
+        var launchOptions = GetLaunchOptions(arguments, logger);
+
+        logger.LogInformation($"Starting Firefox with args: {string.Join(' ', arguments)}");
+        var browser = await playwright.Firefox.LaunchAsync(launchOptions);
+
+        // new context is an equivalent of incognito mode
+        if (Arguments.NoIncognito)
         {
-            return (driverService, getDriver(driverService));
+            return (browser, null);
         }
-        catch
+        var contextOptions = new BrowserNewContextOptions();
+        var context = await browser.NewContextAsync(contextOptions);
+        return (browser, context);
+    }
+
+    private async Task<(IBrowser, IBrowserContext?)> GetChromiumBrowserAsync(ILogger logger, string channel, string sessionLanguage)
+    {
+        var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+        var launchOptions = GetChromiumLaunchOptions(logger, Arguments.BrowserArgs.Value, channel);
+
+        foreach (var file in Directory.EnumerateFiles(Arguments.OutputDirectory, "chromedriver-*.log"))
+            File.Delete(file);
+
+        logger.LogInformation($"Starting chromium with args: {string.Join(' ', Arguments.BrowserArgs.Value)}");
+
+        int max_retries = 3;
+        for (int retry_num = 0; retry_num < max_retries; retry_num++)
         {
-            driverService?.Dispose();
-            throw;
+            try
+            {
+                logger.LogInformation($"Attempt #{retry_num} out of {max_retries}");
+                var browser = await playwright.Chromium.LaunchAsync(launchOptions);
+
+                var headers = new Dictionary<string, string> {
+                    { "Accept-Language", sessionLanguage }
+                };
+
+                // new context is an equivalent of incognito mode
+                if (!Arguments.NoIncognito)
+                {
+                    var incognitoContext = await browser.NewContextAsync(new() {
+                        // Locale = sessionLanguage,
+                        ExtraHTTPHeaders = headers
+                    });
+                    return (browser, incognitoContext);
+                }
+                
+                var context = browser.Contexts.FirstOrDefault();
+                if (context == null)
+                {
+                    logger.LogWarning("No default browser context available. To set the session language a new context will be created and incognito mode will be used");
+                    context = await browser.NewContextAsync(new () {
+                        ExtraHTTPHeaders = headers
+                    });
+                }
+                await context.SetExtraHTTPHeadersAsync(headers);
+                return (browser, context);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Failed to start the browser, attempt #{retry_num}: {ex}");
+            }
         }
+        throw new InvalidOperationException("Failed to start the browser");
     }
 }
