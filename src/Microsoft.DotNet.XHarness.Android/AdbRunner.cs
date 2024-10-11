@@ -188,6 +188,36 @@ public class AdbRunner
         return apiVersion;
     }
 
+    private static int? GetSettingValue (string value)
+    {
+        if (int.TryParse(value, out int result))
+        {
+            return result;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    private void VerifyPackageVerificationSettingValue(string settingName, int expectedValue)
+    {
+        var result = RunAdbCommand(new[] { "shell", "settings", "get", "global", settingName });
+        var settingValue = GetSettingValue(result.StandardOutput.Trim());
+        _log.LogDebug($"{settingName} = {settingValue}");
+
+        if (settingValue != expectedValue)
+            _log.LogWarning($"Installing debug apks on a device might be rejected with INSTALL_FAILED_VERIFICATION_FAILURE. Make sure to set '{settingName}' to '{expectedValue}'");
+    }
+
+    public void CheckPackageVerificationSettings()
+    {
+        _log.LogDebug("Check current adb install and/or package verification settings");
+
+        VerifyPackageVerificationSettingValue("verifier_verify_adb_installs", expectedValue: 0);
+        VerifyPackageVerificationSettingValue("package_verifier_enable", expectedValue: 0);
+    }
+
     public bool WaitForDevice()
     {
         // This command waits for ANY kind of device to be available (emulator or real)
