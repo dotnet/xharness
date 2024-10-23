@@ -129,10 +129,10 @@ public class AppBundleInformationParser : IAppBundleInformationParser
         {
             supports32 = await GetPlistProperty(plistPath, PListExtensions.RequiredDeviceCapabilities, log, cancellationToken);
         }
-        catch
+        catch (Exception e)
         {
             // The property might not be present
-            log.WriteLine("Property UIRequiredDeviceCapabilities not present in Info.plist, assuming 32-bit is not supported");
+            log.WriteLine("Property UIRequiredDeviceCapabilities not present in Info.plist, assuming 32-bit is not supported. Error: " + e.Message);
         }
 
         string? bundleExecutable = null;

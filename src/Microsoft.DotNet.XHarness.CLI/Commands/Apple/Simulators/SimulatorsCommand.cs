@@ -251,7 +251,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             foreach(JsonProperty sim in simulators.RootElement.EnumerateObject())
             {
                 if (sim.Value.GetProperty("runtimeIdentifier").GetString() == runtimeIdentifier)
-                { 
+                {
                     var version = sim.Value.GetProperty("version").GetString();
                     if (version == null)
                         return null;
@@ -305,12 +305,12 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             {
                 target = argument.ParseAsAppRunnerTargetOs();
             }
-            catch (ArgumentOutOfRangeException)
+            catch (ArgumentOutOfRangeException e)
             {
                 throw new ArgumentException(
                     $"Failed to parse simulator '{argument}'. Available values are ios-simulator, tvos-simulator, watchos-simulator and xros-simulator." +
                     Environment.NewLine + Environment.NewLine +
-                    "You need to also specify the version. Example: ios-simulator_13.4");
+                    "You need to also specify the version. Example: ios-simulator_13.4", e);
             }
 
             if (string.IsNullOrEmpty(target.OSVersion))
@@ -349,14 +349,14 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         {
             /*
             * The following url was found while debugging Xcode, the "index2" part is actually hardcoded:
-            * 
+            *
             *	DVTFoundation`-[DVTDownloadableIndexSource identifier]:
             *		0x103db478d <+0>:  pushq  %rbp
             *		0x103db478e <+1>:  movq   %rsp, %rbp
             *		0x103db4791 <+4>:  leaq   0x53f008(%rip), %rax      ; @"index2"
             *		0x103db4798 <+11>: popq   %rbp
             *		0x103db4799 <+12>: retq
-            * 
+            *
             */
             indexName = $"index-{xcodeVersion}.dvtdownloadableindex";
             indexUrl = "https://devimages-cdn.apple.com/downloads/xcode/simulators/index2.dvtdownloadableindex";

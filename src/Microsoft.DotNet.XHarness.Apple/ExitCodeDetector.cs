@@ -41,7 +41,7 @@ public abstract class ExitCodeDetector : IExitCodeDetector
         }
         catch (FileNotFoundException e)
         {
-            throw new Exception("Failed to detect application's exit code. The log file was empty / not found at " + e.FileName);
+            throw new Exception("Failed to detect application's exit code. The log file was empty / not found at " + e.FileName, e);
         }
 
         using (reader)
@@ -86,7 +86,7 @@ public class iOSExitCodeDetector : ExitCodeDetector, IiOSExitCodeDetector
     // Example line coming from the mlaunch log
     // [07:02:21.6637600] Application 'net.dot.iOS.Simulator.PInvoke.Test' terminated (with exit code '42' and/or crashing signal ').
     private Regex DeviceExitCodeRegex { get; } = new Regex(@"terminated \(with exit code '(?<exitCode>-?[0-9]+)' and/or crashing signal", RegexOptions.Compiled);
-    
+
     protected override Match? IsSignalLine(AppBundleInformation appBundleInfo, string logLine)
     {
         if (base.IsSignalLine(appBundleInfo, logLine) is Match match && match.Success)

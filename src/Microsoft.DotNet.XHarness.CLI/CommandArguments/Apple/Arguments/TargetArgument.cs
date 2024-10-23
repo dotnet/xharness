@@ -23,13 +23,13 @@ internal class TargetArgument : Argument<TestTargetOs>
         {
             Value = argumentValue.ParseAsAppRunnerTargetOs();
         }
-        catch (ArgumentOutOfRangeException)
+        catch (ArgumentOutOfRangeException e)
         {
             throw new ArgumentException(
                 $"Failed to parse test target '{argumentValue}'. Available targets are:" +
                 GetAllowedValues(t => t.AsString(), invalidValues: TestTarget.None) +
                 Environment.NewLine + Environment.NewLine +
-                "You can also specify desired OS version, e.g. ios-simulator-64_13.4");
+                "You can also specify desired OS version, e.g. ios-simulator-64_13.4", e);
         }
     }
 

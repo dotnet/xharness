@@ -522,7 +522,7 @@ public class SimulatorLoader : ISimulatorLoader
 
                 if (attempt == retryCount)
                 {
-                    throw new NoDeviceFoundException("Failed to find/create suitable simulator");
+                    throw new NoDeviceFoundException("Failed to find/create suitable simulator", e);
                 }
             }
             finally
