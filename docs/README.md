@@ -12,7 +12,9 @@ The tooling layer represents the foundation of the tool.
 
 **XHarness.iOS.Shared** is specific to Apple mobile platforms, managing functionalities such as AppBundle information, simulators, and device configurations.
 
-**XHarness.Common** provides the essential building blocks, including logging, execution, utilities, and diagnostics. Logging supports various formats, such as `AggregatedLogs`, `ConsoleLogger`, `FileLogger`, `MemoryLogger`, and `CallbackLogger`. The execution component implements platform-specific command runners. Utilities contain helper functions used across the tool. Diagnostics provide detailed information about the execution environment.
+**XHarness.Common** provides the essential building blocks, including logging, execution, utilities, and diagnostics. Logging supports various formats, such as `ConsoleLogger`, `FileLogger`, `MemoryLogger`, `AggregatedLogs`, and `CallbackLogger`. The execution component implements platform-specific command runners. Utilities contain helper functions used across the tool. Diagnostics provide detailed information about the execution environment.
+
+Logging is enabled by default, with the console logger being the default for commands. The file logger is used for `mlaunch` and `adb` commands. The memory logger is used by the platform-specific command runners.
 
 ## Application layer
 
