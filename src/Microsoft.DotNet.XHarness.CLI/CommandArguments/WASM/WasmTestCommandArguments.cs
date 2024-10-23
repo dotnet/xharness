@@ -18,7 +18,6 @@ internal class WasmTestCommandArguments : XHarnessCommandArguments, IWebServerAr
     public OutputDirectoryArgument OutputDirectory { get; } = new();
     public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));
     public LocaleArgument Locale { get; } = new("en-US");
-    public PageLoadStrategyArgument PageLoadStrategy { get; } = new(OpenQA.Selenium.PageLoadStrategy.Normal);
 
     public SymbolMapFileArgument SymbolMapFileArgument { get; } = new();
     public SymbolicatePatternsFileArgument SymbolicatePatternsFileArgument { get; } = new();
@@ -43,7 +42,6 @@ internal class WasmTestCommandArguments : XHarnessCommandArguments, IWebServerAr
             Timeout,
             ExpectedExitCode,
             Locale,
-            PageLoadStrategy,
             SymbolMapFileArgument,
             SymbolicatePatternsFileArgument,
             SymbolicatorArgument,
