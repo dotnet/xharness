@@ -18,7 +18,9 @@ variables:
     - group: DotNet-HelixApi-Access
     - group: SDL_Settings
     - name: _InternalBuildArgs
-      value: /p:DotNetSignType=$(_SignType) 
+      value: /p:DotNetSignType=$(_SignType)
         /p:TeamName=$(_TeamName)
         /p:DotNetPublishUsingPipelines=true
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+        /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+        /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
