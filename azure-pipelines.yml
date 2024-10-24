@@ -23,6 +23,11 @@ resources:
 extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
+    sdl:
+      tsa:
+        enabled: true
+      policheck:
+        enabled: true
     pool:
       name: $(DncEngInternalBuildPool)
       image: 1es-windows-2022
