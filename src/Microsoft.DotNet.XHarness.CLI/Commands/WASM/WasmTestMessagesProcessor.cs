@@ -170,8 +170,9 @@ public class WasmTestMessagesProcessor
                     line = message;
                 }
             }
-            catch (JsonException)
+            catch (JsonException e)
             {
+                _logger.LogError(e.Message);
                 line = message;
             }
         }

@@ -242,7 +242,9 @@ internal class WasmBrowserTestRunner
             }
         }
         catch (WebDriverException wde) when (wde.Message.Contains("timed out after"))
-        { }
+        {
+            _logger.LogDebug(wde.Message);
+        }
         catch (Exception ex)
         {
             _logger.LogDebug($"Failed trying to read log messages via selenium: {ex}");
