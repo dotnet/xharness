@@ -12,13 +12,15 @@
     <MlaunchDestinationDir Condition="'$(TargetFrameworks)' == '' OR $(TargetFrameworks.EndsWith($(TargetFramework)))">$(BaseIntermediateOutputPath)/mlaunch</MlaunchDestinationDir>
 
     <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
-    <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r32.0.0-windows.zip</WindowsAndroidSdkUrl>
+    <AndroidSdkVersion>32.0.0</AndroidSdkVersion>
+
+    <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r$(AndroidSdkVersion)-windows.zip</WindowsAndroidSdkUrl>
     <WindowsAndroidSdkFileName>windows-android-platform-tools.zip</WindowsAndroidSdkFileName>
 
-    <LinuxAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r32.0.0-linux.zip</LinuxAndroidSdkUrl>
+    <LinuxAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r$(AndroidSdkVersion)-linux.zip</LinuxAndroidSdkUrl>
     <LinuxAndroidSdkFileName>linux-android-platform-tools.zip</LinuxAndroidSdkFileName>
 
-    <MacOsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r32.0.0-darwin.zip</MacOsAndroidSdkUrl>
+    <MacOsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r$(AndroidSdkVersion)-darwin.zip</MacOsAndroidSdkUrl>
     <MacOsAndroidSdkFileName>macos-android-platform-tools.zip</MacOsAndroidSdkFileName>
   </PropertyGroup>
 
@@ -52,7 +54,7 @@
     <RemoveDir Directories="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/systrace" />
   </Target>
 
-  <Target Name="IncludeAdb" BeforeTargets="DispatchToInnerBuilds" DependsOnTargets="DownloadAdb">
+  <Target Name="IncludeAdb" BeforeTargets="DispatchToInnerBuilds" DependsOnTargets="DownloadAdb;GenerateCGManifest">
     <ItemGroup>
       <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb.exe" />
       <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/AdbWinApi.dll" />
@@ -87,6 +89,55 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
+  </Target>
+
+  <Target Name="GenerateCGManifest">
+    <PropertyGroup>
+        <CGManifestTemplate>
+        <![CDATA[
+{
+  "$schema": "https://json.schemastore.org/component-detection-manifest.json",
+  "version": 1,
+  "registrations": [
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "Android platform tools for Windows",
+          "version": "$(AndroidSdkVersion)",
+          "downloadUrl": "$(WindowsAndroidSdkUrl)"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "Android platform tools for Linux",
+          "version": "$(AndroidSdkVersion)",
+          "downloadUrl": "$(LinuxAndroidSdkUrl)"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "Android platform tools for MacOS",
+          "version": "$(AndroidSdkVersion)",
+          "downloadUrl": "$(MacOsAndroidSdkUrl)"
+        }
+      }
+    }
+  ]
+}
+        ]]>
+        </CGManifestTemplate>
+    </PropertyGroup>
+    <WriteLinesToFile
+      File="$(BaseIntermediateOutputPath)/cgmanifest.json"
+      Lines="$(CGManifestTemplate)"
+      Overwrite="true" />
   </Target>
 
 </Project>
