@@ -136,9 +136,9 @@ public abstract class ProcessManager : IProcessManager
                     {
                         File.Delete(template);
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        // Don't care
+                        log.WriteLine(e.Message);
                     }
                 }
             }
@@ -298,12 +298,17 @@ public abstract class ProcessManager : IProcessManager
             {
                 hasExited = process.HasExited;
             }
-            catch
+            catch (InvalidOperationException e)
             {
                 // Process.HasExited can sometimes throw exceptions, so
                 // just ignore those and to be safe treat it as the
                 // process didn't exit (the safe option being to not leave
                 // processes behind).
+                stderr.WriteLine($"Process {pid} already exited or busy: {e.Message}");
+            }
+            catch (Exception e)
+            {
+                stderr.WriteLine($"Unexpected error while checking process {pid}: {e.Message}");
             }
 
             if (!hasExited)

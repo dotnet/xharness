@@ -134,9 +134,10 @@ public abstract class SimpleListener : ISimpleListener
                 Stop();
             }
         }
-        catch
+        catch (Exception e)
         {
             // We might have stopped already, so just ignore any exceptions.
+            Log.WriteLine($"An exception occurred in processing thread: {e.Message}");
         }
     }
 

@@ -22,11 +22,11 @@ internal class DeviceArchitectureArgument : RepeatableArgument
             {
                 AndroidArchitectureHelper.ParseAsAndroidArchitecture(archName);
             }
-            catch (ArgumentOutOfRangeException)
+            catch (ArgumentOutOfRangeException e)
             {
                 throw new ArgumentException(
                     $"Failed to parse architecture '{archName}'. Available architectures are:" +
-                    GetAllowedValues<AndroidArchitecture>(t => t.AsString()));
+                    GetAllowedValues<AndroidArchitecture>(t => t.AsString()), e);
             }
         }
     }

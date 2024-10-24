@@ -47,11 +47,11 @@ public class MacOSProcessManager : UnixProcessManager, IMacOSProcessManager
                     doc.Load(plistPath);
                     _xcode_version = Version.Parse(doc.SelectSingleNode("//key[text() = 'CFBundleShortVersionString']/following-sibling::string")?.InnerText ?? throw new Exception("Failed to find the CFBundleShortVersionString property"));
                 }
-                catch (IOException)
+                catch (IOException e)
                 {
                     throw new Exception(
                         $"Failed to find Xcode! Version.plist missing at {plistPath}. " +
-                        "Please make sure xcode-select is set up, or the path to Xcode is supplied as an argument.");
+                        "Please make sure xcode-select is set up, or the path to Xcode is supplied as an argument.", e);
                 }
             }
             return _xcode_version;

@@ -163,9 +163,11 @@ public class WasmTestMessagesProcessor
                 logMessage = JsonSerializer.Deserialize<WasmLogMessage>(message);
                 line = logMessage?.payload ?? message.TrimEnd();
             }
-            catch (JsonException)
+            catch (JsonException e)
             {
+                _logger.LogError(e.Message);
                 line = message.TrimEnd();
+
             }
         }
         else
