@@ -167,7 +167,6 @@ public class WasmTestMessagesProcessor
             {
                 _logger.LogError(e.Message);
                 line = message.TrimEnd();
-
             }
         }
         else
