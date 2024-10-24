@@ -8,6 +8,42 @@ The tooling layer represents the foundation of the tool.
 
 **XHarness.CLI** is the CLI that defines commands and arguments for interacting with XHarness. It serves as the main entry point for users.
 
+Supported platforms include Android, Apple mobile, MacCatalyst, WASI, and desktop browsers (WASM). The available commands are:
+
+### Android commands:
+- `AndroidTest`
+- `AndroidDevice`
+- `AndroidInstall`
+- `AndroidRun`
+- `AndroidUninstall`
+- `AndroidAdb`
+- `AndroidState`
+
+### Apple mobile commands:
+- `AppleTest`
+- `AppleRun`
+- `AppleInstall`
+- `AppleUninstall`
+- `AppleJustTest`
+- `AppleJustRun`
+- `AppleDevice`
+- `AppleMlaunch`
+- `AppleState`
+
+### Apple simulator commands:
+- `List`
+- `Find`
+- `Install`
+- `ResetSimulator`
+
+### WASM commands:
+- `WasmTest`
+- `WasmTestBrowser`
+- `WebServer`
+
+### WASI commands:
+- `WasiTest`
+
 **XHarness.Android** and **XHarness.Apple** implement platform-specific operations and their orchestration. On Android, it uses `adb` runner for communication with devices and command execution. For Apple mobile platforms, it relies on `mlaunch` manager to interact with simulators and devices.
 
 **XHarness.iOS.Shared** is specific to Apple mobile platforms, managing functionalities such as AppBundle information, simulators, and device configurations.
