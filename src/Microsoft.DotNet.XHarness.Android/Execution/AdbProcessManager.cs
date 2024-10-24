@@ -86,7 +86,13 @@ public class AdbProcessManager : IAdbProcessManager
             exitCode = (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT;
 
             // try to terminate the process
-            try { p.Kill(); } catch { }
+            try
+            {
+                p.Kill();
+            } catch (Exception e) {
+                _log.LogError($"Failed to kill process: {e.Message}");
+            }
+
         }
         else
         {

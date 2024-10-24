@@ -238,9 +238,9 @@ public class AdbRunner
                     {
                         KillAdbServer();
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        _log.LogDebug($"Error killing ADB server after a failed start");
+                        _log.LogError($"Error killing ADB server after a failed start: {e.Message}");
                     }
                 }
                 else
