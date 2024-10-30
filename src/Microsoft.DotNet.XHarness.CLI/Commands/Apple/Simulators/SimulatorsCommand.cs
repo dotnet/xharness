@@ -111,6 +111,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
             var fileSizeNode = downloadable.SelectSingleNode("key[text()='fileSize']/following-sibling::integer|key[text()='fileSize']/following-sibling::real");
             var installPrefixNode = downloadable.SelectSingleNode("key[text()='userInfo']/following-sibling::dict/key[text()='InstallPrefix']/following-sibling::string");
+            var buildUpdateNode = downloadable.SelectSingleNode("key[text()='simulatorVersion']/following-sibling::dict[1]/key[text()='buildUpdate']/following-sibling::string[1]");
 
             var version = versionNode.InnerText;
             var versions = version.Split('.');
@@ -146,6 +147,14 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
             var source = ReplaceStringUsingKey(sourceNode?.InnerText, dict);
             var isCryptexDiskImage = false;
+
+            string? buildUpdate = buildUpdateNode?.InnerText;
+            if (buildUpdate is null)
+            {
+                Logger.LogWarning($"Simulator with name: '{nameNode.InnerText}' version: '{versionNode.InnerText}' identifier: '{identifierNode.InnerText}' has no buildUpdate, skipping...");
+                continue;
+            }
+
             if (source is null)
             {
                 // We allow source to be missing for newer simulators (e.g., iOS 18+ available from Xcode 16) that use cryptographically-sealed archives.
@@ -180,7 +189,8 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
                 source: source,
                 installPrefix: installPrefix,
                 fileSize: (long)parsedFileSize,
-                isCryptexDiskImage: isCryptexDiskImage
+                isCryptexDiskImage: isCryptexDiskImage,
+                buildUpdate: buildUpdate
                 ));
         }
 
@@ -218,29 +228,35 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             string simulatorRuntime = "";
             string simulatorVersion = "";
 
-            if (simulator.Identifier.StartsWith("com.apple.dmg.iPhoneSimulatorSDK")) {
+            if (simulator.Identifier.StartsWith("com.apple.dmg.iPhoneSimulatorSDK"))
+            {
                 simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-";
                 simulatorVersion = simulator.Identifier.Substring("com.apple.dmg.iPhoneSimulatorSDK".Length);
             }
-            else if (simulator.Identifier.StartsWith("com.apple.dmg.AppleTVSimulatorSDK")) {
+            else if (simulator.Identifier.StartsWith("com.apple.dmg.AppleTVSimulatorSDK"))
+            {
                 simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.tvOS-";
                 simulatorVersion = simulator.Identifier.Substring("com.apple.dmg.AppleTVSimulatorSDK".Length);
             }
-            else if (simulator.Identifier.StartsWith("com.apple.dmg.WatchSimulatorSDK")) {
+            else if (simulator.Identifier.StartsWith("com.apple.dmg.WatchSimulatorSDK"))
+            {
                 simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.watchOS-";
                 simulatorVersion = simulator.Identifier.Substring("com.apple.dmg.WatchSimulatorSDK".Length);
             }
-            else if (simulator.Identifier.StartsWith("com.apple.dmg.xrSimulatorSDK")) {
+            else if (simulator.Identifier.StartsWith("com.apple.dmg.xrSimulatorSDK"))
+            {
                 simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.xrOS-";
                 simulatorVersion = simulator.Identifier.Substring("com.apple.dmg.xrSimulatorSDK".Length);
             }
-            else {
+            else
+            {
                 Logger.LogWarning($"Unknown simulator type: {simulator.Identifier}");
             }
 
             // trim away any beta suffix
             string simulatorBetaVersion = "";
-            if (simulatorVersion.Contains("_b")) {
+            if (simulatorVersion.Contains("_b"))
+            {
                 simulatorBetaVersion = simulatorVersion.Substring(simulatorVersion.LastIndexOf("_b") + "_b".Length);
                 simulatorVersion = simulatorVersion.Substring(0, simulatorVersion.LastIndexOf("_b"));
             }
@@ -248,7 +264,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             var runtimeIdentifier = simulatorRuntime + simulatorVersion.Replace('_', '-');
             var simulators = JsonDocument.Parse(json);
 
-            foreach(JsonProperty sim in simulators.RootElement.EnumerateObject())
+            foreach (JsonProperty sim in simulators.RootElement.EnumerateObject())
             {
                 if (sim.Value.GetProperty("runtimeIdentifier").GetString() == runtimeIdentifier)
                 {
