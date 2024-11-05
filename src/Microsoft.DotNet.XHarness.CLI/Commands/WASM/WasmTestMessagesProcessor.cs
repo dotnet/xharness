@@ -127,8 +127,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             // after the tests have run, and the xml results file
             // has been written to the console
             if (line.StartsWith("WASM EXIT"))
-            {
-                WasmExitReceivedTcs.SetResult(true);
+            { 
+                _logger.LogDebug("Reached wasm exit");
+                if (!WasmExitReceivedTcs.TrySetResult())
+                    _logger.LogDebug("Got a duplicate exit message.");
             }
         }
 

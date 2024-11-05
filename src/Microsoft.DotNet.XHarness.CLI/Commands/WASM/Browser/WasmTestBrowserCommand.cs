@@ -189,6 +189,12 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
                 "--metrics-recording-only"
             });
 
+            if (File.Exists("/.dockerenv"))
+            {
+                // Use --no-sandbox for containers, and codespaces
+                options.AddArguments("--no-sandbox");
+            }
+
             if (Arguments.NoQuit)
                 options.LeaveBrowserRunning = true;
 
