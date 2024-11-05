@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm
             if (line.StartsWith("WASM EXIT"))
             { 
                 _logger.LogDebug("Reached wasm exit");
-                if (!WasmExitReceivedTcs.TrySetResult())
+                if (!WasmExitReceivedTcs.TrySetResult(true))
                     _logger.LogDebug("Got a duplicate exit message.");
             }
         }
