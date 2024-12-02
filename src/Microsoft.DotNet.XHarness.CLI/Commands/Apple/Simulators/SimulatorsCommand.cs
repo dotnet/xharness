@@ -146,39 +146,12 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             }
 
             var source = ReplaceStringUsingKey(sourceNode?.InnerText, dict);
-            var isCryptexDiskImage = false;
 
             string? buildUpdate = buildUpdateNode?.InnerText;
             if (buildUpdate is null)
             {
                 Logger.LogWarning($"Simulator with name: '{nameNode.InnerText}' version: '{versionNode.InnerText}' identifier: '{identifierNode.InnerText}' has no buildUpdate, skipping...");
                 continue;
-            }
-
-            if (source is null)
-            {
-                // We allow source to be missing for newer simulators (e.g., iOS 18+ available from Xcode 16) that use cryptographically-sealed archives.
-                // Eg.:
-                // <dict>
-                //     <key>category</key>
-                //     <string>simulator</string>
-                //     <key>contentType</key>
-                //     <string>cryptexDiskImage</string>
-                //     ...
-                // These images are downloaded and installed through xcodebuild instead.
-                // https://developer.apple.com/documentation/xcode/installing-additional-simulator-runtimes#Install-and-manage-Simulator-runtimes-from-the-command-line
-                var contentTypeNode = downloadable.SelectSingleNode("key[text()='contentType']/following-sibling::string") ?? throw new Exception("ContentType node not found");
-                var contentType = contentTypeNode.InnerText;
-                if (contentType.Equals("cryptexDiskImage", StringComparison.OrdinalIgnoreCase))
-                {
-                    isCryptexDiskImage = true;
-                    Logger.LogInformation($"Simulator with name: '{nameNode.InnerText}' version: '{versionNode.InnerText}' identifier: '{identifierNode.InnerText}' has no source but it is a cryptex disk image which can be downloaded through xcodebuild.");
-                }
-                else
-                {
-                    Logger.LogWarning($"Simulator with name: '{nameNode.InnerText}' version: '{versionNode.InnerText}' identifier: '{identifierNode.InnerText}' has no source for download nor it is a cryptex disk image, skipping...");
-                    continue;
-                }
             }
 
             simulators.Add(new Simulator(
@@ -189,7 +162,6 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
                 source: source,
                 installPrefix: installPrefix,
                 fileSize: (long)parsedFileSize,
-                isCryptexDiskImage: isCryptexDiskImage,
                 buildUpdate: buildUpdate
                 ));
         }

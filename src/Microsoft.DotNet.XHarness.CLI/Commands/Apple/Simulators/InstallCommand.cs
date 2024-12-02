@@ -142,7 +142,7 @@ internal class InstallCommand : SimulatorsCommand
         // Xcode 16.0 trying to install new simulators (e.g. iOS 18) path
         else if (xcodeVersion.Major == 16 && xcodeVersion.Minor == 0 && simulator.Source is null)
         {
-            Logger.LogWarning($"Xcode {xcodeVersion} does not support downloading arbitrary simulator versions using CLI. It will always default to the latest version. Consider upgrading to Xcode 16.1 or later.");
+            Logger.LogWarning($"Xcode {xcodeVersion} does not support selecting simulator versions using CLI. It will always default to the latest version. Consider upgrading to Xcode 16.1 or later.");
             Logger.LogInformation($"Downloading and installing the latest {simulator.Platform} simulator through xcodebuild with Xcode: {xcodeVersion}");
             var (succeeded, stdout) = await ExecuteCommand("xcodebuild", TimeSpan.FromMinutes(15), "-downloadPlatform", simulator.Platform, "-verbose");
             if (!succeeded)
