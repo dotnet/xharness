@@ -121,8 +121,7 @@ internal class InstallCommand : SimulatorsCommand
 
     private async Task<bool> Install(Simulator simulator)
     {
-        var rawXcodeVersion = await GetXcodeVersion();
-        var xcodeVersion = Version.Parse(rawXcodeVersion);
+        var xcodeVersion = await GetXcodeVersion();
 
         if (CanXcodeDownloadSimulatorsUsingCLI(xcodeVersion) && CanSimulatorBeInstalledUsingXcodeCLI(simulator))
         {

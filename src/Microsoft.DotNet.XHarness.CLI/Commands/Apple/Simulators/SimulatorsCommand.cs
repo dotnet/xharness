@@ -38,7 +38,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
     private static readonly HttpClient s_client = new(new HttpClientHandler { CheckCertificateRevocationList = true });
     private readonly MacOSProcessManager _processManager = new();
-    private string? _xcodeVersion;
+    private Version? _xcodeVersion;
     private string? _xcodeUuid;
 
     protected ILogger Logger { get; set; } = null!;
@@ -185,8 +185,8 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
     protected async Task<Version?> IsInstalled(Simulator simulator)
     {
-        string xcodeVersionString = await GetXcodeVersion();
-        bool isXcode14 = Version.TryParse(xcodeVersionString, out var xcodeVersion) && xcodeVersion.Major >= 14;
+        var xcodeVersion = await GetXcodeVersion();
+        bool isXcode14 = xcodeVersion.Major >= 14;
 
         if (simulator.Identifier.StartsWith("com.apple.dmg.") && isXcode14)
         {
@@ -333,7 +333,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         var xcodeVersion = await GetXcodeVersion();
         string indexUrl, indexName;
 
-        if (Version.Parse(xcodeVersion).Major >= 14)
+        if (xcodeVersion.Major >= 14)
         {
             /*
             * The following url was found while debugging Xcode, the "index2" part is actually hardcoded:
@@ -406,7 +406,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         return false;
     }
 
-    protected async Task<string> GetXcodeVersion()
+    protected async Task<Version> GetXcodeVersion()
     {
         if (_xcodeVersion is not null)
         {
@@ -428,7 +428,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         xcodeVersion = xcodeVersion.Insert(xcodeVersion.Length - 2, ".");
         xcodeVersion = xcodeVersion.Insert(xcodeVersion.Length - 1, ".");
 
-        _xcodeVersion = xcodeVersion;
+        _xcodeVersion = Version.Parse(xcodeVersion);
 
         return _xcodeVersion;
     }
