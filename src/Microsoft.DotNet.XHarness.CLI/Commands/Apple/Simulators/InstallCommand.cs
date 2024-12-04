@@ -121,57 +121,95 @@ internal class InstallCommand : SimulatorsCommand
 
     private async Task<bool> Install(Simulator simulator)
     {
-        if (simulator.Source is null)
+        var xcodeVersion = await GetXcodeVersion();
+
+        if (CanXcodeDownloadSimulatorsUsingCLI(xcodeVersion) && CanSimulatorBeInstalledUsingXcodeCLI(simulator))
         {
-            var xcodeVersion = await GetXcodeVersion();
-            if (!simulator.IsCryptexDiskImage || Version.Parse(xcodeVersion).Major < 16)
+            Logger.LogInformation($"Downloading and installing simulator: {simulator.Name} through xcodebuild with Xcode: {xcodeVersion}");
+            var (succeeded, stdout) = await ExecuteCommand("xcodebuild", TimeSpan.FromMinutes(15), "-downloadPlatform", simulator.Platform, "-buildVersion", simulator.BuildUpdate, "-verbose");
+            if (!succeeded)
             {
-                throw new Exception($"Cannot download simulator: {simulator.Name} from source nor through Xcode: {xcodeVersion}");
+                Logger.LogError($"Download and installation failed through xcodebuild for simulator: {simulator.Name} with Xcode: {xcodeVersion}!" + Environment.NewLine + stdout);
+                return false;
             }
             else
             {
-                Logger.LogInformation($"Downloading and installing simulator: {simulator.Name} through xcodebuild with Xcode: {xcodeVersion}");
-                var (succeeded, stdout) = await ExecuteCommand("xcodebuild", TimeSpan.FromMinutes(15), "-downloadPlatform", simulator.Platform, "-verbose");
-                if (!succeeded)
-                {
-                    Logger.LogError($"Download and installation failed through xcodebuild for simulator: {simulator.Name} with Xcode: {xcodeVersion}!" + Environment.NewLine + stdout);
-                    return false;
-                }
-                else
-                {
-                    Logger.LogDebug(stdout);
-                    return true;
-                }
+                Logger.LogDebug(stdout);
+                return true;
             }
         }
-
-        var filename = Path.GetFileName(simulator.Source);
-        var downloadPath = Path.Combine(TempDirectory, filename);
-        var download = true;
-
-        if (!File.Exists(downloadPath))
+        // Xcode 16.0 trying to install new simulators (e.g. iOS 18) path
+        else if (xcodeVersion.Major == 16 && xcodeVersion.Minor == 0 && simulator.Source is null)
         {
-            Logger.LogInformation(
-                $"Downloading '{simulator.Source}' to '{downloadPath}' " +
-                $"(size: {simulator.FileSize} bytes = {simulator.FileSize / 1024.0 / 1024.0:N2} MB)...");
+            Logger.LogWarning($"Xcode {xcodeVersion} does not support selecting simulator versions using CLI. It will always default to the latest version. Consider upgrading to Xcode 16.1 or later.");
+            Logger.LogInformation($"Downloading and installing the latest {simulator.Platform} simulator through xcodebuild with Xcode: {xcodeVersion}");
+            var (succeeded, stdout) = await ExecuteCommand("xcodebuild", TimeSpan.FromMinutes(15), "-downloadPlatform", simulator.Platform, "-verbose");
+            if (!succeeded)
+            {
+                Logger.LogError($"Download and installation failed through xcodebuild for the latest {simulator.Platform} simulator with Xcode: {xcodeVersion}!" + Environment.NewLine + stdout);
+                return false;
+            }
+            else
+            {
+                Logger.LogDebug(stdout);
+                return true;
+            }
         }
-        else if (new FileInfo(downloadPath).Length != simulator.FileSize)
+        else if (simulator.Source is not null)
         {
-            Logger.LogInformation(
-                $"Downloading '{simulator.Source}' to '{downloadPath}' because the existing file's " +
-                $"size {new FileInfo(downloadPath).Length} does not match the expected size {simulator.FileSize}...");
+            var filename = Path.GetFileName(simulator.Source);
+            var downloadPath = Path.Combine(TempDirectory, filename);
+            var download = true;
+
+            if (!File.Exists(downloadPath))
+            {
+                Logger.LogInformation(
+                    $"Downloading '{simulator.Source}' to '{downloadPath}' " +
+                    $"(size: {simulator.FileSize} bytes = {simulator.FileSize / 1024.0 / 1024.0:N2} MB)...");
+            }
+            else if (new FileInfo(downloadPath).Length != simulator.FileSize)
+            {
+                Logger.LogInformation(
+                    $"Downloading '{simulator.Source}' to '{downloadPath}' because the existing file's " +
+                    $"size {new FileInfo(downloadPath).Length} does not match the expected size {simulator.FileSize}...");
+            }
+            else
+            {
+                download = false;
+            }
+
+            if (download)
+            {
+                await DownloadSimulator(simulator, downloadPath);
+            }
+
+            return await InstallSimulator(simulator, downloadPath, filename);
         }
         else
         {
-            download = false;
+            throw new Exception($"Cannot download simulator: {simulator.Name} from source nor through Xcode: {xcodeVersion}");
         }
+    }
 
-        if (download)
+    // https://developer.apple.com/documentation/xcode/installing-additional-simulator-runtimes
+    private static bool CanSimulatorBeInstalledUsingXcodeCLI(Simulator simulator)
+    {
+        var simulatorVersion = Version.Parse(simulator.Version);
+
+        return simulator.Platform switch
         {
-            await DownloadSimulator(simulator, downloadPath);
-        }
+            "iOS" => simulatorVersion.Major >= 16,
+            "tvOS" => simulatorVersion.Major >= 16,
+            "watchOS" => simulatorVersion.Major >= 9,
+            "visionOS" => simulatorVersion.Major >= 1,
+            _ => false,
+        };
+    }
 
-        return await InstallSimulator(simulator, downloadPath, filename);
+    private static bool CanXcodeDownloadSimulatorsUsingCLI(Version xcodeVersion)
+    {
+        // -buildVersion is only supported in Xcode 16.1 and later
+        return (xcodeVersion.Major == 16 && xcodeVersion.Minor >= 1) || xcodeVersion.Major > 16;
     }
 
     private async Task DownloadSimulator(Simulator simulator, string downloadPath)
