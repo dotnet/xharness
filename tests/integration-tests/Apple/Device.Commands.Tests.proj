@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.13.amd64.iphone.open"/>
+    <HelixTargetQueue Include="osx.1200.amd64.iphone.open"/>
   </ItemGroup>
 
   <PropertyGroup>
