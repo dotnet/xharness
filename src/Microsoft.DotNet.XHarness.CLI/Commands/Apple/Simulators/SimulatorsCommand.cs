@@ -38,7 +38,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
     private static readonly HttpClient s_client = new();
     private readonly MacOSProcessManager _processManager = new();
-    private string? _xcodeVersion;
+    private Version? _xcodeVersion;
     private string? _xcodeUuid;
 
     protected ILogger Logger { get; set; } = null!;
@@ -111,6 +111,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
             var fileSizeNode = downloadable.SelectSingleNode("key[text()='fileSize']/following-sibling::integer|key[text()='fileSize']/following-sibling::real");
             var installPrefixNode = downloadable.SelectSingleNode("key[text()='userInfo']/following-sibling::dict/key[text()='InstallPrefix']/following-sibling::string");
+            var buildUpdateNode = downloadable.SelectSingleNode("key[text()='simulatorVersion']/following-sibling::dict[1]/key[text()='buildUpdate']/following-sibling::string[1]");
 
             var version = versionNode.InnerText;
             var versions = version.Split('.');
@@ -145,31 +146,12 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             }
 
             var source = ReplaceStringUsingKey(sourceNode?.InnerText, dict);
-            var isCryptexDiskImage = false;
-            if (source is null)
+
+            string? buildUpdate = buildUpdateNode?.InnerText;
+            if (buildUpdate is null)
             {
-                // We allow source to be missing for newer simulators (e.g., iOS 18+ available from Xcode 16) that use cryptographically-sealed archives.
-                // Eg.:
-                // <dict>
-                //     <key>category</key>
-                //     <string>simulator</string>
-                //     <key>contentType</key>
-                //     <string>cryptexDiskImage</string>
-                //     ...
-                // These images are downloaded and installed through xcodebuild instead.
-                // https://developer.apple.com/documentation/xcode/installing-additional-simulator-runtimes#Install-and-manage-Simulator-runtimes-from-the-command-line
-                var contentTypeNode = downloadable.SelectSingleNode("key[text()='contentType']/following-sibling::string") ?? throw new Exception("ContentType node not found");
-                var contentType = contentTypeNode.InnerText;
-                if (contentType.Equals("cryptexDiskImage", StringComparison.OrdinalIgnoreCase))
-                {
-                    isCryptexDiskImage = true;
-                    Logger.LogInformation($"Simulator with name: '{nameNode.InnerText}' version: '{versionNode.InnerText}' identifier: '{identifierNode.InnerText}' has no source but it is a cryptex disk image which can be downloaded through xcodebuild.");
-                }
-                else
-                {
-                    Logger.LogWarning($"Simulator with name: '{nameNode.InnerText}' version: '{versionNode.InnerText}' identifier: '{identifierNode.InnerText}' has no source for download nor it is a cryptex disk image, skipping...");
-                    continue;
-                }
+                Logger.LogWarning($"Simulator with name: '{nameNode.InnerText}' version: '{versionNode.InnerText}' identifier: '{identifierNode.InnerText}' has no buildUpdate, skipping...");
+                continue;
             }
 
             simulators.Add(new Simulator(
@@ -180,7 +162,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
                 source: source,
                 installPrefix: installPrefix,
                 fileSize: (long)parsedFileSize,
-                isCryptexDiskImage: isCryptexDiskImage
+                buildUpdate: buildUpdate
                 ));
         }
 
@@ -203,8 +185,8 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
     protected async Task<Version?> IsInstalled(Simulator simulator)
     {
-        string xcodeVersionString = await GetXcodeVersion();
-        bool isXcode14 = Version.TryParse(xcodeVersionString, out var xcodeVersion) && xcodeVersion.Major >= 14;
+        var xcodeVersion = await GetXcodeVersion();
+        bool isXcode14 = xcodeVersion.Major >= 14;
 
         if (simulator.Identifier.StartsWith("com.apple.dmg.") && isXcode14)
         {
@@ -218,29 +200,35 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             string simulatorRuntime = "";
             string simulatorVersion = "";
 
-            if (simulator.Identifier.StartsWith("com.apple.dmg.iPhoneSimulatorSDK")) {
+            if (simulator.Identifier.StartsWith("com.apple.dmg.iPhoneSimulatorSDK"))
+            {
                 simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.iOS-";
                 simulatorVersion = simulator.Identifier.Substring("com.apple.dmg.iPhoneSimulatorSDK".Length);
             }
-            else if (simulator.Identifier.StartsWith("com.apple.dmg.AppleTVSimulatorSDK")) {
+            else if (simulator.Identifier.StartsWith("com.apple.dmg.AppleTVSimulatorSDK"))
+            {
                 simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.tvOS-";
                 simulatorVersion = simulator.Identifier.Substring("com.apple.dmg.AppleTVSimulatorSDK".Length);
             }
-            else if (simulator.Identifier.StartsWith("com.apple.dmg.WatchSimulatorSDK")) {
+            else if (simulator.Identifier.StartsWith("com.apple.dmg.WatchSimulatorSDK"))
+            {
                 simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.watchOS-";
                 simulatorVersion = simulator.Identifier.Substring("com.apple.dmg.WatchSimulatorSDK".Length);
             }
-            else if (simulator.Identifier.StartsWith("com.apple.dmg.xrSimulatorSDK")) {
+            else if (simulator.Identifier.StartsWith("com.apple.dmg.xrSimulatorSDK"))
+            {
                 simulatorRuntime = "com.apple.CoreSimulator.SimRuntime.xrOS-";
                 simulatorVersion = simulator.Identifier.Substring("com.apple.dmg.xrSimulatorSDK".Length);
             }
-            else {
+            else
+            {
                 Logger.LogWarning($"Unknown simulator type: {simulator.Identifier}");
             }
 
             // trim away any beta suffix
             string simulatorBetaVersion = "";
-            if (simulatorVersion.Contains("_b")) {
+            if (simulatorVersion.Contains("_b"))
+            {
                 simulatorBetaVersion = simulatorVersion.Substring(simulatorVersion.LastIndexOf("_b") + "_b".Length);
                 simulatorVersion = simulatorVersion.Substring(0, simulatorVersion.LastIndexOf("_b"));
             }
@@ -248,7 +236,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
             var runtimeIdentifier = simulatorRuntime + simulatorVersion.Replace('_', '-');
             var simulators = JsonDocument.Parse(json);
 
-            foreach(JsonProperty sim in simulators.RootElement.EnumerateObject())
+            foreach (JsonProperty sim in simulators.RootElement.EnumerateObject())
             {
                 if (sim.Value.GetProperty("runtimeIdentifier").GetString() == runtimeIdentifier)
                 {
@@ -347,7 +335,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         var xcodeVersion = await GetXcodeVersion();
         string indexUrl, indexName;
 
-        if (Version.Parse(xcodeVersion).Major >= 14)
+        if (xcodeVersion.Major >= 14)
         {
             /*
             * The following url was found while debugging Xcode, the "index2" part is actually hardcoded:
@@ -420,7 +408,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         return false;
     }
 
-    protected async Task<string> GetXcodeVersion()
+    protected async Task<Version> GetXcodeVersion()
     {
         if (_xcodeVersion is not null)
         {
@@ -442,7 +430,7 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
         xcodeVersion = xcodeVersion.Insert(xcodeVersion.Length - 2, ".");
         xcodeVersion = xcodeVersion.Insert(xcodeVersion.Length - 1, ".");
 
-        _xcodeVersion = xcodeVersion;
+        _xcodeVersion = Version.Parse(xcodeVersion);
 
         return _xcodeVersion;
     }

@@ -16,9 +16,9 @@ internal class Simulator
     public string InstallPrefix { get; }
     public long FileSize { get; }
     public bool IsDmgFormat { get; }
-    public bool IsCryptexDiskImage { get; }
+    public string BuildUpdate { get; }
 
-    public Simulator(string name, string platform, string identifier, string version, string? source, string installPrefix, long fileSize, bool isCryptexDiskImage)
+    public Simulator(string name, string platform, string identifier, string version, string? source, string installPrefix, long fileSize, string buildUpdate)
     {
         Name = name;
         Platform = platform;
@@ -28,6 +28,6 @@ internal class Simulator
         InstallPrefix = installPrefix;
         FileSize = fileSize;
         IsDmgFormat = Identifier.StartsWith("com.apple.dmg.", StringComparison.OrdinalIgnoreCase);
-        IsCryptexDiskImage = isCryptexDiskImage;
+        BuildUpdate = buildUpdate;
     }
 }
