@@ -361,11 +361,15 @@ public class AppTester : AppRunnerBase, IAppTester
             // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit)
             IFileBackedLog aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
 
+            // The app output log is not directly accessible. 
+            // Hence, we duplicate the log to the main console log to simplify the UX of failure investigation.
+            IFileBackedLog aggregatedAppOutputLog = Log.CreateReadableAggregatedLog(_mainLog, appOutputLog);
+
             var result = await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
                 mlaunchArguments,
                 aggregatedLog,
-                appOutputLog,
-                appOutputLog,
+                aggregatedAppOutputLog,
+                aggregatedAppOutputLog,
                 timeout,
                 envVars,
                 cancellationToken: cancellationToken));
