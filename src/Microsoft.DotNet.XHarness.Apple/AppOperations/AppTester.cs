@@ -190,7 +190,8 @@ public class AppTester : AppRunnerBase, IAppTester
             using var crashLogs = new Logs(_logs.Directory);
 
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, device.Name);
-            using ITestReporter testReporter = _testReporterFactory.Create(_mainLog,
+            using ITestReporter testReporter = _testReporterFactory.Create(
+                _mainLog,
                 _mainLog,
                 _logs,
                 crashReporter,
