@@ -154,6 +154,9 @@ public class AdbRunner
             Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath) ?? throw new ArgumentNullException(nameof(outputFilePath)));
             File.WriteAllText(outputFilePath, result.StandardOutput);
             _log.LogInformation($"Wrote current ADB log to {outputFilePath}");
+            // The adb log is not directly accessible.
+            // Hence, we duplicate the log to the main console log to simplify the UX of failure investigation.
+            _log.LogInformation($"ADB log output:{Environment.NewLine}{result.StandardOutput}");
             return true;
         }
     }
