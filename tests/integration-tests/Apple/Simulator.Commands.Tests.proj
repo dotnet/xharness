@@ -2,7 +2,7 @@
   <Import Project="../Helix.SDK.configuration.props"/>
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.13.amd64.open"/>
+    <HelixTargetQueue Include="osx.13.arm64.open"/>
   </ItemGroup>
 
   <PropertyGroup>
@@ -10,9 +10,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TestAppBundleName>System.Numerics.Vectors.Tests</TestAppBundleName>
-    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app/ios-simulator-64/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
-    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\ios-simulator-64</TestAppDestinationDir>
+    <TestAppBundleName>Microsoft.Extensions.Configuration.Ini.Tests</TestAppBundleName>
+    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app/tvos-simulator/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\tvos-simulator</TestAppDestinationDir>
   </PropertyGroup>
 
   <Target Name="TestApple" BeforeTargets="CoreTest">
@@ -26,7 +26,7 @@
 
     <ItemGroup>
       <XHarnessAppBundleToTest Include="$(TestAppDestinationDir)\$(TestAppBundleName).app">
-        <TestTarget>ios-simulator-64_$(iOSSimulatorVersionUnderTest)</TestTarget>
+        <TestTarget>tvos-simulator_$(iOSSimulatorVersionUnderTest)</TestTarget>
         <WorkItemTimeout>00:20:00</WorkItemTimeout>
         <TestTimeout>00:07:00</TestTimeout>
         <LaunchTimeout>00:03:30</LaunchTimeout>
