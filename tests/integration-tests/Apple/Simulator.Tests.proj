@@ -27,7 +27,7 @@
 
     <!-- apple test / tvos-simulator -->
     <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)\TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=tvos-simulator_15.0;TestAppBundleName=Microsoft.Extensions.Configuration.Ini.Tests.app</AdditionalProperties>
+      <AdditionalProperties>TestTarget=tvos-simulator;TestAppBundleName=Microsoft.Extensions.Configuration.Ini.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
   </ItemGroup>
 
