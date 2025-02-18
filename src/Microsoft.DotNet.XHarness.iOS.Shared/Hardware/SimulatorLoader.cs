@@ -234,6 +234,18 @@ public class SimulatorLoader : ISimulatorLoader
 
         await LoadDevices(log, forceRefresh: true, cancellationToken: cancellationToken);
 
+        if (AvailableDevices is null || AvailableDevices.Count() == 0)
+        {
+            log.WriteLine("THis is empty: AvailableDevices");
+        }
+        else
+        {
+            foreach (var av in AvailableDevices)
+            {
+                log.WriteLine($"Name: {av.Name} SimRT: {av.SimRuntime} devType: {av.SimDeviceType}");
+            }
+        }
+
         devices = AvailableDevices.Where((ISimulatorDevice v) => v.SimRuntime == runtime && v.SimDeviceType == devicetype);
         if (!devices.Any())
         {

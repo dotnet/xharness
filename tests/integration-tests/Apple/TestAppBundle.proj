@@ -26,6 +26,7 @@
       <XHarnessAppFoldersToTest Include="$(TestTarget)-$(TestAppBundleName)">
         <AppBundlePath>$(TestAppDestinationDir)\$(TestAppBundleName)</AppBundlePath>
         <TestTarget>$(TestTarget)</TestTarget>
+        <TestTarget Condition="'$(TestTarget)' == 'tvos-simulator'">$(TestTarget)_15.0</TestTarget>
         <WorkItemTimeout>00:20:00</WorkItemTimeout>
         <TestTimeout>00:07:00</TestTimeout>
         <LaunchTimeout>00:03:30</LaunchTimeout>
