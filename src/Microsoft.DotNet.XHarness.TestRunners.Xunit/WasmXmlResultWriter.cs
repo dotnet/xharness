@@ -30,8 +30,9 @@ internal class WasmXmlResultWriter
     {
         private readonly ToBase64Transform _base64Transform = new ToBase64Transform();
 
-        public int InputBlockSize => _base64Transform.InputBlockSize;
-        public int OutputBlockSize => _base64Transform.OutputBlockSize * 2;
+        public int InputBlockSize => _base64Transform.InputBlockSize; // 3 bytes of input
+        public int OutputBlockSize => _base64Transform.OutputBlockSize * 2; // 4 bytes of base64 output * 2 for UTF-16 encoding
+
         public bool CanTransformMultipleBlocks => _base64Transform.CanTransformMultipleBlocks;
         public bool CanReuseTransform => _base64Transform.CanReuseTransform;
 
@@ -51,20 +52,52 @@ internal class WasmXmlResultWriter
             {
                 int bytesToProcess = Math.Min(InputBlockSize, inputCount - inputProcessed);
 
-                // Calculate positions in the output buffer
-                int base64OutputStart = outputOffset + totalBytesWritten + OutputBlockSize / 2;
-                int base64OutputLength = _base64Transform.OutputBlockSize;
+                /*
+                Input Buffer ("hi mom"):
+                +-----+-----+-----+-----+-----+-----+
+                | 'h' | 'i' | ' ' | 'm' | 'o' | 'm' |
+                +-----+-----+-----+-----+-----+-----+
+                |104  |105  | 32  |109  |111  |109  |
+                +-----+-----+-----+-----+-----+-----+
 
-                // Apply Base64 transformation directly to the second half of the output buffer
+                Base64 Encoding Process:
+                - 'hi ' -> 'aGkg'
+                - 'mom' -> 'bW9t'
+
+                Base64 Encoded Output:
+                |                   |base64Written      |                   | base64Written     |
+                +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+                | \0 | \0 | \0 | \0 |'a' |'G' |'k' |'g' | \0 | \0 | \0 | \0 |'b' |'W' |'9' |'t' |
+                +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+                |  0 |  0 |  0 |  0 | 97 | 71 |107 |103 |  0 |  0 |  0 |  0 | 98 | 87 | 57 |116 |
+                +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+                Expanded Output Buffer (UTF-16 Encoding):
+                | outputChars                           | outputChars                           |
+                +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+                | \0 |'a' | \0 |'G' | \0 |'k' | \0 |'g' | \0 |'b' | \0 |'W' | \0 |'9' | \0 |'t' |
+                +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+                | 0  | 97 | 0  | 71 | 0  |107 | 0  |103 | 0  | 98 | 0  | 87 | 0  | 57 | 0  |116 |
+                +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+                */
+
+                // Calculate positions in the output buffer
+                int outputStart = outputOffset + totalBytesWritten;
+                int base64OutputStart = outputStart + OutputBlockSize / 2;
+
+                // write Base64 transformation directly to the second half of the output buffer
                 int base64BytesWritten = _base64Transform.TransformBlock(
                     inputBuffer, inputOffset + inputProcessed, bytesToProcess,
                     outputBuffer, base64OutputStart);
 
-                var outputSpan = MemoryMarshal.Cast<byte, char>(outputBuffer.AsSpan(outputOffset + totalBytesWritten, OutputBlockSize));
+                var base64Written = outputBuffer.AsSpan(base64OutputStart, base64BytesWritten);
+                var outputChars = outputBuffer.AsSpan(outputStart, OutputBlockSize);
                 for (int i = 0; i < base64BytesWritten; i++)
                 {
-                    char base64Char = (char)outputBuffer[base64OutputStart + i];
-                    outputSpan[i] = base64Char;
+                    // Expand each ascii byte to a char write it in the same logical position
+                    // as a char in outputChars eventually filling the output buffer
+                    BitConverter.TryWriteBytes(outputChars.Slice(i * 2), (char)base64Written[i]);
                 }
 
                 inputProcessed += bytesToProcess;
@@ -81,12 +114,10 @@ internal class WasmXmlResultWriter
 
             // Expand each Base64 byte to two bytes in the output buffer
             byte[] outputBuffer = new byte[base64Buffer.Length * 2];
-            Span<char> outputSpan = MemoryMarshal.Cast<byte, char>(outputBuffer.AsSpan());
             for (int i = 0; i < base64Buffer.Length; i++)
             {
-                // Convert each byte to a char
-                char base64Char = (char)base64Buffer[i];
-                outputSpan[i] = base64Char;
+                // Convert each ascii byte to a char
+                BitConverter.TryWriteBytes(outputBuffer.AsSpan(i * 2), (char)base64Buffer[i]);
             }
 
             return outputBuffer;
@@ -108,8 +139,12 @@ internal class WasmXmlResultWriter
         xmlWriter.Flush();
         cryptoStream.FlushFinalBlock();
 
+        // guaranteed to succeed with the MemoryStream() constructor
         ms.TryGetBuffer(out var bytes);
-        var charData = MemoryMarshal.Cast<byte,char>(bytes);
+        // we went to a lot of trouble to put characters in the final buffer
+        // so that we can avoid a copy here and pass the span directly to the
+        // string interpolation logic.
+        Span<char> charData = MemoryMarshal.Cast<byte,char>(bytes);
 
         // Output the result
         Console.WriteLine($"STARTRESULTXML {charData.Length} {charData} ENDRESULTXML");
