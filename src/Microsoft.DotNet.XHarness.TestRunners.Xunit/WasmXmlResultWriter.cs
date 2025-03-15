@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
 internal class WasmXmlResultWriter
 {
-#if !NET || DEBUG
+#if DEBUG
     public static void WriteOnSingleLine(XElement assembliesElement)
     {
         using var ms = new MemoryStream();
@@ -29,6 +29,7 @@ internal class WasmXmlResultWriter
     private class ToBase64CharTransform : ICryptoTransform
     {
         private readonly ToBase64Transform _base64Transform = new ToBase64Transform();
+        private byte[] _intermediate = new byte[2];
 
         public int InputBlockSize => _base64Transform.InputBlockSize; // 3 bytes of input
         public int OutputBlockSize => _base64Transform.OutputBlockSize * 2; // 4 bytes of base64 output * 2 for UTF-16 encoding
@@ -45,66 +46,71 @@ internal class WasmXmlResultWriter
             byte[] inputBuffer, int inputOffset, int inputCount,
             byte[] outputBuffer, int outputOffset)
         {
-            int totalBytesWritten = 0;
-            int inputProcessed = 0;
+            int inputBlocks = Math.DivRem(inputCount, InputBlockSize, out int inputRemainder);
 
-            while (inputProcessed < inputCount)
+            if (inputRemainder != 0)
             {
-                int bytesToProcess = Math.Min(InputBlockSize, inputCount - inputProcessed);
-
-                /*
-                Input Buffer ("hi mom"):
-                +-----+-----+-----+-----+-----+-----+
-                | 'h' | 'i' | ' ' | 'm' | 'o' | 'm' |
-                +-----+-----+-----+-----+-----+-----+
-                |104  |105  | 32  |109  |111  |109  |
-                +-----+-----+-----+-----+-----+-----+
-
-                Base64 Encoding Process:
-                - 'hi ' -> 'aGkg'
-                - 'mom' -> 'bW9t'
-
-                Base64 Encoded Output:
-                |                   |base64Written      |                   | base64Written     |
-                +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
-                | \0 | \0 | \0 | \0 |'a' |'G' |'k' |'g' | \0 | \0 | \0 | \0 |'b' |'W' |'9' |'t' |
-                +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
-                |  0 |  0 |  0 |  0 | 97 | 71 |107 |103 |  0 |  0 |  0 |  0 | 98 | 87 | 57 |116 |
-                +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
-
-                Expanded Output Buffer (UTF-16 Encoding):
-                | outputChars                           | outputChars                           |
-                +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
-                | \0 |'a' | \0 |'G' | \0 |'k' | \0 |'g' | \0 |'b' | \0 |'W' | \0 |'9' | \0 |'t' |
-                +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
-                | 0  | 97 | 0  | 71 | 0  |107 | 0  |103 | 0  | 98 | 0  | 87 | 0  | 57 | 0  |116 |
-                +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
-
-                */
-
-                // Calculate positions in the output buffer
-                int outputStart = outputOffset + totalBytesWritten;
-                int base64OutputStart = outputStart + OutputBlockSize / 2;
-
-                // write Base64 transformation directly to the second half of the output buffer
-                int base64BytesWritten = _base64Transform.TransformBlock(
-                    inputBuffer, inputOffset + inputProcessed, bytesToProcess,
-                    outputBuffer, base64OutputStart);
-
-                var base64Written = outputBuffer.AsSpan(base64OutputStart, base64BytesWritten);
-                var outputChars = outputBuffer.AsSpan(outputStart, OutputBlockSize);
-                for (int i = 0; i < base64BytesWritten; i++)
-                {
-                    // Expand each ascii byte to a char write it in the same logical position
-                    // as a char in outputChars eventually filling the output buffer
-                    BitConverter.TryWriteBytes(outputChars.Slice(i * 2), (char)base64Written[i]);
-                }
-
-                inputProcessed += bytesToProcess;
-                totalBytesWritten += base64BytesWritten * 2;
+                throw new ArgumentException($"Input count must be a multiple of {InputBlockSize}.", nameof(inputCount));
             }
 
-            return totalBytesWritten;
+            if (inputCount == 0)
+            {
+                throw new ArgumentException("Input count must be greater than 0.", nameof(inputCount));
+            }
+
+            /*
+            Input Buffer ("hi mom"):
+            +-----+-----+-----+-----+-----+-----+
+            | 'h' | 'i' | ' ' | 'm' | 'o' | 'm' |
+            +-----+-----+-----+-----+-----+-----+
+            |104  |105  | 32  |109  |111  |109  |
+            +-----+-----+-----+-----+-----+-----+
+
+            Base64 Encoding Process:
+            - 'hi ' -> 'aGkg'
+            - 'mom' -> 'bW9t'
+
+            Base64 Encoded Output:
+            |                   |base64Written      |                   | base64Written     |
+            +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+            | \0 | \0 | \0 | \0 |'a' |'G' |'k' |'g' | \0 | \0 | \0 | \0 |'b' |'W' |'9' |'t' |
+            +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+            |  0 |  0 |  0 |  0 | 97 | 71 |107 |103 |  0 |  0 |  0 |  0 | 98 | 87 | 57 |116 |
+            +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+            Expanded Output Buffer (UTF-16 Encoding):
+            | outputChars                           | outputChars                           |
+            +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+            | \0 |'a' | \0 |'G' | \0 |'k' | \0 |'g' | \0 |'b' | \0 |'W' | \0 |'9' | \0 |'t' |
+            +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+            | 0  | 97 | 0  | 71 | 0  |107 | 0  |103 | 0  | 98 | 0  | 87 | 0  | 57 | 0  |116 |
+            +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+            */
+
+            // Calculate positions in the output buffer
+            int base64OutputStart = outputOffset + OutputBlockSize / 2;
+
+            // write Base64 transformation directly to the second half of the output buffer
+            int base64BytesWritten = _base64Transform.TransformBlock(
+                inputBuffer, inputOffset, inputCount,
+                outputBuffer, base64OutputStart);
+
+            var base64Written = outputBuffer.AsSpan(base64OutputStart, base64BytesWritten);
+            var outputChars = outputBuffer.AsSpan(outputOffset, OutputBlockSize);
+
+            for (int i = 0; i < base64BytesWritten; i++)
+            {
+                // Expand each ascii byte to a char write it in the same logical position
+                // as a char in outputChars eventually filling the output buffer
+                if (!BitConverter.TryWriteBytes(outputChars.Slice(i * 2), (char)base64Written[i]))
+                {
+                    BitConverter.TryWriteBytes(_intermediate, (char)base64Written[i]);
+                    _intermediate.CopyTo(outputChars.Slice(i * 2, 2));
+                }
+            }
+
+            return base64BytesWritten * 2;
         }
 
         public byte[] TransformFinalBlock(byte[] inputBuffer, int inputOffset, int inputCount)
@@ -144,9 +150,9 @@ internal class WasmXmlResultWriter
         // we went to a lot of trouble to put characters in the final buffer
         // so that we can avoid a copy here and pass the span directly to the
         // string interpolation logic.
-        Span<char> charData = MemoryMarshal.Cast<byte,char>(bytes);
+        Span<char> charData = MemoryMarshal.Cast<byte, char>(bytes.AsSpan());
 
-        // Output the result
+        // Output the result and the the ascii length of the data
         Console.WriteLine($"STARTRESULTXML {charData.Length} {charData} ENDRESULTXML");
         Console.WriteLine($"Finished writing {charData.Length} bytes of RESULTXML");
     }
