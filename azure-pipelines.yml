@@ -32,6 +32,9 @@ extends:
         enabled: true
       policheck:
         enabled: true
+      binskim:
+        enabled: true
+        scanOutputDirectoryOnly: true
     pool:
       name: $(DncEngInternalBuildPool)
       image: 1es-windows-2022
