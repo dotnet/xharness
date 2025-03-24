@@ -248,6 +248,12 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
 
+        if (!target.Platform.IsSimulator()) // Simulator app logs are already included in the main log
+        {
+            // Copy system and application logs to the main log for better failure investigation.
+            CopyLogsToMainLog();
+        }
+
         return ParseResult(testResult, resultMessage, appTester.ListenerConnected);
     }
 
@@ -277,6 +283,9 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedMethods: singleMethodFilters?.ToArray(),
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
+
+        // Copy system and application logs to the main log for better failure investigation.
+        CopyLogsToMainLog();
 
         return ParseResult(testResult, resultMessage, appTester.ListenerConnected);
     }
@@ -362,6 +371,44 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
                 _logger.LogError($"Application test run ended in an unexpected way: '{testResult}'" +
                     newLine + (resultMessage != null ? resultMessage + newLine + newLine : null) + checkLogsMessage);
                 return ExitCode.GENERAL_FAILURE;
+        }
+    }
+
+    /// <summary>
+    /// Copy system and application logs to the main log for better failure investigation.
+    /// </summary>
+    private void CopyLogsToMainLog()
+    {
+        var logs = _logs.Where(log => log.Description == LogType.SystemLog.ToString() || log.Description == LogType.ApplicationLog.ToString()).ToList();
+
+        foreach (var log in logs)
+        {
+            _mainLog.WriteLine($"==================== {log.Description} ====================");
+            _mainLog.WriteLine($"Log file: {log.FullPath}");
+            
+            try
+            {
+                // Read and append log content to the main log
+                string logContent;
+                using (var reader = log.GetReader())
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        logContent = reader.ReadLine()!;
+                        if (logContent != null)
+                        {
+                            _mainLog.WriteLine(logContent);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _mainLog.WriteLine($"Failed to read {log.Description}: {ex.Message}");
+            }
+            
+            _mainLog.WriteLine($"==================== End of {log.Description} ====================");
+            _mainLog.WriteLine(string.Empty);
         }
     }
 }
