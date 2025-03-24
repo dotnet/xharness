@@ -31,7 +31,7 @@ here=$(pwd)
 dotnet_install="$here/dotnet-install.sh"
 
 echo "Getting dotnet-install.sh.."
-curl -L https://dot.net/v1/dotnet-install.sh -o "$dotnet_install"
+curl -L https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -o "$dotnet_install"
 chmod u+x "$dotnet_install"
 dotnet_dir="$here/.dotnet"
 
