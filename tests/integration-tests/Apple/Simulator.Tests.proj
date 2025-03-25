@@ -19,6 +19,11 @@
       <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.AppContext.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
 
+    <!-- apple test / maccatalyst -->
+    <XHarnessAppleProject Include="TestAppBundle.proj">
+      <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.Collections.NonGeneric.Tests.app</AdditionalProperties>
+    </XHarnessAppleProject>
+
     <!-- apple run / maccatalyst -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
       <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
