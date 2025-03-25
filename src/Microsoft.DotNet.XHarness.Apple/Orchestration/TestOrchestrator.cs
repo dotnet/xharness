@@ -248,13 +248,15 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
 
+        ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+
         if (!target.Platform.IsSimulator()) // Simulator app logs are already included in the main log
         {
             // Copy system and application logs to the main log for better failure investigation.
             CopyLogsToMainLog();
         }
-
-        return ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+        
+        return exitCode;
     }
 
     private async Task<ExitCode> ExecuteMacCatalystApp(
@@ -284,10 +286,12 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
 
+        ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+
         // Copy system and application logs to the main log for better failure investigation.
         CopyLogsToMainLog();
 
-        return ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+        return exitCode;
     }
 
     private IAppTester GetAppTester(CommunicationChannel communicationChannel, bool isSimulator)
