@@ -389,17 +389,13 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             try
             {
                 // Read and append log content to the main log
-                string logContent;
-                using (var reader = log.GetReader())
+                using var reader = log.GetReader();
+                while (!reader.EndOfStream)
                 {
-                    while (!reader.EndOfStream)
-                    {
-                        logContent = reader.ReadLine()!;
-                        if (logContent != null)
-                        {
-                            _mainLog.WriteLine(logContent);
-                        }
-                    }
+                    var logContent = reader.ReadLine();
+                    if (logContent is null)
+                        continue;
+                    _mainLog.WriteLine(logContent);
                 }
             }
             catch (Exception ex)
