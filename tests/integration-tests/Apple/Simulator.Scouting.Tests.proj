@@ -15,7 +15,7 @@
 
     <!-- apple test / maccatalyst -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.AppContext.Tests.app</AdditionalProperties>
+      <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.Collections.NonGeneric.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple run / maccatalyst -->
