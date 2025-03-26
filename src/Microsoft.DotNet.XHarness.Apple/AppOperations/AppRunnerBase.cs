@@ -327,11 +327,8 @@ public abstract class AppRunnerBase
         }
         else
         {
-            // For MacCatalyst, the test output log does not propagate to the main log.
-            // Hence, we duplicate the log to the main console log to simplify the UX of failure investigation.
-            IFileBackedLog aggregatedAppOutputLog = Log.CreateReadableAggregatedLog(_mainLog, log);
             _processManager
-                .ExecuteCommandAsync("log", logArgs, _mainLog, aggregatedAppOutputLog, aggregatedAppOutputLog, TimeSpan.FromDays(1), cancellationToken: streamCancellation)
+                .ExecuteCommandAsync("log", logArgs, _mainLog, log, log, TimeSpan.FromDays(1), cancellationToken: streamCancellation)
                 .DoNotAwait();
         }
 
