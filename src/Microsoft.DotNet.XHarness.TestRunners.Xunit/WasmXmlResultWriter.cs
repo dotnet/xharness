@@ -153,7 +153,9 @@ internal class WasmXmlResultWriter
         Span<char> charData = MemoryMarshal.Cast<byte, char>(bytes.AsSpan());
 
         // Output the result and the the ascii length of the data
-        Console.WriteLine($"STARTRESULTXML {charData.Length} {charData} ENDRESULTXML");
+        Console.Write($"STARTRESULTXML {charData.Length} ");
+        Console.Write(charData);
+        Console.WriteLine(" ENDRESULTXML");
         Console.WriteLine($"Finished writing {charData.Length} bytes of RESULTXML");
     }
 #endif
