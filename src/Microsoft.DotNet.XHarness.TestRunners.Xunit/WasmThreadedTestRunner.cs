@@ -31,6 +31,6 @@ internal class WasmThreadedTestRunner : XUnitTestRunner
         return base.Run(testAssemblies);
     }
 
-    public override void WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
-        => WasmXmlResultWriter.WriteOnSingleLine(AssembliesElement);
+    public override Task WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
+        => WasmXmlResultWriter.WriteResultsToFile(AssembliesElement);
 }

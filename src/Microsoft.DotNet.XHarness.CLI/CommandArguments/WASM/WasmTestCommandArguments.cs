@@ -30,6 +30,7 @@ internal class WasmTestCommandArguments : XHarnessCommandArguments, IWebServerAr
     public WebServerUseCorsArguments WebServerUseCors { get; } = new();
     public WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; } = new();
     public WebServerUseDefaultFilesArguments WebServerUseDefaultFiles { get; } = new();
+    public WebServerUploadResults WebServerUploadResults { get; } = new();
     public bool IsWebServerEnabled => WebServerMiddlewarePathsAndTypes.Value.Count > 0;
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]

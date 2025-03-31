@@ -18,6 +18,9 @@ internal class WebServerCommandArguments : XHarnessCommandArguments, IWebServerA
     public WebServerUseCorsArguments WebServerUseCors { get; } = new();
     public WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; } = new();
     public WebServerUseDefaultFilesArguments WebServerUseDefaultFiles { get; } = new();
+    public WebServerUploadResults WebServerUploadResults { get; } = new();
+    public OutputDirectoryArgument OutputDirectory { get; } = new();
+
     public bool IsWebServerEnabled => WebServerMiddlewarePathsAndTypes.Value.Count > 0;
 
     public TimeoutArgument Timeout { get; } = new(TimeSpan.FromMinutes(15));

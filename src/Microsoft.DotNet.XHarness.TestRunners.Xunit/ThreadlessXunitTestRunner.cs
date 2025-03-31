@@ -19,16 +19,14 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
 internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
 {
-    public ThreadlessXunitTestRunner(LogWriter logger, bool oneLineResults = false) : base(logger)
+    public ThreadlessXunitTestRunner(LogWriter logger) : base(logger)
     {
-        _oneLineResults = oneLineResults;
         ShowFailureInfos = false;
     }
 
     protected override string ResultsFileName { get => string.Empty; set => throw new InvalidOperationException("This runner outputs its results to stdout."); }
 
     private readonly XElement _assembliesElement = new XElement("assemblies");
-    private readonly bool _oneLineResults;
 
     public override async Task Run(IEnumerable<TestAssemblyInfo> testAssemblies)
     {
@@ -110,26 +108,16 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
         };
     }
 
-    public override string WriteResultsToFile(XmlResultJargon xmlResultJargon)
+    public override async Task<string> WriteResultsToFile(XmlResultJargon xmlResultJargon)
     {
         Debug.Assert(xmlResultJargon == XmlResultJargon.xUnit);
-        WriteResultsToFile(Console.Out, xmlResultJargon);
+        await WriteResultsToFile(Console.Out, xmlResultJargon);
         return "";
     }
 
-    public override void WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
+    public override async Task WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
     {
-        if (_oneLineResults)
-        {
-            WasmXmlResultWriter.WriteOnSingleLine(_assembliesElement);
-        }
-        else
-        {
-            writer.WriteLine($"STARTRESULTXML");
-            _assembliesElement.Save(writer);
-            writer.WriteLine();
-            writer.WriteLine($"ENDRESULTXML");
-        }
+        await WasmXmlResultWriter.WriteResultsToFile(_assembliesElement);
     }
 }
 
