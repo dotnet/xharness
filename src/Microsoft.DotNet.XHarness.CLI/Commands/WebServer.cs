@@ -182,7 +182,8 @@ public class WebServer
                 {
                     router.MapPost("/test-results", async context =>
                     {
-                        var xmlResultsFilePath = Path.Combine(options.OutputDirectory ?? Directory.CreateTempSubdirectory().FullName, "testResults.xml");
+                        var xmlResultsFilePath = Path.Combine(options.OutputDirectory, "testResults.xml");
+
                         await using var fileStream = File.Create(xmlResultsFilePath);
                         await context.Request.BodyReader.CopyToAsync(fileStream);
                         _logger.LogInformation($"Stored {xmlResultsFilePath} results {fileStream.Position} bytes");
