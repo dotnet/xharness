@@ -112,8 +112,8 @@ public abstract class TestRunner
     }
 
     public abstract Task Run(IEnumerable<TestAssemblyInfo> testAssemblies);
-    public abstract string WriteResultsToFile(XmlResultJargon xmlResultJargon);
-    public abstract void WriteResultsToFile(TextWriter writer, XmlResultJargon jargon);
+    public abstract Task<string> WriteResultsToFile(XmlResultJargon xmlResultJargon);
+    public abstract Task WriteResultsToFile(TextWriter writer, XmlResultJargon jargon);
     public abstract void SkipTests(IEnumerable<string> tests);
     public abstract void SkipCategories(IEnumerable<string> categories);
     public abstract void SkipMethod(string method, bool isExcluded);

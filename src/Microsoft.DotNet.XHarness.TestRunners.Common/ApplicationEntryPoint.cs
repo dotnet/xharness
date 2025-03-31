@@ -173,7 +173,7 @@ public abstract class ApplicationEntryPoint
         }
     }
 
-    private static void WriteResults(TestRunner runner, ApplicationOptions options, LogWriter logger, TextWriter writer)
+    private static async Task WriteResults(TestRunner runner, ApplicationOptions options, LogWriter logger, TextWriter writer)
     {
         if (options.EnableXml && writer == null)
         {
@@ -182,12 +182,12 @@ public abstract class ApplicationEntryPoint
 
         if (options.EnableXml)
         {
-            runner.WriteResultsToFile(writer, options.XmlVersion);
+            await runner.WriteResultsToFile(writer, options.XmlVersion);
             logger.Info("Xml file was written to the provided writer.");
         }
         else
         {
-            string resultsFilePath = runner.WriteResultsToFile(options.XmlVersion);
+            string resultsFilePath = await runner.WriteResultsToFile(options.XmlVersion);
             logger.Info($"XML results can be found in '{resultsFilePath}'");
         }
     }
@@ -227,7 +227,7 @@ public abstract class ApplicationEntryPoint
         logger.MinimumLogLevel = MinimumLogLevel.Info;
         var runner = await InternalRunAsync(logger);
 
-        WriteResults(runner, options, logger, resultsFile ?? Console.Out);
+        await WriteResults(runner, options, logger, resultsFile ?? Console.Out);
 
         logger.Info($"{Environment.NewLine}=== TEST EXECUTION SUMMARY ==={Environment.NewLine}Tests run: {runner.TotalTests} Passed: {runner.PassedTests} Inconclusive: {runner.InconclusiveTests} Failed: {runner.FailedTests} Ignored: {runner.FilteredTests} Skipped: {runner.SkippedTests}{Environment.NewLine}");
 

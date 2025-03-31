@@ -158,32 +158,34 @@ internal class NUnitTestRunner : TestRunner, INUnitTestRunner
         return include;
     }
 
-    public override string WriteResultsToFile(XmlResultJargon jargon)
+    public override Task<string> WriteResultsToFile(XmlResultJargon jargon)
     {
         if (_results == null)
         {
-            return string.Empty;
+            return Task.FromResult(string.Empty);
         }
 
         string ret = GetResultsFilePath();
         if (string.IsNullOrEmpty(ret))
         {
-            return string.Empty;
+            return Task.FromResult(string.Empty);
         }
 
         jargon.GetWriter().WriteResultFile(_results, ret);
 
-        return ret;
+        return Task.FromResult(ret);
     }
 
-    public override void WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
+    public override Task WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
     {
         if (_results == null)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         jargon.GetWriter().WriteResultFile(_results, writer);
+
+        return Task.CompletedTask;
     }
 
     public override void SkipTests(IEnumerable<string> tests)

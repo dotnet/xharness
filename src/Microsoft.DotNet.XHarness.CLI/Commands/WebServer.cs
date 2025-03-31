@@ -21,6 +21,7 @@ using Microsoft.Extensions.Options;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
+using System.IO;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands;
 
@@ -175,6 +176,19 @@ public class WebServer
                     });
                 });
             }
+            if (options.WebServerUploadResults)
+            {
+                app.UseRouter(router =>
+                {
+                    router.MapPost("/test-results", async context =>
+                    {
+                        var xmlResultsFilePath = Path.Combine(options.OutputDirectory ?? Directory.CreateTempSubdirectory().FullName, "testResults.xml");
+                        using var fileStream = new FileStream(xmlResultsFilePath, FileMode.Create);
+                        await context.Request.Body.CopyToAsync(fileStream);
+                        _logger.LogInformation($"Stored {xmlResultsFilePath} results");
+                    });
+                });
+            }
 
             foreach (var middleware in options.EchoServerMiddlewares)
             {
@@ -192,6 +206,8 @@ public class WebServer
         public bool UseHttps { get; set; }
         public bool UseCrossOriginPolicy { get; set; }
         public bool UseDefaultFiles { get; set; }
+        public bool WebServerUploadResults { get; set; }
+        public string? OutputDirectory { get; set; }
         public string? ContentRoot { get; set; }
 
         public void CopyTo(TestWebServerOptions otherOptions)
@@ -202,6 +218,8 @@ public class WebServer
             otherOptions.UseHttps = UseHttps;
             otherOptions.UseCrossOriginPolicy = UseCrossOriginPolicy;
             otherOptions.UseDefaultFiles = UseDefaultFiles;
+            otherOptions.WebServerUploadResults = WebServerUploadResults;
+            otherOptions.OutputDirectory = OutputDirectory;
             otherOptions.ContentRoot = ContentRoot;
         }
 
@@ -212,6 +230,8 @@ public class WebServer
             options.UseHttps = arguments.WebServerUseHttps;
             options.UseCrossOriginPolicy = arguments.WebServerUseCrossOriginPolicy;
             options.UseDefaultFiles = arguments.WebServerUseDefaultFiles;
+            options.WebServerUploadResults = arguments.WebServerUploadResults;
+            options.OutputDirectory = arguments.OutputDirectory;
             foreach (var middlewareType in arguments.WebServerMiddlewarePathsAndTypes.GetLoadedTypes())
             {
                 options.EchoServerMiddlewares.Add(middlewareType);

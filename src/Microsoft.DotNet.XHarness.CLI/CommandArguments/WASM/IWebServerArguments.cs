@@ -14,4 +14,6 @@ internal interface IWebServerArguments
     WebServerUseCorsArguments WebServerUseCors { get; }
     WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; }
     WebServerUseDefaultFilesArguments WebServerUseDefaultFiles { get; }
+    WebServerUploadResults WebServerUploadResults { get; }
+    OutputDirectoryArgument OutputDirectory { get; }
 }

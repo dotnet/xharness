@@ -4,6 +4,10 @@
 
 using System;
 using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Runtime.InteropServices.JavaScript;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 
 #nullable enable
@@ -12,10 +16,29 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
 internal class WasmXmlResultWriter
 {
-    public static void WriteOnSingleLine(XElement assembliesElement)
+    public async static Task WriteResultsToFile(XElement assembliesElement)
     {
         using var ms = new MemoryStream();
         assembliesElement.Save(ms);
+
+        if (OperatingSystem.IsBrowser() && JSHost.GlobalThis.HasProperty("fetch"))
+        {
+            // globalThis.location.origin
+            var originURL = JSHost.GlobalThis.GetPropertyAsJSObject("location")!.GetPropertyAsString("origin");
+            using var req = new HttpRequestMessage(HttpMethod.Post, originURL + "/test-results");
+            req.Content = new StreamContent(ms);
+            req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/xml");
+            req.Content.Headers.ContentLength = ms.Length;
+
+            using var httpClient = new HttpClient();
+            using var response = await httpClient.SendAsync(req);
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Finished uploading {ms.Length} bytes of RESULTXML");
+                return;
+            }
+        }
+
         ms.TryGetBuffer(out var bytes);
         var base64 = Convert.ToBase64String(bytes, Base64FormattingOptions.None);
         Console.WriteLine($"STARTRESULTXML {bytes.Count} {base64} ENDRESULTXML");
