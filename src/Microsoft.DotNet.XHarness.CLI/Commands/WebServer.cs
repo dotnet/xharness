@@ -184,7 +184,7 @@ public class WebServer
                     {
                         var xmlResultsFilePath = Path.Combine(options.OutputDirectory ?? Directory.CreateTempSubdirectory().FullName, "testResults.xml");
                         using var fileStream = new FileStream(xmlResultsFilePath, FileMode.Create);
-                        await context.Request.Body.CopyToAsync(fileStream);
+                        await context.Response.Body.CopyToAsync(fileStream);
                         _logger.LogInformation($"Stored {xmlResultsFilePath} results");
                     });
                 });
