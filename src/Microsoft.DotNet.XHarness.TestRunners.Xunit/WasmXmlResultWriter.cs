@@ -21,7 +21,10 @@ internal class WasmXmlResultWriter
         using var ms = new MemoryStream();
         assembliesElement.Save(ms);
 
-        if (OperatingSystem.IsBrowser() && JSHost.GlobalThis.HasProperty("fetch"))
+        if (OperatingSystem.IsBrowser()
+            && JSHost.GlobalThis.HasProperty("fetch")
+            && JSHost.GlobalThis.HasProperty("location")
+            && JSHost.GlobalThis.HasProperty("document"))
         {
             ms.Position = 0;
 
