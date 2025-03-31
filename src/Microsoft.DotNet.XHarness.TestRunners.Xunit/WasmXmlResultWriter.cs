@@ -21,28 +21,38 @@ internal class WasmXmlResultWriter
         using var ms = new MemoryStream();
         assembliesElement.Save(ms);
 
-        if (OperatingSystem.IsBrowser()
-            && JSHost.GlobalThis.HasProperty("fetch")
-            && JSHost.GlobalThis.HasProperty("location")
-            && JSHost.GlobalThis.HasProperty("document"))
+        if (OperatingSystem.IsBrowser())
         {
-            ms.Position = 0;
-
-            // globalThis.location.origin
-            var originURL = JSHost.GlobalThis.GetPropertyAsJSObject("location")!.GetPropertyAsString("origin");
-            using var req = new HttpRequestMessage(HttpMethod.Post, originURL + "/test-results");
-            req.Content = new StreamContent(ms);
-            req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/xml");
-            req.Content.Headers.ContentLength = ms.Length;
-
-            using var httpClient = new HttpClient();
-            using var response = await httpClient.SendAsync(req);
-            if (response.IsSuccessStatusCode)
+            try
             {
-                Console.WriteLine($"Finished uploading {ms.Length} bytes of RESULTXML");
-                return;
+                using JSObject globalThis = JSHost.GlobalThis;
+                if (globalThis.HasProperty("fetch") && JSHost.GlobalThis.HasProperty("location") && JSHost.GlobalThis.HasProperty("document"))
+                {
+                    ms.Position = 0;
+
+                    // globalThis.location.origin
+                    using JSObject location = JSHost.GlobalThis.GetPropertyAsJSObject("location")!;
+                    var originURL = location.GetPropertyAsString("origin");
+
+                    using var req = new HttpRequestMessage(HttpMethod.Post, originURL + "/test-results");
+                    req.Content = new StreamContent(ms);
+                    req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/xml");
+                    req.Content.Headers.ContentLength = ms.Length;
+
+                    using var httpClient = new HttpClient();
+                    using var response = await httpClient.SendAsync(req);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"Finished uploading {ms.Length} bytes of RESULTXML");
+                        return;
+                    }
+                    // otherwise fall back to the console output
+                }
             }
-            // otherwise fall back to the console output
+            catch (Exception)
+            {
+                // fall back to the console output
+            }
         }
 
         ms.TryGetBuffer(out var bytes);
