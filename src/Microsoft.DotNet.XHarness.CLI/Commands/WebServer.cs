@@ -186,7 +186,7 @@ public class WebServer
                         using var fileStream = new FileStream(xmlResultsFilePath, FileMode.Create);
                         await context.Request.Body.CopyToAsync(fileStream);
                         await fileStream.FlushAsync();
-                        _logger.LogInformation($"Stored {xmlResultsFilePath} results");
+                        _logger.LogInformation($"Stored {xmlResultsFilePath} results {fileStream.Position} bytes");
                     });
                 });
             }

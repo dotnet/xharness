@@ -23,6 +23,8 @@ internal class WasmXmlResultWriter
 
         if (OperatingSystem.IsBrowser() && JSHost.GlobalThis.HasProperty("fetch"))
         {
+            ms.Position = 0;
+
             // globalThis.location.origin
             var originURL = JSHost.GlobalThis.GetPropertyAsJSObject("location")!.GetPropertyAsString("origin");
             using var req = new HttpRequestMessage(HttpMethod.Post, originURL + "/test-results");
