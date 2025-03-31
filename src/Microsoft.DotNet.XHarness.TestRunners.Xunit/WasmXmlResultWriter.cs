@@ -26,12 +26,12 @@ internal class WasmXmlResultWriter
             try
             {
                 using JSObject globalThis = JSHost.GlobalThis;
-                if (globalThis.HasProperty("fetch") && JSHost.GlobalThis.HasProperty("location") && JSHost.GlobalThis.HasProperty("document"))
+                if (globalThis.HasProperty("fetch") && globalThis.HasProperty("location") && globalThis.HasProperty("document"))
                 {
                     ms.Position = 0;
 
                     // globalThis.location.origin
-                    using JSObject location = JSHost.GlobalThis.GetPropertyAsJSObject("location")!;
+                    using JSObject location = globalThis.GetPropertyAsJSObject("location")!;
                     var originURL = location.GetPropertyAsString("origin");
 
                     using var req = new HttpRequestMessage(HttpMethod.Post, originURL + "/test-results");
