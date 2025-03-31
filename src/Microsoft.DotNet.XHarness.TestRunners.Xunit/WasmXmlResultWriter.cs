@@ -39,6 +39,7 @@ internal class WasmXmlResultWriter
                 Console.WriteLine($"Finished uploading {ms.Length} bytes of RESULTXML");
                 return;
             }
+            // otherwise fall back to the console output
         }
 
         ms.TryGetBuffer(out var bytes);
