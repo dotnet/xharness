@@ -183,9 +183,8 @@ public class WebServer
                     router.MapPost("/test-results", async context =>
                     {
                         var xmlResultsFilePath = Path.Combine(options.OutputDirectory ?? Directory.CreateTempSubdirectory().FullName, "testResults.xml");
-                        using var fileStream = new FileStream(xmlResultsFilePath, FileMode.Create);
-                        await context.Request.Body.CopyToAsync(fileStream);
-                        await fileStream.FlushAsync();
+                        await using var fileStream = File.Create(xmlResultsFilePath);
+                        await request.BodyReader.CopyToAsync(fileStream);
                         _logger.LogInformation($"Stored {xmlResultsFilePath} results {fileStream.Position} bytes");
                     });
                 });
