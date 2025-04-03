@@ -716,6 +716,12 @@
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/18F485DC-7F0A-440F-BEF9-5BE5954B0FB1</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/18F485DC-7F0A-440F-BEF9-5BE5954B0FB1</LogPath>
       </SimDevice>
+      <SimDevice UDID="336E1D83-AB00-4FAE-A70D-C516D269B90A" Name="iPhone Xs (iOS {{MAX-IOS.VERSION}}) - created by xharness">
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
+        <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-XS</SimDeviceType>
+        <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/336E1D83-AB00-4FAE-A70D-C516D269B90A</DataPath>
+        <LogPath>/Users/mandel/Library/Logs/CoreSimulator/336E1D83-AB00-4FAE-A70D-C516D269B90A</LogPath>
+      </SimDevice>
       <SimDevice UDID="ABC2A44A-789D-4C8B-88A7-0CD7C6BF316C" Name="iPhone 11">
         <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-11</SimDeviceType>
