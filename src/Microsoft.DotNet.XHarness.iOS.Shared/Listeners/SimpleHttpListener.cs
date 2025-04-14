@@ -125,7 +125,8 @@ public class SimpleHttpListener : SimpleListener
                 break;
             default:
                 Log.WriteLine("Unknown upload url: {0}", request.RawUrl);
-                response = $"Unknown upload url: {request.RawUrl}"; // CodeQL [SM02175] False Positive: This is a plain-text API response
+                response = "Unknown upload url";
+                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                 break;
         }
 
