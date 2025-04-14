@@ -125,7 +125,8 @@ public class SimpleHttpListener : SimpleListener
                 break;
             default:
                 Log.WriteLine("Unknown upload url: {0}", request.RawUrl);
-                response = $"Unknown upload url: {request.RawUrl}";
+                response = "Unknown upload url";
+                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                 break;
         }
 

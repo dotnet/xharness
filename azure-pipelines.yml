@@ -34,7 +34,6 @@ extends:
         enabled: true
       binskim:
         enabled: true
-        scanOutputDirectoryOnly: true
     pool:
       name: $(DncEngInternalBuildPool)
       image: 1es-windows-2022
@@ -57,6 +56,13 @@ extends:
               - script: eng\common\CIBuild.cmd -configuration $(_BuildConfig) -prepareMachine $(_InternalBuildArgs) /p:Test=false
                 name: Build
                 displayName: Build
+                condition: succeeded()
+            templateContext:
+              outputs:
+              - output: pipelineArtifact
+                artifact: Artifacts_Windows_NT
+                path: '$(Build.SourcesDirectory)\artifacts\bin\Microsoft.DotNet.XHarness.CLI'
+                displayName: 'Publish Windows_NT Artifacts'
                 condition: succeeded()
 
     - template: /eng/common/templates-official/post-build/post-build.yml@self
