@@ -938,7 +938,6 @@ internal class XUnitTestRunner : XunitTestRunnerBase
 
         return Task.FromResult(outputFilePath);
     }
-
     public override Task WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
     {
         if (_assembliesElement == null)

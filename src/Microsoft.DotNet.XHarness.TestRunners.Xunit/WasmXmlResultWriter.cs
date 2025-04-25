@@ -28,7 +28,7 @@ internal class WasmXmlResultWriter
 
         using var ms = new MemoryStream();
         assembliesElement.Save(ms);
-        assembliesElement = null;
+        assembliesElement = null!;
 
 
         if (OperatingSystem.IsBrowser())
