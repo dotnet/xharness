@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -35,7 +36,14 @@ internal class XUnitTestRunner : XunitTestRunnerBase
 
     private XElement _assembliesElement;
 
-    internal XElement AssembliesElement => _assembliesElement;
+    internal XElement ConsumeAssembliesElement()
+    {
+        Debug.Assert(_assembliesElement != null, "ConsumeAssembliesElement called before Run() or after ConsumeAssembliesElement() was already called.");
+        var res = _assembliesElement;
+        _assembliesElement = null;
+        FailureInfos.Clear();
+        return res;
+    }
 
     public AppDomainSupport AppDomainSupport { get; set; } = AppDomainSupport.Denied;
     protected override string ResultsFileName { get; set; } = "TestResults.xUnit.xml";
