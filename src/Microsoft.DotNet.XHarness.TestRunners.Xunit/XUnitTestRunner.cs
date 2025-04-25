@@ -34,7 +34,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
 
     public int? MaxParallelThreads { get; set; }
 
-    protected XElement _assembliesElement;
+    private XElement _assembliesElement;
 
     internal XElement ConsumeAssembliesElement()
     {
