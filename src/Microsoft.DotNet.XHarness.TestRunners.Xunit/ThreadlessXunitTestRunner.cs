@@ -26,11 +26,22 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
 
     protected override string ResultsFileName { get => string.Empty; set => throw new InvalidOperationException("This runner outputs its results to stdout."); }
 
-    private readonly XElement _assembliesElement = new XElement("assemblies");
+    private XElement? _assembliesElement;
+
+    internal XElement ConsumeAssembliesElement()
+    {
+        Debug.Assert(_assembliesElement != null, "ConsumeAssembliesElement called before Run() or after ConsumeAssembliesElement() was already called.");
+        var res = _assembliesElement;
+        _assembliesElement = null;
+        FailureInfos.Clear();
+        return res!;
+    }
 
     public override async Task Run(IEnumerable<TestAssemblyInfo> testAssemblies)
     {
         OnInfo("Using threadless Xunit runner");
+
+        _assembliesElement = new XElement("assemblies");
 
         var configuration = new TestAssemblyConfiguration() { ShadowCopy = false, ParallelizeAssembly = false, ParallelizeTestCollections = false, MaxParallelThreads = 1, PreEnumerateTheories = false };
         var discoveryOptions = TestFrameworkOptions.ForDiscovery(configuration);
@@ -117,7 +128,7 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
 
     public override async Task WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
     {
-        await WasmXmlResultWriter.WriteResultsToFile(_assembliesElement);
+        await WasmXmlResultWriter.WriteResultsToFile(ConsumeAssembliesElement());
     }
 }
 

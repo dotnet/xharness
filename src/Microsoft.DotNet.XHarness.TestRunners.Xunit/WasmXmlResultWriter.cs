@@ -18,11 +18,24 @@ internal class WasmXmlResultWriter
 {
     public async static Task WriteResultsToFile(XElement assembliesElement)
     {
+        if (OperatingSystem.IsBrowser())
+        {
+            await Task.Yield();
+            GC.Collect();
+            await Task.Yield();
+            GC.Collect();
+        }
+
         using var ms = new MemoryStream();
         assembliesElement.Save(ms);
+        assembliesElement = null;
+
 
         if (OperatingSystem.IsBrowser())
         {
+            await Task.Yield();
+            GC.Collect();
+
             try
             {
                 using JSObject globalThis = JSHost.GlobalThis;
