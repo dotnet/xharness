@@ -27,18 +27,37 @@ public class SimpleListenerFactoryTest
     }
 
     [Fact]
-    public void CreateFileListener()
+    public void CreateNotWatchListener()
+    {
+        var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.iOS, _log.Object, _log.Object, true, true, true);
+        Assert.Equal(ListenerTransport.Tcp, transport);
+        Assert.IsType<SimpleTcpListener>(listener);
+        Assert.Null(listenerTmpFile);
+    }
+
+    [Fact]
+    public void CreateWatchOSSimulator()
     {
         var logFullPath = "myfullpath.txt";
         _ = _log.Setup(l => l.FullPath).Returns(logFullPath);
 
-        var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.iOS, _log.Object, _log.Object, true, true, true);
+        var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.WatchOS, _log.Object, _log.Object, true, true, true);
         Assert.Equal(ListenerTransport.File, transport);
         Assert.IsType<SimpleFileListener>(listener);
         Assert.NotNull(listenerTmpFile);
         Assert.Equal(logFullPath + ".tmp", listenerTmpFile);
 
         _log.Verify(l => l.FullPath, Times.Once);
+
+    }
+
+    [Fact]
+    public void CreateWatchOSDevice()
+    {
+        var (transport, listener, listenerTmpFile) = _factory.Create(RunMode.WatchOS, _log.Object, _log.Object, false, true, true);
+        Assert.Equal(ListenerTransport.Http, transport);
+        Assert.IsType<SimpleHttpListener>(listener);
+        Assert.Null(listenerTmpFile);
     }
 
     [Fact]

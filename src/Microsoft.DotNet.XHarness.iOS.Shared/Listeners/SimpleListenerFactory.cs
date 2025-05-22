@@ -50,7 +50,14 @@ public class SimpleListenerFactory : ISimpleListenerFactory
         ISimpleListener listener;
         ListenerTransport transport;
 
-        transport = ListenerTransport.File;
+        if (mode == RunMode.WatchOS)
+        {
+            transport = isSimulator ? ListenerTransport.File : ListenerTransport.Http;
+        }
+        else
+        {
+            transport = ListenerTransport.Tcp;
+        }
 
         switch (transport)
         {
