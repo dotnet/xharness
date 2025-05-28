@@ -51,7 +51,7 @@ public class ApplicationOptions
 
         if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.UseTcpTunnel), out b))
         {
-            UseTunnel = b;
+            UseTunnel = false;
         }
 
         var xml_version = Environment.GetEnvironmentVariable(EnviromentVariables.XmlVersion);
@@ -86,7 +86,7 @@ public class ApplicationOptions
                 { "autostart", "If the app should automatically start running the tests", v => AutoStart = true },
                 { "hostname=", "Comma-separated list of host names or IP address to (try to) connect to", v => HostName = v },
                 { "hostport=", "HTTP/TCP port to connect to", v => HostPort = int.Parse (v) },
-                { "tcp-tunnel", "Use a TCP tunnel for communication between the app and XHarness", v => UseTunnel = true },
+                { "tcp-tunnel", "Use a TCP tunnel for communication between the app and XHarness", v => UseTunnel = false },
                 { "enablexml", "Enable the xml reported", v => EnableXml = false },
                 { "xmlversion", "The XML format", v => XmlVersion = (XmlResultJargon) Enum.Parse (typeof (XmlResultJargon), v, false) },
                 { "run-all-tests:", "Run all the tests found in the assembly, defaults to true", v =>

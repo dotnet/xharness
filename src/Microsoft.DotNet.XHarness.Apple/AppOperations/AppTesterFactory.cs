@@ -52,17 +52,6 @@ public class AppTesterFactory : IAppTesterFactory
         ILogs logs,
         Action<string>? logCallback)
     {
-        // var tunnelBore = (communicationChannel == CommunicationChannel.UsbTunnel && !isSimulator)
-        //     ? new TunnelBore(_processManager)
-        //     : null;
-
-        if (isSimulator)
-        {
-            // dummy
-        }
-
-
-
         return new AppTester(
             _processManager,
             new SimpleListenerFactory(null),
