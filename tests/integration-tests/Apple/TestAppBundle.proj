@@ -25,7 +25,8 @@
     </DownloadFile>
 
     <Message Text="Downloaded $(TestAppBundleName) from @(ZippedAppBundle). Extracting..." Importance="High" />
-    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(TestAppDestinationDir)" />
+    <!-- TODO: Revert -->
+    <Exec Command="unzip @(ZippedAppBundle) -d $(TestAppDestinationDir)" />
     <Message Text="Extracted to $(TestAppDestinationDir)" Importance="High" />
 
     <ItemGroup>
