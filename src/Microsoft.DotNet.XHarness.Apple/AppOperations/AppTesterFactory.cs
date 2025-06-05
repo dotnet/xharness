@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.XHarness.Apple;
 
 public interface IAppTesterFactory
 {
-    IAppTester Create(CommunicationChannel communicationChannel, bool isSimulator, IFileBackedLog log, ILogs logs, Action<string>? logCallback);
+    IAppTester Create(CommunicationChannel communicationChannel, bool isSimulator, IFileBackedLog log, ILogs logs, Action<string>? logCallback, Version? osVersion);
 }
 
 public class AppTesterFactory : IAppTesterFactory
@@ -50,9 +50,11 @@ public class AppTesterFactory : IAppTesterFactory
         bool isSimulator,
         IFileBackedLog log,
         ILogs logs,
-        Action<string>? logCallback)
+        Action<string>? logCallback,
+        Version? osVersion)
     {
-        var tunnelBore = (communicationChannel == CommunicationChannel.UsbTunnel && !isSimulator)
+        // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
+        var tunnelBore = (communicationChannel == CommunicationChannel.UsbTunnel && !isSimulator && osVersion !=null && osVersion.Major < 18)
             ? new TunnelBore(_processManager)
             : null;
 

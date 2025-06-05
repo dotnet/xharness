@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.13.amd64.iphone.open"/>
+    <!-- TODO: Revert -->
+    <HelixTargetQueue Include="osx.amd64.iphone.scouting.open"/>
   </ItemGroup>
 
   <PropertyGroup>

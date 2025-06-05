@@ -283,6 +283,7 @@ public class AppTester : AppRunnerBase, IAppTester
                         appEndTag);
 
                     await RunDeviceTests(
+                        appInformation,
                         mlaunchArguments,
                         crashReporter,
                         testReporter,
@@ -324,6 +325,7 @@ public class AppTester : AppRunnerBase, IAppTester
     }
 
     private async Task RunDeviceTests(
+        AppBundleInformation appInformation,
         MlaunchArguments mlaunchArguments,
         ICrashSnapshotReporter crashReporter,
         ITestReporter testReporter,
@@ -339,6 +341,8 @@ public class AppTester : AppRunnerBase, IAppTester
 
         var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.Name);
         deviceLogCapturer.StartCapture();
+
+        bool versionParsed = Version.TryParse(device.OSVersion, out var osVersion);
 
         try
         {
@@ -390,6 +394,40 @@ public class AppTester : AppRunnerBase, IAppTester
         if (File.Exists(deviceSystemLog.FullPath))
         {
             _mainLog.WriteLine("Device log captured in {0}", deviceSystemLog.FullPath);
+        }
+
+        // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
+        // Instead, copy the results file from the device to the host machine.
+        if (versionParsed && osVersion!.Major >= 18)
+        {
+            var resultsFilePathOnDevice = "/Documents/test-results.xml";
+            var resultsFilePathOnHost = deviceListener.TestLog.FullPath;
+            var devicectlCmd = $"xcrun devicectl device copy from --device {device.UDID} --source {resultsFilePathOnDevice} --destination {resultsFilePathOnHost} --domain-type appDataContainer --domain-identifier {appInformation.BundleIdentifier}";
+            try
+            {
+                var result = await _processManager.ExecuteCommandAsync(
+                    "/bin/bash",
+                    new List<string> { "-c", devicectlCmd },
+                    _mainLog,
+                    _mainLog,
+                    _mainLog,
+                    TimeSpan.FromMinutes(1),
+                    null,
+                    cancellationToken: cancellationToken);
+                if (File.Exists(resultsFilePathOnHost))
+                {
+                    _mainLog.WriteLine($"Test results copied from device to {resultsFilePathOnHost}");
+                }
+                else
+                {
+                    _mainLog.WriteLine($"Failed to copy test results from device");
+                }
+            }
+            catch (Exception ex)
+            {
+                _mainLog.WriteLine($"Exception while copying test results from device: {ex}");
+                throw;
+            }
         }
     }
 
