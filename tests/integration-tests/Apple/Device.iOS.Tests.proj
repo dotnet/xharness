@@ -6,12 +6,14 @@
 
     <!-- apple test / ios-device -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=ios-device;TestAppBundleName=System.Buffers.Tests.app</AdditionalProperties>
+      <!-- TODO: Revert -->
+      <AdditionalProperties>TestTarget=ios-device;TestAppBundleName=System.Buffers.Tests.2.app</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple run / ios-device -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=ios-device;TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
+      <!-- TODO: Revert -->
+      <AdditionalProperties>TestTarget=ios-device;TestAppBundleName=iOS.Simulator.PInvoke.Test.2.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
     </XHarnessAppleProject>
   </ItemGroup>
 

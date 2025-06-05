@@ -14,7 +14,8 @@
 
   <PropertyGroup>
     <AppStorageUrl>$(AssetsBaseUri)/ios/test-app/$(TestTarget)</AppStorageUrl>
-    <XHarnessTestAppBundleUrl>$(AppStorageUrl)/$(TestAppBundleName).zip</XHarnessTestAppBundleUrl>
+    <!-- TODO: Revert -->
+    <XHarnessTestAppBundleUrl>$(AppStorageUrl)/$([System.String]::Copy($(TestAppBundleName)).Replace('.app', '.zip'))</XHarnessTestAppBundleUrl>
     <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\$(TestTarget)</TestAppDestinationDir>
   </PropertyGroup>
 
