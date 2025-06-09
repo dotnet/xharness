@@ -8,7 +8,7 @@
   <PropertyGroup>
     <TestAppBundleName>System.Buffers.Tests</TestAppBundleName>
     <!-- TODO: Revert -->
-    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app/ios-device/$(TestAppBundleName).2.app.zip</XHarnessTestAppBundleUrl>
+    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app/ios-device/$(TestAppBundleName).2.zip</XHarnessTestAppBundleUrl>
     <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\ios-device</TestAppDestinationDir>
   </PropertyGroup>
 
