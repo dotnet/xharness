@@ -7,6 +7,7 @@
 
   <PropertyGroup>
     <TestAppBundleName>System.Buffers.Tests</TestAppBundleName>
+    <!-- TODO: Revert -->
     <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app/ios-device/$(TestAppBundleName).2.app.zip</XHarnessTestAppBundleUrl>
     <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\ios-device</TestAppDestinationDir>
   </PropertyGroup>
@@ -17,7 +18,8 @@
     </DownloadFile>
 
     <Message Text="Downloaded $(TestAppBundleName) from @(ZippedAppBundle). Extracting..." Importance="High" />
-    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(TestAppDestinationDir)" />
+    <!-- TODO: Revert -->
+    <Exec Command="unzip @(ZippedAppBundle) -d $(TestAppDestinationDir)" />
     <Message Text="Extracted to $(TestAppDestinationDir)" Importance="High" />
 
     <ItemGroup>
