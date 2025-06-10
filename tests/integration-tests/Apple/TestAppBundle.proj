@@ -13,10 +13,9 @@
   <Import Project="../Storage.props"/>
 
   <PropertyGroup>
-    <AppStorageUrl>$(AssetsBaseUri)/ios/test-app/$(TestTarget)</AppStorageUrl>
-    <!-- TODO: Revert -->
-    <XHarnessTestAppBundleUrl>$(AppStorageUrl)/$([System.String]::Copy($(TestAppBundleName)).Replace('.app', '.zip'))</XHarnessTestAppBundleUrl>
-    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\$(TestTarget)</TestAppDestinationDir>
+    <AppStorageUrl>$(AssetsBaseUri)/ios/test-app-new/$(TestTarget)</AppStorageUrl>
+    <XHarnessTestAppBundleUrl>$(AppStorageUrl)/$(TestAppBundleName).zip</XHarnessTestAppBundleUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app-new\$(TestTarget)</TestAppDestinationDir>
   </PropertyGroup>
 
   <Target Name="Build" Returns="@(XHarnessAppFoldersToTest)">
@@ -25,8 +24,7 @@
     </DownloadFile>
 
     <Message Text="Downloaded $(TestAppBundleName) from @(ZippedAppBundle). Extracting..." Importance="High" />
-    <!-- TODO: Revert -->
-    <Exec Command="unzip @(ZippedAppBundle) -d $(TestAppDestinationDir)" />
+    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(TestAppDestinationDir)" />
     <Message Text="Extracted to $(TestAppDestinationDir)" Importance="High" />
 
     <ItemGroup>
