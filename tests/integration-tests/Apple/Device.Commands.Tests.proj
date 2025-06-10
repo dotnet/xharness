@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <!-- TODO: Revert -->
-    <HelixTargetQueue Include="osx.amd64.iphone.scouting.open"/>
+    <HelixTargetQueue Include="osx.13.amd64.iphone.open"/>
   </ItemGroup>
 
   <PropertyGroup>
