@@ -18,7 +18,7 @@ public abstract class iOSApplicationEntryPointBase : ApplicationEntryPoint
     /// <summary>
     /// The final path where test results in XML format will be saved.
     /// </summary>
-    public string TestsResultsFinalPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "test-results.xml");
+    public string TestsResultsFinalPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "test-results.xml");
 
     public override async Task RunAsync()
     {
@@ -30,6 +30,7 @@ public abstract class iOSApplicationEntryPointBase : ApplicationEntryPoint
         {
             using TextWriter? resultsFileMaybe = options.EnableXml ? System.IO.File.CreateText(TestsResultsFinalPath) : null;
             await InternalRunAsync(options, Logger, resultsFileMaybe);
+            Console.WriteLine($"Test results saved to: {TestsResultsFinalPath}");
         }
         else
         {

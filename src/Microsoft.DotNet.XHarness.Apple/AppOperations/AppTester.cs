@@ -292,7 +292,8 @@ public class AppTester : AppRunnerBase, IAppTester
                         appOutputLog,
                         timeout,
                         extraEnvVariables,
-                        cancellationToken);
+                        cancellationToken,
+                        runMode);
                 }
             }
 
@@ -334,7 +335,8 @@ public class AppTester : AppRunnerBase, IAppTester
         ILog appOutputLog,
         TimeSpan timeout,
         IEnumerable<(string, string)> extraEnvVariables,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        RunMode runMode)
     {
         var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
         deviceSystemLog.Timestamp = false;
@@ -400,7 +402,9 @@ public class AppTester : AppRunnerBase, IAppTester
         // Instead, copy the results file from the device to the host machine.
         if (versionParsed && osVersion!.Major >= 18)
         {
-            var resultsFilePathOnDevice = "/Documents/test-results.xml";
+            var resultsFilePathOnDevice = runMode == RunMode.iOS
+                ? "/Documents/test-results.xml"
+                : "/Library/Caches/Documents/test-results.xml";
             var resultsFilePathOnHost = deviceListener.TestLog.FullPath;
             var devicectlCmd = $"xcrun devicectl device copy from --device {device.UDID} --source {resultsFilePathOnDevice} --destination {resultsFilePathOnHost} --domain-type appDataContainer --domain-identifier {appInformation.BundleIdentifier}";
             try
