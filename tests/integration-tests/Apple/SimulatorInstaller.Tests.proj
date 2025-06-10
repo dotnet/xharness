@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.amd64.scouting.open"/>
+    <HelixTargetQueue Include="osx.amd64.iphone.scouting.open"/>
 
     <HelixWorkItem Include="SimulatorInstaller.Tests">
       <PayloadDirectory>$(RepoRoot)\tests\integration-tests\Apple\helix-payloads</PayloadDirectory>
