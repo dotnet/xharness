@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
-    <!-- TODO: Revert -->
     <HelixTargetQueue Include="osx.13.amd64.iphone.open"/>
   </ItemGroup>
 

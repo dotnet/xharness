@@ -252,10 +252,12 @@ public class AppTester : AppRunnerBase, IAppTester
                     mlaunchArguments,
                     crashReporter,
                     testReporter,
+                    deviceListener,
                     (ISimulatorDevice)device,
                     companionDevice as ISimulatorDevice,
                     timeout,
-                    cancellationToken);
+                    cancellationToken,
+                    runMode);
             }
             else
             {
@@ -307,10 +309,12 @@ public class AppTester : AppRunnerBase, IAppTester
         MlaunchArguments mlaunchArguments,
         ICrashSnapshotReporter crashReporter,
         ITestReporter testReporter,
+        ISimpleListener deviceListener,
         ISimulatorDevice simulator,
         ISimulatorDevice? companionSimulator,
         TimeSpan timeout,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        RunMode runMode)
     {
         var result = await RunSimulatorApp(
             appInformation,
@@ -323,6 +327,48 @@ public class AppTester : AppRunnerBase, IAppTester
             cancellationToken);
 
         await testReporter.CollectSimulatorResult(result);
+
+        bool versionParsed = Version.TryParse(simulator.OSVersion, out var osVersion);
+
+        // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
+        // Instead, copy the results file from the device to the host machine.
+        _mainLog.WriteLine("Copying test results from simulator...");
+        _mainLog.WriteLine($"Simulator OS version: {osVersion}");
+        if (versionParsed && osVersion!.Major >= 18)
+        {
+            try
+            {
+                var resultsFilePathOnDevice = runMode == RunMode.iOS
+                    ? "/Documents/test-results.xml"
+                    : "/Library/Caches/Documents/test-results.xml";
+                var resultsFilePathOnHost = deviceListener.TestLog.FullPath;
+                var simCtlCmd = $"xcrun simctl spawn {simulator.UDID} cat {resultsFilePathOnDevice} > \"{resultsFilePathOnHost}\"";
+
+                var _ = await _processManager.ExecuteCommandAsync(
+                    "/bin/bash",
+                    new[] { "-c", simCtlCmd },
+                    _mainLog,
+                    _mainLog,
+                    _mainLog,
+                    TimeSpan.FromMinutes(1),
+                    null,
+                    cancellationToken: cancellationToken);
+
+                if (File.Exists(resultsFilePathOnHost))
+                {
+                    _mainLog.WriteLine($"Test results copied from simulator to {resultsFilePathOnHost}");
+                }
+                else
+                {
+                    _mainLog.WriteLine($"Failed to copy test results from simulator");
+                }
+            }
+            catch (Exception ex)
+            {
+                _mainLog.WriteLine($"Exception while copying test results from simulator: {ex}");
+                throw;
+            }
+        }
     }
 
     private async Task RunDeviceTests(
