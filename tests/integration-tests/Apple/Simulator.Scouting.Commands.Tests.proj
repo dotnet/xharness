@@ -6,7 +6,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <!-- 
+    <!--
       Change to specify the exact Xcode version for testing.
       In the CustomCommands below we can probe installed Xcode versions on Helix with `ls -al /Applications` and then choosing the write path.
     -->
@@ -16,8 +16,8 @@
 
   <PropertyGroup>
     <TestAppBundleName>System.Numerics.Vectors.Tests</TestAppBundleName>
-    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app/ios-simulator-64/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
-    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\ios-simulator-64</TestAppDestinationDir>
+    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app-new/ios-simulator-64/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app-new\ios-simulator-64</TestAppDestinationDir>
   </PropertyGroup>
 
   <Target Name="TestApple" BeforeTargets="CoreTest">

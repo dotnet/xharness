@@ -53,7 +53,7 @@
     <EmbeddedResource Include="Samples\xUnitSample.xml" />
     <EmbeddedResource Include="Samples\Issue95.xml" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <None Include="Samples\TestProject\SystemXunit.csproj"
           CopyToOutputDirectory="PreserveNewest" />
