@@ -327,8 +327,20 @@ public class AppTester : AppRunnerBase, IAppTester
             cancellationToken);
 
         await testReporter.CollectSimulatorResult(result);
+        if (simulator.OSVersion == null)
+        {
+            _mainLog.WriteLine("Simulator OS version is not set, skipping result copying.");
+            return;
+        }
 
-        bool versionParsed = Version.TryParse(simulator.OSVersion.Split(" ")[1], out var osVersion);
+        var osVersionParts = simulator.OSVersion.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (osVersionParts.Length < 2)
+        {
+            _mainLog.WriteLine("Simulator OS version is not in the expected format, skipping result copying.");
+            return;
+        }
+
+        bool versionParsed = Version.TryParse(osVersionParts[1], out var osVersion);
 
         // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
         // Instead, copy the results file from the device to the host machine.
