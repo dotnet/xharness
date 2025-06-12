@@ -344,7 +344,6 @@ public class AppTester : AppRunnerBase, IAppTester
 
         // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
         // Instead, copy the results file from the device to the host machine.
-        _mainLog.WriteLine("Copying test results from simulator...");
         _mainLog.WriteLine($"Simulator OS version: {osVersion}");
         if (versionParsed && osVersion!.Major >= 18)
         {
@@ -458,6 +457,7 @@ public class AppTester : AppRunnerBase, IAppTester
 
         // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
         // Instead, copy the results file from the device to the host machine.
+        _mainLog.WriteLine($"Device OS version: {osVersion}");
         if (versionParsed && osVersion!.Major >= 18)
         {
             var resultsFilePathOnDevice = runMode == RunMode.iOS
