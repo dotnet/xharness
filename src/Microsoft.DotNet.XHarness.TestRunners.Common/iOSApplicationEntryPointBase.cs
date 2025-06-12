@@ -25,7 +25,7 @@ public abstract class iOSApplicationEntryPointBase : ApplicationEntryPoint
         var options = ApplicationOptions.Current;
 
         // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
-        // Instead, save results to a file.
+        // Instead, copy the results file from the device to the host machine.
         if (!OperatingSystem.IsMacCatalyst() && Environment.OSVersion.Version.Major >= 18)
         {
             using TextWriter? resultsFileMaybe = options.EnableXml ? System.IO.File.CreateText(TestsResultsFinalPath) : null;

@@ -204,6 +204,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 timeout,
                 null,
                 (level, message) => _mainLog.WriteLine(message));
+            IResultFileHandler resultFileHandler = new ResultFileHandler(_processManager, _mainLog);
 
             deviceListener.ConnectedTask
                 .TimeoutAfter(testLaunchTimeout)
@@ -252,6 +253,7 @@ public class AppTester : AppRunnerBase, IAppTester
                     mlaunchArguments,
                     crashReporter,
                     testReporter,
+                    resultFileHandler,
                     deviceListener,
                     (ISimulatorDevice)device,
                     companionDevice as ISimulatorDevice,
@@ -289,6 +291,7 @@ public class AppTester : AppRunnerBase, IAppTester
                         mlaunchArguments,
                         crashReporter,
                         testReporter,
+                        resultFileHandler,
                         deviceListener,
                         device,
                         appOutputLog,
@@ -309,6 +312,7 @@ public class AppTester : AppRunnerBase, IAppTester
         MlaunchArguments mlaunchArguments,
         ICrashSnapshotReporter crashReporter,
         ITestReporter testReporter,
+        IResultFileHandler resultFileHandler,
         ISimpleListener deviceListener,
         ISimulatorDevice simulator,
         ISimulatorDevice? companionSimulator,
@@ -327,58 +331,20 @@ public class AppTester : AppRunnerBase, IAppTester
             cancellationToken);
 
         await testReporter.CollectSimulatorResult(result);
-        if (simulator == null || simulator.OSVersion == null)
-        {
-            _mainLog.WriteLine("Simulator OS version is not set, skipping result copying.");
-            return;
-        }
-
-        var osVersionParts = simulator.OSVersion.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (osVersionParts.Length < 2)
-        {
-            _mainLog.WriteLine("Simulator OS version is not in the expected format, skipping result copying.");
-            return;
-        }
-
-        bool versionParsed = Version.TryParse(osVersionParts[1], out var osVersion);
 
         // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
         // Instead, copy the results file from the device to the host machine.
-        _mainLog.WriteLine($"Simulator OS version: {osVersion}");
-        if (versionParsed && osVersion!.Major >= 18)
+        if (deviceListener.TestLog != null &&
+            !await resultFileHandler.CopyResultsAsync(
+                runMode,
+                true,
+                simulator.OSVersion,
+                simulator.UDID,
+                appInformation.BundleIdentifier,
+                deviceListener.TestLog.FullPath,
+                cancellationToken))
         {
-            try
-            {
-                var resultsFilePathOnDevice = runMode == RunMode.iOS
-                    ? "/Documents/test-results.xml"
-                    : "/Library/Caches/Documents/test-results.xml";
-                var resultsFilePathOnHost = deviceListener.TestLog.FullPath;
-                var simCtlCmd = $"cp \"$(xcrun simctl get_app_container {simulator.UDID} {appInformation.BundleIdentifier} data){resultsFilePathOnDevice}\" \"{resultsFilePathOnHost}\"";
-
-                var _ = await _processManager.ExecuteCommandAsync(
-                    "/bin/bash",
-                    new[] { "-c", simCtlCmd },
-                    _mainLog,
-                    _mainLog,
-                    _mainLog,
-                    TimeSpan.FromMinutes(1),
-                    null,
-                    cancellationToken: cancellationToken);
-
-                if (File.Exists(resultsFilePathOnHost))
-                {
-                    _mainLog.WriteLine($"Test results copied from simulator to {resultsFilePathOnHost}");
-                }
-                else
-                {
-                    _mainLog.WriteLine($"Failed to copy test results from simulator");
-                }
-            }
-            catch (Exception ex)
-            {
-                _mainLog.WriteLine($"Exception while copying test results from simulator: {ex}");
-                throw;
-            }
+            throw new InvalidOperationException("Failed to copy test results from simulator to host.");
         }
     }
 
@@ -387,6 +353,7 @@ public class AppTester : AppRunnerBase, IAppTester
         MlaunchArguments mlaunchArguments,
         ICrashSnapshotReporter crashReporter,
         ITestReporter testReporter,
+        IResultFileHandler resultFileHandler,
         ISimpleListener deviceListener,
         IDevice device,
         ILog appOutputLog,
@@ -400,8 +367,6 @@ public class AppTester : AppRunnerBase, IAppTester
 
         var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.Name);
         deviceLogCapturer.StartCapture();
-
-        bool versionParsed = Version.TryParse(device.OSVersion, out var osVersion);
 
         try
         {
@@ -457,39 +422,17 @@ public class AppTester : AppRunnerBase, IAppTester
 
         // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
         // Instead, copy the results file from the device to the host machine.
-        _mainLog.WriteLine($"Device OS version: {osVersion}");
-        if (versionParsed && osVersion!.Major >= 18)
+        if (deviceListener.TestLog != null &&
+            !await resultFileHandler.CopyResultsAsync(
+                runMode,
+                false,
+                device.OSVersion,
+                device.UDID,
+                appInformation.BundleIdentifier,
+                deviceListener.TestLog.FullPath,
+                cancellationToken))
         {
-            var resultsFilePathOnDevice = runMode == RunMode.iOS
-                ? "/Documents/test-results.xml"
-                : "/Library/Caches/Documents/test-results.xml";
-            var resultsFilePathOnHost = deviceListener.TestLog.FullPath;
-            var devicectlCmd = $"xcrun devicectl device copy from --device {device.UDID} --source {resultsFilePathOnDevice} --destination {resultsFilePathOnHost} --domain-type appDataContainer --domain-identifier {appInformation.BundleIdentifier}";
-            try
-            {
-                var result = await _processManager.ExecuteCommandAsync(
-                    "/bin/bash",
-                    new List<string> { "-c", devicectlCmd },
-                    _mainLog,
-                    _mainLog,
-                    _mainLog,
-                    TimeSpan.FromMinutes(1),
-                    null,
-                    cancellationToken: cancellationToken);
-                if (File.Exists(resultsFilePathOnHost))
-                {
-                    _mainLog.WriteLine($"Test results copied from device to {resultsFilePathOnHost}");
-                }
-                else
-                {
-                    _mainLog.WriteLine($"Failed to copy test results from device");
-                }
-            }
-            catch (Exception ex)
-            {
-                _mainLog.WriteLine($"Exception while copying test results from device: {ex}");
-                throw;
-            }
+            throw new InvalidOperationException("Failed to copy test results from device to host.");
         }
     }
 
