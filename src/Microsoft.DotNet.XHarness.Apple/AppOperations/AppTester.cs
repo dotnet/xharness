@@ -328,7 +328,7 @@ public class AppTester : AppRunnerBase, IAppTester
 
         await testReporter.CollectSimulatorResult(result);
 
-        bool versionParsed = Version.TryParse(simulator.OSVersion, out var osVersion);
+        bool versionParsed = Version.TryParse(simulator.OSVersion.Split(" ")[1], out var osVersion);
 
         // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
         // Instead, copy the results file from the device to the host machine.
@@ -342,7 +342,7 @@ public class AppTester : AppRunnerBase, IAppTester
                     ? "/Documents/test-results.xml"
                     : "/Library/Caches/Documents/test-results.xml";
                 var resultsFilePathOnHost = deviceListener.TestLog.FullPath;
-                var simCtlCmd = $"xcrun simctl spawn {simulator.UDID} cat {resultsFilePathOnDevice} > \"{resultsFilePathOnHost}\"";
+                var simCtlCmd = $"cp \"$(xcrun simctl get_app_container {simulator.UDID} {appInformation.BundleIdentifier} data){resultsFilePathOnDevice}\" \"{resultsFilePathOnHost}\"";
 
                 var _ = await _processManager.ExecuteCommandAsync(
                     "/bin/bash",
