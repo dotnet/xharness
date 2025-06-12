@@ -327,7 +327,7 @@ public class AppTester : AppRunnerBase, IAppTester
             cancellationToken);
 
         await testReporter.CollectSimulatorResult(result);
-        if (simulator.OSVersion == null)
+        if (simulator == null || simulator.OSVersion == null)
         {
             _mainLog.WriteLine("Simulator OS version is not set, skipping result copying.");
             return;
