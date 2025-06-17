@@ -3,35 +3,58 @@
 // See the LICENSE file in the project root for more information.
 using System;
 using System.Threading.Tasks;
+using System.IO;
 
 #nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Common;
 
 public abstract class iOSApplicationEntryPointBase : ApplicationEntryPoint
 {
+    /// <summary>
+    /// Logger used for outputting logs. Defaults to Console.Out.
+    /// </summary>
+    public TextWriter? Logger = Console.Out;
+
+    /// <summary>
+    /// The final path where test results in XML format will be saved.
+    /// </summary>
+    public string TestsResultsFinalPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "test-results.xml");
+
     public override async Task RunAsync()
     {
         var options = ApplicationOptions.Current;
-        TcpTextWriter? writer;
 
-        try
+        // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
+        // Instead, copy the results file from the device to the host machine.
+        if (!OperatingSystem.IsMacCatalyst() && Environment.OSVersion.Version.Major >= 18)
         {
-            writer = options.UseTunnel
-                ? TcpTextWriter.InitializeWithTunnelConnection(options.HostPort)
-                : TcpTextWriter.InitializeWithDirectConnection(options.HostName, options.HostPort);
+            using TextWriter? resultsFileMaybe = options.EnableXml ? System.IO.File.CreateText(TestsResultsFinalPath) : null;
+            await InternalRunAsync(options, Logger, resultsFileMaybe);
+            Console.WriteLine($"Test results saved to: {TestsResultsFinalPath}");
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine("Failed to initialize TCP writer. Continuing on console." + Environment.NewLine + ex);
-            writer = null; // null means we will fall back to console output
-        }
+            TcpTextWriter? writer;
 
-        using (writer)
-        {
-            var logger = (writer == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, writer);
-            logger.MinimumLogLevel = MinimumLogLevel.Info;
+            try
+            {
+                writer = options.UseTunnel
+                    ? TcpTextWriter.InitializeWithTunnelConnection(options.HostPort)
+                    : TcpTextWriter.InitializeWithDirectConnection(options.HostName, options.HostPort);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failed to initialize TCP writer. Continuing on console." + Environment.NewLine + ex);
+                writer = null; // null means we will fall back to console output
+            }
 
-            await InternalRunAsync(options, writer, writer);
+            using (writer)
+            {
+                var logger = (writer == null || options.EnableXml) ? new LogWriter(Device) : new LogWriter(Device, writer);
+                logger.MinimumLogLevel = MinimumLogLevel.Info;
+
+                await InternalRunAsync(options, writer, writer);
+            }
         }
     }
 }
