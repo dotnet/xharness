@@ -214,9 +214,10 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         bool signalAppEnd,
         CancellationToken cancellationToken)
     {
+        bool versionParsed = Version.TryParse(device.OSVersion, out var version);
         // iOS 14+ devices do not allow local network access and won't work unless the user confirms a dialog on the screen
         // https://developer.apple.com/forums/thread/663858
-        if (Version.TryParse(device.OSVersion, out var version) && version.Major >= 14 && target.Platform.ToRunMode() == RunMode.iOS && communicationChannel == CommunicationChannel.Network)
+        if (versionParsed && version!.Major >= 14 && target.Platform.ToRunMode() == RunMode.iOS && communicationChannel == CommunicationChannel.Network)
         {
             _logger.LogWarning(
                 "Applications need user permission for communication over local network on iOS 14 and newer." + Environment.NewLine +
@@ -231,7 +232,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
 
         _logger.LogInformation("Starting test run for " + appBundleInfo.BundleIdentifier + "..");
 
-        var appTester = GetAppTester(communicationChannel, target.Platform.IsSimulator());
+        var appTester = GetAppTester(communicationChannel, target.Platform.IsSimulator(), version);
 
         (TestExecutingResult testResult, string resultMessage) = await appTester.TestApp(
             appBundleInfo,
@@ -248,7 +249,15 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
 
-        return ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+        ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+
+        if (!target.Platform.IsSimulator()) // Simulator app logs are already included in the main log
+        {
+            // Copy system and application logs to the main log for better failure investigation.
+            CopyLogsToMainLog();
+        }
+
+        return exitCode;
     }
 
     private async Task<ExitCode> ExecuteMacCatalystApp(
@@ -264,7 +273,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         bool signalAppEnd,
         CancellationToken cancellationToken)
     {
-        var appTester = GetAppTester(communicationChannel, TestTarget.MacCatalyst.IsSimulator());
+        var appTester = GetAppTester(communicationChannel, TestTarget.MacCatalyst.IsSimulator(), null);
 
         (TestExecutingResult testResult, string resultMessage) = await appTester.TestMacCatalystApp(
             appBundleInfo,
@@ -278,15 +287,20 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
 
-        return ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+        ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+
+        // Copy system and application logs to the main log for better failure investigation.
+        CopyLogsToMainLog();
+
+        return exitCode;
     }
 
-    private IAppTester GetAppTester(CommunicationChannel communicationChannel, bool isSimulator)
+    private IAppTester GetAppTester(CommunicationChannel communicationChannel, bool isSimulator, Version? osVersion)
     {
         // Only add the extra callback if we do know that the feature was indeed enabled
         Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(_logger, l) : null;
 
-        return _appTesterFactory.Create(communicationChannel, isSimulator, _mainLog, _logs, logCallback);
+        return _appTesterFactory.Create(communicationChannel, isSimulator, _mainLog, _logs, logCallback, osVersion);
     }
 
     private ExitCode ParseResult(TestExecutingResult testResult, string resultMessage, bool listenerConnected)
@@ -362,6 +376,40 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
                 _logger.LogError($"Application test run ended in an unexpected way: '{testResult}'" +
                     newLine + (resultMessage != null ? resultMessage + newLine + newLine : null) + checkLogsMessage);
                 return ExitCode.GENERAL_FAILURE;
+        }
+    }
+
+    /// <summary>
+    /// Copy system and application logs to the main log for better failure investigation.
+    /// </summary>
+    private void CopyLogsToMainLog()
+    {
+        var logs = _logs.Where(log => log.Description == LogType.SystemLog.ToString() || log.Description == LogType.ApplicationLog.ToString()).ToList();
+
+        foreach (var log in logs)
+        {
+            _mainLog.WriteLine($"==================== {log.Description} ====================");
+            _mainLog.WriteLine($"Log file: {log.FullPath}");
+
+            try
+            {
+                // Read and append log content to the main log
+                using var reader = log.GetReader();
+                while (!reader.EndOfStream)
+                {
+                    var logContent = reader.ReadLine();
+                    if (logContent is null)
+                        continue;
+                    _mainLog.WriteLine(logContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _mainLog.WriteLine($"Failed to read {log.Description}: {ex.Message}");
+            }
+
+            _mainLog.WriteLine($"==================== End of {log.Description} ====================");
+            _mainLog.WriteLine(string.Empty);
         }
     }
 }

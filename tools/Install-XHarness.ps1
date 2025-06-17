@@ -16,7 +16,7 @@ $xharness_version = "10.0.0-prerelease.$Version"
 
 # Install .NET
 Write-Host "Getting dotnet-install.ps1.." -ForegroundColor Cyan
-Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "dotnet-install.ps1"
+Invoke-WebRequest -Uri "https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.ps1" -OutFile "dotnet-install.ps1"
 
 Write-Host "Installing .NET SDK locally to " -NoNewline -ForegroundColor Cyan
 Write-Host ".dotnet" -ForegroundColor Yellow

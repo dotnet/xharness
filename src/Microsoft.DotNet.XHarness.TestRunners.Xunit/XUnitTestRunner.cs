@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -35,7 +36,14 @@ internal class XUnitTestRunner : XunitTestRunnerBase
 
     private XElement _assembliesElement;
 
-    internal XElement AssembliesElement => _assembliesElement;
+    internal XElement ConsumeAssembliesElement()
+    {
+        Debug.Assert(_assembliesElement != null, "ConsumeAssembliesElement called before Run() or after ConsumeAssembliesElement() was already called.");
+        var res = _assembliesElement;
+        _assembliesElement = null;
+        FailureInfos.Clear();
+        return res;
+    }
 
     public AppDomainSupport AppDomainSupport { get; set; } = AppDomainSupport.Denied;
     protected override string ResultsFileName { get; set; } = "TestResults.xUnit.xml";
@@ -901,11 +909,11 @@ internal class XUnitTestRunner : XunitTestRunnerBase
         TotalTests += FilteredTests; // ensure that we do have in the total run the excluded ones.
     }
 
-    public override string WriteResultsToFile(XmlResultJargon jargon)
+    public override Task<string> WriteResultsToFile(XmlResultJargon jargon)
     {
         if (_assembliesElement == null)
         {
-            return string.Empty;
+            return Task.FromResult(string.Empty);
         }
         // remove all the empty nodes
         _assembliesElement.Descendants().Where(e => e.Name == "collection" && !e.Descendants().Any()).Remove();
@@ -928,13 +936,13 @@ internal class XUnitTestRunner : XunitTestRunnerBase
             }
         }
 
-        return outputFilePath;
+        return Task.FromResult(outputFilePath);
     }
-    public override void WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
+    public override Task WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
     {
         if (_assembliesElement == null)
         {
-            return;
+            return Task.CompletedTask;
         }
         // remove all the empty nodes
         _assembliesElement.Descendants().Where(e => e.Name == "collection" && !e.Descendants().Any()).Remove();
@@ -969,6 +977,7 @@ internal class XUnitTestRunner : XunitTestRunnerBase
                     break;
             }
         }
+        return Task.CompletedTask;
     }
 
     private void Transform_Results(string xsltResourceName, XElement element, XmlWriter writer)

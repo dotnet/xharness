@@ -25,6 +25,7 @@ internal class WasiTestCommandArguments : XHarnessCommandArguments, IWebServerAr
     public WebServerUseCrossOriginPolicyArguments WebServerUseCrossOriginPolicy { get; } = new();
     public WebServerUseDefaultFilesArguments WebServerUseDefaultFiles { get; } = new();
     public bool IsWebServerEnabled => WebServerMiddlewarePathsAndTypes.Value.Count > 0;
+    public WebServerUploadResults WebServerUploadResults { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {

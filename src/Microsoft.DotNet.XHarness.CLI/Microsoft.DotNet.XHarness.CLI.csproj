@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>$(NetCurrent);$(NetPrevious);$(NetMinimum)</TargetFrameworks>
+    <TargetFrameworks>$(NetPrevious);$(NetMinimum)</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>xharness</ToolCommandName>
@@ -26,9 +26,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Tools.Mlaunch" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
     <PackageReference Include="Mono.Options" />
     <PackageReference Include="Selenium.WebDriver" />
   </ItemGroup>

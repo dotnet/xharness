@@ -85,7 +85,11 @@ public class iOSExitCodeDetector : ExitCodeDetector, IiOSExitCodeDetector
 {
     // Example line coming from the mlaunch log
     // [07:02:21.6637600] Application 'net.dot.iOS.Simulator.PInvoke.Test' terminated (with exit code '42' and/or crashing signal ').
-    private Regex DeviceExitCodeRegex { get; } = new Regex(@"terminated \(with exit code '(?<exitCode>-?[0-9]+)' and/or crashing signal", RegexOptions.Compiled);
+    private Regex[] DeviceExitCodeRegexes { get; } = new Regex[]
+    {
+        new Regex(@"terminated \(with exit code '(?<exitCode>-?[0-9]+)' and/or crashing signal", RegexOptions.Compiled),
+        new Regex(@"Failed to execute 'devicectl':.*returned the exit code (?<exitCode>\d+)\.", RegexOptions.Compiled)
+    };
 
     protected override Match? IsSignalLine(AppBundleInformation appBundleInfo, string logLine)
     {
@@ -96,7 +100,14 @@ public class iOSExitCodeDetector : ExitCodeDetector, IiOSExitCodeDetector
 
         if (logLine.Contains(appBundleInfo.BundleIdentifier))
         {
-            return DeviceExitCodeRegex.Match(logLine);
+            foreach (var regex in DeviceExitCodeRegexes)
+            {
+                var m = regex.Match(logLine);
+                if (m.Success)
+                {
+                    return m;
+                }
+            }
         }
 
         return null;

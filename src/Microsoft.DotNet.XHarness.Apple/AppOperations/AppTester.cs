@@ -204,6 +204,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 timeout,
                 null,
                 (level, message) => _mainLog.WriteLine(message));
+            IResultFileHandler resultFileHandler = new ResultFileHandler(_processManager, _mainLog);
 
             deviceListener.ConnectedTask
                 .TimeoutAfter(testLaunchTimeout)
@@ -252,10 +253,13 @@ public class AppTester : AppRunnerBase, IAppTester
                     mlaunchArguments,
                     crashReporter,
                     testReporter,
+                    resultFileHandler,
+                    deviceListener,
                     (ISimulatorDevice)device,
                     companionDevice as ISimulatorDevice,
                     timeout,
-                    cancellationToken);
+                    cancellationToken,
+                    runMode);
             }
             else
             {
@@ -283,15 +287,18 @@ public class AppTester : AppRunnerBase, IAppTester
                         appEndTag);
 
                     await RunDeviceTests(
+                        appInformation,
                         mlaunchArguments,
                         crashReporter,
                         testReporter,
+                        resultFileHandler,
                         deviceListener,
                         device,
                         appOutputLog,
                         timeout,
                         extraEnvVariables,
-                        cancellationToken);
+                        cancellationToken,
+                        runMode);
                 }
             }
 
@@ -305,10 +312,13 @@ public class AppTester : AppRunnerBase, IAppTester
         MlaunchArguments mlaunchArguments,
         ICrashSnapshotReporter crashReporter,
         ITestReporter testReporter,
+        IResultFileHandler resultFileHandler,
+        ISimpleListener deviceListener,
         ISimulatorDevice simulator,
         ISimulatorDevice? companionSimulator,
         TimeSpan timeout,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        RunMode runMode)
     {
         var result = await RunSimulatorApp(
             appInformation,
@@ -321,18 +331,36 @@ public class AppTester : AppRunnerBase, IAppTester
             cancellationToken);
 
         await testReporter.CollectSimulatorResult(result);
+
+        // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
+        // Instead, copy the results file from the device to the host machine.
+        if (deviceListener.TestLog != null &&
+            !await resultFileHandler.CopyResultsAsync(
+                runMode,
+                true,
+                simulator.OSVersion,
+                simulator.UDID,
+                appInformation.BundleIdentifier,
+                deviceListener.TestLog.FullPath,
+                cancellationToken))
+        {
+            throw new InvalidOperationException("Failed to copy test results from simulator to host.");
+        }
     }
 
     private async Task RunDeviceTests(
+        AppBundleInformation appInformation,
         MlaunchArguments mlaunchArguments,
         ICrashSnapshotReporter crashReporter,
         ITestReporter testReporter,
+        IResultFileHandler resultFileHandler,
         ISimpleListener deviceListener,
         IDevice device,
         ILog appOutputLog,
         TimeSpan timeout,
         IEnumerable<(string, string)> extraEnvVariables,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        RunMode runMode)
     {
         var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
         deviceSystemLog.Timestamp = false;
@@ -362,15 +390,12 @@ public class AppTester : AppRunnerBase, IAppTester
             // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit)
             IFileBackedLog aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
 
-            // The app output log is not directly accessible. 
-            // Hence, we duplicate the log to the main console log to simplify the UX of failure investigation.
-            IFileBackedLog aggregatedAppOutputLog = Log.CreateReadableAggregatedLog(_mainLog, appOutputLog);
 
             var result = await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
                 mlaunchArguments,
                 aggregatedLog,
-                aggregatedAppOutputLog,
-                aggregatedAppOutputLog,
+                appOutputLog,
+                appOutputLog,
                 timeout,
                 envVars,
                 cancellationToken: cancellationToken));
@@ -393,6 +418,21 @@ public class AppTester : AppRunnerBase, IAppTester
         if (File.Exists(deviceSystemLog.FullPath))
         {
             _mainLog.WriteLine("Device log captured in {0}", deviceSystemLog.FullPath);
+        }
+
+        // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
+        // Instead, copy the results file from the device to the host machine.
+        if (deviceListener.TestLog != null &&
+            !await resultFileHandler.CopyResultsAsync(
+                runMode,
+                false,
+                device.OSVersion,
+                device.UDID,
+                appInformation.BundleIdentifier,
+                deviceListener.TestLog.FullPath,
+                cancellationToken))
+        {
+            throw new InvalidOperationException("Failed to copy test results from device to host.");
         }
     }
 
