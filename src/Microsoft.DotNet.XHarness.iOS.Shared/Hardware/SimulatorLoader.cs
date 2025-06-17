@@ -77,6 +77,15 @@ public class SimulatorLoader : ISimulatorLoader
                 new ListSimulatorsArgument(tmpfile),
                 new XmlOutputFormatArgument());
 
+
+            await _processManager.ExecuteCommandAsync(
+                "/bin/bash",
+                new[] { "-c", "xcrun simctl --version" },
+                log,
+                TimeSpan.FromMinutes(1),
+                null,
+                cancellationToken);
+
             var result = await _processManager.ExecuteCommandAsync(arguments, log, timeout: TimeSpan.FromMinutes(6), cancellationToken: cancellationToken);
 
             cancellationToken.ThrowIfCancellationRequested();
