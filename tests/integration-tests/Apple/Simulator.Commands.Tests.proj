@@ -10,8 +10,8 @@
 
   <PropertyGroup>
     <TestAppBundleName>System.Numerics.Vectors.Tests</TestAppBundleName>
-    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app/ios-simulator-64/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
-    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\ios-simulator-64</TestAppDestinationDir>
+    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app-new/ios-simulator-64/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app-new\ios-simulator-64</TestAppDestinationDir>
   </PropertyGroup>
 
   <Target Name="TestApple" BeforeTargets="CoreTest">

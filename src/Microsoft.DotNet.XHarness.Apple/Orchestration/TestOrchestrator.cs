@@ -214,9 +214,10 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         bool signalAppEnd,
         CancellationToken cancellationToken)
     {
+        bool versionParsed = Version.TryParse(device.OSVersion, out var version);
         // iOS 14+ devices do not allow local network access and won't work unless the user confirms a dialog on the screen
         // https://developer.apple.com/forums/thread/663858
-        if (Version.TryParse(device.OSVersion, out var version) && version.Major >= 14 && target.Platform.ToRunMode() == RunMode.iOS && communicationChannel == CommunicationChannel.Network)
+        if (versionParsed && version!.Major >= 14 && target.Platform.ToRunMode() == RunMode.iOS && communicationChannel == CommunicationChannel.Network)
         {
             _logger.LogWarning(
                 "Applications need user permission for communication over local network on iOS 14 and newer." + Environment.NewLine +
@@ -231,7 +232,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
 
         _logger.LogInformation("Starting test run for " + appBundleInfo.BundleIdentifier + "..");
 
-        var appTester = GetAppTester(communicationChannel, target.Platform.IsSimulator());
+        var appTester = GetAppTester(communicationChannel, target.Platform.IsSimulator(), version);
 
         (TestExecutingResult testResult, string resultMessage) = await appTester.TestApp(
             appBundleInfo,
@@ -255,7 +256,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             // Copy system and application logs to the main log for better failure investigation.
             CopyLogsToMainLog();
         }
-        
+
         return exitCode;
     }
 
@@ -272,7 +273,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         bool signalAppEnd,
         CancellationToken cancellationToken)
     {
-        var appTester = GetAppTester(communicationChannel, TestTarget.MacCatalyst.IsSimulator());
+        var appTester = GetAppTester(communicationChannel, TestTarget.MacCatalyst.IsSimulator(), null);
 
         (TestExecutingResult testResult, string resultMessage) = await appTester.TestMacCatalystApp(
             appBundleInfo,
@@ -294,12 +295,12 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         return exitCode;
     }
 
-    private IAppTester GetAppTester(CommunicationChannel communicationChannel, bool isSimulator)
+    private IAppTester GetAppTester(CommunicationChannel communicationChannel, bool isSimulator, Version? osVersion)
     {
         // Only add the extra callback if we do know that the feature was indeed enabled
         Action<string>? logCallback = IsLldbEnabled() ? (l) => NotifyUserLldbCommand(_logger, l) : null;
 
-        return _appTesterFactory.Create(communicationChannel, isSimulator, _mainLog, _logs, logCallback);
+        return _appTesterFactory.Create(communicationChannel, isSimulator, _mainLog, _logs, logCallback, osVersion);
     }
 
     private ExitCode ParseResult(TestExecutingResult testResult, string resultMessage, bool listenerConnected)
@@ -389,7 +390,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         {
             _mainLog.WriteLine($"==================== {log.Description} ====================");
             _mainLog.WriteLine($"Log file: {log.FullPath}");
-            
+
             try
             {
                 // Read and append log content to the main log
@@ -406,7 +407,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             {
                 _mainLog.WriteLine($"Failed to read {log.Description}: {ex.Message}");
             }
-            
+
             _mainLog.WriteLine($"==================== End of {log.Description} ====================");
             _mainLog.WriteLine(string.Empty);
         }
