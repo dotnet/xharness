@@ -284,7 +284,7 @@ public sealed class LaunchDeviceArgument : SingleValueArgument
 }
 
 /// <summary>
-/// Launch an app that is installed on device, 
+/// Launch an app that is installed on device.
 /// </summary>
 public sealed class LaunchDeviceBundleIdArgument : SingleValueArgument
 {
@@ -435,4 +435,19 @@ public sealed class TimeoutArgument : SingleValueArgument
     public TimeoutArgument(double timeoutInSeconds) : base("timeout", timeoutInSeconds.ToString())
     {
     }
+}
+
+/// <summary>
+/// Specify whether to use the `simctl` command to manage simulators.
+/// </summary>
+public sealed class UseSimCtlArgument : MlaunchArgument
+{
+    private readonly string _value;
+
+    public UseSimCtlArgument(bool value)
+    {
+        this._value = value ? "true" : "false";
+    }
+
+    public override string AsCommandLineArgument() => "--use-sim-ctl:" + _value;
 }
