@@ -64,7 +64,7 @@ public class AppInstallerTests : IDisposable
         // Verify
         Assert.Equal(0, result.ExitCode);
 
-        var expectedArgs = $"--device=:v2:udid={s_mockDevice.UDID} --installsim {StringUtils.FormatArguments(s_appPath)}";
+        var expectedArgs = $"--device=:v2:udid={s_mockDevice.UDID} --installsim {StringUtils.FormatArguments(s_appPath)} --use-sim-ctl:false";
 
         _processManager.Verify(x => x.ExecuteCommandAsync(
            It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
