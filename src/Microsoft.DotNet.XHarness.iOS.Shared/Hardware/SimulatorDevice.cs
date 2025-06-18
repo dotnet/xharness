@@ -129,8 +129,16 @@ public class SimulatorDevice : ISimulatorDevice
         // We shutdown and erase all simulators.
         await Erase(log);
 
-        var tccDB = Path.Combine(DataPath, "data", "Library", "TCC", "TCC.db");
-        if (!File.Exists(tccDB))
+        var tccDBCandidates = new string[] {
+            Path.Combine(DataPath, "data", "Library", "TCC", "TCC.db"),
+            Path.Combine(DataPath, "Library", "TCC", "TCC.db"),
+        };
+        var tccDB = "";
+        var checkForTccDB = new Func<bool>(() => {
+            tccDB = tccDBCandidates.FirstOrDefault(candidate => File.Exists(candidate)) ?? "";
+            return !string.IsNullOrEmpty(tccDB);
+        });
+        if (!checkForTccDB())
         {
             log.WriteLine("Booting the simulator to create TCC.db");
             await _processManager.ExecuteXcodeCommandAsync("simctl", new[] { "boot", UDID }, log, TimeSpan.FromMinutes(1));
@@ -138,7 +146,7 @@ public class SimulatorDevice : ISimulatorDevice
             var tccCreationTimeout = 60;
             var watch = new Stopwatch();
             watch.Start();
-            while (!File.Exists(tccDB) && watch.Elapsed.TotalSeconds < tccCreationTimeout)
+            while (!checkForTccDB() && watch.Elapsed.TotalSeconds < tccCreationTimeout)
             {
                 log.WriteLine("Waiting for simulator to create TCC.db... {0}", (int)(tccCreationTimeout - watch.Elapsed.TotalSeconds));
                 await Task.Delay(TimeSpan.FromSeconds(0.250));
@@ -148,7 +156,7 @@ public class SimulatorDevice : ISimulatorDevice
         var result = true;
         if (File.Exists(tccDB))
         {
-            log.WriteLine("TCC.db found for the simulator {0} (SimRuntime={1} and SimDeviceType={1})", UDID, SimRuntime, SimDeviceType);
+            log.WriteLine("TCC.db found for the simulator {0} (SimRuntime={1} and SimDeviceType={2}): {3}", UDID, SimRuntime, SimDeviceType, tccDB);
             bundleIdentifiers = bundleIdentifiers.Where(id => !string.IsNullOrEmpty(id)).ToArray();
             if (bundleIdentifiers.Any())
             {
@@ -158,7 +166,7 @@ public class SimulatorDevice : ISimulatorDevice
         }
         else
         {
-            log.WriteLine("TCC.db not found for the simulator {0} (SimRuntime={1} and SimDeviceType={1})", UDID, SimRuntime, SimDeviceType);
+            log.WriteLine("TCC.db not found for the simulator {0} (SimRuntime={1} and SimDeviceType={2}). Candidates:\n{3}", UDID, SimRuntime, SimDeviceType, string.Join ("\n\t", tccDBCandidates));
         }
 
         // Make sure we're in a clean state
