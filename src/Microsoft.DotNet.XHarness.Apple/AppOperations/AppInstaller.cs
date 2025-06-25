@@ -52,7 +52,6 @@ public class AppInstaller : IAppInstaller
         {
             args.Add(new SimulatorUDIDArgument(device));
             args.Add(new InstallAppOnSimulatorArgument(appBundleInformation.LaunchAppPath));
-            args.Add(new UseSimCtlArgument(false));
         }
         else
         {
