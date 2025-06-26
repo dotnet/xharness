@@ -13,11 +13,7 @@ using Xunit.Abstractions;
 #endif
 
 #nullable enable
-#if USE_XUNIT_V3
-namespace Microsoft.DotNet.XHarness.TestRunners.Xunit.v3;
-#else
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
-#endif
 
 /// <summary>
 /// Class that contains a collection of filters and can be used to decide if a test should be executed or not.

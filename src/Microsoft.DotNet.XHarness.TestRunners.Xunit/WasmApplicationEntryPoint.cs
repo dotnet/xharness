@@ -9,11 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 
 #nullable enable
-#if USE_XUNIT_V3
-namespace Microsoft.DotNet.XHarness.TestRunners.Xunit.v3;
-#else
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
-#endif
 
 public abstract class WasmApplicationEntryPoint : WasmApplicationEntryPointBase
 {

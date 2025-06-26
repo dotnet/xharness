@@ -25,6 +25,12 @@
     <Compile Include="..\Microsoft.DotNet.XHarness.TestRunners.Xunit\TestCaseExtensions.cs">
       <Link>TestCaseExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\Microsoft.DotNet.XHarness.TestRunners.Xunit\XUnitTestRunner.cs">
+      <Link>XUnitTestRunner.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.DotNet.XHarness.TestRunners.Xunit\XunitTestRunnerBase.cs">
+      <Link>XunitTestRunnerBase.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.DotNet.XHarness.TestRunners.Xunit\AndroidApplicationEntryPoint.cs">
       <Link>AndroidApplicationEntryPoint.cs</Link>
     </Compile>

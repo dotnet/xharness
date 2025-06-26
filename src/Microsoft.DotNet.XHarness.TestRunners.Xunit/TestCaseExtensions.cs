@@ -12,11 +12,7 @@ using Xunit.Abstractions;
 #endif
 
 #nullable enable
-#if USE_XUNIT_V3
-namespace Microsoft.DotNet.XHarness.TestRunners.Xunit.v3;
-#else
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
-#endif
 
 /// <summary>
 /// Useful extensions that make working with the ITestCase interface nicer within the runner.
