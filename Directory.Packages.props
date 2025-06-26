@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <XUnitVersion>2.9.3</XUnitVersion>
-    <XUnitV3Version>3.0.0-pre.25</XUnitV3Version>
+    <XUnitV3Version>2.0.3</XUnitV3Version>
   </PropertyGroup>
 
   <ItemGroup>

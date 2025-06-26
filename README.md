@@ -153,7 +153,7 @@ Currently we support **xunit v2**, **xunit v3**, and **NUnit** test assemblies b
 XHarness supports both xunit v2 and the newer xunit v3:
 
 - **xunit v2**: `Microsoft.DotNet.XHarness.TestRunners.Xunit` (stable, recommended for production)
-- **xunit v3**: `Microsoft.DotNet.XHarness.TestRunners.Xunit.v3` (preview, for early adopters)
+- **xunit v3**: `Microsoft.DotNet.XHarness.TestRunners.Xunit.v3` (stable, latest xunit architecture)
 
 For guidance on choosing between versions, see the [xunit Version Selection Guide](docs/XunitVersionSelection.md).
 

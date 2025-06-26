@@ -7,7 +7,7 @@ XHarness now supports both xunit v2 and xunit v3. This document helps you choose
 | Feature | xunit v2 | xunit v3 |
 |---------|----------|----------|
 | **Package** | `Microsoft.DotNet.XHarness.TestRunners.Xunit` | `Microsoft.DotNet.XHarness.TestRunners.Xunit.v3` |
-| **Stability** | ✅ Stable (2.9.3) | ⚠️ Prerelease (3.0.0-pre.25) |
+| **Stability** | ✅ Stable (2.9.3) | ✅ Stable (2.0.3) |
 | **API Compatibility** | ✅ Mature | ⚠️ Breaking changes |
 | **Performance** | ✅ Proven | 🔄 To be evaluated |
 | **Features** | ✅ Full implementation | ⚠️ Basic implementation |
@@ -30,7 +30,7 @@ XHarness now supports both xunit v2 and xunit v3. This document helps you choose
 **Recommended for:**
 - New projects that want to adopt the latest xunit
 - Projects that need xunit v3 specific features
-- Early adopters willing to work with prerelease software
+- Projects wanting to use the latest stable xunit architecture
 - Testing and evaluation scenarios
 
 **Example project reference:**
@@ -75,8 +75,8 @@ Simply reverse the above steps. The XHarness-level APIs are designed to be compa
 - `xunit.runner.utility` (2.9.3)
 
 **xunit v3:**
-- `xunit.v3.extensibility.core` (3.0.0-pre.25)
-- `xunit.v3.runner.common` (3.0.0-pre.25)
+- `xunit.v3.extensibility.core` (2.0.3)
+- `xunit.v3.runner.common` (2.0.3)
 
 ### Key API Changes in v3
 
