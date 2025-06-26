@@ -17,7 +17,11 @@ using System.Xml.Xsl;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 using Xunit;
+#if USE_XUNIT_V3
+using Xunit.v3;
+#else
 using Xunit.Abstractions;
+#endif
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
