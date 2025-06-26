@@ -5,7 +5,11 @@
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 
 #nullable enable
+#if USE_XUNIT_V3
+namespace Microsoft.DotNet.XHarness.TestRunners.Xunit.v3;
+#else
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
+#endif
 
 public abstract class AndroidApplicationEntryPoint : AndroidApplicationEntryPointBase
 {
@@ -13,7 +17,11 @@ public abstract class AndroidApplicationEntryPoint : AndroidApplicationEntryPoin
 
     protected override TestRunner GetTestRunner(LogWriter logWriter)
     {
+#if USE_XUNIT_V3
+        var runner = new XUnitTestRunner(logWriter);
+#else
         var runner = new XUnitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
+#endif
         ConfigureRunnerFilters(runner, ApplicationOptions.Current);
         return runner;
     }

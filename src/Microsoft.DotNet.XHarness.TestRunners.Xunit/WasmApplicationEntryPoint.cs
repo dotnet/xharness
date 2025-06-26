@@ -9,7 +9,11 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 
 #nullable enable
+#if USE_XUNIT_V3
+namespace Microsoft.DotNet.XHarness.TestRunners.Xunit.v3;
+#else
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
+#endif
 
 public abstract class WasmApplicationEntryPoint : WasmApplicationEntryPointBase
 {
@@ -27,6 +31,11 @@ public abstract class WasmApplicationEntryPoint : WasmApplicationEntryPointBase
 
     protected override TestRunner GetTestRunner(LogWriter logWriter)
     {
+#if USE_XUNIT_V3
+        var runner = new XUnitTestRunner(logWriter);
+        ConfigureRunnerFilters(runner, ApplicationOptions.Current);
+        return runner;
+#else
         XunitTestRunnerBase runner = IsThreadless
             ? new ThreadlessXunitTestRunner(logWriter)
             : new WasmThreadedTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
@@ -50,6 +59,7 @@ public abstract class WasmApplicationEntryPoint : WasmApplicationEntryPointBase
             runner.SkipNamespace(ns, isExcluded: false);
         }
         return runner;
+#endif
     }
 
     protected override IEnumerable<TestAssemblyInfo> GetTestAssemblies()

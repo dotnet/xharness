@@ -10,11 +10,11 @@ using Microsoft.DotNet.XHarness.TestRunners.Common;
 #nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit.v3;
 
-public abstract class XunitV3TestRunnerBase : TestRunner
+public abstract class XunitTestRunnerBase : TestRunner
 {
     private protected XUnitFiltersCollection _filters = new();
 
-    protected XunitV3TestRunnerBase(LogWriter logger) : base(logger)
+    protected XunitTestRunnerBase(LogWriter logger) : base(logger)
     {
     }
 

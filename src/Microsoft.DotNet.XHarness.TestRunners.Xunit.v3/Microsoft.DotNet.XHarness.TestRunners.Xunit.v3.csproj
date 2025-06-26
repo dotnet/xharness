@@ -4,11 +4,36 @@
     <TargetFramework>$(NetMinimum)</TargetFramework>
     <IsPackable>true</IsPackable>
     <Nullable>disable</Nullable>
+    <DefineConstants>USE_XUNIT_V3</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="xunit.v3.extensibility.core" />
     <PackageReference Include="xunit.v3.runner.common" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.XHarness.TestRunners.Xunit\XUnitFilter.cs">
+      <Link>XUnitFilter.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.DotNet.XHarness.TestRunners.Xunit\XUnitFilterType.cs">
+      <Link>XUnitFilterType.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.DotNet.XHarness.TestRunners.Xunit\XUnitFiltersCollection.cs">
+      <Link>XUnitFiltersCollection.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.DotNet.XHarness.TestRunners.Xunit\TestCaseExtensions.cs">
+      <Link>TestCaseExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.DotNet.XHarness.TestRunners.Xunit\AndroidApplicationEntryPoint.cs">
+      <Link>AndroidApplicationEntryPoint.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.DotNet.XHarness.TestRunners.Xunit\iOSApplicationEntryPoint.cs">
+      <Link>iOSApplicationEntryPoint.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.DotNet.XHarness.TestRunners.Xunit\WasmApplicationEntryPoint.cs">
+      <Link>WasmApplicationEntryPoint.cs</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

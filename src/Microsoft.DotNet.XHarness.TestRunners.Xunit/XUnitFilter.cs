@@ -7,10 +7,18 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
+#if USE_XUNIT_V3
+using Xunit.v3;
+#else
 using Xunit.Abstractions;
+#endif
 
 #nullable enable
+#if USE_XUNIT_V3
+namespace Microsoft.DotNet.XHarness.TestRunners.Xunit.v3;
+#else
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
+#endif
 
 internal class XUnitFilter
 {

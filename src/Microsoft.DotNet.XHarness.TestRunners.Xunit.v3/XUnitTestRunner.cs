@@ -16,13 +16,13 @@ using Xunit.v3;
 #nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit.v3;
 
-internal class XunitV3TestRunner : XunitV3TestRunnerBase
+internal class XUnitTestRunner : XunitTestRunnerBase
 {
     private XElement _assembliesElement;
 
     protected override string ResultsFileName { get; set; } = "TestResults.xUnit.v3.xml";
 
-    public XunitV3TestRunner(LogWriter logger) : base(logger)
+    public XUnitTestRunner(LogWriter logger) : base(logger)
     {
     }
 
