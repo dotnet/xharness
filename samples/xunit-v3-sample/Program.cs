@@ -36,7 +36,7 @@ public class Program : WasmApplicationEntryPoint
         using var writer = new StringWriter();
         var logger = new LogWriter(writer);
         
-        var runner = new XunitV3TestRunner(logger);
+        var runner = new XUnitTestRunner(logger);
         
         // Run tests in this assembly
         var assemblyInfo = new TestAssemblyInfo(

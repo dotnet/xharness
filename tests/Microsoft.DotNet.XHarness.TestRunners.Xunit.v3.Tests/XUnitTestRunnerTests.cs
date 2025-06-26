@@ -10,14 +10,14 @@ using Xunit.v3;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit.v3.Tests;
 
-public class XunitV3TestRunnerTests
+public class XUnitTestRunnerTests
 {
     [Fact]
     public void TestRunner_CanBeCreated()
     {
         using var writer = new StringWriter();
         var logger = new LogWriter(writer);
-        var runner = new XunitV3TestRunner(logger);
+        var runner = new XUnitTestRunner(logger);
         
         Assert.NotNull(runner);
         Assert.Equal("TestResults.xUnit.v3.xml", runner.ResultsFileName);
@@ -28,7 +28,7 @@ public class XunitV3TestRunnerTests
     {
         using var writer = new StringWriter();
         var logger = new LogWriter(writer);
-        var runner = new XunitV3TestRunner(logger);
+        var runner = new XUnitTestRunner(logger);
         
         Assert.Contains("v3", runner.ResultsFileName);
     }
@@ -38,7 +38,7 @@ public class XunitV3TestRunnerTests
     {
         using var writer = new StringWriter();
         var logger = new LogWriter(writer);
-        var runner = new XunitV3TestRunner(logger);
+        var runner = new XUnitTestRunner(logger);
         
         await runner.Run(Enumerable.Empty<TestAssemblyInfo>());
         
@@ -52,10 +52,10 @@ public class XunitV3TestRunnerTests
     {
         using var writer = new StringWriter();
         var logger = new LogWriter(writer);
-        var runner = new XunitV3TestRunner(logger);
+        var runner = new XUnitTestRunner(logger);
         
         var assemblyInfo = new TestAssemblyInfo(
-            Assembly: typeof(XunitV3TestRunnerTests).Assembly,
+            Assembly: typeof(XUnitTestRunnerTests).Assembly,
             AssemblyPath: "test.dll"
         );
         
