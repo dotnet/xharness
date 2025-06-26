@@ -28,9 +28,7 @@ public abstract class WasmApplicationEntryPoint : WasmApplicationEntryPointBase
     protected override TestRunner GetTestRunner(LogWriter logWriter)
     {
 #if USE_XUNIT_V3
-        var runner = new XUnitTestRunner(logWriter);
-        ConfigureRunnerFilters(runner, ApplicationOptions.Current);
-        return runner;
+        throw new NotSupportedException("xunit v3 is not supported for WASM applications.");
 #else
         XunitTestRunnerBase runner = IsThreadless
             ? new ThreadlessXunitTestRunner(logWriter)
