@@ -16,8 +16,10 @@
     <PackageVersion Include="Microsoft.Tools.Mlaunch" Version="1.1.14" />
     <PackageVersion Include="NUnit" Version="3.13.0" />
     <PackageVersion Include="NUnit.Engine" Version="3.13.0" />
-    <PackageVersion Include="xunit.extensibility.execution" Version="$(XUnitVersion)" />
-    <PackageVersion Include="xunit.runner.utility" Version="$(XUnitVersion)" />
+    <PackageVersion Include="xunit.extensibility.execution" Version="2.8.2" />
+    <PackageVersion Include="xunit.runner.utility" Version="2.8.2" />
+    <PackageVersion Include="xunit.v3.core" Version="0.3.0-pre.18" />
+    <PackageVersion Include="xunit.v3.runner.utility" Version="0.3.0-pre.18" />
     <PackageVersion Include="Moq" Version="4.20.70" />
   </ItemGroup>
 
