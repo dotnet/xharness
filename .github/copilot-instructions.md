@@ -64,7 +64,7 @@ xharness [platform] [command] [options]
 
 ### Build System
 - Use `./build.sh` (Linux/macOS) or `Build.cmd` (Windows) for proper SDK setup
-- Alternative: `dotnet build XHarness.sln` (requires correct .NET version)
+- Alternative: `dotnet build XHarness.slnx` (requires correct .NET version)
 - Integration with Arcade SDK for .NET Foundation build standards
 - Azure DevOps pipelines for CI/CD
 
@@ -157,7 +157,7 @@ XHarness uses standardized exit codes (see `src/Microsoft.DotNet.XHarness.Common
 ├── eng/                          # Build and engineering files
 ├── tools/                        # Development tools and scripts
 ├── azure-pipelines*.yml         # CI/CD pipeline definitions
-├── XHarness.sln                 # Main solution file
+├── XHarness.slnx                # Main solution file
 ├── build.sh / Build.cmd         # Build scripts
 └── README.md                    # Main documentation
 ```
