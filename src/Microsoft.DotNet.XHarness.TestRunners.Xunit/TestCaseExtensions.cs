@@ -5,7 +5,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+#if USE_XUNIT_V3
+using Xunit.v3;
+#else
 using Xunit.Abstractions;
+#endif
 
 #nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
