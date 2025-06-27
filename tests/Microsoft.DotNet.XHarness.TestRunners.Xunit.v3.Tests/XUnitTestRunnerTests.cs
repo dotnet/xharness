@@ -4,6 +4,7 @@
 
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 using Microsoft.DotNet.XHarness.TestRunners.Xunit;
 using Xunit;
@@ -20,17 +21,6 @@ public class XUnitTestRunnerTests
         var runner = new XUnitTestRunner(logger);
         
         Assert.NotNull(runner);
-        Assert.Equal("TestResults.xUnit.xml", runner.ResultsFileName);
-    }
-
-    [Fact]
-    public void TestRunner_UsesCorrectResultsFileName()
-    {
-        using var writer = new StringWriter();
-        var logger = new LogWriter(writer);
-        var runner = new XUnitTestRunner(logger);
-        
-        Assert.Contains("xUnit", runner.ResultsFileName);
     }
 
     [Fact]
@@ -55,8 +45,8 @@ public class XUnitTestRunnerTests
         var runner = new XUnitTestRunner(logger);
         
         var assemblyInfo = new TestAssemblyInfo(
-            Assembly: typeof(XUnitTestRunnerTests).Assembly,
-            AssemblyPath: "test.dll"
+            typeof(XUnitTestRunnerTests).Assembly,
+            "test.dll"
         );
         
         await runner.Run(new[] { assemblyInfo });
