@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
-    <PackageReference Include="Moq" />
   </ItemGroup>
 
   <ItemGroup>
