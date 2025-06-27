@@ -5,8 +5,8 @@
 using System.IO;
 using System.Linq;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
-using Microsoft.DotNet.XHarness.TestRunners.Xunit.v3;
-using Xunit.v3;
+using Microsoft.DotNet.XHarness.TestRunners.Xunit;
+using Xunit;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit.v3.Tests;
 
@@ -20,7 +20,7 @@ public class XUnitTestRunnerTests
         var runner = new XUnitTestRunner(logger);
         
         Assert.NotNull(runner);
-        Assert.Equal("TestResults.xUnit.v3.xml", runner.ResultsFileName);
+        Assert.Equal("TestResults.xUnit.xml", runner.ResultsFileName);
     }
 
     [Fact]
@@ -30,7 +30,7 @@ public class XUnitTestRunnerTests
         var logger = new LogWriter(writer);
         var runner = new XUnitTestRunner(logger);
         
-        Assert.Contains("v3", runner.ResultsFileName);
+        Assert.Contains("xUnit", runner.ResultsFileName);
     }
 
     [Fact]
@@ -67,6 +67,6 @@ public class XUnitTestRunnerTests
         var assemblyElement = element.Elements("assembly").FirstOrDefault();
         Assert.NotNull(assemblyElement);
         Assert.Equal("test.dll", assemblyElement.Attribute("name")?.Value);
-        Assert.Equal("xUnit.net v3", assemblyElement.Attribute("test-framework")?.Value);
+        Assert.Contains("xUnit.net", assemblyElement.Attribute("test-framework")?.Value);
     }
 }
