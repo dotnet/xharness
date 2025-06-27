@@ -85,6 +85,7 @@ public class XUnitTestRunner : XunitTestRunnerBase
         }
         
         OnInfo("xUnit v3 test execution completed.");
+        await Task.CompletedTask;
     }
 
     public override async Task<string> WriteResultsToFile(XmlResultJargon xmlResultJargon)
