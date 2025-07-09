@@ -284,7 +284,7 @@ public sealed class LaunchDeviceArgument : SingleValueArgument
 }
 
 /// <summary>
-/// Launch an app that is installed on device,
+/// Launch an app that is installed on device.
 /// </summary>
 public sealed class LaunchDeviceBundleIdArgument : SingleValueArgument
 {
