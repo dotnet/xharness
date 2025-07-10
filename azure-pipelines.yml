@@ -53,6 +53,7 @@ extends:
                 name: Build
                 displayName: Build
                 condition: succeeded()
+              # Publish artifacts step
             templateContext:
               outputs:
               - output: pipelineArtifact
@@ -60,6 +61,36 @@ extends:
                 path: '$(Build.SourcesDirectory)\artifacts\bin\Microsoft.DotNet.XHarness.CLI'
                 displayName: 'Publish Windows_NT Artifacts'
                 condition: succeeded()
+              # APIScan integration steps
+          - task: CopyFiles@2
+            displayName: Copy CLI assemblies for APIScan
+            inputs:
+              SourceFolder: '$(Build.SourcesDirectory)\artifacts\bin\Microsoft.DotNet.XHarness.CLI'
+              Contents: |
+                *.dll
+                *.pdb
+              TargetFolder: '$(Agent.TempDirectory)\APIScanFiles'
+            continueOnError: true
+
+          - task: APIScan@2
+            displayName: Run APIScan
+            inputs:
+              softwareFolder: '$(Agent.TempDirectory)\APIScanFiles'
+              softwareName: 'XHarness'
+              softwareVersionNum: '1.0'
+              softwareBuildNum: '$(Build.BuildId)'
+              symbolsFolder: 'SRV*http://symweb'
+            env:
+              AzureServicesAuthConnectionString: runAs=App;AppId=$(MicroBuildApiScanClientId)
+            continueOnError: true
+
+          - task: PublishSecurityAnalysisLogs@3
+            displayName: Publishing analysis artifacts
+            inputs:
+              ArtifactName: 'CodeAnalysisLogs'
+              ArtifactType: 'Container'
+              AllTools: true
+              ToolLogsNotFoundAction: 'Standard'
 
     - template: /eng/common/templates-official/post-build/post-build.yml@self
       parameters:
