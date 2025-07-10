@@ -24,7 +24,7 @@ steps:
       symbolsFolder: 'SRV*http://symweb'
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-      AzureServicesAuthConnectionString: runAs=App;AppId=$(MicroBuildApiScanClientId)
+      AzureServicesAuthConnectionString: runAs=App
 
   - task: PublishSecurityAnalysisLogs@3
     displayName: Publishing analysis artifacts
