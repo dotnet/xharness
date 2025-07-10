@@ -23,6 +23,7 @@ steps:
       softwareBuildNum: '$(Build.BuildId)'
       symbolsFolder: 'SRV*http://symweb'
     env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       AzureServicesAuthConnectionString: runAs=App;AppId=$(MicroBuildApiScanClientId)
 
   - task: PublishSecurityAnalysisLogs@3
