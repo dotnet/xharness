@@ -70,7 +70,6 @@ extends:
                 *.dll
                 *.pdb
               TargetFolder: '$(Agent.TempDirectory)\APIScanFiles'
-            continueOnError: true
 
           - task: APIScan@2
             displayName: Run APIScan
@@ -82,7 +81,6 @@ extends:
               symbolsFolder: 'SRV*http://symweb'
             env:
               AzureServicesAuthConnectionString: runAs=App;AppId=$(MicroBuildApiScanClientId)
-            continueOnError: true
 
           - task: PublishSecurityAnalysisLogs@3
             displayName: Publishing analysis artifacts
