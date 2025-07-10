@@ -54,7 +54,7 @@ extends:
                 displayName: Build
                 condition: succeeded()
               # Publish artifacts step
-              - template: eng/pipelines/apiscan-steps.yml
+              - template: /eng/pipelines/apiscan-steps.yml
             templateContext:
               outputs:
               - output: pipelineArtifact
