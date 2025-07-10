@@ -24,7 +24,7 @@ steps:
       symbolsFolder: 'SRV*http://symweb'
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-      AzureServicesAuthConnectionString: runAs=App
+      AzureServicesAuthConnectionString: runAs=App;AppId=9c9f7a2a-e357-4414-9b9d-08bfaeb94d8f
 
   - task: PublishSecurityAnalysisLogs@3
     displayName: Publishing analysis artifacts
