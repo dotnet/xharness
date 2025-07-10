@@ -1,0 +1,31 @@
+# APIScan integration for XHarness pipeline
+# This template copies CLI assemblies, runs APIScan, and publishes analysis artifacts.
+
+steps:
+  - task: CopyFiles@2
+    displayName: Copy CLI assemblies for APIScan
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)\artifacts\bin\Microsoft.DotNet.XHarness.CLI'
+      Contents: |
+        *.dll
+        *.pdb
+      TargetFolder: '$(Agent.TempDirectory)\APIScanFiles'
+
+  - task: APIScan@2
+    displayName: Run APIScan
+    inputs:
+      softwareFolder: '$(Agent.TempDirectory)\APIScanFiles'
+      softwareName: 'XHarness'
+      softwareVersionNum: '1.0'
+      softwareBuildNum: '$(Build.BuildId)'
+      symbolsFolder: 'SRV*http://symweb'
+    env:
+      AzureServicesAuthConnectionString: runAs=App;AppId=$(MicroBuildApiScanClientId)
+
+  - task: PublishSecurityAnalysisLogs@3
+    displayName: Publishing analysis artifacts
+    inputs:
+      ArtifactName: 'CodeAnalysisLogs'
+      ArtifactType: 'Container'
+      AllTools: true
+      ToolLogsNotFoundAction: 'Standard'
