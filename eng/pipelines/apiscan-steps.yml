@@ -22,9 +22,10 @@ steps:
       softwareVersionNum: '1.0'
       softwareBuildNum: '$(Build.BuildId)'
       symbolsFolder: 'SRV*http://symweb'
+      azureSubscription: 'dotnet-apiscan'
     env:
+      AzureServicesAuthConnectionString: RunAs=App;AppId=$(AppId);TenantId=$(TenantId);ServiceConnectionId=$(ServiceConnectionId);
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-      AzureServicesAuthConnectionString: runAs=App;AppId=9c9f7a2a-e357-4414-9b9d-08bfaeb94d8f
 
   - task: PublishSecurityAnalysisLogs@3
     displayName: Publishing analysis artifacts
