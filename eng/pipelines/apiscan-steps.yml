@@ -1,6 +1,3 @@
-# APIScan integration for XHarness pipeline
-# This template copies CLI assemblies, runs APIScan, and publishes analysis artifacts.
-
 steps:
   - script: dir $(Build.SourcesDirectory)\artifacts\bin\Microsoft.DotNet.XHarness.CLI /s
     displayName: List CLI output for debugging
