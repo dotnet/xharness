@@ -53,7 +53,7 @@ extends:
                 name: Build
                 displayName: Build
                 condition: succeeded()
-              # Publish artifacts step
+
               - template: /eng/pipelines/apiscan-steps.yml
             templateContext:
               outputs:

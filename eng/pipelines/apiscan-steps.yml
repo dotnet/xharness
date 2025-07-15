@@ -18,7 +18,6 @@ steps:
       softwareName: 'XHarness'
       softwareVersionNum: '1.0'
       softwareBuildNum: '$(Build.BuildId)'
-      symbolsFolder: 'SRV*http://symweb'
       azureSubscription: 'dotnet-apiscan'
     env:
       AzureServicesAuthConnectionString: RunAs=App;AppId=$(AppId);TenantId=$(TenantId);ServiceConnectionId=$(ServiceConnectionId);
