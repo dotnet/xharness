@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.amd64.appletv.scouting.open"/>
+    <!-- Test CI -->
+    <HelixTargetQueue Include="osx.13.amd64.iphone.open"/>
 
     <!-- apple test / ios-device -->
     <XHarnessAppleProject Include="TestAppBundle.proj">

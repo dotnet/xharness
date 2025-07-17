@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.amd64.appletv.scouting.open"/>
+   <HelixTargetQueue Include="osx.13.amd64.appletv.open"/>
 
     <!-- apple test / tvos-device -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
