@@ -33,7 +33,7 @@
         <TestTarget>$(TestTarget)</TestTarget>
         <WorkItemTimeout>00:20:00</WorkItemTimeout>
         <TestTimeout>00:07:00</TestTimeout>
-        <LaunchTimeout>00:03:30</LaunchTimeout>
+        <LaunchTimeout>00:00:10</LaunchTimeout>
         <IncludesTestRunner>$(IncludesTestRunner)</IncludesTestRunner>
         <ExpectedExitCode>$(ExpectedExitCode)</ExpectedExitCode>
       </XHarnessAppFoldersToTest>
