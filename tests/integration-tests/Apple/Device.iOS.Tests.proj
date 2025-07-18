@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
-    <!-- Test CI -->
     <HelixTargetQueue Include="osx.13.amd64.iphone.open"/>
 
     <!-- apple test / ios-device -->
