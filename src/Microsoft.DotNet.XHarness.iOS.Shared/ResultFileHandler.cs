@@ -88,7 +88,7 @@ public class ResultFileHandler : IResultFileHandler
 
             if (osVersionParsed.Major >= 18)
             {
-                string cmd = $"xcrun devicectl device copy from --device {udid} --source {sourcePath} --destination {hostDestinationPath} --user root --domain-type appDataContainer --domain-identifier {bundleIdentifier}";
+                string cmd = $"xcrun devicectl device copy from --device {udid} --source {sourcePath} --destination {hostDestinationPath} --user mobile --domain-type appDataContainer --domain-identifier {bundleIdentifier}";
                 await _processManager.ExecuteCommandAsync(
                     "/bin/bash",
                     new List<string> { "-c", cmd },
