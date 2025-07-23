@@ -84,7 +84,7 @@ public class ResultFileHandler : IResultFileHandler
             }
             else
             {
-                cmd = $"xcrun devicectl device copy from --device {udid} --source {sourcePath} --destination {hostDestinationPath} --domain-type appDataContainer --domain-identifier {bundleIdentifier}";
+                cmd = $"xcrun devicectl device copy from --device {udid} --source {sourcePath} --destination {hostDestinationPath} --user mobile --domain-type appDataContainer --domain-identifier {bundleIdentifier}";
             }
 
             await _processManager.ExecuteCommandAsync(
