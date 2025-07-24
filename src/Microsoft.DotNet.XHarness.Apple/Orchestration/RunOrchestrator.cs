@@ -315,7 +315,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
 
         // On iOS 18 and later, mlaunch returns exit code 1 with the following error message:
         // "Failed to execute 'devicectl': returned the exit code <exit code>."
-        if (!result.Succeeded && result.ExitCode != 1)
+        if (!result.Succeeded && result.ExitCode != expectedExitCode)
         {
             _logger.LogError($"App run has failed. mlaunch exited with {result.ExitCode}");
             return ExitCode.APP_LAUNCH_FAILURE;
