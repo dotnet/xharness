@@ -341,6 +341,11 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
                     break;
                 }
 
+                if (result.ExitCode != 0)
+                {
+                    exitCode = result.ExitCode;
+                }
+
                 _logger.LogDebug($"Failed to determine the exit code from {log.FullPath}");
             }
             catch (Exception e)
