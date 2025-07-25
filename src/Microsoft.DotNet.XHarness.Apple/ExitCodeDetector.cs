@@ -88,7 +88,8 @@ public class iOSExitCodeDetector : ExitCodeDetector, IiOSExitCodeDetector
     private Regex[] DeviceExitCodeRegexes { get; } = new Regex[]
     {
         new Regex(@"terminated \(with exit code '(?<exitCode>-?[0-9]+)' and/or crashing signal", RegexOptions.Compiled),
-        new Regex(@"Failed to execute 'devicectl':.*returned the exit code (?<exitCode>\d+)\.", RegexOptions.Compiled)
+        new Regex(@"Failed to execute 'devicectl':.*returned the exit code (?<exitCode>\d+)\.", RegexOptions.Compiled),
+        new Regex(@"Process mlaunch exited with (?<exitCode>\d+)\.?", RegexOptions.Compiled)
     };
 
     protected override Match? IsSignalLine(AppBundleInformation appBundleInfo, string logLine)

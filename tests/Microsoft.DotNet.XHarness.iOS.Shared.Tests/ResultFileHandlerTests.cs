@@ -39,31 +39,31 @@ public class ResultFileHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task SimulatorBadOsVersionFormatReturnsFalse()
+    public async Task SimulatorBadOsVersionFormatThrowsException()
     {
         Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
         Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
         ResultFileHandler handler = CreateHandler(pm, log);
 
-        bool result = await handler.CopyResultsAsync(
-            RunMode.iOS, true, "Simulator", "udid", "bundle", _tempFile, CancellationToken.None);
+        var exception = await Assert.ThrowsAsync<FormatException>(async () =>
+            await handler.CopyResultsAsync(
+                RunMode.iOS, true, "Simulator", "udid", "bundle", _tempFile, CancellationToken.None));
 
-        Assert.False(result);
-        log.Verify(l => l.WriteLine("Simulator OS version is not in the expected format, skipping result copying."), Times.Once);
+        Assert.Equal("Simulator OS version is not in the expected format.", exception.Message);
     }
 
     [Fact]
-    public async Task SimulatorBadOsVersionNumberReturnsFalse()
+    public async Task SimulatorBadOsVersionNumberThrowsException()
     {
         Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
         Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
         ResultFileHandler handler = CreateHandler(pm, log);
 
-        bool result = await handler.CopyResultsAsync(
-            RunMode.iOS, true, "Simulator notanumber", "udid", "bundle", _tempFile, CancellationToken.None);
+        var exception = await Assert.ThrowsAsync<FormatException>(async () =>
+            await handler.CopyResultsAsync(
+                RunMode.iOS, true, "Simulator notanumber", "udid", "bundle", _tempFile, CancellationToken.None));
 
-        Assert.False(result);
-        log.Verify(l => l.WriteLine("Simulator OS version is not in the expected format, skipping result copying."), Times.Once);
+        Assert.Equal("Simulator OS version is not in the expected format.", exception.Message);
     }
 
     [Fact]
@@ -112,17 +112,17 @@ public class ResultFileHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task DeviceBadOsVersionFormatReturnsFalse()
+    public async Task DeviceBadOsVersionFormatThrowsException()
     {
         Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
         Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
         ResultFileHandler handler = CreateHandler(pm, log);
 
-        bool result = await handler.CopyResultsAsync(
-            RunMode.iOS, false, "notanumber", "udid", "bundle", _tempFile, CancellationToken.None);
+        var exception = await Assert.ThrowsAsync<FormatException>(async () =>
+            await handler.CopyResultsAsync(
+                RunMode.iOS, false, "notanumber", "udid", "bundle", _tempFile, CancellationToken.None));
 
-        Assert.False(result);
-        log.Verify(l => l.WriteLine("Device OS version is not in the expected format, skipping result copying."), Times.Once);
+        Assert.Equal("Device OS version is not in the expected format.", exception.Message);
     }
 
     [Fact]
