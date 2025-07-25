@@ -24,6 +24,43 @@ public class ResultFileHandler : IResultFileHandler
         _mainLog = fs;
     }
 
+    public bool IsVersionSupported(string osVersion, bool isSimulator)
+    {
+        if (isSimulator)
+        {
+            // Version format contains string like "Simulator 18.0".
+            string[] osVersionParts = osVersion.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (osVersionParts.Length < 2)
+            {
+                throw new FormatException("Simulator OS version is not in the expected format.");
+            }
+
+            if (!Version.TryParse(osVersionParts[1], out Version osVersionParsed))
+            {
+                throw new FormatException("Simulator OS version is not in the expected format.");
+            }
+
+            if (osVersionParsed.Major >= 18)
+            {
+                return true;
+            }
+        }
+        else
+        {
+            if (!Version.TryParse(osVersion, out Version osVersionParsed))
+            {
+                throw new FormatException($"Device OS version is not in the expected format.");
+            }
+
+            if (osVersionParsed.Major >= 18)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public async Task<bool> CopyResultsAsync(
         RunMode runMode,
         bool isSimulator,
@@ -38,75 +75,35 @@ public class ResultFileHandler : IResultFileHandler
             ? "/Documents/test-results.xml"
             : "/Library/Caches/Documents/test-results.xml";
 
-        if (isSimulator)
+        if (IsVersionSupported(osVersion, isSimulator))
         {
-            // Version format contains string like "Simulator 18.0".
-            string [] osVersionParts = osVersion.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (osVersionParts.Length < 2)
+            string cmd;
+            if (isSimulator)
             {
-                _mainLog.WriteLine("Simulator OS version is not in the expected format, skipping result copying.");
+                cmd = $"cp \"$(xcrun simctl get_app_container {udid} {bundleIdentifier} data){sourcePath}\" \"{hostDestinationPath}\"";
+            }
+            else
+            {
+                cmd = $"xcrun devicectl device copy from --device {udid} --source {sourcePath} --destination {hostDestinationPath} --user mobile --domain-type appDataContainer --domain-identifier {bundleIdentifier}";
+            }
+
+            await _processManager.ExecuteCommandAsync(
+                "/bin/bash",
+                new[] { "-c", cmd },
+                _mainLog,
+                _mainLog,
+                _mainLog,
+                TimeSpan.FromMinutes(1),
+                null,
+                cancellationToken: token);
+
+            if (!File.Exists(hostDestinationPath))
+            {
+                _mainLog.WriteLine($"Failed to copy results file from {(isSimulator ? "simulator" : "device")}. Expected at: {hostDestinationPath}");
                 return false;
             }
-
-            if (!Version.TryParse(osVersionParts[1], out Version osVersionParsed))
-            {
-                _mainLog.WriteLine("Simulator OS version is not in the expected format, skipping result copying.");
-                return false;
-            }
-
-            if (osVersionParsed.Major >= 18)
-            {
-
-                string cmd = $"cp \"$(xcrun simctl get_app_container {udid} {bundleIdentifier} data){sourcePath}\" \"{hostDestinationPath}\"";
-
-                await _processManager.ExecuteCommandAsync(
-                    "/bin/bash",
-                    new[] { "-c", cmd },
-                    _mainLog,
-                    _mainLog,
-                    _mainLog,
-                    TimeSpan.FromMinutes(1),
-                    null,
-                    cancellationToken: token);
-
-                if (!File.Exists(hostDestinationPath))
-                {
-                    _mainLog.WriteLine($"Failed to copy results file from simulator. Expected at: {hostDestinationPath}");
-                    return false;
-                }
-            }
-
-            return true;
         }
-        else
-        {
-            if (!Version.TryParse(osVersion, out Version osVersionParsed))
-            {
-                _mainLog.WriteLine($"Device OS version is not in the expected format, skipping result copying.");
-                return false;
-            }
 
-            if (osVersionParsed.Major >= 18)
-            {
-                string cmd = $"xcrun devicectl device copy from --device {udid} --source {sourcePath} --destination {hostDestinationPath} --user mobile --domain-type appDataContainer --domain-identifier {bundleIdentifier}";
-                await _processManager.ExecuteCommandAsync(
-                    "/bin/bash",
-                    new List<string> { "-c", cmd },
-                    _mainLog,
-                    _mainLog,
-                    _mainLog,
-                    TimeSpan.FromMinutes(1),
-                    null,
-                    cancellationToken: token);
-
-                if (!File.Exists(hostDestinationPath))
-                {
-                    _mainLog.WriteLine($"Failed to copy results file from device. Expected at: {hostDestinationPath}");
-                    return false;
-                }
-            }
-
-            return true;
-        }
+        return true;
     }
 }

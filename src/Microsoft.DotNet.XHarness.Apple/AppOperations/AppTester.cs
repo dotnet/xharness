@@ -206,26 +206,32 @@ public class AppTester : AppRunnerBase, IAppTester
                 (level, message) => _mainLog.WriteLine(message));
             IResultFileHandler resultFileHandler = new ResultFileHandler(_processManager, _mainLog);
 
-            deviceListener.ConnectedTask
-                .TimeoutAfter(testLaunchTimeout)
-                .ContinueWith(async (Task<bool> task) =>
-                {
-                    testReporter.LaunchCallback(task);
+            // For iOS 18+ devices/simulators, result files are copied directly from the app container
+            // rather than transmitted over TCP. In these cases, we skip the TCP launch timeout logic
+            // to prevent test termination when no TCP connection is established.
+            if (deviceListener.TestLog != null && !resultFileHandler.IsVersionSupported(device.OSVersion, isSimulator))
+            {
+                deviceListener.ConnectedTask
+                    .TimeoutAfter(testLaunchTimeout)
+                    .ContinueWith(async (Task<bool> task) =>
+                    {
+                        testReporter.LaunchCallback(task);
 
-                    // Stop listening so that TCP doesn't get connected before here and when we evaluate why we failed
-                    // If no TCP happens, app didn't start in time => APP_LAUNCH_TIMEOUT
-                    // If TCP connects during this method or right after - a very narrow race condition - we would categorize it as TIMED_OUT
-                    // because we would consider the app run started and actually timing out.
-                    if (!deviceListener.ConnectedTask.IsCompleted)
-                    {
-                        await deviceListener.StopAsync();
-                    }
-                    else if (task.IsCompleted && task.Result)
-                    {
-                        ListenerConnected = true;
-                    }
-                }, cancellationToken)
-                .DoNotAwait();
+                        // Stop listening so that TCP doesn't get connected before here and when we evaluate why we failed
+                        // If no TCP happens, app didn't start in time => APP_LAUNCH_TIMEOUT
+                        // If TCP connects during this method or right after - a very narrow race condition - we would categorize it as TIMED_OUT
+                        // because we would consider the app run started and actually timing out.
+                        if (!deviceListener.ConnectedTask.IsCompleted)
+                        {
+                            await deviceListener.StopAsync();
+                        }
+                        else if (task.IsCompleted && task.Result)
+                        {
+                            ListenerConnected = true;
+                        }
+                    }, cancellationToken)
+                    .DoNotAwait();
+            }
 
             _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{device.Name}' ***");
 
