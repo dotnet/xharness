@@ -48,6 +48,7 @@ extends:
           jobs:
           - job: Windows_NT
             displayName: Build Windows
+            timeoutInMinutes: 120
             steps:
               - script: eng\common\CIBuild.cmd -configuration $(_BuildConfig) -prepareMachine $(_InternalBuildArgs) /p:Test=false
                 name: Build
