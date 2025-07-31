@@ -126,8 +126,8 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
         {
             Headless = !Arguments.NoHeadless,
             Args = Arguments.BrowserArgs.Value.ToList(),
-            Timeout = (float?)Arguments.Timeout.Value.TotalMilliseconds,
-            ExecutablePath = !string.IsNullOrEmpty(Arguments.BrowserLocation) ? Arguments.BrowserLocation : null
+            Timeout = (float)Arguments.Timeout.Value.TotalMilliseconds,
+            ExecutablePath = !string.IsNullOrEmpty(Arguments.BrowserLocation.Value) ? Arguments.BrowserLocation.Value : null
         });
 
         var page = await browser.NewPageAsync();
@@ -140,9 +140,9 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
 
     private async Task<(PlaywrightServiceWrapper, PlaywrightBrowserWrapper)> GetFirefoxDriverAsync(ILogger logger)
     {
-        if (!string.IsNullOrEmpty(Arguments.BrowserLocation))
+        if (!string.IsNullOrEmpty(Arguments.BrowserLocation.Value))
         {
-            logger.LogInformation($"Using Firefox from {Arguments.BrowserLocation}");
+            logger.LogInformation($"Using Firefox from {Arguments.BrowserLocation.Value}");
         }
 
         var args = Arguments.BrowserArgs.Value.ToList();
@@ -159,8 +159,8 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
         {
             Headless = !Arguments.NoHeadless,
             Args = args,
-            Timeout = (float?)Arguments.Timeout.Value.TotalMilliseconds,
-            ExecutablePath = !string.IsNullOrEmpty(Arguments.BrowserLocation) ? Arguments.BrowserLocation : null
+            Timeout = (float)Arguments.Timeout.Value.TotalMilliseconds,
+            ExecutablePath = !string.IsNullOrEmpty(Arguments.BrowserLocation.Value) ? Arguments.BrowserLocation.Value : null
         });
 
         var page = await browser.NewPageAsync();
@@ -195,7 +195,7 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
             args.Add("--headless");
 
         if (Arguments.DebuggerPort.Value != null)
-            args.Add($"--remote-debugging-port={Arguments.DebuggerPort}");
+            args.Add($"--remote-debugging-port={Arguments.DebuggerPort.Value}");
 
         if (!Arguments.NoIncognito)
             args.Add("--incognito");
@@ -270,15 +270,15 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                 string? channel = null;
                 if (driverName == "edgedriver")
                     channel = "msedge";
-                else if (driverName == "chromedriver" && !string.IsNullOrEmpty(Arguments.BrowserLocation))
+                else if (driverName == "chromedriver" && !string.IsNullOrEmpty(Arguments.BrowserLocation.Value))
                     channel = "chrome";
 
                 browser = await browserType.LaunchAsync(new BrowserTypeLaunchOptions
                 {
                     Headless = !Arguments.NoHeadless,
                     Args = args,
-                    Timeout = (float?)Arguments.Timeout.Value.TotalMilliseconds,
-                    ExecutablePath = !string.IsNullOrEmpty(Arguments.BrowserLocation) ? Arguments.BrowserLocation : null,
+                    Timeout = (float)Arguments.Timeout.Value.TotalMilliseconds,
+                    ExecutablePath = !string.IsNullOrEmpty(Arguments.BrowserLocation.Value) ? Arguments.BrowserLocation.Value : null,
                     Channel = channel,
                     Env = env.Count > 0 ? env : null
                 });

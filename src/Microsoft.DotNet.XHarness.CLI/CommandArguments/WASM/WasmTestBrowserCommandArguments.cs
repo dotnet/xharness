@@ -73,16 +73,16 @@ internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebS
     {
         base.Validate();
 
-        if (!string.IsNullOrEmpty(BrowserLocation))
+        if (!string.IsNullOrEmpty(BrowserLocation.Value))
         {
             if (Browser == Wasm.Browser.Safari)
             {
                 throw new ArgumentException("Safari driver doesn't support custom browser path");
             }
 
-            if (!File.Exists(BrowserLocation))
+            if (!File.Exists(BrowserLocation.Value))
             {
-                throw new ArgumentException($"Could not find browser at {BrowserLocation}");
+                throw new ArgumentException($"Could not find browser at {BrowserLocation.Value}");
             }
         }
 
