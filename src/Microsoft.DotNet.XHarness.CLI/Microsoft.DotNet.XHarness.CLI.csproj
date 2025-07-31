@@ -27,7 +27,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Tools.Mlaunch" ExcludeAssets="runtime" />
     <PackageReference Include="Mono.Options" />
-    <PackageReference Include="Selenium.WebDriver" />
+    <PackageReference Include="Microsoft.Playwright" />
   </ItemGroup>
 
   <ItemGroup>

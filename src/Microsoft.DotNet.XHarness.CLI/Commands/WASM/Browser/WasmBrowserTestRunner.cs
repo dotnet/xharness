@@ -17,11 +17,7 @@ using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
-
-using OpenQA.Selenium;
-using OpenQA.Selenium.Support.UI;
-
-using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
+using Microsoft.Playwright;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
@@ -33,10 +29,6 @@ internal class WasmBrowserTestRunner
     private readonly IEnumerable<string> _passThroughArguments;
     private readonly WasmTestMessagesProcessor _messagesProcessor;
 
-    // Messages from selenium prepend the url, and location where the message originated
-    // Eg. `foo` becomes `http://localhost:8000/xyz.js 0:12 "foo"
-    static readonly Regex s_consoleLogRegex = new(@"^\s*[a-z]*://[^\s]+\s+\d+:\d+\s+""(.*)""\s*$", RegexOptions.Compiled);
-
     public WasmBrowserTestRunner(WasmTestBrowserCommandArguments arguments, IEnumerable<string> passThroughArguments,
                                         WasmTestMessagesProcessor messagesProcessor, ILogger logger)
     {
@@ -46,7 +38,7 @@ internal class WasmBrowserTestRunner
         _messagesProcessor = messagesProcessor;
     }
 
-    public async Task<ExitCode> RunTestsWithWebDriver(DriverService driverService, IWebDriver driver)
+    public async Task<ExitCode> RunTestsWithPlaywrightAsync(PlaywrightServiceWrapper driverService, PlaywrightBrowserWrapper driver)
     {
         var htmlFilePath = Path.Combine(_arguments.AppPackagePath, _arguments.HTMLFile.Value);
         if (!File.Exists(htmlFilePath))
@@ -71,18 +63,18 @@ internal class WasmBrowserTestRunner
 
             string testUrl = BuildUrl(serverURLs);
 
-            var seleniumLogMessageTask = Task.Run(() => RunSeleniumLogMessagePump(driver, cts.Token), cts.Token);
+            var playwrightLogMessageTask = Task.Run(() => RunPlaywrightLogMessagePump(driver.Page, cts.Token), cts.Token);
             cts.CancelAfter(_arguments.Timeout);
 
             _logger.LogDebug($"Opening in browser: {testUrl}");
-            driver.Navigate().GoToUrl(testUrl);
+            await driver.NavigateToUrlAsync(testUrl);
 
             TaskCompletionSource wasmExitReceivedTcs = _messagesProcessor.WasmExitReceivedTcs;
             var tasks = new Task[]
             {
                     wasmExitReceivedTcs.Task,
                     consolePumpTcs.Task,
-                    seleniumLogMessageTask,
+                    playwrightLogMessageTask,
                     logProcessorTask,
                     Task.Delay(_arguments.Timeout)
             };
@@ -90,7 +82,7 @@ internal class WasmBrowserTestRunner
             if (_arguments.BackgroundThrottling)
             {
                 // throttling only happens when the page is not visible
-                driver.Manage().Window.Minimize();
+                await driver.Page.EvaluateAsync("() => { Object.defineProperty(document, 'visibilityState', { value: 'hidden', writable: false }); }");
             }
 
             var task = await Task.WhenAny(tasks).ConfigureAwait(false);
@@ -103,14 +95,9 @@ internal class WasmBrowserTestRunner
             {
                 if (driverService.IsRunning)
                 {
-                    // Selenium isn't able to kill chrome in this case :/
-                    int pid = driverService.ProcessId;
-                    var p = Process.GetProcessById(pid);
-                    if (p != null)
-                    {
-                        _logger.LogError($"Tests timed out. Killing driver service pid {pid}");
-                        p.Kill(true);
-                    }
+                    // Playwright handles browser lifecycle more gracefully than Selenium
+                    _logger.LogError($"Tests timed out. Closing browser gracefully");
+                    driver.Dispose(); // This will properly close the browser
                 }
 
                 // timed out
@@ -122,10 +109,8 @@ internal class WasmBrowserTestRunner
             if (task == wasmExitReceivedTcs.Task && wasmExitReceivedTcs.Task.IsCompletedSuccessfully)
             {
                 _logger.LogTrace($"Looking for `tests_done` element, to get the exit code");
-                var testsDoneElement = new WebDriverWait(driver, TimeSpan.FromSeconds(30))
-                                            .Until(e => e.FindElement(By.Id("tests_done")));
-
-                if (int.TryParse(testsDoneElement.Text, out var code))
+                var testsDoneElementText = await driver.FindElementTextAsync("#tests_done");
+                if (int.TryParse(testsDoneElementText, out var code))
                 {
                     var appExitCode = (ExitCode)Enum.ToObject(typeof(ExitCode), code);
                     if (logProcessorExitCode != ExitCode.SUCCESS)
@@ -204,50 +189,51 @@ internal class WasmBrowserTestRunner
         }
     }
 
-    // This listens for any `console.log` messages.
-    // Since we pipe messages from managed code, and console.* to the websocket,
+    // This listens for any console messages from Playwright's native console event handling.
+    // Since we still pipe messages from managed code and console.* to the websocket,
     // this wouldn't normally get much. But listening on this to catch any messages
     // that we miss piping to the websocket.
-    private void RunSeleniumLogMessagePump(IWebDriver driver, CancellationToken token)
+    private void RunPlaywrightLogMessagePump(IPage page, CancellationToken token)
     {
         try
         {
-            ILogs logs = driver.Manage().Logs;
+            // Playwright provides structured console events, no need to poll like Selenium
+            page.Console += (_, consoleMessage) =>
+            {
+                if (token.IsCancellationRequested) return;
+
+                if (consoleMessage.Type == "error")
+                {
+                    // These are errors from the browser, some of which might be
+                    // thrown as part of tests. So, we can't differentiate when
+                    // it is an error that we can ignore, vs one that should stop
+                    // the execution completely.
+                    //
+                    // Note: these could be received out-of-order as compared to
+                    // console messages via the websocket.
+                    //
+                    // (see commit message for more info)
+                    _logger.LogError($"[out of order message from the browser console]: {consoleMessage.Text}");
+                    return;
+                }
+
+                // Process the message through our existing message processor
+                _messagesProcessor.Invoke(consoleMessage.Text);
+            };
+
+            // Keep the task alive while not cancelled
             while (!token.IsCancellationRequested)
             {
-                foreach (var logType in logs.AvailableLogTypes)
-                {
-                    foreach (var logEntry in logs.GetLog(logType))
-                    {
-                        if (logEntry.Level == SeleniumLogLevel.Severe)
-                        {
-                            // These are errors from the browser, some of which might be
-                            // thrown as part of tests. So, we can't differentiate when
-                            // it is an error that we can ignore, vs one that should stop
-                            // the execution completely.
-                            //
-                            // Note: these could be received out-of-order as compared to
-                            // console messages via the websocket.
-                            //
-                            // (see commit message for more info)
-                            _logger.LogError($"[out of order message from the {logType}]: {logEntry.Message}");
-                            continue;
-                        }
-
-                        var match = s_consoleLogRegex.Match(Regex.Unescape(logEntry.Message));
-                        string msg = match.Success ? match.Groups[1].Value : logEntry.Message;
-                        _messagesProcessor.Invoke(msg);
-                    }
-                }
+                Task.Delay(1000, token).Wait(token);
             }
         }
-        catch (WebDriverException wde) when (wde.Message.Contains("timed out after"))
+        catch (OperationCanceledException)
         {
-            _logger.LogDebug(wde.Message);
+            _logger.LogDebug($"RunPlaywrightLogMessagePump cancelled");
         }
         catch (Exception ex)
         {
-            _logger.LogDebug($"Failed trying to read log messages via selenium: {ex}");
+            _logger.LogDebug($"Failed trying to read log messages via playwright: {ex}");
             throw;
         }
     }
