@@ -245,6 +245,9 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
             "failed to start"
         };
 
+        foreach (var file in Directory.EnumerateFiles(Arguments.OutputDirectory, $"{driverName}-*.log"))
+            File.Delete(file);
+
         int max_retries = 3;
         int retry_num = 0;
         while (true)
