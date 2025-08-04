@@ -248,7 +248,15 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
 
-        return ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+        ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+
+        if (!target.Platform.IsSimulator()) // Simulator app logs are already included in the main log
+        {
+            // Copy system and application logs to the main log for better failure investigation.
+            CopyLogsToMainLog();
+        }
+        
+        return exitCode;
     }
 
     private async Task<ExitCode> ExecuteMacCatalystApp(
@@ -278,7 +286,12 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
 
-        return ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+        ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+
+        // Copy system and application logs to the main log for better failure investigation.
+        CopyLogsToMainLog();
+
+        return exitCode;
     }
 
     private IAppTester GetAppTester(CommunicationChannel communicationChannel, bool isSimulator)
@@ -362,6 +375,40 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
                 _logger.LogError($"Application test run ended in an unexpected way: '{testResult}'" +
                     newLine + (resultMessage != null ? resultMessage + newLine + newLine : null) + checkLogsMessage);
                 return ExitCode.GENERAL_FAILURE;
+        }
+    }
+
+    /// <summary>
+    /// Copy system and application logs to the main log for better failure investigation.
+    /// </summary>
+    private void CopyLogsToMainLog()
+    {
+        var logs = _logs.Where(log => log.Description == LogType.SystemLog.ToString() || log.Description == LogType.ApplicationLog.ToString()).ToList();
+
+        foreach (var log in logs)
+        {
+            _mainLog.WriteLine($"==================== {log.Description} ====================");
+            _mainLog.WriteLine($"Log file: {log.FullPath}");
+            
+            try
+            {
+                // Read and append log content to the main log
+                using var reader = log.GetReader();
+                while (!reader.EndOfStream)
+                {
+                    var logContent = reader.ReadLine();
+                    if (logContent is null)
+                        continue;
+                    _mainLog.WriteLine(logContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _mainLog.WriteLine($"Failed to read {log.Description}: {ex.Message}");
+            }
+            
+            _mainLog.WriteLine($"==================== End of {log.Description} ====================");
+            _mainLog.WriteLine(string.Empty);
         }
     }
 }
