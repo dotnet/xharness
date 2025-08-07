@@ -110,7 +110,7 @@ public class DeviceLogCapturer : IDeviceLogCapturer
                 // Use 'log show' to convert the .logarchive to readable text
                 Process logShowProcess = new Process();
                 logShowProcess.StartInfo.FileName = "log";
-                logShowProcess.StartInfo.Arguments = $"show \"{_outputPath}\" --predicate 'process == \"{_bundleIdentifier}\"'";
+                logShowProcess.StartInfo.Arguments = $"show \"{_outputPath}\" --predicate \"process == \\\"{_bundleIdentifier}\\\"\"";
                 logShowProcess.StartInfo.UseShellExecute = false;
                 logShowProcess.StartInfo.RedirectStandardOutput = true;
                 logShowProcess.StartInfo.RedirectStandardError = true;
