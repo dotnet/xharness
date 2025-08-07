@@ -36,16 +36,11 @@ public class DeviceLogCapturer : IDeviceLogCapturer
         _deviceUdid = deviceUdid ?? throw new ArgumentNullException(nameof(deviceUdid));
         _bundleIdentifier = bundleIdentifier;
 
-        // Create a .logarchive path
-        var tempDir = Path.GetTempPath();
-        _outputPath = Path.Combine(tempDir, $"device_logs_{Guid.NewGuid()}.logarchive");
+        _outputPath = Path.Combine(Path.GetTempPath(), $"device_logs_{Guid.NewGuid()}.logarchive");
     }
-
-    private Process _process;
 
     public void StartCapture()
     {
-        // Record the start time for later log collection
         _startTime = DateTime.Now;
         _deviceLog.WriteLine($"Device log capture started at {_startTime:yyyy-MM-dd HH:mm:ss}");
     }
@@ -54,122 +49,83 @@ public class DeviceLogCapturer : IDeviceLogCapturer
     {
         _deviceLog.WriteLine($"Device log capture stopped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-        try
+        string startTimeStr = _startTime.ToString("yyyy-MM-dd HH:mm:ss");
+
+        // Collect logs
+        using Process collectProcess = new Process();
+        collectProcess.StartInfo.FileName = "sudo";
+        collectProcess.StartInfo.Arguments = $"log collect --device-udid {_deviceUdid} --start \"{startTimeStr}\" --output \"{_outputPath}\"";
+        collectProcess.StartInfo.UseShellExecute = false;
+        collectProcess.StartInfo.RedirectStandardOutput = true;
+        collectProcess.StartInfo.RedirectStandardError = true;
+
+        StringBuilder collectOutput = new StringBuilder();
+        StringBuilder collectErrors = new StringBuilder();
+
+        collectProcess.OutputDataReceived += (sender, e) =>
         {
-            // Use sudo log collect to get logs from start time to end time
-            string startTimeStr = _startTime.ToString("yyyy-MM-dd HH:mm:ss");
+            if (e.Data != null)
+                collectOutput.AppendLine(e.Data);
+        };
 
-            string arguments = $"log collect --device-udid {_deviceUdid} --start \"{startTimeStr}\" --output \"{_outputPath}\"";
-            _deviceLog.WriteLine($"Collecting logs: sudo {arguments}");
-
-            _process = new Process();
-            _process.StartInfo.FileName = "sudo";
-            _process.StartInfo.Arguments = arguments;
-            _process.StartInfo.UseShellExecute = false;
-            _process.StartInfo.RedirectStandardOutput = true;
-            _process.StartInfo.RedirectStandardError = true;
-
-            StringBuilder collectOutput = new StringBuilder();
-            StringBuilder collectErrors = new StringBuilder();
-
-            _process.OutputDataReceived += (sender, e) =>
-            {
-                if (e.Data != null)
-                    collectOutput.AppendLine(e.Data);
-            };
-
-            _process.ErrorDataReceived += (sender, e) =>
-            {
-                if (e.Data != null)
-                    collectErrors.AppendLine(e.Data);
-            };
-
-            _process.Start();
-            _process.BeginOutputReadLine();
-            _process.BeginErrorReadLine();
-            _process.WaitForExit();
-
-            if (collectErrors.Length > 0)
-            {
-                _mainLog.WriteLine($"Errors during log collection: {collectErrors}");
-            }
-
-            _process.Dispose();
-            _process = null;
-        }
-        catch (Exception ex)
+        collectProcess.ErrorDataReceived += (sender, e) =>
         {
-            _mainLog.WriteLine($"Failed to collect device logs: {ex.Message}");
+            if (e.Data != null)
+                collectErrors.AppendLine(e.Data);
+        };
+
+        collectProcess.Start();
+        collectProcess.BeginOutputReadLine();
+        collectProcess.BeginErrorReadLine();
+        collectProcess.WaitForExit();
+
+        if (collectErrors.Length > 0)
+        {
+            _mainLog.WriteLine($"Errors during log collection: {collectErrors}");
         }
 
-        // Read the collected logs from the output .logarchive
-        if (Directory.Exists(_outputPath))
+        // Read the collected logs
+        using Process readProcess = new Process();
+        readProcess.StartInfo.FileName = "log";
+        readProcess.StartInfo.Arguments = $"show \"{_outputPath}\" --predicate \"process == \\\"{_bundleIdentifier}\\\"\"";
+        readProcess.StartInfo.UseShellExecute = false;
+        readProcess.StartInfo.RedirectStandardOutput = true;
+        readProcess.StartInfo.RedirectStandardError = true;
+
+        StringBuilder output = new StringBuilder();
+        StringBuilder errors = new StringBuilder();
+
+        readProcess.OutputDataReceived += (sender, e) =>
         {
-            try
+            if (e.Data != null)
+                output.AppendLine(e.Data);
+        };
+
+        readProcess.ErrorDataReceived += (sender, e) =>
+        {
+            if (e.Data != null)
+                errors.AppendLine(e.Data);
+        };
+
+        readProcess.Start();
+        readProcess.BeginOutputReadLine();
+        readProcess.BeginErrorReadLine();
+        readProcess.WaitForExit();
+
+        if (output.Length > 0)
+        {
+            lock (_deviceLog)
             {
-                // Use 'log show' to convert the .logarchive to readable text
-                Process logShowProcess = new Process();
-                logShowProcess.StartInfo.FileName = "log";
-                logShowProcess.StartInfo.Arguments = $"show \"{_outputPath}\" --predicate \"process == \\\"{_bundleIdentifier}\\\"\"";
-                logShowProcess.StartInfo.UseShellExecute = false;
-                logShowProcess.StartInfo.RedirectStandardOutput = true;
-                logShowProcess.StartInfo.RedirectStandardError = true;
-
-                StringBuilder output = new StringBuilder();
-                StringBuilder errors = new StringBuilder();
-
-                logShowProcess.OutputDataReceived += (sender, e) =>
-                {
-                    if (e.Data != null)
-                        output.AppendLine(e.Data);
-                };
-
-                logShowProcess.ErrorDataReceived += (sender, e) =>
-                {
-                    if (e.Data != null)
-                        errors.AppendLine(e.Data);
-                };
-
-                logShowProcess.Start();
-                logShowProcess.BeginOutputReadLine();
-                logShowProcess.BeginErrorReadLine();
-                logShowProcess.WaitForExit();
-
-                if (output.Length > 0)
-                {
-                    lock (_deviceLog)
-                    {
-                        _deviceLog.WriteLine("--- Device logs collected ---");
-                        _deviceLog.WriteLine(output.ToString());
-                        _deviceLog.WriteLine("--- End of device logs ---");
-                    }
-                }
-
-                if (errors.Length > 0)
-                {
-                    _mainLog.WriteLine($"Errors while reading device logs: {errors}");
-                }
-
-                logShowProcess.Dispose();
-            }
-            catch (Exception ex)
-            {
-                _mainLog.WriteLine($"Failed to read device logs from {_outputPath}: {ex.Message}");
-            }
-            finally
-            {
-                try
-                {
-                    Directory.Delete(_outputPath, true);
-                }
-                catch (Exception ex)
-                {
-                    _mainLog.WriteLine($"Failed to delete temporary log archive {_outputPath}: {ex.Message}");
-                }
+                _deviceLog.WriteLine(output.ToString());
             }
         }
 
-        _process?.Dispose();
+        if (errors.Length > 0)
+        {
+            _mainLog.WriteLine($"Errors while reading device logs: {errors}");
+        }
+
+        Directory.Delete(_outputPath, true);
     }
 
     public void Dispose() => StopCapture();
