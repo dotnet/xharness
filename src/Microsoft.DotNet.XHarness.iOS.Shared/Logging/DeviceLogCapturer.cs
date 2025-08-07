@@ -5,6 +5,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
@@ -31,7 +32,10 @@ public class DeviceLogCapturer : IDeviceLogCapturer
         _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
         _deviceLog = deviceLog ?? throw new ArgumentNullException(nameof(deviceLog));
         _deviceUdid = deviceUdid ?? throw new ArgumentNullException(nameof(deviceUdid));
-        _outputPath = Path.GetTempFileName();
+
+        // Create a .logarchive path
+        var tempDir = Path.GetTempPath();
+        _outputPath = Path.Combine(tempDir,  $"device_logs_{Guid.NewGuid()}.logarchive");
     }
 
     private Process _process;
@@ -98,21 +102,55 @@ public class DeviceLogCapturer : IDeviceLogCapturer
             }
         }
 
-        // Read the collected logs from the output file
-        if (File.Exists(_outputPath))
+        // Read the collected logs from the output .logarchive
+        if (Directory.Exists(_outputPath))
         {
             try
             {
-                var logContent = File.ReadAllText(_outputPath);
-                if (!string.IsNullOrEmpty(logContent))
+                // Use 'log show' to convert the .logarchive to readable text
+                var logShowProcess = new Process();
+                logShowProcess.StartInfo.FileName = "log";
+                logShowProcess.StartInfo.Arguments = $"show \"{_outputPath}\"";
+                logShowProcess.StartInfo.UseShellExecute = false;
+                logShowProcess.StartInfo.RedirectStandardOutput = true;
+                logShowProcess.StartInfo.RedirectStandardError = true;
+
+                var output = new StringBuilder();
+                var errors = new StringBuilder();
+
+                logShowProcess.OutputDataReceived += (sender, e) =>
+                {
+                    if (e.Data != null)
+                        output.AppendLine(e.Data);
+                };
+
+                logShowProcess.ErrorDataReceived += (sender, e) =>
+                {
+                    if (e.Data != null)
+                        errors.AppendLine(e.Data);
+                };
+
+                logShowProcess.Start();
+                logShowProcess.BeginOutputReadLine();
+                logShowProcess.BeginErrorReadLine();
+                logShowProcess.WaitForExit();
+
+                if (output.Length > 0)
                 {
                     lock (_deviceLog)
                     {
                         _deviceLog.WriteLine("--- Device logs collected ---");
-                        _deviceLog.WriteLine(logContent);
+                        _deviceLog.WriteLine(output.ToString());
                         _deviceLog.WriteLine("--- End of device logs ---");
                     }
                 }
+
+                if (errors.Length > 0)
+                {
+                    _mainLog.WriteLine($"Errors while reading device logs: {errors}");
+                }
+
+                logShowProcess.Dispose();
             }
             catch (Exception ex)
             {
@@ -122,11 +160,11 @@ public class DeviceLogCapturer : IDeviceLogCapturer
             {
                 try
                 {
-                    File.Delete(_outputPath);
+                    Directory.Delete(_outputPath, true);
                 }
                 catch (Exception ex)
                 {
-                    _mainLog.WriteLine($"Failed to delete temporary log file {_outputPath}: {ex.Message}");
+                    _mainLog.WriteLine($"Failed to delete temporary log archive {_outputPath}: {ex.Message}");
                 }
             }
         }
