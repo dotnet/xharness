@@ -52,16 +52,14 @@ public class DeviceLogCapturer : IDeviceLogCapturer
 
     public void StopCapture()
     {
-        DateTime endTime = DateTime.Now;
-        _deviceLog.WriteLine($"Device log capture stopped at {endTime:yyyy-MM-dd HH:mm:ss}");
+        _deviceLog.WriteLine($"Device log capture stopped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         try
         {
             // Use sudo log collect to get logs from start time to end time
             string startTimeStr = _startTime.ToString("yyyy-MM-dd HH:mm:ss");
-            string endTimeStr = endTime.ToString("yyyy-MM-dd HH:mm:ss");
 
-            string arguments = $"log collect --device-udid {_deviceUdid} --start \"{startTimeStr}\" --end \"{endTimeStr}\" --output \"{_outputPath}\" --predicate 'process == \"{_bundleIdentifier}\"'";
+            string arguments = $"log collect --device-udid {_deviceUdid} --start \"{startTimeStr}\" --output \"{_outputPath}\" --predicate 'process == \"{_bundleIdentifier}\"'";
             _deviceLog.WriteLine($"Collecting logs: sudo {arguments}");
 
             _process = new Process();
