@@ -290,16 +290,12 @@ public sealed class LaunchDeviceBundleIdArgument : SingleValueArgument
 {
     private const string ArgName = "launchdevbundleid";
 
-    public string BundleId { get; }
-
     public LaunchDeviceBundleIdArgument(string bundleId) : base(ArgName, bundleId, false)
     {
-        BundleId = bundleId;
     }
 
     public LaunchDeviceBundleIdArgument(AppBundleInformation appInfo) : base(ArgName, appInfo.BundleIdentifier, false)
     {
-        BundleId = appInfo.BundleIdentifier;
     }
 }
 
