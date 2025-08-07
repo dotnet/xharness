@@ -59,11 +59,11 @@ public class DeviceLogCapturer : IDeviceLogCapturer
             // Use sudo log collect to get logs from start time to end time
             string startTimeStr = _startTime.ToString("yyyy-MM-dd HH:mm:ss");
 
-            string arguments = $"log collect --device-udid {_deviceUdid} --start \"{startTimeStr}\" --output \"{_outputPath}\"";
-            _deviceLog.WriteLine($"Collecting logs: sudo {arguments}");
+            string arguments = $"collect --device-udid {_deviceUdid} --start \"{startTimeStr}\" --output \"{_outputPath}\"";
+            _deviceLog.WriteLine($"Collecting logs: log {arguments}");
 
             _process = new Process();
-            _process.StartInfo.FileName = "sudo";
+            _process.StartInfo.FileName = "log";
             _process.StartInfo.Arguments = arguments;
             _process.StartInfo.UseShellExecute = false;
             _process.StartInfo.RedirectStandardOutput = true;
@@ -110,7 +110,7 @@ public class DeviceLogCapturer : IDeviceLogCapturer
                 // Use 'log show' to convert the .logarchive to readable text
                 Process logShowProcess = new Process();
                 logShowProcess.StartInfo.FileName = "log";
-                logShowProcess.StartInfo.Arguments = $"show \"{_outputPath}\"";
+                logShowProcess.StartInfo.Arguments = $"show \"{_outputPath}\" --predicate 'process == \"{_bundleIdentifier}\"'";
                 logShowProcess.StartInfo.UseShellExecute = false;
                 logShowProcess.StartInfo.RedirectStandardOutput = true;
                 logShowProcess.StartInfo.RedirectStandardError = true;
