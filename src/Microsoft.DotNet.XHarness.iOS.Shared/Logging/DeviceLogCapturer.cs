@@ -24,82 +24,90 @@ public class DeviceLogCapturer : IDeviceLogCapturer
     private readonly ILog _mainLog;
     private readonly ILog _deviceLog;
     private readonly string _deviceUdid;
+    private readonly string _bundleIdentifier;
     private readonly string _outputPath;
+    private DateTime _startTime;
 
-    public DeviceLogCapturer(IMlaunchProcessManager processManager, ILog mainLog, ILog deviceLog, string deviceUdid)
+    public DeviceLogCapturer(IMlaunchProcessManager processManager, ILog mainLog, ILog deviceLog, string deviceUdid, string bundleIdentifier = null)
     {
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
         _deviceLog = deviceLog ?? throw new ArgumentNullException(nameof(deviceLog));
         _deviceUdid = deviceUdid ?? throw new ArgumentNullException(nameof(deviceUdid));
+        _bundleIdentifier = bundleIdentifier;
 
         // Create a .logarchive path
         var tempDir = Path.GetTempPath();
-        _outputPath = Path.Combine(tempDir,  $"device_logs_{Guid.NewGuid()}.logarchive");
+        _outputPath = Path.Combine(tempDir, $"device_logs_{Guid.NewGuid()}.logarchive");
     }
 
     private Process _process;
 
     public void StartCapture()
     {
-        // Use sudo log collect instead of mlaunch --logdev
-        var startTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        var arguments = $"log collect --device-udid {_deviceUdid} --start \"{startTime}\" --output \"{_outputPath}\"";
-
-        _process = new Process();
-        _process.StartInfo.FileName = "sudo";
-        _process.StartInfo.Arguments = arguments;
-        _process.StartInfo.UseShellExecute = false;
-        _process.StartInfo.RedirectStandardOutput = true;
-        _process.StartInfo.RedirectStandardError = true;
-        _process.StartInfo.RedirectStandardInput = true;
-
-        _process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
-        {
-            if (e.Data == null)
-            {
-                return;
-            }
-
-            lock (_deviceLog)
-            {
-                _deviceLog.WriteLine(e.Data);
-            }
-        };
-
-        _process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
-        {
-            if (e.Data == null)
-            {
-                return;
-            }
-
-            lock (_deviceLog)
-            {
-                _deviceLog.WriteLine(e.Data);
-            }
-        };
-
-        _deviceLog.WriteLine("{0} {1}", _process.StartInfo.FileName, _process.StartInfo.Arguments);
-
-        _process.Start();
-        _process.BeginOutputReadLine();
-        _process.BeginErrorReadLine();
+        // Record the start time for later log collection
+        _startTime = DateTime.Now;
+        _deviceLog.WriteLine($"Device log capture started at {_startTime:yyyy-MM-dd HH:mm:ss}");
     }
 
     public void StopCapture()
     {
-        if (_process?.HasExited == false)
+        var endTime = DateTime.Now;
+        _deviceLog.WriteLine($"Device log capture stopped at {endTime:yyyy-MM-dd HH:mm:ss}");
+
+        try
         {
-            try
+            // Use sudo log collect to get logs from start time to end time
+            var startTimeStr = _startTime.ToString("yyyy-MM-dd HH:mm:ss");
+            var endTimeStr = endTime.ToString("yyyy-MM-dd HH:mm:ss");
+
+            var arguments = $"log collect --device-udid {_deviceUdid} --start \"{startTimeStr}\" --end \"{endTimeStr}\" --output \"{_outputPath}\"";
+
+            if (!string.IsNullOrEmpty(_bundleIdentifier))
             {
-                _process.Kill();
-                _process.WaitForExit((int)TimeSpan.FromSeconds(5).TotalMilliseconds);
+                // Add predicate to filter logs for specific bundle identifier
+                arguments += $" --predicate 'process == \"{_bundleIdentifier}\"'";
             }
-            catch (InvalidOperationException)
+
+            _deviceLog.WriteLine($"Collecting logs: sudo {arguments}");
+
+            var collectProcess = new Process();
+            collectProcess.StartInfo.FileName = "sudo";
+            collectProcess.StartInfo.Arguments = arguments;
+            collectProcess.StartInfo.UseShellExecute = false;
+            collectProcess.StartInfo.RedirectStandardOutput = true;
+            collectProcess.StartInfo.RedirectStandardError = true;
+
+            var collectOutput = new StringBuilder();
+            var collectErrors = new StringBuilder();
+
+            collectProcess.OutputDataReceived += (sender, e) =>
             {
-                // Process already exited
+                if (e.Data != null)
+                    collectOutput.AppendLine(e.Data);
+            };
+
+            collectProcess.ErrorDataReceived += (sender, e) =>
+            {
+                if (e.Data != null)
+                    collectErrors.AppendLine(e.Data);
+            };
+
+            collectProcess.Start();
+            collectProcess.BeginOutputReadLine();
+            collectProcess.BeginErrorReadLine();
+            collectProcess.WaitForExit();
+
+            if (collectErrors.Length > 0)
+            {
+                _mainLog.WriteLine($"Errors during log collection: {collectErrors}");
             }
+
+            collectProcess.Dispose();
+        }
+        catch (Exception ex)
+        {
+            _mainLog.WriteLine($"Failed to collect device logs: {ex.Message}");
         }
 
         // Read the collected logs from the output .logarchive

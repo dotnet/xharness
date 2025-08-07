@@ -206,7 +206,11 @@ public class AppRunner : AppRunnerBase, IAppRunner
         CancellationToken cancellationToken)
     {
         using var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
-        using var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.UDID);
+
+        // Extract bundle identifier from mlaunch arguments for log filtering
+        var bundleId = mlaunchArguments.OfType<LaunchDeviceBundleIdArgument>().FirstOrDefault()?.BundleId;
+
+        using var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.UDID, bundleId);
         deviceLogCapturer.StartCapture();
 
         await crashReporter.StartCaptureAsync();
