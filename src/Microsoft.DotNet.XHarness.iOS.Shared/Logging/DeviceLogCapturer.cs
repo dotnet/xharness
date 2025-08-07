@@ -52,9 +52,12 @@ public class DeviceLogCapturer : IDeviceLogCapturer
         string startTimeStr = _startTime.ToString("yyyy-MM-dd HH:mm:ss");
 
         // Collect logs
+        string collectArguments = $"log collect --device-udid {_deviceUdid} --start \"{startTimeStr}\" --output \"{_outputPath}\"";
+        _deviceLog.WriteLine($"Collecting logs: sudo {collectArguments}");
+
         using Process collectProcess = new Process();
         collectProcess.StartInfo.FileName = "sudo";
-        collectProcess.StartInfo.Arguments = $"log collect --device-udid {_deviceUdid} --start \"{startTimeStr}\" --output \"{_outputPath}\"";
+        collectProcess.StartInfo.Arguments = collectArguments;
         collectProcess.StartInfo.UseShellExecute = false;
         collectProcess.StartInfo.RedirectStandardOutput = true;
         collectProcess.StartInfo.RedirectStandardError = true;
@@ -85,9 +88,12 @@ public class DeviceLogCapturer : IDeviceLogCapturer
         }
 
         // Read the collected logs
+        string readArguments = $"show \"{_outputPath}\" --predicate \"process == \\\"{_bundleIdentifier}\\\"\"";
+        _deviceLog.WriteLine($"Reading logs: log {readArguments}");
+
         using Process readProcess = new Process();
         readProcess.StartInfo.FileName = "log";
-        readProcess.StartInfo.Arguments = $"show \"{_outputPath}\" --predicate \"process == \\\"{_bundleIdentifier}\\\"\"";
+        readProcess.StartInfo.Arguments = readArguments;
         readProcess.StartInfo.UseShellExecute = false;
         readProcess.StartInfo.RedirectStandardOutput = true;
         readProcess.StartInfo.RedirectStandardError = true;
