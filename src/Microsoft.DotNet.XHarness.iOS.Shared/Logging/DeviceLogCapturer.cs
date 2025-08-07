@@ -4,6 +4,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
@@ -17,40 +18,41 @@ public interface IDeviceLogCapturer : IDisposable
 
 public class DeviceLogCapturer : IDeviceLogCapturer
 {
+    // TODO: Remove process manager
     private readonly IMlaunchProcessManager _processManager;
     private readonly ILog _mainLog;
     private readonly ILog _deviceLog;
-    private readonly string _deviceName;
+    private readonly string _deviceUdid;
+    private readonly string _outputPath;
 
-    public DeviceLogCapturer(IMlaunchProcessManager processManager, ILog mainLog, ILog deviceLog, string deviceName)
+    public DeviceLogCapturer(IMlaunchProcessManager processManager, ILog mainLog, ILog deviceLog, string deviceUdid)
     {
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
         _deviceLog = deviceLog ?? throw new ArgumentNullException(nameof(deviceLog));
-        _deviceName = deviceName ?? throw new ArgumentNullException(nameof(deviceName));
+        _deviceUdid = deviceUdid ?? throw new ArgumentNullException(nameof(deviceUdid));
+        _outputPath = Path.GetTempFileName();
     }
 
     private Process _process;
 
     public void StartCapture()
     {
-        var args = new MlaunchArguments
-            {
-                new SdkRootArgument(_processManager.XcodeRoot),
-                new LogDevArgument(),
-                new DeviceNameArgument(_deviceName),
-            };
+        // Use sudo log collect instead of mlaunch --logdev
+        var startTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        var arguments = $"log collect --device-udid {_deviceUdid} --start \"{startTime}\" --output \"{_outputPath}\"";
 
         _process = new Process();
-        _process.StartInfo.FileName = _processManager.MlaunchPath;
-        _process.StartInfo.Arguments = args.AsCommandLine();
+        _process.StartInfo.FileName = "sudo";
+        _process.StartInfo.Arguments = arguments;
         _process.StartInfo.UseShellExecute = false;
         _process.StartInfo.RedirectStandardOutput = true;
         _process.StartInfo.RedirectStandardError = true;
         _process.StartInfo.RedirectStandardInput = true;
+
         _process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
         {
-            if (e.Data != null)
+            if (e.Data == null)
             {
                 return;
             }
@@ -83,19 +85,53 @@ public class DeviceLogCapturer : IDeviceLogCapturer
 
     public void StopCapture()
     {
-        if (_process.HasExited)
+        if (_process?.HasExited == false)
         {
-            return;
+            try
+            {
+                _process.Kill();
+                _process.WaitForExit((int)TimeSpan.FromSeconds(5).TotalMilliseconds);
+            }
+            catch (InvalidOperationException)
+            {
+                // Process already exited
+            }
         }
 
-        _process.StandardInput.WriteLine();
-        if (_process.WaitForExit((int)TimeSpan.FromSeconds(5).TotalMilliseconds))
+        // Read the collected logs from the output file
+        if (File.Exists(_outputPath))
         {
-            return;
+            try
+            {
+                var logContent = File.ReadAllText(_outputPath);
+                if (!string.IsNullOrEmpty(logContent))
+                {
+                    lock (_deviceLog)
+                    {
+                        _deviceLog.WriteLine("--- Device logs collected ---");
+                        _deviceLog.WriteLine(logContent);
+                        _deviceLog.WriteLine("--- End of device logs ---");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _mainLog.WriteLine($"Failed to read device logs from {_outputPath}: {ex.Message}");
+            }
+            finally
+            {
+                try
+                {
+                    File.Delete(_outputPath);
+                }
+                catch (Exception ex)
+                {
+                    _mainLog.WriteLine($"Failed to delete temporary log file {_outputPath}: {ex.Message}");
+                }
+            }
         }
 
-        _processManager.KillTreeAsync(_process, _mainLog, diagnostics: false).Wait();
-        _process.Dispose();
+        _process?.Dispose();
     }
 
     public void Dispose() => StopCapture();
