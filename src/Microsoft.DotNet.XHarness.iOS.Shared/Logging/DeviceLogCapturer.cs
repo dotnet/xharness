@@ -28,7 +28,7 @@ public class DeviceLogCapturer : IDeviceLogCapturer
     private readonly string _outputPath;
     private DateTime _startTime;
 
-    public DeviceLogCapturer(IMlaunchProcessManager processManager, ILog mainLog, ILog deviceLog, string deviceUdid, string bundleIdentifier = null)
+    public DeviceLogCapturer(IMlaunchProcessManager processManager, ILog mainLog, ILog deviceLog, string deviceUdid, string bundleIdentifier)
     {
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
@@ -52,58 +52,52 @@ public class DeviceLogCapturer : IDeviceLogCapturer
 
     public void StopCapture()
     {
-        var endTime = DateTime.Now;
+        DateTime endTime = DateTime.Now;
         _deviceLog.WriteLine($"Device log capture stopped at {endTime:yyyy-MM-dd HH:mm:ss}");
 
         try
         {
             // Use sudo log collect to get logs from start time to end time
-            var startTimeStr = _startTime.ToString("yyyy-MM-dd HH:mm:ss");
-            var endTimeStr = endTime.ToString("yyyy-MM-dd HH:mm:ss");
+            string startTimeStr = _startTime.ToString("yyyy-MM-dd HH:mm:ss");
+            string endTimeStr = endTime.ToString("yyyy-MM-dd HH:mm:ss");
 
-            var arguments = $"log collect --device-udid {_deviceUdid} --start \"{startTimeStr}\" --end \"{endTimeStr}\" --output \"{_outputPath}\"";
-
-            if (!string.IsNullOrEmpty(_bundleIdentifier))
-            {
-                // Add predicate to filter logs for specific bundle identifier
-                arguments += $" --predicate 'process == \"{_bundleIdentifier}\"'";
-            }
-
+            string arguments = $"log collect --device-udid {_deviceUdid} --start \"{startTimeStr}\" --end \"{endTimeStr}\" --output \"{_outputPath}\" --predicate 'process == \"{_bundleIdentifier}\"'";
             _deviceLog.WriteLine($"Collecting logs: sudo {arguments}");
 
-            var collectProcess = new Process();
-            collectProcess.StartInfo.FileName = "sudo";
-            collectProcess.StartInfo.Arguments = arguments;
-            collectProcess.StartInfo.UseShellExecute = false;
-            collectProcess.StartInfo.RedirectStandardOutput = true;
-            collectProcess.StartInfo.RedirectStandardError = true;
+            _process = new Process();
+            _process.StartInfo.FileName = "sudo";
+            _process.StartInfo.Arguments = arguments;
+            _process.StartInfo.UseShellExecute = false;
+            _process.StartInfo.RedirectStandardOutput = true;
+            _process.StartInfo.RedirectStandardError = true;
 
-            var collectOutput = new StringBuilder();
-            var collectErrors = new StringBuilder();
+            StringBuilder collectOutput = new StringBuilder();
+            StringBuilder collectErrors = new StringBuilder();
 
-            collectProcess.OutputDataReceived += (sender, e) =>
+            _process.OutputDataReceived += (sender, e) =>
             {
                 if (e.Data != null)
                     collectOutput.AppendLine(e.Data);
             };
 
-            collectProcess.ErrorDataReceived += (sender, e) =>
+            _process.ErrorDataReceived += (sender, e) =>
             {
                 if (e.Data != null)
                     collectErrors.AppendLine(e.Data);
             };
 
-            collectProcess.Start();
-            collectProcess.BeginOutputReadLine();
-            collectProcess.BeginErrorReadLine();
-            collectProcess.WaitForExit();
+            _process.Start();
+            _process.BeginOutputReadLine();
+            _process.BeginErrorReadLine();
+            _process.WaitForExit();
 
             if (collectErrors.Length > 0)
             {
                 _mainLog.WriteLine($"Errors during log collection: {collectErrors}");
             }
 
-            collectProcess.Dispose();
+            _process.Dispose();
+            _process = null;
         }
         catch (Exception ex)
         {
@@ -116,15 +110,15 @@ public class DeviceLogCapturer : IDeviceLogCapturer
             try
             {
                 // Use 'log show' to convert the .logarchive to readable text
-                var logShowProcess = new Process();
+                Process logShowProcess = new Process();
                 logShowProcess.StartInfo.FileName = "log";
                 logShowProcess.StartInfo.Arguments = $"show \"{_outputPath}\"";
                 logShowProcess.StartInfo.UseShellExecute = false;
                 logShowProcess.StartInfo.RedirectStandardOutput = true;
                 logShowProcess.StartInfo.RedirectStandardError = true;
 
-                var output = new StringBuilder();
-                var errors = new StringBuilder();
+                StringBuilder output = new StringBuilder();
+                StringBuilder errors = new StringBuilder();
 
                 logShowProcess.OutputDataReceived += (sender, e) =>
                 {

@@ -371,10 +371,7 @@ public class AppTester : AppRunnerBase, IAppTester
         var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
         deviceSystemLog.Timestamp = false;
 
-        // Extract bundle identifier from mlaunch arguments for log filtering
-        var bundleId = mlaunchArguments.OfType<LaunchDeviceBundleIdArgument>().FirstOrDefault()?.BundleId;
-
-        var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.UDID, bundleId);
+        var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.UDID, appInformation.BundleIdentifier);
         deviceLogCapturer.StartCapture();
 
         try

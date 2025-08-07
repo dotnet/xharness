@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XHarness.Apple;
 
 public interface IDeviceLogCapturerFactory
 {
-    IDeviceLogCapturer Create(ILog mainLog, ILog deviceLog, string deviceUdid, string bundleIdentifier = null);
+    IDeviceLogCapturer Create(ILog mainLog, ILog deviceLog, string deviceUdid, string bundleIdentifier);
 }
 
 public class DeviceLogCapturerFactory : IDeviceLogCapturerFactory
@@ -23,6 +23,6 @@ public class DeviceLogCapturerFactory : IDeviceLogCapturerFactory
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
     }
 
-    public IDeviceLogCapturer Create(ILog mainLog, ILog deviceLog, string deviceUdid, string bundleIdentifier = null) => new DeviceLogCapturer(_processManager, mainLog, deviceLog, deviceUdid, bundleIdentifier);
+    public IDeviceLogCapturer Create(ILog mainLog, ILog deviceLog, string deviceUdid, string bundleIdentifier) => new DeviceLogCapturer(_processManager, mainLog, deviceLog, deviceUdid, bundleIdentifier);
 }
 
