@@ -88,7 +88,7 @@ public class DeviceLogCapturer : IDeviceLogCapturer
         }
 
         // Read the collected logs
-        string readArguments = $"show \"{_outputPath}\" --predicate \"process == {_bundleIdentifier.Replace("net.dot.", "")}\"";
+        string readArguments = $"show \"{_outputPath}\"";
         _deviceLog.WriteLine($"Reading logs: log {readArguments}");
 
         using Process readProcess = new Process();
