@@ -380,11 +380,11 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
     }
 
     /// <summary>
-    /// Copy system and application logs to the main log for better failure investigation.
+    /// Copy application logs to the main log for better failure investigation.
     /// </summary>
     private void CopyLogsToMainLog()
     {
-        var logs = _logs.Where(log => log.Description == LogType.SystemLog.ToString() || log.Description == LogType.ApplicationLog.ToString()).ToList();
+        var logs = _logs.Where(log => log.Description == LogType.ApplicationLog.ToString()).ToList();
 
         foreach (var log in logs)
         {
