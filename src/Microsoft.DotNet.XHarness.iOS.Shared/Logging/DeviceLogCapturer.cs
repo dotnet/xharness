@@ -85,6 +85,12 @@ public class DeviceLogCapturer : IDeviceLogCapturer
         if (collectErrors.Length > 0)
         {
             _mainLog.WriteLine($"Errors during log collection: {collectErrors}");
+
+            if (collectProcess.ExitCode != 0)
+            {
+                _deviceLog.WriteLine($"Log collection failed with exit code {collectProcess.ExitCode}. Skipping log reading.");
+                return;
+            }
         }
 
         // Read the collected logs
@@ -131,7 +137,10 @@ public class DeviceLogCapturer : IDeviceLogCapturer
             _mainLog.WriteLine($"Errors while reading device logs: {errors}");
         }
 
-        Directory.Delete(_outputPath, true);
+        if (Directory.Exists(_outputPath))
+        {
+            Directory.Delete(_outputPath, true);
+        }
     }
 
     public void Dispose() => StopCapture();
