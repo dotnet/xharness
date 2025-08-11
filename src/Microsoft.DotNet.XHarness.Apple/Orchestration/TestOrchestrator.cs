@@ -380,7 +380,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
     }
 
     /// <summary>
-    /// Copy application logs to the main log for better failure investigation.
+    /// Copy system and application logs to the main log for better failure investigation.
     /// </summary>
     private void CopyLogsToMainLog()
     {
