@@ -384,7 +384,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
     /// </summary>
     private void CopyLogsToMainLog()
     {
-        var logs = _logs.Where(log => log.Description == LogType.ApplicationLog.ToString()).ToList();
+        var logs = _logs.Where(log => log.Description == LogType.SystemLog.ToString() || log.Description == LogType.ApplicationLog.ToString()).ToList();
 
         foreach (var log in logs)
         {
