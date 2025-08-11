@@ -166,7 +166,7 @@ public class AppTesterTests : AppRunTestBase
 
         var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
         deviceLogCapturerFactory
-            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID, _appBundleInfo.BundleIdentifier))
+            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID))
             .Returns(deviceLogCapturer.Object);
 
         var testResultFilePath = Path.GetTempFileName();
@@ -264,7 +264,7 @@ public class AppTesterTests : AppRunTestBase
 
         var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
         deviceLogCapturerFactory
-            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID, _appBundleInfo.BundleIdentifier))
+            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID))
             .Returns(deviceLogCapturer.Object);
 
         var testResultFilePath = Path.GetTempFileName();
@@ -346,7 +346,7 @@ public class AppTesterTests : AppRunTestBase
 
         var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
         deviceLogCapturerFactory
-            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID, _appBundleInfo.BundleIdentifier))
+            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID))
             .Returns(deviceLogCapturer.Object);
 
         var testResultFilePath = Path.GetTempFileName();
@@ -495,7 +495,7 @@ public class AppTesterTests : AppRunTestBase
 
         var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
         deviceLogCapturerFactory
-            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID, _appBundleInfo.BundleIdentifier))
+            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID))
             .Returns(deviceLogCapturer.Object);
 
         var testResultFilePath = Path.GetTempFileName();

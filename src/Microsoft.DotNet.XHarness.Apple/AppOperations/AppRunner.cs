@@ -183,7 +183,6 @@ public class AppRunner : AppRunnerBase, IAppRunner
                     appEndTag);
 
                 result = await RunDeviceApp(
-                    appInformation,
                     mlaunchArguments,
                     crashReporter,
                     device,
@@ -198,7 +197,6 @@ public class AppRunner : AppRunnerBase, IAppRunner
     }
 
     private async Task<ProcessExecutionResult> RunDeviceApp(
-        AppBundleInformation appInformation,
         MlaunchArguments mlaunchArguments,
         ICrashSnapshotReporter crashReporter,
         IDevice device,
@@ -208,7 +206,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
         CancellationToken cancellationToken)
     {
         using var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
-        using var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.UDID, appInformation.BundleIdentifier);
+        using var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.UDID);
         deviceLogCapturer.StartCapture();
 
         await crashReporter.StartCaptureAsync();

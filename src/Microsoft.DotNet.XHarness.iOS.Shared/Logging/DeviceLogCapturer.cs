@@ -19,22 +19,17 @@ public interface IDeviceLogCapturer : IDisposable
 
 public class DeviceLogCapturer : IDeviceLogCapturer
 {
-    // TODO: Remove process manager
-    private readonly IMlaunchProcessManager _processManager;
     private readonly ILog _mainLog;
     private readonly ILog _deviceLog;
     private readonly string _deviceUdid;
-    private readonly string _bundleIdentifier;
     private readonly string _outputPath;
     private DateTime _startTime;
 
-    public DeviceLogCapturer(IMlaunchProcessManager processManager, ILog mainLog, ILog deviceLog, string deviceUdid, string bundleIdentifier)
+    public DeviceLogCapturer(ILog mainLog, ILog deviceLog, string deviceUdid)
     {
-        _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
         _deviceLog = deviceLog ?? throw new ArgumentNullException(nameof(deviceLog));
         _deviceUdid = deviceUdid ?? throw new ArgumentNullException(nameof(deviceUdid));
-        _bundleIdentifier = bundleIdentifier;
 
         _outputPath = Path.Combine(Path.GetTempPath(), $"device_logs_{Guid.NewGuid()}.logarchive");
     }

@@ -107,7 +107,7 @@ public class AppRunnerTests : AppRunTestBase
 
         var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
         deviceLogCapturerFactory
-            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID, _appBundleInfo.BundleIdentifier))
+            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID))
             .Returns(deviceLogCapturer.Object);
 
         var x = _logs.Object.First();
@@ -173,7 +173,7 @@ public class AppRunnerTests : AppRunTestBase
 
         var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
         deviceLogCapturerFactory
-            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID, _appBundleInfo.BundleIdentifier))
+            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID))
             .Returns(deviceLogCapturer.Object);
 
         var testEndSignal = Guid.NewGuid();
@@ -354,7 +354,7 @@ public class AppRunnerTests : AppRunTestBase
 
         var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
         deviceLogCapturerFactory
-            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID, _appBundleInfo.BundleIdentifier))
+            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID))
             .Returns(deviceLogCapturer.Object);
 
         var x = _logs.Object.First();
