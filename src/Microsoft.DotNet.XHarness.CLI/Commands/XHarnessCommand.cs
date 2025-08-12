@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.CLI.Resources;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
@@ -100,13 +101,13 @@ public abstract class XHarnessCommand<T> : Command where T : IXHarnessCommandArg
                 }
                 else
                 {
-                    throw new ArgumentException($"Unknown arguments: {string.Join(" ", extra)}");
+                    throw new ArgumentException(string.Format(Strings.Error_UnknownArguments, string.Join(" ", extra)));
                 }
             }
 
             if (Arguments.ShowHelp)
             {
-                Console.WriteLine("usage: " + CommandUsage + Environment.NewLine + Environment.NewLine + CommandDescription + Environment.NewLine);
+                Console.WriteLine(string.Format(Strings.Help_Usage, CommandUsage) + Environment.NewLine + Environment.NewLine + CommandDescription + Environment.NewLine);
                 options.WriteOptionDescriptions(Console.Out);
                 return (int)ExitCode.HELP_SHOWN;
             }
@@ -126,7 +127,7 @@ public abstract class XHarnessCommand<T> : Command where T : IXHarnessCommandArg
         }
         catch (Exception e)
         {
-            parseLogger.LogCritical("Unexpected failure argument: {error}", e);
+            parseLogger.LogCritical(Strings.Error_UnexpectedFailure, e);
             return (int)ExitCode.GENERAL_FAILURE;
         }
 

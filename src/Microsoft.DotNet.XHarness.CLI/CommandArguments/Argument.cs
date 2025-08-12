@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.DotNet.XHarness.CLI.Resources;
 using OpenQA.Selenium;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments;
@@ -80,15 +81,13 @@ public abstract class Argument
     {
         if (value == null)
         {
-            throw new ArgumentNullException(message: $"Empty value supplied to {argumentName}", null);
+            throw new ArgumentNullException(message: string.Format(Strings.Error_EmptyValue, argumentName), null);
         }
 
         if (value.All(c => char.IsDigit(c)))
         {
             // Any int would parse into enum successfully, so we forbid that
-            throw new ArgumentException(
-                $"Invalid value '{value}' supplied for {argumentName}. " +
-                $"Valid values are:" + GetAllowedValues(invalidValues: invalidValues));
+            throw new ArgumentException(string.Format(Strings.Error_InvalidValue, value, argumentName, GetAllowedValues(invalidValues: invalidValues)));
         }
 
         var type = typeof(TEnum);
@@ -115,9 +114,7 @@ public abstract class Argument
             validOptions = validOptions.Where(v => !invalidValues.Contains(v));
         }
 
-        throw new ArgumentException(
-            $"Invalid value '{value}' supplied in {argumentName}. " +
-            $"Valid values are:" + GetAllowedValues(invalidValues: invalidValues));
+        throw new ArgumentException(string.Format(Strings.Error_InvalidValue, value, argumentName, GetAllowedValues(invalidValues: invalidValues)));
     }
 }
 
@@ -151,7 +148,7 @@ public abstract class IntArgument : Argument<int>
             return;
         }
 
-        throw new ArgumentException($"{Prototype} must be an integer");
+        throw new ArgumentException(string.Format(Strings.Error_MustBeInteger, Prototype));
     }
 }
 
@@ -170,7 +167,7 @@ public abstract class OptionalIntArgument : Argument<int?>
             return;
         }
 
-        throw new ArgumentException($"{Prototype} must be an integer");
+        throw new ArgumentException(string.Format(Strings.Error_MustBeInteger, Prototype));
     }
 }
 
@@ -197,7 +194,7 @@ public abstract class RequiredStringArgument : Argument<string>
     {
         if (string.IsNullOrEmpty(Value))
         {
-            throw new ArgumentException($"Required argument {Prototype} was not supplied");
+            throw new ArgumentException(string.Format(Strings.Error_RequiredArgumentMissing, Prototype));
         }
     }
 }
@@ -223,7 +220,7 @@ public abstract class TimeSpanArgument : Argument<TimeSpan>
             return;
         }
 
-        throw new ArgumentException($"{Prototype} must be an integer - a number of seconds, or a timespan (00:30:00)");
+        throw new ArgumentException(string.Format(Strings.Error_MustBeTimespan, Prototype));
     }
 }
 
@@ -242,7 +239,7 @@ public abstract class PathArgument : StringArgument
     {
         if (_isRequired && string.IsNullOrEmpty(Value))
         {
-            throw new ArgumentException($"Required argument {Prototype} was not supplied");
+            throw new ArgumentException(string.Format(Strings.Error_RequiredArgumentMissing, Prototype));
         }
     }
 }

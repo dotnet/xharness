@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <!-- Apple Commands -->
+  <data name="Apple_Test_Description" xml:space="preserve">
+    <value>Installs, runs and uninstalls a given iOS/tvOS/watchOS/xrOS/MacCatalyst test application bundle containing TestRunner in a target device/simulator.</value>
+  </data>
+  <data name="Apple_Test_Usage" xml:space="preserve">
+    <value>apple test --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]</value>
+  </data>
+  <data name="Apple_Run_Description" xml:space="preserve">
+    <value>Installs, runs and uninstalls a given iOS/tvOS/watchOS/xrOS/MacCatalyst application bundle in a target device/simulator and tries to detect the exit code.</value>
+  </data>
+  <data name="Apple_Install_Description" xml:space="preserve">
+    <value>Installs a given iOS/tvOS/watchOS/xrOS/MacCatalyst application bundle in a target device/simulator</value>
+  </data>
+  <data name="Apple_Uninstall_Description" xml:space="preserve">
+    <value>Uninstalls a given iOS/tvOS/watchOS/xrOS/MacCatalyst application bundle from a target device/simulator</value>
+  </data>
+  <data name="Apple_JustTest_Description" xml:space="preserve">
+    <value>Runs an already installed iOS/tvOS/watchOS/xrOS/MacCatalyst test application containing a TestRunner in a target device/simulator.</value>
+  </data>
+  <data name="Apple_JustRun_Description" xml:space="preserve">
+    <value>Runs an already installed iOS/tvOS/watchOS/xrOS/MacCatalyst test application containing a TestRunner in a target device/simulator and tries to detect the exit code.</value>
+  </data>
+  <data name="Apple_Device_Description" xml:space="preserve">
+    <value>Finds the UDID of a device/simulator for given target</value>
+  </data>
+  <data name="Apple_Mlaunch_Description" xml:space="preserve">
+    <value>Invoke bundled mlaunch with given arguments</value>
+  </data>
+  <data name="Apple_State_Description" xml:space="preserve">
+    <value>Print information about the current machine, such as host machine info and device status</value>
+  </data>
+  
+  <!-- Android Commands -->
+  <data name="Android_Test_Description" xml:space="preserve">
+    <value>Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app</value>
+  </data>
+  <data name="Android_Device_Description" xml:space="preserve">
+    <value>Get ID of the device compatible with a given .apk / architecture</value>
+  </data>
+  <data name="Android_Install_Description" xml:space="preserve">
+    <value>Install an .apk on an Android device without running it</value>
+  </data>
+  <data name="Android_Run_Description" xml:space="preserve">
+    <value>Run tests using an already installed .apk on an Android device</value>
+  </data>
+  <data name="Android_Uninstall_Description" xml:space="preserve">
+    <value>Uninstall an .apk from an Android device</value>
+  </data>
+  <data name="Android_Adb_Description" xml:space="preserve">
+    <value>Invoke bundled adb with given arguments</value>
+  </data>
+  <data name="Android_State_Description" xml:space="preserve">
+    <value>Print information about the current machine, such as host machine info and device status</value>
+  </data>
+  
+  <!-- Android Headless Commands -->
+  <data name="AndroidHeadless_Test_Description" xml:space="preserve">
+    <value>Executes test executable on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app</value>
+  </data>
+  <data name="AndroidHeadless_Install_Description" xml:space="preserve">
+    <value>Install a test folder to an Android device without running it</value>
+  </data>
+  <data name="AndroidHeadless_Run_Description" xml:space="preserve">
+    <value>Run tests using an already installed executable on an Android device</value>
+  </data>
+  <data name="AndroidHeadless_Uninstall_Description" xml:space="preserve">
+    <value>Uninstall a test folder from an Android device</value>
+  </data>
+  
+  <!-- WASM Commands -->
+  <data name="Wasm_Test_Description" xml:space="preserve">
+    <value>Executes tests on WASM using a selected JavaScript engine</value>
+  </data>
+  <data name="Wasm_TestBrowser_Description" xml:space="preserve">
+    <value>Executes tests on WASM using a browser</value>
+  </data>
+  <data name="Wasm_WebServer_Description" xml:space="preserve">
+    <value>Starts a webserver</value>
+  </data>
+  
+  <!-- WASI Commands -->
+  <data name="Wasi_Test_Description" xml:space="preserve">
+    <value>Executes tests on WASI using a selected engine</value>
+  </data>
+  
+  <!-- Simulator Commands -->
+  <data name="Apple_Simulators_List_Description" xml:space="preserve">
+    <value>Lists available simulators</value>
+  </data>
+  <data name="Apple_Simulators_Find_Description" xml:space="preserve">
+    <value>Finds whether given simulators are installed and outputs list of missing ones (returns 0 when none missing)</value>
+  </data>
+  <data name="Apple_Simulators_Install_Description" xml:space="preserve">
+    <value>Installs given simulators</value>
+  </data>
+  <data name="Apple_Simulators_Reset_Description" xml:space="preserve">
+    <value>Resets given iOS/tvOS simulator (wipes it clean)</value>
+  </data>
+  
+  <!-- Common Error Messages -->
+  <data name="Error_UnknownArguments" xml:space="preserve">
+    <value>Unknown arguments: {0}</value>
+  </data>
+  <data name="Error_RequiredArgumentMissing" xml:space="preserve">
+    <value>Required argument {0} was not supplied</value>
+  </data>
+  <data name="Error_InvalidValue" xml:space="preserve">
+    <value>Invalid value '{0}' supplied for {1}. Valid values are:{2}</value>
+  </data>
+  <data name="Error_MustBeInteger" xml:space="preserve">
+    <value>{0} must be an integer</value>
+  </data>
+  <data name="Error_MustBeTimespan" xml:space="preserve">
+    <value>{0} must be an integer - a number of seconds, or a timespan (00:30:00)</value>
+  </data>
+  <data name="Error_EmptyValue" xml:space="preserve">
+    <value>Empty value supplied to {0}</value>
+  </data>
+  <data name="Error_UnexpectedFailure" xml:space="preserve">
+    <value>Unexpected failure argument: {0}</value>
+  </data>
+  
+  <!-- Help Messages -->
+  <data name="Help_Usage" xml:space="preserve">
+    <value>usage: {0}</value>
+  </data>
+  <data name="Help_CommandNotAvailable" xml:space="preserve">
+    <value>The '{0}' command is not available on non-OSX platforms!</value>
+  </data>
+  <data name="Help_NoHelpAvailable" xml:space="preserve">
+    <value>No help available for command '{0}'. Allowed commands are 'apple', 'wasm', 'wasi' and 'android'</value>
+  </data>
+  <data name="Help_UnknownSubCommand" xml:space="preserve">
+    <value>Unknown sub-command '{0}'.</value>
+  </data>
+  <data name="Help_AllSupportedSubCommands" xml:space="preserve">
+    <value>All supported sub-commands:</value>
+  </data>
+  <data name="Help_RunForMoreDetails" xml:space="preserve">
+    <value>Run 'xharness {0} {{command}} --help' for more details</value>
+  </data>
+  
+  <!-- Log Messages -->
+  <data name="Log_XHarnessCommandIssued" xml:space="preserve">
+    <value>[{0}] XHarness command issued: {1}</value>
+  </data>
+  <data name="Log_XHarnessExitCode" xml:space="preserve">
+    <value>XHarness exit code: {0}{1}</value>
+  </data>
+  
+  <!-- Argument Descriptions -->
+  <data name="Arg_Target_Description" xml:space="preserve">
+    <value>Test target (device/simulator and OS)</value>
+  </data>
+  <data name="Arg_AppPath_Description" xml:space="preserve">
+    <value>Path to application bundle</value>
+  </data>
+  <data name="Arg_OutputDirectory_Description" xml:space="preserve">
+    <value>Directory to which the simulator/device output will be saved</value>
+  </data>
+  <data name="Arg_Timeout_Description" xml:space="preserve">
+    <value>Timeout in seconds. Default is {0} seconds</value>
+  </data>
+  <data name="Arg_LaunchTimeout_Description" xml:space="preserve">
+    <value>Timeout in seconds for the app to start. Default is {0} seconds</value>
+  </data>
+  <data name="Arg_DeviceName_Description" xml:space="preserve">
+    <value>Name of the device/simulator to use</value>
+  </data>
+  <data name="Arg_Verbosity_Description" xml:space="preserve">
+    <value>Logging verbosity level</value>
+  </data>
+  <data name="Arg_Help_Description" xml:space="preserve">
+    <value>Show this message and exit</value>
+  </data>
+</root>

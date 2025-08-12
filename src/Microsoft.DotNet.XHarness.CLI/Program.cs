@@ -11,6 +11,7 @@ using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasi;
+using Microsoft.DotNet.XHarness.CLI.Resources;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Mono.Options;
 
@@ -30,9 +31,9 @@ public static class Program
 
         if (shouldOutput)
         {
-            Console.WriteLine(
-                $"[{XHarnessVersionCommand.GetAssemblyVersion().ProductVersion}] " +
-                "XHarness command issued: " + string.Join(' ', args));
+            Console.WriteLine(string.Format(Strings.Log_XHarnessCommandIssued,
+                XHarnessVersionCommand.GetAssemblyVersion().ProductVersion,
+                string.Join(' ', args)));
         }
 
         if (args.Length > 0)
@@ -41,7 +42,7 @@ public static class Program
             if (args[0] == "apple" && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 // Otherwise the command would just not be found
-                Console.Error.WriteLine("The 'apple' command is not available on non-OSX platforms!");
+                Console.Error.WriteLine(string.Format(Strings.Help_CommandNotAvailable, "apple"));
                 return (int)ExitCode.INVALID_ARGUMENTS;
             }
 #endif
@@ -61,7 +62,7 @@ public static class Program
 
         if (shouldOutput)
         {
-            Console.WriteLine($"XHarness exit code: {result}{exitCodeName}");
+            Console.WriteLine(string.Format(Strings.Log_XHarnessExitCode, result, exitCodeName));
         }
 
         return result;

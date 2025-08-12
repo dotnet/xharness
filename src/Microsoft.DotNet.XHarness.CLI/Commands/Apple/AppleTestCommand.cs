@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
+using Microsoft.DotNet.XHarness.CLI.Resources;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,14 +17,11 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 /// </summary>
 internal class AppleTestCommand : AppleAppCommand<AppleTestCommandArguments>
 {
-    private const string CommandHelp = "Installs, runs and uninstalls a given iOS/tvOS/watchOS/xrOS/MacCatalyst test application bundle containing TestRunner " +
-        "in a target device/simulator.";
-
-    protected override string CommandUsage { get; } = "apple test --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]";
-    protected override string CommandDescription { get; } = CommandHelp;
+    protected override string CommandUsage { get; } = Strings.Apple_Test_Usage;
+    protected override string CommandDescription { get; } = Strings.Apple_Test_Description;
     protected override AppleTestCommandArguments Arguments { get; } = new();
 
-    public AppleTestCommand(IServiceCollection services) : base("test", false, services, CommandHelp)
+    public AppleTestCommand(IServiceCollection services) : base("test", false, services, Strings.Apple_Test_Description)
     {
     }
 
