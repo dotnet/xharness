@@ -4,6 +4,8 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Text;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
@@ -17,85 +19,123 @@ public interface IDeviceLogCapturer : IDisposable
 
 public class DeviceLogCapturer : IDeviceLogCapturer
 {
-    private readonly IMlaunchProcessManager _processManager;
     private readonly ILog _mainLog;
     private readonly ILog _deviceLog;
-    private readonly string _deviceName;
+    private readonly string _deviceUdid;
+    private readonly string _outputPath;
+    private DateTime _startTime;
 
-    public DeviceLogCapturer(IMlaunchProcessManager processManager, ILog mainLog, ILog deviceLog, string deviceName)
+    public DeviceLogCapturer(ILog mainLog, ILog deviceLog, string deviceUdid)
     {
-        _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
         _deviceLog = deviceLog ?? throw new ArgumentNullException(nameof(deviceLog));
-        _deviceName = deviceName ?? throw new ArgumentNullException(nameof(deviceName));
-    }
+        _deviceUdid = deviceUdid ?? throw new ArgumentNullException(nameof(deviceUdid));
 
-    private Process _process;
+        _outputPath = Path.Combine(Path.GetTempPath(), $"device_logs_{Guid.NewGuid()}.logarchive");
+    }
 
     public void StartCapture()
     {
-        var args = new MlaunchArguments
-            {
-                new SdkRootArgument(_processManager.XcodeRoot),
-                new LogDevArgument(),
-                new DeviceNameArgument(_deviceName),
-            };
-
-        _process = new Process();
-        _process.StartInfo.FileName = _processManager.MlaunchPath;
-        _process.StartInfo.Arguments = args.AsCommandLine();
-        _process.StartInfo.UseShellExecute = false;
-        _process.StartInfo.RedirectStandardOutput = true;
-        _process.StartInfo.RedirectStandardError = true;
-        _process.StartInfo.RedirectStandardInput = true;
-        _process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
-        {
-            if (e.Data != null)
-            {
-                return;
-            }
-
-            lock (_deviceLog)
-            {
-                _deviceLog.WriteLine(e.Data);
-            }
-        };
-
-        _process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
-        {
-            if (e.Data == null)
-            {
-                return;
-            }
-
-            lock (_deviceLog)
-            {
-                _deviceLog.WriteLine(e.Data);
-            }
-        };
-
-        _deviceLog.WriteLine("{0} {1}", _process.StartInfo.FileName, _process.StartInfo.Arguments);
-
-        _process.Start();
-        _process.BeginOutputReadLine();
-        _process.BeginErrorReadLine();
+        _startTime = DateTime.Now;
+        _deviceLog.WriteLine($"Device log capture started at {_startTime:yyyy-MM-dd HH:mm:ss}");
     }
 
     public void StopCapture()
     {
-        if (_process.HasExited)
+        _deviceLog.WriteLine($"Device log capture stopped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+
+        string startTimeStr = _startTime.ToString("yyyy-MM-dd HH:mm:ss");
+
+        // Collect logs
+        string collectArguments = $"log collect --device-udid {_deviceUdid} --start \"{startTimeStr}\" --output \"{_outputPath}\"";
+        _deviceLog.WriteLine($"Collecting logs: sudo {collectArguments}");
+
+        using Process collectProcess = new Process();
+        collectProcess.StartInfo.FileName = "sudo";
+        collectProcess.StartInfo.Arguments = collectArguments;
+        collectProcess.StartInfo.UseShellExecute = false;
+        collectProcess.StartInfo.RedirectStandardOutput = true;
+        collectProcess.StartInfo.RedirectStandardError = true;
+
+        StringBuilder collectOutput = new StringBuilder();
+        StringBuilder collectErrors = new StringBuilder();
+
+        collectProcess.OutputDataReceived += (sender, e) =>
         {
-            return;
+            if (e.Data != null)
+                collectOutput.AppendLine(e.Data);
+        };
+
+        collectProcess.ErrorDataReceived += (sender, e) =>
+        {
+            if (e.Data != null)
+                collectErrors.AppendLine(e.Data);
+        };
+
+        collectProcess.Start();
+        collectProcess.BeginOutputReadLine();
+        collectProcess.BeginErrorReadLine();
+        collectProcess.WaitForExit();
+
+        if (collectErrors.Length > 0)
+        {
+            _mainLog.WriteLine($"Errors during log collection: {collectErrors}");
+
+            if (collectProcess.ExitCode != 0)
+            {
+                _deviceLog.WriteLine($"Log collection failed with exit code {collectProcess.ExitCode}. Skipping log reading.");
+                return;
+            }
         }
 
-        _process.StandardInput.WriteLine();
-        if (_process.WaitForExit((int)TimeSpan.FromSeconds(5).TotalMilliseconds))
+        // Read the collected logs
+        string readArguments = $"show \"{_outputPath}\"";
+        _deviceLog.WriteLine($"Reading logs: log {readArguments}");
+
+        using Process readProcess = new Process();
+        readProcess.StartInfo.FileName = "log";
+        readProcess.StartInfo.Arguments = readArguments;
+        readProcess.StartInfo.UseShellExecute = false;
+        readProcess.StartInfo.RedirectStandardOutput = true;
+        readProcess.StartInfo.RedirectStandardError = true;
+
+        StringBuilder output = new StringBuilder();
+        StringBuilder errors = new StringBuilder();
+
+        readProcess.OutputDataReceived += (sender, e) =>
         {
-            return;
+            if (e.Data != null)
+                output.AppendLine(e.Data);
+        };
+
+        readProcess.ErrorDataReceived += (sender, e) =>
+        {
+            if (e.Data != null)
+                errors.AppendLine(e.Data);
+        };
+
+        readProcess.Start();
+        readProcess.BeginOutputReadLine();
+        readProcess.BeginErrorReadLine();
+        readProcess.WaitForExit();
+
+        if (output.Length > 0)
+        {
+            lock (_deviceLog)
+            {
+                _deviceLog.WriteLine(output.ToString());
+            }
         }
 
-        _processManager.KillTreeAsync(_process, _mainLog, diagnostics: false).Wait();
-        _process.Dispose();
+        if (errors.Length > 0)
+        {
+            _mainLog.WriteLine($"Errors while reading device logs: {errors}");
+        }
+
+        if (Directory.Exists(_outputPath))
+        {
+            Directory.Delete(_outputPath, true);
+        }
     }
 
     public void Dispose() => StopCapture();
