@@ -10,6 +10,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.DotNet.XHarness.Android.Execution;
+using Microsoft.DotNet.XHarness.Common.Resources;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.XHarness.Android;
@@ -75,8 +76,8 @@ public class AdbRunner
 
         if (!File.Exists(_absoluteAdbExePath))
         {
-            _log.LogError($"Unable to find adb.exe");
-            throw new FileNotFoundException($"Could not find adb.exe. Either set it in the environment via {AdbEnvironmentVariableName} or call with valid path (provided:  '{adbExePath}')", adbExePath);
+            _log.LogError(Strings.Android_AdbNotFound);
+            throw new FileNotFoundException(string.Format(Strings.Android_AdbPathNotFound, AdbEnvironmentVariableName, adbExePath), adbExePath);
         }
 
         if (!_absoluteAdbExePath.Equals(adbExePath))
@@ -101,7 +102,7 @@ public class AdbRunner
         {
             return Path.Join(currentAssemblyDirectory, @"../../../runtimes/any/native/adb/macos/adb");
         }
-        throw new NotSupportedException("Cannot determine OS platform being used, thus we can not select an ADB executable");
+        throw new NotSupportedException(Strings.Android_OsPlatformNotSupported);
     }
 
     #endregion
@@ -146,17 +147,17 @@ public class AdbRunner
         if (result.ExitCode != 0)
         {
             // Could throw here, but it would tear down a possibly otherwise acceptable execution.
-            _log.LogError($"Error getting ADB log:{Environment.NewLine}{result}");
+            _log.LogError(string.Format(Strings.Android_ErrorGettingAdbLog, Environment.NewLine, result));
             return false;
         }
         else
         {
             Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath) ?? throw new ArgumentNullException(nameof(outputFilePath)));
             File.WriteAllText(outputFilePath, result.StandardOutput);
-            _log.LogInformation($"Wrote current ADB log to {outputFilePath}");
+            _log.LogInformation(string.Format(Strings.Android_WroteAdbLogTo, outputFilePath));
             // The adb log is not directly accessible.
             // Hence, we duplicate the log to the main console log to simplify the UX of failure investigation.
-            _log.LogInformation($"ADB log output:{Environment.NewLine}{result.StandardOutput}");
+            _log.LogInformation(string.Format(Strings.Android_AdbLogOutput, Environment.NewLine, result.StandardOutput));
             return true;
         }
     }

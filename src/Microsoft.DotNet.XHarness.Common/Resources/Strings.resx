@@ -141,7 +141,75 @@
   <data name="Wasi_Test_Description" xml:space="preserve">
     <value>Executes tests on WASI using a selected engine</value>
   </data>
-  
+
+  <!-- Android Messages -->
+  <data name="Android_AdbNotFound" xml:space="preserve">
+    <value>Unable to find adb.exe</value>
+  </data>
+  <data name="Android_AdbPathNotFound" xml:space="preserve">
+    <value>Could not find adb.exe. Either set it in the environment via {0} or call with valid path (provided: '{1}')</value>
+  </data>
+  <data name="Android_OsPlatformNotSupported" xml:space="preserve">
+    <value>Cannot determine OS platform being used, thus we can not select an ADB executable</value>
+  </data>
+  <data name="Android_ErrorGettingAdbLog" xml:space="preserve">
+    <value>Error getting ADB log:{0}{1}</value>
+  </data>
+  <data name="Android_WroteAdbLogTo" xml:space="preserve">
+    <value>Wrote current ADB log to {0}</value>
+  </data>
+  <data name="Android_AdbLogOutput" xml:space="preserve">
+    <value>ADB log output:{0}{1}</value>
+  </data>
+  <data name="Android_FailedToGetApiVersion" xml:space="preserve">
+    <value>Failed to get device's API version</value>
+  </data>
+  <data name="Android_DebugApkInstallWarning" xml:space="preserve">
+    <value>Installing debug apks on a device might be rejected with INSTALL_FAILED_VERIFICATION_FAILURE. Make sure to set '{0}' to '{1}'</value>
+  </data>
+  <data name="Android_WaitingForDevice" xml:space="preserve">
+    <value>Waiting for device to be available (max 5 minutes)</value>
+  </data>
+  <data name="Android_BootCompletionNotDetected" xml:space="preserve">
+    <value>Did not detect boot completion variable on device; device may be in a bad state</value>
+  </data>
+  <data name="Android_ErrorStartingAdbServer" xml:space="preserve">
+    <value>Error starting the ADB server</value>
+  </data>
+  <data name="Android_ErrorKillingAdbServer" xml:space="preserve">
+    <value>Error killing ADB server after a failed start: {0}</value>
+  </data>
+  <data name="Android_FailedToStartAdbServer" xml:space="preserve">
+    <value>Failed to start the ADB server</value>
+  </data>
+  <data name="Android_AttemptingToInstall" xml:space="preserve">
+    <value>Attempting to install {0}</value>
+  </data>
+  <data name="Android_NoValueSupplied" xml:space="preserve">
+    <value>No value supplied for {0}</value>
+  </data>
+  <data name="Android_FileNotFound" xml:space="preserve">
+    <value>Could not find {0}</value>
+  </data>
+  <data name="Android_BrokenPipeRetryInstall" xml:space="preserve">
+    <value>Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install</value>
+  </data>
+  <data name="Android_PackageCacheFullReboot" xml:space="preserve">
+    <value>It seems the package installation cache may be full on the device. We'll try to reboot it before trying one more time.{0}Output:{1}</value>
+  </data>
+  <data name="Android_InstallFailedRetry" xml:space="preserve">
+    <value>Installation failed; Will make one attempt to restart ADB server and the device, then retry the install</value>
+  </data>
+  <data name="Android_InstallError" xml:space="preserve">
+    <value>Error:{0}{1}</value>
+  </data>
+  <data name="Android_SuccessfullyInstalled" xml:space="preserve">
+    <value>Successfully installed {0}</value>
+  </data>
+  <data name="Android_SuccessfullyInstalledToDirectory" xml:space="preserve">
+    <value>Successfully installed {0} to {1}</value>
+  </data>
+
   <!-- Simulator Commands -->
   <data name="Apple_Simulators_List_Description" xml:space="preserve">
     <value>Lists available simulators</value>

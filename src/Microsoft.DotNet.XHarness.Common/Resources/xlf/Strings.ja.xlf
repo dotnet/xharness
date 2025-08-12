@@ -22,9 +22,44 @@
         <target state="new">Uninstall a test folder from an Android device</target>
         <note />
       </trans-unit>
+      <trans-unit id="Android_AdbLogOutput">
+        <source>ADB log output:{0}{1}</source>
+        <target state="new">ADB log output:{0}{1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_AdbNotFound">
+        <source>Unable to find adb.exe</source>
+        <target state="new">Unable to find adb.exe</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_AdbPathNotFound">
+        <source>Could not find adb.exe. Either set it in the environment via {0} or call with valid path (provided: '{1}')</source>
+        <target state="new">Could not find adb.exe. Either set it in the environment via {0} or call with valid path (provided: '{1}')</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Android_Adb_Description">
         <source>Invoke bundled adb with given arguments</source>
         <target state="new">Invoke bundled adb with given arguments</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_AttemptingToInstall">
+        <source>Attempting to install {0}</source>
+        <target state="new">Attempting to install {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_BootCompletionNotDetected">
+        <source>Did not detect boot completion variable on device; device may be in a bad state</source>
+        <target state="new">Did not detect boot completion variable on device; device may be in a bad state</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_BrokenPipeRetryInstall">
+        <source>Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install</source>
+        <target state="new">Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_DebugApkInstallWarning">
+        <source>Installing debug apks on a device might be rejected with INSTALL_FAILED_VERIFICATION_FAILURE. Make sure to set '{0}' to '{1}'</source>
+        <target state="new">Installing debug apks on a device might be rejected with INSTALL_FAILED_VERIFICATION_FAILURE. Make sure to set '{0}' to '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="Android_Device_Description">
@@ -32,9 +67,64 @@
         <target state="new">Get ID of the device compatible with a given .apk / architecture</target>
         <note />
       </trans-unit>
+      <trans-unit id="Android_ErrorGettingAdbLog">
+        <source>Error getting ADB log:{0}{1}</source>
+        <target state="new">Error getting ADB log:{0}{1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_ErrorKillingAdbServer">
+        <source>Error killing ADB server after a failed start: {0}</source>
+        <target state="new">Error killing ADB server after a failed start: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_ErrorStartingAdbServer">
+        <source>Error starting the ADB server</source>
+        <target state="new">Error starting the ADB server</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_FailedToGetApiVersion">
+        <source>Failed to get device's API version</source>
+        <target state="new">Failed to get device's API version</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_FailedToStartAdbServer">
+        <source>Failed to start the ADB server</source>
+        <target state="new">Failed to start the ADB server</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_FileNotFound">
+        <source>Could not find {0}</source>
+        <target state="new">Could not find {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_InstallError">
+        <source>Error:{0}{1}</source>
+        <target state="new">Error:{0}{1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_InstallFailedRetry">
+        <source>Installation failed; Will make one attempt to restart ADB server and the device, then retry the install</source>
+        <target state="new">Installation failed; Will make one attempt to restart ADB server and the device, then retry the install</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Android_Install_Description">
         <source>Install an .apk on an Android device without running it</source>
         <target state="new">Install an .apk on an Android device without running it</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_NoValueSupplied">
+        <source>No value supplied for {0}</source>
+        <target state="new">No value supplied for {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_OsPlatformNotSupported">
+        <source>Cannot determine OS platform being used, thus we can not select an ADB executable</source>
+        <target state="new">Cannot determine OS platform being used, thus we can not select an ADB executable</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_PackageCacheFullReboot">
+        <source>It seems the package installation cache may be full on the device. We'll try to reboot it before trying one more time.{0}Output:{1}</source>
+        <target state="new">It seems the package installation cache may be full on the device. We'll try to reboot it before trying one more time.{0}Output:{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="Android_Run_Description">
@@ -47,6 +137,16 @@
         <target state="new">Print information about the current machine, such as host machine info and device status</target>
         <note />
       </trans-unit>
+      <trans-unit id="Android_SuccessfullyInstalled">
+        <source>Successfully installed {0}</source>
+        <target state="new">Successfully installed {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_SuccessfullyInstalledToDirectory">
+        <source>Successfully installed {0} to {1}</source>
+        <target state="new">Successfully installed {0} to {1}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Android_Test_Description">
         <source>Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app</source>
         <target state="new">Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app</target>
@@ -55,6 +155,16 @@
       <trans-unit id="Android_Uninstall_Description">
         <source>Uninstall an .apk from an Android device</source>
         <target state="new">Uninstall an .apk from an Android device</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_WaitingForDevice">
+        <source>Waiting for device to be available (max 5 minutes)</source>
+        <target state="new">Waiting for device to be available (max 5 minutes)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Android_WroteAdbLogTo">
+        <source>Wrote current ADB log to {0}</source>
+        <target state="new">Wrote current ADB log to {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="Apple_Device_Description">
