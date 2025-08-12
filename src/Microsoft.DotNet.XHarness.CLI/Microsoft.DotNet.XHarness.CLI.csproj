@@ -59,7 +59,7 @@
     <RemoveDir Directories="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/systrace" />
   </Target>
 
-  <Target Name="IncludeAdb" BeforeTargets="DispatchToInnerBuilds" DependsOnTargets="GenerateCGManifest" Condition="'$(SkipAdb)' != 'true'">
+  <Target Name="IncludeAdb" BeforeTargets="DispatchToInnerBuilds" DependsOnTargets="DownloadAdb;GenerateCGManifest" Condition="'$(SkipAdb)' != 'true'">
     <ItemGroup>
       <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb.exe" />
       <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/AdbWinApi.dll" />
