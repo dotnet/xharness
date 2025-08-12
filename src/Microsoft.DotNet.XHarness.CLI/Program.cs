@@ -42,7 +42,7 @@ public static class Program
             if (args[0] == "apple" && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 // Otherwise the command would just not be found
-                Console.Error.WriteLine(string.Format(Strings.Help_CommandNotAvailable, "apple"));
+                Console.Error.WriteLine(string.Format(Strings.Help_CommandNotAvailableOnNonOSX, "apple"));
                 return (int)ExitCode.INVALID_ARGUMENTS;
             }
 #endif
