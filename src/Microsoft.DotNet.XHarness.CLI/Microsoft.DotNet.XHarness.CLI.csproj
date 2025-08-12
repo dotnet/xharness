@@ -43,14 +43,6 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Resources\Strings.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Strings.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
   <Target Name="DownloadAdb" Condition="'$(SkipAdb)' != 'true'">
     <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="true" />
     <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />

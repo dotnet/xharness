@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.DotNet.XHarness.CLI.Resources;
+using Microsoft.DotNet.XHarness.Common.Resources;
 using OpenQA.Selenium;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments;

@@ -11,7 +11,7 @@ using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasi;
-using Microsoft.DotNet.XHarness.CLI.Resources;
+using Microsoft.DotNet.XHarness.Common.Resources;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Mono.Options;
 

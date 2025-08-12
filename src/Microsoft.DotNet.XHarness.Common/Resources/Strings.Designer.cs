@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Microsoft.DotNet.XHarness.CLI.Resources {
+namespace Microsoft.DotNet.XHarness.Common.Resources {
     using System;
     
     
@@ -22,21 +22,21 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Strings {
+    public class Strings {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Strings() {
+        public Strings() {
         }
         
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.DotNet.XHarness.CLI.Resources.Strings", typeof(Strings).Assembly);
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         ///   resource lookups using this resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Path to application bundle.
         /// </summary>
-        internal static string Arg_AppPath_Description {
+        public static string Arg_AppPath_Description {
             get {
                 return ResourceManager.GetString("Arg_AppPath_Description", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Name of the device/simulator to use.
         /// </summary>
-        internal static string Arg_DeviceName_Description {
+        public static string Arg_DeviceName_Description {
             get {
                 return ResourceManager.GetString("Arg_DeviceName_Description", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Show this message and exit.
         /// </summary>
-        internal static string Arg_Help_Description {
+        public static string Arg_Help_Description {
             get {
                 return ResourceManager.GetString("Arg_Help_Description", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Timeout in seconds for the app to start. Default is {0} seconds.
         /// </summary>
-        internal static string Arg_LaunchTimeout_Description {
+        public static string Arg_LaunchTimeout_Description {
             get {
                 return ResourceManager.GetString("Arg_LaunchTimeout_Description", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Directory to which the simulator/device output will be saved.
         /// </summary>
-        internal static string Arg_OutputDirectory_Description {
+        public static string Arg_OutputDirectory_Description {
             get {
                 return ResourceManager.GetString("Arg_OutputDirectory_Description", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Test target (device/simulator and OS).
         /// </summary>
-        internal static string Arg_Target_Description {
+        public static string Arg_Target_Description {
             get {
                 return ResourceManager.GetString("Arg_Target_Description", resourceCulture);
             }
@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Timeout in seconds. Default is {0} seconds.
         /// </summary>
-        internal static string Arg_Timeout_Description {
+        public static string Arg_Timeout_Description {
             get {
                 return ResourceManager.GetString("Arg_Timeout_Description", resourceCulture);
             }
@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Logging verbosity level.
         /// </summary>
-        internal static string Arg_Verbosity_Description {
+        public static string Arg_Verbosity_Description {
             get {
                 return ResourceManager.GetString("Arg_Verbosity_Description", resourceCulture);
             }
@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Invoke bundled adb with given arguments.
         /// </summary>
-        internal static string Android_Adb_Description {
+        public static string Android_Adb_Description {
             get {
                 return ResourceManager.GetString("Android_Adb_Description", resourceCulture);
             }
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Get ID of the device compatible with a given .apk / architecture.
         /// </summary>
-        internal static string Android_Device_Description {
+        public static string Android_Device_Description {
             get {
                 return ResourceManager.GetString("Android_Device_Description", resourceCulture);
             }
@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Install an .apk on an Android device without running it.
         /// </summary>
-        internal static string Android_Install_Description {
+        public static string Android_Install_Description {
             get {
                 return ResourceManager.GetString("Android_Install_Description", resourceCulture);
             }
@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Run tests using an already installed .apk on an Android device.
         /// </summary>
-        internal static string Android_Run_Description {
+        public static string Android_Run_Description {
             get {
                 return ResourceManager.GetString("Android_Run_Description", resourceCulture);
             }
@@ -171,7 +171,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Print information about the current machine, such as host machine info and device status.
         /// </summary>
-        internal static string Android_State_Description {
+        public static string Android_State_Description {
             get {
                 return ResourceManager.GetString("Android_State_Description", resourceCulture);
             }
@@ -180,7 +180,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app.
         /// </summary>
-        internal static string Android_Test_Description {
+        public static string Android_Test_Description {
             get {
                 return ResourceManager.GetString("Android_Test_Description", resourceCulture);
             }
@@ -189,7 +189,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Uninstall an .apk from an Android device.
         /// </summary>
-        internal static string Android_Uninstall_Description {
+        public static string Android_Uninstall_Description {
             get {
                 return ResourceManager.GetString("Android_Uninstall_Description", resourceCulture);
             }
@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Install a test folder to an Android device without running it.
         /// </summary>
-        internal static string AndroidHeadless_Install_Description {
+        public static string AndroidHeadless_Install_Description {
             get {
                 return ResourceManager.GetString("AndroidHeadless_Install_Description", resourceCulture);
             }
@@ -207,7 +207,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Run tests using an already installed executable on an Android device.
         /// </summary>
-        internal static string AndroidHeadless_Run_Description {
+        public static string AndroidHeadless_Run_Description {
             get {
                 return ResourceManager.GetString("AndroidHeadless_Run_Description", resourceCulture);
             }
@@ -216,7 +216,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Executes test executable on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app.
         /// </summary>
-        internal static string AndroidHeadless_Test_Description {
+        public static string AndroidHeadless_Test_Description {
             get {
                 return ResourceManager.GetString("AndroidHeadless_Test_Description", resourceCulture);
             }
@@ -225,7 +225,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Uninstall a test folder from an Android device.
         /// </summary>
-        internal static string AndroidHeadless_Uninstall_Description {
+        public static string AndroidHeadless_Uninstall_Description {
             get {
                 return ResourceManager.GetString("AndroidHeadless_Uninstall_Description", resourceCulture);
             }
@@ -234,7 +234,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Finds the UDID of a device/simulator for given target.
         /// </summary>
-        internal static string Apple_Device_Description {
+        public static string Apple_Device_Description {
             get {
                 return ResourceManager.GetString("Apple_Device_Description", resourceCulture);
             }
@@ -243,7 +243,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Installs a given iOS/tvOS/watchOS/xrOS/MacCatalyst application bundle in a target device/simulator.
         /// </summary>
-        internal static string Apple_Install_Description {
+        public static string Apple_Install_Description {
             get {
                 return ResourceManager.GetString("Apple_Install_Description", resourceCulture);
             }
@@ -252,7 +252,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Runs an already installed iOS/tvOS/watchOS/xrOS/MacCatalyst test application containing a TestRunner in a target device/simulator and tries to detect the exit code..
         /// </summary>
-        internal static string Apple_JustRun_Description {
+        public static string Apple_JustRun_Description {
             get {
                 return ResourceManager.GetString("Apple_JustRun_Description", resourceCulture);
             }
@@ -261,7 +261,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Runs an already installed iOS/tvOS/watchOS/xrOS/MacCatalyst test application containing a TestRunner in a target device/simulator..
         /// </summary>
-        internal static string Apple_JustTest_Description {
+        public static string Apple_JustTest_Description {
             get {
                 return ResourceManager.GetString("Apple_JustTest_Description", resourceCulture);
             }
@@ -270,7 +270,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Invoke bundled mlaunch with given arguments.
         /// </summary>
-        internal static string Apple_Mlaunch_Description {
+        public static string Apple_Mlaunch_Description {
             get {
                 return ResourceManager.GetString("Apple_Mlaunch_Description", resourceCulture);
             }
@@ -279,7 +279,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Installs, runs and uninstalls a given iOS/tvOS/watchOS/xrOS/MacCatalyst application bundle in a target device/simulator and tries to detect the exit code..
         /// </summary>
-        internal static string Apple_Run_Description {
+        public static string Apple_Run_Description {
             get {
                 return ResourceManager.GetString("Apple_Run_Description", resourceCulture);
             }
@@ -288,7 +288,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Finds whether given simulators are installed and outputs list of missing ones (returns 0 when none missing).
         /// </summary>
-        internal static string Apple_Simulators_Find_Description {
+        public static string Apple_Simulators_Find_Description {
             get {
                 return ResourceManager.GetString("Apple_Simulators_Find_Description", resourceCulture);
             }
@@ -297,7 +297,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Installs given simulators.
         /// </summary>
-        internal static string Apple_Simulators_Install_Description {
+        public static string Apple_Simulators_Install_Description {
             get {
                 return ResourceManager.GetString("Apple_Simulators_Install_Description", resourceCulture);
             }
@@ -306,7 +306,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Lists available simulators.
         /// </summary>
-        internal static string Apple_Simulators_List_Description {
+        public static string Apple_Simulators_List_Description {
             get {
                 return ResourceManager.GetString("Apple_Simulators_List_Description", resourceCulture);
             }
@@ -315,7 +315,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Resets given iOS/tvOS simulator (wipes it clean).
         /// </summary>
-        internal static string Apple_Simulators_Reset_Description {
+        public static string Apple_Simulators_Reset_Description {
             get {
                 return ResourceManager.GetString("Apple_Simulators_Reset_Description", resourceCulture);
             }
@@ -324,7 +324,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Print information about the current machine, such as host machine info and device status.
         /// </summary>
-        internal static string Apple_State_Description {
+        public static string Apple_State_Description {
             get {
                 return ResourceManager.GetString("Apple_State_Description", resourceCulture);
             }
@@ -333,7 +333,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Installs, runs and uninstalls a given iOS/tvOS/watchOS/xrOS/MacCatalyst test application bundle containing TestRunner in a target device/simulator..
         /// </summary>
-        internal static string Apple_Test_Description {
+        public static string Apple_Test_Description {
             get {
                 return ResourceManager.GetString("Apple_Test_Description", resourceCulture);
             }
@@ -342,7 +342,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to apple test --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]].
         /// </summary>
-        internal static string Apple_Test_Usage {
+        public static string Apple_Test_Usage {
             get {
                 return ResourceManager.GetString("Apple_Test_Usage", resourceCulture);
             }
@@ -351,7 +351,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Uninstalls a given iOS/tvOS/watchOS/xrOS/MacCatalyst application bundle from a target device/simulator.
         /// </summary>
-        internal static string Apple_Uninstall_Description {
+        public static string Apple_Uninstall_Description {
             get {
                 return ResourceManager.GetString("Apple_Uninstall_Description", resourceCulture);
             }
@@ -360,7 +360,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Empty value supplied to {0}.
         /// </summary>
-        internal static string Error_EmptyValue {
+        public static string Error_EmptyValue {
             get {
                 return ResourceManager.GetString("Error_EmptyValue", resourceCulture);
             }
@@ -369,7 +369,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Invalid value '{0}' supplied for {1}. Valid values are:{2}.
         /// </summary>
-        internal static string Error_InvalidValue {
+        public static string Error_InvalidValue {
             get {
                 return ResourceManager.GetString("Error_InvalidValue", resourceCulture);
             }
@@ -378,7 +378,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to {0} must be an integer.
         /// </summary>
-        internal static string Error_MustBeInteger {
+        public static string Error_MustBeInteger {
             get {
                 return ResourceManager.GetString("Error_MustBeInteger", resourceCulture);
             }
@@ -387,7 +387,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to {0} must be an integer - a number of seconds, or a timespan (00:30:00).
         /// </summary>
-        internal static string Error_MustBeTimespan {
+        public static string Error_MustBeTimespan {
             get {
                 return ResourceManager.GetString("Error_MustBeTimespan", resourceCulture);
             }
@@ -396,7 +396,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Required argument {0} was not supplied.
         /// </summary>
-        internal static string Error_RequiredArgumentMissing {
+        public static string Error_RequiredArgumentMissing {
             get {
                 return ResourceManager.GetString("Error_RequiredArgumentMissing", resourceCulture);
             }
@@ -405,7 +405,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Unexpected failure argument: {0}.
         /// </summary>
-        internal static string Error_UnexpectedFailure {
+        public static string Error_UnexpectedFailure {
             get {
                 return ResourceManager.GetString("Error_UnexpectedFailure", resourceCulture);
             }
@@ -414,7 +414,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Unknown arguments: {0}.
         /// </summary>
-        internal static string Error_UnknownArguments {
+        public static string Error_UnknownArguments {
             get {
                 return ResourceManager.GetString("Error_UnknownArguments", resourceCulture);
             }
@@ -423,7 +423,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to All supported sub-commands:.
         /// </summary>
-        internal static string Help_AllSupportedSubCommands {
+        public static string Help_AllSupportedSubCommands {
             get {
                 return ResourceManager.GetString("Help_AllSupportedSubCommands", resourceCulture);
             }
@@ -432,7 +432,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to The '{0}' command is not available on non-OSX platforms!.
         /// </summary>
-        internal static string Help_CommandNotAvailable {
+        public static string Help_CommandNotAvailable {
             get {
                 return ResourceManager.GetString("Help_CommandNotAvailable", resourceCulture);
             }
@@ -441,7 +441,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to No help available for command '{0}'. Allowed commands are 'apple', 'wasm', 'wasi' and 'android'.
         /// </summary>
-        internal static string Help_NoHelpAvailable {
+        public static string Help_NoHelpAvailable {
             get {
                 return ResourceManager.GetString("Help_NoHelpAvailable", resourceCulture);
             }
@@ -450,7 +450,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Run 'xharness {0} {{command}} --help' for more details.
         /// </summary>
-        internal static string Help_RunForMoreDetails {
+        public static string Help_RunForMoreDetails {
             get {
                 return ResourceManager.GetString("Help_RunForMoreDetails", resourceCulture);
             }
@@ -459,7 +459,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Unknown sub-command '{0}'..
         /// </summary>
-        internal static string Help_UnknownSubCommand {
+        public static string Help_UnknownSubCommand {
             get {
                 return ResourceManager.GetString("Help_UnknownSubCommand", resourceCulture);
             }
@@ -468,7 +468,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to usage: {0}.
         /// </summary>
-        internal static string Help_Usage {
+        public static string Help_Usage {
             get {
                 return ResourceManager.GetString("Help_Usage", resourceCulture);
             }
@@ -477,7 +477,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to [{0}] XHarness command issued: {1}.
         /// </summary>
-        internal static string Log_XHarnessCommandIssued {
+        public static string Log_XHarnessCommandIssued {
             get {
                 return ResourceManager.GetString("Log_XHarnessCommandIssued", resourceCulture);
             }
@@ -486,7 +486,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to XHarness exit code: {0}{1}.
         /// </summary>
-        internal static string Log_XHarnessExitCode {
+        public static string Log_XHarnessExitCode {
             get {
                 return ResourceManager.GetString("Log_XHarnessExitCode", resourceCulture);
             }
@@ -495,7 +495,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Executes tests on WASI using a selected engine.
         /// </summary>
-        internal static string Wasi_Test_Description {
+        public static string Wasi_Test_Description {
             get {
                 return ResourceManager.GetString("Wasi_Test_Description", resourceCulture);
             }
@@ -504,7 +504,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Executes tests on WASM using a browser.
         /// </summary>
-        internal static string Wasm_TestBrowser_Description {
+        public static string Wasm_TestBrowser_Description {
             get {
                 return ResourceManager.GetString("Wasm_TestBrowser_Description", resourceCulture);
             }
@@ -513,7 +513,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Executes tests on WASM using a selected JavaScript engine.
         /// </summary>
-        internal static string Wasm_Test_Description {
+        public static string Wasm_Test_Description {
             get {
                 return ResourceManager.GetString("Wasm_Test_Description", resourceCulture);
             }
@@ -522,7 +522,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Starts a webserver.
         /// </summary>
-        internal static string Wasm_WebServer_Description {
+        public static string Wasm_WebServer_Description {
             get {
                 return ResourceManager.GetString("Wasm_WebServer_Description", resourceCulture);
             }

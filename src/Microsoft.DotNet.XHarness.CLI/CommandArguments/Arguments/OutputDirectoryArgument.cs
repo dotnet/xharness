@@ -4,7 +4,7 @@
 
 using System;
 using System.IO;
-using Microsoft.DotNet.XHarness.CLI.Resources;
+using Microsoft.DotNet.XHarness.Common.Resources;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments;
 
