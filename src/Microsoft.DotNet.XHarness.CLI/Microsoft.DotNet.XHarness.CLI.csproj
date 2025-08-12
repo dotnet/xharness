@@ -41,7 +41,7 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
-  <Target Name="DownloadAdb">
+  <Target Name="DownloadAdb" Condition="'$(SkipAdb)' != 'true'">
     <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="true" />
     <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />
     <DownloadFile SourceUrl="$(MacOsAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(MacOsAndroidSdkFileName)" SkipUnchangedFiles="True" />
@@ -51,7 +51,7 @@
     <RemoveDir Directories="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/systrace" />
   </Target>
 
-  <Target Name="IncludeAdb" BeforeTargets="DispatchToInnerBuilds" DependsOnTargets="DownloadAdb;GenerateCGManifest">
+  <Target Name="IncludeAdb" BeforeTargets="DispatchToInnerBuilds" DependsOnTargets="GenerateCGManifest" Condition="'$(SkipAdb)' != 'true'">
     <ItemGroup>
       <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb.exe" />
       <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/AdbWinApi.dll" />
