@@ -220,7 +220,7 @@ public abstract class TimeSpanArgument : Argument<TimeSpan>
             return;
         }
 
-        throw new ArgumentException(string.Format(Strings.Error_MustBeTimespan, Prototype));
+        throw new ArgumentException(string.Format(Strings.Error_MustBeIntegerOrTimespan, Prototype));
     }
 }
 

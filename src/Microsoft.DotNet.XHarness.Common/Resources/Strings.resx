@@ -237,7 +237,7 @@
   <data name="Error_MustBeInteger" xml:space="preserve">
     <value>{0} must be an integer</value>
   </data>
-  <data name="Error_MustBeTimespan" xml:space="preserve">
+  <data name="Error_MustBeIntegerOrTimespan" xml:space="preserve">
     <value>{0} must be an integer - a number of seconds, or a timespan (00:30:00)</value>
   </data>
   <data name="Error_EmptyValue" xml:space="preserve">
@@ -251,10 +251,10 @@
   <data name="Help_Usage" xml:space="preserve">
     <value>usage: {0}</value>
   </data>
-  <data name="Help_CommandNotAvailable" xml:space="preserve">
+  <data name="Help_CommandNotAvailableOnNonOSX" xml:space="preserve">
     <value>The '{0}' command is not available on non-OSX platforms!</value>
   </data>
-  <data name="Help_NoHelpAvailable" xml:space="preserve">
+  <data name="Help_NoHelpAvailableForCommand" xml:space="preserve">
     <value>No help available for command '{0}'. Allowed commands are 'apple', 'wasm', 'wasi' and 'android'</value>
   </data>
   <data name="Help_UnknownSubCommand" xml:space="preserve">

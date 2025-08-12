@@ -387,9 +387,9 @@ namespace Microsoft.DotNet.XHarness.Common.Resources {
         /// <summary>
         ///   Looks up a localized string similar to {0} must be an integer - a number of seconds, or a timespan (00:30:00).
         /// </summary>
-        public static string Error_MustBeTimespan {
+        public static string Error_MustBeIntegerOrTimespan {
             get {
-                return ResourceManager.GetString("Error_MustBeTimespan", resourceCulture);
+                return ResourceManager.GetString("Error_MustBeIntegerOrTimespan", resourceCulture);
             }
         }
         
@@ -432,18 +432,18 @@ namespace Microsoft.DotNet.XHarness.Common.Resources {
         /// <summary>
         ///   Looks up a localized string similar to The '{0}' command is not available on non-OSX platforms!.
         /// </summary>
-        public static string Help_CommandNotAvailable {
+        public static string Help_CommandNotAvailableOnNonOSX {
             get {
-                return ResourceManager.GetString("Help_CommandNotAvailable", resourceCulture);
+                return ResourceManager.GetString("Help_CommandNotAvailableOnNonOSX", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to No help available for command '{0}'. Allowed commands are 'apple', 'wasm', 'wasi' and 'android'.
         /// </summary>
-        public static string Help_NoHelpAvailable {
+        public static string Help_NoHelpAvailableForCommand {
             get {
-                return ResourceManager.GetString("Help_NoHelpAvailable", resourceCulture);
+                return ResourceManager.GetString("Help_NoHelpAvailableForCommand", resourceCulture);
             }
         }
         

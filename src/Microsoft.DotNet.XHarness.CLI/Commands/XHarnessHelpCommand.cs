@@ -62,7 +62,7 @@ internal class XHarnessHelpCommand : HelpCommand
                     }
                     else
                     {
-                        Console.WriteLine(string.Format(Strings.Help_CommandNotAvailable, command));
+                        Console.WriteLine(string.Format(Strings.Help_CommandNotAvailableOnNonOSX, command));
                     }
 #endif
                 break;
@@ -73,7 +73,7 @@ internal class XHarnessHelpCommand : HelpCommand
                 PrintCommandHelp(new WasiCommandSet(), subCommand);
                 break;
             default:
-                Console.WriteLine(string.Format(Strings.Help_NoHelpAvailable, command));
+                Console.WriteLine(string.Format(Strings.Help_NoHelpAvailableForCommand, command));
                 break;
         }
 
