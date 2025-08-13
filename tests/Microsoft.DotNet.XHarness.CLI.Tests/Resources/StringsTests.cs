@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.DotNet.XHarness.CLI.Resources;
+using Microsoft.DotNet.XHarness.Common.Resources;
 using Xunit;
 
 namespace Microsoft.DotNet.XHarness.CLI.Tests.Resources;
@@ -39,8 +39,8 @@ public class StringsTests
         Assert.NotNull(Strings.Help_Usage);
         Assert.Contains("{0}", Strings.Help_Usage);
         
-        Assert.NotNull(Strings.Help_CommandNotAvailable);
-        Assert.Contains("{0}", Strings.Help_CommandNotAvailable);
+        Assert.NotNull(Strings.Help_CommandNotAvailableOnNonOSX);
+        Assert.Contains("{0}", Strings.Help_CommandNotAvailableOnNonOSX);
     }
 
     [Fact]

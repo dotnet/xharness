@@ -5,6 +5,7 @@
     <IsPackable>true</IsPackable>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>$(NoWarn);CS8002</NoWarn>
+    <EnableXlfLocalization>false</EnableXlfLocalization>
   </PropertyGroup>
 
   <ItemGroup>
