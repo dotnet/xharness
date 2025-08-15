@@ -210,7 +210,7 @@ public class AdbRunner
         _log.LogDebug($"{settingName} = {settingValue}");
 
         if (settingValue != expectedValue)
-            _log.LogWarning($"Installing debug apks on a device might be rejected with INSTALL_FAILED_VERIFICATION_FAILURE. Make sure to set '{settingName}' to '{expectedValue}'");
+            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_InstallDebugApkWarning, settingName, expectedValue);
     }
 
     public void CheckPackageVerificationSettings()
@@ -267,7 +267,7 @@ public class AdbRunner
 
                 if (!started)
                 {
-                    _log.LogWarning($"Error starting the ADB server" + Environment.NewLine + result);
+                    _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ErrorStartingAdbServer, Environment.NewLine, result);
 
                     try
                     {
@@ -275,7 +275,7 @@ public class AdbRunner
                     }
                     catch (Exception e)
                     {
-                        _log.LogError($"Error killing ADB server after a failed start: {e.Message}");
+                        _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ErrorKillingAdbServer, e.Message);
                     }
                 }
                 else
