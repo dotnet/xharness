@@ -342,19 +342,31 @@
   <data name="Android_SkippingOutputLineParseFailure" xml:space="preserve">
     <value>Skipping output line due to key-value-pair parse failure: '{0}'</value>
   </data>
-  <data name="Android_UnableToFindAdb" xml:space="preserve">
-    <value>Unable to find adb.exe</value>
+  <data name="Android_InstallDebugApkWarning" xml:space="preserve">
+    <value>Installing debug apks on a device might be rejected with INSTALL_FAILED_VERIFICATION_FAILURE. Make sure to set '{0}' to '{1}'</value>
   </data>
-  <data name="Android_ErrorGettingAdbBugReport" xml:space="preserve">
-    <value>Error getting ADB bugreport:{0}{1}</value>
+  <data name="Android_ErrorStartingAdbServer" xml:space="preserve">
+    <value>Error starting the ADB server{0}{1}</value>
   </data>
-  <data name="Android_WroteAdbBugReportTo" xml:space="preserve">
-    <value>Wrote ADB bugreport to {0}</value>
+  <data name="Android_ErrorKillingAdbServer" xml:space="preserve">
+    <value>Error killing ADB server after a failed start: {0}</value>
   </data>
-  <data name="Android_WaitingForCommandTimedOut" xml:space="preserve">
-    <value>Waiting for command timed out: execution may be compromised</value>
+  <data name="Android_AttemptingToInstallApk" xml:space="preserve">
+    <value>Attempting to install {0}</value>
   </data>
-  <data name="Android_FailedToKillProcess" xml:space="preserve">
-    <value>Failed to kill process: {0}</value>
+  <data name="Android_InstallBrokenPipeRetry" xml:space="preserve">
+    <value>Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install</value>
+  </data>
+  <data name="Android_DeviceCacheFullWarning" xml:space="preserve">
+    <value>It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{0}Output:{1}</value>
+  </data>
+  <data name="Android_InstallFailedRetry" xml:space="preserve">
+    <value>Installation failed; Will make one attempt to restart ADB server and the device, then retry the install</value>
+  </data>
+  <data name="Android_InstallError" xml:space="preserve">
+    <value>Error:{0}{1}</value>
+  </data>
+  <data name="Android_SuccessfullyInstalled" xml:space="preserve">
+    <value>Successfully installed {0}</value>
   </data>
 </root>
