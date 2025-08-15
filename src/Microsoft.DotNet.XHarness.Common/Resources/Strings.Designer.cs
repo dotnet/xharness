@@ -527,5 +527,32 @@ namespace Microsoft.DotNet.XHarness.Common.Resources {
                 return ResourceManager.GetString("Wasm_WebServer_Description", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to save diagnostics data to '{0}': {1}.
+        /// </summary>
+        public static string Common_DiagnosticsDataSaveFailed {
+            get {
+                return ResourceManager.GetString("Common_DiagnosticsDataSaveFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No symbolicator given.
+        /// </summary>
+        public static string Common_NoSymbolicatorGiven {
+            get {
+                return ResourceManager.GetString("Common_NoSymbolicatorGiven", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Symbolicator '{0}' is not of WasmSymbolicatorBase type..
+        /// </summary>
+        public static string Common_InvalidSymbolicatorType {
+            get {
+                return ResourceManager.GetString("Common_InvalidSymbolicatorType", resourceCulture);
+            }
+        }
     }
 }

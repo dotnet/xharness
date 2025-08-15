@@ -144,7 +144,7 @@ public class CommandDiagnostics : IDiagnosticsData
         }
         catch (Exception e)
         {
-            _logger.LogError("Failed to save diagnostics data to '{pathToFile}': {error}", targetFile, e);
+            _logger.LogError(Resources.Strings.Common_DiagnosticsDataSaveFailed, targetFile, e);
         }
     }
 }

@@ -300,4 +300,13 @@
   <data name="Arg_Help_Description" xml:space="preserve">
     <value>Show this message and exit</value>
   </data>
+  <data name="Common_DiagnosticsDataSaveFailed" xml:space="preserve">
+    <value>Failed to save diagnostics data to '{0}': {1}</value>
+  </data>
+  <data name="Common_NoSymbolicatorGiven" xml:space="preserve">
+    <value>No symbolicator given</value>
+  </data>
+  <data name="Common_InvalidSymbolicatorType" xml:space="preserve">
+    <value>Symbolicator '{0}' is not of WasmSymbolicatorBase type.</value>
+  </data>
 </root>
