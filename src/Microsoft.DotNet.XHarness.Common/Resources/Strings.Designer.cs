@@ -554,5 +554,104 @@ namespace Microsoft.DotNet.XHarness.Common.Resources {
                 return ResourceManager.GetString("Common_InvalidSymbolicatorType", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hit error (typically permissions) trying to pull {0}.
+        /// </summary>
+        public static string Android_ErrorPullingFiles {
+            get {
+                return ResourceManager.GetString("Android_ErrorPullingFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Received expected instrumentation exit code ({0}), but we hit errors pulling files from the device (see log for details.).
+        /// </summary>
+        public static string Android_ExpectedExitCodeButFileError {
+            get {
+                return ResourceManager.GetString("Android_ExpectedExitCodeButFileError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Non-success instrumentation exit code: {0}, expected: {1}.
+        /// </summary>
+        public static string Android_NonSuccessInstrumentationExitCode {
+            get {
+                return ResourceManager.GetString("Android_NonSuccessInstrumentationExitCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test execution summary:{0}{1}.
+        /// </summary>
+        public static string Android_TestExecutionSummary {
+            get {
+                return ResourceManager.GetString("Android_TestExecutionSummary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Short message:{0}{1}.
+        /// </summary>
+        public static string Android_ShortMessage {
+            get {
+                return ResourceManager.GetString("Android_ShortMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instrumentation finished normally with exit code {0}.
+        /// </summary>
+        public static string Android_InstrumentationFinishedNormally {
+            get {
+                return ResourceManager.GetString("Android_InstrumentationFinishedNormally", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Un-parse-able value for '{0}' : '{1}'.
+        /// </summary>
+        public static string Android_UnparseableReturnCodeValue {
+            get {
+                return ResourceManager.GetString("Android_UnparseableReturnCodeValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No value for '{0}' provided in instrumentation result. This may indicate a crashed test (see log).
+        /// </summary>
+        public static string Android_NoReturnCodeProvided {
+            get {
+                return ResourceManager.GetString("Android_NoReturnCodeProvided", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found XML result file: '{0}'(key: {1}).
+        /// </summary>
+        public static string Android_FoundXmlResultFile {
+            get {
+                return ResourceManager.GetString("Android_FoundXmlResultFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Key '{0}' defined more than once.
+        /// </summary>
+        public static string Android_DuplicateKey {
+            get {
+                return ResourceManager.GetString("Android_DuplicateKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skipping output line due to key-value-pair parse failure: '{0}'.
+        /// </summary>
+        public static string Android_SkippingOutputLineParseFailure {
+            get {
+                return ResourceManager.GetString("Android_SkippingOutputLineParseFailure", resourceCulture);
+            }
+        }
     }
 }

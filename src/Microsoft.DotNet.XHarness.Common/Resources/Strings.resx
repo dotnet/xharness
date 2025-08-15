@@ -309,4 +309,37 @@
   <data name="Common_InvalidSymbolicatorType" xml:space="preserve">
     <value>Symbolicator '{0}' is not of WasmSymbolicatorBase type.</value>
   </data>
+  <data name="Android_ErrorPullingFiles" xml:space="preserve">
+    <value>Hit error (typically permissions) trying to pull {0}</value>
+  </data>
+  <data name="Android_ExpectedExitCodeButFileError" xml:space="preserve">
+    <value>Received expected instrumentation exit code ({0}), but we hit errors pulling files from the device (see log for details.)</value>
+  </data>
+  <data name="Android_NonSuccessInstrumentationExitCode" xml:space="preserve">
+    <value>Non-success instrumentation exit code: {0}, expected: {1}</value>
+  </data>
+  <data name="Android_TestExecutionSummary" xml:space="preserve">
+    <value>Test execution summary:{0}{1}</value>
+  </data>
+  <data name="Android_ShortMessage" xml:space="preserve">
+    <value>Short message:{0}{1}</value>
+  </data>
+  <data name="Android_InstrumentationFinishedNormally" xml:space="preserve">
+    <value>Instrumentation finished normally with exit code {0}</value>
+  </data>
+  <data name="Android_UnparseableReturnCodeValue" xml:space="preserve">
+    <value>Un-parse-able value for '{0}' : '{1}'</value>
+  </data>
+  <data name="Android_NoReturnCodeProvided" xml:space="preserve">
+    <value>No value for '{0}' provided in instrumentation result. This may indicate a crashed test (see log)</value>
+  </data>
+  <data name="Android_FoundXmlResultFile" xml:space="preserve">
+    <value>Found XML result file: '{0}'(key: {1})</value>
+  </data>
+  <data name="Android_DuplicateKey" xml:space="preserve">
+    <value>Key '{0}' defined more than once</value>
+  </data>
+  <data name="Android_SkippingOutputLineParseFailure" xml:space="preserve">
+    <value>Skipping output line due to key-value-pair parse failure: '{0}'</value>
+  </data>
 </root>
