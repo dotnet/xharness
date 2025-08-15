@@ -342,4 +342,19 @@
   <data name="Android_SkippingOutputLineParseFailure" xml:space="preserve">
     <value>Skipping output line due to key-value-pair parse failure: '{0}'</value>
   </data>
+  <data name="Android_UnableToFindAdb" xml:space="preserve">
+    <value>Unable to find adb.exe</value>
+  </data>
+  <data name="Android_ErrorGettingAdbBugReport" xml:space="preserve">
+    <value>Error getting ADB bugreport:{0}{1}</value>
+  </data>
+  <data name="Android_WroteAdbBugReportTo" xml:space="preserve">
+    <value>Wrote ADB bugreport to {0}</value>
+  </data>
+  <data name="Android_WaitingForCommandTimedOut" xml:space="preserve">
+    <value>Waiting for command timed out: execution may be compromised</value>
+  </data>
+  <data name="Android_FailedToKillProcess" xml:space="preserve">
+    <value>Failed to kill process: {0}</value>
+  </data>
 </root>

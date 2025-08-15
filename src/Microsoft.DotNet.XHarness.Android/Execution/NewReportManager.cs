@@ -22,12 +22,12 @@ class NewReportManager : IReportManager
         if (result.ExitCode != 0)
         {
             // Could throw here, but it would tear down a possibly otherwise acceptable execution.
-            _log.LogError($"Error getting ADB bugreport:{Environment.NewLine}{result}");
+            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ErrorGettingAdbBugReport, Environment.NewLine, result);
             return string.Empty;
         }
         else
         {
-            _log.LogInformation($"Wrote ADB bugreport to {outputFilePathWithoutFormat}.zip");
+            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_WroteAdbBugReportTo, $"{outputFilePathWithoutFormat}.zip");
             return $"{outputFilePathWithoutFormat}.zip";
         }
     }

@@ -75,7 +75,7 @@ public class AdbRunner
 
         if (!File.Exists(_absoluteAdbExePath))
         {
-            _log.LogError($"Unable to find adb.exe");
+            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_UnableToFindAdb);
             throw new FileNotFoundException($"Could not find adb.exe. Either set it in the environment via {AdbEnvironmentVariableName} or call with valid path (provided:  '{adbExePath}')", adbExePath);
         }
 
@@ -146,17 +146,17 @@ public class AdbRunner
         if (result.ExitCode != 0)
         {
             // Could throw here, but it would tear down a possibly otherwise acceptable execution.
-            _log.LogError($"Error getting ADB log:{Environment.NewLine}{result}");
+            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ErrorGettingAdbLog, Environment.NewLine, result);
             return false;
         }
         else
         {
             Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath) ?? throw new ArgumentNullException(nameof(outputFilePath)));
             File.WriteAllText(outputFilePath, result.StandardOutput);
-            _log.LogInformation($"Wrote current ADB log to {outputFilePath}");
+            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_WroteAdbLogTo, outputFilePath);
             // The adb log is not directly accessible.
             // Hence, we duplicate the log to the main console log to simplify the UX of failure investigation.
-            _log.LogInformation($"ADB log output:{Environment.NewLine}{result.StandardOutput}");
+            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbLogOutput, Environment.NewLine, result.StandardOutput);
             return true;
         }
     }
@@ -227,7 +227,7 @@ public class AdbRunner
         // Needed because emulators start up asynchronously and take a while.
         // (Returns instantly if device is ready)
         // This can fail if _currentDevice is unset if there are multiple devices.
-        _log.LogInformation("Waiting for device to be available (max 5 minutes)");
+        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_WaitingForDevice);
         RunAdbCommand(new[] { "wait-for-device" }, TimeSpan.FromMinutes(5))
             .ThrowIfFailed("Error waiting for Android device/emulator");
 
@@ -252,7 +252,7 @@ public class AdbRunner
         }
         else
         {
-            _log.LogError($"Did not detect boot completion variable on device; device may be in a bad state");
+            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_BootCompletionNotDetected);
             return false;
         }
     }
@@ -298,7 +298,7 @@ public class AdbRunner
 
     public int CopyHeadlessFolder(string testPath, bool sharedRuntime = false)
     {
-        _log.LogInformation($"Attempting to install {testPath}");
+        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AttemptingToInstall, testPath);
 
         if (string.IsNullOrEmpty(testPath))
         {
@@ -356,7 +356,7 @@ public class AdbRunner
         }
         else
         {
-            _log.LogInformation($"Successfully installed {testPath} to {targetDirectory}");
+            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_SuccessfullyInstalledToDirectory, testPath, targetDirectory);
         }
 
         return result.ExitCode;
