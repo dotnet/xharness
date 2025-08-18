@@ -70,7 +70,7 @@ public class InstrumentationRunner
                 }
                 catch (Exception toLog)
                 {
-                    _logger.LogError(toLog, "Hit error (typically permissions) trying to pull {filePathOnDevice}", deviceOutputFolder);
+                    _logger.LogError(toLog, Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ErrorPullingFiles, deviceOutputFolder);
                     failurePullingFiles = true;
                 }
             }
@@ -101,8 +101,7 @@ public class InstrumentationRunner
 
         if (failurePullingFiles)
         {
-            _logger.LogError($"Received expected instrumentation exit code ({instrumentationExitCode}), " +
-                             "but we hit errors pulling files from the device (see log for details.)");
+            _logger.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ExpectedExitCodeButFileError, instrumentationExitCode);
             return ExitCode.DEVICE_FILE_COPY_FAILURE;
         }
 
@@ -113,7 +112,7 @@ public class InstrumentationRunner
 
         if (instrumentationExitCode != expectedExitCode)
         {
-            _logger.LogError($"Non-success instrumentation exit code: {instrumentationExitCode}, expected: {expectedExitCode}");
+            _logger.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_NonSuccessInstrumentationExitCode, instrumentationExitCode, expectedExitCode);
             return ExitCode.TESTS_FAILED;
         }
 
@@ -131,12 +130,12 @@ public class InstrumentationRunner
 
         if (resultValues.TryGetValue(TestRunSummaryVariableName, out string? testRunSummary))
         {
-            _logger.LogInformation($"Test execution summary:{Environment.NewLine}{testRunSummary}");
+            _logger.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_TestExecutionSummary, Environment.NewLine, testRunSummary);
         }
 
         if (resultValues.TryGetValue(ShortMessageVariableName, out string? shortMessage))
         {
-            _logger.LogInformation($"Short message:{Environment.NewLine}{shortMessage}");
+            _logger.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ShortMessage, Environment.NewLine, shortMessage);
             processCrashed = shortMessage.Contains(ProcessCrashedShortMessage);
         }
 
@@ -147,17 +146,17 @@ public class InstrumentationRunner
         {
             if (int.TryParse(returnCode, out int parsedExitCode))
             {
-                _logger.LogInformation($"Instrumentation finished normally with exit code {parsedExitCode}");
+                _logger.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_InstrumentationFinishedNormally, parsedExitCode);
                 instrumentationExitCode = parsedExitCode;
             }
             else
             {
-                _logger.LogError($"Un-parse-able value for '{ReturnCodeVariableName}' : '{returnCode}'");
+                _logger.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_UnparseableReturnCodeValue, ReturnCodeVariableName, returnCode);
             }
         }
         else
         {
-            _logger.LogError($"No value for '{ReturnCodeVariableName}' provided in instrumentation result. This may indicate a crashed test (see log)");
+            _logger.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_NoReturnCodeProvided, ReturnCodeVariableName);
         }
 
         return (ExitCode: instrumentationExitCode, Crashed: processCrashed, FilePullFailed: failurePullingFiles);
@@ -174,7 +173,7 @@ public class InstrumentationRunner
                 continue;
             }
 
-            _logger.LogInformation($"Found XML result file: '{resultFile}'(key: {possibleResultKey})");
+            _logger.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_FoundXmlResultFile, resultFile, possibleResultKey);
 
             try
             {
@@ -182,7 +181,7 @@ public class InstrumentationRunner
             }
             catch (Exception toLog)
             {
-                _logger.LogError(toLog, "Hit error (typically permissions) trying to pull {filePathOnDevice}", resultFile);
+                _logger.LogError(toLog, Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ErrorPullingFiles, resultFile);
                 success = true;
             }
         }
@@ -206,7 +205,7 @@ public class InstrumentationRunner
 
                 if (outputs.ContainsKey(key))
                 {
-                    _logger.LogWarning($"Key '{key}' defined more than once");
+                    _logger.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_DuplicateKey, key);
                     outputs[key] = value;
                 }
                 else
@@ -216,7 +215,7 @@ public class InstrumentationRunner
             }
             else
             {
-                _logger.LogWarning($"Skipping output line due to key-value-pair parse failure: '{line}'");
+                _logger.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_SkippingOutputLineParseFailure, line);
             }
         }
 
