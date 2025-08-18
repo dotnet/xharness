@@ -158,6 +158,21 @@
   <data name="Android_WroteAdbLogTo" xml:space="preserve">
     <value>Wrote current ADB log to {0}</value>
   </data>
+  <data name="Android_ErrorGettingAdbBugReport" xml:space="preserve">
+    <value>Error getting ADB bugreport:{0}{1}</value>
+  </data>
+  <data name="Android_WroteAdbBugReportTo" xml:space="preserve">
+    <value>Wrote ADB bug report to {0}</value>
+  </data>
+  <data name="Android_UnableToFindAdb" xml:space="preserve">
+    <value>Unable to find ADB tool</value>
+  </data>
+  <data name="Android_WaitingForCommandTimedOut" xml:space="preserve">
+    <value>Waiting for command to finish timed out</value>
+  </data>
+  <data name="Android_FailedToKillProcess" xml:space="preserve">
+    <value>Failed to kill process: {0}</value>
+  </data>
   <data name="Android_AdbLogOutput" xml:space="preserve">
     <value>ADB log output:{0}{1}</value>
   </data>

@@ -61,141 +61,6 @@ namespace Microsoft.DotNet.XHarness.Common.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Path to application bundle.
-        /// </summary>
-        public static string Arg_AppPath_Description {
-            get {
-                return ResourceManager.GetString("Arg_AppPath_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Name of the device/simulator to use.
-        /// </summary>
-        public static string Arg_DeviceName_Description {
-            get {
-                return ResourceManager.GetString("Arg_DeviceName_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Show this message and exit.
-        /// </summary>
-        public static string Arg_Help_Description {
-            get {
-                return ResourceManager.GetString("Arg_Help_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Timeout in seconds for the app to start. Default is {0} seconds.
-        /// </summary>
-        public static string Arg_LaunchTimeout_Description {
-            get {
-                return ResourceManager.GetString("Arg_LaunchTimeout_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Directory to which the simulator/device output will be saved.
-        /// </summary>
-        public static string Arg_OutputDirectory_Description {
-            get {
-                return ResourceManager.GetString("Arg_OutputDirectory_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test target (device/simulator and OS).
-        /// </summary>
-        public static string Arg_Target_Description {
-            get {
-                return ResourceManager.GetString("Arg_Target_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Timeout in seconds. Default is {0} seconds.
-        /// </summary>
-        public static string Arg_Timeout_Description {
-            get {
-                return ResourceManager.GetString("Arg_Timeout_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Logging verbosity level.
-        /// </summary>
-        public static string Arg_Verbosity_Description {
-            get {
-                return ResourceManager.GetString("Arg_Verbosity_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invoke bundled adb with given arguments.
-        /// </summary>
-        public static string Android_Adb_Description {
-            get {
-                return ResourceManager.GetString("Android_Adb_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Get ID of the device compatible with a given .apk / architecture.
-        /// </summary>
-        public static string Android_Device_Description {
-            get {
-                return ResourceManager.GetString("Android_Device_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Install an .apk on an Android device without running it.
-        /// </summary>
-        public static string Android_Install_Description {
-            get {
-                return ResourceManager.GetString("Android_Install_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Run tests using an already installed .apk on an Android device.
-        /// </summary>
-        public static string Android_Run_Description {
-            get {
-                return ResourceManager.GetString("Android_Run_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Print information about the current machine, such as host machine info and device status.
-        /// </summary>
-        public static string Android_State_Description {
-            get {
-                return ResourceManager.GetString("Android_State_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app.
-        /// </summary>
-        public static string Android_Test_Description {
-            get {
-                return ResourceManager.GetString("Android_Test_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Uninstall an .apk from an Android device.
-        /// </summary>
-        public static string Android_Uninstall_Description {
-            get {
-                return ResourceManager.GetString("Android_Uninstall_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Install a test folder to an Android device without running it.
         /// </summary>
         public static string AndroidHeadless_Install_Description {
@@ -228,6 +93,447 @@ namespace Microsoft.DotNet.XHarness.Common.Resources {
         public static string AndroidHeadless_Uninstall_Description {
             get {
                 return ResourceManager.GetString("AndroidHeadless_Uninstall_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ADB log output:{0}{1}.
+        /// </summary>
+        public static string Android_AdbLogOutput {
+            get {
+                return ResourceManager.GetString("Android_AdbLogOutput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find adb.exe.
+        /// </summary>
+        public static string Android_AdbNotFound {
+            get {
+                return ResourceManager.GetString("Android_AdbNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find adb.exe. Either set it in the environment via {0} or call with valid path (provided: '{1}').
+        /// </summary>
+        public static string Android_AdbPathNotFound {
+            get {
+                return ResourceManager.GetString("Android_AdbPathNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invoke bundled adb with given arguments.
+        /// </summary>
+        public static string Android_Adb_Description {
+            get {
+                return ResourceManager.GetString("Android_Adb_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempting to install {0}.
+        /// </summary>
+        public static string Android_AttemptingToInstall {
+            get {
+                return ResourceManager.GetString("Android_AttemptingToInstall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempting to install {0}.
+        /// </summary>
+        public static string Android_AttemptingToInstallApk {
+            get {
+                return ResourceManager.GetString("Android_AttemptingToInstallApk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Did not detect boot completion variable on device; device may be in a bad state.
+        /// </summary>
+        public static string Android_BootCompletionNotDetected {
+            get {
+                return ResourceManager.GetString("Android_BootCompletionNotDetected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install.
+        /// </summary>
+        public static string Android_BrokenPipeRetryInstall {
+            get {
+                return ResourceManager.GetString("Android_BrokenPipeRetryInstall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing debug apks on a device might be rejected with INSTALL_FAILED_VERIFICATION_FAILURE. Make sure to set '{0}' to '{1}'.
+        /// </summary>
+        public static string Android_DebugApkInstallWarning {
+            get {
+                return ResourceManager.GetString("Android_DebugApkInstallWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{0}Output:{1}.
+        /// </summary>
+        public static string Android_DeviceCacheFullWarning {
+            get {
+                return ResourceManager.GetString("Android_DeviceCacheFullWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get ID of the device compatible with a given .apk / architecture.
+        /// </summary>
+        public static string Android_Device_Description {
+            get {
+                return ResourceManager.GetString("Android_Device_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Key '{0}' defined more than once.
+        /// </summary>
+        public static string Android_DuplicateKey {
+            get {
+                return ResourceManager.GetString("Android_DuplicateKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error getting ADB bugreport:{0}{1}.
+        /// </summary>
+        public static string Android_ErrorGettingAdbBugReport {
+            get {
+                return ResourceManager.GetString("Android_ErrorGettingAdbBugReport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error getting ADB log:{0}{1}.
+        /// </summary>
+        public static string Android_ErrorGettingAdbLog {
+            get {
+                return ResourceManager.GetString("Android_ErrorGettingAdbLog", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error killing ADB server after a failed start: {0}.
+        /// </summary>
+        public static string Android_ErrorKillingAdbServer {
+            get {
+                return ResourceManager.GetString("Android_ErrorKillingAdbServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hit error (typically permissions) trying to pull {0}.
+        /// </summary>
+        public static string Android_ErrorPullingFiles {
+            get {
+                return ResourceManager.GetString("Android_ErrorPullingFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error starting the ADB server.
+        /// </summary>
+        public static string Android_ErrorStartingAdbServer {
+            get {
+                return ResourceManager.GetString("Android_ErrorStartingAdbServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Received expected instrumentation exit code ({0}), but we hit errors pulling files from the device (see log for details.).
+        /// </summary>
+        public static string Android_ExpectedExitCodeButFileError {
+            get {
+                return ResourceManager.GetString("Android_ExpectedExitCodeButFileError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get device's API version.
+        /// </summary>
+        public static string Android_FailedToGetApiVersion {
+            get {
+                return ResourceManager.GetString("Android_FailedToGetApiVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to kill process: {0}.
+        /// </summary>
+        public static string Android_FailedToKillProcess {
+            get {
+                return ResourceManager.GetString("Android_FailedToKillProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to start the ADB server.
+        /// </summary>
+        public static string Android_FailedToStartAdbServer {
+            get {
+                return ResourceManager.GetString("Android_FailedToStartAdbServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find {0}.
+        /// </summary>
+        public static string Android_FileNotFound {
+            get {
+                return ResourceManager.GetString("Android_FileNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found XML result file: '{0}'(key: {1}).
+        /// </summary>
+        public static string Android_FoundXmlResultFile {
+            get {
+                return ResourceManager.GetString("Android_FoundXmlResultFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install.
+        /// </summary>
+        public static string Android_InstallBrokenPipeRetry {
+            get {
+                return ResourceManager.GetString("Android_InstallBrokenPipeRetry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing debug apks on a device might be rejected with INSTALL_FAILED_VERIFICATION_FAILURE. Make sure to set '{0}' to '{1}'.
+        /// </summary>
+        public static string Android_InstallDebugApkWarning {
+            get {
+                return ResourceManager.GetString("Android_InstallDebugApkWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error:{0}{1}.
+        /// </summary>
+        public static string Android_InstallError {
+            get {
+                return ResourceManager.GetString("Android_InstallError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installation failed; Will make one attempt to restart ADB server and the device, then retry the install.
+        /// </summary>
+        public static string Android_InstallFailedRetry {
+            get {
+                return ResourceManager.GetString("Android_InstallFailedRetry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install an .apk on an Android device without running it.
+        /// </summary>
+        public static string Android_Install_Description {
+            get {
+                return ResourceManager.GetString("Android_Install_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instrumentation finished normally with exit code {0}.
+        /// </summary>
+        public static string Android_InstrumentationFinishedNormally {
+            get {
+                return ResourceManager.GetString("Android_InstrumentationFinishedNormally", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No value for '{0}' provided in instrumentation result. This may indicate a crashed test (see log).
+        /// </summary>
+        public static string Android_NoReturnCodeProvided {
+            get {
+                return ResourceManager.GetString("Android_NoReturnCodeProvided", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No value supplied for {0}.
+        /// </summary>
+        public static string Android_NoValueSupplied {
+            get {
+                return ResourceManager.GetString("Android_NoValueSupplied", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Non-success instrumentation exit code: {0}, expected: {1}.
+        /// </summary>
+        public static string Android_NonSuccessInstrumentationExitCode {
+            get {
+                return ResourceManager.GetString("Android_NonSuccessInstrumentationExitCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot determine OS platform being used, thus we can not select an ADB executable.
+        /// </summary>
+        public static string Android_OsPlatformNotSupported {
+            get {
+                return ResourceManager.GetString("Android_OsPlatformNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to It seems the package installation cache may be full on the device. We'll try to reboot it before trying one more time.{0}Output:{1}.
+        /// </summary>
+        public static string Android_PackageCacheFullReboot {
+            get {
+                return ResourceManager.GetString("Android_PackageCacheFullReboot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run tests using an already installed .apk on an Android device.
+        /// </summary>
+        public static string Android_Run_Description {
+            get {
+                return ResourceManager.GetString("Android_Run_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Short message:{0}{1}.
+        /// </summary>
+        public static string Android_ShortMessage {
+            get {
+                return ResourceManager.GetString("Android_ShortMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skipping output line due to key-value-pair parse failure: '{0}'.
+        /// </summary>
+        public static string Android_SkippingOutputLineParseFailure {
+            get {
+                return ResourceManager.GetString("Android_SkippingOutputLineParseFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Print information about the current machine, such as host machine info and device status.
+        /// </summary>
+        public static string Android_State_Description {
+            get {
+                return ResourceManager.GetString("Android_State_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully installed {0}.
+        /// </summary>
+        public static string Android_SuccessfullyInstalled {
+            get {
+                return ResourceManager.GetString("Android_SuccessfullyInstalled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully installed {0} to {1}.
+        /// </summary>
+        public static string Android_SuccessfullyInstalledToDirectory {
+            get {
+                return ResourceManager.GetString("Android_SuccessfullyInstalledToDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test execution summary:{0}{1}.
+        /// </summary>
+        public static string Android_TestExecutionSummary {
+            get {
+                return ResourceManager.GetString("Android_TestExecutionSummary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Executes test .apk on an Android device, waits up to a given timeout, then copies files off the device and uninstalls the test app.
+        /// </summary>
+        public static string Android_Test_Description {
+            get {
+                return ResourceManager.GetString("Android_Test_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find ADB tool.
+        /// </summary>
+        public static string Android_UnableToFindAdb {
+            get {
+                return ResourceManager.GetString("Android_UnableToFindAdb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uninstall an .apk from an Android device.
+        /// </summary>
+        public static string Android_Uninstall_Description {
+            get {
+                return ResourceManager.GetString("Android_Uninstall_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Un-parse-able value for '{0}' : '{1}'.
+        /// </summary>
+        public static string Android_UnparseableReturnCodeValue {
+            get {
+                return ResourceManager.GetString("Android_UnparseableReturnCodeValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for command to finish timed out.
+        /// </summary>
+        public static string Android_WaitingForCommandTimedOut {
+            get {
+                return ResourceManager.GetString("Android_WaitingForCommandTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for device to be available (max 5 minutes).
+        /// </summary>
+        public static string Android_WaitingForDevice {
+            get {
+                return ResourceManager.GetString("Android_WaitingForDevice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wrote ADB bug report to {0}.
+        /// </summary>
+        public static string Android_WroteAdbBugReportTo {
+            get {
+                return ResourceManager.GetString("Android_WroteAdbBugReportTo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wrote current ADB log to {0}.
+        /// </summary>
+        public static string Android_WroteAdbLogTo {
+            get {
+                return ResourceManager.GetString("Android_WroteAdbLogTo", resourceCulture);
             }
         }
         
@@ -354,6 +660,105 @@ namespace Microsoft.DotNet.XHarness.Common.Resources {
         public static string Apple_Uninstall_Description {
             get {
                 return ResourceManager.GetString("Apple_Uninstall_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Path to application bundle.
+        /// </summary>
+        public static string Arg_AppPath_Description {
+            get {
+                return ResourceManager.GetString("Arg_AppPath_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of the device/simulator to use.
+        /// </summary>
+        public static string Arg_DeviceName_Description {
+            get {
+                return ResourceManager.GetString("Arg_DeviceName_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show this message and exit.
+        /// </summary>
+        public static string Arg_Help_Description {
+            get {
+                return ResourceManager.GetString("Arg_Help_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timeout in seconds for the app to start. Default is {0} seconds.
+        /// </summary>
+        public static string Arg_LaunchTimeout_Description {
+            get {
+                return ResourceManager.GetString("Arg_LaunchTimeout_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Directory to which the simulator/device output will be saved.
+        /// </summary>
+        public static string Arg_OutputDirectory_Description {
+            get {
+                return ResourceManager.GetString("Arg_OutputDirectory_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test target (device/simulator and OS).
+        /// </summary>
+        public static string Arg_Target_Description {
+            get {
+                return ResourceManager.GetString("Arg_Target_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timeout in seconds. Default is {0} seconds.
+        /// </summary>
+        public static string Arg_Timeout_Description {
+            get {
+                return ResourceManager.GetString("Arg_Timeout_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Logging verbosity level.
+        /// </summary>
+        public static string Arg_Verbosity_Description {
+            get {
+                return ResourceManager.GetString("Arg_Verbosity_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to save diagnostics data to '{0}': {1}.
+        /// </summary>
+        public static string Common_DiagnosticsDataSaveFailed {
+            get {
+                return ResourceManager.GetString("Common_DiagnosticsDataSaveFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Symbolicator '{0}' is not of WasmSymbolicatorBase type..
+        /// </summary>
+        public static string Common_InvalidSymbolicatorType {
+            get {
+                return ResourceManager.GetString("Common_InvalidSymbolicatorType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No symbolicator given.
+        /// </summary>
+        public static string Common_NoSymbolicatorGiven {
+            get {
+                return ResourceManager.GetString("Common_NoSymbolicatorGiven", resourceCulture);
             }
         }
         
@@ -525,132 +930,6 @@ namespace Microsoft.DotNet.XHarness.Common.Resources {
         public static string Wasm_WebServer_Description {
             get {
                 return ResourceManager.GetString("Wasm_WebServer_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to save diagnostics data to '{0}': {1}.
-        /// </summary>
-        public static string Common_DiagnosticsDataSaveFailed {
-            get {
-                return ResourceManager.GetString("Common_DiagnosticsDataSaveFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No symbolicator given.
-        /// </summary>
-        public static string Common_NoSymbolicatorGiven {
-            get {
-                return ResourceManager.GetString("Common_NoSymbolicatorGiven", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Symbolicator '{0}' is not of WasmSymbolicatorBase type..
-        /// </summary>
-        public static string Common_InvalidSymbolicatorType {
-            get {
-                return ResourceManager.GetString("Common_InvalidSymbolicatorType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Hit error (typically permissions) trying to pull {0}.
-        /// </summary>
-        public static string Android_ErrorPullingFiles {
-            get {
-                return ResourceManager.GetString("Android_ErrorPullingFiles", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Received expected instrumentation exit code ({0}), but we hit errors pulling files from the device (see log for details.).
-        /// </summary>
-        public static string Android_ExpectedExitCodeButFileError {
-            get {
-                return ResourceManager.GetString("Android_ExpectedExitCodeButFileError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Non-success instrumentation exit code: {0}, expected: {1}.
-        /// </summary>
-        public static string Android_NonSuccessInstrumentationExitCode {
-            get {
-                return ResourceManager.GetString("Android_NonSuccessInstrumentationExitCode", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test execution summary:{0}{1}.
-        /// </summary>
-        public static string Android_TestExecutionSummary {
-            get {
-                return ResourceManager.GetString("Android_TestExecutionSummary", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Short message:{0}{1}.
-        /// </summary>
-        public static string Android_ShortMessage {
-            get {
-                return ResourceManager.GetString("Android_ShortMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Instrumentation finished normally with exit code {0}.
-        /// </summary>
-        public static string Android_InstrumentationFinishedNormally {
-            get {
-                return ResourceManager.GetString("Android_InstrumentationFinishedNormally", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Un-parse-able value for '{0}' : '{1}'.
-        /// </summary>
-        public static string Android_UnparseableReturnCodeValue {
-            get {
-                return ResourceManager.GetString("Android_UnparseableReturnCodeValue", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No value for '{0}' provided in instrumentation result. This may indicate a crashed test (see log).
-        /// </summary>
-        public static string Android_NoReturnCodeProvided {
-            get {
-                return ResourceManager.GetString("Android_NoReturnCodeProvided", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Found XML result file: '{0}'(key: {1}).
-        /// </summary>
-        public static string Android_FoundXmlResultFile {
-            get {
-                return ResourceManager.GetString("Android_FoundXmlResultFile", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Key '{0}' defined more than once.
-        /// </summary>
-        public static string Android_DuplicateKey {
-            get {
-                return ResourceManager.GetString("Android_DuplicateKey", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skipping output line due to key-value-pair parse failure: '{0}'.
-        /// </summary>
-        public static string Android_SkippingOutputLineParseFailure {
-            get {
-                return ResourceManager.GetString("Android_SkippingOutputLineParseFailure", resourceCulture);
             }
         }
     }
