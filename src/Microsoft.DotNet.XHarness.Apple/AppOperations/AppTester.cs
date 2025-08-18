@@ -190,7 +190,8 @@ public class AppTester : AppRunnerBase, IAppTester
             using var crashLogs = new Logs(_logs.Directory);
 
             ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, device.Name);
-            using ITestReporter testReporter = _testReporterFactory.Create(_mainLog,
+            using ITestReporter testReporter = _testReporterFactory.Create(
+                _mainLog,
                 _mainLog,
                 _logs,
                 crashReporter,
@@ -360,6 +361,7 @@ public class AppTester : AppRunnerBase, IAppTester
 
             // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit)
             IFileBackedLog aggregatedLog = Log.CreateReadableAggregatedLog(_mainLog, testReporter.CallbackLog);
+
 
             var result = await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
                 mlaunchArguments,
