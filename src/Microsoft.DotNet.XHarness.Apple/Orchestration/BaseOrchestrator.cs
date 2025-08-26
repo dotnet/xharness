@@ -203,7 +203,7 @@ public abstract class BaseOrchestrator : IDisposable
 
         try
         {
-            _logger.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_LookingForDevices, target.AsString(), (target.Platform.IsSimulator() ? "simulators" : "devices"));
+            _logger.LogInformation(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_LookingForDevices, target.AsString(), (target.Platform.IsSimulator() ? "simulators" : "devices")));
 
             var finderLogName = $"list-{target.AsString()}-{_helpers.Timestamp}.log";
             using var finderLog = _logs.Create(finderLogName, "DeviceList", true);
@@ -220,11 +220,11 @@ public abstract class BaseOrchestrator : IDisposable
                 pairedDevicesOnly: true,
                 cancellationToken);
 
-            _logger.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_FoundDevice, (target.Platform.IsSimulator() ? "simulator" : "physical"), device.Name);
+            _logger.LogInformation(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_FoundDevice, (target.Platform.IsSimulator() ? "simulator" : "physical"), device.Name));
 
             if (companionDevice != null)
             {
-                _logger.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_FoundCompanionDevice, (target.Platform.IsSimulator() ? "simulator" : "physical"), companionDevice.Name);
+                _logger.LogInformation(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_FoundCompanionDevice, (target.Platform.IsSimulator() ? "simulator" : "physical"), companionDevice.Name));
             }
         }
         catch (NoDeviceFoundException e)
@@ -255,12 +255,12 @@ public abstract class BaseOrchestrator : IDisposable
                 var simulator = (ISimulatorDevice)device;
                 var bundleIds = appBundleInfo.BundleIdentifier == string.Empty ? Array.Empty<string>() : new[] { appBundleInfo.BundleIdentifier };
 
-                _logger.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_ResettingSimulator, device.Name);
+                _logger.LogInformation(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_ResettingSimulator, device.Name));
                 await simulator.PrepareSimulator(_mainLog, bundleIds);
 
                 if (companionDevice != null)
                 {
-                    _logger.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_ResettingCompanionSimulator, companionDevice.Name);
+                    _logger.LogInformation(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_ResettingCompanionSimulator, companionDevice.Name));
                     var companionSimulator = (ISimulatorDevice)companionDevice;
                     await companionSimulator.PrepareSimulator(_mainLog, bundleIds);
                 }
@@ -269,7 +269,7 @@ public abstract class BaseOrchestrator : IDisposable
             }
             catch (Exception e)
             {
-                _logger.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_FailedToResetSimulator, Environment.NewLine, e);
+                _logger.LogError(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_FailedToResetSimulator, Environment.NewLine, e));
                 return ExitCode.SIMULATOR_FAILURE;
             }
         }
@@ -292,7 +292,7 @@ public abstract class BaseOrchestrator : IDisposable
 
         if (exitCode != ExitCode.SUCCESS)
         {
-            _logger.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_CleaningUpFailedInstallation, device.Name);
+            _logger.LogInformation(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_CleaningUpFailedInstallation, device.Name));
 
             var uninstallResult = await UninstallApp(target.Platform, appBundleInfo.BundleIdentifier, device, isPreparation: false, new CancellationToken());
             if (uninstallResult == ExitCode.SIMULATOR_FAILURE)
@@ -374,7 +374,7 @@ public abstract class BaseOrchestrator : IDisposable
         TestTargetOs target,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_InstallingApplication, appBundleInfo.AppName, device.Name);
+        _logger.LogInformation(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_InstallingApplication, appBundleInfo.AppName, device.Name));
 
         ProcessExecutionResult result;
 
@@ -384,7 +384,7 @@ public abstract class BaseOrchestrator : IDisposable
         }
         catch (Exception e)
         {
-            _logger.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_FailedToInstallAppBundle, Environment.NewLine, e);
+            _logger.LogError(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_FailedToInstallAppBundle, Environment.NewLine, e));
             return ExitCode.PACKAGE_INSTALLATION_FAILURE;
         }
 
@@ -424,7 +424,7 @@ public abstract class BaseOrchestrator : IDisposable
             return exitCode;
         }
 
-        _logger.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_ApplicationInstalledSuccessfully, appBundleInfo.AppName, device.Name);
+        _logger.LogInformation(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_BaseOrchestrator_ApplicationInstalledSuccessfully, appBundleInfo.AppName, device.Name));
 
         return ExitCode.SUCCESS;
     }

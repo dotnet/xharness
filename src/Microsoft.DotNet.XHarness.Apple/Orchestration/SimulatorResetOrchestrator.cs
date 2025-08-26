@@ -54,7 +54,7 @@ public class SimulatorResetOrchestrator : BaseOrchestrator, ISimulatorResetOrche
     {
         if (!target.Platform.IsSimulator() || target.Platform.ToRunMode() == RunMode.MacOS)
         {
-            _consoleLogger.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_SimulatorResetOrchestrator_RequiresSimulator, target.AsString());
+            _consoleLogger.LogError(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_SimulatorResetOrchestrator_RequiresSimulator, target.AsString()));
             return Task.FromResult(ExitCode.INVALID_ARGUMENTS);
         }
 
