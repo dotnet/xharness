@@ -25,13 +25,13 @@ public class InstrumentationRunner
 
     private readonly ILogger _logger;
     private readonly AdbRunner _runner;
-    
+
     public InstrumentationRunner(ILogger logger, AdbRunner runner)
     {
         _logger = logger;
         _runner = runner;
     }
-    
+
     public ExitCode RunApkInstrumentation(
         string apkPackageName,
         string? instrumentationName,

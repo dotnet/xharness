@@ -24,6 +24,5 @@ public interface IResultFileHandler
         string osVersion,
         string udid,
         string bundleIdentifier,
-        string hostDestinationPath,
-        CancellationToken token);
+        string hostDestinationPath);
 }

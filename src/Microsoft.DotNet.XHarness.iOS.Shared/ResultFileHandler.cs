@@ -67,8 +67,7 @@ public class ResultFileHandler : IResultFileHandler
         string osVersion,
         string udid,
         string bundleIdentifier,
-        string hostDestinationPath,
-        CancellationToken token)
+        string hostDestinationPath)
     {
         // This file path is set in iOSApplicationEntryPointBase
         string sourcePath = runMode == RunMode.iOS
@@ -95,7 +94,7 @@ public class ResultFileHandler : IResultFileHandler
                 _mainLog,
                 TimeSpan.FromMinutes(1),
                 null,
-                cancellationToken: token);
+                null);
 
             if (!File.Exists(hostDestinationPath))
             {
