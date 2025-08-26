@@ -11,6 +11,11 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared;
 public interface IResultFileHandler
 {
     /// <summary>
+    /// Determines whether the result file handler supports the given OS version and simulator status.
+    /// </summary>
+    bool IsVersionSupported(string osVersion, bool isSimulator);
+
+    /// <summary>
     /// Copy the XML results file from the app container (simulator or device) to the host path.
     /// </summary>
     Task<bool> CopyResultsAsync(

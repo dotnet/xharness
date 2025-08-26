@@ -152,12 +152,12 @@ Currently we support **xunit v2**, **xunit v3**, and **NUnit** test assemblies b
 When working on XHarness, there are couple of neat hacks that can improve the inner loop.
 The repository can either be built using regular .NET, assuming you have new enough version:
 ```
-dotnet build XHarness.sln
+dotnet build XHarness.slnx
 ```
 or you can use the build scripts `build.sh` or `Build.cmd` in repository root which will install the correct .NET SDK into the `.dotnet` folder.
 You can then use
 ```
-./.dotnet/dotnet build XHarness.sln
+./.dotnet/dotnet build XHarness.slnx
 ```
 
 You can also use Visual Studio 2019+ and just F5 the `Microsoft.DotNet.XHarness.CLI` project.
