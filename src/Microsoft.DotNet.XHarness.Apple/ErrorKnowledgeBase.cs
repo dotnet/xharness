@@ -17,40 +17,39 @@ public class ErrorKnowledgeBase : IErrorKnowledgeBase
     private static readonly Dictionary<string, KnownIssue> s_testErrorMaps = new()
     {
         ["Failed to communicate with the device"] =
-            new("Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device",
+            new(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_FailedCommunicateDevice,
                 suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
 
         ["MT1031"] =
-            new("Cannot launch the application because the device is locked. Please unlock the device and try again",
+            new(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_DeviceLockedMT1031,
                 suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
 
         ["the device is locked"] =
-            new("Cannot launch the application because the device is locked. Please unlock the device and try again",
+            new(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_DeviceLocked,
                 suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
 
         ["while Setup Assistant is running"] =
-            new("Cannot launch the application because the device's update hasn't been finished. The setup assistant is still running. Please finish the device OS update on the device",
+            new(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_SetupAssistantRunning,
                 suggestedExitCode: (int)ExitCode.DEVICE_FAILURE),
 
         ["LSOpenURLsWithRole() failed with error -10825"] =
-            new("This application requires a newer version of MacOS",
+            new(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_RequiresNewerMacOS,
                 suggestedExitCode: (int)ExitCode.GENERAL_FAILURE),
 
         ["Failed to start launchd_sim: could not bind to session"] =
-            new("Failed to launch the Simulator as XHarness was most likely started from a user session without GUI capabilities (e.g. from a launchd daemon). " +
-                "Please start XHarness from a full user session or bind the run to one via `sudo launchctl asuser`",
+            new(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_LaunchdSimBindError,
                 suggestedExitCode: (int)ExitCode.APP_LAUNCH_FAILURE),
 
         ["error HE0018: Could not launch the simulator application"] =
-            new("Failed to launch the Simulator, please try again. If the problem persists, try rebooting MacOS",
+            new(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_FailedLaunchSimulator,
                 suggestedExitCode: (int)ExitCode.SIMULATOR_FAILURE),
 
         ["error HE0042: Could not launch the app"] =
-            new("Failed to launch the application, please try again. If the problem persists, try rebooting MacOS",
+            new(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_FailedLaunchApp,
                 suggestedExitCode: (int)ExitCode.APP_LAUNCH_FAILURE),
        
         ["[TCP tunnel] Xamarin.Hosting: Failed to connect to port"] = new(
-            "TCP Tunnel Connection Failed to connect to TCP port",
+            Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_TcpTunnelConnectionFailed,
             suggestedExitCode: (int)ExitCode.TCP_CONNECTION_FAILED),
     };
 
@@ -59,19 +58,19 @@ public class ErrorKnowledgeBase : IErrorKnowledgeBase
     private static readonly Dictionary<string, KnownIssue> s_installErrorMaps = new()
     {
         ["IncorrectArchitecture"] =
-            new("IncorrectArchitecture: Failed to find matching device arch for the application"), // known failure, but not an issue
+            new(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_IncorrectArchitecture), // known failure, but not an issue
 
         ["0xe8008015"] =
-            new("No valid provisioning profile found", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
+            new(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_NoValidProvisioningProfile, suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
 
         ["valid provisioning profile for this executable was not found"] =
-            new("No valid provisioning profile found", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
+            new(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_NoValidProvisioningProfile, suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
 
         ["0xe800801c"] =
-            new("App is not signed", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
+            new(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_AppNotSigned, suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
 
         ["No code signature found"] =
-            new("App is not signed", suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
+            new(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ErrorKnowledgeBase_AppNotSigned, suggestedExitCode: (int)ExitCode.APP_NOT_SIGNED),
     };
 
     public bool IsKnownBuildIssue(IFileBackedLog buildLog, [NotNullWhen(true)] out KnownIssue? knownFailureMessage)

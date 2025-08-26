@@ -43,7 +43,7 @@ public class AppInstaller : IAppInstaller
     {
         if (!Directory.Exists(appBundleInformation.LaunchAppPath))
         {
-            throw new DirectoryNotFoundException("Failed to find the app bundle directory");
+            throw new DirectoryNotFoundException(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_AppInstaller_FailedFindAppBundle);
         }
 
         var args = new MlaunchArguments();
@@ -65,7 +65,7 @@ public class AppInstaller : IAppInstaller
         }
 
         var totalSize = Directory.GetFiles(appBundleInformation.LaunchAppPath, "*", SearchOption.AllDirectories).Select((v) => new FileInfo(v).Length).Sum();
-        _mainLog.WriteLine($"Installing '{appBundleInformation.LaunchAppPath}' to '{device.Name}' ({totalSize / 1024.0 / 1024.0:N2} MB)");
+        _mainLog.WriteLine(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_AppInstaller_InstallingApp, appBundleInformation.LaunchAppPath, device.Name, totalSize / 1024.0 / 1024.0));
 
         return await _processManager.ExecuteCommandAsync(args, _mainLog, TimeSpan.FromMinutes(15), verbosity: 2, cancellationToken: cancellationToken);
     }

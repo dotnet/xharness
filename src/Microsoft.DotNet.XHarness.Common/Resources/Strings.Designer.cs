@@ -932,5 +932,221 @@ namespace Microsoft.DotNet.XHarness.Common.Resources {
                 return ResourceManager.GetString("Wasm_WebServer_Description", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please supply a value for apkPath.
+        /// </summary>
+        public static string Android_ApkHelper_SupplyApkPath {
+            get {
+                return ResourceManager.GetString("Android_ApkHelper_SupplyApkPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid APK Path: '{0}'.
+        /// </summary>
+        public static string Android_ApkHelper_InvalidApkPath {
+            get {
+                return ResourceManager.GetString("Android_ApkHelper_InvalidApkPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only know how to open APK files..
+        /// </summary>
+        public static string Android_ApkHelper_OnlyApkFiles {
+            get {
+                return ResourceManager.GetString("Android_ApkHelper_OnlyApkFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error reading Darwin Kernel Version.
+        /// </summary>
+        public static string Apple_Darwin_ErrorReadingKernelVersion {
+            get {
+                return ResourceManager.GetString("Apple_Darwin_ErrorReadingKernelVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error reading Darwin Kernel Version.
+        /// </summary>
+        public static string Apple_Darwin_UnknownErrorReadingKernelVersion {
+            get {
+                return ResourceManager.GetString("Apple_Darwin_UnknownErrorReadingKernelVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device.
+        /// </summary>
+        public static string Apple_ErrorKnowledgeBase_FailedCommunicateDevice {
+            get {
+                return ResourceManager.GetString("Apple_ErrorKnowledgeBase_FailedCommunicateDevice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot launch the application because the device is locked. Please unlock the device and try again.
+        /// </summary>
+        public static string Apple_ErrorKnowledgeBase_DeviceLockedMT1031 {
+            get {
+                return ResourceManager.GetString("Apple_ErrorKnowledgeBase_DeviceLockedMT1031", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot launch the application because the device is locked. Please unlock the device and try again.
+        /// </summary>
+        public static string Apple_ErrorKnowledgeBase_DeviceLocked {
+            get {
+                return ResourceManager.GetString("Apple_ErrorKnowledgeBase_DeviceLocked", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot launch the application because the device's update hasn't been finished. The setup assistant is still running. Please finish the device OS update on the device.
+        /// </summary>
+        public static string Apple_ErrorKnowledgeBase_SetupAssistantRunning {
+            get {
+                return ResourceManager.GetString("Apple_ErrorKnowledgeBase_SetupAssistantRunning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This application requires a newer version of MacOS.
+        /// </summary>
+        public static string Apple_ErrorKnowledgeBase_RequiresNewerMacOS {
+            get {
+                return ResourceManager.GetString("Apple_ErrorKnowledgeBase_RequiresNewerMacOS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to launch the Simulator as XHarness was most likely started from a user session without GUI capabilities (e.g. from a launchd daemon). Please start XHarness from a full user session or bind the run to one via `sudo launchctl asuser`.
+        /// </summary>
+        public static string Apple_ErrorKnowledgeBase_LaunchdSimBindError {
+            get {
+                return ResourceManager.GetString("Apple_ErrorKnowledgeBase_LaunchdSimBindError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to launch the Simulator, please try again. If the problem persists, try rebooting MacOS.
+        /// </summary>
+        public static string Apple_ErrorKnowledgeBase_FailedLaunchSimulator {
+            get {
+                return ResourceManager.GetString("Apple_ErrorKnowledgeBase_FailedLaunchSimulator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to launch the application, please try again. If the problem persists, try rebooting MacOS.
+        /// </summary>
+        public static string Apple_ErrorKnowledgeBase_FailedLaunchApp {
+            get {
+                return ResourceManager.GetString("Apple_ErrorKnowledgeBase_FailedLaunchApp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TCP Tunnel Connection Failed to connect to TCP port.
+        /// </summary>
+        public static string Apple_ErrorKnowledgeBase_TcpTunnelConnectionFailed {
+            get {
+                return ResourceManager.GetString("Apple_ErrorKnowledgeBase_TcpTunnelConnectionFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IncorrectArchitecture: Failed to find matching device arch for the application.
+        /// </summary>
+        public static string Apple_ErrorKnowledgeBase_IncorrectArchitecture {
+            get {
+                return ResourceManager.GetString("Apple_ErrorKnowledgeBase_IncorrectArchitecture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No valid provisioning profile found.
+        /// </summary>
+        public static string Apple_ErrorKnowledgeBase_NoValidProvisioningProfile {
+            get {
+                return ResourceManager.GetString("Apple_ErrorKnowledgeBase_NoValidProvisioningProfile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to App is not signed.
+        /// </summary>
+        public static string Apple_ErrorKnowledgeBase_AppNotSigned {
+            get {
+                return ResourceManager.GetString("Apple_ErrorKnowledgeBase_AppNotSigned", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to detect application's exit code. The log file was empty / not found at {0}.
+        /// </summary>
+        public static string Apple_ExitCodeDetector_FailedDetectExitCode {
+            get {
+                return ResourceManager.GetString("Apple_ExitCodeDetector_FailedDetectExitCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to find the app bundle directory.
+        /// </summary>
+        public static string Apple_AppInstaller_FailedFindAppBundle {
+            get {
+                return ResourceManager.GetString("Apple_AppInstaller_FailedFindAppBundle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing '{0}' to '{1}' ({2:N2} MB).
+        /// </summary>
+        public static string Apple_AppInstaller_InstallingApp {
+            get {
+                return ResourceManager.GetString("Apple_AppInstaller_InstallingApp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to *** Executing '{0}' on MacCatalyst ***.
+        /// </summary>
+        public static string Apple_AppRunner_ExecutingOnMacCatalyst {
+            get {
+                return ResourceManager.GetString("Apple_AppRunner_ExecutingOnMacCatalyst", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to *** Executing '{0}' on {1} '{2}' ***.
+        /// </summary>
+        public static string Apple_AppRunner_ExecutingOnDevice {
+            get {
+                return ResourceManager.GetString("Apple_AppRunner_ExecutingOnDevice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Didn't find any suitable simulator.
+        /// </summary>
+        public static string Apple_AppRunner_NoSuitableSimulator {
+            get {
+                return ResourceManager.GetString("Apple_AppRunner_NoSuitableSimulator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting the app.
+        /// </summary>
+        public static string Apple_AppRunner_StartingApp {
+            get {
+                return ResourceManager.GetString("Apple_AppRunner_StartingApp", resourceCulture);
+            }
+        }
     }
 }

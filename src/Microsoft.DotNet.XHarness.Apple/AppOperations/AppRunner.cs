@@ -82,7 +82,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
         IEnumerable<(string, string)> extraEnvVariables,
         CancellationToken cancellationToken = default)
     {
-        _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
+        _mainLog.WriteLine(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_AppRunner_ExecutingOnMacCatalyst, appInformation.AppName));
         var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
 
         var envVariables = new Dictionary<string, string>();
@@ -132,7 +132,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
             isDevice: !isSimulator,
             device.Name);
 
-        _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{device.Name}' ***");
+        _mainLog.WriteLine(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_AppRunner_ExecutingOnDevice, appInformation.AppName, target.AsString(), device.Name));
 
 
         if (isSimulator)
@@ -142,7 +142,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
 
             if (simulator == null)
             {
-                _mainLog.WriteLine("Didn't find any suitable simulator");
+                _mainLog.WriteLine(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_AppRunner_NoSuitableSimulator);
                 throw new NoDeviceFoundException();
             }
 
@@ -211,7 +211,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
 
         await crashReporter.StartCaptureAsync();
 
-        _mainLog.WriteLine("Starting the app");
+        _mainLog.WriteLine(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_AppRunner_StartingApp);
 
         var envVars = new Dictionary<string, string>();
         AddExtraEnvVars(envVars, extraEnvVariables);

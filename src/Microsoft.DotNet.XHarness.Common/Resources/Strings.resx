@@ -369,4 +369,76 @@
   <data name="Android_DeviceCacheFullWarning" xml:space="preserve">
     <value>It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{0}Output:{1}</value>
   </data>
+  <data name="Android_ApkHelper_SupplyApkPath" xml:space="preserve">
+    <value>Please supply a value for apkPath</value>
+  </data>
+  <data name="Android_ApkHelper_InvalidApkPath" xml:space="preserve">
+    <value>Invalid APK Path: '{0}'</value>
+  </data>
+  <data name="Android_ApkHelper_OnlyApkFiles" xml:space="preserve">
+    <value>Only know how to open APK files.</value>
+  </data>
+  <data name="Apple_Darwin_ErrorReadingKernelVersion" xml:space="preserve">
+    <value>Error reading Darwin Kernel Version</value>
+  </data>
+  <data name="Apple_Darwin_UnknownErrorReadingKernelVersion" xml:space="preserve">
+    <value>Unknown error reading Darwin Kernel Version</value>
+  </data>
+  <data name="Apple_ErrorKnowledgeBase_FailedCommunicateDevice" xml:space="preserve">
+    <value>Failed to communicate with the device. Please ensure the cable is properly connected, and try rebooting the device</value>
+  </data>
+  <data name="Apple_ErrorKnowledgeBase_DeviceLockedMT1031" xml:space="preserve">
+    <value>Cannot launch the application because the device is locked. Please unlock the device and try again</value>
+  </data>
+  <data name="Apple_ErrorKnowledgeBase_DeviceLocked" xml:space="preserve">
+    <value>Cannot launch the application because the device is locked. Please unlock the device and try again</value>
+  </data>
+  <data name="Apple_ErrorKnowledgeBase_SetupAssistantRunning" xml:space="preserve">
+    <value>Cannot launch the application because the device's update hasn't been finished. The setup assistant is still running. Please finish the device OS update on the device</value>
+  </data>
+  <data name="Apple_ErrorKnowledgeBase_RequiresNewerMacOS" xml:space="preserve">
+    <value>This application requires a newer version of MacOS</value>
+  </data>
+  <data name="Apple_ErrorKnowledgeBase_LaunchdSimBindError" xml:space="preserve">
+    <value>Failed to launch the Simulator as XHarness was most likely started from a user session without GUI capabilities (e.g. from a launchd daemon). Please start XHarness from a full user session or bind the run to one via `sudo launchctl asuser`</value>
+  </data>
+  <data name="Apple_ErrorKnowledgeBase_FailedLaunchSimulator" xml:space="preserve">
+    <value>Failed to launch the Simulator, please try again. If the problem persists, try rebooting MacOS</value>
+  </data>
+  <data name="Apple_ErrorKnowledgeBase_FailedLaunchApp" xml:space="preserve">
+    <value>Failed to launch the application, please try again. If the problem persists, try rebooting MacOS</value>
+  </data>
+  <data name="Apple_ErrorKnowledgeBase_TcpTunnelConnectionFailed" xml:space="preserve">
+    <value>TCP Tunnel Connection Failed to connect to TCP port</value>
+  </data>
+  <data name="Apple_ErrorKnowledgeBase_IncorrectArchitecture" xml:space="preserve">
+    <value>IncorrectArchitecture: Failed to find matching device arch for the application</value>
+  </data>
+  <data name="Apple_ErrorKnowledgeBase_NoValidProvisioningProfile" xml:space="preserve">
+    <value>No valid provisioning profile found</value>
+  </data>
+  <data name="Apple_ErrorKnowledgeBase_AppNotSigned" xml:space="preserve">
+    <value>App is not signed</value>
+  </data>
+  <data name="Apple_ExitCodeDetector_FailedDetectExitCode" xml:space="preserve">
+    <value>Failed to detect application's exit code. The log file was empty / not found at {0}</value>
+  </data>
+  <data name="Apple_AppInstaller_FailedFindAppBundle" xml:space="preserve">
+    <value>Failed to find the app bundle directory</value>
+  </data>
+  <data name="Apple_AppInstaller_InstallingApp" xml:space="preserve">
+    <value>Installing '{0}' to '{1}' ({2:N2} MB)</value>
+  </data>
+  <data name="Apple_AppRunner_ExecutingOnMacCatalyst" xml:space="preserve">
+    <value>*** Executing '{0}' on MacCatalyst ***</value>
+  </data>
+  <data name="Apple_AppRunner_ExecutingOnDevice" xml:space="preserve">
+    <value>*** Executing '{0}' on {1} '{2}' ***</value>
+  </data>
+  <data name="Apple_AppRunner_NoSuitableSimulator" xml:space="preserve">
+    <value>Didn't find any suitable simulator</value>
+  </data>
+  <data name="Apple_AppRunner_StartingApp" xml:space="preserve">
+    <value>Starting the app</value>
+  </data>
 </root>
