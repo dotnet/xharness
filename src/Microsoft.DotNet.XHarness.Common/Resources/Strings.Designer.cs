@@ -1033,6 +1033,177 @@ namespace Microsoft.DotNet.XHarness.Common.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_ApplicationInstalledSuccessfully.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_ApplicationInstalledSuccessfully {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_ApplicationInstalledSuccessfully", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_ApplicationUninstalledSuccessfully.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_ApplicationUninstalledSuccessfully {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_ApplicationUninstalledSuccessfully", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_CleaningUpCompanionSimulator.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_CleaningUpCompanionSimulator {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_CleaningUpCompanionSimulator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_CleaningUpFailedInstallation.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_CleaningUpFailedInstallation {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_CleaningUpFailedInstallation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_CleaningUpSimulator.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_CleaningUpSimulator {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_CleaningUpSimulator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_FailedToInstallAppBundle.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_FailedToInstallAppBundle {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_FailedToInstallAppBundle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_FailedToInstallApplication.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_FailedToInstallApplication {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_FailedToInstallApplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_FailedToResetSimulator.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_FailedToResetSimulator {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_FailedToResetSimulator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_FailedToUninstallAppBundle.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_FailedToUninstallAppBundle {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_FailedToUninstallAppBundle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_FoundCompanionDevice.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_FoundCompanionDevice {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_FoundCompanionDevice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_FoundDevice.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_FoundDevice {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_FoundDevice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_GettingAppBundleInfo.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_GettingAppBundleInfo {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_GettingAppBundleInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_InstallingApplication.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_InstallingApplication {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_InstallingApplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_LookingForDevices.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_LookingForDevices {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_LookingForDevices", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_QueryingSimulatorForAppBundle.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_QueryingSimulatorForAppBundle {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_QueryingSimulatorForAppBundle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_ResettingCompanionSimulator.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_ResettingCompanionSimulator {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_ResettingCompanionSimulator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_ResettingSimulator.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_ResettingSimulator {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_ResettingSimulator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_UninstallingApplication.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_UninstallingApplication {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_UninstallingApplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_BaseOrchestrator_UninstallingPreviousInstance.
+        /// </summary>
+        public static string Apple_BaseOrchestrator_UninstallingPreviousInstance {
+            get {
+                return ResourceManager.GetString("Apple_BaseOrchestrator_UninstallingPreviousInstance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to the value of Apple_Darwin_ErrorReadingKernelVersion.
         /// </summary>
         public static string Apple_Darwin_ErrorReadingKernelVersion {
@@ -1218,6 +1389,15 @@ namespace Microsoft.DotNet.XHarness.Common.Resources {
         public static string Apple_Run_Description {
             get {
                 return ResourceManager.GetString("Apple_Run_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value of Apple_SimulatorResetOrchestrator_RequiresSimulator.
+        /// </summary>
+        public static string Apple_SimulatorResetOrchestrator_RequiresSimulator {
+            get {
+                return ResourceManager.GetString("Apple_SimulatorResetOrchestrator_RequiresSimulator", resourceCulture);
             }
         }
         

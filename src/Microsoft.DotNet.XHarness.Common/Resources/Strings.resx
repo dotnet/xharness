@@ -582,4 +582,61 @@
   <data name="Apple_SimulatorResetOrchestrator_RequiresSimulator" xml:space="preserve">
     <value>The simulator reset action requires a simulator target while {0} specified</value>
   </data>
+  <data name="Apple_BaseOrchestrator_LookingForDevices" xml:space="preserve">
+    <value>Looking for available {0} {1}..</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_FoundDevice" xml:space="preserve">
+    <value>Found {0} device '{1}'</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_FoundCompanionDevice" xml:space="preserve">
+    <value>Found companion {0} device '{1}'</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_ResettingSimulator" xml:space="preserve">
+    <value>Reseting simulator '{0}'</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_ResettingCompanionSimulator" xml:space="preserve">
+    <value>Reseting companion simulator '{0}'</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_FailedToResetSimulator" xml:space="preserve">
+    <value>Failed to reset simulator: {0}{1}</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_CleaningUpFailedInstallation" xml:space="preserve">
+    <value>Cleaning up the failed installation from '{0}'</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_InstallingApplication" xml:space="preserve">
+    <value>Installing application '{0}' on '{1}'</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_FailedToInstallAppBundle" xml:space="preserve">
+    <value>Failed to install the app bundle:{0}{1}</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_FailedToInstallApplication" xml:space="preserve">
+    <value>Failed to install the application</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_ApplicationInstalledSuccessfully" xml:space="preserve">
+    <value>Application '{0}' was installed successfully on '{1}'</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_UninstallingPreviousInstance" xml:space="preserve">
+    <value>Uninstalling any previous instance of '{0}' from '{1}'</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_UninstallingApplication" xml:space="preserve">
+    <value>Uninstalling the application '{0}' from '{1}'</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_ApplicationUninstalledSuccessfully" xml:space="preserve">
+    <value>Application '{0}' was uninstalled successfully</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_FailedToUninstallAppBundle" xml:space="preserve">
+    <value>Failed to uninstall the app bundle! Check logs for more details!</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_CleaningUpSimulator" xml:space="preserve">
+    <value>Cleaning up simulator '{0}'</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_CleaningUpCompanionSimulator" xml:space="preserve">
+    <value>Cleaning up companion simulator '{0}'</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_QueryingSimulatorForAppBundle" xml:space="preserve">
+    <value>Querying simulator for app bundle information..</value>
+  </data>
+  <data name="Apple_BaseOrchestrator_GettingAppBundleInfo" xml:space="preserve">
+    <value>Getting app bundle information from '{0}'..</value>
+  </data>
 </root>
