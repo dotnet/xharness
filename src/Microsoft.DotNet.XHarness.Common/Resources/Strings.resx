@@ -579,4 +579,7 @@
   <data name="Android_AdbRunner_UnableToDisableChatty" xml:space="preserve">
     <value>Unable to disable chatty. Logcat may hide what it finds to be repeating entries.</value>
   </data>
+  <data name="Apple_SimulatorResetOrchestrator_RequiresSimulator" xml:space="preserve">
+    <value>The simulator reset action requires a simulator target while {0} specified</value>
+  </data>
 </root>
