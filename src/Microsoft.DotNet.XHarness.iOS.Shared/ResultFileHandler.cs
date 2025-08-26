@@ -93,7 +93,6 @@ public class ResultFileHandler : IResultFileHandler
                 _mainLog,
                 _mainLog,
                 TimeSpan.FromMinutes(1),
-                null,
                 null);
 
             if (!File.Exists(hostDestinationPath))
