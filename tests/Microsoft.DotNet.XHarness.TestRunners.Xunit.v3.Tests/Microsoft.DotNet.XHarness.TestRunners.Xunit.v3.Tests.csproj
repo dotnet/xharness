@@ -11,11 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.TestRunners.Common\Microsoft.DotNet.XHarness.TestRunners.Common.csproj" />
-    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.TestRunners.Xunit.v3\Microsoft.DotNet.XHarness.TestRunners.Xunit.v3.csproj">
-      <ExcludeAssets>all</ExcludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>compile</IncludeAssets>
-    </ProjectReference>
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.TestRunners.Xunit.v3\Microsoft.DotNet.XHarness.TestRunners.Xunit.v3.csproj" />
   </ItemGroup>
 
 </Project>
