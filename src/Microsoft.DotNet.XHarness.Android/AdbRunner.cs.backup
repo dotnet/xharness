@@ -383,7 +383,7 @@ public class AdbRunner
         // 1. Pipe between ADB server and emulator device is broken; restarting the ADB server helps
         if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE || result.StandardError.Contains(AdbInstallBrokenPipeError))
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_BrokenPipeRetry);
+            _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install");
             KillAdbServer();
             StartAdbServer();
             result = RunAdbCommand(new[] { "install", apkPath });
@@ -392,7 +392,7 @@ public class AdbRunner
         // 2. Installation cache on device is messed up; restarting the device reliably seems to unblock this (unless the device is actually full, if so this will error the same)
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbDeviceFullInstallFailureMessage))
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_InstallCacheFullRetry, Environment.NewLine, result);
+            _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{Environment.NewLine}Output:{result}");
             RebootAndroidDevice();
             WaitForDevice();
             result = RunAdbCommand(new[] { "install", apkPath });
@@ -402,7 +402,7 @@ public class AdbRunner
         // installer might hang up so we need to clean it up and free memory
         if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT || (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbInstallException)))
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_InstallFailedRetry);
+            _log.LogWarning($"Installation failed; Will make one attempt to restart ADB server and the device, then retry the install");
             KillAdbServer();
             StartAdbServer();
             RebootAndroidDevice();
@@ -412,11 +412,11 @@ public class AdbRunner
 
         if (result.ExitCode != 0)
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_InstallError, Environment.NewLine, result);
+            _log.LogError($"Error:{Environment.NewLine}{result}");
         }
         else
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_SuccessfullyInstalledApk, apkPath);
+            _log.LogInformation($"Successfully installed {apkPath}");
         }
 
         return result.ExitCode;
@@ -431,13 +431,13 @@ public class AdbRunner
 
         var fullTestPath = GlobalReadWriteDirectory + Path.AltDirectorySeparatorChar +  new DirectoryInfo(testPath).Name;
 
-        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_AttemptingToRemoveFolder, fullTestPath);
+        _log.LogInformation($"Attempting to remove folder '{fullTestPath}'..");
         var result = RunAdbCommand(new[] { "shell", "rm", "-fr", fullTestPath });
 
         // See note above in install()
         if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE)
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_BrokenPipeRetry);
+            _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, and retry the uninstallation");
 
             KillAdbServer();
             StartAdbServer();
@@ -446,11 +446,11 @@ public class AdbRunner
 
         if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_SuccessfullyUninstalledFolder, fullTestPath);
+            _log.LogInformation($"Successfully uninstalled {fullTestPath}");
         }
         else
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_FailedToUninstallFolder, fullTestPath, result);
+            _log.LogError(message: $"Failed to uninstall {fullTestPath}: {result}");
 
         }
 
@@ -464,7 +464,7 @@ public class AdbRunner
             throw new ArgumentNullException(nameof(apkName));
         }
 
-        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_AttemptingToRemoveApk, apkName);
+        _log.LogInformation($"Attempting to remove apk '{apkName}'..");
         var result = RunAdbCommand(new[] { "uninstall", apkName });
 
         // See note above in install()
@@ -501,7 +501,7 @@ public class AdbRunner
         var result = RunAdbCommand(new[] { "shell", "am", "kill", "--user", "all", apkName });
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_InstallError, Environment.NewLine, result);
+            _log.LogError($"Error:{Environment.NewLine}{result}");
         }
         else
         {

@@ -441,4 +441,142 @@
   <data name="Apple_AppRunner_StartingApp" xml:space="preserve">
     <value>Starting the app</value>
   </data>
+  <data name="Android_AdbRunner_BrokenPipeRetry" xml:space="preserve">
+    <value>Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install</value>
+  </data>
+  <data name="Android_AdbRunner_InstallCacheFullRetry" xml:space="preserve">
+    <value>It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{0}Output:{1}</value>
+  </data>
+  <data name="Android_AdbRunner_InstallFailedRetry" xml:space="preserve">
+    <value>Installation failed; Will make one attempt to restart ADB server and the device, then retry the install</value>
+  </data>
+  <data name="Android_AdbRunner_InstallError" xml:space="preserve">
+    <value>Error:{0}{1}</value>
+  </data>
+  <data name="Android_AdbRunner_AttemptingToInstallApk" xml:space="preserve">
+    <value>Attempting to install {0}</value>
+  </data>
+  <data name="Android_AdbRunner_SuccessfullyInstalledApk" xml:space="preserve">
+    <value>Successfully installed {0}</value>
+  </data>
+  <data name="Android_AdbRunner_AttemptingToRemoveFolder" xml:space="preserve">
+    <value>Attempting to remove folder '{0}'..</value>
+  </data>
+  <data name="Android_AdbRunner_SuccessfullyUninstalledFolder" xml:space="preserve">
+    <value>Successfully uninstalled {0}</value>
+  </data>
+  <data name="Android_AdbRunner_FailedToUninstallFolder" xml:space="preserve">
+    <value>Failed to uninstall {0}: {1}</value>
+  </data>
+  <data name="Android_AdbRunner_AttemptingToRemoveApk" xml:space="preserve">
+    <value>Attempting to remove apk '{0}'..</value>
+  </data>
+  <data name="Android_AdbRunner_SuccessfullyUninstalledApk" xml:space="preserve">
+    <value>Successfully uninstalled {0}</value>
+  </data>
+  <data name="Android_AdbRunner_ApkNotOnDevice" xml:space="preserve">
+    <value>APK '{0}' was not on device</value>
+  </data>
+  <data name="Android_AdbRunner_UninstallError" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="Android_AdbRunner_KillingProcesses" xml:space="preserve">
+    <value>Killing all running processes for '{0}': </value>
+  </data>
+  <data name="Android_AdbRunner_KillProcessError" xml:space="preserve">
+    <value>Error:{0}{1}</value>
+  </data>
+  <data name="Android_AdbRunner_KillingProcessesByName" xml:space="preserve">
+    <value>Killing all running processes for '{0}': </value>
+  </data>
+  <data name="Android_AdbRunner_FailedToKillProcessByName" xml:space="preserve">
+    <value>Failed to kill process by name ({0}):{1}{2}</value>
+  </data>
+  <data name="Android_AdbRunner_AttemptingToPullFile" xml:space="preserve">
+    <value>Attempting to pull contents of {0} to {1}</value>
+  </data>
+  <data name="Android_AdbRunner_PullFailedApi30Fallback" xml:space="preserve">
+    <value>Failed to pull file. Device is running Android API 30, trying fallback to pull {0}</value>
+  </data>
+  <data name="Android_AdbRunner_SkippingFileCopyExists" xml:space="preserve">
+    <value>Skipping file copy as {0} already exists</value>
+  </data>
+  <data name="Android_AdbRunner_FailedToPullFile" xml:space="preserve">
+    <value>Failed to pull file.</value>
+  </data>
+  <data name="Android_AdbRunner_ExceptionFindingDevice" xml:space="preserve">
+    <value>Exception thrown while trying to find compatible device</value>
+  </data>
+  <data name="Android_AdbRunner_NoDeviceWithId" xml:space="preserve">
+    <value>No attached device with ID {0} found</value>
+  </data>
+  <data name="Android_AdbRunner_NoDeviceWithApi" xml:space="preserve">
+    <value>No attached device with API {0} detected</value>
+  </data>
+  <data name="Android_AdbRunner_NoDeviceWithArchitecture" xml:space="preserve">
+    <value>No attached device supports one of required architectures {0}</value>
+  </data>
+  <data name="Android_AdbRunner_NoDeviceWithApp" xml:space="preserve">
+    <value>No attached device with app {0} installed</value>
+  </data>
+  <data name="Android_AdbRunner_NoDeviceWithFile" xml:space="preserve">
+    <value>No attached device with file {0} installed</value>
+  </data>
+  <data name="Android_AdbRunner_CouldNotUnderstandRequiredApp" xml:space="preserve">
+    <value>Could not understand required app "{0}"</value>
+  </data>
+  <data name="Android_AdbRunner_CannotFindSuitableDevice" xml:space="preserve">
+    <value>Cannot find a suitable device, please check that a device is attached</value>
+  </data>
+  <data name="Android_AdbRunner_MoreThanOneSuitableDevice" xml:space="preserve">
+    <value>There is more than one suitable device. Please provide API version, device architecture or device ID</value>
+  </data>
+  <data name="Android_AdbRunner_FindingAttachedDevices" xml:space="preserve">
+    <value>Finding attached devices/emulators...</value>
+  </data>
+  <data name="Android_AdbRunner_NoAttachedDevices" xml:space="preserve">
+    <value>No attached devices / emulators detected. </value>
+  </data>
+  <data name="Android_AdbRunner_DeviceOfflineRetrying" xml:space="preserve">
+    <value>Device {0} is offline; retrying up to five minutes</value>
+  </data>
+  <data name="Android_AdbRunner_FailedToGetProperty" xml:space="preserve">
+    <value>Failed to get device's property {0}. Check if a device is attached / emulator is started</value>
+  </data>
+  <data name="Android_AdbRunner_FailedToCheckExistence" xml:space="preserve">
+    <value>Failed to check existence of {0}. Check if a device is attached / emulator is started</value>
+  </data>
+  <data name="Android_AdbRunner_ActiveDeviceUnset" xml:space="preserve">
+    <value>Active Android device unset</value>
+  </data>
+  <data name="Android_AdbRunner_ActiveDeviceSet" xml:space="preserve">
+    <value>Active Android device set to serial '{0}'</value>
+  </data>
+  <data name="Android_AdbRunner_SettingExecutablePermissions" xml:space="preserve">
+    <value>Setting executable permissions on {0} and runtime</value>
+  </data>
+  <data name="Android_AdbRunner_StartingScript" xml:space="preserve">
+    <value>Starting {0} from {1} (exit code 0 == success)</value>
+  </data>
+  <data name="Android_AdbRunner_ErrorRunningScript" xml:space="preserve">
+    <value>An error occurred running {0}</value>
+  </data>
+  <data name="Android_AdbRunner_RunCommandTookTime" xml:space="preserve">
+    <value>Running command {0} took {1} seconds</value>
+  </data>
+  <data name="Android_AdbRunner_StartingDefaultInstrumentation" xml:space="preserve">
+    <value>Starting default instrumentation class on {0} (exit code 0 == success)</value>
+  </data>
+  <data name="Android_AdbRunner_StartingInstrumentation" xml:space="preserve">
+    <value>Starting instrumentation class '{0}' on {1}</value>
+  </data>
+  <data name="Android_AdbRunner_InstrumentationTimedOut" xml:space="preserve">
+    <value>Running instrumentation class {0} timed out after waiting {1} seconds</value>
+  </data>
+  <data name="Android_AdbRunner_InstrumentationTookTime" xml:space="preserve">
+    <value>Running instrumentation class {0} took {1} seconds</value>
+  </data>
+  <data name="Android_AdbRunner_UnableToDisableChatty" xml:space="preserve">
+    <value>Unable to disable chatty. Logcat may hide what it finds to be repeating entries.</value>
+  </data>
 </root>
