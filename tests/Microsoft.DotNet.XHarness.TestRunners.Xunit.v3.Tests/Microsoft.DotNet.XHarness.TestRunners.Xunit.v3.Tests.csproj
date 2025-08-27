@@ -4,14 +4,11 @@
     <TargetFramework>$(NetCurrent)</TargetFramework>
     <IsPackable>false</IsPackable>
     <Nullable>disable</Nullable>
-    <!-- Test project disabled due to xunit v2/v3 package conflicts in CI -->
-    <!-- The v3 implementation is tested through the main build and integration tests -->
-    <IsTestProject>false</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Minimal reference to avoid package conflicts -->
     <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.TestRunners.Common\Microsoft.DotNet.XHarness.TestRunners.Common.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.TestRunners.Xunit.v3\Microsoft.DotNet.XHarness.TestRunners.Xunit.v3.csproj" />
   </ItemGroup>
 
 </Project>
