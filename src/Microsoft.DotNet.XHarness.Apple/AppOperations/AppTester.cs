@@ -347,8 +347,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 simulator.OSVersion,
                 simulator.UDID,
                 appInformation.BundleIdentifier,
-                deviceListener.TestLog.FullPath,
-                cancellationToken))
+                deviceListener.TestLog.FullPath))
         {
             throw new InvalidOperationException("Failed to copy test results from simulator to host.");
         }
@@ -435,8 +434,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 device.OSVersion,
                 device.UDID,
                 appInformation.BundleIdentifier,
-                deviceListener.TestLog.FullPath,
-                cancellationToken))
+                deviceListener.TestLog.FullPath))
         {
             throw new InvalidOperationException("Failed to copy test results from device to host.");
         }
