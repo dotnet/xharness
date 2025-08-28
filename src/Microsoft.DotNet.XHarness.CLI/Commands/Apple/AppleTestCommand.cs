@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
-using Microsoft.DotNet.XHarness.Common.Resources;
+using Microsoft.DotNet.XHarness.CLI.Resources;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.DependencyInjection;
 

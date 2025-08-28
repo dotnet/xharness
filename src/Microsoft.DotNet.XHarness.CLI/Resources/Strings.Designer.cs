@@ -10,8 +10,8 @@
 
 namespace Microsoft.DotNet.XHarness.CLI.Resources {
     using System;
-    
-    
+
+
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -23,15 +23,15 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Strings {
-        
+
         private static global::System.Resources.ResourceManager resourceMan;
-        
+
         private static global::System.Globalization.CultureInfo resourceCulture;
-        
+
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Strings() {
         }
-        
+
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
                 return resourceMan;
             }
         }
-        
+
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
@@ -59,13 +59,22 @@ namespace Microsoft.DotNet.XHarness.CLI.Resources {
                 resourceCulture = value;
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to This is an example localized message that can be translated to different languages.
+        ///   Looks up a localized string similar to Installs, runs and uninstalls a given iOS/tvOS/watchOS/xrOS/MacCatalyst test application bundle containing TestRunner in a target device/simulator.
         /// </summary>
-        public static string ExampleMessage {
+        public static string Apple_Test_Description {
             get {
-                return ResourceManager.GetString("ExampleMessage", resourceCulture);
+                return ResourceManager.GetString("Apple_Test_Description", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to apple test --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]].
+        /// </summary>
+        public static string Apple_Test_Usage {
+            get {
+                return ResourceManager.GetString("Apple_Test_Usage", resourceCulture);
             }
         }
     }

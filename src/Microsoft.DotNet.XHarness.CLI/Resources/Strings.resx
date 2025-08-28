@@ -56,7 +56,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ExampleMessage" xml:space="preserve">
-    <value>This is an example localized message that can be translated to different languages</value>
+  <data name="Apple_Test_Usage" xml:space="preserve">
+    <value>apple test --app=... --output-directory=... --target=... [OPTIONS] [-- [RUNTIME ARGUMENTS]]</value>
+  </data>
+  <data name="Apple_Test_Description" xml:space="preserve">
+    <value>Installs, runs and uninstalls a given iOS/tvOS/watchOS/xrOS/MacCatalyst test application bundle containing TestRunner in a target device/simulator.</value>
   </data>
 </root>
