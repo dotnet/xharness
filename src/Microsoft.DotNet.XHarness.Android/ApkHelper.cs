@@ -12,15 +12,15 @@ public static class ApkHelper
     {
         if (string.IsNullOrEmpty(apkPath))
         {
-            throw new ArgumentException(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ApkHelper_SupplyApkPath);
+            throw new ArgumentException("Please supply a value for apkPath");
         }
         if (!File.Exists(apkPath))
         {
-            throw new FileNotFoundException(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ApkHelper_InvalidApkPath, apkPath), apkPath);
+            throw new FileNotFoundException($"Invalid APK Path: '{apkPath}'", apkPath);
         }
         if (!Path.GetExtension(apkPath).Equals(".apk", StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ApkHelper_OnlyApkFiles);
+            throw new InvalidOperationException("Only know how to open APK files.");
         }
 
         using (ZipArchive archive = ZipFile.Open(apkPath, ZipArchiveMode.Read))

@@ -37,9 +37,9 @@ public static class Darwin
             }
             catch (Exception ex)
             {
-                throw new PlatformNotSupportedException(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_Darwin_ErrorReadingKernelVersion, ex);
+                throw new PlatformNotSupportedException("Error reading Darwin Kernel Version", ex);
             }
-            throw new PlatformNotSupportedException(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_Darwin_UnknownErrorReadingKernelVersion);
+            throw new PlatformNotSupportedException("Unknown error reading Darwin Kernel Version");
         }
     }
 

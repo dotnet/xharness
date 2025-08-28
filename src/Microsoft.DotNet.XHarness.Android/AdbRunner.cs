@@ -75,7 +75,7 @@ public class AdbRunner
 
         if (!File.Exists(_absoluteAdbExePath))
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_UnableToFindAdb);
+            _log.LogError($"Unable to find adb.exe");
             throw new FileNotFoundException($"Could not find adb.exe. Either set it in the environment via {AdbEnvironmentVariableName} or call with valid path (provided:  '{adbExePath}')", adbExePath);
         }
 
@@ -146,17 +146,17 @@ public class AdbRunner
         if (result.ExitCode != 0)
         {
             // Could throw here, but it would tear down a possibly otherwise acceptable execution.
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ErrorGettingAdbLog, Environment.NewLine, result);
+            _log.LogError($"Error getting ADB log:{Environment.NewLine}{result}");
             return false;
         }
         else
         {
             Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath) ?? throw new ArgumentNullException(nameof(outputFilePath)));
             File.WriteAllText(outputFilePath, result.StandardOutput);
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_WroteAdbLogTo, outputFilePath);
+            _log.LogInformation($"Wrote current ADB log to {outputFilePath}");
             // The adb log is not directly accessible.
             // Hence, we duplicate the log to the main console log to simplify the UX of failure investigation.
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbLogOutput, Environment.NewLine, result.StandardOutput);
+            _log.LogInformation($"ADB log output:{Environment.NewLine}{result.StandardOutput}");
             return true;
         }
     }
@@ -210,7 +210,7 @@ public class AdbRunner
         _log.LogDebug($"{settingName} = {settingValue}");
 
         if (settingValue != expectedValue)
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_InstallDebugApkWarning, settingName, expectedValue);
+            _log.LogWarning($"Installing debug apks on a device might be rejected with INSTALL_FAILED_VERIFICATION_FAILURE. Make sure to set '{settingName}' to '{expectedValue}'");
     }
 
     public void CheckPackageVerificationSettings()
@@ -227,7 +227,7 @@ public class AdbRunner
         // Needed because emulators start up asynchronously and take a while.
         // (Returns instantly if device is ready)
         // This can fail if _currentDevice is unset if there are multiple devices.
-        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_WaitingForDevice);
+        _log.LogInformation("Waiting for device to be available (max 5 minutes)");
         RunAdbCommand(new[] { "wait-for-device" }, TimeSpan.FromMinutes(5))
             .ThrowIfFailed("Error waiting for Android device/emulator");
 
@@ -252,7 +252,7 @@ public class AdbRunner
         }
         else
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_BootCompletionNotDetected);
+            _log.LogError($"Did not detect boot completion variable on device; device may be in a bad state");
             return false;
         }
     }
@@ -267,7 +267,7 @@ public class AdbRunner
 
                 if (!started)
                 {
-                    _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ErrorStartingAdbServer, Environment.NewLine, result);
+                    _log.LogWarning($"Error starting the ADB server" + Environment.NewLine + result);
 
                     try
                     {
@@ -275,7 +275,7 @@ public class AdbRunner
                     }
                     catch (Exception e)
                     {
-                        _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ErrorKillingAdbServer, e.Message);
+                        _log.LogError($"Error killing ADB server after a failed start: {e.Message}");
                     }
                 }
                 else
@@ -298,7 +298,7 @@ public class AdbRunner
 
     public int CopyHeadlessFolder(string testPath, bool sharedRuntime = false)
     {
-        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AttemptingToInstall, testPath);
+        _log.LogInformation($"Attempting to install {testPath}");
 
         if (string.IsNullOrEmpty(testPath))
         {
@@ -323,7 +323,7 @@ public class AdbRunner
         // 1. Pipe between ADB server and emulator device is broken; restarting the ADB server helps
         if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE || result.StandardError.Contains(AdbInstallBrokenPipeError))
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_BrokenPipeRetry);
+            _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install");
             KillAdbServer();
             StartAdbServer();
             result = RunAdbCommand(new[] { "push", testPath, targetDirectory });
@@ -332,7 +332,7 @@ public class AdbRunner
         // 2. Installation cache on device is messed up; restarting the device reliably seems to unblock this (unless the device is actually full, if so this will error the same)
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbDeviceFullInstallFailureMessage))
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_InstallCacheFullRetry, Environment.NewLine, result);
+            _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{Environment.NewLine}Output:{result}");
             RebootAndroidDevice();
             WaitForDevice();
             result = RunAdbCommand(new[] { "push", testPath, targetDirectory });
@@ -342,7 +342,7 @@ public class AdbRunner
         // installer might hang up so we need to clean it up and free memory
         if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT || (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbInstallException)))
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_InstallFailedRetry);
+            _log.LogWarning($"Installation failed; Will make one attempt to restart ADB server and the device, then retry the install");
             KillAdbServer();
             StartAdbServer();
             RebootAndroidDevice();
@@ -352,11 +352,11 @@ public class AdbRunner
 
         if (result.ExitCode != 0)
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_InstallError, Environment.NewLine, result);
+            _log.LogError($"Error:{Environment.NewLine}{result}");
         }
         else
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_SuccessfullyInstalledToDirectory, testPath, targetDirectory);
+            _log.LogInformation($"Successfully installed {testPath} to {targetDirectory}");
         }
 
         return result.ExitCode;
@@ -364,7 +364,7 @@ public class AdbRunner
 
     public int InstallApk(string apkPath)
     {
-        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_AttemptingToInstallApk, apkPath);
+        _log.LogInformation($"Attempting to install {apkPath}");
 
         if (string.IsNullOrEmpty(apkPath))
         {
@@ -383,7 +383,7 @@ public class AdbRunner
         // 1. Pipe between ADB server and emulator device is broken; restarting the ADB server helps
         if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE || result.StandardError.Contains(AdbInstallBrokenPipeError))
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_BrokenPipeRetry);
+            _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install");
             KillAdbServer();
             StartAdbServer();
             result = RunAdbCommand(new[] { "install", apkPath });
@@ -392,7 +392,7 @@ public class AdbRunner
         // 2. Installation cache on device is messed up; restarting the device reliably seems to unblock this (unless the device is actually full, if so this will error the same)
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbDeviceFullInstallFailureMessage))
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_InstallCacheFullRetry, Environment.NewLine, result);
+            _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{Environment.NewLine}Output:{result}");
             RebootAndroidDevice();
             WaitForDevice();
             result = RunAdbCommand(new[] { "install", apkPath });
@@ -402,7 +402,7 @@ public class AdbRunner
         // installer might hang up so we need to clean it up and free memory
         if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT || (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbInstallException)))
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_InstallFailedRetry);
+            _log.LogWarning($"Installation failed; Will make one attempt to restart ADB server and the device, then retry the install");
             KillAdbServer();
             StartAdbServer();
             RebootAndroidDevice();
@@ -412,11 +412,11 @@ public class AdbRunner
 
         if (result.ExitCode != 0)
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_InstallError, Environment.NewLine, result);
+            _log.LogError($"Error:{Environment.NewLine}{result}");
         }
         else
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_SuccessfullyInstalledApk, apkPath);
+            _log.LogInformation($"Successfully installed {apkPath}");
         }
 
         return result.ExitCode;
@@ -431,13 +431,13 @@ public class AdbRunner
 
         var fullTestPath = GlobalReadWriteDirectory + Path.AltDirectorySeparatorChar +  new DirectoryInfo(testPath).Name;
 
-        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_AttemptingToRemoveFolder, fullTestPath);
+        _log.LogInformation($"Attempting to remove folder '{fullTestPath}'..");
         var result = RunAdbCommand(new[] { "shell", "rm", "-fr", fullTestPath });
 
         // See note above in install()
         if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE)
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_BrokenPipeRetry);
+            _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, and retry the uninstallation");
 
             KillAdbServer();
             StartAdbServer();
@@ -446,11 +446,11 @@ public class AdbRunner
 
         if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_SuccessfullyUninstalledFolder, fullTestPath);
+            _log.LogInformation($"Successfully uninstalled {fullTestPath}");
         }
         else
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_FailedToUninstallFolder, fullTestPath, result);
+            _log.LogError(message: $"Failed to uninstall {fullTestPath}: {result}");
 
         }
 
@@ -464,13 +464,13 @@ public class AdbRunner
             throw new ArgumentNullException(nameof(apkName));
         }
 
-        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_AttemptingToRemoveApk, apkName);
+        _log.LogInformation($"Attempting to remove apk '{apkName}'..");
         var result = RunAdbCommand(new[] { "uninstall", apkName });
 
         // See note above in install()
         if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE)
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_BrokenPipeRetry);
+            _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, and retry the uninstallation");
 
             KillAdbServer();
             StartAdbServer();
@@ -479,16 +479,16 @@ public class AdbRunner
 
         if (result.ExitCode == (int)AdbExitCodes.SUCCESS)
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_SuccessfullyUninstalledApk, apkName);
+            _log.LogInformation($"Successfully uninstalled {apkName}");
         }
         else if (result.ExitCode == (int)AdbExitCodes.ADB_UNINSTALL_APP_NOT_ON_DEVICE ||
                  result.ExitCode == (int)AdbExitCodes.ADB_UNINSTALL_APP_NOT_ON_EMULATOR)
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_ApkNotOnDevice, apkName);
+            _log.LogInformation($"APK '{apkName}' was not on device");
         }
         else
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_UninstallError, result);
+            _log.LogError(message: $"Error: {result}");
         }
 
         return result.ExitCode;
@@ -497,11 +497,11 @@ public class AdbRunner
     // This function works but given we'll likely only be using Instrumentations doesn't matter.
     public int KillApk(string apkName)
     {
-        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_KillingProcesses, apkName);
+        _log.LogInformation($"Killing all running processes for '{apkName}': ");
         var result = RunAdbCommand(new[] { "shell", "am", "kill", "--user", "all", apkName });
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_InstallError, Environment.NewLine, result);
+            _log.LogError($"Error:{Environment.NewLine}{result}");
         }
         else
         {
@@ -512,11 +512,11 @@ public class AdbRunner
 
     public int KillProcess(string testName)
     {
-        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_KillingProcessesByName, testName);
+        _log.LogInformation($"Killing all running processes for '{testName}': ");
         var result = RunAdbCommand(new[] { "shell", "pkill", testName });
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_FailedToKillProcessByName, testName, Environment.NewLine, result);
+            _log.LogError($"Failed to kill process by name ({testName}):{Environment.NewLine}{result}");
 
         }
         else
@@ -540,7 +540,7 @@ public class AdbRunner
         {
             Directory.CreateDirectory(tempFolder);
             Directory.CreateDirectory(localPath);
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_AttemptingToPullFile, devicePath, localPath);
+            _log.LogInformation($"Attempting to pull contents of {devicePath} to {localPath}");
             var copiedFiles = new List<string>();
 
             var result = RunAdbCommand(new[] { "pull", devicePath, tempFolder });
@@ -554,7 +554,7 @@ public class AdbRunner
 
                 // On Android API 30 we can't use "adb pull" directly due to permission issues on emulators, see https://github.com/dotnet/xharness/issues/385
                 // As a workaround we copy the files to the temp directory on the device using "run-as" and pull from there
-                _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_PullFailedApi30Fallback, devicePath);
+                _log.LogInformation($"Failed to pull file. Device is running Android API 30, trying fallback to pull {devicePath}");
 
                 result = RunAdbCommand(new[] { "shell", "run-as", apkPackageName, "ls", devicePath });
                 result.ThrowIfFailed($"Failed checking for file using fallback: {result}");
@@ -591,7 +591,7 @@ public class AdbRunner
                 // if the file is already there, just warn and skip it.
                 if (File.Exists(destinationPath))
                 {
-                    _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_SkippingFileCopyExists, destinationPath);
+                    _log.LogWarning($"Skipping file copy as {destinationPath} already exists");
                 }
                 else
                 {
@@ -619,13 +619,13 @@ public class AdbRunner
         }
 
         Directory.CreateDirectory(localPath);
-        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_AttemptingToPullFile, devicePath, localPath);
+        _log.LogInformation($"Attempting to pull contents of {devicePath} to {localPath}");
 
         var result = RunAdbCommand(new[] { "pull", devicePath, localPath });
 
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_FailedToPullFile);
+            _log.LogError($"Failed to pull file.");
         }
         return (int)AdbExitCodes.SUCCESS;
     }
@@ -729,7 +729,7 @@ public class AdbRunner
         }
         catch (Exception toLog)
         {
-            _log.LogError(toLog, Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_ExceptionFindingDevice);
+            _log.LogError(toLog, $"Exception thrown while trying to find compatible device");
             return Array.Empty<AndroidDevice>();
         }
 
@@ -744,7 +744,7 @@ public class AdbRunner
 
             if (devices.Count == 0)
             {
-                _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_NoDeviceWithId, requiredDeviceId);
+                _log.LogError($"No attached device with ID {requiredDeviceId} found");
                 return devices;
             }
         }
@@ -755,7 +755,7 @@ public class AdbRunner
 
             if (devices.Count == 0)
             {
-                _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_NoDeviceWithApi, requiredApiVersion);
+                _log.LogError($"No attached device with API {requiredApiVersion} detected");
                 return devices;
             }
         }
@@ -766,7 +766,7 @@ public class AdbRunner
 
             if (devices.Count == 0)
             {
-                _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_NoDeviceWithArchitecture, string.Join(", ", requiredArchitectures));
+                _log.LogError($"No attached device supports one of required architectures {string.Join(", ", requiredArchitectures)}");
                 return devices;
             }
         }
@@ -779,7 +779,7 @@ public class AdbRunner
 
                 if (devices.Count == 0)
                 {
-                    _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_NoDeviceWithApp, requiredInstalledApp);
+                    _log.LogError($"No attached device with app {requiredInstalledApp} installed");
                     return devices;
                 }
             }
@@ -789,13 +789,13 @@ public class AdbRunner
 
                 if (devices.Count == 0)
                 {
-                    _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_NoDeviceWithFile, requiredInstalledApp);
+                    _log.LogError($"No attached device with file {requiredInstalledApp} installed");
                     return devices;
                 }
             }
             else
             {
-                _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_CouldNotUnderstandRequiredApp, requiredInstalledApp);
+                _log.LogError($"Could not understand required app \"{requiredInstalledApp}\"");
             }
         }
 
@@ -823,7 +823,7 @@ public class AdbRunner
 
             if (singleDevice)
             {
-                _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_CannotFindSuitableDevice);
+                _log.LogError($"Cannot find a suitable device, please check that a device is attached");
             }
 
             return null;
@@ -831,7 +831,7 @@ public class AdbRunner
 
         if (singleDevice && devices.Count > 1)
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_MoreThanOneSuitableDevice);
+            _log.LogError($"There is more than one suitable device. Please provide API version, device architecture or device ID");
             return null;
         }
 
@@ -857,7 +857,7 @@ public class AdbRunner
     {
         string[] standardOutputLines = Array.Empty<string>();
 
-        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_FindingAttachedDevices);
+        _log.LogInformation("Finding attached devices/emulators...");
 
         // Retry up to 3 mins til we get output; if the ADB server isn't started the output will come from a child process and we'll miss it.
         ProcessExecutionResults result = Retry(
@@ -891,7 +891,7 @@ public class AdbRunner
         if (standardOutputLines.Length < 2)
         {
             // Abandon the run here, don't just guess.
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_NoAttachedDevices +
+            _log.LogWarning("No attached devices / emulators detected. " +
                 "Check that any emulators have been started, and attached device(s) are connected via USB, powered-on, unlocked and authorized.");
             return Array.Empty<AndroidDevice>();
         }
@@ -954,7 +954,7 @@ public class AdbRunner
             {
                 if (!r.Succeeded || r.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
                 {
-                    _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_DeviceOfflineRetrying, deviceName);
+                    _log.LogWarning($"Device {deviceName} is offline; retrying up to five minutes");
                     return true;
                 }
 
@@ -965,7 +965,7 @@ public class AdbRunner
 
         if (!result.Succeeded)
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_FailedToGetProperty, property +
+            _log.LogError($"Failed to get device's property {property}. Check if a device is attached / emulator is started" +
                 Environment.NewLine + result.StandardError);
 
             return null;
@@ -991,7 +991,7 @@ public class AdbRunner
             {
                 if (r.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
                 {
-                    _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_DeviceOfflineRetrying, deviceName);
+                    _log.LogWarning($"Device {deviceName} is offline; retrying up to five minutes");
                     return true;
                 }
 
@@ -1002,7 +1002,7 @@ public class AdbRunner
 
         if (!result.Succeeded)
         {
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_FailedToCheckExistence, deviceTestPath +
+            _log.LogError($"Failed to check existence of {deviceTestPath}. Check if a device is attached / emulator is started" +
                 Environment.NewLine + result.StandardError);
 
             return false;
@@ -1018,11 +1018,11 @@ public class AdbRunner
 
         if (device is null)
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_ActiveDeviceUnset);
+            _log.LogInformation($"Active Android device unset");
         }
         else
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_ActiveDeviceSet, device.DeviceSerial);
+            _log.LogInformation($"Active Android device set to serial '{device.DeviceSerial}'");
         }
     }
 
@@ -1038,11 +1038,11 @@ public class AdbRunner
             deviceRuntimePath,
         };
 
-        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_SettingExecutablePermissions, testScript);
+        _log.LogInformation($"Setting executable permissions on {testScript} and runtime");
         var result = RunAdbCommand(new[] { "shell", "chmod", "a+x", deviceTestPath, deviceRuntimePath });
         result.ThrowIfFailed($"Failed setting permissions on {deviceTestPath} and {deviceRuntimePath}: {result}");
 
-        _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_StartingScript, testScript, deviceTestPath);
+        _log.LogInformation($"Starting {testScript} from {deviceTestPath} (exit code 0 == success)");
 
 
         var stopWatch = Stopwatch.StartNew();
@@ -1051,11 +1051,11 @@ public class AdbRunner
 
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_ErrorRunningScript, testScript);
+            _log.LogInformation($"An error occurred running {testScript}");
         }
         else
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_RunCommandTookTime, testScript, stopWatch.Elapsed.TotalSeconds);
+            _log.LogInformation($"Running command {testScript} took {stopWatch.Elapsed.TotalSeconds} seconds");
         }
 
         _log.LogDebug(result.ToString());
@@ -1077,12 +1077,12 @@ public class AdbRunner
 
         if (string.IsNullOrEmpty(instrumentationClassName))
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_StartingDefaultInstrumentation, apkName);
+            _log.LogInformation($"Starting default instrumentation class on {apkName} (exit code 0 == success)");
             adbArgs.Add(apkName);
         }
         else
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_StartingInstrumentation, instrumentationClassName, apkName);
+            _log.LogInformation($"Starting instrumentation class '{instrumentationClassName}' on {apkName}");
             adbArgs.Add($"{apkName}/{instrumentationClassName}");
         }
 
@@ -1092,11 +1092,11 @@ public class AdbRunner
 
         if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_InstrumentationTimedOut, displayName, stopWatch.Elapsed.TotalSeconds);
+            _log.LogWarning("Running instrumentation class {name} timed out after waiting {seconds} seconds", displayName, stopWatch.Elapsed.TotalSeconds);
         }
         else
         {
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_InstrumentationTookTime, displayName, stopWatch.Elapsed.TotalSeconds);
+            _log.LogInformation("Running instrumentation class {name} took {seconds} seconds", displayName, stopWatch.Elapsed.TotalSeconds);
         }
 
         _log.LogDebug(result.ToString());
@@ -1110,7 +1110,7 @@ public class AdbRunner
 
         if (!result.Succeeded)
         {
-            _log.LogWarning(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_AdbRunner_UnableToDisableChatty);
+            _log.LogWarning($"Unable to disable chatty. Logcat may hide what it finds to be repeating entries.");
         }
     }
 

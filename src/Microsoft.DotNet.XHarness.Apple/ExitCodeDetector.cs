@@ -41,7 +41,7 @@ public abstract class ExitCodeDetector : IExitCodeDetector
         }
         catch (FileNotFoundException e)
         {
-            throw new Exception(string.Format(Microsoft.DotNet.XHarness.Common.Resources.Strings.Apple_ExitCodeDetector_FailedDetectExitCode, e.FileName), e);
+            throw new Exception("Failed to detect application's exit code. The log file was empty / not found at " + e.FileName, e);
         }
 
         using (reader)

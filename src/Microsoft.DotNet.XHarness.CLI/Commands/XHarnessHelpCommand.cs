@@ -11,7 +11,6 @@ using Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasi;
-using Microsoft.DotNet.XHarness.Common.Resources;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Mono.Options;
 
@@ -62,7 +61,7 @@ internal class XHarnessHelpCommand : HelpCommand
                     }
                     else
                     {
-                        Console.WriteLine(string.Format(Strings.Help_CommandNotAvailableOnNonOSX, command));
+                        Console.WriteLine($"Command '{command}' could be run on OSX only.");
                     }
 #endif
                 break;
@@ -73,7 +72,7 @@ internal class XHarnessHelpCommand : HelpCommand
                 PrintCommandHelp(new WasiCommandSet(), subCommand);
                 break;
             default:
-                Console.WriteLine(string.Format(Strings.Help_NoHelpAvailableForCommand, command));
+                Console.WriteLine($"No help available for command '{command}'. Allowed commands are 'apple', 'wasm', 'wasi' and 'android'");
                 break;
         }
 
@@ -91,11 +90,11 @@ internal class XHarnessHelpCommand : HelpCommand
                 return;
             }
 
-            Console.WriteLine(string.Format(Strings.Help_UnknownSubCommand, subcommand) + Environment.NewLine);
+            Console.WriteLine($"Unknown sub-command '{subcommand}'.{Environment.NewLine}");
         }
 
-        Console.WriteLine(Strings.Help_AllSupportedSubCommands);
+        Console.WriteLine("All supported sub-commands:");
         commandSet.Run(new string[] { "help" });
-        Console.WriteLine(string.Format(Environment.NewLine + Strings.Help_RunForMoreDetails, commandSet.Suite));
+        Console.WriteLine($"{Environment.NewLine}Run 'xharness {commandSet.Suite} {{command}} --help' for more details");
     }
 }

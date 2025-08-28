@@ -28,13 +28,13 @@ internal class Api23AndOlderReportManager : IReportManager
         if (result.ExitCode != 0)
         {
             // Could throw here, but it would tear down a possibly otherwise acceptable execution.
-            _log.LogError(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_ErrorGettingAdbBugReport, Environment.NewLine, result);
+            _log.LogError($"Error getting ADB bugreport:{Environment.NewLine}{result}");
             return string.Empty;
         }
         else
         {
             File.WriteAllText($"{outputFilePathWithoutFormat}.txt", result.StandardOutput);
-            _log.LogInformation(Microsoft.DotNet.XHarness.Common.Resources.Strings.Android_WroteAdbBugReportTo, $"{outputFilePathWithoutFormat}.txt");
+            _log.LogInformation($"Wrote ADB bugreport to {outputFilePathWithoutFormat}.txt");
             return $"{outputFilePathWithoutFormat}.txt";
         }
     }
