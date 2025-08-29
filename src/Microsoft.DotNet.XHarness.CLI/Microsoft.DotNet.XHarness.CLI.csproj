@@ -10,6 +10,8 @@
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>$(NoWarn);CS8002</NoWarn>
     <MlaunchDestinationDir Condition="'$(TargetFrameworks)' == '' OR $(TargetFrameworks.EndsWith($(TargetFramework)))">$(BaseIntermediateOutputPath)/mlaunch</MlaunchDestinationDir>
+    <!-- Disable XLF localization since we're not using translation files -->
+    <EnableXlfLocalization>false</EnableXlfLocalization>
 
     <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
     <AndroidSdkVersion>32.0.0</AndroidSdkVersion>
@@ -39,6 +41,14 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources\Strings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Strings.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <Target Name="DownloadAdb">
