@@ -146,7 +146,7 @@ There is a library `Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit` th
 It is possible to use `DefaultAndroidEntryPoint` from there for the test app by providing only test result path and test assemblies.
 Other parameters can be overrided as well if needed.
 
-Currently we support Xunit and NUnit test assemblies but the `Microsoft.DotNet.XHarness.Tests.Runners` supports implementation of custom runner too.
+Currently we support **xunit v2**, **xunit v3**, and **NUnit** test assemblies but the `Microsoft.DotNet.XHarness.Tests.Runners` supports implementation of custom runner too.
 
 ## Development instructions
 When working on XHarness, there are couple of neat hacks that can improve the inner loop.
