@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -44,39 +45,132 @@ Arguments:
         }
 
         IEnumerable<string> testRequiredArchitecture = Arguments.DeviceArchitecture.Value;
-
         logger.LogInformation($"Required architecture: '{string.Join("', '", testRequiredArchitecture)}'");
 
         var runner = new AdbRunner(logger);
 
-        var exitCode = AndroidHeadlessInstallCommand.InvokeHelper(
-            logger: logger,
-            testPath: Arguments.TestPath,
-            runtimePath: Arguments.RuntimePath,
-            testRequiredArchitecture: testRequiredArchitecture,
-            deviceId: Arguments.DeviceId.Value,
-            apiVersion: Arguments.ApiVersion.Value,
-            bootTimeoutSeconds: Arguments.LaunchTimeout,
-            runner,
-            DiagnosticsData);
-
-        if (exitCode == ExitCode.SUCCESS)
+        // Determine which API levels to test
+        var apiLevelsToTest = new List<int>();
+        
+        if (Arguments.ApiLevels.Value.Any())
         {
-            exitCode = AndroidHeadlessRunCommand.InvokeHelper(
+            // Use multiple API levels if specified
+            apiLevelsToTest.AddRange(Arguments.ApiLevels.ApiLevels);
+            logger.LogInformation($"Running tests on API levels: {string.Join(", ", apiLevelsToTest)}");
+        }
+        else if (Arguments.ApiVersion.Value.HasValue)
+        {
+            // Use single API version if specified
+            apiLevelsToTest.Add(Arguments.ApiVersion.Value.Value);
+            logger.LogInformation($"Running tests on API level: {Arguments.ApiVersion.Value}");
+        }
+        else
+        {
+            // No specific API level - use any available device
+            apiLevelsToTest.Add(0); // 0 means any API level
+            logger.LogInformation("Running tests on any available device");
+        }
+
+        ExitCode finalExitCode = ExitCode.SUCCESS;
+        var failedApiLevels = new List<int>();
+
+        // Run tests on each specified API level
+        foreach (var apiLevel in apiLevelsToTest)
+        {
+            logger.LogInformation($"=== Testing on API level {(apiLevel == 0 ? "any" : apiLevel.ToString())} ===");
+            
+            var currentApiLevel = apiLevel == 0 ? (int?)null : apiLevel;
+            
+            // Start emulator if needed and API level is specified
+            if (currentApiLevel.HasValue)
+            {
+                if (!runner.StartEmulator(currentApiLevel.Value))
+                {
+                    logger.LogError($"Failed to start emulator for API level {currentApiLevel}");
+                    failedApiLevels.Add(currentApiLevel.Value);
+                    finalExitCode = ExitCode.DEVICE_NOT_FOUND;
+                    continue;
+                }
+            }
+
+            var exitCode = AndroidHeadlessInstallCommand.InvokeHelper(
                 logger: logger,
                 testPath: Arguments.TestPath,
                 runtimePath: Arguments.RuntimePath,
-                testAssembly: Arguments.TestAssembly,
-                testScript: Arguments.TestScript,
-                outputDirectory: Arguments.OutputDirectory,
-                timeout: Arguments.Timeout,
-                expectedExitCode: Arguments.ExpectedExitCode,
-                wifi: Arguments.Wifi,
-                runner: runner);
+                testRequiredArchitecture: testRequiredArchitecture,
+                deviceId: Arguments.DeviceId.Value,
+                apiVersion: currentApiLevel,
+                bootTimeoutSeconds: Arguments.LaunchTimeout,
+                runner,
+                DiagnosticsData);
+
+            if (exitCode == ExitCode.SUCCESS)
+            {
+                // Create API-level specific output directory if testing multiple levels
+                var outputDirectory = Arguments.OutputDirectory.Value;
+                if (apiLevelsToTest.Count > 1 && currentApiLevel.HasValue)
+                {
+                    outputDirectory = Path.Combine(Arguments.OutputDirectory.Value, $"api-{currentApiLevel}");
+                    Directory.CreateDirectory(outputDirectory);
+                    logger.LogInformation($"Using API-specific output directory: {outputDirectory}");
+                }
+
+                exitCode = AndroidHeadlessRunCommand.InvokeHelper(
+                    logger: logger,
+                    testPath: Arguments.TestPath,
+                    runtimePath: Arguments.RuntimePath,
+                    testAssembly: Arguments.TestAssembly,
+                    testScript: Arguments.TestScript,
+                    outputDirectory: outputDirectory,
+                    timeout: Arguments.Timeout,
+                    expectedExitCode: Arguments.ExpectedExitCode,
+                    wifi: Arguments.Wifi,
+                    runner: runner);
+            }
+
+            if (exitCode != ExitCode.SUCCESS)
+            {
+                if (currentApiLevel.HasValue)
+                {
+                    failedApiLevels.Add(currentApiLevel.Value);
+                }
+                
+                if (finalExitCode == ExitCode.SUCCESS)
+                {
+                    finalExitCode = exitCode;
+                }
+                
+                logger.LogError($"Tests failed on API level {(currentApiLevel?.ToString() ?? "any")} with exit code: {exitCode}");
+            }
+            else
+            {
+                logger.LogInformation($"Tests passed on API level {(currentApiLevel?.ToString() ?? "any")}");
+            }
         }
 
+        // Cleanup
         runner.DeleteHeadlessFolder(Arguments.TestPath);
         runner.DeleteHeadlessFolder("runtime");
-        return exitCode;
+
+        // Stop emulators if we started them (only if user specified API levels)
+        if (Arguments.ApiLevels.Value.Any())
+        {
+            runner.StopEmulators(Arguments.ApiLevels.ApiLevels);
+        }
+
+        // Report summary
+        if (apiLevelsToTest.Count > 1)
+        {
+            logger.LogInformation($"=== Test Summary ===");
+            logger.LogInformation($"Total API levels tested: {apiLevelsToTest.Count}");
+            logger.LogInformation($"Successful: {apiLevelsToTest.Count - failedApiLevels.Count}");
+            
+            if (failedApiLevels.Any())
+            {
+                logger.LogError($"Failed API levels: {string.Join(", ", failedApiLevels)}");
+            }
+        }
+
+        return finalExitCode;
     }
 }

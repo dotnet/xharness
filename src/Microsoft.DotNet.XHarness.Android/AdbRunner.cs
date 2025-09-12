@@ -1162,5 +1162,208 @@ public class AdbRunner
         return result;
     }
 
+    #region Emulator Management
+
+    /// <summary>
+    /// Starts an Android emulator with the specified API level.
+    /// </summary>
+    /// <param name="apiLevel">The Android API level to start</param>
+    /// <param name="timeout">Timeout for emulator startup</param>
+    /// <returns>True if the emulator was started successfully</returns>
+    public bool StartEmulator(int apiLevel, TimeSpan? timeout = null)
+    {
+        timeout ??= TimeSpan.FromMinutes(5);
+        
+        _log.LogInformation($"Starting Android emulator for API level {apiLevel}");
+        
+        // Check if an emulator for this API level is already running
+        var existingDevices = GetAllDevices(requiredApiVersion: apiLevel);
+        if (existingDevices.Any())
+        {
+            _log.LogInformation($"Emulator for API level {apiLevel} is already running");
+            return true;
+        }
+
+        // Find available AVD name for this API level
+        var avdName = GetAvdNameForApiLevel(apiLevel);
+        if (string.IsNullOrEmpty(avdName))
+        {
+            _log.LogError($"No AVD found for API level {apiLevel}");
+            return false;
+        }
+
+        // Start the emulator
+        var emulatorPath = GetEmulatorExecutablePath();
+        if (string.IsNullOrEmpty(emulatorPath))
+        {
+            _log.LogError("Could not find emulator executable");
+            return false;
+        }
+
+        _log.LogInformation($"Starting emulator with AVD: {avdName}");
+        var startTime = DateTime.Now;
+        
+        // Start emulator in background
+        var emulatorProcess = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = emulatorPath,
+                Arguments = $"-avd {avdName} -no-window -no-audio -no-boot-anim",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            }
+        };
+
+        try
+        {
+            emulatorProcess.Start();
+            _log.LogInformation($"Emulator process started with PID {emulatorProcess.Id}");
+        }
+        catch (Exception ex)
+        {
+            _log.LogError($"Failed to start emulator: {ex.Message}");
+            return false;
+        }
+
+        // Wait for emulator to be ready
+        _log.LogInformation($"Waiting for emulator to be ready (timeout: {timeout})");
+        var endTime = startTime.Add(timeout.Value);
+        
+        while (DateTime.Now < endTime)
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(10));
+            
+            var devices = GetAllDevices(requiredApiVersion: apiLevel);
+            if (devices.Any())
+            {
+                _log.LogInformation($"Emulator for API level {apiLevel} is now ready");
+                return true;
+            }
+        }
+
+        _log.LogError($"Emulator for API level {apiLevel} failed to start within timeout");
+        return false;
+    }
+
+    /// <summary>
+    /// Stops emulators running the specified API levels.
+    /// </summary>
+    /// <param name="apiLevels">The API levels of emulators to stop</param>
+    public void StopEmulators(IEnumerable<int> apiLevels)
+    {
+        foreach (var apiLevel in apiLevels)
+        {
+            StopEmulator(apiLevel);
+        }
+    }
+
+    /// <summary>
+    /// Stops an emulator running the specified API level.
+    /// </summary>
+    /// <param name="apiLevel">The API level of the emulator to stop</param>
+    public void StopEmulator(int apiLevel)
+    {
+        _log.LogInformation($"Stopping emulator for API level {apiLevel}");
+        
+        var devices = GetAllDevices(requiredApiVersion: apiLevel);
+        foreach (var device in devices)
+        {
+            if (device.DeviceSerial.StartsWith("emulator-"))
+            {
+                _log.LogInformation($"Stopping emulator device: {device.DeviceSerial}");
+                RunAdbCommand(new[] { "-s", device.DeviceSerial, "emu", "kill" });
+            }
+        }
+    }
+
+    private string? GetAvdNameForApiLevel(int apiLevel)
+    {
+        try
+        {
+            // Try to list available AVDs using emulator command
+            var emulatorPath = GetEmulatorExecutablePath();
+            if (!string.IsNullOrEmpty(emulatorPath))
+            {
+                var result = _processManager.Run(emulatorPath, new[] { "-list-avds" }, TimeSpan.FromSeconds(30));
+                if (result.Succeeded)
+                {
+                    var lines = result.StandardOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                    // For simplicity, try common AVD naming patterns
+                    var commonNames = new[]
+                    {
+                        $"android-{apiLevel}",
+                        $"API_{apiLevel}",
+                        $"api-{apiLevel}",
+                        $"android{apiLevel}"
+                    };
+                    
+                    foreach (var name in commonNames)
+                    {
+                        if (lines.Any(line => line.Trim().Equals(name, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            return name;
+                        }
+                    }
+                    
+                    // If no exact match, return the first available AVD
+                    if (lines.Length > 0)
+                    {
+                        _log.LogWarning($"No AVD found for API level {apiLevel}, using first available: {lines[0].Trim()}");
+                        return lines[0].Trim();
+                    }
+                }
+            }
+            
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _log.LogError($"Error getting AVD name for API level {apiLevel}: {ex.Message}");
+            return null;
+        }
+    }
+
+    private string? GetEmulatorExecutablePath()
+    {
+        // Try to find emulator executable
+        var androidHome = Environment.GetEnvironmentVariable("ANDROID_HOME") 
+                         ?? Environment.GetEnvironmentVariable("ANDROID_SDK_ROOT");
+        
+        if (!string.IsNullOrEmpty(androidHome))
+        {
+            var emulatorPath = Path.Combine(androidHome, "emulator", "emulator");
+            if (File.Exists(emulatorPath))
+            {
+                return emulatorPath;
+            }
+            
+            // Try Windows executable
+            emulatorPath = Path.Combine(androidHome, "emulator", "emulator.exe");
+            if (File.Exists(emulatorPath))
+            {
+                return emulatorPath;
+            }
+        }
+        
+        // Try system PATH by calling emulator directly
+        try
+        {
+            var result = _processManager.Run("emulator", new[] { "-help" }, TimeSpan.FromSeconds(5));
+            if (result.Succeeded || result.ExitCode == 1) // emulator -help typically returns exit code 1
+            {
+                return "emulator"; // Available in PATH
+            }
+        }
+        catch
+        {
+            // Ignore errors when checking PATH
+        }
+        
+        return null;
+    }
+
+    #endregion
+
     #endregion
 }
