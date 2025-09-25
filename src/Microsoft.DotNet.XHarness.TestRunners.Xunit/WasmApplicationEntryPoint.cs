@@ -27,6 +27,9 @@ public abstract class WasmApplicationEntryPoint : WasmApplicationEntryPointBase
 
     protected override TestRunner GetTestRunner(LogWriter logWriter)
     {
+#if USE_XUNIT_V3
+        throw new NotSupportedException("xunit v3 is not supported for WASM applications.");
+#else
         XunitTestRunnerBase runner = IsThreadless
             ? new ThreadlessXunitTestRunner(logWriter)
             : new WasmThreadedTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
@@ -50,6 +53,7 @@ public abstract class WasmApplicationEntryPoint : WasmApplicationEntryPointBase
             runner.SkipNamespace(ns, isExcluded: false);
         }
         return runner;
+#endif
     }
 
     protected override IEnumerable<TestAssemblyInfo> GetTestAssemblies()
