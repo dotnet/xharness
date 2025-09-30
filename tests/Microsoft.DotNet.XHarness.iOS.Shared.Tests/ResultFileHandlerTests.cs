@@ -47,7 +47,7 @@ public class ResultFileHandlerTests : IDisposable
 
         var exception = await Assert.ThrowsAsync<FormatException>(async () =>
             await handler.CopyResultsAsync(
-                RunMode.iOS, true, "Simulator", "udid", "bundle", _tempFile, CancellationToken.None));
+                RunMode.iOS, true, "Simulator", "udid", "bundle", _tempFile));
 
         Assert.Equal("Simulator OS version is not in the expected format.", exception.Message);
     }
@@ -61,7 +61,7 @@ public class ResultFileHandlerTests : IDisposable
 
         var exception = await Assert.ThrowsAsync<FormatException>(async () =>
             await handler.CopyResultsAsync(
-                RunMode.iOS, true, "Simulator notanumber", "udid", "bundle", _tempFile, CancellationToken.None));
+                RunMode.iOS, true, "Simulator notanumber", "udid", "bundle", _tempFile));
 
         Assert.Equal("Simulator OS version is not in the expected format.", exception.Message);
     }
@@ -74,7 +74,7 @@ public class ResultFileHandlerTests : IDisposable
         ResultFileHandler handler = CreateHandler(pm, log);
 
         bool result = await handler.CopyResultsAsync(
-            RunMode.iOS, true, "Simulator 17.4", "udid", "bundle", _tempFile, CancellationToken.None);
+            RunMode.iOS, true, "Simulator 17.4", "udid", "bundle", _tempFile);
 
         Assert.True(result);
     }
@@ -89,7 +89,7 @@ public class ResultFileHandlerTests : IDisposable
         File.WriteAllText(_tempFile, "dummy");
 
         bool result = await handler.CopyResultsAsync(
-            RunMode.iOS, true, "Simulator 18.0", "udid", "bundle", _tempFile, CancellationToken.None);
+            RunMode.iOS, true, "Simulator 18.0", "udid", "bundle", _tempFile);
 
         Assert.True(result);
     }
@@ -105,7 +105,7 @@ public class ResultFileHandlerTests : IDisposable
             File.Delete(_tempFile);
 
         bool result = await handler.CopyResultsAsync(
-            RunMode.iOS, true, "Simulator 18.0", "udid", "bundle", _tempFile, CancellationToken.None);
+            RunMode.iOS, true, "Simulator 18.0", "udid", "bundle", _tempFile);
 
         Assert.False(result);
         log.Verify(l => l.WriteLine($"Failed to copy results file from simulator. Expected at: {_tempFile}"), Times.Once);
@@ -120,7 +120,7 @@ public class ResultFileHandlerTests : IDisposable
 
         var exception = await Assert.ThrowsAsync<FormatException>(async () =>
             await handler.CopyResultsAsync(
-                RunMode.iOS, false, "notanumber", "udid", "bundle", _tempFile, CancellationToken.None));
+                RunMode.iOS, false, "notanumber", "udid", "bundle", _tempFile));
 
         Assert.Equal("Device OS version is not in the expected format.", exception.Message);
     }
@@ -133,7 +133,7 @@ public class ResultFileHandlerTests : IDisposable
         ResultFileHandler handler = CreateHandler(pm, log);
 
         bool result = await handler.CopyResultsAsync(
-            RunMode.iOS, false, "17.4", "udid", "bundle", _tempFile, CancellationToken.None);
+            RunMode.iOS, false, "17.4", "udid", "bundle", _tempFile);
 
         Assert.True(result);
     }
@@ -148,7 +148,7 @@ public class ResultFileHandlerTests : IDisposable
         File.WriteAllText(_tempFile, "dummy");
 
         bool result = await handler.CopyResultsAsync(
-            RunMode.iOS, false, "18.0", "udid", "bundle", _tempFile, CancellationToken.None);
+            RunMode.iOS, false, "18.0", "udid", "bundle", _tempFile);
 
         Assert.True(result);
     }
@@ -164,7 +164,7 @@ public class ResultFileHandlerTests : IDisposable
             File.Delete(_tempFile);
 
         bool result = await handler.CopyResultsAsync(
-            RunMode.iOS, false, "18.0", "udid", "bundle", _tempFile, CancellationToken.None);
+            RunMode.iOS, false, "18.0", "udid", "bundle", _tempFile);
 
         Assert.False(result);
         log.Verify(l => l.WriteLine($"Failed to copy results file from device. Expected at: {_tempFile}"), Times.Once);

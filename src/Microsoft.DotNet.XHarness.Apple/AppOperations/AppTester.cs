@@ -347,8 +347,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 simulator.OSVersion,
                 simulator.UDID,
                 appInformation.BundleIdentifier,
-                deviceListener.TestLog.FullPath,
-                cancellationToken))
+                deviceListener.TestLog.FullPath))
         {
             throw new InvalidOperationException("Failed to copy test results from simulator to host.");
         }
@@ -371,7 +370,7 @@ public class AppTester : AppRunnerBase, IAppTester
         var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
         deviceSystemLog.Timestamp = false;
 
-        var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.Name);
+        var deviceLogCapturer = _deviceLogCapturerFactory.Create(_mainLog, deviceSystemLog, device.UDID);
         deviceLogCapturer.StartCapture();
 
         try
@@ -435,8 +434,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 device.OSVersion,
                 device.UDID,
                 appInformation.BundleIdentifier,
-                deviceListener.TestLog.FullPath,
-                cancellationToken))
+                deviceListener.TestLog.FullPath))
         {
             throw new InvalidOperationException("Failed to copy test results from device to host.");
         }
