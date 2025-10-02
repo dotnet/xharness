@@ -332,10 +332,17 @@ public class AdbRunner
         // 2. Installation cache on device is messed up; restarting the device reliably seems to unblock this (unless the device is actually full, if so this will error the same)
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbDeviceFullInstallFailureMessage))
         {
-            _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{Environment.NewLine}Output:{result}");
+            var firstAttemptResult = result;
+            _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.");
             RebootAndroidDevice();
             WaitForDevice();
             result = RunAdbCommand(new[] { "push", testPath, targetDirectory });
+            
+            // Only log the initial failure output if the retry also failed
+            if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
+            {
+                _log.LogWarning($"Initial failure output:{Environment.NewLine}{firstAttemptResult}");
+            }
         }
 
         // 3. Installation timed out or failed with exception; restarting the ADB server, reboot the device and give more time for installation
@@ -392,10 +399,17 @@ public class AdbRunner
         // 2. Installation cache on device is messed up; restarting the device reliably seems to unblock this (unless the device is actually full, if so this will error the same)
         if (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbDeviceFullInstallFailureMessage))
         {
-            _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.{Environment.NewLine}Output:{result}");
+            var firstAttemptResult = result;
+            _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.");
             RebootAndroidDevice();
             WaitForDevice();
             result = RunAdbCommand(new[] { "install", apkPath });
+            
+            // Only log the initial failure output if the retry also failed
+            if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
+            {
+                _log.LogWarning($"Initial failure output:{Environment.NewLine}{firstAttemptResult}");
+            }
         }
 
         // 3. Installation timed out or failed with exception; restarting the ADB server, reboot the device and give more time for installation
