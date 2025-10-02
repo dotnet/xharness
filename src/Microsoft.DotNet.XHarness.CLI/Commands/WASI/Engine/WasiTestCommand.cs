@@ -94,6 +94,14 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
                 }
             }
             
+            // Propagate DOTNET_CI environment variable if it's set on the host
+            var dotnetCI = System.Environment.GetEnvironmentVariable("DOTNET_CI");
+            if (!string.IsNullOrEmpty(dotnetCI))
+            {
+                engineArgs.Add("--env");
+                engineArgs.Add($"DOTNET_CI={dotnetCI}");
+            }
+
             engineArgs.AddRange(PassThroughArguments);
 
             var xmlResultsFilePath = Path.Combine(Arguments.OutputDirectory, "testResults.xml");
