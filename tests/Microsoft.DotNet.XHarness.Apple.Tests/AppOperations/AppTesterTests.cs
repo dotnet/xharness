@@ -620,6 +620,156 @@ public class AppTesterTests : AppRunTestBase
         deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
     }
 
+    [Fact]
+    public async Task TestOnSimulator_PropagatesDotnetCIEnvVar()
+    {
+        // Setup DOTNET_CI environment variable
+        var originalValue = Environment.GetEnvironmentVariable("DOTNET_CI");
+        Environment.SetEnvironmentVariable("DOTNET_CI", "true");
+
+        try
+        {
+            var testResultFilePath = Path.GetTempFileName();
+            var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
+            File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
+
+            _logs
+                .Setup(x => x.Create("test-ios-simulator-64-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
+                .Returns(listenerLogFile);
+
+            var captureLog = new Mock<ICaptureLog>();
+            captureLog.SetupGet(x => x.FullPath).Returns(_simulatorLogPath);
+
+            var captureLogFactory = new Mock<ICaptureLogFactory>();
+            captureLogFactory
+                .Setup(x => x.Create(
+                   Path.Combine(_logs.Object.Directory, _mockSimulator.Name + ".log"),
+                   _mockSimulator.SystemLog,
+                   false,
+                   It.IsAny<LogType>()))
+                .Returns(captureLog.Object);
+
+            var appTester = new AppTester(
+                _processManager.Object,
+                _listenerFactory.Object,
+                _snapshotReporterFactory,
+                captureLogFactory.Object,
+                Mock.Of<IDeviceLogCapturerFactory>(),
+                _testReporterFactory,
+                new XmlResultParser(),
+                _mainLog.Object,
+                _logs.Object,
+                _helpers.Object);
+
+            // Act
+            var (result, resultMessage) = await appTester.TestApp(
+                _appBundleInfo,
+                new TestTargetOs(TestTarget.Simulator_tvOS, null),
+                _mockSimulator,
+                null,
+                TimeSpan.FromSeconds(30),
+                TimeSpan.FromSeconds(30),
+                signalAppEnd: false,
+                extraAppArguments: Array.Empty<string>(),
+                extraEnvVariables: Array.Empty<(string, string)>());
+
+            // Verify
+            Assert.Equal(TestExecutingResult.Succeeded, result);
+
+            // Verify DOTNET_CI was passed as an environment variable
+            _processManager
+                .Verify(
+                    x => x.ExecuteCommandAsync(
+                       It.Is<MlaunchArguments>(args => args.AsCommandLine().Contains("-setenv=DOTNET_CI=true")),
+                       _mainLog.Object,
+                       It.IsAny<TimeSpan>(),
+                       It.IsAny<Dictionary<string, string>>(),
+                       It.IsAny<int>(),
+                       It.IsAny<CancellationToken>()),
+                    Times.Once);
+        }
+        finally
+        {
+            // Restore original value
+            Environment.SetEnvironmentVariable("DOTNET_CI", originalValue);
+        }
+    }
+
+    [Fact]
+    public async Task TestOnSimulator_DoesNotPropagateDotnetCIWhenNotSet()
+    {
+        // Ensure DOTNET_CI environment variable is not set
+        var originalValue = Environment.GetEnvironmentVariable("DOTNET_CI");
+        Environment.SetEnvironmentVariable("DOTNET_CI", null);
+
+        try
+        {
+            var testResultFilePath = Path.GetTempFileName();
+            var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
+            File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
+
+            _logs
+                .Setup(x => x.Create("test-ios-simulator-64-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
+                .Returns(listenerLogFile);
+
+            var captureLog = new Mock<ICaptureLog>();
+            captureLog.SetupGet(x => x.FullPath).Returns(_simulatorLogPath);
+
+            var captureLogFactory = new Mock<ICaptureLogFactory>();
+            captureLogFactory
+                .Setup(x => x.Create(
+                   Path.Combine(_logs.Object.Directory, _mockSimulator.Name + ".log"),
+                   _mockSimulator.SystemLog,
+                   false,
+                   It.IsAny<LogType>()))
+                .Returns(captureLog.Object);
+
+            var appTester = new AppTester(
+                _processManager.Object,
+                _listenerFactory.Object,
+                _snapshotReporterFactory,
+                captureLogFactory.Object,
+                Mock.Of<IDeviceLogCapturerFactory>(),
+                _testReporterFactory,
+                new XmlResultParser(),
+                _mainLog.Object,
+                _logs.Object,
+                _helpers.Object);
+
+            // Act
+            var (result, resultMessage) = await appTester.TestApp(
+                _appBundleInfo,
+                new TestTargetOs(TestTarget.Simulator_tvOS, null),
+                _mockSimulator,
+                null,
+                TimeSpan.FromSeconds(30),
+                TimeSpan.FromSeconds(30),
+                signalAppEnd: false,
+                extraAppArguments: Array.Empty<string>(),
+                extraEnvVariables: Array.Empty<(string, string)>());
+
+            // Verify
+            Assert.Equal(TestExecutingResult.Succeeded, result);
+
+            // Verify DOTNET_CI was NOT passed as an environment variable
+            _processManager
+                .Verify(
+                    x => x.ExecuteCommandAsync(
+                       It.Is<MlaunchArguments>(args => !args.AsCommandLine().Contains("-setenv=DOTNET_CI")),
+                       _mainLog.Object,
+                       It.IsAny<TimeSpan>(),
+                       It.IsAny<Dictionary<string, string>>(),
+                       It.IsAny<int>(),
+                       It.IsAny<CancellationToken>()),
+                    Times.Once);
+        }
+        finally
+        {
+            // Restore original value
+            Environment.SetEnvironmentVariable("DOTNET_CI", originalValue);
+        }
+    }
+
     private string GetExpectedDeviceMlaunchArgs(string? skippedTests = null, bool useTunnel = false, string? extraArgs = null) =>
         "-setenv=NUNIT_AUTOEXIT=true " +
         $"-setenv=NUNIT_HOSTPORT={Port} " +

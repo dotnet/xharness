@@ -583,6 +583,13 @@ public class AppTester : AppRunnerBase, IAppTester
             variables.Add(EnviromentVariables.AppEndTag, appEndTag);
         }
 
+        // Propagate DOTNET_CI environment variable if it's set on the host
+        var dotnetCI = Environment.GetEnvironmentVariable(EnviromentVariables.DotnetCI);
+        if (!string.IsNullOrEmpty(dotnetCI))
+        {
+            variables.Add(EnviromentVariables.DotnetCI, dotnetCI);
+        }
+
         AddExtraEnvVars(variables, extraEnvVariables);
 
         return variables;
