@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.AndroidHeadless;
@@ -21,7 +20,6 @@ internal class AndroidHeadlessInstallCommandArguments : XHarnessCommandArguments
     public DeviceIdArgument DeviceId { get; } = new();
     public DeviceArchitectureArgument DeviceArchitecture { get; } = new();
     public ApiVersionArgument ApiVersion { get; } = new();
-    public ApiLevelsArgument ApiLevels { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
@@ -35,17 +33,5 @@ internal class AndroidHeadlessInstallCommandArguments : XHarnessCommandArguments
         LaunchTimeout,
         DeviceArchitecture,
         ApiVersion,
-        ApiLevels,
     };
-
-    public override void Validate()
-    {
-        base.Validate();
-
-        // Validate that both ApiVersion and ApiLevels are not specified at the same time
-        if (ApiVersion.Value.HasValue && ApiLevels.Value.Any())
-        {
-            throw new ArgumentException("Cannot specify both --api-version and --api-levels. Use --api-levels for multiple API levels or --api-version for a single API level.");
-        }
-    }
 }

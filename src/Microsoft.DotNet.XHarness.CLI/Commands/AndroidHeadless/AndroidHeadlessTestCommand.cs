@@ -49,45 +49,39 @@ Arguments:
 
         var runner = new AdbRunner(logger);
 
-        // Determine which API levels to test
-        var apiLevelsToTest = new List<int>();
+        // Determine which API versions to test
+        var apiVersionsToTest = new List<int>();
         
-        if (Arguments.ApiLevels.Value.Any())
+        if (Arguments.ApiVersion.Value.Any())
         {
-            // Use multiple API levels if specified
-            apiLevelsToTest.AddRange(Arguments.ApiLevels.ApiLevels);
-            logger.LogInformation($"Running tests on API levels: {string.Join(", ", apiLevelsToTest)}");
-        }
-        else if (Arguments.ApiVersion.Value.HasValue)
-        {
-            // Use single API version if specified
-            apiLevelsToTest.Add(Arguments.ApiVersion.Value.Value);
-            logger.LogInformation($"Running tests on API level: {Arguments.ApiVersion.Value}");
+            // Use multiple API versions if specified
+            apiVersionsToTest.AddRange(Arguments.ApiVersion.ApiVersions);
+            logger.LogInformation($"Running tests on API versions: {string.Join(", ", apiVersionsToTest)}");
         }
         else
         {
-            // No specific API level - use any available device
-            apiLevelsToTest.Add(0); // 0 means any API level
+            // No specific API version - use any available device
+            apiVersionsToTest.Add(0); // 0 means any API version
             logger.LogInformation("Running tests on any available device");
         }
 
         ExitCode finalExitCode = ExitCode.SUCCESS;
-        var failedApiLevels = new List<int>();
+        var failedApiVersions = new List<int>();
 
-        // Run tests on each specified API level
-        foreach (var apiLevel in apiLevelsToTest)
+        // Run tests on each specified API version
+        foreach (var apiVersion in apiVersionsToTest)
         {
-            logger.LogInformation($"=== Testing on API level {(apiLevel == 0 ? "any" : apiLevel.ToString())} ===");
+            logger.LogInformation($"=== Testing on API version {(apiVersion == 0 ? "any" : apiVersion.ToString())} ===");
             
-            var currentApiLevel = apiLevel == 0 ? (int?)null : apiLevel;
+            var currentApiVersion = apiVersion == 0 ? (int?)null : apiVersion;
             
-            // Start emulator if needed and API level is specified
-            if (currentApiLevel.HasValue)
+            // Start emulator if needed and API version is specified
+            if (currentApiVersion.HasValue)
             {
-                if (!runner.StartEmulator(currentApiLevel.Value))
+                if (!runner.StartEmulator(currentApiVersion.Value))
                 {
-                    logger.LogError($"Failed to start emulator for API level {currentApiLevel}");
-                    failedApiLevels.Add(currentApiLevel.Value);
+                    logger.LogError($"Failed to start emulator for API version {currentApiVersion}");
+                    failedApiVersions.Add(currentApiVersion.Value);
                     finalExitCode = ExitCode.DEVICE_NOT_FOUND;
                     continue;
                 }
@@ -99,18 +93,18 @@ Arguments:
                 runtimePath: Arguments.RuntimePath,
                 testRequiredArchitecture: testRequiredArchitecture,
                 deviceId: Arguments.DeviceId.Value,
-                apiVersion: currentApiLevel,
+                apiVersion: currentApiVersion,
                 bootTimeoutSeconds: Arguments.LaunchTimeout,
                 runner,
                 DiagnosticsData);
 
             if (exitCode == ExitCode.SUCCESS)
             {
-                // Create API-level specific output directory if testing multiple levels
+                // Create API-version specific output directory if testing multiple versions
                 var outputDirectory = Arguments.OutputDirectory.Value;
-                if (apiLevelsToTest.Count > 1 && currentApiLevel.HasValue)
+                if (apiVersionsToTest.Count > 1 && currentApiVersion.HasValue)
                 {
-                    outputDirectory = Path.Combine(Arguments.OutputDirectory.Value, $"api-{currentApiLevel}");
+                    outputDirectory = Path.Combine(Arguments.OutputDirectory.Value, $"api-{currentApiVersion}");
                     Directory.CreateDirectory(outputDirectory);
                     logger.LogInformation($"Using API-specific output directory: {outputDirectory}");
                 }
@@ -130,9 +124,9 @@ Arguments:
 
             if (exitCode != ExitCode.SUCCESS)
             {
-                if (currentApiLevel.HasValue)
+                if (currentApiVersion.HasValue)
                 {
-                    failedApiLevels.Add(currentApiLevel.Value);
+                    failedApiVersions.Add(currentApiVersion.Value);
                 }
                 
                 if (finalExitCode == ExitCode.SUCCESS)
@@ -140,11 +134,11 @@ Arguments:
                     finalExitCode = exitCode;
                 }
                 
-                logger.LogError($"Tests failed on API level {(currentApiLevel?.ToString() ?? "any")} with exit code: {exitCode}");
+                logger.LogError($"Tests failed on API version {(currentApiVersion?.ToString() ?? "any")} with exit code: {exitCode}");
             }
             else
             {
-                logger.LogInformation($"Tests passed on API level {(currentApiLevel?.ToString() ?? "any")}");
+                logger.LogInformation($"Tests passed on API version {(currentApiVersion?.ToString() ?? "any")}");
             }
         }
 
@@ -152,22 +146,22 @@ Arguments:
         runner.DeleteHeadlessFolder(Arguments.TestPath);
         runner.DeleteHeadlessFolder("runtime");
 
-        // Stop emulators if we started them (only if user specified API levels)
-        if (Arguments.ApiLevels.Value.Any())
+        // Stop emulators if we started them (only if user specified API versions)
+        if (Arguments.ApiVersion.Value.Any())
         {
-            runner.StopEmulators(Arguments.ApiLevels.ApiLevels);
+            runner.StopEmulators(Arguments.ApiVersion.ApiVersions);
         }
 
         // Report summary
-        if (apiLevelsToTest.Count > 1)
+        if (apiVersionsToTest.Count > 1)
         {
             logger.LogInformation($"=== Test Summary ===");
-            logger.LogInformation($"Total API levels tested: {apiLevelsToTest.Count}");
-            logger.LogInformation($"Successful: {apiLevelsToTest.Count - failedApiLevels.Count}");
+            logger.LogInformation($"Total API versions tested: {apiVersionsToTest.Count}");
+            logger.LogInformation($"Successful: {apiVersionsToTest.Count - failedApiVersions.Count}");
             
-            if (failedApiLevels.Any())
+            if (failedApiVersions.Any())
             {
-                logger.LogError($"Failed API levels: {string.Join(", ", failedApiLevels)}");
+                logger.LogError($"Failed API versions: {string.Join(", ", failedApiVersions)}");
             }
         }
 
