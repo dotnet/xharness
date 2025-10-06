@@ -135,6 +135,25 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                                                              symbolicator);
             var logProcessorTask = Task.Run(() => logProcessor.RunAsync(cts.Token));
 
+            // Prepare environment variables
+            Dictionary<string, string>? environmentVariables = null;
+            if (Arguments.Engine.Value == JavaScriptEngine.NodeJS)
+            {
+                // Node respects LANG only, ignores LANGUAGE
+                environmentVariables = new Dictionary<string, string>() { {"LANG", Arguments.Locale} };
+            }
+
+            // Propagate DOTNET_CI environment variable if it's set on the host
+            var dotnetCI = System.Environment.GetEnvironmentVariable("DOTNET_CI");
+            if (!string.IsNullOrEmpty(dotnetCI))
+            {
+                environmentVariables ??= new Dictionary<string, string>();
+                if (!environmentVariables.ContainsKey("DOTNET_CI"))
+                {
+                    environmentVariables.Add("DOTNET_CI", dotnetCI);
+                }
+            }
+
             var processTask = processManager.ExecuteCommandAsync(
                 engineBinary,
                 engineArgs,
@@ -142,10 +161,7 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                 stdoutLog: new CallbackLog(msg => logProcessor.Invoke(msg)),
                 stderrLog: new CallbackLog(logProcessor.ProcessErrorMessage),
                 Arguments.Timeout,
-                // Node respects LANG only, ignores LANGUAGE
-                environmentVariables: Arguments.Engine.Value == JavaScriptEngine.NodeJS ?
-                                    new Dictionary<string, string>() { {"LANG", Arguments.Locale} } :
-                                    null);
+                environmentVariables);
 
             TaskCompletionSource wasmExitReceivedTcs = logProcessor.WasmExitReceivedTcs;
             var tasks = new Task[]

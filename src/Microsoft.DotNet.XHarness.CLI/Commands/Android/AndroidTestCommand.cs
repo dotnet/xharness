@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.Android;
@@ -61,11 +63,19 @@ Arguments:
             {
                 runner.ClearAdbLog();
 
+                // Propagate DOTNET_CI environment variable if it's set on the host
+                var instrumentationArguments = new Dictionary<string, string>(Arguments.InstrumentationArguments.Value);
+                var dotnetCI = System.Environment.GetEnvironmentVariable("DOTNET_CI");
+                if (!string.IsNullOrEmpty(dotnetCI) && !instrumentationArguments.ContainsKey("DOTNET_CI"))
+                {
+                    instrumentationArguments.Add("DOTNET_CI", dotnetCI);
+                }
+
                 var instrumentationRunner = new InstrumentationRunner(logger, runner);
                 exitCode = instrumentationRunner.RunApkInstrumentation(
                     Arguments.PackageName,
                     Arguments.InstrumentationName,
-                    Arguments.InstrumentationArguments,
+                    instrumentationArguments,
                     Arguments.OutputDirectory,
                     Arguments.DeviceOutputFolder,
                     Arguments.Timeout,

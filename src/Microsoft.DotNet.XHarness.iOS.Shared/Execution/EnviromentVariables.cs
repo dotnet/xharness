@@ -89,4 +89,10 @@ public static class EnviromentVariables
     /// Env var uses to notify the test application which test classes will be excluded.
     /// </summary>
     public const string SkippedClasses = "NUNIT_SKIPPED_CLASSES";
+
+    /// <summary>
+    /// Env var that indicates the test is running in CI environment.
+    /// This is used by SkipOnCIAttribute and other test attributes to skip tests that shouldn't run in CI.
+    /// </summary>
+    public const string DotnetCI = "DOTNET_CI";
 }
