@@ -88,9 +88,9 @@ fi
 
 export BUILD_REASON="dev"
 export BUILD_REPOSITORY_NAME="xharness"
-export BUILD_SOURCEBRANCH="master"
+export BUILD_SOURCEBRANCH="main"
 export SYSTEM_TEAMPROJECT="dnceng"
 export SYSTEM_ACCESSTOKEN=""
 
 highlight "> Starting tests (logging to XHarness.binlog)"
-"$repo_root/build.sh" -configuration Debug -restore -test -projects "$test_project" /p:RestoreUsingNugetTargets=false /bl:./XHarness.binlog
+"$repo_root/build.sh" -configuration Debug -restore -test -projects "$test_project" /p:RestoreUsingNugetTargets=false /bl:./XHarness.binlog -verbosity:diag
