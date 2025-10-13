@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../tests/integration-tests/Storage.props"/>
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -16,13 +17,13 @@
     <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
     <AndroidSdkVersion>32.0.0</AndroidSdkVersion>
 
-    <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r$(AndroidSdkVersion)-windows.zip</WindowsAndroidSdkUrl>
+    <WindowsAndroidSdkUrl>$(AssetsBaseUri)/android/windows-android-platform-tools_r$(AndroidSdkVersion).zip</WindowsAndroidSdkUrl>
     <WindowsAndroidSdkFileName>windows-android-platform-tools.zip</WindowsAndroidSdkFileName>
 
-    <LinuxAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r$(AndroidSdkVersion)-linux.zip</LinuxAndroidSdkUrl>
+    <LinuxAndroidSdkUrl>$(AssetsBaseUri)/android/linux-android-platform-tools_r$(AndroidSdkVersion).zip</LinuxAndroidSdkUrl>
     <LinuxAndroidSdkFileName>linux-android-platform-tools.zip</LinuxAndroidSdkFileName>
 
-    <MacOsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r$(AndroidSdkVersion)-darwin.zip</MacOsAndroidSdkUrl>
+    <MacOsAndroidSdkUrl>$(AssetsBaseUri)/android/macos-android-platform-tools_r$(AndroidSdkVersion).zip</MacOsAndroidSdkUrl>
     <MacOsAndroidSdkFileName>macos-android-platform-tools.zip</MacOsAndroidSdkFileName>
   </PropertyGroup>
 
