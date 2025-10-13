@@ -17,13 +17,13 @@
     <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
     <AndroidSdkVersion>29.0.6</AndroidSdkVersion>
 
-    <WindowsAndroidSdkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/windows-android-platform-tools_r$(AndroidSdkVersion).zip</WindowsAndroidSdkUrl>
+    <WindowsAndroidSdkUrl>$(AssetsBaseUri)/android/windows-android-platform-tools_r$(AndroidSdkVersion).zip</WindowsAndroidSdkUrl>
     <WindowsAndroidSdkFileName>windows-android-platform-tools.zip</WindowsAndroidSdkFileName>
 
-    <LinuxAndroidSdkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/linux-android-platform-tools_r$(AndroidSdkVersion).zip</LinuxAndroidSdkUrl>
+    <LinuxAndroidSdkUrl>$(AssetsBaseUri)/android/linux-android-platform-tools_r$(AndroidSdkVersion).zip</LinuxAndroidSdkUrl>
     <LinuxAndroidSdkFileName>linux-android-platform-tools.zip</LinuxAndroidSdkFileName>
 
-    <MacOsAndroidSdkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/macos-android-platform-tools_r$(AndroidSdkVersion).zip</MacOsAndroidSdkUrl>
+    <MacOsAndroidSdkUrl>$(AssetsBaseUri)/android/macos-android-platform-tools_r$(AndroidSdkVersion).zip</MacOsAndroidSdkUrl>
     <MacOsAndroidSdkFileName>macos-android-platform-tools.zip</MacOsAndroidSdkFileName>
   </PropertyGroup>
 
