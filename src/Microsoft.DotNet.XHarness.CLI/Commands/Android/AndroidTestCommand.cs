@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.XHarness.Android;
 using Microsoft.DotNet.XHarness.CLI.Android;
@@ -62,10 +64,17 @@ Arguments:
                 runner.ClearAdbLog();
 
                 var instrumentationRunner = new InstrumentationRunner(logger, runner);
+                var instrumentationArguments = new Dictionary<string, string>(Arguments.InstrumentationArguments.Value, StringComparer.Ordinal);
+
+                foreach (var (name, value) in Arguments.EnvironmentalVariables.Value)
+                {
+                    instrumentationArguments[$"env:{name}"] = value;
+                }
+
                 exitCode = instrumentationRunner.RunApkInstrumentation(
                     Arguments.PackageName,
                     Arguments.InstrumentationName,
-                    Arguments.InstrumentationArguments,
+                    instrumentationArguments,
                     Arguments.OutputDirectory,
                     Arguments.DeviceOutputFolder,
                     Arguments.Timeout,

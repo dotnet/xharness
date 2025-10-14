@@ -32,6 +32,8 @@ public class DefaultAndroidEntryPoint : AndroidApplicationEntryPoint
     private readonly string? _excludeCategoriesFile;
     private readonly Dictionary<string, string> _parsedArguments;
 
+    private const string EnvironmentArgumentPrefix = "env:";
+
     public const string ResultsFileArgumentName = "results-file-name";
     public const string ResultsFileArgumentPath = "results-file-path";
     public const string ExcludeCategoriesDirArgumentName = "exclude-categories-dir";
@@ -47,6 +49,11 @@ public class DefaultAndroidEntryPoint : AndroidApplicationEntryPoint
     public DefaultAndroidEntryPoint(string resultsPath, Dictionary<string, string> optionalBundle)
     {
         _parsedArguments = optionalBundle;
+
+        if (ApplyEnvironmentVariables(optionalBundle))
+        {
+            ApplicationOptions.Current = new ApplicationOptions();
+        }
 
         // use default name for test results file
         _parsedArguments.TryAdd(ResultsFileArgumentName, "TestResults.xml");
@@ -112,5 +119,23 @@ public class DefaultAndroidEntryPoint : AndroidApplicationEntryPoint
         }
 
         return testRunner;
+    }
+
+    private static bool ApplyEnvironmentVariables(IReadOnlyDictionary<string, string> arguments)
+    {
+        bool applied = false;
+
+        foreach (var pair in arguments)
+        {
+            if (pair.Key.StartsWith(EnvironmentArgumentPrefix, StringComparison.Ordinal) &&
+                pair.Key.Length > EnvironmentArgumentPrefix.Length)
+            {
+                var envName = pair.Key.Substring(EnvironmentArgumentPrefix.Length);
+                Environment.SetEnvironmentVariable(envName, pair.Value);
+                applied = true;
+            }
+        }
+
+        return applied;
     }
 }

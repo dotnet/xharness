@@ -3,7 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Linq;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments;
+using Microsoft.DotNet.XHarness.CLI.CommandArguments.Android;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Xunit;
 
@@ -194,5 +196,43 @@ public class ArgumentTests
         Assert.Equal("time is 00:00:05", $"time is {timespanArg}");
         Assert.Equal("switch is true", $"switch is {switchArg}");
         Assert.Equal("string is string-value", $"string is {stringArg}");
+    }
+
+    [Fact]
+    public void EnvironmentalVariablesArgumentCollectsValues()
+    {
+        var argument = new EnvironmentalVariablesArgument();
+        var command = UnitTestCommand.FromArgument(argument);
+
+        var exitCode = command.Invoke(new[]
+        {
+            "--set-env=env1=val1",
+            "--set-env",
+            "env2=val2",
+        });
+
+        Assert.Equal(0, exitCode);
+        Assert.True(command.CommandRun);
+
+        var values = argument.Value.ToArray();
+        Assert.Equal(2, values.Length);
+        Assert.Equal(("env1", "val1"), values[0]);
+        Assert.Equal(("env2", "val2"), values[1]);
+    }
+
+    [Fact]
+    public void EnvironmentalVariablesArgumentRequiresKeyValueFormat()
+    {
+        var argument = new EnvironmentalVariablesArgument();
+        var command = UnitTestCommand.FromArgument(argument);
+
+        var exitCode = command.Invoke(new[]
+        {
+            "--set-env",
+            "invalid",
+        });
+
+        Assert.Equal((int)ExitCode.INVALID_ARGUMENTS, exitCode);
+        Assert.False(command.CommandRun);
     }
 }
