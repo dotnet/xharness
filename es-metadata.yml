@@ -1,0 +1,8 @@
+schemaVersion: 0.0.1
+isProduction: true
+accountableOwners:
+  service: 97d8e3f4-a4c4-4c48-8ce1-d6b3342c16f1
+routing:
+  defaultAreaPath:
+    org: devdiv
+    path: DevDiv\NET Fundamentals\Infrastructure\XHarness
