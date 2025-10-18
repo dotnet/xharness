@@ -6,11 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
-#if USE_XUNIT_V3
-using Xunit.v3;
-#else
-using Xunit.Abstractions;
-#endif
+using Xunit.Sdk;
 
 #nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
@@ -18,7 +14,7 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 /// <summary>
 /// Class that contains a collection of filters and can be used to decide if a test should be executed or not.
 /// </summary>
-internal class XUnitFiltersCollection : List<XUnitFilter>
+public class XUnitFiltersCollection : List<XUnitFilter>
 {
     /// <summary>
     /// Return all the filters that are applied to assemblies.
@@ -65,7 +61,7 @@ internal class XUnitFiltersCollection : List<XUnitFilter>
     public bool IsExcluded(TestAssemblyInfo assembly, Action<string>? log = null) =>
         IsExcludedInternal(AssemblyFilters, f => f.IsExcluded(assembly, log));
 
-    public bool IsExcluded(ITestCase testCase, Action<string>? log = null)
+    public bool IsExcluded(ITestCaseDiscovered testCase, Action<string>? log = null)
     {
         // Check each type of filter separately. For conflicts within a type of filter, we want the inclusion
         // (the logic in IsExcludedInternal), but if all filters for a filter type exclude a test case, we want
