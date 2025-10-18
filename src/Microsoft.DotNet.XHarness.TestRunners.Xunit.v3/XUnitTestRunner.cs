@@ -21,6 +21,7 @@ using Xunit.Sdk;
 using Xunit.v3;
 using Xunit.Runner.Common;
 using TestAssemblyInfo = Microsoft.DotNet.XHarness.TestRunners.Common.TestAssemblyInfo;
+using TestResult = Microsoft.DotNet.XHarness.TestRunners.Common.TestResult;
 
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
@@ -373,16 +374,15 @@ public class XUnitTestRunner : XunitTestRunnerBase
             throw new ArgumentNullException(nameof(assembly));
         }
 
-        Stream configStream = GetConfigurationFileStream(assembly);
-        if (configStream != null)
+        string configFileName = assembly.Location + ".xunit.runner.json";
+        var configuration = new TestAssemblyConfiguration();
+        
+        if (File.Exists(configFileName))
         {
-            using (configStream)
-            {
-                return ConfigReader_Json.Load(configStream);
-            }
+            ConfigReader_Json.Load(configuration, assembly.Location, configFileName, null);
         }
 
-        return null;
+        return configuration;
     }
 
     protected virtual ITestFrameworkDiscoveryOptions GetFrameworkOptionsForDiscovery(TestAssemblyConfiguration configuration)
@@ -408,7 +408,8 @@ public class XUnitTestRunner : XunitTestRunnerBase
     private async Task<XElement> Run(Assembly assembly, string assemblyPath)
     {
         var testFramework = ExtensibilityPointFactory.GetTestFramework(assemblyPath);
-        using (var frontController = new InProcessFrontController(testFramework, assembly, configFilePath: null))
+        var frontController = new InProcessFrontController(testFramework, assembly, configFilePath: null);
+        try
         {
             var configuration = GetConfiguration(assembly) ?? new TestAssemblyConfiguration() { PreEnumerateTheories = false };
             ITestFrameworkDiscoveryOptions discoveryOptions = GetFrameworkOptionsForDiscovery(configuration);
@@ -464,11 +465,15 @@ public class XUnitTestRunner : XunitTestRunnerBase
             await frontController.Run(
                 _messageSink,
                 executionOptions,
-                filteredTestCases.Select(tc => tc.Serialization).ToList(),
+                (IReadOnlyCollection<string>)filteredTestCases.Select(tc => tc.Serialization).ToList(),
                 new CancellationTokenSource()
             ).ConfigureAwait(false);
 
             return resultsXmlAssembly;
+        }
+        finally
+        {
+            // InProcessFrontController doesn't implement IDisposable, so just clean up
         }
     }
 
@@ -522,7 +527,7 @@ public class XUnitTestRunner : XunitTestRunnerBase
             _runner.OnInfo($"[Test framework: {message.TestFrameworkDisplayName}]");
             if (_assemblyElement != null)
             {
-                _assemblyElement.SetAttributeValue("name", message.TestAssemblyUniqueID);
+                _assemblyElement.SetAttributeValue("name", message.AssemblyName ?? "");
                 _assemblyElement.SetAttributeValue("test-framework", message.TestFrameworkDisplayName);
                 _assemblyElement.SetAttributeValue("run-date", DateTime.Now.ToString("yyyy-MM-dd"));
                 _assemblyElement.SetAttributeValue("run-time", DateTime.Now.ToString("HH:mm:ss"));
@@ -590,7 +595,7 @@ public class XUnitTestRunner : XunitTestRunnerBase
         private bool HandleTestPassed(ITestPassed message)
         {
             _runner.PassedTests++;
-            _runner.OnInfo($"{_runner.TestStagePrefix}[PASS]{_runner.GetThreadIdForLog()} {message.TestDisplayName}");
+            _runner.OnInfo($"{_runner.TestStagePrefix}[PASS]{_runner.GetThreadIdForLog()} {message.TestCaseDisplayName}");
             
             AddTestElement(message);
             
@@ -604,7 +609,7 @@ public class XUnitTestRunner : XunitTestRunnerBase
         private bool HandleTestFailed(ITestFailed message)
         {
             _runner.FailedTests++;
-            var sb = new StringBuilder($"{_runner.TestStagePrefix}[FAIL]{_runner.GetThreadIdForLog()} {message.TestDisplayName}");
+            var sb = new StringBuilder($"{_runner.TestStagePrefix}[FAIL]{_runner.GetThreadIdForLog()} {message.TestCaseDisplayName}");
             sb.AppendLine();
             sb.AppendLine($"   {string.Join(Environment.NewLine, message.Messages)}");
             sb.AppendLine($"   {string.Join(Environment.NewLine, message.StackTraces)}");
@@ -629,7 +634,7 @@ public class XUnitTestRunner : XunitTestRunnerBase
         private bool HandleTestSkipped(ITestSkipped message)
         {
             _runner.SkippedTests++;
-            _runner.OnInfo($"{_runner.TestStagePrefix}[IGNORED] {message.TestDisplayName}");
+            _runner.OnInfo($"{_runner.TestStagePrefix}[IGNORED] {message.TestCaseDisplayName}");
             
             AddTestElement(message, skipped: true);
             
@@ -668,8 +673,8 @@ public class XUnitTestRunner : XunitTestRunnerBase
 
             var testElement = new XElement("test",
                 new XAttribute("name", message.TestDisplayName),
-                new XAttribute("type", message.TestClassUniqueID ?? ""),
-                new XAttribute("method", message.TestMethodUniqueID ?? ""),
+                new XAttribute("type", message.TestClassName ?? ""),
+                new XAttribute("method", message.TestMethodName ?? ""),
                 new XAttribute("time", message.ExecutionTime.ToString("0.000")),
                 new XAttribute("result", failed ? "Fail" : (skipped ? "Skip" : "Pass"))
             );
