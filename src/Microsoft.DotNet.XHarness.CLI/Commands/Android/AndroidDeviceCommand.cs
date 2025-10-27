@@ -63,7 +63,7 @@ Arguments:
         var device = runner.GetDevice(
             loadApiVersion: true,
             loadArchitecture: true,
-            requiredApiVersion: Arguments.ApiVersion.Value,
+            requiredApiVersion: Arguments.ApiVersion.FirstApiVersion,
             requiredArchitectures: apkRequiredArchitecture);
 
         if (device is null)
