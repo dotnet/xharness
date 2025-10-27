@@ -13,6 +13,7 @@
     <Project Path="src/Microsoft.DotNet.XHarness.TestRunners.Common/Microsoft.DotNet.XHarness.TestRunners.Common.csproj" />
     <Project Path="src/Microsoft.DotNet.XHarness.TestRunners.NUnit/Microsoft.DotNet.XHarness.TestRunners.NUnit.csproj" />
     <Project Path="src/Microsoft.DotNet.XHarness.TestRunners.Xunit/Microsoft.DotNet.XHarness.TestRunners.Xunit.csproj" />
+    <Project Path="src/Microsoft.DotNet.XHarness.TestRunners.Xunit.v3/Microsoft.DotNet.XHarness.TestRunners.Xunit.v3.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Microsoft.DotNet.XHarness.Android.Tests/Microsoft.DotNet.XHarness.Android.Tests.csproj" />
@@ -21,5 +22,6 @@
     <Project Path="tests/Microsoft.DotNet.XHarness.Common.Tests/Microsoft.DotNet.XHarness.Common.Tests.csproj" />
     <Project Path="tests/Microsoft.DotNet.XHarness.iOS.Shared.Tests/Microsoft.DotNet.XHarness.iOS.Shared.Tests.csproj" />
     <Project Path="tests/Microsoft.DotNet.XHarness.TestRunners.Tests/Microsoft.DotNet.XHarness.TestRunners.Tests.csproj" />
+    <Project Path="tests/Microsoft.DotNet.XHarness.TestRunners.Xunit.v3.Tests/Microsoft.DotNet.XHarness.TestRunners.Xunit.v3.Tests.csproj" />
   </Folder>
 </Solution>
