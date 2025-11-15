@@ -28,6 +28,8 @@ public class SimulatorLoaderTests
     {
         _executionLog = new Mock<ILog>();
         _processManager = new Mock<IMlaunchProcessManager>();
+        // Setup default Xcode version for tests - use Xcode 15 to test backward compatibility
+        _processManager.SetupGet(p => p.XcodeVersion).Returns(new Version(15, 0));
         _simulatorLoader = new SimulatorLoader(_processManager.Object);
     }
 
@@ -113,7 +115,7 @@ public class SimulatorLoaderTests
         MlaunchArgument outputFormatArg = passedArguments.Where(a => a is XmlOutputFormatArgument).FirstOrDefault();
         Assert.NotNull(outputFormatArg);
 
-        Assert.Equal(76, _simulatorLoader.AvailableDevices.Count());
+        Assert.Equal(77, _simulatorLoader.AvailableDevices.Count());
     }
 
     [Theory]

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.amd64.scouting.open"/>
+    <HelixTargetQueue Include="osx.26.arm64.open"/>
 
     <!-- apple test / ios-simulator-64 -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
