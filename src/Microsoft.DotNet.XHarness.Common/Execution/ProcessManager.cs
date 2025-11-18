@@ -249,7 +249,14 @@ public abstract class ProcessManager : IProcessManager
         };
 
         var sb = new StringBuilder();
-        sb.Append($"Running {StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
+        if (process.StartInfo.Arguments.Any ())
+        {
+            sb.Append($"Running {StringUtils.Quote(process.StartInfo.FileName)} {StringUtils.FormatArguments(process.StartInfo.ArgumentList)}");
+        }
+        else
+        {
+            sb.Append($"Running {StringUtils.Quote(process.StartInfo.FileName)} {process.StartInfo.Arguments}");
+        }
 
         if (process.StartInfo.EnvironmentVariables != null)
         {
