@@ -12,7 +12,7 @@ param (
 
 $ErrorActionPreference = "Stop"
 
-$xharness_version = "10.0.0-prerelease.$Version"
+$xharness_version = "11.0.0-prerelease.$Version"
 
 # Install .NET
 Write-Host "Getting dotnet-install.ps1.." -ForegroundColor Cyan
