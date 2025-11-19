@@ -238,7 +238,13 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
             foreach (JsonProperty sim in simulators.RootElement.EnumerateObject())
             {
-                if (sim.Value.GetProperty("runtimeIdentifier").GetString() == runtimeIdentifier)
+                // Skip entries that don't have a runtimeIdentifier property (e.g., unusable simulators)
+                if (!sim.Value.TryGetProperty("runtimeIdentifier", out var runtimeIdProperty))
+                {
+                    continue;
+                }
+
+                if (runtimeIdProperty.GetString() == runtimeIdentifier)
                 {
                     var version = sim.Value.GetProperty("version").GetString();
                     if (version == null)
