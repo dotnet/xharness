@@ -246,7 +246,13 @@ internal abstract class SimulatorsCommand : XHarnessCommand<SimulatorsCommandArg
 
                 if (runtimeIdProperty.GetString() == runtimeIdentifier)
                 {
-                    var version = sim.Value.GetProperty("version").GetString();
+                    // Also check if version property exists
+                    if (!sim.Value.TryGetProperty("version", out var versionProperty))
+                    {
+                        return null;
+                    }
+
+                    var version = versionProperty.GetString();
                     if (version == null)
                         return null;
 
