@@ -76,7 +76,7 @@ stages:
       jobs:
       - job: OSX
         pool:
-          vmImage: macOS-13
+          vmImage: macOS-15
         strategy:
           matrix:
             Release:
