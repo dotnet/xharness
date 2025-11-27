@@ -36,6 +36,9 @@ extends:
         enabled: true
       binskim:
         enabled: true
+      codeql:
+        ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/release/') }}:
+          enabledOnNonDefaultBranches: true
     pool:
       name: $(DncEngInternalBuildPool)
       image: 1es-windows-2022
