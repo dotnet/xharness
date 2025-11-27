@@ -20,7 +20,8 @@ public class XmlResultParser : IResultParser
     private static readonly IHelpers s_helpers = new Helpers();
     private readonly Dictionary<XmlResultJargon, (IXmlResultParser Parser, ITestReportGenerator Generator)> _xmlFormatters = new()
     {
-        { XmlResultJargon.TouchUnit, (new TouchUnitResultParser(), new TouchUnitTestReportGenerator()) },
+        { XmlResultJargon.TouchUnit_NUnitV2, (new TouchUnitResultParser(), new TouchUnitTestReportGenerator()) },
+        { XmlResultJargon.TouchUnit_NUnitV3, (new TouchUnitResultParser(), new TouchUnitTestReportGenerator()) },
         { XmlResultJargon.NUnitV2, (new NUnitV2ResultParser(), new NUnitV2TestReportGenerator()) },
         { XmlResultJargon.NUnitV3, (new NUnitV3ResultParser(), new NUnitV3TestReportGenerator()) },
         { XmlResultJargon.Trx, (new TrxResultParser(), new TrxTestReportGenerator()) },
@@ -60,8 +61,19 @@ public class XmlResultParser : IResultParser
             }
             if (line.Contains("TouchUnitTestRun"))
             {
-                type = XmlResultJargon.TouchUnit;
-                return true;
+                while ((line = stream.ReadLine()) != null) {
+                    if (line.Contains("test-run"))
+                    {
+                        type = XmlResultJargon.TouchUnit_NUnitV3;
+                        return true;
+                    }
+                    if (line.Contains("test-results"))
+                    {
+                        type = XmlResultJargon.TouchUnit_NUnitV2;
+                        return true;
+                    }
+                }
+                return false;
             }
             if (line.Contains("test-results"))
             { // first element of the NUnitV3 test collection
@@ -88,7 +100,8 @@ public class XmlResultParser : IResultParser
         var fileName = Path.GetFileName(path);
         switch (xmlType)
         {
-            case XmlResultJargon.TouchUnit:
+            case XmlResultJargon.TouchUnit_NUnitV2:
+            case XmlResultJargon.TouchUnit_NUnitV3:
             case XmlResultJargon.NUnitV2:
             case XmlResultJargon.NUnitV3:
                 return path.Replace(fileName, $"nunit-{fileName}");
