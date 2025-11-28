@@ -341,15 +341,28 @@ public class AppTester : AppRunnerBase, IAppTester
         // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
         // Instead, copy the results file from the device to the host machine.
         if (deviceListener.TestLog != null &&
-            !await resultFileHandler.CopyResultsAsync(
+            resultFileHandler.IsVersionSupported(simulator.OSVersion, true))
+        {
+            bool resultsCopied = await resultFileHandler.CopyResultsAsync(
                 runMode,
                 true,
                 simulator.OSVersion,
                 simulator.UDID,
                 appInformation.BundleIdentifier,
-                deviceListener.TestLog.FullPath))
-        {
-            throw new InvalidOperationException("Failed to copy test results from simulator to host.");
+                deviceListener.TestLog.FullPath);
+
+            // If results weren't copied, it likely means the app crashed before tests could run
+            // Try to retrieve the crash report
+            if (!resultsCopied)
+            {
+                _mainLog.WriteLine("Test results file not found, app may have crashed before tests started.");
+                await resultFileHandler.CopyCrashReportAsync(
+                    simulator.UDID,
+                    simulator.Name,
+                    appInformation,
+                    _mainLog,
+                    isSimulator: true);
+            }
         }
     }
 
@@ -428,15 +441,28 @@ public class AppTester : AppRunnerBase, IAppTester
         // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
         // Instead, copy the results file from the device to the host machine.
         if (deviceListener.TestLog != null &&
-            !await resultFileHandler.CopyResultsAsync(
+            resultFileHandler.IsVersionSupported(device.OSVersion, false))
+        {
+            bool resultsCopied = await resultFileHandler.CopyResultsAsync(
                 runMode,
                 false,
                 device.OSVersion,
                 device.UDID,
                 appInformation.BundleIdentifier,
-                deviceListener.TestLog.FullPath))
-        {
-            throw new InvalidOperationException("Failed to copy test results from device to host.");
+                deviceListener.TestLog.FullPath);
+
+            // If results weren't copied, it likely means the app crashed before tests could run
+            // Try to retrieve the crash report
+            if (!resultsCopied)
+            {
+                _mainLog.WriteLine("Test results file not found, app may have crashed before tests started.");
+                await resultFileHandler.CopyCrashReportAsync(
+                    device.UDID,
+                    device.Name,
+                    appInformation,
+                    appOutputLog,
+                    isSimulator: false);
+            }
         }
     }
 
