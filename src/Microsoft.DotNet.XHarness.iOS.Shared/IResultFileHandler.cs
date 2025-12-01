@@ -25,4 +25,14 @@ public interface IResultFileHandler
         string udid,
         string bundleIdentifier,
         string hostDestinationPath);
+
+    /// <summary>
+    /// Copy the latest crash report from the device and dumps its content to the log.
+    /// </summary>
+    Task CopyCrashReportAsync(
+        string deviceUdid,
+        string? deviceName,
+        AppBundleInformation appInformation,
+        Common.Logging.ILog outputLog,
+        bool isSimulator);
 }
