@@ -579,7 +579,7 @@ MonoTouchFixtures.Foundation.TimerTest.CreateTimer_NewSignature:   WaitOne<br/>
         using var writer = new StringWriter();
         using var stream = GetType().Assembly.GetManifestResourceStream(name);
         using var reader = new StreamReader(stream);
-        _resultParser.GenerateTestReport(writer, reader, XmlResultJargon.TouchUnit);
+        _resultParser.GenerateTestReport(writer, reader, XmlResultJargon.TouchUnit_NUnitV2);
 
         var expectedOutput = "";
         Assert.Equal(expectedOutput.Replace("\r", ""), writer.ToString().Replace("\r", ""));
