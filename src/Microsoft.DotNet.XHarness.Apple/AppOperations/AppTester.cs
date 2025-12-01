@@ -460,7 +460,7 @@ public class AppTester : AppRunnerBase, IAppTester
                     device.UDID,
                     device.Name,
                     appInformation,
-                    appOutputLog,
+                    _mainLog,
                     isSimulator: false);
             }
         }

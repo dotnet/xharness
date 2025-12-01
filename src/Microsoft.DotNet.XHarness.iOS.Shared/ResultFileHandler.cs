@@ -160,7 +160,18 @@ public class ResultFileHandler : IResultFileHandler
         _mainLog.WriteLine($"Found crash report: {latestCrashReport}");
 
         // Download the crash report
-        string crashReportContent = Path.GetTempFileName();
+        string? uploadRoot = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
+        string crashReportContent;
+
+        if (!string.IsNullOrEmpty(uploadRoot) && Directory.Exists(uploadRoot))
+        {
+            string crashFileName = Path.GetFileName(latestCrashReport);
+            crashReportContent = Path.Combine(uploadRoot, crashFileName);
+        }
+        else
+        {
+            crashReportContent = Path.GetTempFileName();
+        }
 
         MlaunchArguments downloadArgs = new MlaunchArguments(
             new DownloadCrashReportArgument(latestCrashReport),
@@ -183,19 +194,10 @@ public class ResultFileHandler : IResultFileHandler
         }
 
         // Dump the crash report content to the log
-        _mainLog.WriteLine("========================================");
-        _mainLog.WriteLine("Crash report:");
+        _mainLog.WriteLine($"==================== Crash report ====================");
+        _mainLog.WriteLine($"Crash report file: {crashReportContent}");
         string crashContent = await File.ReadAllTextAsync(crashReportContent);
         _mainLog.WriteLine(crashContent);
-        _mainLog.WriteLine("========================================");
-
-        // Also write to the output log if different from main log
-        if (outputLog != _mainLog)
-        {
-            outputLog.WriteLine("========================================");
-            outputLog.WriteLine("Crash report:");
-            outputLog.WriteLine(crashContent);
-            outputLog.WriteLine("========================================");
-        }
+        _mainLog.WriteLine($"==================== End of Crash report ====================");
     }
 }

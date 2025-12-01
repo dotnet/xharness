@@ -5,9 +5,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Moq;
 using Xunit;
@@ -168,5 +171,85 @@ public class ResultFileHandlerTests : IDisposable
 
         Assert.False(result);
         log.Verify(l => l.WriteLine($"Failed to copy results file from device. Expected at: {_tempFile}"), Times.Once);
+    }
+
+    [Fact]
+    public async Task CopyCrashReportUsesHelixUploadRootWhenAvailable()
+    {
+        string originalUploadRoot = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
+        string uploadRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(uploadRoot);
+
+        try
+        {
+            Environment.SetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT", uploadRoot);
+
+            Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
+            Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
+            ResultFileHandler handler = CreateHandler(pm, log);
+
+            string crashReportName = "MyApp-2025-11-25-223847.ips";
+            string expectedDownloadPath = Path.Combine(uploadRoot, crashReportName);
+            string crashContent = "Dummy crash content";
+            string actualDownloadPath = null;
+
+            int callCount = 0;
+
+            pm.Setup(m => m.ExecuteCommandAsync(
+                    It.IsAny<MlaunchArguments>(),
+                    It.IsAny<ILog>(),
+                    It.IsAny<TimeSpan>(),
+                    It.IsAny<Dictionary<string, string>>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken?>()))
+                .Returns((MlaunchArguments args, ILog _, TimeSpan _, Dictionary<string, string> _, int _, CancellationToken? _) =>
+                {
+                    callCount++;
+                    if (callCount == 1)
+                    {
+                        string listFilePath = GetArgumentValue(args, "list-crash-reports");
+                        File.WriteAllLines(listFilePath, new[] { crashReportName });
+                    }
+                    else if (callCount == 2)
+                    {
+                        actualDownloadPath = GetArgumentValue(args, "download-crash-report-to");
+                        File.WriteAllText(actualDownloadPath, crashContent);
+                    }
+
+                    return Task.FromResult(new ProcessExecutionResult { ExitCode = 0 });
+                });
+
+            var appInfo = new AppBundleInformation("MyApp", "com.example.myapp", "/tmp", "/tmp", supports32b: false);
+
+            await handler.CopyCrashReportAsync("device-udid", null, appInfo, log.Object, isSimulator: false);
+
+            Assert.Equal(expectedDownloadPath, actualDownloadPath);
+            Assert.True(File.Exists(expectedDownloadPath));
+
+            log.Verify(l => l.WriteLine("Attempting to retrieve crash report from device..."), Times.Once);
+            log.Verify(l => l.WriteLine($"Found crash report: {crashReportName}"), Times.Once);
+            log.Verify(l => l.WriteLine("==================== Crash report ===================="), Times.Once);
+            log.Verify(l => l.WriteLine($"Crash report file: {expectedDownloadPath}"), Times.Once);
+            log.Verify(l => l.WriteLine(crashContent), Times.Once);
+            log.Verify(l => l.WriteLine("==================== End of Crash report ===================="), Times.Once);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT", originalUploadRoot);
+
+            if (Directory.Exists(uploadRoot))
+            {
+                Directory.Delete(uploadRoot, true);
+            }
+        }
+    }
+
+    private static string GetArgumentValue(MlaunchArguments args, string argumentName)
+    {
+        string prefix = $"--{argumentName}=";
+        string argument = args.Select(a => a.AsCommandLineArgument())
+            .First(a => a.StartsWith(prefix, StringComparison.Ordinal));
+
+        return argument.Substring(prefix.Length).Trim('"');
     }
 }
