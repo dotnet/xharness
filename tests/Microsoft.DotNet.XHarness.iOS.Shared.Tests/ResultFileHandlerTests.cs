@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
@@ -176,6 +177,12 @@ public class ResultFileHandlerTests : IDisposable
     [Fact]
     public async Task CopyCrashReportUsesHelixUploadRootWhenAvailable()
     {
+        // Skip on Windows as mlaunch is not available
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         string originalUploadRoot = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
         string uploadRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(uploadRoot);
