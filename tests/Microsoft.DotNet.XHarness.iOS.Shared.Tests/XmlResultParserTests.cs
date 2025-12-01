@@ -43,8 +43,11 @@ public class XmlResultParserTests
             case XmlResultJargon.NUnitV3:
                 sampleFileName = "NUnitV3Sample.xml";
                 break;
-            case XmlResultJargon.TouchUnit:
+            case XmlResultJargon.TouchUnit_NUnitV2:
                 sampleFileName = "TouchUnitSample.xml";
+                break;
+            case XmlResultJargon.TouchUnit_NUnitV3:
+                sampleFileName = "TouchUnitSample2.xml";
                 break;
             case XmlResultJargon.xUnit:
                 sampleFileName = "xUnitSample.xml";
@@ -80,7 +83,8 @@ public class XmlResultParserTests
     [Theory]
     [InlineData(XmlResultJargon.NUnitV2)]
     [InlineData(XmlResultJargon.NUnitV3)]
-    [InlineData(XmlResultJargon.TouchUnit)]
+    [InlineData(XmlResultJargon.TouchUnit_NUnitV2)]
+    [InlineData(XmlResultJargon.TouchUnit_NUnitV3)]
     [InlineData(XmlResultJargon.xUnit)]
     public void IsValidXmlTest(XmlResultJargon jargon)
     {
@@ -545,19 +549,19 @@ Xamarin.MTouch.RebuildWhenReferenceSymbolsInCode: message</li>
 @"<div style='padding-left: 15px;'>
 <ul>
 <li>
-Bug17793:   Not signalled twice in 5s<br/>
+MonoTouchFixtures.Foundation.TimerTest.Bug17793:   Not signalled twice in 5s<br/>
   Expected: True<br/>
   But was:  False<br/>
 <br />
 </li>
 <li>
-Bug2443:   Not signalled twice in 5s<br/>
+MonoTouchFixtures.Foundation.TimerTest.Bug2443:   Not signalled twice in 5s<br/>
   Expected: True<br/>
   But was:  False<br/>
 <br />
 </li>
 <li>
-CreateTimer_NewSignature:   WaitOne<br/>
+MonoTouchFixtures.Foundation.TimerTest.CreateTimer_NewSignature:   WaitOne<br/>
   Expected: True<br/>
   But was:  False<br/>
 <br />
@@ -566,5 +570,70 @@ CreateTimer_NewSignature:   WaitOne<br/>
 </div>
 ";
         Assert.Equal(writer.ToString().Replace("\r", ""), expectedOutput.Replace("\r", ""));
+    }
+
+    [Fact]
+    public void TouchUnitTestReport()
+    {
+        var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("TouchUnitSample.xml", StringComparison.Ordinal)).FirstOrDefault();
+        using var writer = new StringWriter();
+        using var stream = GetType().Assembly.GetManifestResourceStream(name);
+        using var reader = new StreamReader(stream);
+        _resultParser.GenerateTestReport(writer, reader, XmlResultJargon.TouchUnit_NUnitV2);
+
+        var expectedOutput = "";
+        Assert.Equal(expectedOutput.Replace("\r", ""), writer.ToString().Replace("\r", ""));
+    }
+
+    [Fact]
+    public void TouchUnit2TestReport()
+    {
+        var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("TouchUnitSample2.xml", StringComparison.Ordinal)).FirstOrDefault();
+        using var writer = new StringWriter();
+        using var stream = GetType().Assembly.GetManifestResourceStream(name);
+        using var reader = new StreamReader(stream);
+        _resultParser.GenerateTestReport(writer, reader, XmlResultJargon.TouchUnit_NUnitV3);
+
+        var expectedOutput =
+@"<div style='padding-left: 15px;'>
+<ul>
+<li>
+MonoTests.System.Net.Http.MessageHandlerTest.TestNSUrlSessionDefaultDisableCookiesWithManagedContainer:   Network request completed<br/>
+  Expected: True<br/>
+  But was:  False<br/>
+<br />
+</li>
+<li>
+MonoTests.System.Net.Http.MessageHandlerTest.TestNSUrlSessionDefaultDisabledCookies:   Network request completed<br/>
+  Expected: True<br/>
+  But was:  False<br/>
+<br />
+</li>
+<li>
+MonoTests.System.Net.Http.MessageHandlerTest.TestNSUrlSessionHandlerCookies:   Network request completed<br/>
+  Expected: True<br/>
+  But was:  False<br/>
+<br />
+</li>
+<li>
+MonoTests.System.Net.Http.MessageHandlerTest.UpdateRequestUriAfterRedirect(System.Net.Http.NSUrlSessionHandler):   Post RequestUri<br/>
+  Expected string length 20 but was 64. Strings differ at index 20.<br/>
+  Expected: &quot;https://httpbin.org/&quot;<br/>
+  But was:  &quot;https://httpbin.org/redirect-to?url=https%3A%2F%2Fhttpbin.org%2F&quot;<br/>
+  -------------------------------^<br/>
+<br />
+</li>
+<li>
+MonoTests.System.Net.Http.MessageHandlerTest.UpdateRequestUriAfterRedirect(System.Net.Http.SocketsHttpHandler):   Post RequestUri<br/>
+  Expected string length 20 but was 64. Strings differ at index 20.<br/>
+  Expected: &quot;https://httpbin.org/&quot;<br/>
+  But was:  &quot;https://httpbin.org/redirect-to?url=https%3A%2F%2Fhttpbin.org%2F&quot;<br/>
+  -------------------------------^<br/>
+<br />
+</li>
+</ul>
+</div>
+";
+        Assert.Equal(expectedOutput.Replace("\r", ""), writer.ToString().Replace("\r", ""));
     }
 }
