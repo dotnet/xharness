@@ -6,6 +6,8 @@ namespace Microsoft.DotNet.XHarness.Common;
 public enum XmlResultJargon
 {
     TouchUnit,
+    TouchUnit_NUnitV2 = TouchUnit,
+    TouchUnit_NUnitV3,
     NUnitV2,
     NUnitV3,
     xUnit,
