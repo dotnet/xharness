@@ -1,6 +1,8 @@
 variables:
 - template: /eng/common-variables.yml@self
 - template: /eng/common/templates-official/variables/pool-providers.yml@self
+- name: Codeql.Cadence
+  value: 0
 - name: Codeql.Language
   value: csharp,python,actions,powershell
 - name: Codeql.ExcludePathPatterns
