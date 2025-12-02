@@ -1,8 +1,6 @@
 variables:
 - template: /eng/common-variables.yml@self
 - template: /eng/common/templates-official/variables/pool-providers.yml@self
-- name: Codeql.Cadence
-  value: 0
 - name: Codeql.Language
   value: csharp,actions,powershell
 
@@ -37,7 +35,8 @@ extends:
       binskim:
         enabled: true
       codeql:
-        enabledOnNonDefaultBranches: true
+        ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/release/') }}:
+            enabledOnNonDefaultBranches: true
     pool:
       name: $(DncEngInternalBuildPool)
       image: 1es-windows-2022
