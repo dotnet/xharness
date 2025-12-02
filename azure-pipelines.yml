@@ -4,9 +4,7 @@ variables:
 - name: Codeql.Cadence
   value: 0
 - name: Codeql.Language
-  value: csharp,python,actions,powershell
-- name: Codeql.ExcludePathPatterns
-  value: eng/common/cross/install-debs.py
+  value: csharp,actions,powershell
 
 # CI triggers
 trigger:
