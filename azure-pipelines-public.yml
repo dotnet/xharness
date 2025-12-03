@@ -76,7 +76,7 @@ stages:
       jobs:
       - job: OSX
         pool:
-          vmImage: macOS-13
+          vmImage: macOS-15
         strategy:
           matrix:
             Release:
@@ -91,7 +91,7 @@ stages:
           displayName: Build and run tests
           condition: succeeded()
 
-        - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.10.0.0-ci.nupkg
+        - publish: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping/Microsoft.DotNet.XHarness.CLI.11.0.0-ci.nupkg
           artifact: Microsoft.DotNet.XHarness.CLI.$(_BuildConfig)
           displayName: Publish XHarness CLI for Helix Testing
           condition: and(succeeded(), eq(variables['_BuildConfig'], 'Debug'))

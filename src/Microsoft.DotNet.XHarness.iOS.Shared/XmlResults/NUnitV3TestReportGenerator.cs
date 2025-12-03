@@ -16,42 +16,21 @@ public class NUnitV3TestReportGenerator : TestReportGenerator
     public override void GenerateTestReport(TextWriter writer, XmlReader reader)
     {
         var failedTests = new List<(string name, string message)>();
-        while (reader.Read())
+
+        while (reader.ReadToFollowing("test-case"))
         {
-            if (reader.NodeType == XmlNodeType.Element && reader.Name == "test-run")
+            var status = reader["result"];
+            switch (status)
             {
-                long.TryParse(reader["failed"], out var failed);
-                if (failed == 0)
-                {
+                case "Error":
+                case "Failed":
+                    string name = reader["fullname"] ?? throw new InvalidOperationException();
+                    var subtree = reader.ReadSubtree();
+                    subtree.ReadToDescendant("message");
+                    string message = subtree.ReadElementContentAsString();
+                    while (subtree.Read()) { } // read to end of subtree
+                    failedTests.Add((name, message));
                     break;
-                }
-            }
-
-            if (reader.NodeType == XmlNodeType.Element && reader.Name == "test-suite" && (reader["type"] == "TestFixture" || reader["type"] == "ParameterizedFixture"))
-            {
-                reader.ReadToDescendant("test-case");
-                do
-                {
-                    if (reader.Name != "test-case")
-                    {
-                        break;
-                    }
-                    // read the test cases in the current node
-                    var status = reader["result"];
-                    switch (status)
-                    {
-                        case "Error":
-                        case "Failed":
-                            string name = reader["name"] ?? throw new InvalidOperationException();
-                            var subtree = reader.ReadSubtree();
-                            subtree.ReadToDescendant("message");
-                            string message = subtree.ReadElementContentAsString();
-                            while (subtree.Read()) { } // read to end of subtree
-                            failedTests.Add((name, message));
-                            break;
-
-                    }
-                } while (reader.ReadToNextSibling("test-case"));
             }
         }
 

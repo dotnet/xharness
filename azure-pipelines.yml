@@ -1,6 +1,8 @@
 variables:
 - template: /eng/common-variables.yml@self
 - template: /eng/common/templates-official/variables/pool-providers.yml@self
+- name: Codeql.Language
+  value: csharp,actions,powershell
 
 # CI triggers
 trigger:
@@ -32,6 +34,9 @@ extends:
         enabled: true
       binskim:
         enabled: true
+      codeql:
+        ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/release/') }}:
+          enabledOnNonDefaultBranches: true
     pool:
       name: $(DncEngInternalBuildPool)
       image: 1es-windows-2022

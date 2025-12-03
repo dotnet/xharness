@@ -5,8 +5,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
@@ -103,5 +105,99 @@ public class ResultFileHandler : IResultFileHandler
         }
 
         return true;
+    }
+
+    public async Task CopyCrashReportAsync(
+        string deviceUdid,
+        string? deviceName,
+        AppBundleInformation appInformation,
+        ILog outputLog,
+        bool isSimulator)
+    {
+        _mainLog.WriteLine("Attempting to retrieve crash report from device...");
+
+        // List all crash reports on the device
+        string tempCrashListFile = Path.GetTempFileName();
+
+        MlaunchArguments listArgs = new MlaunchArguments(new ListCrashReportsArgument(tempCrashListFile));
+
+        if (!string.IsNullOrEmpty(deviceName))
+        {
+            listArgs.Add(new DeviceNameArgument(deviceName));
+        }
+
+        ProcessExecutionResult listResult = await _processManager.ExecuteCommandAsync(
+            listArgs,
+            _mainLog,
+            TimeSpan.FromMinutes(1));
+
+        if (!listResult.Succeeded || !File.Exists(tempCrashListFile))
+        {
+            _mainLog.WriteLine("Failed to list crash reports from device.");
+            return;
+        }
+
+        List<string> crashReports = File.ReadAllLines(tempCrashListFile)
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToList();
+
+        if (crashReports.Count == 0)
+        {
+            _mainLog.WriteLine("No crash reports found on device.");
+            return;
+        }
+
+        // Filter for crash reports that might be related to our app
+        // .ips files typically follow the format: AppName-YYYY-MM-DD-HHMMSS.ips or similar
+        List<string> appRelatedCrashes = crashReports
+            .Where(crash => crash.Contains(appInformation.AppName, StringComparison.OrdinalIgnoreCase) ||
+                            crash.EndsWith(".ips", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        // Use the last crash report (most recent) from the filtered list
+        string latestCrashReport = (appRelatedCrashes.Count > 0 ? appRelatedCrashes : crashReports).Last();
+
+        _mainLog.WriteLine($"Found crash report: {latestCrashReport}");
+
+        // Download the crash report
+        string? uploadRoot = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
+        string crashReportContent;
+
+        if (!string.IsNullOrEmpty(uploadRoot) && Directory.Exists(uploadRoot))
+        {
+            string crashFileName = Path.GetFileName(latestCrashReport);
+            crashReportContent = Path.Combine(uploadRoot, crashFileName);
+        }
+        else
+        {
+            crashReportContent = Path.GetTempFileName();
+        }
+
+        MlaunchArguments downloadArgs = new MlaunchArguments(
+            new DownloadCrashReportArgument(latestCrashReport),
+            new DownloadCrashReportToArgument(crashReportContent));
+
+        if (!string.IsNullOrEmpty(deviceName))
+        {
+            downloadArgs.Add(new DeviceNameArgument(deviceName));
+        }
+
+        ProcessExecutionResult downloadResult = await _processManager.ExecuteCommandAsync(
+            downloadArgs,
+            _mainLog,
+            TimeSpan.FromMinutes(1));
+
+        if (!downloadResult.Succeeded || !File.Exists(crashReportContent))
+        {
+            _mainLog.WriteLine("Failed to download crash report from device.");
+            return;
+        }
+
+        // Dump the crash report content to the log
+        _mainLog.WriteLine($"==================== Crash report ====================");
+        _mainLog.WriteLine($"Crash report file: {crashReportContent}");
+        string crashContent = await File.ReadAllTextAsync(crashReportContent);
+        _mainLog.WriteLine(crashContent);
+        _mainLog.WriteLine($"==================== End of Crash report ====================");
     }
 }

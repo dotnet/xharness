@@ -14,9 +14,12 @@ public class NUnitV2TestReportGenerator : TestReportGenerator
 {
     public override void GenerateTestReport(TextWriter writer, XmlReader reader)
     {
-        if (!reader.ReadToFollowing("test-results"))
+        if (reader.Name != "test-results")
         {
-            return;
+            if (!reader.ReadToFollowing("test-results"))
+            {
+                return;
+            }
         }
 
         long.TryParse(reader["errors"], out var errors);
