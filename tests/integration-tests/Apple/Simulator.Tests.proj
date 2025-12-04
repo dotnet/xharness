@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
+    <HelixTargetQueue Include="osx.26.arm64.open"/>
     <HelixTargetQueue Include="osx.15.amd64.open"/>
     <HelixTargetQueue Include="osx.14.arm64.open"/>
 

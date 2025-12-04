@@ -49,7 +49,7 @@
         <Version>393473</Version>
       </SimRuntime>
     </SupportedRuntimes>
-    <SupportedDeviceTypes Count="50">
+    <SupportedDeviceTypes Count="51">
       <SimDeviceType>
         <Name>iPhone 4s</Name>
         <Identifier>com.apple.CoreSimulator.SimDeviceType.iPhone-4s</Identifier>
@@ -197,6 +197,14 @@
       <SimDeviceType>
         <Name>iPhone 11 Pro Max</Name>
         <Identifier>com.apple.CoreSimulator.SimDeviceType.iPhone-11-Pro-Max</Identifier>
+        <ProductFamilyId>IPhone</ProductFamilyId>
+        <MinRuntimeVersion>851968</MinRuntimeVersion>
+        <MaxRuntimeVersion>4294967295</MaxRuntimeVersion>
+        <Supports64Bits>true</Supports64Bits>
+      </SimDeviceType>
+      <SimDeviceType>
+        <Name>iPhone 16</Name>
+        <Identifier>com.apple.CoreSimulator.SimDeviceType.iPhone-16</Identifier>
         <ProductFamilyId>IPhone</ProductFamilyId>
         <MinRuntimeVersion>851968</MinRuntimeVersion>
         <MaxRuntimeVersion>4294967295</MaxRuntimeVersion>
@@ -451,7 +459,7 @@
         <Supports64Bits>false</Supports64Bits>
       </SimDeviceType>
     </SupportedDeviceTypes>
-    <AvailableDevices Count="75">
+    <AvailableDevices Count="77">
       <SimDevice UDID="B0CF5BA5-318E-4FC8-8FC1-FB82D9F2FB42" Name="iPhone 5">
         <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-10-3</SimRuntime>
         <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-5</SimDeviceType>
@@ -716,11 +724,17 @@
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/18F485DC-7F0A-440F-BEF9-5BE5954B0FB1</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/18F485DC-7F0A-440F-BEF9-5BE5954B0FB1</LogPath>
       </SimDevice>
-      <SimDevice UDID="336E1D83-AB00-4FAE-A70D-C516D269B90A" Name="iPhone Xs (iOS {{MAX-IOS.VERSION}}) - created by xharness">
+      <SimDevice UDID="336E1D83-AB00-4FAE-A70D-C516D269B90A" Name="iPhone 16 (iOS {{MAX-IOS.VERSION}}) - created by xharness">
         <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
-        <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-XS</SimDeviceType>
+        <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-16</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/336E1D83-AB00-4FAE-A70D-C516D269B90A</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/336E1D83-AB00-4FAE-A70D-C516D269B90A</LogPath>
+      </SimDevice>
+      <SimDevice UDID="E9914E48-7A63-493D-B7AA-D7AD90F0E999" Name="iPhone Xs (iOS {{MAX-IOS.VERSION}}) - created by xharness">
+        <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
+        <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.iPhone-XS</SimDeviceType>
+        <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/E9914E48-7A63-493D-B7AA-D7AD90F0E999</DataPath>
+        <LogPath>/Users/mandel/Library/Logs/CoreSimulator/E9914E48-7A63-493D-B7AA-D7AD90F0E999</LogPath>
       </SimDevice>
       <SimDevice UDID="ABC2A44A-789D-4C8B-88A7-0CD7C6BF316C" Name="iPhone 11">
         <SimRuntime>com.apple.CoreSimulator.SimRuntime.iOS-{{MAX-IOS-VERSION}}</SimRuntime>
@@ -909,7 +923,7 @@
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/77F07B96-D2E4-4F04-B958-B68E2FBCC2ED</LogPath>
       </SimDevice>
     </AvailableDevices>
-    <AvailableDevicePairs Count="4">
+    <AvailableDevicePairs Count="6">
       <SimDevicePair UDID="91AD462B-4179-40E3-A367-6D4A63F68432">
         <Companion>62992D4C-C669-4C51-AAD4-1877891EC26B</Companion>
         <Gizmo>F00FA51A-D353-4DD0-9631-FBAE0CE79D0F</Gizmo>
@@ -920,6 +934,10 @@
       </SimDevicePair>
       <SimDevicePair UDID="324096C4-4773-48E7-8420-CECCC8B060BD">
         <Companion>336E1D83-AB00-4FAE-A70D-C516D269B90A</Companion>
+        <Gizmo>BB2F9CF0-A928-4909-867A-525A937D7390</Gizmo>
+      </SimDevicePair>
+      <SimDevicePair UDID="E9914E48-7A63-493D-B7AA-D7AD90F0E998">
+        <Companion>E9914E48-7A63-493D-B7AA-D7AD90F0E999</Companion>
         <Gizmo>BB2F9CF0-A928-4909-867A-525A937D7390</Gizmo>
       </SimDevicePair>
       <SimDevicePair UDID="59E9A82D-89C7-4456-AE2C-FECB01899CD6">

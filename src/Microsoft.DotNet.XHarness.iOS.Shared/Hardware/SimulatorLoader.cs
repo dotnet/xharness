@@ -40,7 +40,7 @@ public class SimulatorLoader : ISimulatorLoader
     public SimulatorLoader(IMlaunchProcessManager processManager, ISimulatorSelector? simulatorSelector = null)
     {
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
-        _simulatorSelector = simulatorSelector ?? new DefaultSimulatorSelector();
+        _simulatorSelector = simulatorSelector ?? new DefaultSimulatorSelector(processManager);
     }
 
     public async Task LoadDevices(
