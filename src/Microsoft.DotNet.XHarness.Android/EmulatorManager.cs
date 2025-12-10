@@ -522,19 +522,75 @@ public class EmulatorManager
         return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".android", "avd");
     }
 
-    private static string? GetEmulatorPath()
+    private string? GetEmulatorPath()
     {
-        var sdkRoot = Environment.GetEnvironmentVariable("ANDROID_SDK_ROOT") ?? Environment.GetEnvironmentVariable("ANDROID_HOME");
-        if (!string.IsNullOrEmpty(sdkRoot))
+        // Try to find emulator relative to bundled adb (for XHarness runtime bundles)
+        var adbPath = _adbRunner.AdbExePath;
+        if (!string.IsNullOrEmpty(adbPath))
         {
-            var candidate = Path.Combine(sdkRoot, "emulator", "emulator");
+            var adbDir = Path.GetDirectoryName(adbPath);
+            if (!string.IsNullOrEmpty(adbDir))
+            {
+                // Check if emulator is in sibling directory: runtimes/any/native/adb/linux/adb -> runtimes/any/native/emulator/linux/emulator
+                var runtimesDir = Path.GetDirectoryName(Path.GetDirectoryName(adbDir));
+                if (!string.IsNullOrEmpty(runtimesDir))
+                {
+                    var emulatorCandidate = Path.Combine(runtimesDir, "emulator", Path.GetFileName(adbDir), "emulator");
+                    if (File.Exists(emulatorCandidate))
+                    {
+                        _log.LogDebug($"Found emulator relative to bundled adb: {emulatorCandidate}");
+                        return emulatorCandidate;
+                    }
+                }
+
+                // Check if adb and emulator are in the same SDK structure: sdk/platform-tools/adb -> sdk/emulator/emulator
+                var sdkRoot = Path.GetDirectoryName(adbDir);
+                if (!string.IsNullOrEmpty(sdkRoot))
+                {
+                    var emulatorCandidate = Path.Combine(sdkRoot, "emulator", "emulator");
+                    if (File.Exists(emulatorCandidate))
+                    {
+                        _log.LogDebug($"Found emulator in SDK structure relative to adb: {emulatorCandidate}");
+                        return emulatorCandidate;
+                    }
+                }
+            }
+        }
+
+        // Try environment variables
+        var envSdkRoot = Environment.GetEnvironmentVariable("ANDROID_SDK_ROOT") ?? Environment.GetEnvironmentVariable("ANDROID_HOME");
+        if (!string.IsNullOrEmpty(envSdkRoot))
+        {
+            var candidate = Path.Combine(envSdkRoot, "emulator", "emulator");
             if (File.Exists(candidate))
             {
+                _log.LogDebug($"Found emulator via ANDROID_SDK_ROOT: {candidate}");
                 return candidate;
             }
         }
 
+        // Try common Linux installation paths (for Helix and CI environments)
+        var commonPaths = new[]
+        {
+            "/usr/local/android-sdk/emulator/emulator",
+            "/usr/local/lib/android/sdk/emulator/emulator",
+            "/usr/lib/android-sdk/emulator/emulator",
+            "/opt/android-sdk/emulator/emulator",
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Android/Sdk/emulator/emulator"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".android-sdk/emulator/emulator"),
+        };
+
+        foreach (var path in commonPaths)
+        {
+            if (File.Exists(path))
+            {
+                _log.LogDebug($"Found emulator at common path: {path}");
+                return path;
+            }
+        }
+
         // Fallback to PATH resolution
+        _log.LogDebug("Falling back to PATH resolution for emulator");
         return "emulator";
     }
 }

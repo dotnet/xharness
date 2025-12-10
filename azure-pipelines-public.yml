@@ -116,6 +116,30 @@ stages:
 
 - template: eng/e2e-test.yml
   parameters:
+    name: E2E_Android_Emulator_Lifecycle_AutoStart
+    displayName: Android - Emulator Lifecycle - Auto Start
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Emulator.Lifecycle.AutoStart.Tests.proj
+
+- template: eng/e2e-test.yml
+  parameters:
+    name: E2E_Android_Emulator_Lifecycle_AutoStartWithReset
+    displayName: Android - Emulator Lifecycle - Auto Start With Reset
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Emulator.Lifecycle.AutoStartWithReset.Tests.proj
+
+- template: eng/e2e-test.yml
+  parameters:
+    name: E2E_Android_Emulator_Lifecycle_ArchitectureMatching
+    displayName: Android - Emulator Lifecycle - Architecture Matching
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Emulator.Lifecycle.ArchitectureMatching.Tests.proj
+
+- template: eng/e2e-test.yml
+  parameters:
+    name: E2E_Android_Emulator_Lifecycle_ApiLevelMatching
+    displayName: Android - Emulator Lifecycle - API Level Matching
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Emulator.Lifecycle.ApiLevelMatching.Tests.proj
+
+- template: eng/e2e-test.yml
+  parameters:
     name: E2E_Android_Devices
     displayName: Android - Devices
     testProject: $(Build.SourcesDirectory)/tests/integration-tests/Android/Device.Tests.proj
