@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <Target Name="ValidateArchitecture" BeforeTargets="Build">
-    <Error Condition="'$(IsArm64Queue)' != 'true' and '$(IsAmd64Queue)' != 'true'"
+    <Error Condition="'$(HelixTargetQueue)' != '' and '$(IsArm64Queue)' != 'true' and '$(IsAmd64Queue)' != 'true'"
            Text="Unable to detect architecture from HelixTargetQueue '$(HelixTargetQueue)'. Queue name must contain 'arm64' or 'amd64'." />
   </Target>
 
