@@ -37,6 +37,7 @@ Arguments:
         }
 
         var runner = new AdbRunner(logger);
+        var emulatorManager = new EmulatorManager(logger, runner);
 
         return InvokeHelper(
             logger: logger,
@@ -46,7 +47,9 @@ Arguments:
             deviceId: Arguments.DeviceId,
             apiVersion: Arguments.ApiVersion.Value,
             bootTimeoutSeconds: Arguments.LaunchTimeout,
+            resetEmulator: Arguments.ResetEmulator,
             runner: runner,
+            emulatorManager: emulatorManager,
             DiagnosticsData);
     }
 
@@ -58,7 +61,9 @@ Arguments:
         string? deviceId,
         int? apiVersion,
         TimeSpan bootTimeoutSeconds,
+        bool resetEmulator,
         AdbRunner runner,
+        EmulatorManager emulatorManager,
         IDiagnosticsData diagnosticsData)
     {
         using (logger.BeginScope("Initialization and setup of APK on device"))
@@ -91,12 +96,16 @@ Arguments:
             // Make sure the adb server is started
             runner.StartAdbServer();
 
-            AndroidDevice? device = runner.GetDevice(
+            // Always attempt to find or start emulator (matching iOS behavior)
+            var device = runner.GetDeviceOrStartEmulator(
+                emulatorManager: emulatorManager,
+                startEmulatorIfNeeded: true,
+                wipeEmulatorData: resetEmulator,
                 loadArchitecture: true,
                 loadApiVersion: true,
-                deviceId,
-                apiVersion,
-                requiredArchitectures);
+                requiredDeviceId: deviceId,
+                requiredApiVersion: apiVersion,
+                requiredArchitectures: requiredArchitectures);
 
             if (device is null)
             {

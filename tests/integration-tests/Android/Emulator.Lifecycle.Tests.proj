@@ -1,0 +1,169 @@
+<Project Sdk="Microsoft.DotNet.Helix.Sdk">
+
+  <ItemGroup>
+    <HelixTargetQueue Include="Ubuntu.2204.Amd64.Android.Multi.Open"/>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TestPackageName>net.dot.System.Buffers.Tests</TestPackageName>
+    <TestInstrumentationName>net.dot.MonoRunner</TestInstrumentationName>
+    <XHarnessX86TestApkUrl>$(AssetsBaseUri)/android/test-apk/x86/System.Buffers.Tests-x86.apk</XHarnessX86TestApkUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)apk</TestAppDestinationDir>
+  </PropertyGroup>
+
+  <Target Name="TestAndroidEmulatorLifecycle" BeforeTargets="CoreTest">
+    <DownloadFile 
+      SourceUrl="$(XHarnessX86TestApkUrl)" 
+      DestinationFolder="$(TestAppDestinationDir)" 
+      SkipUnchangedFiles="True" 
+      Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="DownloadedX86Apk" />
+    </DownloadFile>
+
+    <Message Text="Downloaded x86 APK: @(DownloadedX86Apk)" Importance="High" />
+
+    <ItemGroup>
+      <!-- Test 1: Auto-start emulator without reset flag -->
+      <XHarnessApkToTest Include="@(DownloadedX86Apk)">
+        <TestName>Auto-start-no-reset</TestName>
+        <AndroidPackageName>$(TestPackageName)</AndroidPackageName>
+        <AndroidInstrumentationName>$(TestInstrumentationName)</AndroidInstrumentationName>
+        <WorkItemTimeout>00:15:00</WorkItemTimeout>
+        <CustomCommands><![CDATA[
+          set -ex
+          echo "=== Test 1: Auto-start emulator without --reset-emulator ==="
+          
+          adb devices | grep emulator | cut -f1 | xargs -I {} adb -s {} emu kill || true
+          sleep 5
+          
+          initial_count=`adb devices | grep -c emulator || echo 0`
+          echo "Initial emulator count: $initial_count"
+          
+          set +e
+          result=0
+          xharness android test --app="$app" --package-name="$package_name" --instrumentation="$instrumentation_name" --output-directory="$output_directory" --device-arch=x86 --api-version=36 --verbosity=Debug
+          ((result|=$?))
+          
+          emulator_count=`adb devices | grep -c emulator || echo 0`
+          echo "Emulators running after test: $emulator_count"
+          
+          if [ "$emulator_count" -eq "0" ]; then
+            echo "ERROR: No emulator running after test"
+            exit 1
+          fi
+          
+          echo "SUCCESS: Test 1 passed - emulator auto-started"
+          exit $result
+        ]]></CustomCommands>
+      </XHarnessApkToTest>
+
+      <!-- Test 2: Auto-start emulator with reset flag -->
+      <XHarnessApkToTest Include="@(DownloadedX86Apk)">
+        <TestName>Auto-start-with-reset</TestName>
+        <AndroidPackageName>$(TestPackageName)</AndroidPackageName>
+        <AndroidInstrumentationName>$(TestInstrumentationName)</AndroidInstrumentationName>
+        <WorkItemTimeout>00:15:00</WorkItemTimeout>
+        <CustomCommands><![CDATA[
+          set -ex
+          echo "=== Test 2: Auto-start emulator with --reset-emulator ==="
+          
+          adb devices | grep emulator | cut -f1 | xargs -I {} adb -s {} emu kill || true
+          sleep 5
+          
+          set +e
+          result=0
+          xharness android test --app="$app" --package-name="$package_name" --instrumentation="$instrumentation_name" --output-directory="$output_directory" --device-arch=x86 --api-version=36 --reset-emulator --verbosity=Debug
+          ((result|=$?))
+          
+          emulator_count=`adb devices | grep -c emulator || echo 0`
+          echo "Emulators running after reset test: $emulator_count"
+          
+          if [ "$emulator_count" -ne "0" ]; then
+            echo "ERROR: Emulator still running after --reset-emulator (should be stopped)"
+            exit 1
+          fi
+          
+          echo "SUCCESS: Test 2 passed - emulator reset and stopped"
+          exit $result
+        ]]></CustomCommands>
+      </XHarnessApkToTest>
+
+      <!-- Test 3: Architecture matching (x86) -->
+      <XHarnessApkToTest Include="@(DownloadedX86Apk)">
+        <TestName>Architecture-matching-x86</TestName>
+        <AndroidPackageName>$(TestPackageName)</AndroidPackageName>
+        <AndroidInstrumentationName>$(TestInstrumentationName)</AndroidInstrumentationName>
+        <WorkItemTimeout>00:15:00</WorkItemTimeout>
+        <CustomCommands><![CDATA[
+          set -ex
+          echo "=== Test 3: Architecture matching (x86) ==="
+          
+          adb devices | grep emulator | cut -f1 | xargs -I {} adb -s {} emu kill || true
+          sleep 5
+          
+          set +e
+          result=0
+          xharness android test --app="$app" --package-name="$package_name" --instrumentation="$instrumentation_name" --output-directory="$output_directory" --device-arch=x86 --api-version=36 --verbosity=Debug
+          ((result|=$?))
+          
+          device_id=`adb devices | grep emulator | head -1 | cut -f1`
+          if [ -z "$device_id" ]; then
+            echo "ERROR: No emulator running"
+            exit 1
+          fi
+          
+          device_arch=`adb -s $device_id shell getprop ro.product.cpu.abi`
+          echo "Device architecture: $device_arch"
+          
+          if [[ ! "$device_arch" =~ "x86" ]]; then
+            echo "ERROR: Expected x86 architecture, got: $device_arch"
+            exit 1
+          fi
+          
+          adb -s $device_id emu kill || true
+          echo "SUCCESS: Test 3 passed - correct architecture selected"
+          exit $result
+        ]]></CustomCommands>
+      </XHarnessApkToTest>
+
+      <!-- Test 4: API level matching (API 30) -->
+      <XHarnessApkToTest Include="@(DownloadedX86Apk)">
+        <TestName>API-level-matching-30</TestName>
+        <AndroidPackageName>$(TestPackageName)</AndroidPackageName>
+        <AndroidInstrumentationName>$(TestInstrumentationName)</AndroidInstrumentationName>
+        <WorkItemTimeout>00:15:00</WorkItemTimeout>
+        <CustomCommands><![CDATA[
+          set -ex
+          echo "=== Test 4: API level matching (API 30) ==="
+          
+          adb devices | grep emulator | cut -f1 | xargs -I {} adb -s {} emu kill || true
+          sleep 5
+          
+          set +e
+          result=0
+          xharness android test --app="$app" --package-name="$package_name" --instrumentation="$instrumentation_name" --output-directory="$output_directory" --device-arch=x86 --api-version=30 --verbosity=Debug
+          ((result|=$?))
+          
+          device_id=`adb devices | grep emulator | head -1 | cut -f1`
+          if [ -z "$device_id" ]; then
+            echo "ERROR: No emulator running"
+            exit 1
+          fi
+          
+          api_level=`adb -s $device_id shell getprop ro.build.version.sdk`
+          echo "Device API level: $api_level"
+          
+          if [ "$api_level" != "30" ]; then
+            echo "ERROR: Expected API level 30, got: $api_level"
+            exit 1
+          fi
+          
+          adb -s $device_id emu kill || true
+          echo "SUCCESS: Test 4 passed - correct API level selected"
+          exit $result
+        ]]></CustomCommands>
+      </XHarnessApkToTest>
+    </ItemGroup>
+  </Target>
+
+</Project>

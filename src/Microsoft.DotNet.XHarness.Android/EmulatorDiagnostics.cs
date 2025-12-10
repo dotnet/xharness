@@ -192,4 +192,199 @@ internal class EmulatorDiagnostics
 
         return topProcesses;
     }
+
+    /// <summary>
+    /// Collects running emulator process information (PIDs, command lines).
+    /// </summary>
+    public Dictionary<string, string> CollectRunningEmulatorProcesses()
+    {
+        _log.LogInformation("Starting Collect Running Emulator Processes");
+        var stopwatch = Stopwatch.StartNew();
+
+        var diagnostics = new Dictionary<string, string>();
+
+        try
+        {
+            var emulatorProcesses = Process.GetProcesses()
+                .Where(p => p.ProcessName.Contains("emulator", StringComparison.OrdinalIgnoreCase) ||
+                           p.ProcessName.Contains("qemu", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            diagnostics["Emulator Process Count"] = emulatorProcesses.Count.ToString();
+
+            for (int i = 0; i < emulatorProcesses.Count; i++)
+            {
+                var proc = emulatorProcesses[i];
+                try
+                {
+                    var memoryMB = proc.WorkingSet64 / (1024.0 * 1024.0);
+                    var startTime = proc.StartTime.ToString("yyyy-MM-dd HH:mm:ss");
+                    
+                    diagnostics[$"Emulator Process #{i + 1}"] = 
+                        $"{proc.ProcessName} (PID: {proc.Id}, Started: {startTime}, Memory: {memoryMB:F2} MB)";
+                }
+                catch (Exception ex)
+                {
+                    diagnostics[$"Emulator Process #{i + 1}"] = $"{proc.ProcessName} (PID: {proc.Id}, error: {ex.Message})";
+                    _log.LogDebug(ex, $"Failed to get full info for emulator process {proc.ProcessName}");
+                }
+                finally
+                {
+                    proc.Dispose();
+                }
+            }
+
+            if (emulatorProcesses.Count == 0)
+            {
+                diagnostics["Status"] = "No emulator processes found";
+            }
+
+            _log.LogInformation($"Finished Collect Running Emulator Processes in {stopwatch.Elapsed}");
+            return diagnostics;
+        }
+        catch (Exception ex)
+        {
+            _log.LogError(ex, "Error collecting running emulator processes");
+            diagnostics["Error"] = ex.Message;
+            _log.LogInformation($"Failed Collect Running Emulator Processes in {stopwatch.Elapsed}");
+            return diagnostics;
+        }
+    }
+
+    /// <summary>
+    /// Validates AVD configuration for the specified AVD name.
+    /// </summary>
+    public Dictionary<string, string> ValidateAvdConfig(string avdName)
+    {
+        _log.LogInformation($"Starting Validate AVD Config for '{avdName}'");
+        var stopwatch = Stopwatch.StartNew();
+
+        var diagnostics = new Dictionary<string, string>();
+
+        try
+        {
+            var avdHome = GetAvdHome();
+            var avdPath = Path.Combine(avdHome, $"{avdName}.avd");
+            var configPath = Path.Combine(avdPath, "config.ini");
+
+            diagnostics["AVD Name"] = avdName;
+            diagnostics["AVD Path"] = avdPath;
+            diagnostics["Config Path"] = configPath;
+
+            if (!Directory.Exists(avdPath))
+            {
+                diagnostics["AVD Directory Exists"] = "No - AVD directory not found";
+                diagnostics["Status"] = "Invalid - AVD directory missing";
+                _log.LogWarning($"AVD directory does not exist: {avdPath}");
+                _log.LogInformation($"Finished Validate AVD Config in {stopwatch.Elapsed}");
+                return diagnostics;
+            }
+
+            diagnostics["AVD Directory Exists"] = "Yes";
+
+            if (!File.Exists(configPath))
+            {
+                diagnostics["Config File Exists"] = "No - config.ini not found";
+                diagnostics["Status"] = "Invalid - config.ini missing";
+                _log.LogWarning($"config.ini does not exist: {configPath}");
+                _log.LogInformation($"Finished Validate AVD Config in {stopwatch.Elapsed}");
+                return diagnostics;
+            }
+
+            diagnostics["Config File Exists"] = "Yes";
+
+            // Check if config.ini is readable and has content
+            var configContent = File.ReadAllText(configPath);
+            diagnostics["Config File Size"] = $"{configContent.Length} bytes";
+
+            if (string.IsNullOrWhiteSpace(configContent))
+            {
+                diagnostics["Config File Content"] = "Empty or whitespace only";
+                diagnostics["Status"] = "Invalid - config.ini is empty";
+                _log.LogWarning($"config.ini is empty: {configPath}");
+            }
+            else
+            {
+                diagnostics["Config File Content"] = $"{configContent.Split('\n').Length} lines";
+
+                // Check for essential config keys
+                var hasImageSysDir = configContent.Contains("image.sysdir", StringComparison.OrdinalIgnoreCase);
+                var hasAbi = configContent.Contains("abi.type", StringComparison.OrdinalIgnoreCase) || 
+                            configContent.Contains("hw.cpu.arch", StringComparison.OrdinalIgnoreCase);
+
+                diagnostics["Has System Image Path"] = hasImageSysDir ? "Yes" : "No";
+                diagnostics["Has ABI Info"] = hasAbi ? "Yes" : "No";
+
+                if (hasImageSysDir && hasAbi)
+                {
+                    diagnostics["Status"] = "Valid";
+                }
+                else
+                {
+                    diagnostics["Status"] = "Warning - Missing essential config keys";
+                    _log.LogWarning($"AVD config missing essential keys (imageSysDir: {hasImageSysDir}, ABI: {hasAbi})");
+                }
+            }
+
+            _log.LogInformation($"Finished Validate AVD Config in {stopwatch.Elapsed}");
+            return diagnostics;
+        }
+        catch (Exception ex)
+        {
+            _log.LogError(ex, $"Error validating AVD config for '{avdName}'");
+            diagnostics["Error"] = ex.Message;
+            diagnostics["Status"] = $"Error - {ex.Message}";
+            _log.LogInformation($"Failed Validate AVD Config in {stopwatch.Elapsed}");
+            return diagnostics;
+        }
+    }
+
+    /// <summary>
+    /// Collects all boot failure diagnostics.
+    /// </summary>
+    public void CollectAndLogBootFailureDiagnostics(string avdName)
+    {
+        _log.LogError($"==== Boot Failure Diagnostics for AVD '{avdName}' ====");
+
+        try
+        {
+            // 1. Disk space
+            _log.LogError("--- Disk Space ---");
+            var diskInfo = CollectDiskSpaceDiagnostics();
+            foreach (var kvp in diskInfo)
+            {
+                _log.LogError($"{kvp.Key}: {kvp.Value}");
+            }
+
+            // 2. Memory and processes
+            _log.LogError("--- Memory and Processes ---");
+            var memoryInfo = CollectMemoryAndProcessDiagnostics();
+            foreach (var kvp in memoryInfo)
+            {
+                _log.LogError($"{kvp.Key}: {kvp.Value}");
+            }
+
+            // 3. Running emulator processes
+            _log.LogError("--- Running Emulator Processes ---");
+            var emulatorProcs = CollectRunningEmulatorProcesses();
+            foreach (var kvp in emulatorProcs)
+            {
+                _log.LogError($"{kvp.Key}: {kvp.Value}");
+            }
+
+            // 4. AVD configuration
+            _log.LogError("--- AVD Configuration ---");
+            var avdConfig = ValidateAvdConfig(avdName);
+            foreach (var kvp in avdConfig)
+            {
+                _log.LogError($"{kvp.Key}: {kvp.Value}");
+            }
+
+            _log.LogError("==== End Boot Failure Diagnostics ====");
+        }
+        catch (Exception ex)
+        {
+            _log.LogError(ex, "Error collecting boot failure diagnostics");
+        }
+    }
 }

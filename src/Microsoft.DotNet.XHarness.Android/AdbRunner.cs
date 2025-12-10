@@ -225,74 +225,102 @@ public class AdbRunner
 
     public bool WaitForDevice()
     {
-        // This command waits for ANY kind of device to be available (emulator or real)
-        // Needed because emulators start up asynchronously and take a while.
-        // (Returns instantly if device is ready)
-        // This can fail if _currentDevice is unset if there are multiple devices.
-        _log.LogInformation("Waiting for device to be available (max 5 minutes)");
-        RunAdbCommand(new[] { "wait-for-device" }, TimeSpan.FromMinutes(5))
-            .ThrowIfFailed("Error waiting for Android device/emulator");
+        _log.LogInformation("Starting Wait for Device");
+        var stopwatch = Stopwatch.StartNew();
 
-        // Some users will be installing the emulator and immediately calling xharness, they need to be able to expect the device is ready to load APKs.
-        // Once wait-for-device returns, we'll give it up to TimeToWaitForBootCompletion (default 5 min) for 'adb shell getprop sys.boot_completed'
-        // to be '1' (as opposed to empty) to make subsequent automation happy.
-        var watch = Stopwatch.StartNew();
-        bool bootCompleted = Retry(
-            () =>
+        try
+        {
+            // This command waits for ANY kind of device to be available (emulator or real)
+            // Needed because emulators start up asynchronously and take a while.
+            // (Returns instantly if device is ready)
+            // This can fail if _currentDevice is unset if there are multiple devices.
+            _log.LogDebug("Waiting for device to be available (max 5 minutes)");
+            RunAdbCommand(new[] { "wait-for-device" }, TimeSpan.FromMinutes(5))
+                .ThrowIfFailed("Error waiting for Android device/emulator");
+
+            // Some users will be installing the emulator and immediately calling xharness, they need to be able to expect the device is ready to load APKs.
+            // Once wait-for-device returns, we'll give it up to TimeToWaitForBootCompletion (default 5 min) for 'adb shell getprop sys.boot_completed'
+            // to be '1' (as opposed to empty) to make subsequent automation happy.
+            var bootWatch = Stopwatch.StartNew();
+            bool bootCompleted = Retry(
+                () =>
+                {
+                    string? result = GetDeviceProperty(AdbProperty.BootCompletion, _activeDevice?.DeviceSerial);
+                    _log.LogDebug($"sys.boot_completed = '{result}'");
+                    return result?.StartsWith('1') ?? false;
+                },
+                retryInterval: TimeSpan.FromSeconds(10),
+                retryPeriod: TimeToWaitForBootCompletion);
+
+            if (bootCompleted)
             {
-                string? result = GetDeviceProperty(AdbProperty.BootCompletion, _activeDevice?.DeviceSerial);
-                _log.LogDebug($"sys.boot_completed = '{result}'");
-                return result?.StartsWith('1') ?? false;
-            },
-            retryInterval: TimeSpan.FromSeconds(10),
-            retryPeriod: TimeToWaitForBootCompletion);
-
-        if (bootCompleted)
-        {
-            _log.LogDebug($"Waited {(int)watch.Elapsed.TotalSeconds} seconds for device boot completion");
-            return true;
+                _log.LogDebug($"Waited {(int)bootWatch.Elapsed.TotalSeconds} seconds for device boot completion");
+                _log.LogInformation($"Finished Wait for Device in {stopwatch.Elapsed}");
+                return true;
+            }
+            else
+            {
+                _log.LogError($"Did not detect boot completion variable on device; device may be in a bad state");
+                _log.LogInformation($"Failed Wait for Device in {stopwatch.Elapsed}");
+                return false;
+            }
         }
-        else
+        catch (Exception ex)
         {
-            _log.LogError($"Did not detect boot completion variable on device; device may be in a bad state");
-            return false;
+            _log.LogError(ex, "Error while waiting for device");
+            _log.LogInformation($"Failed Wait for Device in {stopwatch.Elapsed}");
+            throw;
         }
     }
 
     public void StartAdbServer()
     {
-        bool started = Retry(
-            () =>
-            {
-                var result = RunAdbCommand(new[] { "start-server" }, TimeSpan.FromMinutes(1));
-                started = result.Succeeded;
+        _log.LogInformation("Starting Start ADB Server");
+        var stopwatch = Stopwatch.StartNew();
 
-                if (!started)
-                {
-                    _log.LogWarning($"Error starting the ADB server" + Environment.NewLine + result);
-
-                    try
-                    {
-                        KillAdbServer();
-                    }
-                    catch (Exception e)
-                    {
-                        _log.LogError($"Error killing ADB server after a failed start: {e.Message}");
-                    }
-                }
-                else
-                {
-                    _log.LogDebug(result.StandardOutput);
-                }
-
-                return started;
-            },
-            retryInterval: TimeSpan.FromSeconds(10),
-            retryPeriod: TimeSpan.FromMinutes(5));
-
-        if (!started)
+        try
         {
-            throw new AdbFailureException("Failed to start the ADB server");
+            bool started = Retry(
+                () =>
+                {
+                    var result = RunAdbCommand(new[] { "start-server" }, TimeSpan.FromMinutes(1));
+                    started = result.Succeeded;
+
+                    if (!started)
+                    {
+                        _log.LogWarning($"Error starting the ADB server" + Environment.NewLine + result);
+
+                        try
+                        {
+                            KillAdbServer();
+                        }
+                        catch (Exception e)
+                        {
+                            _log.LogError($"Error killing ADB server after a failed start: {e.Message}");
+                        }
+                    }
+                    else
+                    {
+                        _log.LogDebug(result.StandardOutput);
+                    }
+
+                    return started;
+                },
+                retryInterval: TimeSpan.FromSeconds(10),
+                retryPeriod: TimeSpan.FromMinutes(5));
+
+            if (!started)
+            {
+                _log.LogInformation($"Failed Start ADB Server in {stopwatch.Elapsed}");
+                throw new AdbFailureException("Failed to start the ADB server");
+            }
+
+            _log.LogInformation($"Finished Start ADB Server in {stopwatch.Elapsed}");
+        }
+        catch
+        {
+            _log.LogInformation($"Failed Start ADB Server in {stopwatch.Elapsed}");
+            throw;
         }
     }
 
@@ -373,69 +401,82 @@ public class AdbRunner
 
     public int InstallApk(string apkPath)
     {
-        _log.LogInformation($"Attempting to install {apkPath}");
+        _log.LogInformation($"Starting Install APK ({Path.GetFileName(apkPath)})");
+        var stopwatch = Stopwatch.StartNew();
 
-        if (string.IsNullOrEmpty(apkPath))
+        try
         {
-            throw new ArgumentException($"No value supplied for {nameof(apkPath)} ");
-        }
-
-        if (!File.Exists(apkPath))
-        {
-            throw new FileNotFoundException($"Could not find {apkPath}", apkPath);
-        }
-
-        var result = RunAdbCommand(new[] { "install", apkPath });
-
-        // Two possible retry scenarios, theoretically both can happen on the same run:
-
-        // 1. Pipe between ADB server and emulator device is broken; restarting the ADB server helps
-        if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE || result.StandardError.Contains(AdbInstallBrokenPipeError))
-        {
-            _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install");
-            KillAdbServer();
-            StartAdbServer();
-            result = RunAdbCommand(new[] { "install", apkPath });
-        }
-
-        // 2. Installation cache on device is messed up; restarting the device reliably seems to unblock this (unless the device is actually full, if so this will error the same)
-        if (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbDeviceFullInstallFailureMessage))
-        {
-            var firstAttemptResult = result;
-            _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.");
-            RebootAndroidDevice();
-            WaitForDevice();
-            result = RunAdbCommand(new[] { "install", apkPath });
-            
-            // Only log the initial failure output if the retry also failed
-            if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
+            if (string.IsNullOrEmpty(apkPath))
             {
-                _log.LogWarning($"Initial failure output:{Environment.NewLine}{firstAttemptResult}");
+                throw new ArgumentException($"No value supplied for {nameof(apkPath)} ");
             }
-        }
 
-        // 3. Installation timed out or failed with exception; restarting the ADB server, reboot the device and give more time for installation
-        // installer might hang up so we need to clean it up and free memory
-        if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT || (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbInstallException)))
-        {
-            _log.LogWarning($"Installation failed; Will make one attempt to restart ADB server and the device, then retry the install");
-            KillAdbServer();
-            StartAdbServer();
-            RebootAndroidDevice();
-            WaitForDevice();
-            result = RunAdbCommand(new[] { "install", apkPath }, TimeSpan.FromMinutes(10));
-        }
+            if (!File.Exists(apkPath))
+            {
+                throw new FileNotFoundException($"Could not find {apkPath}", apkPath);
+            }
 
-        if (result.ExitCode != 0)
-        {
-            _log.LogError($"Error:{Environment.NewLine}{result}");
-        }
-        else
-        {
-            _log.LogInformation($"Successfully installed {apkPath}");
-        }
+            _log.LogDebug($"Installing APK from: {apkPath}");
+            var result = RunAdbCommand(new[] { "install", apkPath });
 
-        return result.ExitCode;
+            // Two possible retry scenarios, theoretically both can happen on the same run:
+
+            // 1. Pipe between ADB server and emulator device is broken; restarting the ADB server helps
+            if (result.ExitCode == (int)AdbExitCodes.ADB_BROKEN_PIPE || result.StandardError.Contains(AdbInstallBrokenPipeError))
+            {
+                _log.LogWarning($"Hit broken pipe error; Will make one attempt to restart ADB server, then retry the install");
+                KillAdbServer();
+                StartAdbServer();
+                result = RunAdbCommand(new[] { "install", apkPath });
+            }
+
+            // 2. Installation cache on device is messed up; restarting the device reliably seems to unblock this (unless the device is actually full, if so this will error the same)
+            if (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbDeviceFullInstallFailureMessage))
+            {
+                var firstAttemptResult = result;
+                _log.LogWarning($"It seems the package installation cache may be full on the device.  We'll try to reboot it before trying one more time.");
+                RebootAndroidDevice();
+                WaitForDevice();
+                result = RunAdbCommand(new[] { "install", apkPath });
+                
+                // Only log the initial failure output if the retry also failed
+                if (result.ExitCode != (int)AdbExitCodes.SUCCESS)
+                {
+                    _log.LogWarning($"Initial failure output:{Environment.NewLine}{firstAttemptResult}");
+                }
+            }
+
+            // 3. Installation timed out or failed with exception; restarting the ADB server, reboot the device and give more time for installation
+            // installer might hang up so we need to clean it up and free memory
+            if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT || (result.ExitCode != (int)AdbExitCodes.SUCCESS && result.StandardError.Contains(AdbInstallException)))
+            {
+                _log.LogWarning($"Installation failed; Will make one attempt to restart ADB server and the device, then retry the install");
+                KillAdbServer();
+                StartAdbServer();
+                RebootAndroidDevice();
+                WaitForDevice();
+                result = RunAdbCommand(new[] { "install", apkPath }, TimeSpan.FromMinutes(10));
+            }
+
+            if (result.ExitCode != 0)
+            {
+                _log.LogError($"Error:{Environment.NewLine}{result}");
+                _log.LogInformation($"Failed Install APK in {stopwatch.Elapsed}");
+            }
+            else
+            {
+                _log.LogDebug($"Successfully installed {apkPath}");
+                _log.LogInformation($"Finished Install APK in {stopwatch.Elapsed}");
+            }
+
+            return result.ExitCode;
+        }
+        catch (Exception ex)
+        {
+            _log.LogError(ex, "Exception during APK installation");
+            _log.LogInformation($"Failed Install APK in {stopwatch.Elapsed}");
+            throw;
+        }
     }
 
     public int DeleteHeadlessFolder(string testPath)
@@ -955,10 +996,29 @@ public class AdbRunner
             return null;
         }
 
-        // Start emulator
-        if (!emulatorManager.StartEmulator(avd.Name, wipeEmulatorData))
+        // Try to start emulator
+        var emulatorDevice = TryStartAndWaitForEmulator(emulatorManager, avd.Name, wipeEmulatorData);
+        if (emulatorDevice != null)
         {
-            _log.LogError($"Failed to start emulator '{avd.Name}'");
+            return ConfigureEmulatorDevice(emulatorDevice, loadArchitecture, loadApiVersion);
+        }
+
+        // Failed to start - collect diagnostics
+        _log.LogError("Failed to start emulator - collecting diagnostics");
+        var diagnostics = new EmulatorDiagnostics(_log);
+        diagnostics.CollectAndLogBootFailureDiagnostics(avd.Name);
+        return null;
+    }
+
+    private AndroidDevice? TryStartAndWaitForEmulator(
+        EmulatorManager emulatorManager,
+        string avdName,
+        bool wipeData)
+    {
+        // Start emulator
+        if (!emulatorManager.StartEmulator(avdName, wipeData))
+        {
+            _log.LogError($"Failed to start emulator process '{avdName}'");
             return null;
         }
 
@@ -1000,6 +1060,14 @@ public class AdbRunner
             return null;
         }
 
+        return emulatorDevice;
+    }
+
+    private AndroidDevice? ConfigureEmulatorDevice(
+        AndroidDevice emulatorDevice,
+        bool loadArchitecture,
+        bool loadApiVersion)
+    {
         // Load additional properties if requested
         if (loadArchitecture && emulatorDevice.Architecture == null)
         {
@@ -1011,7 +1079,7 @@ public class AdbRunner
             emulatorDevice.ApiVersion = GetDeviceApiVersion();
         }
 
-        _log.LogInformation($"Successfully started and booted emulator '{avd.Name}' on {emulatorDevice.DeviceSerial}");
+        _log.LogInformation($"Successfully started and booted emulator on {emulatorDevice.DeviceSerial}");
         return emulatorDevice;
     }
 
