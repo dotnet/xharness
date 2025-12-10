@@ -49,6 +49,8 @@ public class AdbRunner
 
     private AndroidDevice? _activeDevice = null;
 
+    public string AdbExePath => _absoluteAdbExePath;
+
     public AdbRunner(ILogger log, string adbExePath = "") : this(log, new AdbProcessManager(log), adbExePath) { }
 
     public AdbRunner(ILogger log, IAdbProcessManager processManager, string adbExePath = "")
@@ -865,6 +867,152 @@ public class AdbRunner
         }
 
         return device;
+    }
+
+    /// <summary>
+    /// Gets a device or optionally starts an emulator if no matching device is found.
+    /// </summary>
+    /// <param name="emulatorManager">Emulator manager for starting emulators</param>
+    /// <param name="startEmulatorIfNeeded">If true, will attempt to start an emulator when no device matches</param>
+    /// <param name="wipeEmulatorData">If true, wipes emulator data before starting (default: true)</param>
+    /// <param name="loadArchitecture">Should we also query device's architecture?</param>
+    /// <param name="loadApiVersion">Should we also query device's API version?</param>
+    /// <param name="requiredDeviceId">Specifies a particular device we are looking for</param>
+    /// <param name="requiredApiVersion">Filters devices based on the API (SDK) level/version</param>
+    /// <param name="requiredArchitectures">Allows only devices that support at least one of given architectures</param>
+    /// <param name="requiredInstalledApp">Allows only devices with a given app installed</param>
+    /// <returns>A device that satisfies the requirements, or null if none found/started</returns>
+    public AndroidDevice? GetDeviceOrStartEmulator(
+        EmulatorManager emulatorManager,
+        bool startEmulatorIfNeeded = false,
+        bool wipeEmulatorData = true,
+        bool loadArchitecture = false,
+        bool loadApiVersion = false,
+        string? requiredDeviceId = null,
+        int? requiredApiVersion = null,
+        IEnumerable<string>? requiredArchitectures = null,
+        string? requiredInstalledApp = null)
+    {
+        // First try to find an existing device
+        var device = GetSingleDevice(
+            loadArchitecture,
+            loadApiVersion,
+            requiredDeviceId,
+            requiredApiVersion,
+            requiredArchitectures,
+            requiredInstalledApp);
+
+        if (device != null)
+        {
+            return device;
+        }
+
+        // If no device found and emulator starting is not requested, return null
+        if (!startEmulatorIfNeeded)
+        {
+            _log.LogDebug("No matching device found and emulator starting is not enabled");
+            return null;
+        }
+
+        // If device ID was specified, don't start emulator (user wants specific device)
+        if (!string.IsNullOrEmpty(requiredDeviceId))
+        {
+            _log.LogWarning($"Device ID '{requiredDeviceId}' was specified but not found; not starting emulator");
+            return null;
+        }
+
+        // Emulator starting requires API version
+        if (!requiredApiVersion.HasValue)
+        {
+            _log.LogError("Cannot start emulator without required API version");
+            return null;
+        }
+
+        _log.LogInformation($"No suitable device found; attempting to start emulator with API {requiredApiVersion}");
+
+        // Determine architecture requirement
+        string? requiredArchitecture = null;
+        if (requiredArchitectures?.Any() == true)
+        {
+            // Use first architecture from the list
+            requiredArchitecture = requiredArchitectures.First();
+            _log.LogDebug($"Using architecture '{requiredArchitecture}' from required architectures list");
+        }
+
+        // Stop other emulators first
+        _log.LogInformation("Stopping other running emulators before starting new one");
+        if (!emulatorManager.StopAllEmulators())
+        {
+            _log.LogWarning("Failed to stop all running emulators; proceeding anyway");
+        }
+
+        // Find suitable AVD
+        var avd = emulatorManager.SelectAvdByApiLevel(requiredApiVersion.Value, requiredArchitecture);
+        if (avd == null)
+        {
+            _log.LogError($"No AVD found with API level {requiredApiVersion}" + 
+                (requiredArchitecture != null ? $" and architecture {requiredArchitecture}" : ""));
+            return null;
+        }
+
+        // Start emulator
+        if (!emulatorManager.StartEmulator(avd.Name, wipeEmulatorData))
+        {
+            _log.LogError($"Failed to start emulator '{avd.Name}'");
+            return null;
+        }
+
+        // Wait for emulator to appear in device list and boot
+        var timeout = TimeSpan.FromMinutes(5);
+        _log.LogInformation($"Waiting for emulator to boot (timeout: {timeout.TotalMinutes} minutes)...");
+        
+        // Poll for new emulator device (they start with "emulator-" prefix)
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        AndroidDevice? emulatorDevice = null;
+
+        while (stopwatch.Elapsed < timeout)
+        {
+            var devices = GetDevices();
+            emulatorDevice = devices.FirstOrDefault(d => d.DeviceSerial.StartsWith("emulator-", StringComparison.OrdinalIgnoreCase));
+            
+            if (emulatorDevice != null)
+            {
+                _log.LogDebug($"Emulator device appeared: {emulatorDevice.DeviceSerial}");
+                break;
+            }
+
+            _log.LogDebug("Emulator not yet visible, retrying...");
+            System.Threading.Thread.Sleep(TimeSpan.FromSeconds(5));
+        }
+
+        if (emulatorDevice == null)
+        {
+            _log.LogError($"Emulator did not appear in device list within {timeout}");
+            return null;
+        }
+
+        // Set as active device and wait for boot completion
+        SetActiveDevice(emulatorDevice);
+        
+        if (!WaitForDevice())
+        {
+            _log.LogError("Emulator device did not complete boot");
+            return null;
+        }
+
+        // Load additional properties if requested
+        if (loadArchitecture && emulatorDevice.Architecture == null)
+        {
+            emulatorDevice.Architecture = GetDeviceProperty(AdbProperty.Architecture, emulatorDevice.DeviceSerial);
+        }
+
+        if (loadApiVersion && emulatorDevice.ApiVersion == null)
+        {
+            emulatorDevice.ApiVersion = GetDeviceApiVersion();
+        }
+
+        _log.LogInformation($"Successfully started and booted emulator '{avd.Name}' on {emulatorDevice.DeviceSerial}");
+        return emulatorDevice;
     }
 
     private IReadOnlyCollection<AndroidDevice> GetDevices(params AdbProperty[] propertiesToLoad)
