@@ -13,9 +13,9 @@
   <Import Project="../Storage.props"/>
 
   <PropertyGroup>
-    <AppStorageUrl>$(AssetsBaseUri)/ios/test-app-new/$(TestTarget)</AppStorageUrl>
+    <AppStorageUrl>$(AssetsBaseUri)/ios/test-app-new/$(TestTarget)/$(TestArch)</AppStorageUrl>
     <XHarnessTestAppBundleUrl>$(AppStorageUrl)/$(TestAppBundleName).zip</XHarnessTestAppBundleUrl>
-    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app-new\$(TestTarget)</TestAppDestinationDir>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app-new\$(TestTarget)\$(TestArch)</TestAppDestinationDir>
   </PropertyGroup>
 
   <Target Name="Build" Returns="@(XHarnessAppFoldersToTest)">
@@ -23,6 +23,10 @@
       <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle" />
     </DownloadFile>
 
+    <!--
+      The test apps have .zip extension but are actually tar.gz files. When updating the apps, make sure to compress them using tar.
+      E.g.: COPYFILE_DISABLE=1 tar - -no-xattrs - -no-acls - -no-mac-metadata -czf <TestAppBundleName>.zip <TestAppBundleName> (remove spaces - -)
+    -->
     <Message Text="Downloaded $(TestAppBundleName) from @(ZippedAppBundle). Extracting..." Importance="High" />
     <Exec Command="tar -xzf @(ZippedAppBundle) -C $(TestAppDestinationDir)" />
     <Message Text="Extracted to $(TestAppDestinationDir)" Importance="High" />
