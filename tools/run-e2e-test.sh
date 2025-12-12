@@ -93,5 +93,4 @@ export SYSTEM_TEAMPROJECT="dnceng"
 export SYSTEM_ACCESSTOKEN=""
 
 highlight "> Starting tests (logging to XHarness.binlog)"
-# "$repo_root/build.sh" -configuration Debug -restore -test -projects "$test_project" /p:RestoreUsingNugetTargets=false /bl:./XHarness.binlog
-"$repo_root/build.sh" -configuration Debug -restore -test -projects "$test_project" /v:d /p:RestoreUsingNugetTargets=false /bl:./XHarness.binlog /warnAsError:false
+"$repo_root/build.sh" -configuration Debug -restore -test -projects "$test_project" /p:RestoreUsingNugetTargets=false /bl:./XHarness.binlog
