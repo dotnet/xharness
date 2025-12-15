@@ -124,6 +124,9 @@ Arguments:
 
             logger.LogDebug($"Working with {device.DeviceSerial} (API {device.ApiVersion})");
 
+            // TMP: set verifier_verify_adb_installs to 1
+            runner.RunAdbCommand(["shell", "settings", "put", "global", "verifier_verify_adb_installs", "0"]);
+            runner.RunAdbCommand(["shell", "settings", "put", "global", "package_verifier_enable", "0"]);
             runner.CheckPackageVerificationSettings();
 
             // If anything changed about the app, Install will fail; uninstall it first.
