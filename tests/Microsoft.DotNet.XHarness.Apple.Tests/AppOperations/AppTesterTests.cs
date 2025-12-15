@@ -129,6 +129,8 @@ public class AppTesterTests : AppRunTestBase
                 x => x.ExecuteCommandAsync(
                    It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                    _mainLog.Object,
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
                    It.IsAny<Dictionary<string, string>>(),
                    It.IsAny<int>(),
