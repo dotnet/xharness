@@ -32,14 +32,14 @@
           set -ex
           echo "=== Test: Auto-start emulator without --reset-emulator ==="
           
-          # XHarness will auto-start an emulator with API 30 since no device is available
+          # XHarness will auto-start an emulator with API 31 since no device is available
           xharness android test \
             --app="$app" \
             --package-name="$package_name" \
             --instrumentation="$instrumentation_name" \
             --output-directory="$output_directory" \
             --device-arch=x86 \
-            --api-version=30 \
+            --api-version=31 \
             --verbosity=Debug
           
           exit_code=$?

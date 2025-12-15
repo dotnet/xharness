@@ -39,7 +39,7 @@
             --instrumentation="$instrumentation_name" \
             --output-directory="$output_directory" \
             --device-arch=x86 \
-            --api-version=30 \
+            --api-version=31 \
             --verbosity=Debug
           
           exit_code=$?

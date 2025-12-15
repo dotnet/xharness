@@ -24,22 +24,22 @@
 
     <ItemGroup>
       <XHarnessApkToTest Include="@(DownloadedX86Apk)">
-        <TestName>API-level-matching-30</TestName>
+        <TestName>API-level-matching-31</TestName>
         <AndroidPackageName>$(TestPackageName)</AndroidPackageName>
         <AndroidInstrumentationName>$(TestInstrumentationName)</AndroidInstrumentationName>
         <WorkItemTimeout>00:15:00</WorkItemTimeout>
         <CustomCommands><![CDATA[
           set -ex
-          echo "=== Test: API level matching (API 30) ==="
+          echo "=== Test: API level matching (API 31) ==="
           
-          # XHarness should select/start an emulator with API level 30
+          # XHarness should select/start an emulator with API level 31
           xharness android test \
             --app="$app" \
             --package-name="$package_name" \
             --instrumentation="$instrumentation_name" \
             --output-directory="$output_directory" \
             --device-arch=x86 \
-            --api-version=30 \
+            --api-version=31 \
             --verbosity=Debug
           
           exit_code=$?
