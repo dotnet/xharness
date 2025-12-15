@@ -690,10 +690,14 @@ public class AdbRunner
     /// <summary>
     /// Gets all attached devices and their properties.
     /// </summary>
-    public IReadOnlyCollection<AndroidDevice> GetDevices() => GetDevices(
-        AdbProperty.Architecture,
-        AdbProperty.ApiVersion,
-        AdbProperty.SupportedArchitectures);
+    public IReadOnlyCollection<AndroidDevice> GetDevices(int retries = 9, int retryIntervalSeconds = 10)
+        => GetDevices(
+            propertiesToLoad: [
+                AdbProperty.Architecture,
+                AdbProperty.ApiVersion,
+                AdbProperty.SupportedArchitectures ],
+            retries,
+            retryIntervalSeconds);
 
     /// <summary>
     /// Gets all connected devices that satisfy the requirements.
@@ -935,6 +939,7 @@ public class AdbRunner
         string? requiredInstalledApp = null)
     {
         // First try to find an existing device
+        // TODO: why does this attempt 10 times before failing? is there a chance the state of the machine will change in that time?
         var device = GetSingleDevice(
             loadArchitecture,
             loadApiVersion,
@@ -1083,7 +1088,7 @@ public class AdbRunner
         return emulatorDevice;
     }
 
-    private IReadOnlyCollection<AndroidDevice> GetDevices(params AdbProperty[] propertiesToLoad)
+    private IReadOnlyCollection<AndroidDevice> GetDevices(AdbProperty[] propertiesToLoad, int retries = 9, int retryIntervalSeconds = 10)
     {
         string[] standardOutputLines = Array.Empty<string>();
 
@@ -1112,8 +1117,8 @@ public class AdbRunner
 
                 return false;
             },
-            retryInterval: TimeSpan.FromSeconds(10),
-            retryPeriod: TimeSpan.FromSeconds(90));
+            retryInterval: TimeSpan.FromSeconds(retryIntervalSeconds),
+            retryPeriod: TimeSpan.FromSeconds(retries * retryIntervalSeconds));
 
         result.ThrowIfFailed("Failed to enumerate attached devices");
 

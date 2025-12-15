@@ -252,7 +252,7 @@ public class EmulatorManager
 
         List<string>? GetRunningEmulators()
         {
-            var devices = _adbRunner.GetDevices();
+            var devices = _adbRunner.GetDevices(retries: 0);
             return devices
                 .Where(d => d.DeviceSerial.StartsWith("emulator-", StringComparison.OrdinalIgnoreCase))
                 .Select(d => $"{d.DeviceSerial}\tdevice")
@@ -299,7 +299,7 @@ public class EmulatorManager
             
             try
             {
-                var devices = _adbRunner.GetDevices();
+                var devices = _adbRunner.GetDevices(retries: 0);
                 var remainingEmulators = devices
                     .Where(d => d.DeviceSerial.StartsWith("emulator-", StringComparison.OrdinalIgnoreCase))
                     .Select(d => $"{d.DeviceSerial}\tdevice")
