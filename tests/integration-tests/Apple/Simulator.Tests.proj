@@ -1,32 +1,45 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
+  <!-- Detect architecture from Helix target queue name -->
+  <PropertyGroup>
+    <IsArm64Queue>$(HelixTargetQueue.Contains('arm64'))</IsArm64Queue>
+    <IsAmd64Queue>$(HelixTargetQueue.Contains('amd64'))</IsAmd64Queue>
+    <TestArch Condition="'$(IsArm64Queue)' == 'true'">arm64</TestArch>
+    <TestArch Condition="'$(IsAmd64Queue)' == 'true'">x64</TestArch>
+  </PropertyGroup>
+
+  <Target Name="ValidateArchitecture" BeforeTargets="Build">
+    <Error Condition="'$(HelixTargetQueue)' != '' and '$(IsArm64Queue)' != 'true' and '$(IsAmd64Queue)' != 'true'"
+           Text="Unable to detect architecture from HelixTargetQueue '$(HelixTargetQueue)'. Queue name must contain 'arm64' or 'amd64'." />
+  </Target>
+
   <ItemGroup>
     <HelixTargetQueue Include="osx.15.amd64.open"/>
-    <HelixTargetQueue Include="osx.14.arm64.open"/>
+    <HelixTargetQueue Include="osx.26.arm64.open"/>
 
     <!-- apple test / ios-simulator-64 -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=System.Numerics.Vectors.Tests.app</AdditionalProperties>
+      <AdditionalProperties>TestTarget=ios-simulator-64;TestArch=$(TestArch);TestAppBundleName=System.Numerics.Vectors.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple run / ios-simlator-64 -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
+      <AdditionalProperties>TestTarget=ios-simulator-64;TestArch=$(TestArch);TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple test / maccatalyst -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.Collections.NonGeneric.Tests.app</AdditionalProperties>
+      <AdditionalProperties>TestTarget=maccatalyst;TestArch=$(TestArch);TestAppBundleName=System.Collections.NonGeneric.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple run / maccatalyst -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
+      <AdditionalProperties>TestTarget=maccatalyst;TestArch=$(TestArch);TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple test / tvos-simulator -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=tvos-simulator;TestAppBundleName=Microsoft.Extensions.Configuration.Ini.Tests.app</AdditionalProperties>
+      <AdditionalProperties>TestTarget=tvos-simulator;TestArch=$(TestArch);TestAppBundleName=Microsoft.Extensions.Configuration.Ini.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
   </ItemGroup>
 

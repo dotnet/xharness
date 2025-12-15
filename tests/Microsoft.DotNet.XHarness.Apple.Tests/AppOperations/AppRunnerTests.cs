@@ -69,6 +69,8 @@ public class AppRunnerTests : AppRunTestBase
                 x => x.ExecuteCommandAsync(
                    It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                    It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
                    It.IsAny<Dictionary<string, string>>(),
                    It.IsAny<int>(),
@@ -431,11 +433,13 @@ public class AppRunnerTests : AppRunTestBase
                 x => x.ExecuteCommandAsync(
                    It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                    It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
                    It.IsAny<Dictionary<string, string>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()))
-            .Callback((MlaunchArguments args, ILog log, TimeSpan timeout, Dictionary<string, string> env, int verbosity, CancellationToken? ct) =>
+            .Callback((MlaunchArguments args, ILog log, ILog stdoutLog, ILog stderrLog, TimeSpan timeout, Dictionary<string, string> env, int verbosity, CancellationToken? ct) =>
             {
                 appLog = log;
                 appLaunchedTask.SetResult();
@@ -484,6 +488,8 @@ public class AppRunnerTests : AppRunTestBase
             .Verify(
                 x => x.ExecuteCommandAsync(
                    It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
                    It.IsAny<Dictionary<string, string>>(),
@@ -534,11 +540,13 @@ public class AppRunnerTests : AppRunTestBase
                 x => x.ExecuteCommandAsync(
                    It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                    It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
                    It.IsAny<Dictionary<string, string>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()))
-            .Callback((MlaunchArguments args, ILog log, TimeSpan timeout, Dictionary<string, string> env, int verbosity, CancellationToken? ct) =>
+            .Callback((MlaunchArguments args, ILog log, ILog stdoutLog, ILog stderrLog, TimeSpan timeout, Dictionary<string, string> env, int verbosity, CancellationToken? ct) =>
             {
                 appLaunchedTask.SetResult();
             })
@@ -588,6 +596,8 @@ public class AppRunnerTests : AppRunTestBase
             .Verify(
                 x => x.ExecuteCommandAsync(
                    It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
                    It.IsAny<Dictionary<string, string>>(),
