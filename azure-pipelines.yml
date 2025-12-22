@@ -1,8 +1,6 @@
 variables:
 - template: /eng/common-variables.yml@self
 - template: /eng/common/templates-official/variables/pool-providers.yml@self
-- name: Codeql.Language
-  value: csharp,actions,powershell
 
 # CI triggers
 trigger:
@@ -26,7 +24,7 @@ extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
     settings:
-        networkIsolationPolicy: Permissive,CFSClean
+        networkIsolationPolicy: Permissive,CFSClean,CFSClean2
     sdl:
       tsa:
         enabled: true
