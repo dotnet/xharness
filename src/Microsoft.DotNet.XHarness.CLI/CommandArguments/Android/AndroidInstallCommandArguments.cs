@@ -18,6 +18,7 @@ internal class AndroidInstallCommandArguments : XHarnessCommandArguments, IAndro
     public DeviceIdArgument DeviceId { get; } = new();
     public DeviceArchitectureArgument DeviceArchitecture { get; } = new();
     public ApiVersionArgument ApiVersion { get; } = new();
+    public ResetEmulatorArgument ResetEmulator { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
@@ -29,6 +30,7 @@ internal class AndroidInstallCommandArguments : XHarnessCommandArguments, IAndro
         LaunchTimeout,
         DeviceArchitecture,
         ApiVersion,
+        ResetEmulator,
     };
 
     public override void Validate()

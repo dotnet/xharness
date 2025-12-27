@@ -37,6 +37,7 @@ Arguments:
         }
 
         var runner = new AdbRunner(logger);
+        var emulatorManager = new EmulatorManager(logger, runner);
 
         return InvokeHelper(
             logger: logger,
@@ -46,7 +47,9 @@ Arguments:
             deviceId: Arguments.DeviceId,
             apiVersion: Arguments.ApiVersion.Value,
             bootTimeoutSeconds: Arguments.LaunchTimeout,
+            resetEmulator: Arguments.ResetEmulator,
             runner: runner,
+            emulatorManager: emulatorManager,
             DiagnosticsData);
     }
 
@@ -58,7 +61,9 @@ Arguments:
         string? deviceId,
         int? apiVersion,
         TimeSpan bootTimeoutSeconds,
+        bool resetEmulator,
         AdbRunner runner,
+        EmulatorManager emulatorManager,
         IDiagnosticsData diagnosticsData)
     {
         using (logger.BeginScope("Initialization and setup of APK on device"))
@@ -91,12 +96,16 @@ Arguments:
             // Make sure the adb server is started
             runner.StartAdbServer();
 
-            AndroidDevice? device = runner.GetDevice(
+            // Always attempt to find or start emulator (matching iOS behavior)
+            var device = runner.GetDeviceOrStartEmulator(
+                emulatorManager: emulatorManager,
+                startEmulatorIfNeeded: true,
+                wipeEmulatorData: resetEmulator,
                 loadArchitecture: true,
                 loadApiVersion: true,
-                deviceId,
-                apiVersion,
-                requiredArchitectures);
+                requiredDeviceId: deviceId,
+                requiredApiVersion: apiVersion,
+                requiredArchitectures: requiredArchitectures);
 
             if (device is null)
             {
@@ -115,6 +124,9 @@ Arguments:
 
             logger.LogDebug($"Working with {device.DeviceSerial} (API {device.ApiVersion})");
 
+            // TMP: set verifier_verify_adb_installs to 1
+            runner.RunAdbCommand(["shell", "settings", "put", "global", "verifier_verify_adb_installs", "0"]);
+            runner.RunAdbCommand(["shell", "settings", "put", "global", "package_verifier_enable", "0"]);
             runner.CheckPackageVerificationSettings();
 
             // If anything changed about the app, Install will fail; uninstall it first.
