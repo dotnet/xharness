@@ -18,9 +18,7 @@ using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 using OpenQA.Selenium.DevTools;
 using OpenQA.Selenium.Support.UI;
-using OpenQA.Selenium.Firefox;
 
-using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
