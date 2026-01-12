@@ -5,21 +5,20 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net.WebSockets;
 using System.IO;
+using System.Net.WebSockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-
-using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Wasm;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
-
 using OpenQA.Selenium;
+using OpenQA.Selenium.DevTools;
 using OpenQA.Selenium.Support.UI;
+using OpenQA.Selenium.Firefox;
 
 using SeleniumLogLevel = OpenQA.Selenium.LogLevel;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
@@ -71,7 +70,25 @@ internal class WasmBrowserTestRunner
 
             string testUrl = BuildUrl(serverURLs);
 
-            var seleniumLogMessageTask = Task.Run(() => RunSeleniumLogMessagePump(driver, cts.Token), cts.Token);
+            Task seleniumLogMessageTask;
+            var devTools = driver as IDevTools;
+            // firefox does not support devtools protocol, we use websocket to push console logs from Firefox
+            if (devTools != null)
+            {
+                seleniumLogMessageTask = new TaskCompletionSource<bool>().Task; // never completes
+                var session = devTools.CreateDevToolsSession();
+                await session.Console.Enable();
+                session.Console.MessageAdded += Console_MessageAdded;
+
+                void Console_MessageAdded(object? sender, OpenQA.Selenium.DevTools.Console.MessageAddedEventArgs e)
+                {
+                    var text = e.Message.Text;
+                    var match = s_consoleLogRegex.Match(Regex.Unescape(text));
+                    string msg = match.Success ? match.Groups[1].Value : text;
+                    _messagesProcessor.Invoke(msg);
+                }
+            }
+
             cts.CancelAfter(_arguments.Timeout);
 
             _logger.LogDebug($"Opening in browser: {testUrl}");
@@ -82,7 +99,6 @@ internal class WasmBrowserTestRunner
             {
                     wasmExitReceivedTcs.Task,
                     consolePumpTcs.Task,
-                    seleniumLogMessageTask,
                     logProcessorTask,
                     Task.Delay(_arguments.Timeout)
             };
@@ -201,54 +217,6 @@ internal class WasmBrowserTestRunner
         finally
         {
             _logger.LogDebug($"Reading console messages from websocket stopped");
-        }
-    }
-
-    // This listens for any `console.log` messages.
-    // Since we pipe messages from managed code, and console.* to the websocket,
-    // this wouldn't normally get much. But listening on this to catch any messages
-    // that we miss piping to the websocket.
-    private void RunSeleniumLogMessagePump(IWebDriver driver, CancellationToken token)
-    {
-        try
-        {
-            ILogs logs = driver.Manage().Logs;
-            while (!token.IsCancellationRequested)
-            {
-                foreach (var logType in logs.AvailableLogTypes)
-                {
-                    foreach (var logEntry in logs.GetLog(logType))
-                    {
-                        if (logEntry.Level == SeleniumLogLevel.Severe)
-                        {
-                            // These are errors from the browser, some of which might be
-                            // thrown as part of tests. So, we can't differentiate when
-                            // it is an error that we can ignore, vs one that should stop
-                            // the execution completely.
-                            //
-                            // Note: these could be received out-of-order as compared to
-                            // console messages via the websocket.
-                            //
-                            // (see commit message for more info)
-                            _logger.LogError($"[out of order message from the {logType}]: {logEntry.Message}");
-                            continue;
-                        }
-
-                        var match = s_consoleLogRegex.Match(Regex.Unescape(logEntry.Message));
-                        string msg = match.Success ? match.Groups[1].Value : logEntry.Message;
-                        _messagesProcessor.Invoke(msg);
-                    }
-                }
-            }
-        }
-        catch (WebDriverException wde) when (wde.Message.Contains("timed out after"))
-        {
-            _logger.LogDebug(wde.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug($"Failed trying to read log messages via selenium: {ex}");
-            throw;
         }
     }
 
