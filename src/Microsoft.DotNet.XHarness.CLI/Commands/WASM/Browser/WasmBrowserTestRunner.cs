@@ -70,12 +70,10 @@ internal class WasmBrowserTestRunner
 
             string testUrl = BuildUrl(serverURLs);
 
-            Task seleniumLogMessageTask;
             var devTools = driver as IDevTools;
             // firefox does not support devtools protocol, we use websocket to push console logs from Firefox
             if (devTools != null)
             {
-                seleniumLogMessageTask = new TaskCompletionSource<bool>().Task; // never completes
                 var session = devTools.CreateDevToolsSession();
                 await session.Console.Enable();
                 session.Console.MessageAdded += Console_MessageAdded;
