@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
@@ -40,9 +41,16 @@ public class WebServer
                 ? new string[] { "http://127.0.0.1:0", "https://127.0.0.1:0" }
                 : new string[] { "http://127.0.0.1:0" };
 
-        var builder = new WebHostBuilder()
-            .UseKestrel()
-            .UseStartup<TestWebServerStartup>()
+
+        var builder = new HostBuilder()
+            .ConfigureWebHost(webHostBuilder =>
+            {
+                webHostBuilder
+                    .UseContentRoot(Directory.GetCurrentDirectory())
+                    .UseStartup<TestWebServerStartup>()
+                    .UseKestrel()
+                    .UseUrls(urls);
+            })
             .ConfigureLogging(logging =>
             {
                 logging.AddConsole().AddFilter(null, LogLevel.Warning);
@@ -60,14 +68,14 @@ public class WebServer
                         }));
                 }
                 services.AddRouting();
-                services.AddSingleton<ILogger>(logger);
+                services.AddLogging();
+                services.AddSingleton(logger);
                 services.Configure<TestWebServerOptions>(ctx.Configuration);
                 services.Configure<TestWebServerOptions>(options =>
                 {
                     webServerOptions.CopyTo(options);
                 });
-            })
-            .UseUrls(urls);
+            });
 
         if (webServerOptions.ContentRoot != null)
         {
@@ -78,23 +86,10 @@ public class WebServer
 
         await host.StartAsync(token);
 
-        var ipAddress = host.ServerFeatures
-            .Get<IServerAddressesFeature>()?
-            .Addresses
-            .Where(a => a.StartsWith("http:"))
-            .Select(a => new Uri(a))
-            .Select(uri => $"{uri.Host}:{uri.Port}")
-            .FirstOrDefault();
-
-        var ipAddressSecure = webServerOptions.UseHttps
-            ? host.ServerFeatures
-                .Get<IServerAddressesFeature>()?
-                .Addresses
-                .Where(a => a.StartsWith("https:"))
-                .Select(a => new Uri(a))
-                .Select(uri => $"{uri.Host}:{uri.Port}")
-                .FirstOrDefault()
-            : null;
+        var server = host.Services.GetService<IServer>();
+        var addressFeature = server?.Features.Get<IServerAddressesFeature>();
+        var ipAddress = addressFeature?.Addresses.FirstOrDefault(a => a.StartsWith("http://", StringComparison.OrdinalIgnoreCase));
+        var ipAddressSecure = addressFeature?.Addresses.FirstOrDefault(a => a.StartsWith("https://", StringComparison.OrdinalIgnoreCase));
 
         if (ipAddress == null || (webServerOptions.UseHttps && ipAddressSecure == null))
         {
@@ -107,20 +102,20 @@ public class WebServer
     private class TestWebServerStartup
     {
         private readonly IWebHostEnvironment _hostingEnvironment;
-        private readonly ILogger _logger;
 
-        public TestWebServerStartup(IWebHostEnvironment hostingEnvironment, ILogger logger)
+        public TestWebServerStartup(IWebHostEnvironment hostingEnvironment)
         {
             _hostingEnvironment = hostingEnvironment;
-            _logger = logger;
         }
 
         public void Configure(IApplicationBuilder app, IOptionsMonitor<TestWebServerOptions> optionsAccessor)
         {
+            var logger = app.ApplicationServices.GetRequiredService<ILogger>();
             var provider = new FileExtensionContentTypeProvider();
             provider.Mappings[".wasm"] = "application/wasm";
             provider.Mappings[".cjs"] = "text/javascript";
             provider.Mappings[".mjs"] = "text/javascript";
+
 
             foreach (var extn in new string[] { ".dll", ".pdb", ".dat", ".blat", ".webcil" })
             {
@@ -186,7 +181,7 @@ public class WebServer
 
                         await using var fileStream = File.Create(xmlResultsFilePath);
                         await context.Request.BodyReader.CopyToAsync(fileStream);
-                        _logger.LogInformation($"Stored {xmlResultsFilePath} results {fileStream.Position} bytes");
+                        logger.LogInformation($"Stored {xmlResultsFilePath} results {fileStream.Position} bytes");
                     });
                 });
             }
@@ -194,7 +189,7 @@ public class WebServer
             foreach (var middleware in options.EchoServerMiddlewares)
             {
                 app.UseMiddleware(middleware);
-                _logger.LogInformation($"Loaded {middleware.FullName} middleware");
+                logger.LogInformation($"Loaded {middleware.FullName} middleware");
             }
         }
     }
