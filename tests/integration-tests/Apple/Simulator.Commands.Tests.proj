@@ -5,7 +5,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <iOSSimulatorVersionUnderTest>16.4</iOSSimulatorVersionUnderTest>
+    <iOSSimulatorVersionUnderTest>18.0</iOSSimulatorVersionUnderTest>
   </PropertyGroup>
 
   <PropertyGroup>
