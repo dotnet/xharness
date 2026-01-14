@@ -88,8 +88,18 @@ public class WebServer
 
         var server = host.Services.GetService<IServer>();
         var addressFeature = server?.Features.Get<IServerAddressesFeature>();
-        var ipAddress = addressFeature?.Addresses.FirstOrDefault(a => a.StartsWith("http://", StringComparison.OrdinalIgnoreCase));
-        var ipAddressSecure = addressFeature?.Addresses.FirstOrDefault(a => a.StartsWith("https://", StringComparison.OrdinalIgnoreCase));
+        var ipAddress = addressFeature?
+                .Addresses
+                .Where(a => a.StartsWith("http:"))
+                .Select(a => new Uri(a))
+                .Select(uri => $"{uri.Host}:{uri.Port}")
+                .FirstOrDefault();
+        var ipAddressSecure = addressFeature?
+                .Addresses
+                .Where(a => a.StartsWith("https:"))
+                .Select(a => new Uri(a))
+                .Select(uri => $"{uri.Host}:{uri.Port}")
+                .FirstOrDefault();
 
         if (ipAddress == null || (webServerOptions.UseHttps && ipAddressSecure == null))
         {
