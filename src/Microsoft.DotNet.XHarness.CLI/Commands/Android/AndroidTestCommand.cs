@@ -38,6 +38,7 @@ Arguments:
     protected override ExitCode InvokeCommand(ILogger logger)
     {
         var runner = new AdbRunner(logger);
+        var emulatorManager = new EmulatorManager(logger, runner);
 
         var exitCode = AndroidInstallCommand.InvokeHelper(
             logger: logger,
@@ -47,7 +48,9 @@ Arguments:
             deviceId: Arguments.DeviceId.Value,
             apiVersion: Arguments.ApiVersion.Value,
             bootTimeoutSeconds: Arguments.LaunchTimeout,
+            resetEmulator: Arguments.ResetEmulator,
             runner,
+            emulatorManager,
             DiagnosticsData);
 
         if (Arguments.Wifi != WifiStatus.Unknown)
@@ -75,6 +78,13 @@ Arguments:
         finally
         {
             runner.UninstallApk(Arguments.PackageName);
+            
+            // Clean up emulator if --reset-emulator was used (matches iOS behavior)
+            if (Arguments.ResetEmulator)
+            {
+                logger.LogInformation("Cleaning up emulators after test run");
+                emulatorManager.StopAllEmulators();
+            }
         }
 
         return exitCode;
