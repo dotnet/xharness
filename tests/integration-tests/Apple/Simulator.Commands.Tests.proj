@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.15.amd64.open"/>
+    <HelixTargetQueue Include="osx.13.amd64.open"/>
   </ItemGroup>
 
   <PropertyGroup>
-    <iOSSimulatorVersionUnderTest>18.0</iOSSimulatorVersionUnderTest>
+    <iOSSimulatorVersionUnderTest>16.4</iOSSimulatorVersionUnderTest>
   </PropertyGroup>
 
   <PropertyGroup>
