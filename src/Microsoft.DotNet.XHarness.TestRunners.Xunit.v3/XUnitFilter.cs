@@ -7,16 +7,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
-#if USE_XUNIT_V3
-using Xunit.v3;
-#else
-using Xunit.Abstractions;
-#endif
+using Xunit.Sdk;
 
 #nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
-internal class XUnitFilter
+public class XUnitFilter
 {
     public string? AssemblyName { get; private set; }
     public string? SelectorName { get; private set; }
@@ -112,7 +108,7 @@ internal class XUnitFilter
         };
     }
 
-    private bool ApplyTraitFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
+    private bool ApplyTraitFilter(ITestCaseDiscovered testCase, Func<bool, bool>? reportFilteredTest = null)
     {
         Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
 
@@ -143,7 +139,7 @@ internal class XUnitFilter
         return log(!Exclude);
     }
 
-    private bool ApplyTypeNameFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
+    private bool ApplyTypeNameFilter(ITestCaseDiscovered testCase, Func<bool, bool>? reportFilteredTest = null)
     {
         Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
         var testClassName = testCase.GetTestClass();
@@ -158,10 +154,10 @@ internal class XUnitFilter
         return log(!Exclude);
     }
 
-    private bool ApplySingleFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
+    private bool ApplySingleFilter(ITestCaseDiscovered testCase, Func<bool, bool>? reportFilteredTest = null)
     {
         Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
-        if (string.Equals(testCase.DisplayName, SelectorValue, StringComparison.InvariantCulture))
+        if (string.Equals(testCase.TestCaseDisplayName, SelectorValue, StringComparison.InvariantCulture))
         {
             // if there is a match, return the exclude value
             return log(Exclude);
@@ -170,7 +166,7 @@ internal class XUnitFilter
         return log(!Exclude);
     }
 
-    private bool ApplyNamespaceFilter(ITestCase testCase, Func<bool, bool>? reportFilteredTest = null)
+    private bool ApplyNamespaceFilter(ITestCaseDiscovered testCase, Func<bool, bool>? reportFilteredTest = null)
     {
         Func<bool, bool> log = (result) => reportFilteredTest?.Invoke(result) ?? result;
         var testClassNamespace = testCase.GetNamespace();
@@ -213,7 +209,7 @@ internal class XUnitFilter
         return log(!Exclude);
     }
 
-    public bool IsExcluded(ITestCase testCase, Action<string>? log = null)
+    public bool IsExcluded(ITestCaseDiscovered testCase, Action<string>? log = null)
     {
         Func<bool, bool>? reportFilteredTest = null;
         if (log != null)
@@ -231,7 +227,7 @@ internal class XUnitFilter
         };
     }
 
-    private bool ReportFilteredTest(ITestCase testCase, bool excluded, Action<string>? log = null)
+    private bool ReportFilteredTest(ITestCaseDiscovered testCase, bool excluded, Action<string>? log = null)
     {
         const string includedText = "Included";
         const string excludedText = "Excluded";
@@ -244,7 +240,7 @@ internal class XUnitFilter
         var selector = FilterType == XUnitFilterType.Trait ?
             $"'{SelectorName}':'{SelectorValue}'" : $"'{SelectorValue}'";
 
-        log($"[FILTER] {(excluded ? excludedText : includedText)} test (filtered by {FilterType}; {selector}): {testCase.DisplayName}");
+        log($"[FILTER] {(excluded ? excludedText : includedText)} test (filtered by {FilterType}; {selector}): {testCase.TestCaseDisplayName}");
         return excluded;
     }
 

@@ -5,17 +5,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-#if USE_XUNIT_V3
-using Xunit.v3;
-#else
-using Xunit.Abstractions;
-#endif
+using System.Linq;
+using Xunit.Sdk;
 
 #nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
 /// <summary>
-/// Useful extensions that make working with the ITestCase interface nicer within the runner.
+/// Useful extensions that make working with the ITestCaseDiscovered interface nicer within the runner.
 /// </summary>
 public static class TestCaseExtensions
 {
@@ -24,10 +21,10 @@ public static class TestCaseExtensions
     /// </summary>
     /// <param name="testCase">The test case under test.</param>
     /// <returns>true if the test case has traits, false otherwise.</returns>
-    public static bool HasTraits(this ITestCase testCase) =>
+    public static bool HasTraits(this ITestCaseDiscovered testCase) =>
         testCase.Traits != null && testCase.Traits.Count > 0;
 
-    public static bool TryGetTrait(this ITestCase testCase,
+    public static bool TryGetTrait(this ITestCaseDiscovered testCase,
                                    string trait,
                                    [NotNullWhen(true)] out List<string>? values,
                                    StringComparison comparer = StringComparison.InvariantCultureIgnoreCase)
@@ -45,7 +42,8 @@ public static class TestCaseExtensions
         {
             if (trait.Equals(t, comparer))
             {
-                return testCase.Traits.TryGetValue(t, out values);
+                values = testCase.Traits[t].ToList();
+                return true;
             }
         }
 
@@ -58,10 +56,10 @@ public static class TestCaseExtensions
     /// </summary>
     /// <param name="testCase">TestCase whose class we want to retrieve.</param>
     /// <returns>The name of the class that owns the test.</returns>
-    public static string? GetTestClass(this ITestCase testCase) =>
-        testCase.TestMethod?.TestClass?.Class?.Name?.Trim();
+    public static string? GetTestClass(this ITestCaseDiscovered testCase) =>
+        testCase.TestClassName?.Trim();
 
-    public static string? GetNamespace(this ITestCase testCase)
+    public static string? GetNamespace(this ITestCaseDiscovered testCase)
     {
         var testClassName = testCase.GetTestClass();
         if (testClassName == null)
