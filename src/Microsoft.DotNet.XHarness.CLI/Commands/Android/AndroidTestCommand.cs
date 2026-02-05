@@ -45,7 +45,7 @@ Arguments:
             appPackagePath: Arguments.AppPackagePath,
             requestedArchitectures: Arguments.DeviceArchitecture.Value.ToList(),
             deviceId: Arguments.DeviceId.Value,
-            apiVersion: Arguments.ApiVersion.Value,
+            apiVersion: Arguments.ApiVersion.FirstApiVersion,
             bootTimeoutSeconds: Arguments.LaunchTimeout,
             runner,
             DiagnosticsData);
