@@ -57,7 +57,8 @@ extends:
           enablePublishBuildArtifacts: true
           enableMicrobuild: true
           enablePublishUsingPipelines: true
-          enablePublishBuildAssets: true
+          ${{ if ne(variables['Build.Reason'], 'Schedule') }}:
+            enablePublishBuildAssets: true
           helixRepo: dotnet/xharness
           jobs:
           - job: Windows_NT
