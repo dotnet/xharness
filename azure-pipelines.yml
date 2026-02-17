@@ -57,7 +57,8 @@ extends:
           enablePublishBuildArtifacts: true
           enableMicrobuild: true
           enablePublishUsingPipelines: true
-          enablePublishBuildAssets: true
+          ${{ if ne(variables['Build.Reason'], 'Schedule') }}:
+            enablePublishBuildAssets: true
           helixRepo: dotnet/xharness
           jobs:
           - job: Windows_NT
@@ -77,7 +78,8 @@ extends:
                 path: '$(Build.SourcesDirectory)\artifacts\bin\Microsoft.DotNet.XHarness.CLI'
                 displayName: 'Publish Windows_NT Artifacts'
                 condition: succeeded()
-    - template: /eng/common/templates-official/post-build/post-build.yml@self
-      parameters:
-        enableSymbolValidation: true
-        enableSourceLinkValidation: true
+    - ${{ if ne(variables['Build.Reason'], 'Schedule') }}:
+      - template: /eng/common/templates-official/post-build/post-build.yml@self
+        parameters:
+          enableSymbolValidation: true
+          enableSourceLinkValidation: true
