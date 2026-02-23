@@ -143,15 +143,9 @@ public class TestReporter : ITestReporter
         }
         else
         {
-            while (!reader.EndOfStream)
+            string? line;
+            while ((line = await reader.ReadLineAsync()) is not null)
             {
-                var line = await reader.ReadLineAsync();
-
-                if (line == null)
-                {
-                    continue;
-                }
-
                 if (line.StartsWith("Application launched. PID = ", StringComparison.Ordinal))
                 {
                     var pidstr = line.Substring("Application launched. PID = ".Length);
