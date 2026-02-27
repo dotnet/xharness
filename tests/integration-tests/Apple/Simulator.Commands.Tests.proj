@@ -6,12 +6,13 @@
 
   <PropertyGroup>
     <iOSSimulatorVersionUnderTest>18.1</iOSSimulatorVersionUnderTest>
+    <TestArch>x64</TestArch>
   </PropertyGroup>
 
   <PropertyGroup>
     <TestAppBundleName>System.Numerics.Vectors.Tests</TestAppBundleName>
-    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app-new/ios-simulator-64/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
-    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app-new\ios-simulator-64</TestAppDestinationDir>
+    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app-new/ios-simulator-64/$(TestArch)/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app-new\ios-simulator-64\$(TestArch)</TestAppDestinationDir>
   </PropertyGroup>
 
   <Target Name="TestApple" BeforeTargets="CoreTest">
