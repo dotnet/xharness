@@ -36,12 +36,10 @@
           xharness apple simulators install $target --verbosity=Debug
           xharness apple simulators reset-simulator --output-directory="$output_directory" --target=$target --verbosity=Debug
           deviceId=`xharness apple device $target`
-          set +e
-          result=0
           xharness apple test -t=$target --device="$deviceId" -o="$output_directory" --app="$app" --launch-timeout=$launch_timeout --timeout=$timeout -v
-          ((result|=$?))
-          xharness apple uninstall -t=$target --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" -v
-          ((result|=$?))
+          result=$?
+          # Uninstall may fail if 'apple test' already cleaned up the simulator - don't fail the test for that
+          xharness apple uninstall -t=$target --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" -v || true
           exit $result
         ]]>
         </CustomCommands>
