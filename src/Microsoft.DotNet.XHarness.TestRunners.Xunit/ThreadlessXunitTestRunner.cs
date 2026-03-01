@@ -98,7 +98,8 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
             testSink.Execution.TestAssemblyStartingEvent += args => { Console.WriteLine($"Starting:    {assemblyFileName}"); };
             testSink.Execution.TestAssemblyFinishedEvent += args => { Console.WriteLine($"Finished:    {assemblyFileName}"); };
 
-            await controller.RunTestsAsync(testCasesToRun, MessageSinkAdapter.Wrap(completionSink), testOptions);
+            var messageSink = new SkipExceptionConvertingSink(MessageSinkAdapter.Wrap(completionSink));
+            await controller.RunTestsAsync(testCasesToRun, messageSink, testOptions);
 
             totalSummary = Combine(totalSummary, await summaryTaskSource.Task);
 
