@@ -37,9 +37,11 @@ public class ResultFileHandlerTests : IDisposable
 
     private static ResultFileHandler CreateHandler(
         Mock<IMlaunchProcessManager> processManagerMock,
-        Mock<IFileBackedLog> logMock)
+        Mock<IFileBackedLog> logMock,
+        int[] retryDelaysMs = null)
     {
-        return new ResultFileHandler(processManagerMock.Object, logMock.Object);
+        // Default to no retry delays in tests to keep them fast
+        return new ResultFileHandler(processManagerMock.Object, logMock.Object, retryDelaysMs ?? Array.Empty<int>());
     }
 
     [Fact]
@@ -112,7 +114,7 @@ public class ResultFileHandlerTests : IDisposable
             RunMode.iOS, true, "Simulator 18.0", "udid", "bundle", _tempFile);
 
         Assert.False(result);
-        log.Verify(l => l.WriteLine($"Failed to copy results file from simulator. Expected at: {_tempFile}"), Times.Once);
+        log.Verify(l => l.WriteLine($"Failed to copy results file from simulator (attempt 1). Expected at: {_tempFile}"), Times.Once);
     }
 
     [Fact]
@@ -171,7 +173,7 @@ public class ResultFileHandlerTests : IDisposable
             RunMode.iOS, false, "18.0", "udid", "bundle", _tempFile);
 
         Assert.False(result);
-        log.Verify(l => l.WriteLine($"Failed to copy results file from device. Expected at: {_tempFile}"), Times.Once);
+        log.Verify(l => l.WriteLine($"Failed to copy results file from device (attempt 1). Expected at: {_tempFile}"), Times.Once);
     }
 
     [Fact]
@@ -249,6 +251,83 @@ public class ResultFileHandlerTests : IDisposable
                 Directory.Delete(uploadRoot, true);
             }
         }
+    }
+
+    [Fact]
+    public async Task DeviceOsVersion18RetrySucceedsOnSecondAttempt()
+    {
+        Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
+        Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
+        // Use a short delay for the test
+        ResultFileHandler handler = CreateHandler(pm, log, new[] { 1 });
+
+        if (File.Exists(_tempFile))
+            File.Delete(_tempFile);
+
+        int callCount = 0;
+        pm.Setup(m => m.ExecuteCommandAsync(
+                It.IsAny<string>(),
+                It.IsAny<IList<string>>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken?>()))
+            .Returns(() =>
+            {
+                callCount++;
+                if (callCount == 2)
+                {
+                    // Simulate success on second attempt by writing the file
+                    File.WriteAllText(_tempFile, "results");
+                }
+                return Task.FromResult(new ProcessExecutionResult { ExitCode = 0 });
+            });
+
+        bool result = await handler.CopyResultsAsync(
+            RunMode.iOS, false, "18.0", "udid", "bundle", _tempFile);
+
+        Assert.True(result);
+        Assert.Equal(2, callCount);
+        log.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Retrying results file copy (attempt 2)"))), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeviceOsVersion18AllRetriesFailReturnsFalse()
+    {
+        Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
+        Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
+        // Two retries with minimal delay
+        ResultFileHandler handler = CreateHandler(pm, log, new[] { 1, 1 });
+
+        if (File.Exists(_tempFile))
+            File.Delete(_tempFile);
+
+        int callCount = 0;
+        pm.Setup(m => m.ExecuteCommandAsync(
+                It.IsAny<string>(),
+                It.IsAny<IList<string>>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken?>()))
+            .Returns(() =>
+            {
+                callCount++;
+                return Task.FromResult(new ProcessExecutionResult { ExitCode = 1 });
+            });
+
+        bool result = await handler.CopyResultsAsync(
+            RunMode.iOS, false, "18.0", "udid", "bundle", _tempFile);
+
+        Assert.False(result);
+        // 1 initial attempt + 2 retries = 3 total
+        Assert.Equal(3, callCount);
+        log.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Retrying results file copy (attempt 2)"))), Times.Once);
+        log.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Retrying results file copy (attempt 3)"))), Times.Once);
     }
 
     private static string GetArgumentValue(MlaunchArguments args, string argumentName)

@@ -17,13 +17,19 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared;
 
 public class ResultFileHandler : IResultFileHandler
 {
+    // Delays in milliseconds between devicectl retries.
+    // Exposed as internal to allow unit tests to inject shorter delays.
+    internal static readonly int[] DefaultRetryDelaysMs = { 5_000, 10_000, 20_000 };
+
     private IMlaunchProcessManager _processManager;
     private IFileBackedLog _mainLog;
+    private readonly int[] _retryDelaysMs;
 
-    public ResultFileHandler(IMlaunchProcessManager pm, IFileBackedLog fs)
+    public ResultFileHandler(IMlaunchProcessManager pm, IFileBackedLog fs, int[]? retryDelaysMs = null)
     {
         _processManager = pm;
         _mainLog = fs;
+        _retryDelaysMs = retryDelaysMs ?? DefaultRetryDelaysMs;
     }
 
     public bool IsVersionSupported(string osVersion, bool isSimulator)
@@ -88,20 +94,41 @@ public class ResultFileHandler : IResultFileHandler
                 cmd = $"xcrun devicectl device copy from --device {udid} --source {sourcePath} --destination {hostDestinationPath} --user mobile --domain-type appDataContainer --domain-identifier {bundleIdentifier}";
             }
 
-            await _processManager.ExecuteCommandAsync(
-                "/bin/bash",
-                new[] { "-c", cmd },
-                _mainLog,
-                _mainLog,
-                _mainLog,
-                TimeSpan.FromMinutes(1),
-                null);
-
-            if (!File.Exists(hostDestinationPath))
+            // Retry up to 3 times with increasing delays to handle transient device communication errors
+            // (e.g., com.apple.Mercury.error 1000 or RSD error 0xE8000003 on tvOS devices).
+            for (int attempt = 0; attempt <= _retryDelaysMs.Length; attempt++)
             {
-                _mainLog.WriteLine($"Failed to copy results file from {(isSimulator ? "simulator" : "device")}. Expected at: {hostDestinationPath}");
-                return false;
+                if (attempt > 0)
+                {
+                    int delayMs = _retryDelaysMs[attempt - 1];
+                    _mainLog.WriteLine($"Retrying results file copy (attempt {attempt + 1}) after {delayMs / 1000}s delay...");
+                    await Task.Delay(delayMs);
+
+                    // Remove a partial/failed destination file before retrying
+                    if (File.Exists(hostDestinationPath))
+                    {
+                        File.Delete(hostDestinationPath);
+                    }
+                }
+
+                await _processManager.ExecuteCommandAsync(
+                    "/bin/bash",
+                    new[] { "-c", cmd },
+                    _mainLog,
+                    _mainLog,
+                    _mainLog,
+                    TimeSpan.FromMinutes(1),
+                    null);
+
+                if (File.Exists(hostDestinationPath))
+                {
+                    return true;
+                }
+
+                _mainLog.WriteLine($"Failed to copy results file from {(isSimulator ? "simulator" : "device")} (attempt {attempt + 1}). Expected at: {hostDestinationPath}");
             }
+
+            return false;
         }
 
         return true;

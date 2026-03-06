@@ -46,7 +46,10 @@ public class DeviceLogCapturer : IDeviceLogCapturer
 
         string startTimeStr = _startTime.ToString("yyyy-MM-dd HH:mm:ss");
 
-        // Collect logs
+        // Collect logs. Use a timeout to avoid hanging indefinitely if the device
+        // becomes unresponsive (e.g. tvOS devices with broken log streaming).
+        const int processTimeoutMs = 120_000; // 2 minutes
+
         string collectArguments = $"log collect --device-udid {_deviceUdid} --start \"{startTimeStr}\" --output \"{_outputPath}\"";
         _deviceLog.WriteLine($"Collecting logs: sudo {collectArguments}");
 
@@ -75,7 +78,13 @@ public class DeviceLogCapturer : IDeviceLogCapturer
         collectProcess.Start();
         collectProcess.BeginOutputReadLine();
         collectProcess.BeginErrorReadLine();
-        collectProcess.WaitForExit();
+
+        if (!collectProcess.WaitForExit(processTimeoutMs))
+        {
+            _mainLog.WriteLine($"Device log collection timed out after {processTimeoutMs / 1000}s. Killing process and skipping log reading.");
+            try { collectProcess.Kill(entireProcessTree: true); } catch { /* best effort */ }
+            return;
+        }
 
         if (collectErrors.Length > 0)
         {
@@ -117,19 +126,26 @@ public class DeviceLogCapturer : IDeviceLogCapturer
         readProcess.Start();
         readProcess.BeginOutputReadLine();
         readProcess.BeginErrorReadLine();
-        readProcess.WaitForExit();
 
-        if (output.Length > 0)
+        if (!readProcess.WaitForExit(processTimeoutMs))
         {
-            lock (_deviceLog)
-            {
-                _deviceLog.WriteLine(output.ToString());
-            }
+            _mainLog.WriteLine($"Device log reading timed out after {processTimeoutMs / 1000}s. Killing process.");
+            try { readProcess.Kill(entireProcessTree: true); } catch { /* best effort */ }
         }
-
-        if (errors.Length > 0)
+        else
         {
-            _mainLog.WriteLine($"Errors while reading device logs: {errors}");
+            if (output.Length > 0)
+            {
+                lock (_deviceLog)
+                {
+                    _deviceLog.WriteLine(output.ToString());
+                }
+            }
+
+            if (errors.Length > 0)
+            {
+                _mainLog.WriteLine($"Errors while reading device logs: {errors}");
+            }
         }
 
         if (Directory.Exists(_outputPath))

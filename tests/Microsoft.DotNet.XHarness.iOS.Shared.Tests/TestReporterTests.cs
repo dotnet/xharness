@@ -427,4 +427,37 @@ public class TestReporterTests : IDisposable
         _processManager.Verify(p => p.KillTreeAsync(It.IsAny<int>(), It.IsAny<ILog>(), true), Times.Never);
         _crashReporter.Verify(c => c.EndCaptureAsync(TimeSpan.FromSeconds(5)), Times.Once);
     }
+
+    /// <summary>
+    /// When CollectDeviceResult sets Success=true (tests completed via app end signal)
+    /// but the results file copy fails (e.g., devicectl error on tvOS), ParseResult should
+    /// return Succeeded rather than Crashed, since we already confirmed test completion.
+    /// </summary>
+    [Fact]
+    public async Task ParseResultTestRunCompletedButResultsFileUnavailableReturnsSucceeded()
+    {
+        // Set up listener with a non-existent log file (simulate failed devicectl copy)
+        var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
+        _listener.Setup(l => l.TestLog).Returns(listenerLog);
+
+        var testReporter = BuildTestReporter();
+
+        // Simulate mlaunch exiting with 0 (after app end signal detection → RunAndWatchForAppSignal sets ExitCode=0)
+        var processResult = new ProcessExecutionResult() { TimedOut = false, ExitCode = 0 };
+        await testReporter.CollectDeviceResult(processResult);
+
+        // At this point Success=true (set by CollectDeviceResult via CollectResult)
+        Assert.True(testReporter.Success, "Success should be true after CollectDeviceResult with ExitCode=0");
+
+        var (result, resultMessage) = await testReporter.ParseResult();
+
+        // Should return Succeeded, not Crashed, since we know tests completed
+        Assert.Equal(TestExecutingResult.Succeeded, result);
+        Assert.True(testReporter.Success, "Success should remain true");
+        Assert.Contains("completed but results file was not available", resultMessage);
+
+        _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Test run completed but results file was not available"))), Times.Once);
+        // Crash reporter should be called with 0 delay since tests succeeded
+        _crashReporter.Verify(c => c.EndCaptureAsync(It.Is<TimeSpan>(t => t.TotalSeconds == 0)), Times.Once);
+    }
 }
