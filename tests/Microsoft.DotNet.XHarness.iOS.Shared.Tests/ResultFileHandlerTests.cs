@@ -254,7 +254,7 @@ public class ResultFileHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task DeviceOsVersion18RetrySucceedsOnSecondAttempt()
+    public async Task CopyResultsAsync_WhenFirstAttemptFailsAndSecondSucceeds_ReturnsTrue()
     {
         Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
         Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
@@ -294,7 +294,7 @@ public class ResultFileHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task DeviceOsVersion18AllRetriesFailReturnsFalse()
+    public async Task CopyResultsAsync_WhenAllRetriesFail_ReturnsFalse()
     {
         Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
         Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();

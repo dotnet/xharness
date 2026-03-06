@@ -434,7 +434,7 @@ public class TestReporterTests : IDisposable
     /// return Succeeded rather than Crashed, since we already confirmed test completion.
     /// </summary>
     [Fact]
-    public async Task ParseResultTestRunCompletedButResultsFileUnavailableReturnsSucceeded()
+    public async Task ParseResult_WhenTestCompletedButResultsUnavailable_ReturnsSucceeded()
     {
         // Set up listener with a non-existent log file (simulate failed devicectl copy)
         var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
