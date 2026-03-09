@@ -83,8 +83,12 @@ public class DeviceLogCapturer : IDeviceLogCapturer
         {
             _mainLog.WriteLine($"Device log collection timed out after {processTimeoutMs / 1000}s. Killing process and skipping log reading.");
             try { collectProcess.Kill(entireProcessTree: true); } catch { /* best effort */ }
+            CleanupOutputPath();
             return;
         }
+
+        // Ensure all asynchronous output/error reads have completed before consuming buffers
+        collectProcess.WaitForExit();
 
         if (collectErrors.Length > 0)
         {
@@ -93,6 +97,7 @@ public class DeviceLogCapturer : IDeviceLogCapturer
             if (collectProcess.ExitCode != 0)
             {
                 _deviceLog.WriteLine($"Log collection failed with exit code {collectProcess.ExitCode}. Skipping log reading.");
+                CleanupOutputPath();
                 return;
             }
         }
@@ -134,6 +139,9 @@ public class DeviceLogCapturer : IDeviceLogCapturer
         }
         else
         {
+            // Ensure all asynchronous output/error reads have completed before consuming buffers
+            readProcess.WaitForExit();
+
             if (output.Length > 0)
             {
                 lock (_deviceLog)
@@ -148,6 +156,11 @@ public class DeviceLogCapturer : IDeviceLogCapturer
             }
         }
 
+        CleanupOutputPath();
+    }
+
+    private void CleanupOutputPath()
+    {
         if (Directory.Exists(_outputPath))
         {
             Directory.Delete(_outputPath, true);

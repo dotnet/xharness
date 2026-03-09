@@ -17,9 +17,7 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared;
 
 public class ResultFileHandler : IResultFileHandler
 {
-    // Delays in milliseconds between devicectl retries.
-    // Exposed as internal to allow unit tests to inject shorter delays.
-    internal static readonly int[] DefaultRetryDelaysMs = { 5_000, 10_000, 20_000 };
+    private static readonly int[] DefaultRetryDelaysMs = { 5_000, 10_000, 20_000 };
 
     private IMlaunchProcessManager _processManager;
     private IFileBackedLog _mainLog;
@@ -29,7 +27,8 @@ public class ResultFileHandler : IResultFileHandler
     {
         _processManager = pm;
         _mainLog = fs;
-        _retryDelaysMs = retryDelaysMs ?? DefaultRetryDelaysMs;
+        // Clone to prevent external mutation of the shared default array
+        _retryDelaysMs = (retryDelaysMs ?? DefaultRetryDelaysMs).ToArray();
     }
 
     public bool IsVersionSupported(string osVersion, bool isSimulator)
