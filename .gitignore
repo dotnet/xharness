@@ -362,3 +362,4 @@ MigrationBackup/
 .idea
 
 .vscode/
+.nuget/
