@@ -5,13 +5,14 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <iOSSimulatorVersionUnderTest>16.4</iOSSimulatorVersionUnderTest>
+    <iOSSimulatorVersionUnderTest>18.1</iOSSimulatorVersionUnderTest>
+    <TestArch>x64</TestArch>
   </PropertyGroup>
 
   <PropertyGroup>
     <TestAppBundleName>System.Numerics.Vectors.Tests</TestAppBundleName>
-    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app-new/ios-simulator-64/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
-    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app-new\ios-simulator-64</TestAppDestinationDir>
+    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app-new/ios-simulator-64/$(TestArch)/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app-new\ios-simulator-64\$(TestArch)</TestAppDestinationDir>
   </PropertyGroup>
 
   <Target Name="TestApple" BeforeTargets="CoreTest">
@@ -35,13 +36,10 @@
           xharness apple simulators install $target --verbosity=Debug
           xharness apple simulators reset-simulator --output-directory="$output_directory" --target=$target --verbosity=Debug
           deviceId=`xharness apple device $target`
-          xharness apple install -t=$target --device="$deviceId" -o="$output_directory" --app="$app" --timeout=$launch_timeout -v
-          set +e
-          result=0
-          xharness apple just-test -t=$target --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" --launch-timeout=$launch_timeout --timeout=$timeout -v
-          ((result|=$?))
-          xharness apple uninstall -t=$target --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" -v
-          ((result|=$?))
+          xharness apple test -t=$target --device="$deviceId" -o="$output_directory" --app="$app" --launch-timeout=$launch_timeout --timeout=$timeout -v
+          result=$?
+          # Uninstall may fail if 'apple test' already cleaned up the simulator - don't fail the test for that
+          xharness apple uninstall -t=$target --device="$deviceId" -o="$output_directory" --app="net.dot.$(TestAppBundleName)" -v || true
           exit $result
         ]]>
         </CustomCommands>
