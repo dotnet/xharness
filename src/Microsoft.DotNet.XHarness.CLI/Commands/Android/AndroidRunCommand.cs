@@ -39,9 +39,22 @@ Arguments:
         // Make sure the adb server is started
         runner.StartAdbServer();
 
+        runner.TimeToWaitForBootCompletion = Arguments.LaunchTimeout;
+
         var device = string.IsNullOrEmpty(Arguments.DeviceId.Value)
             ? runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredInstalledApp: "package:" + Arguments.PackageName)
             : runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredDeviceId: Arguments.DeviceId.Value);
+
+        if (device is null)
+        {
+            logger.LogWarning("No compatible device found on first attempt; trying emulator recovery...");
+            if (runner.TryRecoverEmulator())
+            {
+                device = string.IsNullOrEmpty(Arguments.DeviceId.Value)
+                    ? runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredInstalledApp: "package:" + Arguments.PackageName)
+                    : runner.GetSingleDevice(loadArchitecture: true, loadApiVersion: true, requiredDeviceId: Arguments.DeviceId.Value);
+            }
+        }
 
         if (device is null)
         {
@@ -49,8 +62,6 @@ Arguments:
         }
 
         DiagnosticsData.CaptureDeviceInfo(device);
-
-        runner.TimeToWaitForBootCompletion = Arguments.LaunchTimeout;
 
         // Wait till at least device(s) are ready
         runner.WaitForDevice();

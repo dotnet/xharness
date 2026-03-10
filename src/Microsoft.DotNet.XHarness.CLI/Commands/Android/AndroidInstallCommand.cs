@@ -91,6 +91,8 @@ Arguments:
             // Make sure the adb server is started
             runner.StartAdbServer();
 
+            runner.TimeToWaitForBootCompletion = bootTimeoutSeconds;
+
             AndroidDevice? device = runner.GetDevice(
                 loadArchitecture: true,
                 loadApiVersion: true,
@@ -100,12 +102,24 @@ Arguments:
 
             if (device is null)
             {
+                logger.LogWarning("No compatible device found on first attempt; trying emulator recovery...");
+                if (runner.TryRecoverEmulator())
+                {
+                    device = runner.GetDevice(
+                        loadArchitecture: true,
+                        loadApiVersion: true,
+                        deviceId,
+                        apiVersion,
+                        requiredArchitectures);
+                }
+            }
+
+            if (device is null)
+            {
                 throw new NoDeviceFoundException($"Failed to find compatible device: {string.Join(", ", requiredArchitectures)}");
             }
 
             diagnosticsData.CaptureDeviceInfo(device);
-
-            runner.TimeToWaitForBootCompletion = bootTimeoutSeconds;
 
             // Wait till at least device(s) are ready
             runner.WaitForDevice();

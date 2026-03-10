@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using Microsoft.DotNet.XHarness.Android.Execution;
 using Microsoft.Extensions.Logging;
@@ -263,6 +264,220 @@ public class AdbRunner
     }
 
     public void KillAdbServer() => RunAdbCommand(new[] { "kill-server" }).ThrowIfFailed("Error killing ADB Server");
+
+    /// <summary>
+    /// Attempts to recover the Android emulator when no suitable device is found.
+    /// Steps:
+    ///   1. Logs diagnostics about currently available devices
+    ///   2. Resets the ADB daemon (kill-server + start-server)
+    ///   3. If device still not visible, tries to restart the emulator process via
+    ///      systemctl (on Linux/systemd machines) or 'adb emu restart' as a fallback
+    ///   4. Waits for the device to appear and complete boot
+    /// </summary>
+    /// <returns>true if a device appeared after recovery, false otherwise</returns>
+    public bool TryRecoverEmulator()
+    {
+        // Step 1: Diagnostics - log what devices ARE currently attached
+        _log.LogInformation("Attempting emulator recovery. Logging available devices for diagnostics...");
+        var devicesResult = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
+        _log.LogInformation($"Current 'adb devices -l' output:{Environment.NewLine}{devicesResult.StandardOutput}");
+
+        // On Linux, also log the emulator service status for diagnostics
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            try
+            {
+                var statusResult = RunSystemCommand("systemctl", new[] { "status", "android-emulator" }, TimeSpan.FromSeconds(15));
+                _log.LogInformation($"systemctl status android-emulator:{Environment.NewLine}{statusResult.StandardOutput}");
+            }
+            catch (Exception e)
+            {
+                _log.LogDebug($"Unable to check systemctl status: {e.Message}");
+            }
+        }
+
+        // Step 2: Reset ADB daemon (kill-server + start-server)
+        _log.LogInformation("Resetting ADB server as part of emulator recovery...");
+        try
+        {
+            KillAdbServer();
+        }
+        catch (Exception e)
+        {
+            _log.LogWarning($"Error killing ADB server during recovery: {e.Message}");
+        }
+
+        Thread.Sleep(TimeSpan.FromSeconds(2));
+
+        try
+        {
+            StartAdbServer();
+        }
+        catch (Exception e)
+        {
+            _log.LogWarning($"Error restarting ADB server during recovery: {e.Message}");
+        }
+
+        // Step 3: Re-check for devices after ADB reset - if a device reappeared, we are done
+        var recheckResult = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
+        _log.LogInformation($"Devices after ADB server reset:{Environment.NewLine}{recheckResult.StandardOutput}");
+
+        var recheckLines = recheckResult.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        if (recheckLines.Length >= 2)
+        {
+            _log.LogInformation("Device(s) reappeared after ADB server reset; skipping emulator service restart");
+            return true;
+        }
+
+        // Step 4: Try to restart the emulator process
+        bool restartAttempted = false;
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            try
+            {
+                _log.LogInformation("Attempting to restart android-emulator service via systemctl...");
+                var restartResult = RunSystemCommand("systemctl", new[] { "restart", "android-emulator" }, TimeSpan.FromMinutes(2));
+                if (restartResult.Succeeded)
+                {
+                    _log.LogInformation("systemctl restart android-emulator succeeded");
+                    restartAttempted = true;
+                }
+                else
+                {
+                    _log.LogWarning($"systemctl restart android-emulator failed (exit code {restartResult.ExitCode}):{Environment.NewLine}{restartResult.StandardError}");
+                }
+            }
+            catch (Exception e)
+            {
+                _log.LogDebug($"Unable to restart via systemctl: {e.Message}");
+            }
+        }
+
+        if (!restartAttempted)
+        {
+            // Fallback: attempt 'adb emu restart' (works if emulator console port is reachable)
+            _log.LogInformation("Attempting 'adb emu restart' as emulator restart fallback...");
+            try
+            {
+                var emuResult = RunAdbCommand(new[] { "emu", "restart" }, TimeSpan.FromSeconds(30));
+                _log.LogDebug($"adb emu restart output: {emuResult.StandardOutput}");
+                restartAttempted = true;
+            }
+            catch (Exception e)
+            {
+                _log.LogWarning($"adb emu restart failed: {e.Message}");
+            }
+        }
+
+        if (!restartAttempted)
+        {
+            _log.LogWarning("No emulator restart method succeeded; recovery not possible");
+            return false;
+        }
+
+        // Step 5: Wait for a device to reappear
+        _log.LogInformation("Waiting for emulator to reappear after recovery (max 5 minutes)...");
+        bool deviceAppeared = Retry(
+            () =>
+            {
+                var r = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
+                var lines = r.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+                return lines.Length >= 2;
+            },
+            retryInterval: TimeSpan.FromSeconds(10),
+            retryPeriod: TimeSpan.FromMinutes(5));
+
+        if (!deviceAppeared)
+        {
+            _log.LogWarning("No device appeared after emulator recovery attempt");
+            return false;
+        }
+
+        // Step 6: Wait for boot completion
+        _log.LogInformation("Waiting for emulator boot completion after recovery...");
+        var bootWatch = Stopwatch.StartNew();
+        bool bootCompleted = Retry(
+            () =>
+            {
+                string? bootStatus = GetDeviceProperty(AdbProperty.BootCompletion, null);
+                _log.LogDebug($"sys.boot_completed = '{bootStatus}'");
+                return bootStatus?.StartsWith('1') ?? false;
+            },
+            retryInterval: TimeSpan.FromSeconds(10),
+            retryPeriod: TimeToWaitForBootCompletion);
+
+        if (bootCompleted)
+        {
+            _log.LogInformation($"Emulator recovered and boot completed after {(int)bootWatch.Elapsed.TotalSeconds} seconds");
+            return true;
+        }
+        else
+        {
+            _log.LogWarning("Emulator appeared but did not complete boot within the timeout after recovery");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Runs a non-ADB system command (e.g. systemctl) and returns the result.
+    /// </summary>
+    private static ProcessExecutionResults RunSystemCommand(string command, IEnumerable<string> arguments, TimeSpan timeout)
+    {
+        var processStartInfo = new ProcessStartInfo()
+        {
+            CreateNoWindow = true,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            FileName = command,
+        };
+
+        foreach (var arg in arguments)
+        {
+            processStartInfo.ArgumentList.Add(arg);
+        }
+
+        var p = new Process() { StartInfo = processStartInfo };
+        var standardOut = new StringBuilder();
+        var standardErr = new StringBuilder();
+
+        p.OutputDataReceived += (sender, e) => { if (e.Data != null) lock (standardOut) standardOut.AppendLine(e.Data); };
+        p.ErrorDataReceived += (sender, e) => { if (e.Data != null) lock (standardErr) standardErr.AppendLine(e.Data); };
+
+        p.Start();
+        p.BeginOutputReadLine();
+        p.BeginErrorReadLine();
+
+        bool timedOut = false;
+        int exitCode;
+
+        if (!p.WaitForExit((int)Math.Min(timeout.TotalMilliseconds, int.MaxValue)))
+        {
+            timedOut = true;
+            exitCode = -1;
+            try { p.Kill(); } catch { }
+        }
+        else
+        {
+            p.WaitForExit();
+            exitCode = p.ExitCode;
+        }
+
+        p.Close();
+
+        lock (standardOut)
+        lock (standardErr)
+        {
+            return new ProcessExecutionResults()
+            {
+                ExitCode = exitCode,
+                StandardOutput = standardOut.ToString(),
+                StandardError = standardErr.ToString(),
+                TimedOut = timedOut,
+            };
+        }
+    }
 
     public int CopyHeadlessFolder(string testPath, bool sharedRuntime = false)
     {
@@ -730,11 +945,15 @@ public class AdbRunner
 
         if (requiredArchitectures?.Any() ?? false)
         {
+            var availableDevices = devices;
             devices = devices.Where(device => device.SupportedArchitectures?.Intersect(requiredArchitectures).Any() ?? false).ToList();
 
             if (devices.Count == 0)
             {
-                _log.LogError($"No attached device supports one of required architectures {string.Join(", ", requiredArchitectures)}");
+                var availableArchInfo = string.Join(", ", availableDevices.Select(
+                    d => $"{d.DeviceSerial}=[{string.Join(",", d.SupportedArchitectures ?? Array.Empty<string>())}]"));
+                _log.LogError($"No attached device supports one of required architectures: {string.Join(", ", requiredArchitectures)}. " +
+                    $"Found {availableDevices.Count} device(s) with: {availableArchInfo}");
                 return devices;
             }
         }
