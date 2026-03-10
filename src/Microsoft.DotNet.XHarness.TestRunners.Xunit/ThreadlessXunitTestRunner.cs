@@ -54,7 +54,7 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
         foreach (var testAsmInfo in testAssemblies)
         {
             string assemblyFileName = testAsmInfo.FullPath;
-            var controller = new Xunit2(AppDomainSupport.Denied, new NullSourceInformationProvider(), assemblyFileName, configFileName: null, shadowCopy: false, shadowCopyFolder: null, diagnosticMessageSink: diagnosticSink, verifyTestAssemblyExists: false);
+            var controller = new YieldingXunit2(AppDomainSupport.Denied, new NullSourceInformationProvider(), assemblyFileName, configFileName: null, shadowCopy: false, shadowCopyFolder: null, diagnosticMessageSink: diagnosticSink, verifyTestAssemblyExists: false);
 
             discoveryOptions.SetSynchronousMessageReporting(true);
             testOptions.SetSynchronousMessageReporting(true);
@@ -98,7 +98,7 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
             testSink.Execution.TestAssemblyStartingEvent += args => { Console.WriteLine($"Starting:    {assemblyFileName}"); };
             testSink.Execution.TestAssemblyFinishedEvent += args => { Console.WriteLine($"Finished:    {assemblyFileName}"); };
 
-            controller.RunTests(testCasesToRun, completionSink, testOptions);
+            await controller.RunTestsAsync(testCasesToRun, MessageSinkAdapter.Wrap(completionSink), testOptions);
 
             totalSummary = Combine(totalSummary, await summaryTaskSource.Task);
 

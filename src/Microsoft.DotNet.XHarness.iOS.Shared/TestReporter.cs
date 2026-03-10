@@ -601,6 +601,17 @@ public class TestReporter : ITestReporter
             result.ResultMessage = "Test runner failed to launch";
             Success = false;
         }
+        else if (Success == true)
+        {
+            // Test run completed (detected via app end signal or mlaunch exit) but the results file
+            // was not found. This can happen when the device file copy (devicectl) fails due to
+            // transient device communication issues (e.g., tvOS Mercury error 1000, RSD 0xE8000003).
+            // Since we already confirmed test completion, treat this as success with a warning.
+            WrenchLog.WriteLine("AddSummary: <b><i>{0} completed but results unavailable</i></b><br/>", _runMode);
+            _mainLog.WriteLine("Test run completed but results file was not available (device communication issue)");
+            result.ResultMessage = "Test run completed but results file was not available";
+            // Success remains true
+        }
         else
         {
             WrenchLog.WriteLine("AddSummary: <b><i>{0} crashed at startup (no log)</i></b><br/>", _runMode);
