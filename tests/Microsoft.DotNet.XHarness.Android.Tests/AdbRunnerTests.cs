@@ -23,6 +23,8 @@ public class AdbRunnerTests : IDisposable
     private static readonly string s_adbPath = Path.Combine(s_scratchAndOutputPath, "adb");
     private static string s_currentDeviceSerial = "";
     private static int s_bootCompleteCheckTimes = 0;
+    private static int s_devicesCallCount = 0;
+    private static int s_devicesReturnEmptyForNFirstCalls = 0;
     private readonly Mock<ILogger> _mainLog;
     private readonly Mock<IAdbProcessManager> _processManager;
     private readonly List<AndroidDevice> _fakeDeviceList;
@@ -35,6 +37,10 @@ public class AdbRunnerTests : IDisposable
 
         // Fake devices to pretend are attached to the system
         _fakeDeviceList = InitializeFakeDeviceList();
+
+        // Reset call counters for each test
+        s_devicesCallCount = 0;
+        s_devicesReturnEmptyForNFirstCalls = 0;
 
         // Fake ADB executable since its path is checked 
         Directory.CreateDirectory(s_scratchAndOutputPath);
@@ -267,6 +273,39 @@ public class AdbRunnerTests : IDisposable
         }
     }
 
+    [Fact]
+    public void TryRecoverEmulator_WhenDeviceAppearsAfterAdbReset_ReturnsTrue()
+    {
+        // The first devices call (diagnostics) returns empty; after ADB reset (kill+start-server), devices reappear
+        s_devicesReturnEmptyForNFirstCalls = 1;
+        s_bootCompleteCheckTimes = 1; // Boot is already complete, no extra wait needed
+
+        var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+        bool result = runner.TryRecoverEmulator();
+
+        Assert.True(result);
+        VerifyAdbCall(Times.AtLeast(2), "devices", "-l");
+        VerifyAdbCall(Times.Once(), "kill-server");
+        VerifyAdbCall(Times.Once(), "start-server");
+    }
+
+    [Fact]
+    public void TryRecoverEmulator_WhenDeviceAppearsAfterEmulatorRestart_ReturnsTrue()
+    {
+        // The first two devices calls return empty (diagnostics + post-ADB-reset recheck);
+        // the emulator restart (emu restart fallback) succeeds, and the device appears on the next check.
+        s_devicesReturnEmptyForNFirstCalls = 2;
+        s_bootCompleteCheckTimes = 1; // Boot is already complete, no extra wait needed
+
+        var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+        bool result = runner.TryRecoverEmulator();
+
+        Assert.True(result);
+        VerifyAdbCall(Times.AtLeast(3), "devices", "-l");
+        VerifyAdbCall(Times.Once(), "kill-server");
+        VerifyAdbCall(Times.Once(), "start-server");
+    }
+
     #endregion
 
     #region Helper Functions
@@ -339,14 +378,18 @@ public class AdbRunnerTests : IDisposable
                 break;
 
             case "devices":
+                s_devicesCallCount++;
                 var s = new StringBuilder();
-                int transportId = 1;
                 s.AppendLine("List of devices attached");
 
-                foreach (var device in _fakeDeviceList)
+                if (s_devicesCallCount > s_devicesReturnEmptyForNFirstCalls)
                 {
-                    string state = device == _fakeDeviceList.Last() ? "offline" : "online";
-                    s.AppendLine($"{device.DeviceSerial}          {state} transportid:{transportId++}");
+                    int transportId = 1;
+                    foreach (var device in _fakeDeviceList)
+                    {
+                        string state = device == _fakeDeviceList.Last() ? "offline" : "online";
+                        s.AppendLine($"{device.DeviceSerial}          {state} transportid:{transportId++}");
+                    }
                 }
 
                 stdOut = s.ToString();
@@ -410,6 +453,7 @@ public class AdbRunnerTests : IDisposable
             case "wait-for-device":
             case "start-server":
             case "kill-server":
+            case "emu":
                 break;
 
             default:
