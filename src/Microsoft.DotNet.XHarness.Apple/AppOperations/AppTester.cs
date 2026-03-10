@@ -352,16 +352,25 @@ public class AppTester : AppRunnerBase, IAppTester
                 deviceListener.TestLog.FullPath);
 
             // If results weren't copied, it likely means the app crashed before tests could run
-            // Try to retrieve the crash report
+            // Try to retrieve the crash report, but only if the test run didn't already complete.
+            // When test run completed (Success=true from CollectSimulatorResult), the failure is a
+            // communication issue, not an app crash, so we skip crash report retrieval.
             if (!resultsCopied)
             {
-                _mainLog.WriteLine("Test results file not found, app may have crashed before tests started.");
-                await resultFileHandler.CopyCrashReportAsync(
-                    simulator.UDID,
-                    simulator.Name,
-                    appInformation,
-                    _mainLog,
-                    isSimulator: true);
+                if (testReporter.Success == true)
+                {
+                    _mainLog.WriteLine("Test results file not found after retries, but test run completed successfully. Device communication issue likely caused the copy failure.");
+                }
+                else
+                {
+                    _mainLog.WriteLine("Test results file not found, app may have crashed before tests started.");
+                    await resultFileHandler.CopyCrashReportAsync(
+                        simulator.UDID,
+                        simulator.Name,
+                        appInformation,
+                        _mainLog,
+                        isSimulator: true);
+                }
             }
         }
     }
@@ -452,16 +461,25 @@ public class AppTester : AppRunnerBase, IAppTester
                 deviceListener.TestLog.FullPath);
 
             // If results weren't copied, it likely means the app crashed before tests could run
-            // Try to retrieve the crash report
+            // Try to retrieve the crash report, but only if the test run didn't already complete.
+            // When test run completed (Success=true from CollectDeviceResult), the failure is a
+            // device communication issue, not an app crash, so we skip crash report retrieval.
             if (!resultsCopied)
             {
-                _mainLog.WriteLine("Test results file not found, app may have crashed before tests started.");
-                await resultFileHandler.CopyCrashReportAsync(
-                    device.UDID,
-                    device.Name,
-                    appInformation,
-                    _mainLog,
-                    isSimulator: false);
+                if (testReporter.Success == true)
+                {
+                    _mainLog.WriteLine("Test results file not found after retries, but test run completed successfully. Device communication issue likely caused the copy failure.");
+                }
+                else
+                {
+                    _mainLog.WriteLine("Test results file not found, app may have crashed before tests started.");
+                    await resultFileHandler.CopyCrashReportAsync(
+                        device.UDID,
+                        device.Name,
+                        appInformation,
+                        _mainLog,
+                        isSimulator: false);
+                }
             }
         }
     }
