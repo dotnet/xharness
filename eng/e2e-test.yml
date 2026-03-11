@@ -17,7 +17,8 @@ stages:
         - job: Linux
           timeoutInMinutes: 180
           pool:
-            vmimage: ubuntu-latest
+            name: $(DncEngPublicBuildPool)
+            demands: ImageOverride -equals build.ubuntu.2204.amd64.open
           strategy:
             matrix:
               Build_Debug:
