@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
@@ -24,7 +25,8 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
         ShowFailureInfos = false;
     }
 
-    protected override string ResultsFileName { get => string.Empty; set => throw new InvalidOperationException("This runner outputs its results to stdout."); }
+    private string _resultsFileName = "TestResults.xUnit.xml";
+    protected override string ResultsFileName { get => _resultsFileName; set => _resultsFileName = value; }
 
     private XElement? _assembliesElement;
 
@@ -121,14 +123,41 @@ internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
 
     public override async Task<string> WriteResultsToFile(XmlResultJargon xmlResultJargon)
     {
-        Debug.Assert(xmlResultJargon == XmlResultJargon.xUnit);
-        await WriteResultsToFile(Console.Out, xmlResultJargon);
-        return "";
+        if (_assembliesElement is null)
+            return string.Empty;
+
+        if (OperatingSystem.IsBrowser())
+        {
+            Debug.Assert(xmlResultJargon == XmlResultJargon.xUnit);
+            await WriteResultsToFile(Console.Out, xmlResultJargon);
+            return "";
+        }
+
+        string outputFilePath = GetResultsFilePath();
+        var settings = new XmlWriterSettings { Indent = true };
+        using (var xmlWriter = XmlWriter.Create(outputFilePath, settings))
+        {
+            _assembliesElement.Save(xmlWriter);
+        }
+
+        return outputFilePath;
     }
 
-    public override async Task WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
+    public override Task WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
     {
-        await WasmXmlResultWriter.WriteResultsToFile(ConsumeAssembliesElement());
+        if (_assembliesElement is null)
+            return Task.CompletedTask;
+
+        if (OperatingSystem.IsBrowser())
+            return WasmXmlResultWriter.WriteResultsToFile(ConsumeAssembliesElement());
+
+        var settings = new XmlWriterSettings { Indent = true };
+        using (var xmlWriter = XmlWriter.Create(writer, settings))
+        {
+            _assembliesElement.Save(xmlWriter);
+        }
+
+        return Task.CompletedTask;
     }
 }
 
