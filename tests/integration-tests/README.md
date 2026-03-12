@@ -4,7 +4,7 @@ This folder includes integration tests projects for different support platforms 
 They are used in end-to-end testing scenarios and are referenced from `azure-pipelines-public.yml` E2E templates.
 
 In the relevant `*.proj` files one can configure various setting for execution on Helix like:
-- configuring the Helix queue (e.g., `osx.13.amd64.iphone.open` via `HelixTargetQueue` item group)
+- configuring the Helix queue (e.g., `osx.15.amd64.iphone.open` via `HelixTargetQueue` item group)
 - app bundle to download, send to Helix and test (e.g., `System.Buffers.Tests.app`)
 - etc.
 
