@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetCurrent);$(NetPrevious);$(NetMinimum)</TargetFrameworks>
+    <TargetFrameworks>$(NetCurrent);$(NetMinimum)</TargetFrameworks>
+    <TargetFrameworks Condition="'$(NetPrevious)' != ''">$(NetCurrent);$(NetPrevious);$(NetMinimum)</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <RootNamespace>Microsoft.DotNet.XHarness.TestRunners.Xunit</RootNamespace>
   </PropertyGroup>
