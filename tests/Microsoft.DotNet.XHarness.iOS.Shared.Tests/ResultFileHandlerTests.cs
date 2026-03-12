@@ -5,9 +5,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
+using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Moq;
 using Xunit;
@@ -33,9 +37,11 @@ public class ResultFileHandlerTests : IDisposable
 
     private static ResultFileHandler CreateHandler(
         Mock<IMlaunchProcessManager> processManagerMock,
-        Mock<IFileBackedLog> logMock)
+        Mock<IFileBackedLog> logMock,
+        int[] retryDelaysMs = null)
     {
-        return new ResultFileHandler(processManagerMock.Object, logMock.Object);
+        // Default to no retry delays in tests to keep them fast
+        return new ResultFileHandler(processManagerMock.Object, logMock.Object, retryDelaysMs ?? Array.Empty<int>());
     }
 
     [Fact]
@@ -108,7 +114,7 @@ public class ResultFileHandlerTests : IDisposable
             RunMode.iOS, true, "Simulator 18.0", "udid", "bundle", _tempFile);
 
         Assert.False(result);
-        log.Verify(l => l.WriteLine($"Failed to copy results file from simulator. Expected at: {_tempFile}"), Times.Once);
+        log.Verify(l => l.WriteLine($"Failed to copy results file from simulator (attempt 1). Expected at: {_tempFile}"), Times.Once);
     }
 
     [Fact]
@@ -167,6 +173,169 @@ public class ResultFileHandlerTests : IDisposable
             RunMode.iOS, false, "18.0", "udid", "bundle", _tempFile);
 
         Assert.False(result);
-        log.Verify(l => l.WriteLine($"Failed to copy results file from device. Expected at: {_tempFile}"), Times.Once);
+        log.Verify(l => l.WriteLine($"Failed to copy results file from device (attempt 1). Expected at: {_tempFile}"), Times.Once);
+    }
+
+    [Fact]
+    public async Task CopyCrashReportUsesHelixUploadRootWhenAvailable()
+    {
+        // Skip on Windows as mlaunch is not available
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        string originalUploadRoot = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
+        string uploadRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(uploadRoot);
+
+        try
+        {
+            Environment.SetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT", uploadRoot);
+
+            Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
+            Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
+            ResultFileHandler handler = CreateHandler(pm, log);
+
+            string crashReportName = "MyApp-2025-11-25-223847.ips";
+            string expectedDownloadPath = Path.Combine(uploadRoot, crashReportName);
+            string crashContent = "Dummy crash content";
+            string actualDownloadPath = null;
+
+            int callCount = 0;
+
+            pm.Setup(m => m.ExecuteCommandAsync(
+                    It.IsAny<MlaunchArguments>(),
+                    It.IsAny<ILog>(),
+                    It.IsAny<TimeSpan>(),
+                    It.IsAny<Dictionary<string, string>>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken?>()))
+                .Returns((MlaunchArguments args, ILog _, TimeSpan _, Dictionary<string, string> _, int _, CancellationToken? _) =>
+                {
+                    callCount++;
+                    if (callCount == 1)
+                    {
+                        string listFilePath = GetArgumentValue(args, "list-crash-reports");
+                        File.WriteAllLines(listFilePath, new[] { crashReportName });
+                    }
+                    else if (callCount == 2)
+                    {
+                        actualDownloadPath = GetArgumentValue(args, "download-crash-report-to");
+                        File.WriteAllText(actualDownloadPath, crashContent);
+                    }
+
+                    return Task.FromResult(new ProcessExecutionResult { ExitCode = 0 });
+                });
+
+            var appInfo = new AppBundleInformation("MyApp", "com.example.myapp", "/tmp", "/tmp", supports32b: false);
+
+            await handler.CopyCrashReportAsync("device-udid", null, appInfo, log.Object, isSimulator: false);
+
+            Assert.Equal(expectedDownloadPath, actualDownloadPath);
+            Assert.True(File.Exists(expectedDownloadPath));
+
+            log.Verify(l => l.WriteLine("Attempting to retrieve crash report from device..."), Times.Once);
+            log.Verify(l => l.WriteLine($"Found crash report: {crashReportName}"), Times.Once);
+            log.Verify(l => l.WriteLine("==================== Crash report ===================="), Times.Once);
+            log.Verify(l => l.WriteLine($"Crash report file: {expectedDownloadPath}"), Times.Once);
+            log.Verify(l => l.WriteLine(crashContent), Times.Once);
+            log.Verify(l => l.WriteLine("==================== End of Crash report ===================="), Times.Once);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT", originalUploadRoot);
+
+            if (Directory.Exists(uploadRoot))
+            {
+                Directory.Delete(uploadRoot, true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task CopyResultsAsync_WhenFirstAttemptFailsAndSecondSucceeds_ReturnsTrue()
+    {
+        Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
+        Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
+        // Use a short delay for the test
+        ResultFileHandler handler = CreateHandler(pm, log, new[] { 1 });
+
+        if (File.Exists(_tempFile))
+            File.Delete(_tempFile);
+
+        int callCount = 0;
+        pm.Setup(m => m.ExecuteCommandAsync(
+                It.IsAny<string>(),
+                It.IsAny<IList<string>>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken?>()))
+            .Returns(() =>
+            {
+                callCount++;
+                if (callCount == 2)
+                {
+                    // Simulate success on second attempt by writing the file
+                    File.WriteAllText(_tempFile, "results");
+                }
+                return Task.FromResult(new ProcessExecutionResult { ExitCode = 0 });
+            });
+
+        bool result = await handler.CopyResultsAsync(
+            RunMode.iOS, false, "18.0", "udid", "bundle", _tempFile);
+
+        Assert.True(result);
+        Assert.Equal(2, callCount);
+        log.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Retrying results file copy (attempt 2)"))), Times.Once);
+    }
+
+    [Fact]
+    public async Task CopyResultsAsync_WhenAllRetriesFail_ReturnsFalse()
+    {
+        Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
+        Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
+        // Two retries with minimal delay
+        ResultFileHandler handler = CreateHandler(pm, log, new[] { 1, 1 });
+
+        if (File.Exists(_tempFile))
+            File.Delete(_tempFile);
+
+        int callCount = 0;
+        pm.Setup(m => m.ExecuteCommandAsync(
+                It.IsAny<string>(),
+                It.IsAny<IList<string>>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken?>()))
+            .Returns(() =>
+            {
+                callCount++;
+                return Task.FromResult(new ProcessExecutionResult { ExitCode = 1 });
+            });
+
+        bool result = await handler.CopyResultsAsync(
+            RunMode.iOS, false, "18.0", "udid", "bundle", _tempFile);
+
+        Assert.False(result);
+        // 1 initial attempt + 2 retries = 3 total
+        Assert.Equal(3, callCount);
+        log.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Retrying results file copy (attempt 2)"))), Times.Once);
+        log.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Retrying results file copy (attempt 3)"))), Times.Once);
+    }
+
+    private static string GetArgumentValue(MlaunchArguments args, string argumentName)
+    {
+        string prefix = $"--{argumentName}=";
+        string argument = args.Select(a => a.AsCommandLineArgument())
+            .First(a => a.StartsWith(prefix, StringComparison.Ordinal));
+
+        return argument.Substring(prefix.Length).Trim('"');
     }
 }
