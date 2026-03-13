@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Runtime.CompilerServices;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 
 #nullable enable
@@ -13,6 +14,13 @@ public abstract class AndroidApplicationEntryPoint : AndroidApplicationEntryPoin
 
     protected override TestRunner GetTestRunner(LogWriter logWriter)
     {
+        if (!RuntimeFeature.IsDynamicCodeSupported)
+        {
+            var reflectionRunner = new ReflectionBasedXunitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
+            ConfigureRunnerFilters(reflectionRunner, ApplicationOptions.Current);
+            return reflectionRunner;
+        }
+
         var runner = new XUnitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
         ConfigureRunnerFilters(runner, ApplicationOptions.Current);
         return runner;
