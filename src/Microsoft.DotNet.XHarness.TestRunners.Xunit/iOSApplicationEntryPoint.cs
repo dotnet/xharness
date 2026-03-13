@@ -14,9 +14,9 @@ public abstract class iOSApplicationEntryPoint : iOSApplicationEntryPointBase
     {
         if (!RuntimeFeature.IsDynamicCodeSupported)
         {
-            var threadlessRunner = new ThreadlessXunitTestRunner(logWriter);
-            ConfigureRunnerFilters(threadlessRunner, ApplicationOptions.Current);
-            return threadlessRunner;
+            var nativeAotRunner = new NativeAotXunitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
+            ConfigureRunnerFilters(nativeAotRunner, ApplicationOptions.Current);
+            return nativeAotRunner;
         }
 
         var runner = new XUnitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
