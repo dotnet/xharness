@@ -14,18 +14,18 @@ using Xunit;
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
 /// <summary>
-/// Xunit test runner for NativeAOT environments. Extends ThreadlessXunitTestRunner
+/// Xunit test runner using reflection-based discovery (NativeAOT-safe)
 /// with parallel test execution support and file-based result output.
 /// </summary>
-internal class NativeAotXunitTestRunner : ThreadlessXunitTestRunner
+internal class ReflectionBasedXunitTestRunner : CustomXunitTestRunner
 {
     public int? MaxParallelThreads { get; set; }
 
-    public NativeAotXunitTestRunner(LogWriter logger) : base(logger)
+    public ReflectionBasedXunitTestRunner(LogWriter logger) : base(logger)
     {
     }
 
-    protected override string RunnerDisplayName => "NativeAOT Xunit runner (reflection-based discovery, threaded execution)";
+    protected override string RunnerDisplayName => "reflection-based Xunit runner (threaded execution)";
 
     private string _resultsFileName = "TestResults.xUnit.xml";
     protected override string ResultsFileName { get => _resultsFileName; set => _resultsFileName = value; }

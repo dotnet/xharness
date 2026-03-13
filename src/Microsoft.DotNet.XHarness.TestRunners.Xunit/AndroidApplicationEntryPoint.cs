@@ -16,9 +16,9 @@ public abstract class AndroidApplicationEntryPoint : AndroidApplicationEntryPoin
     {
         if (!RuntimeFeature.IsDynamicCodeSupported)
         {
-            var nativeAotRunner = new NativeAotXunitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
-            ConfigureRunnerFilters(nativeAotRunner, ApplicationOptions.Current);
-            return nativeAotRunner;
+            var reflectionRunner = new ReflectionBasedXunitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
+            ConfigureRunnerFilters(reflectionRunner, ApplicationOptions.Current);
+            return reflectionRunner;
         }
 
         var runner = new XUnitTestRunner(logWriter) { MaxParallelThreads = MaxParallelThreads };
