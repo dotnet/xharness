@@ -22,7 +22,7 @@ public interface IMlaunchProcessManager : IMacOSProcessManager, IProcessManager
         ILog log,
         TimeSpan timeout,
         Dictionary<string, string>? environmentVariables = null,
-        int verbosity = 5,
+        int verbosity = 2,
         CancellationToken? cancellationToken = null);
 
     Task<ProcessExecutionResult> ExecuteCommandAsync(
@@ -32,7 +32,7 @@ public interface IMlaunchProcessManager : IMacOSProcessManager, IProcessManager
         ILog stderrLog,
         TimeSpan timeout,
         Dictionary<string, string>? environmentVariables = null,
-        int verbosity = 5,
+        int verbosity = 2,
         CancellationToken? cancellationToken = null);
 
     Task<ProcessExecutionResult> RunAsync(
@@ -41,7 +41,7 @@ public interface IMlaunchProcessManager : IMacOSProcessManager, IProcessManager
         ILog log,
         TimeSpan? timeout = null,
         Dictionary<string, string>? environmentVariables = null,
-        int verbosity = 5,
+        int verbosity = 2,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null);
 
@@ -53,7 +53,7 @@ public interface IMlaunchProcessManager : IMacOSProcessManager, IProcessManager
         ILog stderrLog,
         TimeSpan? timeout = null,
         Dictionary<string, string>? environmentVariables = null,
-        int verbosity = 5,
+        int verbosity = 2,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null);
 }
