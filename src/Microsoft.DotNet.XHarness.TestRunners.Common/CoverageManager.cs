@@ -16,13 +16,17 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Common;
 /// <summary>
 /// Manages code coverage collection for XHarness device tests.
 ///
-/// When an external coverage tool (e.g., coverlet) has already produced a coverage file,
-/// CoverageManager finds and returns it. Otherwise, it generates a method-level coverage
-/// report by reflecting over the test assemblies — recording which types and methods exist
-/// and which were exercised during the test run.
+/// Generates a method-level Cobertura XML coverage report by reflecting over the loaded
+/// test assemblies — enumerating all public types and methods. If an external coverage tool
+/// has already produced a file at the output path, that file is returned instead.
 ///
-/// The generated report uses the Cobertura XML format so it can be consumed by standard
-/// coverage visualization tools (Azure DevOps, Codecov, ReportGenerator, etc.).
+/// Note: Standard coverage tools like coverlet cannot instrument assemblies for device
+/// builds (APK/app bundles) because they only hook into the `dotnet test` pipeline.
+/// CoverageManager provides built-in coverage generation that works on all platforms
+/// (Android, iOS, WASM) without any external dependencies.
+///
+/// The generated Cobertura XML can be consumed by standard visualization tools
+/// (Azure DevOps, Codecov, ReportGenerator, etc.).
 /// </summary>
 public class CoverageManager
 {
