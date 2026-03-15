@@ -258,9 +258,9 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
             "--metrics-recording-only"
         });
 
-        if (File.Exists("/.dockerenv"))
+        if (File.Exists("/.dockerenv") || Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true")
         {
-            // Use --no-sandbox for containers, and codespaces
+            // Use --no-sandbox for containers (Linux Docker, Windows containers, and codespaces)
             options.AddArguments("--no-sandbox");
         }
 
@@ -288,7 +288,8 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
         {
                 "exited abnormally",
                 "Cannot start the driver service",
-                "failed to start"
+                "failed to start",
+                "DevToolsActivePort file doesn't exist"
             };
 
         foreach (var file in Directory.EnumerateFiles(Arguments.OutputDirectory, $"{driverName}-*.log"))
@@ -320,17 +321,20 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                 return (driverService, driver);
             }
             catch (TargetInvocationException tie) when
-                        (tie.InnerException is WebDriverException wde
-                            && err_snippets.Any(s => wde.ToString().Contains(s)) && retry_num < max_retries - 1)
+                        (tie.InnerException is Exception inner
+                            && (inner is WebDriverException || inner is InvalidOperationException)
+                            && err_snippets.Any(s => inner.ToString().Contains(s)) && retry_num < max_retries - 1)
             {
                 // chrome can sometimes crash on startup when launching from chromedriver.
                 // As a *workaround*, let's retry that a few times
-                // Example error seen:
-                //     [12:41:07] crit: OpenQA.Selenium.WebDriverException: unknown error: Chrome failed to start: exited abnormally.
+                // Example errors seen:
+                //     OpenQA.Selenium.WebDriverException: unknown error: Chrome failed to start: exited abnormally.
                 //    (chrome not reachable)
+                //     System.InvalidOperationException: session not created: Chrome failed to start: crashed.
+                //    (session not created: DevToolsActivePort file doesn't exist)
 
                 // Log on max-1 tries, and rethrow on the last one
-                logger.LogWarning($"Failed to start the browser, attempt #{retry_num}: {wde}");
+                logger.LogWarning($"Failed to start the browser, attempt #{retry_num}: {inner}");
 
                 driverService?.Dispose();
             }
