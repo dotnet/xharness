@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -23,8 +25,21 @@ internal class AppleJustTestCommand : AppleAppCommand<AppleJustTestCommandArgume
     {
     }
 
-    protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken) =>
-        serviceProvider.GetRequiredService<IJustTestOrchestrator>()
+    protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken)
+    {
+        var envVars = Arguments.EnvironmentalVariables.Value;
+
+        if (Arguments.EnableCoverage)
+        {
+            var coverageVars = new List<(string, string)>(envVars)
+            {
+                ("NUNIT_ENABLE_COVERAGE", "true"),
+                ("NUNIT_COVERAGE_OUTPUT_PATH", "coverage.cobertura.xml"),
+            };
+            envVars = coverageVars;
+        }
+
+        return serviceProvider.GetRequiredService<IJustTestOrchestrator>()
             .OrchestrateTest(
                 Arguments.BundleIdentifier,
                 Arguments.Target,
@@ -38,7 +53,8 @@ internal class AppleJustTestCommand : AppleAppCommand<AppleJustTestCommandArgume
                 includeWirelessDevices: Arguments.IncludeWireless,
                 enableLldb: Arguments.EnableLldb,
                 signalAppEnd: Arguments.SignalAppEnd,
-                Arguments.EnvironmentalVariables.Value,
+                envVars,
                 PassThroughArguments,
                 cancellationToken);
+    }
 }

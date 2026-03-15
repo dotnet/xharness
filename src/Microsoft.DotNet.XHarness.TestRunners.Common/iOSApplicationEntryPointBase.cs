@@ -31,6 +31,11 @@ public abstract class iOSApplicationEntryPointBase : ApplicationEntryPoint
             using TextWriter? resultsFileMaybe = options.EnableXml ? System.IO.File.CreateText(TestsResultsFinalPath) : null;
             await InternalRunAsync(options, Logger, resultsFileMaybe);
             Console.WriteLine($"Test results saved to: {TestsResultsFinalPath}");
+
+            if (CoverageResultPath != null)
+            {
+                Console.WriteLine($"Coverage results saved to: {CoverageResultPath}");
+            }
         }
         else
         {
@@ -54,6 +59,14 @@ public abstract class iOSApplicationEntryPointBase : ApplicationEntryPoint
                 logger.MinimumLogLevel = MinimumLogLevel.Info;
 
                 await InternalRunAsync(options, writer, writer);
+
+                // Coverage file is written to disk by CoverageManager (same as iOS 18+ path).
+                // Do NOT send coverage data over TCP — it would corrupt the test results XML stream.
+                // The host will pull the coverage file from the app container.
+                if (CoverageResultPath != null)
+                {
+                    Console.WriteLine($"Coverage results saved to: {CoverageResultPath}");
+                }
             }
         }
     }

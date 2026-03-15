@@ -53,11 +53,16 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
         var serviceProvider = Services.BuildServiceProvider();
         var diagnosticsData = serviceProvider.GetRequiredService<IDiagnosticsData>();
 
+        var coverageOutputPath = Arguments.EnableCoverage
+            ? Path.Combine(Arguments.OutputDirectory, "coverage.cobertura.xml")
+            : null;
+
         var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath,
                                                          stdoutFilePath,
                                                          logger,
                                                          Arguments.ErrorPatternsFile,
-                                                         symbolicator);
+                                                         symbolicator,
+                                                         coverageOutputPath);
         var runner = new WasmBrowserTestRunner(
                             Arguments,
                             PassThroughArguments,
