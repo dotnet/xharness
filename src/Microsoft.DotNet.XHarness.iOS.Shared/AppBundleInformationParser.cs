@@ -175,10 +175,11 @@ public class AppBundleInformationParser : IAppBundleInformationParser
         };
 
         var commandOutput = new MemoryLog { Timestamp = false };
+        var processLog = new MemoryLog { Timestamp = false };
         var result = await _processManager.ExecuteCommandAsync(
             PlistBuddyPath,
             args,
-            log,
+            processLog,
             commandOutput,
             commandOutput,
             TimeSpan.FromSeconds(10),
