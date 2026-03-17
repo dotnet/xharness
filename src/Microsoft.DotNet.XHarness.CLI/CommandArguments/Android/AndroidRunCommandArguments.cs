@@ -20,6 +20,7 @@ internal class AndroidRunCommandArguments : XHarnessCommandArguments, IAndroidAp
     public ExpectedExitCodeArgument ExpectedExitCode { get; } = new((int)Common.CLI.ExitCode.SUCCESS);
     public DeviceOutputFolderArgument DeviceOutputFolder { get; } = new();
     public WifiArgument Wifi { get; } = new();
+    public CommandArguments.EnableCoverageArgument EnableCoverage { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
@@ -34,5 +35,6 @@ internal class AndroidRunCommandArguments : XHarnessCommandArguments, IAndroidAp
         ExpectedExitCode,
         DeviceOutputFolder,
         Wifi,
+        EnableCoverage,
     };
 }

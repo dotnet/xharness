@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -25,8 +27,24 @@ internal class AppleTestCommand : AppleAppCommand<AppleTestCommandArguments>
     {
     }
 
-    protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken) =>
-        serviceProvider.GetRequiredService<ITestOrchestrator>()
+    protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken)
+    {
+        var envVars = Arguments.EnvironmentalVariables.Value;
+
+        if (Arguments.EnableCoverage)
+        {
+            // Inject coverage env vars so the test runner on the device enables coverage.
+            // Use Documents/coverage.cobertura.xml — the same directory where test results go,
+            // which the orchestrator already knows how to pull from the app container.
+            var coverageVars = new List<(string, string)>(envVars)
+            {
+                ("NUNIT_ENABLE_COVERAGE", "true"),
+                ("NUNIT_COVERAGE_OUTPUT_PATH", "coverage.cobertura.xml"),
+            };
+            envVars = coverageVars;
+        }
+
+        return serviceProvider.GetRequiredService<ITestOrchestrator>()
             .OrchestrateTest(
                 Arguments.AppBundlePath,
                 Arguments.Target,
@@ -41,7 +59,8 @@ internal class AppleTestCommand : AppleAppCommand<AppleTestCommandArguments>
                 resetSimulator: Arguments.ResetSimulator,
                 enableLldb: Arguments.EnableLldb,
                 signalAppEnd: Arguments.SignalAppEnd,
-                Arguments.EnvironmentalVariables.Value,
+                envVars,
                 PassThroughArguments,
                 cancellationToken);
+    }
 }

@@ -192,6 +192,11 @@ public abstract class ApplicationEntryPoint
         }
     }
 
+    /// <summary>
+    /// Path to the coverage results file after test execution, if coverage was enabled and collected.
+    /// </summary>
+    public string? CoverageResultPath { get; private set; }
+
     private async Task<TestRunner> InternalRunAsync(LogWriter logger)
     {
         logger.MinimumLogLevel = MinimumLogLevel;
@@ -206,10 +211,35 @@ public abstract class ApplicationEntryPoint
         runner.SkipTests(await IgnoreFileParser.ParseContentFilesAsync(IgnoreFilesDirectory));
 
         var testAssemblies = GetTestAssemblies();
+
+        // Set up coverage before running tests
+        var options = ApplicationOptions.Current;
+        CoverageManager? coverageManager = null;
+        if (options.EnableCoverage)
+        {
+            coverageManager = new CoverageManager(options.CoverageOutputPath);
+            coverageManager.PrepareForCoverage(testAssemblies);
+            logger.Info("Code coverage enabled. Coverage output path: " + coverageManager.OutputPath);
+        }
+
         // notify the clients we are starting
         TestsStarted?.Invoke(this, new EventArgs());
 
         await runner.Run(testAssemblies).ConfigureAwait(false);
+
+        // Check for coverage results if enabled and all tests passed
+        if (coverageManager != null && runner.FailedTests == 0)
+        {
+            CoverageResultPath = coverageManager.GetCoverageResults();
+            if (CoverageResultPath != null)
+            {
+                logger.Info($"Coverage results found at: {CoverageResultPath}");
+            }
+            else
+            {
+                logger.Info("Coverage was enabled but no coverage results file was found.");
+            }
+        }
 
         var result = new TestRunResult(runner);
         // notify the client we are done and the results, but do not expose
