@@ -82,7 +82,7 @@ public class DeviceLogCapturer : IDeviceLogCapturer
         if (!collectProcess.WaitForExit(processTimeoutMs))
         {
             _mainLog.WriteLine($"Device log collection timed out after {processTimeoutMs / 1000}s. Killing process and skipping log reading.");
-            try { collectProcess.Kill(entireProcessTree: true); } catch { /* best effort */ }
+            try { collectProcess.Kill(); } catch { /* best effort */ }
             CleanupOutputPath();
             return;
         }
@@ -135,7 +135,7 @@ public class DeviceLogCapturer : IDeviceLogCapturer
         if (!readProcess.WaitForExit(processTimeoutMs))
         {
             _mainLog.WriteLine($"Device log reading timed out after {processTimeoutMs / 1000}s. Killing process.");
-            try { readProcess.Kill(entireProcessTree: true); } catch { /* best effort */ }
+            try { readProcess.Kill(); } catch { /* best effort */ }
         }
         else
         {

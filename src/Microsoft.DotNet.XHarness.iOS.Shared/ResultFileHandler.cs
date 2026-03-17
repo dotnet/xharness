@@ -36,7 +36,7 @@ public class ResultFileHandler : IResultFileHandler
         if (isSimulator)
         {
             // Version format contains string like "Simulator 18.0".
-            string[] osVersionParts = osVersion.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            string[] osVersionParts = osVersion.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (osVersionParts.Length < 2)
             {
                 throw new FormatException("Simulator OS version is not in the expected format.");
@@ -176,7 +176,7 @@ public class ResultFileHandler : IResultFileHandler
         // Filter for crash reports that might be related to our app
         // .ips files typically follow the format: AppName-YYYY-MM-DD-HHMMSS.ips or similar
         List<string> appRelatedCrashes = crashReports
-            .Where(crash => crash.Contains(appInformation.AppName, StringComparison.OrdinalIgnoreCase) ||
+            .Where(crash => crash.IndexOf(appInformation.AppName, StringComparison.OrdinalIgnoreCase) >= 0 ||
                             crash.EndsWith(".ips", StringComparison.OrdinalIgnoreCase))
             .ToList();
 
@@ -222,7 +222,7 @@ public class ResultFileHandler : IResultFileHandler
         // Dump the crash report content to the log
         _mainLog.WriteLine($"==================== Crash report ====================");
         _mainLog.WriteLine($"Crash report file: {crashReportContent}");
-        string crashContent = await File.ReadAllTextAsync(crashReportContent);
+        string crashContent = File.ReadAllText(crashReportContent);
         _mainLog.WriteLine(crashContent);
         _mainLog.WriteLine($"==================== End of Crash report ====================");
     }
