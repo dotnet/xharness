@@ -32,7 +32,7 @@ public class MlaunchProcessManager : MacOSProcessManager, IMlaunchProcessManager
         ILog log,
         TimeSpan timeout,
         Dictionary<string, string>? environmentVariables = null,
-        int verbosity = 5,
+        int verbosity = 0,
         CancellationToken? cancellationToken = null)
     {
         using var p = new Process();
@@ -46,7 +46,7 @@ public class MlaunchProcessManager : MacOSProcessManager, IMlaunchProcessManager
         ILog stderr,
         TimeSpan timeout,
         Dictionary<string, string>? environmentVariables = null,
-        int verbosity = 5,
+        int verbosity = 0,
         CancellationToken? cancellationToken = null)
     {
         using var p = new Process();
@@ -59,7 +59,7 @@ public class MlaunchProcessManager : MacOSProcessManager, IMlaunchProcessManager
         ILog log,
         TimeSpan? timeout = null,
         Dictionary<string, string>? environmentVariables = null,
-        int verbosity = 5,
+        int verbosity = 0,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null) =>
 
@@ -73,7 +73,7 @@ public class MlaunchProcessManager : MacOSProcessManager, IMlaunchProcessManager
         ILog stderr,
         TimeSpan? timeout = null,
         Dictionary<string, string>? environmentVariables = null,
-        int verbosity = 5,
+        int verbosity = 0,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null)
     {
