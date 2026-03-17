@@ -3,13 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 using Xunit;
@@ -18,146 +15,38 @@ using Xunit.Abstractions;
 #nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
-internal class ThreadlessXunitTestRunner : XunitTestRunnerBase
+internal class ThreadlessXunitTestRunner : CustomXunitTestRunner
 {
     public ThreadlessXunitTestRunner(LogWriter logger) : base(logger)
     {
-        ShowFailureInfos = false;
     }
 
-    private string _resultsFileName = "TestResults.xUnit.xml";
-    protected override string ResultsFileName { get => _resultsFileName; set => _resultsFileName = value; }
+    protected override string RunnerDisplayName => "threadless Xunit runner";
 
-    private XElement? _assembliesElement;
+    protected override string ResultsFileName { get => string.Empty; set => throw new InvalidOperationException("This runner outputs its results to stdout."); }
 
-    internal XElement ConsumeAssembliesElement()
+    protected override TestAssemblyConfiguration CreateConfiguration()
     {
-        Debug.Assert(_assembliesElement != null, "ConsumeAssembliesElement called before Run() or after ConsumeAssembliesElement() was already called.");
-        var res = _assembliesElement;
-        _assembliesElement = null;
-        FailureInfos.Clear();
-        return res!;
-    }
-
-    public override async Task Run(IEnumerable<TestAssemblyInfo> testAssemblies)
-    {
-        OnInfo("Using threadless Xunit runner");
-
-        _assembliesElement = new XElement("assemblies");
-
-        var configuration = new TestAssemblyConfiguration() { ShadowCopy = false, ParallelizeAssembly = false, ParallelizeTestCollections = false, MaxParallelThreads = 1, PreEnumerateTheories = false };
-        var discoveryOptions = TestFrameworkOptions.ForDiscovery(configuration);
-        var discoverySink = new TestDiscoverySink();
-        var diagnosticSink = new ConsoleDiagnosticMessageSink(Logger);
-        var testOptions = TestFrameworkOptions.ForExecution(configuration);
-        var testSink = new TestMessageSink();
-
-        var totalSummary = new ExecutionSummary();
-        foreach (var testAsmInfo in testAssemblies)
+        return new TestAssemblyConfiguration()
         {
-            string assemblyFileName = testAsmInfo.FullPath;
-            var controller = new YieldingXunit2(AppDomainSupport.Denied, new NullSourceInformationProvider(), assemblyFileName, configFileName: null, shadowCopy: false, shadowCopyFolder: null, diagnosticMessageSink: diagnosticSink, verifyTestAssemblyExists: false);
-
-            discoveryOptions.SetSynchronousMessageReporting(true);
-            testOptions.SetSynchronousMessageReporting(true);
-
-            OnInfo($"Discovering: {assemblyFileName} (method display = {discoveryOptions.GetMethodDisplayOrDefault()}, method display options = {discoveryOptions.GetMethodDisplayOptionsOrDefault()})");
-            var assemblyInfo = new global::Xunit.Sdk.ReflectionAssemblyInfo(testAsmInfo.Assembly);
-            var discoverer = new ThreadlessXunitDiscoverer(assemblyInfo, new NullSourceInformationProvider(), discoverySink);
-
-            discoverer.FindWithoutThreads(includeSourceInformation: false, discoverySink, discoveryOptions);
-            var testCasesToRun = discoverySink.TestCases.Where(t => !_filters.IsExcluded(t)).ToList();
-            OnInfo($"Discovered:  {assemblyFileName} (found {testCasesToRun.Count} of {discoverySink.TestCases.Count} test cases)");
-
-            var summaryTaskSource = new TaskCompletionSource<ExecutionSummary>();
-            var resultsXmlAssembly = new XElement("assembly");
-#pragma warning disable CS0618 // Delegating*Sink types are marked obsolete, but we can't move to ExecutionSink yet: https://github.com/dotnet/arcade/issues/14375
-            var resultsSink = new DelegatingXmlCreationSink(new DelegatingExecutionSummarySink(testSink), resultsXmlAssembly);
-#pragma warning restore
-            var completionSink = new CompletionCallbackExecutionSink(resultsSink, summary => summaryTaskSource.SetResult(summary));
-
-            if (EnvironmentVariables.IsLogTestStart())
-            {
-                testSink.Execution.TestStartingEvent += args => { OnInfo($"[STRT] {args.Message.Test.DisplayName}"); };
-            }
-            testSink.Execution.TestPassedEvent += args =>
-            {
-                OnDebug($"[PASS] {args.Message.Test.DisplayName}");
-                PassedTests++;
-            };
-            testSink.Execution.TestSkippedEvent += args =>
-            {
-                OnDebug($"[SKIP] {args.Message.Test.DisplayName}");
-                SkippedTests++;
-            };
-            testSink.Execution.TestFailedEvent += args =>
-            {
-                OnError($"[FAIL] {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}");
-                FailedTests++;
-            };
-            testSink.Execution.TestFinishedEvent += args => ExecutedTests++;
-
-            testSink.Execution.TestAssemblyStartingEvent += args => { Console.WriteLine($"Starting:    {assemblyFileName}"); };
-            testSink.Execution.TestAssemblyFinishedEvent += args => { Console.WriteLine($"Finished:    {assemblyFileName}"); };
-
-            await controller.RunTestsAsync(testCasesToRun, MessageSinkAdapter.Wrap(completionSink), testOptions);
-
-            totalSummary = Combine(totalSummary, await summaryTaskSource.Task);
-
-            _assembliesElement.Add(resultsXmlAssembly);
-        }
-        TotalTests = totalSummary.Total;
-    }
-
-    private ExecutionSummary Combine(ExecutionSummary aggregateSummary, ExecutionSummary assemblySummary)
-    {
-        return new ExecutionSummary
-        {
-            Total = aggregateSummary.Total + assemblySummary.Total,
-            Failed = aggregateSummary.Failed + assemblySummary.Failed,
-            Skipped = aggregateSummary.Skipped + assemblySummary.Skipped,
-            Errors = aggregateSummary.Errors + assemblySummary.Errors,
-            Time = aggregateSummary.Time + assemblySummary.Time
+            ShadowCopy = false,
+            ParallelizeAssembly = false,
+            ParallelizeTestCollections = false,
+            MaxParallelThreads = 1,
+            PreEnumerateTheories = false,
         };
     }
 
     public override async Task<string> WriteResultsToFile(XmlResultJargon xmlResultJargon)
     {
-        if (_assembliesElement is null)
-            return string.Empty;
-
-        if (OperatingSystem.IsBrowser())
-        {
-            Debug.Assert(xmlResultJargon == XmlResultJargon.xUnit);
-            await WriteResultsToFile(Console.Out, xmlResultJargon);
-            return "";
-        }
-
-        string outputFilePath = GetResultsFilePath();
-        var settings = new XmlWriterSettings { Indent = true };
-        using (var xmlWriter = XmlWriter.Create(outputFilePath, settings))
-        {
-            _assembliesElement.Save(xmlWriter);
-        }
-
-        return outputFilePath;
+        Debug.Assert(xmlResultJargon == XmlResultJargon.xUnit);
+        await WriteResultsToFile(Console.Out, xmlResultJargon);
+        return "";
     }
 
-    public override Task WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
+    public override async Task WriteResultsToFile(TextWriter writer, XmlResultJargon jargon)
     {
-        if (_assembliesElement is null)
-            return Task.CompletedTask;
-
-        if (OperatingSystem.IsBrowser())
-            return WasmXmlResultWriter.WriteResultsToFile(ConsumeAssembliesElement());
-
-        var settings = new XmlWriterSettings { Indent = true };
-        using (var xmlWriter = XmlWriter.Create(writer, settings))
-        {
-            _assembliesElement.Save(xmlWriter);
-        }
-
-        return Task.CompletedTask;
+        await WasmXmlResultWriter.WriteResultsToFile(ConsumeAssembliesElement());
     }
 }
 
