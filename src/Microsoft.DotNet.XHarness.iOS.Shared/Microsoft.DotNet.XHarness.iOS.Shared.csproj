@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(NetMinimum)</TargetFramework>
+    <TargetFrameworks>$(XHarnessNetTFMs)</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <Nullable>disable</Nullable>
   </PropertyGroup>

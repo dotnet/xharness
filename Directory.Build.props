@@ -9,6 +9,10 @@
     <DisableImplicitNamespaceImports_DotNet>true</DisableImplicitNamespaceImports_DotNet>
     <Copyright>$(CopyrightNetFoundation)</Copyright>
     <Nullable>enable</Nullable>
+    <!-- All .NET TFMs that shipped XHarness packages must support.
+         Arcade defines NetCurrent/NetMinimum but drops older TFMs that downstream repos still need.
+         Update this property when changing the supported range. -->
+    <XHarnessNetTFMs>$(NetCurrent);net10.0;net9.0;net8.0</XHarnessNetTFMs>
   </PropertyGroup>
 
 </Project>
