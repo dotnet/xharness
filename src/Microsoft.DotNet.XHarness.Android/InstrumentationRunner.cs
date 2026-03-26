@@ -6,7 +6,11 @@ using Microsoft.DotNet.XHarness.Android.Execution;
 using System.Collections.Generic;
 using System.IO;
 using System;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using System.Linq;
 
@@ -42,6 +46,7 @@ public class InstrumentationRunner
         int expectedExitCode)
     {
         int? instrumentationExitCode = null;
+        var producedFiles = new List<DiagnosticsFile>();
 
         // No class name = default Instrumentation
         ProcessExecutionResults result = _runner.RunApkInstrumentation(apkPackageName, instrumentationName, instrumentationArguments, timeout);
@@ -54,7 +59,7 @@ public class InstrumentationRunner
         {
             if (result.ExitCode == (int)ExitCode.SUCCESS)
             {
-                (instrumentationExitCode, processCrashed, failurePullingFiles) = ParseInstrumentationResult(apkPackageName, outputDirectory, result.StandardOutput);
+                (instrumentationExitCode, processCrashed, failurePullingFiles) = ParseInstrumentationResult(apkPackageName, outputDirectory, result.StandardOutput, producedFiles);
             }
 
             // Optionally copy off an entire folder
@@ -66,6 +71,12 @@ public class InstrumentationRunner
                     foreach (string log in logs)
                     {
                         _logger.LogDebug($"Found output file: {log}");
+                        producedFiles.Add(new DiagnosticsFile
+                        {
+                            Name = Path.GetFileName(log),
+                            Type = "device-output",
+                            Path = log,
+                        });
                     }
                 }
                 catch (Exception toLog)
@@ -75,58 +86,83 @@ public class InstrumentationRunner
                 }
             }
 
-            logCatSucceeded = _runner.TryDumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log"));
+            var logcatFileName = $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log";
+            var logcatFilePath = Path.Combine(outputDirectory, logcatFileName);
+            logCatSucceeded = _runner.TryDumpAdbLog(logcatFilePath);
+
+            if (logCatSucceeded)
+            {
+                producedFiles.Add(new DiagnosticsFile
+                {
+                    Name = logcatFileName,
+                    Type = "logcat",
+                    Path = logcatFilePath,
+                });
+            }
 
             if (processCrashed)
             {
-                _runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{apkPackageName}"));
+                var bugreportPath = _runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{apkPackageName}"));
+                if (!string.IsNullOrEmpty(bugreportPath))
+                {
+                    producedFiles.Add(new DiagnosticsFile
+                    {
+                        Name = Path.GetFileName(bugreportPath),
+                        Type = "bugreport",
+                        Path = bugreportPath,
+                    });
+                }
             }
         }
+
+        // Determine exit code
+        ExitCode exitCode;
 
         // In case emulator crashes halfway through, we can tell by failing to pull ADB logs from it
         if (!logCatSucceeded)
         {
-            return ExitCode.SIMULATOR_FAILURE;
+            exitCode = ExitCode.SIMULATOR_FAILURE;
         }
-
-        if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
+        else if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
         {
-            return ExitCode.TIMED_OUT;
+            exitCode = ExitCode.TIMED_OUT;
         }
-
-        if (processCrashed)
+        else if (processCrashed)
         {
-            return ExitCode.APP_CRASH;
+            exitCode = ExitCode.APP_CRASH;
         }
-
-        if (failurePullingFiles)
+        else if (failurePullingFiles)
         {
             _logger.LogError($"Received expected instrumentation exit code ({instrumentationExitCode}), " +
                              "but we hit errors pulling files from the device (see log for details.)");
-            return ExitCode.DEVICE_FILE_COPY_FAILURE;
+            exitCode = ExitCode.DEVICE_FILE_COPY_FAILURE;
         }
-
-        if (!instrumentationExitCode.HasValue)
+        else if (!instrumentationExitCode.HasValue)
         {
-            return ExitCode.RETURN_CODE_NOT_SET;
+            exitCode = ExitCode.RETURN_CODE_NOT_SET;
         }
-
-        if (instrumentationExitCode != expectedExitCode)
+        else if (instrumentationExitCode != expectedExitCode)
         {
             _logger.LogError($"Non-success instrumentation exit code: {instrumentationExitCode}, expected: {expectedExitCode}");
-            return ExitCode.TESTS_FAILED;
+            exitCode = ExitCode.TESTS_FAILED;
+        }
+        else
+        {
+            exitCode = ExitCode.SUCCESS;
         }
 
-        return ExitCode.SUCCESS;
+        EmitRunSummary(exitCode, instrumentationExitCode, producedFiles);
+
+        return exitCode;
     }
 
-    private (int? ExitCode, bool Crashed, bool FilePullFailed) ParseInstrumentationResult(string apkPackageName, string outputDirectory, string result)
+    private (int? ExitCode, bool Crashed, bool FilePullFailed) ParseInstrumentationResult(string apkPackageName, string outputDirectory, string result, List<DiagnosticsFile> producedFiles)
     {
         // This is where test instrumentation can communicate outwardly that test execution failed
         IReadOnlyDictionary<string, string> resultValues = ParseInstrumentationOutputs(result);
 
         // Pull XUnit result XMLs off the device
-        bool failurePullingFiles = PullResultXMLs(apkPackageName, outputDirectory, resultValues)!;
+        bool failurePullingFiles = PullResultXMLs(apkPackageName, outputDirectory, resultValues, producedFiles)!;
         bool processCrashed = false;
 
         if (resultValues.TryGetValue(TestRunSummaryVariableName, out string? testRunSummary))
@@ -163,7 +199,7 @@ public class InstrumentationRunner
         return (ExitCode: instrumentationExitCode, Crashed: processCrashed, FilePullFailed: failurePullingFiles);
     }
 
-    private bool PullResultXMLs(string apkPackageName, string outputDirectory, IReadOnlyDictionary<string, string> resultValues)
+    private bool PullResultXMLs(string apkPackageName, string outputDirectory, IReadOnlyDictionary<string, string> resultValues, List<DiagnosticsFile> producedFiles)
     {
         bool success = false;
 
@@ -179,6 +215,12 @@ public class InstrumentationRunner
             try
             {
                 _runner.PullFiles(apkPackageName, resultFile, outputDirectory);
+                producedFiles.Add(new DiagnosticsFile
+                {
+                    Name = Path.GetFileName(resultFile),
+                    Type = "test-results",
+                    Path = Path.Combine(outputDirectory, Path.GetFileName(resultFile)),
+                });
             }
             catch (Exception toLog)
             {
@@ -221,5 +263,113 @@ public class InstrumentationRunner
         }
 
         return outputs;
+    }
+
+    private void EmitRunSummary(ExitCode exitCode, int? instrumentationExitCode, List<DiagnosticsFile> producedFiles)
+    {
+        // Human-readable summary
+        var summary = new StringBuilder();
+        summary.AppendLine("=== XHARNESS RUN SUMMARY ===");
+        summary.AppendLine($"Exit code: {(int)exitCode} ({exitCode})");
+
+        if (instrumentationExitCode.HasValue)
+        {
+            summary.AppendLine($"Instrumentation exit code: {instrumentationExitCode}");
+        }
+
+        var device = _runner.GetActiveDevice();
+        if (device != null)
+        {
+            summary.Append($"Device: {device.DeviceSerial}");
+            if (device.ApiVersion.HasValue)
+            {
+                summary.Append($" (API {device.ApiVersion}");
+                if (!string.IsNullOrEmpty(device.Architecture))
+                {
+                    summary.Append($", {device.Architecture}");
+                }
+                summary.Append(')');
+            }
+            summary.AppendLine();
+        }
+
+        if (producedFiles.Count > 0)
+        {
+            summary.AppendLine("Files produced:");
+            foreach (var file in producedFiles)
+            {
+                summary.AppendLine($"  [{file.Type.ToUpperInvariant()}] {file.Name}");
+            }
+        }
+
+        summary.Append("=============================");
+        _logger.LogInformation(summary.ToString());
+
+        // Machine-readable JSON block for AI agents
+        EmitJsonResultBlock(exitCode, instrumentationExitCode, device, producedFiles);
+    }
+
+    public void EmitJsonResultBlock(ExitCode exitCode, int? instrumentationExitCode, AndroidDevice? device, List<DiagnosticsFile> producedFiles)
+    {
+        // Construct Helix API URLs if running inside Helix
+        string? helixJobId = Environment.GetEnvironmentVariable("HELIX_CORRELATION_ID");
+        string? helixWorkItem = Environment.GetEnvironmentVariable("HELIX_WORKITEM_FRIENDLYNAME");
+
+        var fileEntries = new List<object>();
+        foreach (var file in producedFiles)
+        {
+            var entry = new Dictionary<string, string>
+            {
+                ["name"] = file.Name,
+                ["type"] = file.Type,
+            };
+
+            if (!string.IsNullOrEmpty(helixJobId) && !string.IsNullOrEmpty(helixWorkItem))
+            {
+                entry["helixApiUrl"] = $"https://helix.dot.net/api/2019-06-17/jobs/{helixJobId}/workitems/{Uri.EscapeDataString(helixWorkItem)}/files/{Uri.EscapeDataString(file.Name)}";
+            }
+
+            fileEntries.Add(entry);
+        }
+
+        var resultData = new Dictionary<string, object?>
+        {
+            ["version"] = 1,
+            ["exitCode"] = (int)exitCode,
+            ["exitCodeName"] = exitCode.ToString(),
+        };
+
+        if (instrumentationExitCode.HasValue)
+        {
+            resultData["instrumentationExitCode"] = instrumentationExitCode.Value;
+        }
+
+        if (device != null)
+        {
+            resultData["device"] = device.DeviceSerial;
+            if (device.ApiVersion.HasValue)
+            {
+                resultData["apiVersion"] = device.ApiVersion.Value;
+            }
+            if (!string.IsNullOrEmpty(device.Architecture))
+            {
+                resultData["architecture"] = device.Architecture;
+            }
+        }
+
+        if (fileEntries.Count > 0)
+        {
+            resultData["files"] = fileEntries;
+        }
+
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        };
+
+        string json = JsonSerializer.Serialize(resultData, options);
+        _logger.LogInformation($"<<XHARNESS_RESULT_START>>{Environment.NewLine}{json}{Environment.NewLine}<<XHARNESS_RESULT_END>>");
     }
 }

@@ -50,6 +50,11 @@ public class AdbRunner
 
     private AndroidDevice? _activeDevice = null;
 
+    /// <summary>
+    /// Returns the currently active device, if one has been selected.
+    /// </summary>
+    public AndroidDevice? GetActiveDevice() => _activeDevice;
+
     public AdbRunner(ILogger log, string adbExePath = "") : this(log, new AdbProcessManager(log), adbExePath) { }
 
     public AdbRunner(ILogger log, IAdbProcessManager processManager, string adbExePath = "")
@@ -154,12 +159,60 @@ public class AdbRunner
         {
             Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath) ?? throw new ArgumentNullException(nameof(outputFilePath)));
             File.WriteAllText(outputFilePath, result.StandardOutput);
-            _log.LogInformation($"Wrote current ADB log to {outputFilePath}");
-            // The adb log is not directly accessible.
-            // Hence, we duplicate the log to the main console log to simplify the UX of failure investigation.
-            _log.LogInformation($"ADB log output:{Environment.NewLine}{result.StandardOutput}");
+            _log.LogInformation($"Wrote full ADB log ({CountLines(result.StandardOutput)} lines) to {outputFilePath}");
+
+            // Filter to only DOTNET-tagged lines for console output (full log is in the file above)
+            var filteredLog = FilterToDotnetLines(result.StandardOutput);
+            if (!string.IsNullOrEmpty(filteredLog))
+            {
+                _log.LogInformation($"ADB log (DOTNET entries):{Environment.NewLine}{filteredLog}");
+            }
+            else
+            {
+                _log.LogInformation("ADB log contained no DOTNET-tagged entries (see full log file for details)");
+            }
+
             return true;
         }
+    }
+
+    public static string FilterToDotnetLines(string logcatOutput)
+    {
+        if (string.IsNullOrEmpty(logcatOutput))
+        {
+            return string.Empty;
+        }
+
+        var sb = new StringBuilder();
+        foreach (var line in logcatOutput.Split('\n'))
+        {
+            // Match lines from the DOTNET log tag used by the Mono Android test runner
+            if (line.Contains(" DOTNET  ") || line.Contains(" DOTNET: "))
+            {
+                sb.AppendLine(line.TrimEnd('\r'));
+            }
+        }
+
+        return sb.ToString().TrimEnd();
+    }
+
+    private static int CountLines(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return 0;
+        }
+
+        int count = 0;
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (text[i] == '\n')
+            {
+                count++;
+            }
+        }
+
+        return count + 1;
     }
 
     public string DumpBugReport(string outputFilePathWithoutFormat)
