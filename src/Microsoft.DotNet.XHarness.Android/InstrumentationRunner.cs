@@ -6,9 +6,6 @@ using Microsoft.DotNet.XHarness.Android.Execution;
 using System.Collections.Generic;
 using System.IO;
 using System;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
@@ -267,109 +264,17 @@ public class InstrumentationRunner
 
     private void EmitRunSummary(ExitCode exitCode, int? instrumentationExitCode, List<DiagnosticsFile> producedFiles)
     {
-        // Human-readable summary
-        var summary = new StringBuilder();
-        summary.AppendLine("=== XHARNESS RUN SUMMARY ===");
-        summary.AppendLine($"Exit code: {(int)exitCode} ({exitCode})");
-
-        if (instrumentationExitCode.HasValue)
-        {
-            summary.AppendLine($"Instrumentation exit code: {instrumentationExitCode}");
-        }
-
         var device = _runner.GetActiveDevice();
-        if (device != null)
-        {
-            summary.Append($"Device: {device.DeviceSerial}");
-            if (device.ApiVersion.HasValue)
-            {
-                summary.Append($" (API {device.ApiVersion}");
-                if (!string.IsNullOrEmpty(device.Architecture))
-                {
-                    summary.Append($", {device.Architecture}");
-                }
-                summary.Append(')');
-            }
-            summary.AppendLine();
-        }
+        string? deviceOsVersion = device?.ApiVersion.HasValue == true ? $"API {device.ApiVersion}" : null;
 
-        if (producedFiles.Count > 0)
-        {
-            summary.AppendLine("Files produced:");
-            foreach (var file in producedFiles)
-            {
-                summary.AppendLine($"  [{file.Type.ToUpperInvariant()}] {file.Name}");
-            }
-        }
-
-        summary.Append("=============================");
-        _logger.LogInformation(summary.ToString());
-
-        // Machine-readable JSON block for AI agents
-        EmitJsonResultBlock(exitCode, instrumentationExitCode, device, producedFiles);
-    }
-
-    public void EmitJsonResultBlock(ExitCode exitCode, int? instrumentationExitCode, AndroidDevice? device, List<DiagnosticsFile> producedFiles)
-    {
-        // Construct Helix API URLs if running inside Helix
-        string? helixJobId = Environment.GetEnvironmentVariable("HELIX_CORRELATION_ID");
-        string? helixWorkItem = Environment.GetEnvironmentVariable("HELIX_WORKITEM_FRIENDLYNAME");
-
-        var fileEntries = new List<object>();
-        foreach (var file in producedFiles)
-        {
-            var entry = new Dictionary<string, string>
-            {
-                ["name"] = file.Name,
-                ["type"] = file.Type,
-            };
-
-            if (!string.IsNullOrEmpty(helixJobId) && !string.IsNullOrEmpty(helixWorkItem))
-            {
-                entry["helixApiUrl"] = $"https://helix.dot.net/api/2019-06-17/jobs/{helixJobId}/workitems/{Uri.EscapeDataString(helixWorkItem)}/files/{Uri.EscapeDataString(file.Name)}";
-            }
-
-            fileEntries.Add(entry);
-        }
-
-        var resultData = new Dictionary<string, object?>
-        {
-            ["version"] = 1,
-            ["exitCode"] = (int)exitCode,
-            ["exitCodeName"] = exitCode.ToString(),
-        };
-
-        if (instrumentationExitCode.HasValue)
-        {
-            resultData["instrumentationExitCode"] = instrumentationExitCode.Value;
-        }
-
-        if (device != null)
-        {
-            resultData["device"] = device.DeviceSerial;
-            if (device.ApiVersion.HasValue)
-            {
-                resultData["apiVersion"] = device.ApiVersion.Value;
-            }
-            if (!string.IsNullOrEmpty(device.Architecture))
-            {
-                resultData["architecture"] = device.Architecture;
-            }
-        }
-
-        if (fileEntries.Count > 0)
-        {
-            resultData["files"] = fileEntries;
-        }
-
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        };
-
-        string json = JsonSerializer.Serialize(resultData, options);
-        _logger.LogInformation($"<<XHARNESS_RESULT_START>>{Environment.NewLine}{json}{Environment.NewLine}<<XHARNESS_RESULT_END>>");
+        RunSummaryEmitter.EmitRunSummary(
+            _logger,
+            exitCode,
+            platform: "android",
+            deviceName: device?.DeviceSerial,
+            deviceOsVersion: deviceOsVersion,
+            architecture: device?.Architecture,
+            instrumentationExitCode: instrumentationExitCode,
+            producedFiles: producedFiles);
     }
 }

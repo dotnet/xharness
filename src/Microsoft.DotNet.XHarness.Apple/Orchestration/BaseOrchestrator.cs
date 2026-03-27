@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -170,7 +171,7 @@ public abstract class BaseOrchestrator : IDisposable
 
             try
             {
-                return await executeMacCatalystApp(appBundleInfo);
+                exitCode = await executeMacCatalystApp(appBundleInfo);
             }
             catch (Exception e)
             {
@@ -196,9 +197,10 @@ public abstract class BaseOrchestrator : IDisposable
                 }
 
                 _logger.LogError(message.ToString());
-
-                return exitCode;
             }
+
+            EmitAppleRunSummary(exitCode);
+            return exitCode;
         }
 
         try
@@ -353,7 +355,56 @@ public abstract class BaseOrchestrator : IDisposable
             }
         }
 
+        EmitAppleRunSummary(exitCode);
+
         return exitCode;
+    }
+
+    private void EmitAppleRunSummary(ExitCode exitCode)
+    {
+        var producedFiles = new List<DiagnosticsFile>();
+
+        // Collect files from the logs collection
+        foreach (var log in _logs.OfType<IFileBackedLog>())
+        {
+            if (string.IsNullOrEmpty(log.FullPath) || !File.Exists(log.FullPath))
+            {
+                continue;
+            }
+
+            // Skip empty log files
+            var fileInfo = new FileInfo(log.FullPath);
+            if (fileInfo.Length == 0)
+            {
+                continue;
+            }
+
+            var fileName = Path.GetFileName(log.FullPath);
+            var fileType = log.Description ?? "log";
+
+            producedFiles.Add(new DiagnosticsFile
+            {
+                Name = fileName,
+                Type = fileType.ToLowerInvariant().Replace(" ", "-"),
+                Path = log.FullPath,
+            });
+        }
+
+        // Also populate diagnostics data files
+        foreach (var file in producedFiles)
+        {
+            _diagnosticsData.Files.Add(file);
+        }
+
+        RunSummaryEmitter.EmitRunSummary(
+            message => _logger.LogInformation(message),
+            exitCode,
+            platform: "apple",
+            deviceName: _diagnosticsData.Device,
+            deviceOsVersion: _diagnosticsData.TargetOS,
+            architecture: null,
+            instrumentationExitCode: null,
+            producedFiles: producedFiles);
     }
 
     public void Dispose()
