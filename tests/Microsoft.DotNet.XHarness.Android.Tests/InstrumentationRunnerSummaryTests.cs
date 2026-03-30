@@ -127,9 +127,9 @@ public class RunSummaryEmitterTests
             RunSummaryEmitter.EmitRunSummary(_mockLogger.Object, ExitCode.SUCCESS, "android", null, null, null, 0, files);
 
             var json = ExtractJsonFromLogs();
-            var url = json.GetProperty("files")[0].GetProperty("helixApiUrl").GetString();
-            Assert.Contains("test-job-id", url);
-            Assert.Contains("testResults.xml", url);
+            Assert.Equal("test-job-id", json.GetProperty("helixJobId").GetString());
+            Assert.Contains("test-job-id", json.GetProperty("helixConsoleUri").GetString());
+            Assert.Contains("test-job-id", json.GetProperty("helixFilesUri").GetString());
         }
         finally
         {
@@ -152,7 +152,8 @@ public class RunSummaryEmitterTests
         RunSummaryEmitter.EmitRunSummary(_mockLogger.Object, ExitCode.SUCCESS, "android", null, null, null, 0, files);
 
         var json = ExtractJsonFromLogs();
-        Assert.False(json.GetProperty("files")[0].TryGetProperty("helixApiUrl", out _));
+        Assert.False(json.TryGetProperty("helixJobId", out _));
+        Assert.False(json.TryGetProperty("helixFilesUri", out _));
     }
 
     [Fact]

@@ -83,74 +83,72 @@ public class InstrumentationRunner
                 }
             }
 
-            var logcatFileName = $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log";
-            var logcatFilePath = Path.Combine(outputDirectory, logcatFileName);
-            logCatSucceeded = _runner.TryDumpAdbLog(logcatFilePath);
+            // Determine exit code before logcat dump so the summary appears first
+            ExitCode exitCode = DetermineExitCode(result, logCatSucceeded: true, processCrashed, failurePullingFiles, instrumentationExitCode, expectedExitCode);
 
-            if (logCatSucceeded)
-            {
-                producedFiles.Add(new DiagnosticsFile
-                {
-                    Name = logcatFileName,
-                    Type = "logcat",
-                    Path = logcatFilePath,
-                });
-            }
+            // Emit summary before the logcat dump for better visibility
+            var logcatFileName = $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log";
+            producedFiles.Add(new DiagnosticsFile { Name = logcatFileName, Type = "logcat" });
 
             if (processCrashed)
             {
-                var bugreportPath = _runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{apkPackageName}"));
-                if (!string.IsNullOrEmpty(bugreportPath))
-                {
-                    producedFiles.Add(new DiagnosticsFile
-                    {
-                        Name = Path.GetFileName(bugreportPath),
-                        Type = "bugreport",
-                        Path = bugreportPath,
-                    });
-                }
+                producedFiles.Add(new DiagnosticsFile { Name = $"adb-bugreport-{apkPackageName}", Type = "bugreport" });
+            }
+
+            EmitRunSummary(exitCode, instrumentationExitCode, producedFiles, outputDirectory);
+
+            // Now dump the logcat (which produces console output)
+            var logcatFilePath = Path.Combine(outputDirectory, logcatFileName);
+            logCatSucceeded = _runner.TryDumpAdbLog(logcatFilePath);
+
+            if (processCrashed)
+            {
+                _runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{apkPackageName}"));
             }
         }
 
-        // Determine exit code
-        ExitCode exitCode;
+        // Re-determine exit code with actual logcat success
+        ExitCode finalExitCode = DetermineExitCode(result, logCatSucceeded, processCrashed, failurePullingFiles, instrumentationExitCode, expectedExitCode);
 
-        // In case emulator crashes halfway through, we can tell by failing to pull ADB logs from it
+        return finalExitCode;
+    }
+
+    private ExitCode DetermineExitCode(ProcessExecutionResults result, bool logCatSucceeded, bool processCrashed, bool failurePullingFiles, int? instrumentationExitCode, int expectedExitCode)
+    {
         if (!logCatSucceeded)
         {
-            exitCode = ExitCode.SIMULATOR_FAILURE;
+            return ExitCode.SIMULATOR_FAILURE;
         }
-        else if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
+
+        if (result.ExitCode == (int)AdbExitCodes.INSTRUMENTATION_TIMEOUT)
         {
-            exitCode = ExitCode.TIMED_OUT;
+            return ExitCode.TIMED_OUT;
         }
-        else if (processCrashed)
+
+        if (processCrashed)
         {
-            exitCode = ExitCode.APP_CRASH;
+            return ExitCode.APP_CRASH;
         }
-        else if (failurePullingFiles)
+
+        if (failurePullingFiles)
         {
             _logger.LogError($"Received expected instrumentation exit code ({instrumentationExitCode}), " +
                              "but we hit errors pulling files from the device (see log for details.)");
-            exitCode = ExitCode.DEVICE_FILE_COPY_FAILURE;
+            return ExitCode.DEVICE_FILE_COPY_FAILURE;
         }
-        else if (!instrumentationExitCode.HasValue)
+
+        if (!instrumentationExitCode.HasValue)
         {
-            exitCode = ExitCode.RETURN_CODE_NOT_SET;
+            return ExitCode.RETURN_CODE_NOT_SET;
         }
-        else if (instrumentationExitCode != expectedExitCode)
+
+        if (instrumentationExitCode != expectedExitCode)
         {
             _logger.LogError($"Non-success instrumentation exit code: {instrumentationExitCode}, expected: {expectedExitCode}");
-            exitCode = ExitCode.TESTS_FAILED;
-        }
-        else
-        {
-            exitCode = ExitCode.SUCCESS;
+            return ExitCode.TESTS_FAILED;
         }
 
-        EmitRunSummary(exitCode, instrumentationExitCode, producedFiles);
-
-        return exitCode;
+        return ExitCode.SUCCESS;
     }
 
     private (int? ExitCode, bool Crashed, bool FilePullFailed) ParseInstrumentationResult(string apkPackageName, string outputDirectory, string result, List<DiagnosticsFile> producedFiles)
@@ -262,13 +260,23 @@ public class InstrumentationRunner
         return outputs;
     }
 
-    private void EmitRunSummary(ExitCode exitCode, int? instrumentationExitCode, List<DiagnosticsFile> producedFiles)
+    private void EmitRunSummary(ExitCode exitCode, int? instrumentationExitCode, List<DiagnosticsFile> producedFiles, string outputDirectory)
     {
         var device = _runner.GetActiveDevice();
         string? deviceOsVersion = device?.ApiVersion.HasValue == true ? $"API {device.ApiVersion}" : null;
 
         RunSummaryEmitter.EmitRunSummary(
             _logger,
+            exitCode,
+            platform: "android",
+            deviceName: device?.DeviceSerial,
+            deviceOsVersion: deviceOsVersion,
+            architecture: device?.Architecture,
+            instrumentationExitCode: instrumentationExitCode,
+            producedFiles: producedFiles);
+
+        RunSummaryEmitter.WriteResultJsonFile(
+            outputDirectory,
             exitCode,
             platform: "android",
             deviceName: device?.DeviceSerial,

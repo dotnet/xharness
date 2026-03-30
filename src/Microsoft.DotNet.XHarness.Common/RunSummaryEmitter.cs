@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -67,6 +68,7 @@ public static class RunSummaryEmitter
     {
         var summary = new StringBuilder();
         summary.AppendLine("=== XHARNESS RUN SUMMARY ===");
+        summary.AppendLine($"Machine: {Environment.MachineName}");
         summary.AppendLine($"Exit code: {(int)exitCode} ({exitCode})");
 
         if (instrumentationExitCode.HasValue)
@@ -120,6 +122,63 @@ public static class RunSummaryEmitter
         int? instrumentationExitCode,
         IReadOnlyList<DiagnosticsFile> producedFiles)
     {
+        var resultData = BuildResultData(exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles);
+
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        };
+
+        string json = JsonSerializer.Serialize(resultData, options);
+        logInfo($"{JsonStartMarker}{Environment.NewLine}{json}{Environment.NewLine}{JsonEndMarker}");
+    }
+
+    /// <summary>
+    /// Writes the JSON result block as a file (xharness-result.json) in the specified directory.
+    /// This file gets uploaded to Helix automatically when written to the output/uploads directory.
+    /// </summary>
+    public static void WriteResultJsonFile(
+        string outputDirectory,
+        ExitCode exitCode,
+        string platform,
+        string? deviceName,
+        string? deviceOsVersion,
+        string? architecture,
+        int? instrumentationExitCode,
+        IReadOnlyList<DiagnosticsFile> producedFiles)
+    {
+        try
+        {
+            var resultData = BuildResultData(exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles);
+
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            };
+
+            string json = JsonSerializer.Serialize(resultData, options);
+            Directory.CreateDirectory(outputDirectory);
+            File.WriteAllText(Path.Combine(outputDirectory, "xharness-result.json"), json);
+        }
+        catch
+        {
+            // Best effort — don't fail the run if file writing fails
+        }
+    }
+
+    private static Dictionary<string, object?> BuildResultData(
+        ExitCode exitCode,
+        string platform,
+        string? deviceName,
+        string? deviceOsVersion,
+        string? architecture,
+        int? instrumentationExitCode,
+        IReadOnlyList<DiagnosticsFile> producedFiles)
+    {
         string? helixJobId = Environment.GetEnvironmentVariable("HELIX_CORRELATION_ID");
         string? helixWorkItem = Environment.GetEnvironmentVariable("HELIX_WORKITEM_FRIENDLYNAME");
 
@@ -132,21 +191,26 @@ public static class RunSummaryEmitter
                 ["type"] = file.Type,
             };
 
-            if (!string.IsNullOrEmpty(helixJobId) && !string.IsNullOrEmpty(helixWorkItem))
-            {
-                entry["helixApiUrl"] = $"https://helix.dot.net/api/2019-06-17/jobs/{helixJobId}/workitems/{Uri.EscapeDataString(helixWorkItem)}/files/{Uri.EscapeDataString(file.Name)}";
-            }
-
             fileEntries.Add(entry);
         }
 
         var resultData = new Dictionary<string, object?>
         {
             ["version"] = 1,
+            ["machineName"] = Environment.MachineName,
             ["exitCode"] = (int)exitCode,
             ["exitCodeName"] = exitCode.ToString(),
             ["platform"] = platform,
         };
+
+        if (!string.IsNullOrEmpty(helixJobId) && !string.IsNullOrEmpty(helixWorkItem))
+        {
+            var encodedWorkItem = Uri.EscapeDataString(helixWorkItem);
+            resultData["helixWorkItemId"] = helixWorkItem;
+            resultData["helixJobId"] = helixJobId;
+            resultData["helixConsoleUri"] = $"https://helix.dot.net/api/2019-06-17/jobs/{helixJobId}/workitems/{encodedWorkItem}/console";
+            resultData["helixFilesUri"] = $"https://helix.dot.net/api/2019-06-17/jobs/{helixJobId}/workitems/{encodedWorkItem}/files";
+        }
 
         if (instrumentationExitCode.HasValue)
         {
@@ -173,14 +237,6 @@ public static class RunSummaryEmitter
             resultData["files"] = fileEntries;
         }
 
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        };
-
-        string json = JsonSerializer.Serialize(resultData, options);
-        logInfo($"{JsonStartMarker}{Environment.NewLine}{json}{Environment.NewLine}{JsonEndMarker}");
+        return resultData;
     }
 }

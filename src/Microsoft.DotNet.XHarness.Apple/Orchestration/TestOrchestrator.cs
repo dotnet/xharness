@@ -49,6 +49,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
     private readonly ILogs _logs;
     private readonly IFileBackedLog _mainLog;
     private readonly IErrorKnowledgeBase _errorKnowledgeBase;
+    private readonly IDiagnosticsData _diagnosticsData;
 
     public TestOrchestrator(
         IAppBundleInformationParser appBundleInformationParser,
@@ -69,6 +70,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         _logs = logs ?? throw new ArgumentNullException(nameof(logs));
         _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
         _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
+        _diagnosticsData = diagnosticsData ?? throw new ArgumentNullException(nameof(diagnosticsData));
     }
 
     public Task<ExitCode> OrchestrateTest(
@@ -251,6 +253,8 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
 
         ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
 
+        EmitAppleRunSummary(exitCode);
+
         if (!target.Platform.IsSimulator()) // Simulator app logs are already included in the main log
         {
             // Copy system and application logs to the main log for better failure investigation.
@@ -288,6 +292,8 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             cancellationToken: cancellationToken);
 
         ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
+
+        EmitAppleRunSummary(exitCode);
 
         // Copy system and application logs to the main log for better failure investigation.
         CopyLogsToMainLog();

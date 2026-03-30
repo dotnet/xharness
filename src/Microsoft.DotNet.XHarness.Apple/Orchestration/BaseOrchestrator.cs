@@ -44,6 +44,7 @@ public abstract class BaseOrchestrator : IDisposable
     private readonly IHelpers _helpers;
 
     private bool _lldbFileCreated;
+    private bool _summaryEmitted;
 
     // This is needed because
     // - For simulators, we query the simulator for Info.plist location and parse it
@@ -158,6 +159,11 @@ public abstract class BaseOrchestrator : IDisposable
 
         if (target.Platform == TestTarget.MacCatalyst)
         {
+            // MacCatalyst runs on the local Mac — set device info accordingly
+            _diagnosticsData.Device = Environment.MachineName;
+            _diagnosticsData.TargetOS = $"macOS {Environment.OSVersion.Version}";
+            _diagnosticsData.IsDevice = false;
+
             try
             {
                 appBundleInfo = await getAppBundle(target, null!, cancellationToken);
@@ -360,8 +366,15 @@ public abstract class BaseOrchestrator : IDisposable
         return exitCode;
     }
 
-    private void EmitAppleRunSummary(ExitCode exitCode)
+    protected void EmitAppleRunSummary(ExitCode exitCode)
     {
+        if (_summaryEmitted)
+        {
+            return;
+        }
+
+        _summaryEmitted = true;
+
         var producedFiles = new List<DiagnosticsFile>();
 
         // Collect files from the logs collection
@@ -398,6 +411,16 @@ public abstract class BaseOrchestrator : IDisposable
 
         RunSummaryEmitter.EmitRunSummary(
             message => _logger.LogInformation(message),
+            exitCode,
+            platform: "apple",
+            deviceName: _diagnosticsData.Device,
+            deviceOsVersion: _diagnosticsData.TargetOS,
+            architecture: null,
+            instrumentationExitCode: null,
+            producedFiles: producedFiles);
+
+        RunSummaryEmitter.WriteResultJsonFile(
+            _logs.Directory,
             exitCode,
             platform: "apple",
             deviceName: _diagnosticsData.Device,
