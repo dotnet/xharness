@@ -49,7 +49,6 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
     private readonly ILogs _logs;
     private readonly IFileBackedLog _mainLog;
     private readonly IErrorKnowledgeBase _errorKnowledgeBase;
-    private readonly IDiagnosticsData _diagnosticsData;
 
     public TestOrchestrator(
         IAppBundleInformationParser appBundleInformationParser,
@@ -70,7 +69,6 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         _logs = logs ?? throw new ArgumentNullException(nameof(logs));
         _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
         _errorKnowledgeBase = errorKnowledgeBase ?? throw new ArgumentNullException(nameof(errorKnowledgeBase));
-        _diagnosticsData = diagnosticsData ?? throw new ArgumentNullException(nameof(diagnosticsData));
     }
 
     public Task<ExitCode> OrchestrateTest(
@@ -253,13 +251,8 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
 
         ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
 
-        EmitAppleRunSummary(exitCode);
-
-        if (!target.Platform.IsSimulator()) // Simulator app logs are already included in the main log
-        {
-            // Copy system and application logs to the main log for better failure investigation.
-            CopyLogsToMainLog();
-        }
+        // Copy application logs to the main log for better failure investigation.
+        CopyLogsToMainLog();
 
         return exitCode;
     }
@@ -293,10 +286,8 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
 
         ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
 
-        EmitAppleRunSummary(exitCode);
-
-        // Copy system and application logs to the main log for better failure investigation.
-        CopyLogsToMainLog();
+        // Copy system log to the main log — MacCatalyst output goes to SystemLog, not ApplicationLog
+        CopyLogsToMainLog(isMacCatalyst: true);
 
         return exitCode;
     }
@@ -388,9 +379,14 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
     /// <summary>
     /// Copy system and application logs to the main log for better failure investigation.
     /// </summary>
-    private void CopyLogsToMainLog()
+    private void CopyLogsToMainLog(bool isMacCatalyst = false)
     {
-        var logs = _logs.Where(log => log.Description == LogType.ApplicationLog.ToString()).ToList();
+        // ApplicationLog: app console output captured via simctl (iOS/tvOS simulators, devices)
+        // SystemLog: macOS system log where MacCatalyst app output goes (runs as native process)
+        var targetLogType = isMacCatalyst ? LogType.SystemLog : LogType.ApplicationLog;
+        var logs = _logs.Where(log => log.Description == targetLogType.ToString()).ToList();
+
+        _logger.LogInformation($"Copying {targetLogType} logs to the main log for better failure investigation. Logs count: {logs.Count}.");
 
         foreach (var log in logs)
         {

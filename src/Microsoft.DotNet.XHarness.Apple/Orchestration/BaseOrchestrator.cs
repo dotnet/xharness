@@ -44,7 +44,6 @@ public abstract class BaseOrchestrator : IDisposable
     private readonly IHelpers _helpers;
 
     private bool _lldbFileCreated;
-    private bool _summaryEmitted;
 
     // This is needed because
     // - For simulators, we query the simulator for Info.plist location and parse it
@@ -93,9 +92,10 @@ public abstract class BaseOrchestrator : IDisposable
         ExecuteAppFunc executeApp,
         CancellationToken cancellationToken)
     {
+        ExitCode exitCode = ExitCode.GENERAL_FAILURE;
         try
         {
-            return await OrchestrateOperationInternal(
+            exitCode = await OrchestrateOperationInternal(
                 target,
                 deviceName,
                 includeWirelessDevices,
@@ -109,8 +109,14 @@ public abstract class BaseOrchestrator : IDisposable
         catch (OperationCanceledException e)
         {
             _logger.LogDebug(e.ToString());
-            return ExitCode.APP_LAUNCH_TIMEOUT;
+            exitCode = ExitCode.APP_LAUNCH_TIMEOUT;
         }
+        finally
+        {
+            EmitAppleRunSummary(exitCode);
+        }
+
+        return exitCode;
     }
 
     private async Task<ExitCode> OrchestrateOperationInternal(
@@ -205,7 +211,6 @@ public abstract class BaseOrchestrator : IDisposable
                 _logger.LogError(message.ToString());
             }
 
-            EmitAppleRunSummary(exitCode);
             return exitCode;
         }
 
@@ -361,20 +366,11 @@ public abstract class BaseOrchestrator : IDisposable
             }
         }
 
-        EmitAppleRunSummary(exitCode);
-
         return exitCode;
     }
 
     protected void EmitAppleRunSummary(ExitCode exitCode)
     {
-        if (_summaryEmitted)
-        {
-            return;
-        }
-
-        _summaryEmitted = true;
-
         var producedFiles = new List<DiagnosticsFile>();
 
         // Collect files from the logs collection

@@ -83,10 +83,6 @@ public class InstrumentationRunner
                 }
             }
 
-            // Determine exit code before logcat dump so the summary appears first
-            ExitCode exitCode = DetermineExitCode(result, logCatSucceeded: true, processCrashed, failurePullingFiles, instrumentationExitCode, expectedExitCode);
-
-            // Emit summary before the logcat dump for better visibility
             var logcatFileName = $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log";
             producedFiles.Add(new DiagnosticsFile { Name = logcatFileName, Type = "logcat" });
 
@@ -95,9 +91,6 @@ public class InstrumentationRunner
                 producedFiles.Add(new DiagnosticsFile { Name = $"adb-bugreport-{apkPackageName}", Type = "bugreport" });
             }
 
-            EmitRunSummary(exitCode, instrumentationExitCode, producedFiles, outputDirectory);
-
-            // Now dump the logcat (which produces console output)
             var logcatFilePath = Path.Combine(outputDirectory, logcatFileName);
             logCatSucceeded = _runner.TryDumpAdbLog(logcatFilePath);
 
@@ -107,10 +100,11 @@ public class InstrumentationRunner
             }
         }
 
-        // Re-determine exit code with actual logcat success
-        ExitCode finalExitCode = DetermineExitCode(result, logCatSucceeded, processCrashed, failurePullingFiles, instrumentationExitCode, expectedExitCode);
+        // Determine exit code and emit summary after all operations complete
+        ExitCode exitCode = DetermineExitCode(result, logCatSucceeded, processCrashed, failurePullingFiles, instrumentationExitCode, expectedExitCode);
+        EmitRunSummary(exitCode, instrumentationExitCode, producedFiles, outputDirectory);
 
-        return finalExitCode;
+        return exitCode;
     }
 
     private ExitCode DetermineExitCode(ProcessExecutionResults result, bool logCatSucceeded, bool processCrashed, bool failurePullingFiles, int? instrumentationExitCode, int expectedExitCode)
