@@ -15,12 +15,12 @@ using Xunit;
 
 namespace Microsoft.DotNet.XHarness.Android.Tests;
 
-public class RunSummaryEmitterTests
+public class InstrumentationRunnerSummaryTests
 {
     private readonly Mock<ILogger> _mockLogger;
     private readonly List<string> _loggedMessages;
 
-    public RunSummaryEmitterTests()
+    public InstrumentationRunnerSummaryTests()
     {
         _mockLogger = new Mock<ILogger>();
         _loggedMessages = new List<string>();

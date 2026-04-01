@@ -84,19 +84,21 @@ public class InstrumentationRunner
             }
 
             var logcatFileName = $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log";
-            producedFiles.Add(new DiagnosticsFile { Name = logcatFileName, Type = "logcat" });
-
-            if (processCrashed)
-            {
-                producedFiles.Add(new DiagnosticsFile { Name = $"adb-bugreport-{apkPackageName}", Type = "bugreport" });
-            }
-
             var logcatFilePath = Path.Combine(outputDirectory, logcatFileName);
             logCatSucceeded = _runner.TryDumpAdbLog(logcatFilePath);
 
+            if (logCatSucceeded)
+            {
+                producedFiles.Add(new DiagnosticsFile { Name = logcatFileName, Type = "logcat" });
+            }
+
             if (processCrashed)
             {
-                _runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{apkPackageName}"));
+                var bugreportPath = _runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{apkPackageName}"));
+                if (!string.IsNullOrEmpty(bugreportPath))
+                {
+                    producedFiles.Add(new DiagnosticsFile { Name = Path.GetFileName(bugreportPath), Type = "bugreport" });
+                }
             }
         }
 
