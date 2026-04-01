@@ -166,7 +166,10 @@ public class WasmTestMessagesProcessor
                 logMessage = JsonSerializer.Deserialize<WasmLogMessage>(message);
                 if (logMessage != null)
                 {
-                    line = logMessage.payload + " " + string.Join(" ", logMessage.arguments ?? Enumerable.Empty<object>());
+                    // Use payload (the formatted text) if available, otherwise join arguments.
+                    // Do not concatenate both — payload already contains the formatted output,
+                    // and arguments duplicates it for simple console.log() calls.
+                    line = logMessage.payload ?? string.Join(" ", logMessage.arguments ?? Enumerable.Empty<object>());
                 }
                 else
                 {
@@ -256,7 +259,10 @@ public class WasmTestMessagesProcessor
             {
                 // the message on WASI looks like WASM EXIT 123
                 // here we strip the first 10 characters and parse the rest
-                ForwardedExitCode = int.Parse(line.Substring(10));
+                if (int.TryParse(line.Substring(10), out var exitCode))
+                    ForwardedExitCode = exitCode;
+                else
+                    _logger.LogWarning($"Could not parse exit code from: {line}");
             }
             if (!WasmExitReceivedTcs.TrySetResult())
                 _logger.LogDebug("Got a duplicate exit message.");

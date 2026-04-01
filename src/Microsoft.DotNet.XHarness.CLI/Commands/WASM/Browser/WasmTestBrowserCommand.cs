@@ -294,7 +294,8 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                 "exited abnormally",
                 "Cannot start the driver service",
                 "failed to start",
-                "DevToolsActivePort file doesn't exist"
+                "DevToolsActivePort file doesn't exist",
+                "session not created"
             };
 
         foreach (var file in Directory.EnumerateFiles(Arguments.OutputDirectory, $"{driverName}-*.log"))
@@ -337,6 +338,8 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
                 //    (chrome not reachable)
                 //     System.InvalidOperationException: session not created: Chrome failed to start: crashed.
                 //    (session not created: DevToolsActivePort file doesn't exist)
+                //     System.InvalidOperationException: session not created: Chrome instance exited.
+                //    (SessionNotCreated)
 
                 // Log on max-1 tries, and rethrow on the last one
                 logger.LogWarning($"Failed to start the browser, attempt #{retry_num}: {inner}");
