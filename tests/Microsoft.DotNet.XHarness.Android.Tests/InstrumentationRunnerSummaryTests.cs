@@ -54,17 +54,6 @@ public class RunSummaryEmitterTests
     }
 
     [Fact]
-    public void EmitRunSummary_ContainsHumanSummary()
-    {
-        RunSummaryEmitter.EmitRunSummary(_mockLogger.Object, ExitCode.TESTS_FAILED, "android", "device1", "API 33", "arm64", 1, new List<DiagnosticsFile>());
-
-        var summary = _loggedMessages.Find(m => m.Contains("XHARNESS RUN SUMMARY"));
-        Assert.NotNull(summary);
-        Assert.Contains("TESTS_FAILED", summary);
-        Assert.Contains("device1", summary);
-    }
-
-    [Fact]
     public void EmitJsonResultBlock_ContainsExitCode()
     {
         RunSummaryEmitter.EmitRunSummary(_mockLogger.Object, ExitCode.TESTS_FAILED, "android", null, null, null, 1, new List<DiagnosticsFile>());

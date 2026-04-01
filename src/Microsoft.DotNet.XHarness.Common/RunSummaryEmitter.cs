@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.XHarness.Common.CLI;
@@ -13,8 +12,8 @@ using Microsoft.Extensions.Logging;
 namespace Microsoft.DotNet.XHarness.Common;
 
 /// <summary>
-/// Emits a structured run summary and machine-readable JSON block to the console log.
-/// Used by both Android and Apple platforms to provide consistent output for humans and AI agents.
+/// Emits a structured JSON result block to the console log.
+/// Used by both Android and Apple platforms to provide consistent output for humans and automated tooling.
 /// </summary>
 public static class RunSummaryEmitter
 {
@@ -22,7 +21,7 @@ public static class RunSummaryEmitter
     public const string JsonEndMarker = "<<XHARNESS_RESULT_END>>";
 
     /// <summary>
-    /// Emits a human-readable summary block followed by a machine-readable JSON block.
+    /// Emits a structured JSON result block to the log.
     /// </summary>
     public static void EmitRunSummary(
         ILogger logger,
@@ -40,7 +39,7 @@ public static class RunSummaryEmitter
     }
 
     /// <summary>
-    /// Emits a human-readable summary block followed by a machine-readable JSON block.
+    /// Emits a structured JSON result block to the log.
     /// Uses an Action&lt;string&gt; for logging to support different logger abstractions.
     /// </summary>
     public static void EmitRunSummary(
@@ -53,59 +52,7 @@ public static class RunSummaryEmitter
         int? instrumentationExitCode,
         IReadOnlyList<DiagnosticsFile> producedFiles)
     {
-        EmitHumanSummary(logInfo, exitCode, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles);
         EmitJsonResultBlock(logInfo, exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles);
-    }
-
-    private static void EmitHumanSummary(
-        Action<string> logInfo,
-        ExitCode exitCode,
-        string? deviceName,
-        string? deviceOsVersion,
-        string? architecture,
-        int? instrumentationExitCode,
-        IReadOnlyList<DiagnosticsFile> producedFiles)
-    {
-        var summary = new StringBuilder();
-        summary.AppendLine("=== XHARNESS RUN SUMMARY ===");
-        summary.AppendLine($"Machine: {Environment.MachineName}");
-        summary.AppendLine($"Exit code: {(int)exitCode} ({exitCode})");
-
-        if (instrumentationExitCode.HasValue)
-        {
-            summary.AppendLine($"Instrumentation exit code: {instrumentationExitCode}");
-        }
-
-        if (!string.IsNullOrEmpty(deviceName))
-        {
-            summary.Append($"Device: {deviceName}");
-            var details = new List<string>();
-            if (!string.IsNullOrEmpty(deviceOsVersion))
-            {
-                details.Add(deviceOsVersion);
-            }
-            if (!string.IsNullOrEmpty(architecture))
-            {
-                details.Add(architecture);
-            }
-            if (details.Count > 0)
-            {
-                summary.Append($" ({string.Join(", ", details)})");
-            }
-            summary.AppendLine();
-        }
-
-        if (producedFiles.Count > 0)
-        {
-            summary.AppendLine("Files produced:");
-            foreach (var file in producedFiles)
-            {
-                summary.AppendLine($"  [{file.Type.ToUpperInvariant()}] {file.Name}");
-            }
-        }
-
-        summary.Append("=============================");
-        logInfo(summary.ToString());
     }
 
     /// <summary>
