@@ -108,6 +108,9 @@ public class InstrumentationRunnerSummaryTests
             new() { Name = "testResults.xml", Type = "test-results" },
         };
 
+        var originalCorrelationId = Environment.GetEnvironmentVariable("HELIX_CORRELATION_ID");
+        var originalFriendlyName = Environment.GetEnvironmentVariable("HELIX_WORKITEM_FRIENDLYNAME");
+
         Environment.SetEnvironmentVariable("HELIX_CORRELATION_ID", "test-job-id");
         Environment.SetEnvironmentVariable("HELIX_WORKITEM_FRIENDLYNAME", "My.Test");
 
@@ -122,8 +125,8 @@ public class InstrumentationRunnerSummaryTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable("HELIX_CORRELATION_ID", null);
-            Environment.SetEnvironmentVariable("HELIX_WORKITEM_FRIENDLYNAME", null);
+            Environment.SetEnvironmentVariable("HELIX_CORRELATION_ID", originalCorrelationId);
+            Environment.SetEnvironmentVariable("HELIX_WORKITEM_FRIENDLYNAME", originalFriendlyName);
         }
     }
 
