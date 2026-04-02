@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System;
 using Microsoft.Extensions.Logging;
+using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using System.Linq;
 
@@ -42,6 +43,7 @@ public class InstrumentationRunner
         int expectedExitCode)
     {
         int? instrumentationExitCode = null;
+        var producedFiles = new List<DiagnosticsFile>();
 
         // No class name = default Instrumentation
         ProcessExecutionResults result = _runner.RunApkInstrumentation(apkPackageName, instrumentationName, instrumentationArguments, timeout);
@@ -54,7 +56,7 @@ public class InstrumentationRunner
         {
             if (result.ExitCode == (int)ExitCode.SUCCESS)
             {
-                (instrumentationExitCode, processCrashed, failurePullingFiles) = ParseInstrumentationResult(apkPackageName, outputDirectory, result.StandardOutput);
+                (instrumentationExitCode, processCrashed, failurePullingFiles) = ParseInstrumentationResult(apkPackageName, outputDirectory, result.StandardOutput, producedFiles);
             }
 
             // Optionally copy off an entire folder
@@ -66,6 +68,12 @@ public class InstrumentationRunner
                     foreach (string log in logs)
                     {
                         _logger.LogDebug($"Found output file: {log}");
+                        producedFiles.Add(new DiagnosticsFile
+                        {
+                            Name = Path.GetFileName(log),
+                            Type = "device-output",
+                            Path = log,
+                        });
                     }
                 }
                 catch (Exception toLog)
@@ -75,15 +83,34 @@ public class InstrumentationRunner
                 }
             }
 
-            logCatSucceeded = _runner.TryDumpAdbLog(Path.Combine(outputDirectory, $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log"));
+            var logcatFileName = $"adb-logcat-{apkPackageName}-{(instrumentationName ?? "default")}.log";
+            var logcatFilePath = Path.Combine(outputDirectory, logcatFileName);
+            logCatSucceeded = _runner.TryDumpAdbLog(logcatFilePath);
+
+            if (logCatSucceeded)
+            {
+                producedFiles.Add(new DiagnosticsFile { Name = logcatFileName, Type = "logcat" });
+            }
 
             if (processCrashed)
             {
-                _runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{apkPackageName}"));
+                var bugreportPath = _runner.DumpBugReport(Path.Combine(outputDirectory, $"adb-bugreport-{apkPackageName}"));
+                if (!string.IsNullOrEmpty(bugreportPath))
+                {
+                    producedFiles.Add(new DiagnosticsFile { Name = Path.GetFileName(bugreportPath), Type = "bugreport" });
+                }
             }
         }
 
-        // In case emulator crashes halfway through, we can tell by failing to pull ADB logs from it
+        // Determine exit code and emit summary after all operations complete
+        ExitCode exitCode = DetermineExitCode(result, logCatSucceeded, processCrashed, failurePullingFiles, instrumentationExitCode, expectedExitCode);
+        EmitRunSummary(exitCode, instrumentationExitCode, producedFiles, outputDirectory);
+
+        return exitCode;
+    }
+
+    private ExitCode DetermineExitCode(ProcessExecutionResults result, bool logCatSucceeded, bool processCrashed, bool failurePullingFiles, int? instrumentationExitCode, int expectedExitCode)
+    {
         if (!logCatSucceeded)
         {
             return ExitCode.SIMULATOR_FAILURE;
@@ -120,13 +147,13 @@ public class InstrumentationRunner
         return ExitCode.SUCCESS;
     }
 
-    private (int? ExitCode, bool Crashed, bool FilePullFailed) ParseInstrumentationResult(string apkPackageName, string outputDirectory, string result)
+    private (int? ExitCode, bool Crashed, bool FilePullFailed) ParseInstrumentationResult(string apkPackageName, string outputDirectory, string result, List<DiagnosticsFile> producedFiles)
     {
         // This is where test instrumentation can communicate outwardly that test execution failed
         IReadOnlyDictionary<string, string> resultValues = ParseInstrumentationOutputs(result);
 
         // Pull XUnit result XMLs off the device
-        bool failurePullingFiles = PullResultXMLs(apkPackageName, outputDirectory, resultValues)!;
+        bool failurePullingFiles = PullResultXMLs(apkPackageName, outputDirectory, resultValues, producedFiles)!;
         bool processCrashed = false;
 
         if (resultValues.TryGetValue(TestRunSummaryVariableName, out string? testRunSummary))
@@ -163,7 +190,7 @@ public class InstrumentationRunner
         return (ExitCode: instrumentationExitCode, Crashed: processCrashed, FilePullFailed: failurePullingFiles);
     }
 
-    private bool PullResultXMLs(string apkPackageName, string outputDirectory, IReadOnlyDictionary<string, string> resultValues)
+    private bool PullResultXMLs(string apkPackageName, string outputDirectory, IReadOnlyDictionary<string, string> resultValues, List<DiagnosticsFile> producedFiles)
     {
         bool success = false;
 
@@ -179,6 +206,12 @@ public class InstrumentationRunner
             try
             {
                 _runner.PullFiles(apkPackageName, resultFile, outputDirectory);
+                producedFiles.Add(new DiagnosticsFile
+                {
+                    Name = Path.GetFileName(resultFile),
+                    Type = "test-results",
+                    Path = Path.Combine(outputDirectory, Path.GetFileName(resultFile)),
+                });
             }
             catch (Exception toLog)
             {
@@ -221,5 +254,31 @@ public class InstrumentationRunner
         }
 
         return outputs;
+    }
+
+    private void EmitRunSummary(ExitCode exitCode, int? instrumentationExitCode, List<DiagnosticsFile> producedFiles, string outputDirectory)
+    {
+        var device = _runner.GetActiveDevice();
+        string? deviceOsVersion = device?.ApiVersion.HasValue == true ? $"API {device.ApiVersion}" : null;
+
+        RunSummaryEmitter.EmitRunSummary(
+            _logger,
+            exitCode,
+            platform: "android",
+            deviceName: device?.DeviceSerial,
+            deviceOsVersion: deviceOsVersion,
+            architecture: device?.Architecture,
+            instrumentationExitCode: instrumentationExitCode,
+            producedFiles: producedFiles);
+
+        RunSummaryEmitter.WriteResultJsonFile(
+            outputDirectory,
+            exitCode,
+            platform: "android",
+            deviceName: device?.DeviceSerial,
+            deviceOsVersion: deviceOsVersion,
+            architecture: device?.Architecture,
+            instrumentationExitCode: instrumentationExitCode,
+            producedFiles: producedFiles);
     }
 }
