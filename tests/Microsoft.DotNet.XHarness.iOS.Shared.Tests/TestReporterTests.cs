@@ -150,6 +150,51 @@ public class TestReporterTests : IDisposable
         File.Delete(tmpFile);
     }
 
+    [Fact]
+    public async Task CollectSimulatorResult_WhenConnectedTaskCanceledAndRunLogEmpty_DoesNotThrowAndTreatsAsLaunchFailure()
+    {
+        var connectedTask = new TaskCompletionSource<bool>();
+        connectedTask.TrySetCanceled();
+        _listener.Setup(l => l.ConnectedTask).Returns(connectedTask.Task);
+
+        var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
+        _listener.Setup(l => l.TestLog).Returns(listenerLog);
+
+        var runLogPath = Path.GetTempFileName();
+        File.WriteAllText(runLogPath, string.Empty);
+        _runLog
+            .Setup(l => l.GetReader())
+            .Returns(() => new StreamReader(File.OpenRead(runLogPath)));
+
+        var stderr = Path.GetTempFileName();
+        _mainLog.Setup(l => l.FullPath).Returns(stderr);
+
+        _logs
+            .Setup(l => l.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool?>()))
+            .Returns((string filename, string description, bool? timestamp) =>
+                Mock.Of<IFileBackedLog>(l => l.FullPath == Path.Combine(_logsDirectory, filename)));
+
+        var testReporter = BuildTestReporter();
+        var processResult = new ProcessExecutionResult() { TimedOut = false, ExitCode = 1 };
+
+        var exception = await Record.ExceptionAsync(() => testReporter.CollectSimulatorResult(processResult));
+
+        Assert.Null(exception);
+        Assert.False(testReporter.Success, "success");
+
+        var (result, resultMessage) = await testReporter.ParseResult();
+
+        Assert.Equal(TestExecutingResult.LaunchFailure, result);
+        Assert.Equal("Launch failure", resultMessage);
+
+        _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Could not find pid in mtouch output."))), Times.Once);
+        _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Equals("Test run failed to launch"))), Times.Once);
+        _processManager.Verify(p => p.KillTreeAsync(It.IsAny<int>(), It.IsAny<ILog>(), true), Times.Never);
+
+        File.Delete(runLogPath);
+        File.Delete(stderr);
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
