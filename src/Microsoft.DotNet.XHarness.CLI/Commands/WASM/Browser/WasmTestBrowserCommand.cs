@@ -189,9 +189,6 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
             "Connection refused"
         };
 
-        foreach (var file in Directory.EnumerateFiles(Arguments.OutputDirectory, "geckodriver-*.log"))
-            File.Delete(file);
-
         int max_retries = 3;
         int retry_num = 0;
         while (true)
@@ -200,9 +197,6 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
             try
             {
                 driverService = FirefoxDriverService.CreateDefaultService();
-                driverService.EnableAppendLog = false;
-                driverService.EnableVerboseLogging = true;
-                driverService.LogPath = Path.Combine(Arguments.OutputDirectory, $"geckodriver-{retry_num}.log");
 
                 return (driverService, new FirefoxDriver(driverService, options, Arguments.Timeout));
             }
