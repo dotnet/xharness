@@ -23,6 +23,7 @@ internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebS
     public DebuggerPortArgument DebuggerPort { get; set; } = new();
     public NoIncognitoArgument NoIncognito { get; } = new();
     public NoHeadlessArgument NoHeadless { get; } = new();
+    public NoAppVerbosityArgument NoAppVerbosity { get; } = new();
     public NoQuitArgument NoQuit { get; } = new();
     public BackgroundThrottlingArgument BackgroundThrottling { get; } = new();
     public LocaleArgument Locale { get; } = new("en-US");
@@ -55,6 +56,7 @@ internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebS
             DebuggerPort,
             NoIncognito,
             NoHeadless,
+            NoAppVerbosity,
             NoQuit,
             BackgroundThrottling,
             Locale,
