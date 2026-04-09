@@ -31,8 +31,13 @@ public class CallbackLog : Log
     {
     }
 
-    protected override void WriteImpl(string value)
+    protected override void WriteImpl(string? value)
     {
+        if (value == null)
+        {
+            return;
+        }
+
         lock (_captured)
         {
             _captured.Append(value);

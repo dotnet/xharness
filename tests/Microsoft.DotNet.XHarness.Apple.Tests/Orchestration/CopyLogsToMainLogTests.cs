@@ -80,7 +80,7 @@ public class CopyLogsToMainLogTests : OrchestratorTestBase
             .Setup(x => x.TestApp(
                 It.IsAny<AppBundleInformation>(), It.IsAny<TestTargetOs>(), It.IsAny<IDevice>(), It.IsAny<IDevice>(),
                 It.IsAny<TimeSpan>(), It.IsAny<TimeSpan>(), It.IsAny<bool>(), It.IsAny<IEnumerable<string>>(),
-                It.IsAny<IEnumerable<(string, string)>>(), It.IsAny<XmlResultJargon>(),
+                It.IsAny<IEnumerable<(string, string?)>>(), It.IsAny<XmlResultJargon>(),
                 It.IsAny<string[]?>(), It.IsAny<string[]?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TestExecutingResult.Succeeded, SuccessResultLine));
 
@@ -92,7 +92,7 @@ public class CopyLogsToMainLogTests : OrchestratorTestBase
             Array.Empty<string>(), Array.Empty<string>(),
             includeWirelessDevices: false, resetSimulator: true, enableLldb: false,
             signalAppEnd: false,
-            Array.Empty<(string, string)>(), Array.Empty<string>(),
+            Array.Empty<(string, string?)>(), Array.Empty<string>(),
             new CancellationToken());
 
         // Verify
@@ -128,7 +128,7 @@ public class CopyLogsToMainLogTests : OrchestratorTestBase
         _appTester
             .Setup(x => x.TestMacCatalystApp(
                 It.IsAny<AppBundleInformation>(), It.IsAny<TimeSpan>(), It.IsAny<TimeSpan>(), It.IsAny<bool>(),
-                It.IsAny<IEnumerable<string>>(), It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<IEnumerable<string>>(), It.IsAny<IEnumerable<(string, string?)>>(),
                 It.IsAny<XmlResultJargon>(), It.IsAny<string[]?>(), It.IsAny<string[]?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((TestExecutingResult.Succeeded, SuccessResultLine));
@@ -141,7 +141,7 @@ public class CopyLogsToMainLogTests : OrchestratorTestBase
             Array.Empty<string>(), Array.Empty<string>(),
             includeWirelessDevices: false, resetSimulator: true, enableLldb: false,
             signalAppEnd: true,
-            Array.Empty<(string, string)>(), Array.Empty<string>(),
+            Array.Empty<(string, string?)>(), Array.Empty<string>(),
             new CancellationToken());
 
         // Verify
@@ -169,7 +169,7 @@ public class CopyLogsToMainLogTests : OrchestratorTestBase
             .Setup(x => x.TestApp(
                 It.IsAny<AppBundleInformation>(), It.IsAny<TestTargetOs>(), It.IsAny<IDevice>(), It.IsAny<IDevice>(),
                 It.IsAny<TimeSpan>(), It.IsAny<TimeSpan>(), It.IsAny<bool>(), It.IsAny<IEnumerable<string>>(),
-                It.IsAny<IEnumerable<(string, string)>>(), It.IsAny<XmlResultJargon>(),
+                It.IsAny<IEnumerable<(string, string?)>>(), It.IsAny<XmlResultJargon>(),
                 It.IsAny<string[]?>(), It.IsAny<string[]?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TestExecutingResult.Succeeded, SuccessResultLine));
 
@@ -181,7 +181,7 @@ public class CopyLogsToMainLogTests : OrchestratorTestBase
             Array.Empty<string>(), Array.Empty<string>(),
             includeWirelessDevices: false, resetSimulator: false, enableLldb: false,
             signalAppEnd: false,
-            Array.Empty<(string, string)>(), Array.Empty<string>(),
+            Array.Empty<(string, string?)>(), Array.Empty<string>(),
             new CancellationToken());
 
         // Verify

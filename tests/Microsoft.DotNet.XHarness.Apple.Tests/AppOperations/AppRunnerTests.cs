@@ -57,7 +57,7 @@ public class AppRunnerTests : AppRunTestBase
             signalAppEnd: false,
             waitForExit: true,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") });
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") });
 
         // Verify
         Assert.True(result.Succeeded);
@@ -72,7 +72,7 @@ public class AppRunnerTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -133,7 +133,7 @@ public class AppRunnerTests : AppRunTestBase
             signalAppEnd: false,
             waitForExit: true,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") });
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") });
 
         // Verify
         Assert.True(result.Succeeded);
@@ -148,7 +148,7 @@ public class AppRunnerTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -198,7 +198,7 @@ public class AppRunnerTests : AppRunTestBase
                    Capture.In(appOutputLogs),
                    Capture.In(appOutputLogs),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>?>(),
+                   It.IsAny<Dictionary<string, string?>?>(),
                    It.IsAny<int>(),
                    Capture.In(cancellationTokens)))
             .Callback(() =>
@@ -233,7 +233,7 @@ public class AppRunnerTests : AppRunTestBase
             signalAppEnd: true,
             waitForExit: true,
             Array.Empty<string>(),
-            Array.Empty<(string, string)>());
+            Array.Empty<(string, string?)>());
 
         // Everything should hang now since we mimicked mlaunch not being able to tell the app quits
         // We will wait for XHarness to kick off the mlaunch (the app)
@@ -303,7 +303,7 @@ public class AppRunnerTests : AppRunTestBase
             signalAppEnd: false,
             waitForExit: true,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") });
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") });
 
         // Verify
         Assert.True(result.Succeeded);
@@ -319,7 +319,7 @@ public class AppRunnerTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
 
@@ -332,7 +332,7 @@ public class AppRunnerTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>?>(),
+                   It.IsAny<Dictionary<string, string?>?>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
 
@@ -380,7 +380,7 @@ public class AppRunnerTests : AppRunTestBase
             signalAppEnd: false,
             waitForExit: false,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") });
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") });
 
         // Verify
         Assert.True(result.Succeeded);
@@ -395,7 +395,7 @@ public class AppRunnerTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -436,10 +436,10 @@ public class AppRunnerTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()))
-            .Callback((MlaunchArguments args, ILog log, ILog stdoutLog, ILog stderrLog, TimeSpan timeout, Dictionary<string, string> env, int verbosity, CancellationToken? ct) =>
+            .Callback((MlaunchArguments args, ILog log, ILog stdoutLog, ILog stderrLog, TimeSpan timeout, Dictionary<string, string?> env, int verbosity, CancellationToken? ct) =>
             {
                 appLog = log;
                 appLaunchedTask.SetResult();
@@ -465,7 +465,7 @@ public class AppRunnerTests : AppRunTestBase
             signalAppEnd: false,
             waitForExit: false,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") });
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") });
 
         // No we wait for the launch of the app (which will then hang and the ScanLog will start waiting for the launch signal)
         await appLaunchedTask.Task;
@@ -492,7 +492,7 @@ public class AppRunnerTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -543,10 +543,10 @@ public class AppRunnerTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()))
-            .Callback((MlaunchArguments args, ILog log, ILog stdoutLog, ILog stderrLog, TimeSpan timeout, Dictionary<string, string> env, int verbosity, CancellationToken? ct) =>
+            .Callback((MlaunchArguments args, ILog log, ILog stdoutLog, ILog stderrLog, TimeSpan timeout, Dictionary<string, string?> env, int verbosity, CancellationToken? ct) =>
             {
                 appLaunchedTask.SetResult();
             })
@@ -571,7 +571,7 @@ public class AppRunnerTests : AppRunTestBase
             signalAppEnd: false,
             waitForExit: false,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") });
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") });
 
         // No we wait for the code to start launching the app
         await appLaunchedTask.Task;
@@ -600,7 +600,7 @@ public class AppRunnerTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -654,7 +654,7 @@ public class AppRunnerTests : AppRunTestBase
             signalAppEnd: false,
             waitForExit: false,
             extraAppArguments: Array.Empty<string>(),
-            extraEnvVariables: Array.Empty<(string, string)>());
+            extraEnvVariables: Array.Empty<(string, string?)>());
 
         // Verify
         Assert.True(result.Succeeded);
@@ -670,7 +670,7 @@ public class AppRunnerTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
 

@@ -227,7 +227,7 @@ public abstract class AppRunnerBase
     /// </summary>
     /// <param name="envVariables">Environmental variables where the arguments are added</param>
     /// <param name="variables">Variables to set</param>
-    protected void AddExtraEnvVars(Dictionary<string, string> envVariables, IEnumerable<(string, string)> variables)
+    protected void AddExtraEnvVars(Dictionary<string, string?> envVariables, IEnumerable<(string, string?)> variables)
     {
         using (var enumerator = variables.GetEnumerator())
         {
