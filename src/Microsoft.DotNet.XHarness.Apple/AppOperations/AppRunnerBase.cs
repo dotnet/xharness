@@ -61,7 +61,7 @@ public abstract class AppRunnerBase
         TimeSpan timeout,
         bool waitForExit,
         IEnumerable<string> extraArguments,
-        Dictionary<string, string> environmentVariables,
+        Dictionary<string, string?>? environmentVariables,
         CancellationToken cancellationToken)
     {
         using var systemLog = _captureLogFactory.Create(

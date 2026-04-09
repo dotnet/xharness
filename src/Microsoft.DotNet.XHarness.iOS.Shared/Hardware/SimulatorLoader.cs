@@ -532,9 +532,9 @@ public class SimulatorLoader : ISimulatorLoader
         }
     }
 
-    public IEnumerable<ISimulatorDevice?> SelectDevices(TestTarget target, ILog log, bool minVersion, CancellationToken cancellationToken = default)
+    public IEnumerable<ISimulatorDevice> SelectDevices(TestTarget target, ILog log, bool minVersion, CancellationToken cancellationToken = default)
         => new SimulatorEnumerable(this, target, minVersion, log, cancellationToken);
-    public IEnumerable<ISimulatorDevice?> SelectDevices(TestTargetOs target, ILog log, bool minVersion, CancellationToken cancellationToken = default)
+    public IEnumerable<ISimulatorDevice> SelectDevices(TestTargetOs target, ILog log, bool minVersion, CancellationToken cancellationToken = default)
         => new SimulatorEnumerable(this, target, minVersion, log, cancellationToken);
 
     private class SimulatorXmlNodeComparer : IEqualityComparer<XmlNode>
