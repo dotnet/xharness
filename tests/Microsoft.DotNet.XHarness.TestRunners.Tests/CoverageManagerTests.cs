@@ -3,9 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using Microsoft.DotNet.XHarness.TestRunners.Common;
 using Xunit;
 
@@ -15,7 +13,6 @@ namespace Microsoft.DotNet.XHarness.TestRunners.Tests;
 public class CoverageManagerTests : IDisposable
 {
     private readonly string _tempDir;
-    private static readonly TestAssemblyInfo[] s_emptyAssemblies = Array.Empty<TestAssemblyInfo>();
 
     public CoverageManagerTests()
     {
@@ -53,7 +50,7 @@ public class CoverageManagerTests : IDisposable
         var outputPath = Path.Combine(subDir, "coverage.xml");
         var manager = new CoverageManager(outputPath);
 
-        manager.PrepareForCoverage(s_emptyAssemblies);
+        manager.PrepareForCoverage();
 
         Assert.True(Directory.Exists(subDir));
     }
@@ -64,7 +61,7 @@ public class CoverageManagerTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "coverage.xml");
         var manager = new CoverageManager(outputPath);
 
-        manager.PrepareForCoverage(s_emptyAssemblies);
+        manager.PrepareForCoverage();
 
         Assert.Equal(outputPath, Environment.GetEnvironmentVariable("COVERAGE_OUTPUT_PATH"));
     }
@@ -95,31 +92,10 @@ public class CoverageManagerTests : IDisposable
     }
 
     [Fact]
-    public void GetCoverageResults_GeneratesReflectionCoverage_WhenNoFileExists()
-    {
-        var outputPath = Path.Combine(_tempDir, "coverage.cobertura.xml");
-        var manager = new CoverageManager(outputPath);
-
-        // Provide the current test assembly as a "test assembly"
-        var asm = Assembly.GetExecutingAssembly();
-        manager.PrepareForCoverage(new[] { new TestAssemblyInfo(asm, asm.Location) });
-
-        var result = manager.GetCoverageResults();
-
-        Assert.NotNull(result);
-        Assert.True(File.Exists(result));
-        var content = File.ReadAllText(result);
-        Assert.Contains("<coverage", content);
-        Assert.Contains("<package", content);
-        Assert.Contains("line-rate", content);
-    }
-
-    [Fact]
-    public void GetCoverageResults_ReturnsNull_WhenNoAssembliesAndNoFile()
+    public void GetCoverageResults_ReturnsNull_WhenNoFileExists()
     {
         var outputPath = Path.Combine(_tempDir, "nonexistent.xml");
         var manager = new CoverageManager(outputPath);
-        // Don't call PrepareForCoverage (no assemblies)
 
         var result = manager.GetCoverageResults();
 

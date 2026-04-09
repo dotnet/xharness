@@ -133,6 +133,46 @@ public class ResultFileHandler : IResultFileHandler
         return true;
     }
 
+    public async Task<bool> CopyCoverageResultsAsync(
+        RunMode runMode,
+        bool isSimulator,
+        string osVersion,
+        string udid,
+        string bundleIdentifier,
+        string hostDestinationPath)
+    {
+        // Coverage file path mirrors the value set in AppleTestCommand/AppleJustTestCommand
+        string sourcePath = runMode == RunMode.iOS
+            ? "/Documents/coverage.cobertura.xml"
+            : "/Library/Caches/Documents/coverage.cobertura.xml";
+
+        if (!IsVersionSupported(osVersion, isSimulator))
+        {
+            return false;
+        }
+
+        string cmd;
+        if (isSimulator)
+        {
+            cmd = $"cp \"$(xcrun simctl get_app_container {udid} {bundleIdentifier} data){sourcePath}\" \"{hostDestinationPath}\"";
+        }
+        else
+        {
+            cmd = $"xcrun devicectl device copy from --device {udid} --source {sourcePath} --destination {hostDestinationPath} --user mobile --domain-type appDataContainer --domain-identifier {bundleIdentifier}";
+        }
+
+        await _processManager.ExecuteCommandAsync(
+            "/bin/bash",
+            new[] { "-c", cmd },
+            _mainLog,
+            _mainLog,
+            _mainLog,
+            TimeSpan.FromMinutes(1),
+            null);
+
+        return File.Exists(hostDestinationPath);
+    }
+
     public async Task CopyCrashReportAsync(
         string deviceUdid,
         string? deviceName,

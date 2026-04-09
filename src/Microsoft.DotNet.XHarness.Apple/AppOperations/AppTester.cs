@@ -372,6 +372,13 @@ public class AppTester : AppRunnerBase, IAppTester
                         isSimulator: true);
                 }
             }
+
+            // Try to copy coverage results (non-fatal if not present)
+            var coverageDest = Path.Combine(_logs.Directory, "coverage.cobertura.xml");
+            if (await resultFileHandler.CopyCoverageResultsAsync(runMode, true, simulator.OSVersion, simulator.UDID, appInformation.BundleIdentifier, coverageDest))
+            {
+                _mainLog.WriteLine($"Coverage results copied to {coverageDest}");
+            }
         }
     }
 
@@ -480,6 +487,13 @@ public class AppTester : AppRunnerBase, IAppTester
                         _mainLog,
                         isSimulator: false);
                 }
+            }
+
+            // Try to copy coverage results (non-fatal if not present)
+            var coverageDest = Path.Combine(_logs.Directory, "coverage.cobertura.xml");
+            if (await resultFileHandler.CopyCoverageResultsAsync(runMode, false, device.OSVersion, device.UDID, appInformation.BundleIdentifier, coverageDest))
+            {
+                _mainLog.WriteLine($"Coverage results copied to {coverageDest}");
             }
         }
     }

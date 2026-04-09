@@ -218,7 +218,7 @@ public abstract class ApplicationEntryPoint
         if (options.EnableCoverage)
         {
             coverageManager = new CoverageManager(options.CoverageOutputPath);
-            coverageManager.PrepareForCoverage(testAssemblies);
+            coverageManager.PrepareForCoverage();
             logger.Info("Code coverage enabled. Coverage output path: " + coverageManager.OutputPath);
         }
 

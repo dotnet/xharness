@@ -165,6 +165,12 @@ public class InstrumentationRunner
             {
                 _runner.PullFiles(apkPackageName, coveragePath, outputDirectory);
                 _logger.LogInformation($"Coverage results pulled to '{outputDirectory}'");
+                producedFiles.Add(new DiagnosticsFile
+                {
+                    Name = Path.GetFileName(coveragePath),
+                    Type = "coverage",
+                    Path = Path.Combine(outputDirectory, Path.GetFileName(coveragePath)),
+                });
             }
             catch (Exception toLog)
             {
