@@ -35,6 +35,11 @@ public interface IDiagnosticsData
     /// True when the target is a real HW device, false for simulators, maccatalyst..
     /// </summary>
     bool? IsDevice { get; set; }
+
+    /// <summary>
+    /// Files produced during the command execution.
+    /// </summary>
+    IList<DiagnosticsFile> Files { get; }
 }
 
 /// <summary>
@@ -63,6 +68,9 @@ public class CommandDiagnostics : IDiagnosticsData
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? IsDevice { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public IList<DiagnosticsFile> Files { get; } = new List<DiagnosticsFile>();
 
     public int Duration => (int)Math.Round(_timer.Elapsed.TotalSeconds);
 
@@ -147,4 +155,16 @@ public class CommandDiagnostics : IDiagnosticsData
             _logger.LogError("Failed to save diagnostics data to '{pathToFile}': {error}", targetFile, e);
         }
     }
+}
+
+/// <summary>
+/// Represents a file produced during a command execution.
+/// </summary>
+public class DiagnosticsFile
+{
+    public string Name { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Path { get; set; }
 }
