@@ -235,7 +235,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
 
         // Arguments passed to the iOS app bundle
         args.AddRange(extraAppArguments.Select(arg => new SetAppArgumentArgument(arg)));
-        args.AddRange(extraEnvVariables.Select(v => new SetEnvVariableArgument(v.Item1, v.Item2)));
+        args.AddRange(GetSetEnvVariableArguments(extraEnvVariables));
 
         if (appEndTag != null)
         {

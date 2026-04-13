@@ -245,6 +245,14 @@ public abstract class AppRunnerBase
         }
     }
 
+    protected static IEnumerable<SetEnvVariableArgument> GetSetEnvVariableArguments(IEnumerable<(string Name, string? Value)> envVariables)
+        => envVariables
+            .Where(pair => pair.Value is not null)
+            .Select(pair => new SetEnvVariableArgument(pair.Name, pair.Value!));
+
+    protected static IEnumerable<SetEnvVariableArgument> GetSetEnvVariableArguments(IEnumerable<KeyValuePair<string, string?>> envVariables)
+        => GetSetEnvVariableArguments(envVariables.Select(pair => (pair.Key, pair.Value)));
+
     protected string WatchForAppEndTag(
         out string tag,
         ref IFileBackedLog appLog,

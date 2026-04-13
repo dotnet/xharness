@@ -657,7 +657,7 @@ public class AppTester : AppRunnerBase, IAppTester
             appEndTag);
 
         // Variables passed through --set-env
-        args.AddRange(envVariables.Select(pair => new SetEnvVariableArgument(pair.Key, pair.Value)));
+        args.AddRange(GetSetEnvVariableArguments(envVariables));
 
         // Arguments passed to the iOS app bundle
         args.AddRange(extraAppArguments.Select(arg => new SetAppArgumentArgument(arg)));

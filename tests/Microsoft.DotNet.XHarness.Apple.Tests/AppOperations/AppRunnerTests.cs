@@ -93,6 +93,59 @@ public class AppRunnerTests : AppRunTestBase
     }
 
     [Fact]
+    public async Task RunOnSimulatorWithNullEnvVariableSkipsArgument()
+    {
+        var captureLog = new Mock<ICaptureLog>();
+        captureLog.SetupGet(x => x.FullPath).Returns(_simulatorLogPath);
+        captureLog.SetupGet(x => x.Description).Returns(LogType.SystemLog.ToString());
+
+        var captureLogFactory = new Mock<ICaptureLogFactory>();
+        captureLogFactory
+            .Setup(x => x.Create(
+               Path.Combine(_logs.Object.Directory, _mockSimulator.Name + ".log"),
+               _mockSimulator.SystemLog,
+               false,
+               LogType.SystemLog))
+            .Returns(captureLog.Object);
+
+        SetupLogList(new[] { captureLog.Object });
+
+        var appRunner = new AppRunner(
+            _processManager.Object,
+            _snapshotReporterFactory,
+            captureLogFactory.Object,
+            Mock.Of<IDeviceLogCapturerFactory>(),
+            _mainLog.Object,
+            _logs.Object,
+            _helpers.Object);
+
+        var result = await appRunner.RunApp(
+            _appBundleInfo,
+            new TestTargetOs(TestTarget.Simulator_tvOS, null),
+            _mockSimulator,
+            null,
+            timeout: TimeSpan.FromSeconds(30),
+            signalAppEnd: false,
+            waitForExit: true,
+            extraAppArguments: new[] { "--foo=bar", "--xyz" },
+            extraEnvVariables: new (string, string?)[] { ("appArg1", null) });
+
+        Assert.True(result.Succeeded);
+
+        _processManager.Verify(
+            x => x.ExecuteCommandAsync(
+               It.Is<MlaunchArguments>(args => !args.AsCommandLine().Contains("-setenv=appArg1=")),
+               It.IsAny<ILog>(),
+               It.IsAny<ILog>(),
+               It.IsAny<ILog>(),
+               It.IsAny<TimeSpan>(),
+               It.IsAny<Dictionary<string, string?>>(),
+               It.IsAny<int>(),
+               It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task RunOnDeviceTest()
     {
         var deviceSystemLog = new Mock<IFileBackedLog>();
