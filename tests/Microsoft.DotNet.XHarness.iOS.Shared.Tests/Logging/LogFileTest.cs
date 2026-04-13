@@ -129,14 +129,14 @@ public class LogFileTest : IDisposable
     [Fact]
     public void WriteNullTest()
     {
-        using var log = new LogFile(_description, _path)
+        using (var log = new LogFile(_description, _path))
         {
-            Timestamp = false,
-        };
+            log.Timestamp = false;
 
-        log.Write(null);
-        log.WriteLine(null);
-        log.Flush();
+            log.Write(null);
+            log.WriteLine(null);
+            log.Flush();
+        }
 
         Assert.Equal("\n", File.ReadAllText(_path));
     }
