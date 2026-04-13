@@ -399,18 +399,6 @@ public abstract class BaseOrchestrator : IDisposable
             });
         }
 
-        // Check for coverage file in the output directory
-        var coveragePath = Path.Combine(_logs.Directory, "coverage.cobertura.xml");
-        if (File.Exists(coveragePath))
-        {
-            producedFiles.Add(new DiagnosticsFile
-            {
-                Name = "coverage.cobertura.xml",
-                Type = "coverage",
-                Path = coveragePath,
-            });
-        }
-
         // Also populate diagnostics data files
         foreach (var file in producedFiles)
         {

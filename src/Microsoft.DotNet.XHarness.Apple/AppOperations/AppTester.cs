@@ -391,6 +391,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 var coverageDest = Path.Combine(_logs.Directory, coverageFileName);
                 if (await resultFileHandler.CopyCoverageResultsAsync(runMode, true, simulator.OSVersion, simulator.UDID, appInformation.BundleIdentifier, coverageFileName, coverageDest))
                 {
+                    _logs.AddFile(coverageDest, "Coverage");
                     _mainLog.WriteLine($"Coverage results copied to {coverageDest}");
                 }
             }
@@ -512,6 +513,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 var coverageDest = Path.Combine(_logs.Directory, coverageFileName);
                 if (await resultFileHandler.CopyCoverageResultsAsync(runMode, false, device.OSVersion, device.UDID, appInformation.BundleIdentifier, coverageFileName, coverageDest))
                 {
+                    _logs.AddFile(coverageDest, "Coverage");
                     _mainLog.WriteLine($"Coverage results copied to {coverageDest}");
                 }
             }
