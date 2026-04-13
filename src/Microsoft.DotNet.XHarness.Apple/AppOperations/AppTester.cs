@@ -240,6 +240,12 @@ public class AppTester : AppRunnerBase, IAppTester
                 cancellationToken);
             cancellationToken = combinedCancellationToken.Token;
 
+            bool enableCoverage = extraEnvVariables.Any(e => e.Item1 == "NUNIT_ENABLE_COVERAGE");
+            string coverageFileName = extraEnvVariables
+                .Where(e => e.Item1 == "NUNIT_COVERAGE_OUTPUT_PATH")
+                .Select(e => e.Item2)
+                .FirstOrDefault() ?? "coverage.cobertura.xml";
+
             if (isSimulator)
             {
                 var mlaunchArguments = GetSimulatorArguments(
@@ -265,7 +271,9 @@ public class AppTester : AppRunnerBase, IAppTester
                     companionDevice as ISimulatorDevice,
                     timeout,
                     cancellationToken,
-                    runMode);
+                    runMode,
+                    enableCoverage,
+                    coverageFileName);
             }
             else
             {
@@ -304,7 +312,9 @@ public class AppTester : AppRunnerBase, IAppTester
                         timeout,
                         extraEnvVariables,
                         cancellationToken,
-                        runMode);
+                        runMode,
+                        enableCoverage,
+                        coverageFileName);
                 }
             }
 
@@ -324,7 +334,9 @@ public class AppTester : AppRunnerBase, IAppTester
         ISimulatorDevice? companionSimulator,
         TimeSpan timeout,
         CancellationToken cancellationToken,
-        RunMode runMode)
+        RunMode runMode,
+        bool enableCoverage,
+        string coverageFileName)
     {
         var result = await RunSimulatorApp(
             appInformation,
@@ -373,11 +385,14 @@ public class AppTester : AppRunnerBase, IAppTester
                 }
             }
 
-            // Try to copy coverage results (non-fatal if not present)
-            var coverageDest = Path.Combine(_logs.Directory, "coverage.cobertura.xml");
-            if (await resultFileHandler.CopyCoverageResultsAsync(runMode, true, simulator.OSVersion, simulator.UDID, appInformation.BundleIdentifier, coverageDest))
+            // Try to copy coverage results if coverage was enabled (non-fatal if not present)
+            if (enableCoverage)
             {
-                _mainLog.WriteLine($"Coverage results copied to {coverageDest}");
+                var coverageDest = Path.Combine(_logs.Directory, coverageFileName);
+                if (await resultFileHandler.CopyCoverageResultsAsync(runMode, true, simulator.OSVersion, simulator.UDID, appInformation.BundleIdentifier, coverageFileName, coverageDest))
+                {
+                    _mainLog.WriteLine($"Coverage results copied to {coverageDest}");
+                }
             }
         }
     }
@@ -394,7 +409,9 @@ public class AppTester : AppRunnerBase, IAppTester
         TimeSpan timeout,
         IEnumerable<(string, string)> extraEnvVariables,
         CancellationToken cancellationToken,
-        RunMode runMode)
+        RunMode runMode,
+        bool enableCoverage,
+        string coverageFileName)
     {
         var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
         deviceSystemLog.Timestamp = false;
@@ -489,11 +506,14 @@ public class AppTester : AppRunnerBase, IAppTester
                 }
             }
 
-            // Try to copy coverage results (non-fatal if not present)
-            var coverageDest = Path.Combine(_logs.Directory, "coverage.cobertura.xml");
-            if (await resultFileHandler.CopyCoverageResultsAsync(runMode, false, device.OSVersion, device.UDID, appInformation.BundleIdentifier, coverageDest))
+            // Try to copy coverage results if coverage was enabled (non-fatal if not present)
+            if (enableCoverage)
             {
-                _mainLog.WriteLine($"Coverage results copied to {coverageDest}");
+                var coverageDest = Path.Combine(_logs.Directory, coverageFileName);
+                if (await resultFileHandler.CopyCoverageResultsAsync(runMode, false, device.OSVersion, device.UDID, appInformation.BundleIdentifier, coverageFileName, coverageDest))
+                {
+                    _mainLog.WriteLine($"Coverage results copied to {coverageDest}");
+                }
             }
         }
     }

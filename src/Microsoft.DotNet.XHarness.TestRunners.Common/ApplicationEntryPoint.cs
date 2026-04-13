@@ -227,8 +227,8 @@ public abstract class ApplicationEntryPoint
 
         await runner.Run(testAssemblies).ConfigureAwait(false);
 
-        // Check for coverage results if enabled and all tests passed
-        if (coverageManager != null && runner.FailedTests == 0)
+        // Check for coverage results if enabled (regardless of test outcome)
+        if (coverageManager != null)
         {
             CoverageResultPath = coverageManager.GetCoverageResults();
             if (CoverageResultPath != null)

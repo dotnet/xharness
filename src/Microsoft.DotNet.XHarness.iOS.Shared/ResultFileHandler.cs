@@ -139,12 +139,13 @@ public class ResultFileHandler : IResultFileHandler
         string osVersion,
         string udid,
         string bundleIdentifier,
+        string coverageFileName,
         string hostDestinationPath)
     {
-        // Coverage file path mirrors the value set in AppleTestCommand/AppleJustTestCommand
+        // Build source path using the same relative file name that was passed to the app
         string sourcePath = runMode == RunMode.iOS
-            ? "/Documents/coverage.cobertura.xml"
-            : "/Library/Caches/Documents/coverage.cobertura.xml";
+            ? $"/Documents/{coverageFileName}"
+            : $"/Library/Caches/Documents/{coverageFileName}";
 
         if (!IsVersionSupported(osVersion, isSimulator))
         {

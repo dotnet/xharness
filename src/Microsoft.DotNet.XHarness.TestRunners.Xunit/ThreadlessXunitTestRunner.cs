@@ -15,7 +15,7 @@ using Xunit.Abstractions;
 #nullable enable
 namespace Microsoft.DotNet.XHarness.TestRunners.Xunit;
 
-public class ThreadlessXunitTestRunner : CustomXunitTestRunner
+internal class ThreadlessXunitTestRunner : CustomXunitTestRunner
 {
     public ThreadlessXunitTestRunner(LogWriter logger) : base(logger)
     {

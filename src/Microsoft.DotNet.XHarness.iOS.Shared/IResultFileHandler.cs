@@ -28,6 +28,7 @@ public interface IResultFileHandler
 
     /// <summary>
     /// Copy the coverage results file from the app container (simulator or device) to the host path.
+    /// <paramref name="coverageFileName"/> is the relative file name inside the app's Documents directory.
     /// Returns true if the file was successfully copied.
     /// </summary>
     Task<bool> CopyCoverageResultsAsync(
@@ -36,6 +37,7 @@ public interface IResultFileHandler
         string osVersion,
         string udid,
         string bundleIdentifier,
+        string coverageFileName,
         string hostDestinationPath);
 
     /// <summary>
