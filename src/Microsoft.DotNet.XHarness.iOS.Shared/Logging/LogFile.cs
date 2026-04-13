@@ -65,9 +65,9 @@ public class LogFile : FileBackedLog
         }
     }
 
-    protected override void WriteImpl(string value)
+    protected override void WriteImpl(string? value)
     {
-        var bytes = Encoding.GetBytes(value);
+        var bytes = Encoding.GetBytes(value ?? string.Empty);
         Write(bytes, 0, bytes.Length);
     }
 

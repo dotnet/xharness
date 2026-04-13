@@ -22,6 +22,8 @@ public abstract partial class Log : ILog
 
     public void Write(string? value)
     {
+        value ??= string.Empty;
+
         if (Timestamp)
         {
             value = "[" + DateTime.Now.ToString("HH:mm:ss.fffffff") + "] " + value;
@@ -30,7 +32,7 @@ public abstract partial class Log : ILog
         WriteImpl(value);
     }
 
-    public void WriteLine(string? value) => Write(value + "\n");
+    public void WriteLine(string? value) => Write((value ?? string.Empty) + "\n");
 
     public void WriteLine(string format, params object?[] args) => Write(string.Format(format, args) + "\n");
 
