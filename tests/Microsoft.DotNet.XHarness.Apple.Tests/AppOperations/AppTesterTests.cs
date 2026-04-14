@@ -116,7 +116,7 @@ public class AppTesterTests : AppRunTestBase
             TimeSpan.FromSeconds(30),
             signalAppEnd: false,
             extraAppArguments: new string[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") });
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") });
 
         // Verify
         Assert.Equal(TestExecutingResult.Succeeded, result);
@@ -132,7 +132,7 @@ public class AppTesterTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -154,6 +154,68 @@ public class AppTesterTests : AppRunTestBase
         _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
 
         captureLog.Verify(x => x.StartCapture(), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task TestOnSimulatorWithNullEnvVariableSkipsArgument()
+    {
+        var testResultFilePath = Path.GetTempFileName();
+        var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
+        File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
+
+        _logs
+            .Setup(x => x.Create("test-ios-simulator-64-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
+            .Returns(listenerLogFile);
+
+        var captureLog = new Mock<ICaptureLog>();
+        captureLog.SetupGet(x => x.FullPath).Returns(_simulatorLogPath);
+
+        var captureLogFactory = new Mock<ICaptureLogFactory>();
+        captureLogFactory
+            .Setup(x => x.Create(
+               Path.Combine(_logs.Object.Directory, _mockSimulator.Name + ".log"),
+               _mockSimulator.SystemLog,
+               false,
+               It.IsAny<LogType>()))
+            .Returns(captureLog.Object);
+
+        var appTester = new AppTester(
+            _processManager.Object,
+            _listenerFactory.Object,
+            _snapshotReporterFactory,
+            captureLogFactory.Object,
+            Mock.Of<IDeviceLogCapturerFactory>(),
+            _testReporterFactory,
+            new XmlResultParser(),
+            _mainLog.Object,
+            _logs.Object,
+            _helpers.Object);
+
+        var (result, resultMessage) = await appTester.TestApp(
+            _appBundleInfo,
+            new TestTargetOs(TestTarget.Simulator_tvOS, null),
+            _mockSimulator,
+            null,
+            TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(30),
+            signalAppEnd: false,
+            extraAppArguments: new[] { "--foo=bar", "--xyz" },
+            extraEnvVariables: new (string, string?)[] { ("appArg1", null) });
+
+        Assert.Equal(TestExecutingResult.Succeeded, result);
+        Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
+
+        _processManager.Verify(
+            x => x.ExecuteCommandAsync(
+               It.Is<MlaunchArguments>(args => !args.AsCommandLine().Contains("-setenv=appArg1=")),
+               _mainLog.Object,
+               It.IsAny<ILog>(),
+               It.IsAny<ILog>(),
+               It.IsAny<TimeSpan>(),
+               It.IsAny<Dictionary<string, string?>>(),
+               It.IsAny<int>(),
+               It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Theory]
@@ -215,7 +277,7 @@ public class AppTesterTests : AppRunTestBase
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") });
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") });
 
         // Verify
         Assert.Equal(TestExecutingResult.Succeeded, result);
@@ -233,7 +295,7 @@ public class AppTesterTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.Is<Dictionary<string, string>>(d => d["appArg1"] == "value1"),
+                   It.Is<Dictionary<string, string?>>(d => d["appArg1"] == "value1"),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -303,7 +365,7 @@ public class AppTesterTests : AppRunTestBase
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") },
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") },
             skippedMethods: skippedTests);
 
         // Verify
@@ -322,7 +384,7 @@ public class AppTesterTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -381,7 +443,7 @@ public class AppTesterTests : AppRunTestBase
             s_mockDevice,
             null,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") },
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") },
             timeout: TimeSpan.FromSeconds(30),
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
@@ -402,7 +464,7 @@ public class AppTesterTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -458,7 +520,7 @@ public class AppTesterTests : AppRunTestBase
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") });
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") });
 
         // Verify
         Assert.Equal(TestExecutingResult.Succeeded, result);
@@ -473,7 +535,7 @@ public class AppTesterTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.Is<Dictionary<string, string>>(envVars =>
+                   It.Is<Dictionary<string, string?>>(envVars =>
                         envVars["NUNIT_HOSTNAME"] == "127.0.0.1" &&
                         envVars["NUNIT_HOSTPORT"] == Port.ToString() &&
                         envVars["NUNIT_AUTOEXIT"] == "true" &&
@@ -537,7 +599,7 @@ public class AppTesterTests : AppRunTestBase
                    Capture.In(appOutputLogs),
                    Capture.In(appOutputLogs),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>?>(),
+                   It.IsAny<Dictionary<string, string?>?>(),
                    It.IsAny<int>(),
                    Capture.In(cancellationTokens)))
             .Callback(() =>
@@ -575,7 +637,7 @@ public class AppTesterTests : AppRunTestBase
             testLaunchTimeout: TimeSpan.FromMinutes(30),
             signalAppEnd: true,
             Array.Empty<string>(),
-            Array.Empty<(string, string)>());
+            Array.Empty<(string, string?)>());
 
         // Everything should hang now since we mimicked mlaunch not being able to tell the app quits
         // We will wait for XHarness to kick off the mlaunch (the app)

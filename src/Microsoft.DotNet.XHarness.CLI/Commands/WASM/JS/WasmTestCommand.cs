@@ -149,7 +149,7 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                 Arguments.Timeout,
                 // Node respects LANG only, ignores LANGUAGE
                 environmentVariables: Arguments.Engine.Value == JavaScriptEngine.NodeJS ?
-                                    new Dictionary<string, string>() { {"LANG", Arguments.Locale} } :
+                                    new Dictionary<string, string?>() { { "LANG", Arguments.Locale } } :
                                     null);
 
             TaskCompletionSource wasmExitReceivedTcs = logProcessor.WasmExitReceivedTcs;

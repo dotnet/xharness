@@ -25,7 +25,7 @@ public abstract partial class Log
             Timestamp = false;
         }
 
-        protected override void WriteImpl(string value)
+        protected override void WriteImpl(string? value)
         {
             foreach (var log in _logs)
             {

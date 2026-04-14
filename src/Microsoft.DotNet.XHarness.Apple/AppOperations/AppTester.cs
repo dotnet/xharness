@@ -33,7 +33,7 @@ public interface IAppTester
         TimeSpan testLaunchTimeout,
         bool signalAppEnd,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
         string[]? skippedMethods = null,
         string[]? skippedTestClasses = null,
@@ -45,7 +45,7 @@ public interface IAppTester
         TimeSpan testLaunchTimeout,
         bool signalAppEnd,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
         string[]? skippedMethods = null,
         string[]? skippedTestClasses = null,
@@ -105,7 +105,7 @@ public class AppTester : AppRunnerBase, IAppTester
         TimeSpan testLaunchTimeout,
         bool signalAppEnd,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
         string[]? skippedMethods = null,
         string[]? skippedTestClasses = null,
@@ -161,7 +161,7 @@ public class AppTester : AppRunnerBase, IAppTester
         TimeSpan testLaunchTimeout,
         bool signalAppEnd,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         XmlResultJargon xmlResultJargon = XmlResultJargon.xUnit,
         string[]? skippedMethods = null,
         string[]? skippedTestClasses = null,
@@ -408,7 +408,7 @@ public class AppTester : AppRunnerBase, IAppTester
         IDevice device,
         ILog appOutputLog,
         TimeSpan timeout,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         CancellationToken cancellationToken,
         RunMode runMode,
         bool enableCoverage,
@@ -436,7 +436,7 @@ public class AppTester : AppRunnerBase, IAppTester
 
             _mainLog.WriteLine("Starting the application");
 
-            var envVars = new Dictionary<string, string>();
+            var envVars = new Dictionary<string, string?>();
             AddExtraEnvVars(envVars, extraEnvVariables);
 
             // We need to check for MT1111 (which means that mlaunch won't wait for the app to exit)
@@ -535,7 +535,7 @@ public class AppTester : AppRunnerBase, IAppTester
         string[]? skippedMethods,
         string[]? skippedTestClasses,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         string? appEndTag,
         CancellationToken cancellationToken)
     {
@@ -614,17 +614,17 @@ public class AppTester : AppRunnerBase, IAppTester
         return await testReporter.ParseResult();
     }
 
-    private Dictionary<string, string> GetEnvVariables(
+    private Dictionary<string, string?> GetEnvVariables(
         XmlResultJargon xmlResultJargon,
         string[]? skippedMethods,
         string[]? skippedTestClasses,
         ListenerTransport listenerTransport,
         int listenerPort,
         string listenerTmpFile,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         string? appEndTag)
     {
-        var variables = new Dictionary<string, string>
+        var variables = new Dictionary<string, string?>
             {
                 { EnviromentVariables.AutoExit, "true" },
                 { EnviromentVariables.HostPort, listenerPort.ToString() },
@@ -676,7 +676,7 @@ public class AppTester : AppRunnerBase, IAppTester
         int listenerPort,
         string listenerTmpFile,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         string? appEndTag)
     {
         var args = new MlaunchArguments();
@@ -693,7 +693,7 @@ public class AppTester : AppRunnerBase, IAppTester
             appEndTag);
 
         // Variables passed through --set-env
-        args.AddRange(envVariables.Select(pair => new SetEnvVariableArgument(pair.Key, pair.Value)));
+        args.AddRange(GetSetEnvVariableArguments(envVariables));
 
         // Arguments passed to the iOS app bundle
         args.AddRange(extraAppArguments.Select(arg => new SetAppArgumentArgument(arg)));
@@ -711,7 +711,7 @@ public class AppTester : AppRunnerBase, IAppTester
         int deviceListenerPort,
         string deviceListenerTmpFile,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables)
+        IEnumerable<(string, string?)> extraEnvVariables)
     {
         var args = GetCommonArguments(
             xmlResultJargon,
@@ -758,7 +758,7 @@ public class AppTester : AppRunnerBase, IAppTester
         int deviceListenerPort,
         string deviceListenerTmpFile,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         string? appEndTag)
     {
         var args = GetCommonArguments(

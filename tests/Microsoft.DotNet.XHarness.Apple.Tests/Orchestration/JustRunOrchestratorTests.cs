@@ -58,7 +58,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
         // Setup
         var testTarget = new TestTargetOs(TestTarget.Simulator_iOS64, "13.5");
 
-        var envVars = new[] { ("envVar1", "value1"), ("envVar2", "value2") };
+        var envVars = new (string, string?)[] { ("envVar1", "value1"), ("envVar2", "value2") };
 
         _iOSExitCodeDetector
             .Setup(x => x.DetectExitCode(_appBundleInformation, It.IsAny<IReadableLog>()))
@@ -143,7 +143,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
                 false,
                 true,
                 extraArguments,
-                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<IEnumerable<(string, string?)>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProcessExecutionResult
             {
@@ -164,7 +164,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
             enableLldb: false,
             signalAppEnd: false,
             waitForExit: true,
-            Array.Empty<(string, string)>(),
+            Array.Empty<(string, string?)>(),
             extraArguments,
             new CancellationToken());
 
@@ -201,7 +201,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
                 false,
                 true,
                 It.IsAny<IEnumerable<string>>(),
-                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<IEnumerable<(string, string?)>>(),
                 It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception())
             .Verifiable();
@@ -224,7 +224,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
             enableLldb: true,
             signalAppEnd: false,
             waitForExit: true,
-            Array.Empty<(string, string)>(),
+            Array.Empty<(string, string?)>(),
             Array.Empty<string>(),
             new CancellationToken());
 
@@ -271,7 +271,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
                 true,
                 true,
                 extraArguments,
-                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<IEnumerable<(string, string?)>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProcessExecutionResult
             {
@@ -298,7 +298,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
             enableLldb: false,
             signalAppEnd: true,
             waitForExit: true,
-            Array.Empty<(string, string)>(),
+            Array.Empty<(string, string?)>(),
             extraArguments,
             new CancellationToken());
 
@@ -329,7 +329,7 @@ public class JustRunOrchestratorTests : OrchestratorTestBase
 
         var testTarget = new TestTargetOs(TestTarget.MacCatalyst, null);
 
-        var envVars = new[] { ("envVar1", "value1"), ("envVar2", "value2") };
+        var envVars = new (string, string?)[] { ("envVar1", "value1"), ("envVar2", "value2") };
 
         _macCatalystExitCodeDetector
             .Setup(x => x.DetectExitCode(It.Is<AppBundleInformation>(info => info.BundleIdentifier == BundleIdentifier), It.IsAny<IReadableLog>()))
