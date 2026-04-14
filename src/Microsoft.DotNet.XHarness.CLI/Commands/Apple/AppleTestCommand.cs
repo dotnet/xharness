@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
@@ -29,14 +28,14 @@ internal class AppleTestCommand : AppleAppCommand<AppleTestCommandArguments>
 
     protected override Task<ExitCode> InvokeInternal(ServiceProvider serviceProvider, CancellationToken cancellationToken)
     {
-        var envVars = Arguments.EnvironmentalVariables.Value;
+        IReadOnlyCollection<(string, string?)> envVars = Arguments.EnvironmentalVariables.Value;
 
         if (Arguments.EnableCoverage)
         {
             // Inject coverage env vars so the test runner on the device enables coverage.
             // Use Documents/coverage.cobertura.xml — the same directory where test results go,
             // which the orchestrator already knows how to pull from the app container.
-            var coverageVars = new List<(string, string)>(envVars)
+            var coverageVars = new List<(string, string?)>(envVars)
             {
                 ("NUNIT_ENABLE_COVERAGE", "true"),
                 ("NUNIT_COVERAGE_OUTPUT_PATH", "coverage.cobertura.xml"),
