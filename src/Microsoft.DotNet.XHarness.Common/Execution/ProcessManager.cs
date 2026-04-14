@@ -32,7 +32,7 @@ public abstract class ProcessManager : IProcessManager
         IList<string> args,
         ILog log,
         TimeSpan timeout,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         CancellationToken? cancellationToken = null)
         => await ExecuteCommandAsync(filename, args, log, log, log, timeout, environmentVariables, cancellationToken);
 
@@ -42,7 +42,7 @@ public abstract class ProcessManager : IProcessManager
         ILog stdout,
         ILog stderr,
         TimeSpan timeout,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         CancellationToken? cancellationToken = null)
     {
         using var p = new Process();
@@ -55,7 +55,7 @@ public abstract class ProcessManager : IProcessManager
         Process process,
         ILog log,
         TimeSpan? timeout = null,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null)
         => RunAsync(process, log, log, log, timeout, environmentVariables, cancellationToken, diagnostics);
@@ -66,7 +66,7 @@ public abstract class ProcessManager : IProcessManager
         ILog stdout,
         ILog stderr,
         TimeSpan? timeout = null,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null)
         => RunAsyncInternal(process, log, stdout, stderr, timeout, environmentVariables, cancellationToken, diagnostics);
@@ -164,7 +164,7 @@ public abstract class ProcessManager : IProcessManager
         ILog stdout,
         ILog stderr,
         TimeSpan? timeout = null,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null) => RunAsyncInternal(
             process,
@@ -186,7 +186,7 @@ public abstract class ProcessManager : IProcessManager
         Action<int, int> kill,
         Func<ILog, int, IList<int>> getChildProcessIds,
         TimeSpan? timeout = null,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null)
     {

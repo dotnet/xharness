@@ -174,11 +174,11 @@ public static class ProjectFileExtensions
         return false;
     }
 
-    public static string? GetOutputPath(this XmlDocument csproj, string platform, string configuration) => GetElementValue(csproj, platform, configuration, "OutputPath", throwIfNotFound: false);
+    public static string? GetOutputPath(this XmlDocument csproj, string? platform, string? configuration) => GetElementValue(csproj, platform, configuration, "OutputPath", throwIfNotFound: false);
 
-    public static string? GetMtouchArch(this XmlDocument csproj, string platform, string configuration) => GetElementValue(csproj, platform, configuration, "MtouchArch", throwIfNotFound: false);
+    public static string? GetMtouchArch(this XmlDocument csproj, string? platform, string? configuration) => GetElementValue(csproj, platform, configuration, "MtouchArch", throwIfNotFound: false);
 
-    private static string? GetElementValue(this XmlDocument csproj, string platform, string configuration, string elementName, bool throwIfNotFound = true)
+    private static string? GetElementValue(this XmlDocument csproj, string? platform, string? configuration, string elementName, bool throwIfNotFound = true)
     {
         var nodes = csproj.SelectNodes($"/*/*/*[local-name() = '{elementName}']");
         foreach (XmlNode? n in nodes)
@@ -202,7 +202,7 @@ public static class ProjectFileExtensions
         return null;
     }
 
-    public static string GetOutputAssemblyPath(this XmlDocument csproj, string platform, string configuration)
+    public static string GetOutputAssemblyPath(this XmlDocument csproj, string? platform, string? configuration)
     {
         var outputPath = GetOutputPath(csproj, platform, configuration);
         var assemblyName = GetElementValue(csproj, platform, configuration, "AssemblyName");
@@ -390,11 +390,11 @@ public static class ProjectFileExtensions
         }
     }
 
-    public static void AddExtraMtouchArgs(this XmlDocument csproj, string value, string platform, string configuration) => AddToNode(csproj, "MtouchExtraArgs", value, platform, configuration);
+    public static void AddExtraMtouchArgs(this XmlDocument csproj, string value, string? platform, string? configuration) => AddToNode(csproj, "MtouchExtraArgs", value, platform, configuration);
 
-    public static void AddMonoBundlingExtraArgs(this XmlDocument csproj, string value, string platform, string configuration) => AddToNode(csproj, "MonoBundlingExtraArgs", value, platform, configuration);
+    public static void AddMonoBundlingExtraArgs(this XmlDocument csproj, string value, string? platform, string? configuration) => AddToNode(csproj, "MonoBundlingExtraArgs", value, platform, configuration);
 
-    public static void AddToNode(this XmlDocument csproj, string node, string value, string platform, string configuration)
+    public static void AddToNode(this XmlDocument csproj, string node, string value, string? platform, string? configuration)
     {
         var nodes = csproj.SelectNodes($"//*[local-name() = '{node}']");
         foreach (XmlNode? mea in nodes)
@@ -426,13 +426,13 @@ public static class ProjectFileExtensions
         propertyGroup.AppendChild(newNode);
     }
 
-    public static string? GetMtouchLink(this XmlDocument csproj, string platform, string configuration) => GetNode(csproj, "MtouchLink", platform, configuration);
+    public static string? GetMtouchLink(this XmlDocument csproj, string? platform, string? configuration) => GetNode(csproj, "MtouchLink", platform, configuration);
 
-    public static void SetMtouchUseLlvm(this XmlDocument csproj, bool value, string platform, string configuration) => SetNode(csproj, "MtouchUseLlvm", true ? "true" : "false", platform, configuration);
+    public static void SetMtouchUseLlvm(this XmlDocument csproj, bool value, string? platform, string? configuration) => SetNode(csproj, "MtouchUseLlvm", true ? "true" : "false", platform, configuration);
 
-    public static void SetMtouchUseBitcode(this XmlDocument csproj, bool value, string platform, string configuration) => SetNode(csproj, "MtouchEnableBitcode", true ? "true" : "false", platform, configuration);
+    public static void SetMtouchUseBitcode(this XmlDocument csproj, bool value, string? platform, string? configuration) => SetNode(csproj, "MtouchEnableBitcode", true ? "true" : "false", platform, configuration);
 
-    public static IEnumerable<XmlNode> GetPropertyGroups(this XmlDocument csproj, string platform, string configuration)
+    public static IEnumerable<XmlNode> GetPropertyGroups(this XmlDocument csproj, string? platform, string? configuration)
     {
         var propertyGroups = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]");
         foreach (XmlNode? node in propertyGroups)
@@ -451,7 +451,7 @@ public static class ProjectFileExtensions
         }
     }
 
-    public static void SetNode(this XmlDocument csproj, string node, string value, string platform, string configuration)
+    public static void SetNode(this XmlDocument csproj, string node, string value, string? platform, string? configuration)
     {
         var projnode = csproj.SelectElementNodes(node);
         var found = false;
@@ -486,7 +486,7 @@ public static class ProjectFileExtensions
         }
     }
 
-    private static string? GetNode(this XmlDocument csproj, string name, string platform, string configuration)
+    private static string? GetNode(this XmlDocument csproj, string name, string? platform, string? configuration)
     {
         foreach (var pg in GetPropertyGroups(csproj, platform, configuration))
         {
@@ -982,7 +982,7 @@ public static class ProjectFileExtensions
         }
     }
 
-    public static void AddAdditionalDefines(this XmlDocument csproj, string value, string platform, string configuration)
+    public static void AddAdditionalDefines(this XmlDocument csproj, string value, string? platform, string? configuration)
     {
         var projnode = csproj.SelectNodes("//*[local-name() = 'PropertyGroup' and @Condition]/*[local-name() = 'DefineConstants']");
         foreach (XmlNode? xmlnode in projnode)
@@ -1039,7 +1039,7 @@ public static class ProjectFileExtensions
         newPropertyGroup.AppendChild(defineConstantsElement);
     }
 
-    private static XmlNode AddPropertyGroup(this XmlDocument csproj, string platform, string configuration)
+    private static XmlNode AddPropertyGroup(this XmlDocument csproj, string? platform, string? configuration)
     {
         // Create a new PropertyGroup with the desired condition, and add it just after the last PropertyGroup in the csproj.
         var projectNode = csproj.SelectSingleNode("//*[local-name() = 'Project']");

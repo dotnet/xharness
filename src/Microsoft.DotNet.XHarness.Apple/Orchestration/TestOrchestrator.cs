@@ -34,7 +34,7 @@ public interface ITestOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken);
 }
@@ -85,7 +85,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
         => OrchestrateTest(
@@ -120,7 +120,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
     {
@@ -209,7 +209,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         XmlResultJargon xmlResultJargon,
         IEnumerable<string> singleMethodFilters,
         IEnumerable<string> classMethodFilters,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         bool signalAppEnd,
         CancellationToken cancellationToken)
@@ -265,7 +265,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         XmlResultJargon xmlResultJargon,
         IEnumerable<string> singleMethodFilters,
         IEnumerable<string> classMethodFilters,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         bool signalAppEnd,
         CancellationToken cancellationToken)

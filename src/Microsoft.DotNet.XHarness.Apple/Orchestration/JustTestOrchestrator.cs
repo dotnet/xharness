@@ -31,7 +31,7 @@ public interface IJustTestOrchestrator
         bool includeWirelessDevices,
         bool enableLldb,
         bool signalAppEnd,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken);
 }
@@ -75,7 +75,7 @@ public class JustTestOrchestrator : TestOrchestrator, IJustTestOrchestrator
         bool includeWirelessDevices,
         bool enableLldb,
         bool signalAppEnd,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
         => OrchestrateTest(

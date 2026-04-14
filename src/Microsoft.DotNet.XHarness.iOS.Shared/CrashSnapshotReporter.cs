@@ -185,7 +185,7 @@ public class CrashSnapshotReporter : ICrashSnapshotReporter
 
         var name = Path.GetFileName(report.FullPath);
         var symbolicated = _logs.Create(Path.ChangeExtension(name, ".symbolicated.log"), $"Symbolicated crash report: {name}", timestamp: false);
-        var environment = new Dictionary<string, string> { { "DEVELOPER_DIR", Path.Combine(_processManager.XcodeRoot, "Contents", "Developer") } };
+        var environment = new Dictionary<string, string?> { { "DEVELOPER_DIR", Path.Combine(_processManager.XcodeRoot, "Contents", "Developer") } };
         var result = await _processManager.ExecuteCommandAsync(_symbolicateCrashPath, new[] { report.FullPath }, symbolicated, TimeSpan.FromMinutes(1), environment);
         if (result.Succeeded)
         {

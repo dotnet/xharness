@@ -21,7 +21,7 @@ public interface IMlaunchProcessManager : IMacOSProcessManager, IProcessManager
         MlaunchArguments args,
         ILog log,
         TimeSpan timeout,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         int verbosity = 0,
         CancellationToken? cancellationToken = null);
 
@@ -31,7 +31,7 @@ public interface IMlaunchProcessManager : IMacOSProcessManager, IProcessManager
         ILog stdoutLog,
         ILog stderrLog,
         TimeSpan timeout,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         int verbosity = 0,
         CancellationToken? cancellationToken = null);
 
@@ -40,7 +40,7 @@ public interface IMlaunchProcessManager : IMacOSProcessManager, IProcessManager
         MlaunchArguments args,
         ILog log,
         TimeSpan? timeout = null,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         int verbosity = 0,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null);
@@ -52,7 +52,7 @@ public interface IMlaunchProcessManager : IMacOSProcessManager, IProcessManager
         ILog stdoutLog,
         ILog stderrLog,
         TimeSpan? timeout = null,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         int verbosity = 0,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null);
