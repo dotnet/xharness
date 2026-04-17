@@ -240,6 +240,8 @@ public class AppTester : AppRunnerBase, IAppTester
                 cancellationToken);
             cancellationToken = combinedCancellationToken.Token;
 
+            var (enableCoverage, coverageFileName) = GetCoverageSettings(extraEnvVariables);
+
             if (isSimulator)
             {
                 var mlaunchArguments = GetSimulatorArguments(
@@ -265,7 +267,9 @@ public class AppTester : AppRunnerBase, IAppTester
                     companionDevice as ISimulatorDevice,
                     timeout,
                     cancellationToken,
-                    runMode);
+                    runMode,
+                    enableCoverage,
+                    coverageFileName);
             }
             else
             {
@@ -304,7 +308,9 @@ public class AppTester : AppRunnerBase, IAppTester
                         timeout,
                         extraEnvVariables,
                         cancellationToken,
-                        runMode);
+                        runMode,
+                        enableCoverage,
+                        coverageFileName);
                 }
             }
 
@@ -324,7 +330,9 @@ public class AppTester : AppRunnerBase, IAppTester
         ISimulatorDevice? companionSimulator,
         TimeSpan timeout,
         CancellationToken cancellationToken,
-        RunMode runMode)
+        RunMode runMode,
+        bool enableCoverage,
+        string coverageFileName)
     {
         var result = await RunSimulatorApp(
             appInformation,
@@ -372,6 +380,17 @@ public class AppTester : AppRunnerBase, IAppTester
                         isSimulator: true);
                 }
             }
+
+            // Try to copy coverage results if coverage was enabled (non-fatal if not present)
+            if (enableCoverage)
+            {
+                var coverageDest = Path.Combine(_logs.Directory, coverageFileName);
+                if (await resultFileHandler.CopyCoverageResultsAsync(runMode, true, simulator.OSVersion, simulator.UDID, appInformation.BundleIdentifier, coverageFileName, coverageDest))
+                {
+                    _logs.AddFile(coverageDest, "Coverage");
+                    _mainLog.WriteLine($"Coverage results copied to {coverageDest}");
+                }
+            }
         }
     }
 
@@ -387,7 +406,9 @@ public class AppTester : AppRunnerBase, IAppTester
         TimeSpan timeout,
         IEnumerable<(string, string?)> extraEnvVariables,
         CancellationToken cancellationToken,
-        RunMode runMode)
+        RunMode runMode,
+        bool enableCoverage,
+        string coverageFileName)
     {
         var deviceSystemLog = _logs.Create($"device-{device.Name}-{_helpers.Timestamp}.log", LogType.SystemLog.ToString());
         deviceSystemLog.Timestamp = false;
@@ -481,6 +502,17 @@ public class AppTester : AppRunnerBase, IAppTester
                         isSimulator: false);
                 }
             }
+
+            // Try to copy coverage results if coverage was enabled (non-fatal if not present)
+            if (enableCoverage)
+            {
+                var coverageDest = Path.Combine(_logs.Directory, coverageFileName);
+                if (await resultFileHandler.CopyCoverageResultsAsync(runMode, false, device.OSVersion, device.UDID, appInformation.BundleIdentifier, coverageFileName, coverageDest))
+                {
+                    _logs.AddFile(coverageDest, "Coverage");
+                    _mainLog.WriteLine($"Coverage results copied to {coverageDest}");
+                }
+            }
         }
     }
 
@@ -505,10 +537,12 @@ public class AppTester : AppRunnerBase, IAppTester
     {
         var deviceListenerPort = deviceListener.InitializeAndGetPort();
         deviceListener.StartAsync();
+        var (enableCoverage, coverageFileName) = GetCoverageSettings(extraEnvVariables);
 
         using var crashLogs = new Logs(_logs.Directory);
 
         ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: false, null);
+        IResultFileHandler resultFileHandler = new ResultFileHandler(_processManager, _mainLog);
         using ITestReporter testReporter = _testReporterFactory.Create(
             _mainLog,
             _mainLog,
@@ -569,6 +603,23 @@ public class AppTester : AppRunnerBase, IAppTester
 
             var result = await RunMacCatalystApp(appInformation, appOutputLog, timeout, waitForExit: true, extraAppArguments, envVariables, combinedCancellationToken.Token);
             await testReporter.CollectSimulatorResult(result);
+
+            if (enableCoverage)
+            {
+                var coverageDest = Path.Combine(_logs.Directory, coverageFileName);
+                if (await resultFileHandler.CopyCoverageResultsAsync(
+                    RunMode.MacOS,
+                    isSimulator: false,
+                    osVersion: Environment.OSVersion.Version.ToString(),
+                    udid: string.Empty,
+                    appInformation.BundleIdentifier,
+                    coverageFileName,
+                    coverageDest))
+                {
+                    _logs.AddFile(coverageDest, "Coverage");
+                    _mainLog.WriteLine($"Coverage results copied to {coverageDest}");
+                }
+            }
         }
         finally
         {
@@ -576,6 +627,17 @@ public class AppTester : AppRunnerBase, IAppTester
         }
 
         return await testReporter.ParseResult();
+    }
+
+    private static (bool EnableCoverage, string CoverageFileName) GetCoverageSettings(IEnumerable<(string, string?)> extraEnvVariables)
+    {
+        bool enableCoverage = extraEnvVariables.Any(e => e.Item1 == "NUNIT_ENABLE_COVERAGE");
+        string coverageFileName = extraEnvVariables
+            .Where(e => e.Item1 == "NUNIT_COVERAGE_OUTPUT_PATH")
+            .Select(e => e.Item2)
+            .FirstOrDefault() ?? "coverage.cobertura.xml";
+
+        return (enableCoverage, coverageFileName);
     }
 
     private Dictionary<string, string?> GetEnvVariables(

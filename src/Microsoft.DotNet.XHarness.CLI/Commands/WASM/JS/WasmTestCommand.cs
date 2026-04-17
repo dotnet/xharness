@@ -128,11 +128,16 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                                                            Arguments.SymbolicatePatternsFileArgument,
                                                            logger);
 
+            var coverageOutputPath = Arguments.EnableCoverage
+                ? Path.Combine(Arguments.OutputDirectory, "coverage.cobertura.xml")
+                : null;
+
             var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath,
                                                              stdoutFilePath,
                                                              logger,
                                                              Arguments.ErrorPatternsFile,
-                                                             symbolicator);
+                                                             symbolicator,
+                                                             coverageOutputPath);
             var logProcessorTask = Task.Run(() => logProcessor.RunAsync(cts.Token));
 
             var processTask = processManager.ExecuteCommandAsync(

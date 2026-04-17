@@ -19,6 +19,7 @@ public class InstrumentationRunner
 
     // nunit2 one should go away eventually
     private static readonly string[] s_xmlOutputVariableNames = { "nunit2-results-path", "test-results-path" };
+    private const string CoverageResultsPathVariableName = "coverage-results-path";
     private const string TestRunSummaryVariableName = "test-execution-summary";
     private const string ShortMessageVariableName = "shortMsg";
     private const string ProcessCrashedShortMessage = "Process crashed";
@@ -155,6 +156,27 @@ public class InstrumentationRunner
         // Pull XUnit result XMLs off the device
         bool failurePullingFiles = PullResultXMLs(apkPackageName, outputDirectory, resultValues, producedFiles)!;
         bool processCrashed = false;
+
+        // Pull coverage results if present (non-fatal on failure)
+        if (resultValues.TryGetValue(CoverageResultsPathVariableName, out string? coveragePath))
+        {
+            _logger.LogInformation($"Found coverage results file: '{coveragePath}'");
+            try
+            {
+                _runner.PullFiles(apkPackageName, coveragePath, outputDirectory);
+                _logger.LogInformation($"Coverage results pulled to '{outputDirectory}'");
+                producedFiles.Add(new DiagnosticsFile
+                {
+                    Name = Path.GetFileName(coveragePath),
+                    Type = "coverage",
+                    Path = Path.Combine(outputDirectory, Path.GetFileName(coveragePath)),
+                });
+            }
+            catch (Exception toLog)
+            {
+                _logger.LogWarning(toLog, "Failed to pull coverage results from {filePathOnDevice}. Coverage data may be unavailable.", coveragePath);
+            }
+        }
 
         if (resultValues.TryGetValue(TestRunSummaryVariableName, out string? testRunSummary))
         {

@@ -330,6 +330,79 @@ public class ResultFileHandlerTests : IDisposable
         log.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Retrying results file copy (attempt 3)"))), Times.Once);
     }
 
+    [Fact]
+    public async Task CopyCoverageResultsAsync_WhenFirstAttemptFailsAndSecondSucceeds_ReturnsTrue()
+    {
+        Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
+        Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
+        ResultFileHandler handler = CreateHandler(pm, log, new[] { 1 });
+
+        if (File.Exists(_tempFile))
+            File.Delete(_tempFile);
+
+        int callCount = 0;
+        pm.Setup(m => m.ExecuteCommandAsync(
+                It.IsAny<string>(),
+                It.IsAny<IList<string>>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken?>()))
+            .Returns(() =>
+            {
+                callCount++;
+                if (callCount == 2)
+                {
+                    File.WriteAllText(_tempFile, "coverage");
+                }
+                return Task.FromResult(new ProcessExecutionResult { ExitCode = 0 });
+            });
+
+        bool result = await handler.CopyCoverageResultsAsync(
+            RunMode.iOS, false, "18.0", "udid", "bundle", "coverage.cobertura.xml", _tempFile);
+
+        Assert.True(result);
+        Assert.Equal(2, callCount);
+        log.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Retrying coverage results file copy (attempt 2)"))), Times.Once);
+    }
+
+    [Fact]
+    public async Task CopyCoverageResultsAsync_MacCatalystUsesLocalContainerPath()
+    {
+        Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
+        Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
+        ResultFileHandler handler = CreateHandler(pm, log);
+
+        string command = null;
+        pm.Setup(m => m.ExecuteCommandAsync(
+                It.IsAny<string>(),
+                It.IsAny<IList<string>>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken?>()))
+            .Returns((string _, IList<string> args, ILog _, ILog _, ILog _, TimeSpan _, Dictionary<string, string> _, CancellationToken? _) =>
+            {
+                command = args[1];
+                File.WriteAllText(_tempFile, "coverage");
+                return Task.FromResult(new ProcessExecutionResult { ExitCode = 0 });
+            });
+
+        bool result = await handler.CopyCoverageResultsAsync(
+            RunMode.MacOS, false, Environment.OSVersion.Version.ToString(), string.Empty, "com.example.maccatalyst", "coverage.cobertura.xml", _tempFile);
+
+        Assert.True(result);
+        Assert.Contains("Library", command);
+        Assert.Contains("Containers", command);
+        Assert.Contains("com.example.maccatalyst", command);
+        Assert.Contains("Documents", command);
+        Assert.Contains("coverage.cobertura.xml", command);
+    }
+
     private static string GetArgumentValue(MlaunchArguments args, string argumentName)
     {
         string prefix = $"--{argumentName}=";
