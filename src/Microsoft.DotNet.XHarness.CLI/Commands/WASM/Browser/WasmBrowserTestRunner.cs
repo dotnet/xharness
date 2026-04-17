@@ -221,27 +221,7 @@ internal class WasmBrowserTestRunner
         var uriBuilder = new UriBuilder($"{serverURLs.Http}/{_arguments.HTMLFile}");
         var sb = new StringBuilder();
 
-        if (_arguments.DebuggerPort.Value != null)
-            sb.Append($"arg=--debug");
-
-        foreach (var envVariable in _arguments.WebServerHttpEnvironmentVariables.Value)
-        {
-            if (sb.Length > 0)
-                sb.Append('&');
-            sb.Append($"arg={HttpUtility.UrlEncode($"--setenv={envVariable}={serverURLs!.Http}")}");
-        }
-
-        if (_arguments.WebServerUseHttps)
-        {
-            foreach (var envVariable in _arguments.WebServerHttpsEnvironmentVariables.Value)
-            {
-                if (sb.Length > 0)
-                    sb.Append('&');
-                sb.Append($"arg={HttpUtility.UrlEncode($"--setenv={envVariable}={serverURLs!.Https}")}");
-            }
-        }
-
-        foreach (var arg in _passThroughArguments)
+        foreach (string arg in GetApplicationArguments(_arguments, _passThroughArguments, serverURLs))
         {
             if (sb.Length > 0)
                 sb.Append('&');
@@ -249,13 +229,38 @@ internal class WasmBrowserTestRunner
             sb.Append($"arg={HttpUtility.UrlEncode(arg)}");
         }
 
-        if (sb.Length > 0)
-            sb.Append('&');
-
-        sb.Append($"arg=-verbosity&arg={VerbosityToString()}");
-
         uriBuilder.Query = sb.ToString();
         return uriBuilder.ToString();
+    }
+
+    internal static string[] GetApplicationArguments(
+        WasmTestBrowserCommandArguments arguments,
+        IEnumerable<string> passThroughArguments,
+        ServerURLs serverURLs)
+    {
+        List<string> applicationArguments = new();
+
+        if (arguments.DebuggerPort.Value != null)
+            applicationArguments.Add("--debug");
+
+        foreach (string envVariable in arguments.WebServerHttpEnvironmentVariables.Value)
+            applicationArguments.Add($"--setenv={envVariable}={serverURLs.Http}");
+
+        if (arguments.WebServerUseHttps)
+        {
+            foreach (string envVariable in arguments.WebServerHttpsEnvironmentVariables.Value)
+                applicationArguments.Add($"--setenv={envVariable}={serverURLs.Https}");
+        }
+
+        applicationArguments.AddRange(passThroughArguments);
+
+        if (!arguments.NoAppVerbosity)
+        {
+            applicationArguments.Add("-verbosity");
+            applicationArguments.Add(VerbosityToString(arguments.Verbosity.Value));
+        }
+
+        return applicationArguments.ToArray();
     }
 
     // MinimumLogLevel.Critical,
@@ -264,7 +269,7 @@ internal class WasmBrowserTestRunner
     // MinimumLogLevel.Info,
     // MinimumLogLevel.Debug,
     // MinimumLogLevel.Verbose
-    private string VerbosityToString() => _arguments.Verbosity.Value switch
+    private static string VerbosityToString(LogLevel verbosity) => verbosity switch
     {
         LogLevel.Trace => "Verbose",
         LogLevel.Debug => "Debug",
@@ -273,6 +278,6 @@ internal class WasmBrowserTestRunner
         LogLevel.Error => "Error",
         LogLevel.Critical => "Critical",
         LogLevel.None => "Critical",
-        _ => throw new NotSupportedException($"The value '{_arguments.Verbosity.Value}' is not supported in conversion to MinimumLogLevel")
+        _ => throw new NotSupportedException($"The value '{verbosity}' is not supported in conversion to MinimumLogLevel")
     };
 }
