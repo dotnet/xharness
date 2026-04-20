@@ -20,6 +20,21 @@ public abstract class WasmApplicationEntryPointBase : ApplicationEntryPoint
         var runner = await InternalRunAsync(options, null, Console.Out);
 
         LastRunHadFailedTests = runner.FailedTests != 0;
+
+        // Emit coverage data on stdout for the host to capture
+        if (CoverageResultPath != null)
+        {
+            try
+            {
+                var coverageBytes = System.IO.File.ReadAllBytes(CoverageResultPath);
+                var base64 = Convert.ToBase64String(coverageBytes);
+                Console.WriteLine($"STARTCOVERAGEXML {coverageBytes.Length} {base64} ENDCOVERAGEXML");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Coverage] Warning: Failed to emit coverage data: {ex.Message}");
+            }
+        }
     }
 
     public bool LastRunHadFailedTests { get; set; }

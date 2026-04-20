@@ -13,8 +13,8 @@ public interface ILog : IDisposable
     bool Timestamp { get; set; }
     Encoding Encoding { get; }
     void Write(byte[] buffer, int offset, int count);
-    void Write(string value);
-    void WriteLine(string value);
-    void WriteLine(string format, params object[] args);
+    void Write(string? value);
+    void WriteLine(string? value);
+    void WriteLine(string format, params object?[] args);
     void Flush();
 }

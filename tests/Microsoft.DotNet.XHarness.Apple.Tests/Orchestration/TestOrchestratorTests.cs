@@ -63,7 +63,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
         // Setup
         var testTarget = new TestTargetOs(TestTarget.Simulator_iOS64, "13.5");
 
-        var envVars = new[] { ("envVar1", "value1"), ("envVar2", "value2") };
+        var envVars = new (string, string?)[] { ("envVar1", "value1"), ("envVar2", "value2") };
 
         _appTester
             .Setup(x => x.TestApp(
@@ -138,7 +138,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
                 It.IsAny<TimeSpan>(),
                 false,
                 extraArguments,
-                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<IEnumerable<(string, string?)>>(),
                 It.IsAny<XmlResultJargon>(),
                 It.IsAny<string[]?>(),
                 It.IsAny<string[]?>(),
@@ -161,7 +161,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
             resetSimulator: false,
             enableLldb: false,
             signalAppEnd: false,
-            Array.Empty<(string, string)>(),
+            Array.Empty<(string, string?)>(),
             extraArguments,
             new CancellationToken());
 
@@ -199,7 +199,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
                 It.IsAny<TimeSpan>(),
                 false,
                 It.IsAny<IEnumerable<string>>(),
-                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<IEnumerable<(string, string?)>>(),
                 It.IsAny<XmlResultJargon>(),
                 It.IsAny<string[]?>(),
                 It.IsAny<string[]?>(),
@@ -228,7 +228,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
             resetSimulator: false,
             enableLldb: true,
             signalAppEnd: false,
-            Array.Empty<(string, string)>(),
+            Array.Empty<(string, string?)>(),
             Array.Empty<string>(),
             new CancellationToken());
 
@@ -267,7 +267,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
                 It.IsAny<TimeSpan>(),
                 false,
                 It.IsAny<IEnumerable<string>>(),
-                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<IEnumerable<(string, string?)>>(),
                 It.IsAny<XmlResultJargon>(),
                 It.IsAny<string[]?>(),
                 It.IsAny<string[]?>(),
@@ -304,7 +304,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
             resetSimulator: false,
             enableLldb: true,
             signalAppEnd: false,
-            Array.Empty<(string, string)>(),
+            Array.Empty<(string, string?)>(),
             Array.Empty<string>(),
             cts.Token);
 
@@ -341,7 +341,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
             resetSimulator: false,
             enableLldb: true,
             signalAppEnd: false,
-            Array.Empty<(string, string)>(),
+            Array.Empty<(string, string?)>(),
             Array.Empty<string>(),
             new CancellationToken());
 
@@ -370,7 +370,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
                 It.IsAny<TimeSpan>(),
                 true,
                 extraArguments,
-                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<IEnumerable<(string, string?)>>(),
                 It.IsAny<XmlResultJargon>(),
                 It.IsAny<string[]?>(),
                 It.IsAny<string[]?>(),
@@ -393,7 +393,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
             resetSimulator: false,
             enableLldb: false,
             signalAppEnd: true,
-            Array.Empty<(string, string)>(),
+            Array.Empty<(string, string?)>(),
             extraArguments,
             new CancellationToken());
 
@@ -425,7 +425,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
 
         var testTarget = new TestTargetOs(TestTarget.MacCatalyst, null);
 
-        var envVars = new[] { ("envVar1", "value1"), ("envVar2", "value2") };
+        var envVars = new (string, string?)[] { ("envVar1", "value1"), ("envVar2", "value2") };
 
         _appTester
             .Setup(x => x.TestMacCatalystApp(
@@ -491,7 +491,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
                 It.IsAny<TimeSpan>(),
                 false,
                 extraArguments,
-                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<IEnumerable<(string, string?)>>(),
                 It.IsAny<XmlResultJargon>(),
                 It.IsAny<string[]?>(),
                 It.IsAny<string[]?>(),
@@ -523,7 +523,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
             resetSimulator: false,
             enableLldb: false,
             signalAppEnd: false,
-            Array.Empty<(string, string)>(),
+            Array.Empty<(string, string?)>(),
             extraArguments,
             new CancellationToken());
 

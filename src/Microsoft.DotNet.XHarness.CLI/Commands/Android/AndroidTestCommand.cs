@@ -61,6 +61,11 @@ Arguments:
             {
                 runner.ClearAdbLog();
 
+                if (Arguments.EnableCoverage)
+                {
+                    Arguments.InstrumentationArguments.Value["enable-coverage"] = "true";
+                }
+
                 var instrumentationRunner = new InstrumentationRunner(logger, runner);
                 exitCode = instrumentationRunner.RunApkInstrumentation(
                     Arguments.PackageName,

@@ -89,4 +89,14 @@ public static class EnviromentVariables
     /// Env var uses to notify the test application which test classes will be excluded.
     /// </summary>
     public const string SkippedClasses = "NUNIT_SKIPPED_CLASSES";
+
+    /// <summary>
+    /// Env var that will tell the test application to enable code coverage collection.
+    /// </summary>
+    public const string EnableCoverage = "NUNIT_ENABLE_COVERAGE";
+
+    /// <summary>
+    /// Env var that provides the test application with the output path for coverage results.
+    /// </summary>
+    public const string CoverageOutputPath = "NUNIT_COVERAGE_OUTPUT_PATH";
 }

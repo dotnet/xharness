@@ -125,4 +125,19 @@ public class LogFileTest : IDisposable
         Assert.False(oldLineFound, "old line");
         Assert.True(newLineFound, "new line");
     }
+
+    [Fact]
+    public void WriteNullTest()
+    {
+        using (var log = new LogFile(_description, _path))
+        {
+            log.Timestamp = false;
+
+            log.Write(null);
+            log.WriteLine(null);
+            log.Flush();
+        }
+
+        Assert.Equal("\n", File.ReadAllText(_path));
+    }
 }

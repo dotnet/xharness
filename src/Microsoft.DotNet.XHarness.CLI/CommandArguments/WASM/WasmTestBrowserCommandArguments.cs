@@ -40,6 +40,7 @@ internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebS
     public WebServerUseDefaultFilesArguments WebServerUseDefaultFiles { get; } = new();
     public WebServerUploadResults WebServerUploadResults { get; } = new();
     public bool IsWebServerEnabled => WebServerMiddlewarePathsAndTypes.Value.Count > 0;
+    public CommandArguments.EnableCoverageArgument EnableCoverage { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
@@ -69,6 +70,7 @@ internal class WasmTestBrowserCommandArguments : XHarnessCommandArguments, IWebS
             WebServerUseCors,
             WebServerUseCrossOriginPolicy,
             WebServerUseDefaultFiles,
+            EnableCoverage,
     };
 
     public override void Validate()

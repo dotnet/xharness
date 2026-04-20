@@ -29,7 +29,7 @@ public interface IAppRunner
         bool signalAppEnd,
         bool waitForExit,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         CancellationToken cancellationToken = default);
 
     Task<ProcessExecutionResult> RunMacCatalystApp(
@@ -38,7 +38,7 @@ public interface IAppRunner
         bool signalAppEnd,
         bool waitForExit,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         CancellationToken cancellationToken = default);
 }
 
@@ -79,13 +79,13 @@ public class AppRunner : AppRunnerBase, IAppRunner
         bool signalAppEnd,
         bool waitForExit,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         CancellationToken cancellationToken = default)
     {
         _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on MacCatalyst ***");
         var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
 
-        var envVariables = new Dictionary<string, string>();
+        var envVariables = new Dictionary<string, string?>();
         AddExtraEnvVars(envVariables, extraEnvVariables);
 
         if (signalAppEnd)
@@ -116,7 +116,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
         bool signalAppEnd,
         bool waitForExit,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         CancellationToken cancellationToken = default)
     {
         ProcessExecutionResult result;
@@ -201,7 +201,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
         ICrashSnapshotReporter crashReporter,
         IDevice device,
         ILog appOutputLog,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         TimeSpan timeout,
         CancellationToken cancellationToken)
     {
@@ -213,7 +213,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
 
         _mainLog.WriteLine("Starting the app");
 
-        var envVars = new Dictionary<string, string>();
+        var envVars = new Dictionary<string, string?>();
         AddExtraEnvVars(envVars, extraEnvVariables);
 
         return await RunAndWatchForAppSignal(() => _processManager.ExecuteCommandAsync(
@@ -228,14 +228,14 @@ public class AppRunner : AppRunnerBase, IAppRunner
 
     private static MlaunchArguments GetCommonArguments(
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         string? appEndTag)
     {
         var args = new MlaunchArguments();
 
         // Arguments passed to the iOS app bundle
         args.AddRange(extraAppArguments.Select(arg => new SetAppArgumentArgument(arg)));
-        args.AddRange(extraEnvVariables.Select(v => new SetEnvVariableArgument(v.Item1, v.Item2)));
+        args.AddRange(GetSetEnvVariableArguments(extraEnvVariables));
 
         if (appEndTag != null)
         {
@@ -249,7 +249,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
         AppBundleInformation appInformation,
         ISimulatorDevice simulator,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables)
+        IEnumerable<(string, string?)> extraEnvVariables)
     {
         var args = GetCommonArguments(extraAppArguments, extraEnvVariables, appEndTag: null);
 
@@ -281,7 +281,7 @@ public class AppRunner : AppRunnerBase, IAppRunner
         bool waitForExit,
         bool isWatchTarget,
         IEnumerable<string> extraAppArguments,
-        IEnumerable<(string, string)> extraEnvVariables,
+        IEnumerable<(string, string?)> extraEnvVariables,
         string? appEndTag)
     {
         var args = GetCommonArguments(extraAppArguments, extraEnvVariables, appEndTag);

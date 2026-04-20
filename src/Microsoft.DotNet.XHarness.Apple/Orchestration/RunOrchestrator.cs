@@ -32,7 +32,7 @@ public interface IRunOrchestrator
         bool enableLldb,
         bool signalAppEnd,
         bool waitForExit,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken);
 }
@@ -92,7 +92,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         bool enableLldb,
         bool signalAppEnd,
         bool waitForExit,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
         => OrchestrateRun(
@@ -143,7 +143,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         bool enableLldb,
         bool signalAppEnd,
         bool waitForExit,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
     {
@@ -239,7 +239,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         int expectedExitCode,
         bool signalAppEnd,
         bool waitForExit,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
     {
@@ -277,7 +277,7 @@ public class RunOrchestrator : BaseOrchestrator, IRunOrchestrator
         int expectedExitCode,
         bool signalAppEnd,
         bool waitForExit,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
     {

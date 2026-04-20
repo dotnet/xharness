@@ -26,6 +26,7 @@ internal class AppleJustTestCommandArguments : XHarnessCommandArguments, IAppleA
     public EnableLldbArgument EnableLldb { get; } = new();
     public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
     public SignalAppEndArgument SignalAppEnd { get; } = new();
+    public CommandArguments.EnableCoverageArgument EnableCoverage { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
@@ -45,6 +46,7 @@ internal class AppleJustTestCommandArguments : XHarnessCommandArguments, IAppleA
         EnableLldb,
         SignalAppEnd,
         EnvironmentalVariables,
+        EnableCoverage,
     };
 
     public override void Validate()
