@@ -27,12 +27,13 @@ stages:
       enableTelemetry: true
       enablePublishBuildArtifacts: true
       enableMicrobuild: true
-      enablePublishUsingPipelines: true
+      publishingVersion: 4
       enablePublishBuildAssets: true
       helixRepo: dotnet/xharness
 
       jobs:
       - job: Windows_NT
+        enablePublishing: true
         pool:
             name: $(DncEngPublicBuildPool)
             demands: ImageOverride -equals 1es-windows-2022-open
@@ -72,12 +73,13 @@ stages:
       enableTelemetry: true
       enablePublishBuildArtifacts: true
       enableMicrobuild: true
-      enablePublishUsingPipelines: true
+      publishingVersion: 4
       enablePublishBuildAssets: true
       helixRepo: dotnet/xharness
 
       jobs:
       - job: OSX
+        enablePublishing: true
         pool:
           vmImage: macOS-15
         strategy:
