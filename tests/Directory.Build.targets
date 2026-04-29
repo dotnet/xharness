@@ -1,0 +1,14 @@
+<Project>
+  <Import Project="..\Directory.Build.targets" />
+
+  <!--
+    Workaround for arcade SDK after https://github.com/dotnet/arcade/pull/16734:
+    Microsoft.DotNet.Arcade.Sdk's XUnit.targets implicitly adds 'xunit.v3.assert.aot' for
+    .NETCoreApp test projects, while still pinning 'xunit.core' to v2.x which transitively
+    brings in 'xunit.assert'. This causes CS0433 ambiguous-reference errors on Xunit.Assert.
+    XHarness tests use xunit v2; drop the v3 assert assembly.
+  -->
+  <ItemGroup>
+    <PackageReference Remove="xunit.v3.assert.aot" />
+  </ItemGroup>
+</Project>
