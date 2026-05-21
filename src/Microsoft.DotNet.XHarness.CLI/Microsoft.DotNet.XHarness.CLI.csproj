@@ -4,11 +4,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <!-- AOT build only targets the current TFM and ships as a per-RID native binary, not a global tool -->
-    <TargetFrameworks Condition="'$(XHarnessAotNative)' != 'true'">$(XHarnessNetTFMs)</TargetFrameworks>
-    <TargetFramework Condition="'$(XHarnessAotNative)' == 'true'">$(NetCurrent)</TargetFramework>
-    <IsPackable Condition="'$(XHarnessAotNative)' != 'true'">true</IsPackable>
-    <PackAsTool Condition="'$(XHarnessAotNative)' != 'true'">true</PackAsTool>
-    <ToolCommandName Condition="'$(XHarnessAotNative)' != 'true'">xharness</ToolCommandName>
+    <TargetFrameworks Condition="'$(XHarnessNativeAot)' != 'true'">$(XHarnessNetTFMs)</TargetFrameworks>
+    <TargetFramework Condition="'$(XHarnessNativeAot)' == 'true'">$(NetCurrent)</TargetFramework>
+    <IsPackable Condition="'$(XHarnessNativeAot)' != 'true'">true</IsPackable>
+    <PackAsTool Condition="'$(XHarnessNativeAot)' != 'true'">true</PackAsTool>
+    <ToolCommandName Condition="'$(XHarnessNativeAot)' != 'true'">xharness</ToolCommandName>
     <RollForward>Major</RollForward>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>$(NoWarn);CS8002</NoWarn>
@@ -17,13 +17,13 @@
     <EnableXlfLocalization>false</EnableXlfLocalization>
 
     <!-- NativeAOT-only switches: define a compile constant and turn on PublishAot when publishing -->
-    <DefineConstants Condition="'$(XHarnessAotNative)' == 'true'">$(DefineConstants);XHARNESS_AOT_NATIVE</DefineConstants>
-    <PublishAot Condition="'$(XHarnessAotNative)' == 'true'">true</PublishAot>
-    <InvariantGlobalization Condition="'$(XHarnessAotNative)' == 'true'">true</InvariantGlobalization>
+    <DefineConstants Condition="'$(XHarnessNativeAot)' == 'true'">$(DefineConstants);XHARNESS_NATIVEAOT</DefineConstants>
+    <PublishAot Condition="'$(XHarnessNativeAot)' == 'true'">true</PublishAot>
+    <InvariantGlobalization Condition="'$(XHarnessNativeAot)' == 'true'">true</InvariantGlobalization>
     <!-- mlaunch package contains a strong-named DLL that AOT analysis trips over; we don't actually link against it -->
-    <SuppressTrimAnalysisWarnings Condition="'$(XHarnessAotNative)' == 'true'">false</SuppressTrimAnalysisWarnings>
+    <SuppressTrimAnalysisWarnings Condition="'$(XHarnessNativeAot)' == 'true'">false</SuppressTrimAnalysisWarnings>
     <!-- The AOT binary is consumed via PATH on Helix and is expected to be named 'xharness' -->
-    <AssemblyName Condition="'$(XHarnessAotNative)' == 'true'">xharness</AssemblyName>
+    <AssemblyName Condition="'$(XHarnessNativeAot)' == 'true'">xharness</AssemblyName>
 
     <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
     <AndroidSdkVersion>32.0.0</AndroidSdkVersion>
@@ -41,7 +41,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Tools.Mlaunch" ExcludeAssets="runtime" />
     <PackageReference Include="Mono.Options" />
-    <PackageReference Include="Selenium.WebDriver" Condition="'$(XHarnessAotNative)' != 'true'" />
+    <PackageReference Include="Selenium.WebDriver" Condition="'$(XHarnessNativeAot)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -51,12 +51,12 @@
     <ProjectReference Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(XHarnessAotNative)' != 'true'">
+  <ItemGroup Condition="'$(XHarnessNativeAot)' != 'true'">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <!-- For the AOT build, drop WASM/WASI commands and arguments - they depend on ASP.NET Core and Selenium which are not in the AOT slice -->
-  <ItemGroup Condition="'$(XHarnessAotNative)' == 'true'">
+  <ItemGroup Condition="'$(XHarnessNativeAot)' == 'true'">
     <Compile Remove="Commands\WASM\**\*.cs" />
     <Compile Remove="Commands\WASI\**\*.cs" />
     <Compile Remove="Commands\WebServer.cs" />
@@ -117,7 +117,7 @@
   <Target Name="CopyAdbAndMlaunchForAotPublish"
           AfterTargets="Publish"
           DependsOnTargets="DownloadAdb;GenerateCGManifest;ExtractMlaunch"
-          Condition="'$(XHarnessAotNative)' == 'true' AND '$(PublishDir)' != ''">
+          Condition="'$(XHarnessNativeAot)' == 'true' AND '$(PublishDir)' != ''">
     <ItemGroup>
       <_AotPublishWindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb.exe" />
       <_AotPublishWindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/AdbWinApi.dll" />

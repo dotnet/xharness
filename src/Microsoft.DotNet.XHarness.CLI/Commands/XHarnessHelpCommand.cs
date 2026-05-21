@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple.Simulators;
-#if !XHARNESS_AOT_NATIVE
+#if !XHARNESS_NATIVEAOT
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasi;
 #endif
@@ -68,21 +68,21 @@ internal class XHarnessHelpCommand : HelpCommand
 #endif
                 break;
             case "wasm":
-#if !XHARNESS_AOT_NATIVE
+#if !XHARNESS_NATIVEAOT
                 PrintCommandHelp(new WasmCommandSet(), subCommand);
 #else
                 Console.WriteLine("Command 'wasm' is not available in this build of xharness.");
 #endif
                 break;
             case "wasi":
-#if !XHARNESS_AOT_NATIVE
+#if !XHARNESS_NATIVEAOT
                 PrintCommandHelp(new WasiCommandSet(), subCommand);
 #else
                 Console.WriteLine("Command 'wasi' is not available in this build of xharness.");
 #endif
                 break;
             default:
-#if !XHARNESS_AOT_NATIVE
+#if !XHARNESS_NATIVEAOT
                 Console.WriteLine($"No help available for command '{command}'. Allowed commands are 'apple', 'wasm', 'wasi' and 'android'");
 #else
                 Console.WriteLine($"No help available for command '{command}'. Allowed commands are 'apple' and 'android'");

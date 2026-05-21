@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-#if !XHARNESS_AOT_NATIVE
+#if !XHARNESS_NATIVEAOT
 using OpenQA.Selenium;
 #endif
 
@@ -286,7 +286,7 @@ public abstract class SwitchArgument : Argument<bool>
     public override string ToString() => Value ? "true" : "false";
 }
 
-#if !XHARNESS_AOT_NATIVE
+#if !XHARNESS_NATIVEAOT
 public abstract class EnumPageLoadStrategyArgument : Argument<PageLoadStrategy>
 {
     private readonly PageLoadStrategy _defaultValue;

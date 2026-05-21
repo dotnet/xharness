@@ -9,7 +9,7 @@ using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.AndroidHeadless;
 using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple;
-#if !XHARNESS_AOT_NATIVE
+#if !XHARNESS_NATIVEAOT
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasi;
 #endif
@@ -86,7 +86,7 @@ public static class Program
 
         commandSet.Add(new AndroidCommandSet());
         commandSet.Add(new AndroidHeadlessCommandSet());
-#if !XHARNESS_AOT_NATIVE
+#if !XHARNESS_NATIVEAOT
         commandSet.Add(new WasmCommandSet());
         commandSet.Add(new WasiCommandSet());
 #endif

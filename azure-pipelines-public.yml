@@ -139,7 +139,7 @@ stages:
             src/Microsoft.DotNet.XHarness.CLI/Microsoft.DotNet.XHarness.CLI.csproj
             -c Release
             -r osx-arm64
-            -p:XHarnessAotNative=true
+            -p:XHarnessNativeAot=true
             /bl:$(Build.SourcesDirectory)/artifacts/log/Release/Publish_AOT_osx-arm64.binlog
           displayName: dotnet publish (osx-arm64, NativeAOT)
           condition: succeeded()
