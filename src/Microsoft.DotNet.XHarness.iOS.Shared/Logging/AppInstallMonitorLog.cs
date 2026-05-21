@@ -60,9 +60,9 @@ public class AppInstallMonitorLog : FileBackedLog
 
     private void ResetTimer() => _cancellationSource.CancelAfter(TimeSpan.FromMinutes(1));
 
-    protected override void WriteImpl(string value)
+    protected override void WriteImpl(string? value)
     {
-        var v = value.Trim();
+        var v = value?.Trim() ?? string.Empty;
         if (v.StartsWith("Installing application bundle", StringComparison.Ordinal))
         {
             if (!CopyingApp)

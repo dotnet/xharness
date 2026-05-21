@@ -79,6 +79,11 @@ Arguments:
             runner.EnableWifi(Arguments.Wifi == WifiStatus.Enable);
         }
 
+        if (Arguments.EnableCoverage)
+        {
+            Arguments.InstrumentationArguments.Value["enable-coverage"] = "true";
+        }
+
         var instrumentationRunner = new InstrumentationRunner(logger, runner);
         return instrumentationRunner.RunApkInstrumentation(
             Arguments.PackageName,

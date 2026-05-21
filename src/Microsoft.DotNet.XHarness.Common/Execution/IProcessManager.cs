@@ -28,7 +28,7 @@ public interface IProcessManager
         IList<string> args,
         ILog log,
         TimeSpan timeout,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         CancellationToken? cancellationToken = null);
 
     Task<ProcessExecutionResult> ExecuteCommandAsync(
@@ -38,14 +38,14 @@ public interface IProcessManager
         ILog stdoutLog,
         ILog stderrLog,
         TimeSpan timeout,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         CancellationToken? cancellationToken = null);
 
     Task<ProcessExecutionResult> RunAsync(
         Process process,
         ILog log,
         TimeSpan? timeout = null,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null);
 
@@ -55,7 +55,7 @@ public interface IProcessManager
         ILog stdoutLog,
         ILog stderrLog,
         TimeSpan? timeout = null,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null);
 

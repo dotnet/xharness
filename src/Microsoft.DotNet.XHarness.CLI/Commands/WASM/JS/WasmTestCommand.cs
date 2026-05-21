@@ -128,11 +128,16 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                                                            Arguments.SymbolicatePatternsFileArgument,
                                                            logger);
 
+            var coverageOutputPath = Arguments.EnableCoverage
+                ? Path.Combine(Arguments.OutputDirectory, "coverage.cobertura.xml")
+                : null;
+
             var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath,
                                                              stdoutFilePath,
                                                              logger,
                                                              Arguments.ErrorPatternsFile,
-                                                             symbolicator);
+                                                             symbolicator,
+                                                             coverageOutputPath);
             var logProcessorTask = Task.Run(() => logProcessor.RunAsync(cts.Token));
 
             var processTask = processManager.ExecuteCommandAsync(
@@ -144,7 +149,7 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
                 Arguments.Timeout,
                 // Node respects LANG only, ignores LANGUAGE
                 environmentVariables: Arguments.Engine.Value == JavaScriptEngine.NodeJS ?
-                                    new Dictionary<string, string>() { {"LANG", Arguments.Locale} } :
+                                    new Dictionary<string, string?>() { { "LANG", Arguments.Locale } } :
                                     null);
 
             TaskCompletionSource wasmExitReceivedTcs = logProcessor.WasmExitReceivedTcs;

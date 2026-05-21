@@ -76,7 +76,7 @@ public class TestReporter : ITestReporter
 
     public bool ResultsUseXml => _xmlJargon != XmlResultJargon.Missing;
 
-    private bool TestExecutionStarted => _listener.ConnectedTask.IsCompleted && _listener.ConnectedTask.Result;
+    private bool TestExecutionStarted => _listener.ConnectedTask.IsCompletedSuccessfully && _listener.ConnectedTask.Result;
 
     public TestReporter(
         IMlaunchProcessManager processManager,
@@ -136,7 +136,7 @@ public class TestReporter : ITestReporter
         if (reader.Peek() == -1)
         {
             // Empty file! If the app never connected to our listener, it probably never launched
-            if (!_listener.ConnectedTask.IsCompleted || !_listener.ConnectedTask.Result)
+            if (!_listener.ConnectedTask.IsCompletedSuccessfully || !_listener.ConnectedTask.Result)
             {
                 _launchFailure = true;
             }

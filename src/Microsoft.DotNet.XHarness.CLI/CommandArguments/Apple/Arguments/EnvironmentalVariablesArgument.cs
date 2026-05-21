@@ -12,8 +12,8 @@ namespace Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
 /// </summary>
 internal class EnvironmentalVariablesArgument : Argument
 {
-    public IReadOnlyCollection<(string, string)> Value => _environmentalVariables;
-    private readonly List<(string, string)> _environmentalVariables = new();
+    public IReadOnlyCollection<(string, string?)> Value => _environmentalVariables;
+    private readonly List<(string, string?)> _environmentalVariables = new();
 
     public EnvironmentalVariablesArgument() : base("set-env=", "Environmental variable to set for the application in format key=value. Can be used multiple times")
     {

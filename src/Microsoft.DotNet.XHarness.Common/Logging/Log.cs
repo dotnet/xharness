@@ -20,8 +20,10 @@ public abstract partial class Log : ILog
 
     public virtual void Write(byte[] buffer, int offset, int count) => Write(Encoding.GetString(buffer, offset, count));
 
-    public void Write(string value)
+    public void Write(string? value)
     {
+        value ??= string.Empty;
+
         if (Timestamp)
         {
             value = "[" + DateTime.Now.ToString("HH:mm:ss.fffffff") + "] " + value;
@@ -30,9 +32,9 @@ public abstract partial class Log : ILog
         WriteImpl(value);
     }
 
-    public void WriteLine(string value) => Write(value + "\n");
+    public void WriteLine(string? value) => Write((value ?? string.Empty) + "\n");
 
-    public void WriteLine(string format, params object[] args) => Write(string.Format(format, args) + "\n");
+    public void WriteLine(string format, params object?[] args) => Write(string.Format(format, args) + "\n");
 
     public override string ToString() => Description ?? string.Empty;
 
@@ -40,5 +42,5 @@ public abstract partial class Log : ILog
 
     public abstract void Dispose();
 
-    protected abstract void WriteImpl(string value);
+    protected abstract void WriteImpl(string? value);
 }

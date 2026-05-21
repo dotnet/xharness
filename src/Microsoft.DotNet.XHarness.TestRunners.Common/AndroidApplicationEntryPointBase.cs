@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -28,5 +29,12 @@ public abstract class AndroidApplicationEntryPointBase : ApplicationEntryPoint
         var options = ApplicationOptions.Current;
         using TextWriter? resultsFileMaybe = options.EnableXml ? File.CreateText(TestsResultsFinalPath) : null;
         await InternalRunAsync(options, Logger, resultsFileMaybe);
+
+        if (CoverageResultPath != null)
+        {
+            // Report the coverage path via stdout so the Instrumentation class can
+            // forward it as INSTRUMENTATION_RESULT: coverage-results-path=<path>
+            Console.WriteLine($"INSTRUMENTATION_RESULT: coverage-results-path={CoverageResultPath}");
+        }
     }
 }

@@ -81,6 +81,16 @@ public class ApplicationOptions
             AppEndTag = Environment.GetEnvironmentVariable(EnviromentVariables.AppEndTag);
         }
 
+        if (bool.TryParse(Environment.GetEnvironmentVariable(EnviromentVariables.EnableCoverage), out b))
+        {
+            EnableCoverage = b;
+        }
+
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnviromentVariables.CoverageOutputPath)))
+        {
+            CoverageOutputPath = Environment.GetEnvironmentVariable(EnviromentVariables.CoverageOutputPath);
+        }
+
         var os = new OptionSet() {
                 { "autoexit", "Exit application once the test run has completed", v => TerminateAfterExecution = true },
                 { "autostart", "If the app should automatically start running the tests", v => AutoStart = true },
@@ -113,6 +123,8 @@ public class ApplicationOptions
                     v => _classMethodFilters.Add(v)
                 },
                 { "test-end-tag=", "String that will be outputted when test run has finished", v => AppEndTag = v },
+                { "enable-coverage", "Enable code coverage collection", v => EnableCoverage = true },
+                { "coverage-output=", "Path for coverage output file", v => CoverageOutputPath = v },
             };
 
         try
@@ -179,4 +191,14 @@ public class ApplicationOptions
     /// String that will be outputted when test run has finished.
     /// </summary>
     public string AppEndTag { get; private set; }
+
+    /// <summary>
+    /// Enable code coverage collection during test execution.
+    /// </summary>
+    public bool EnableCoverage { get; private set; }
+
+    /// <summary>
+    /// Output path for coverage results file.
+    /// </summary>
+    public string CoverageOutputPath { get; private set; }
 }

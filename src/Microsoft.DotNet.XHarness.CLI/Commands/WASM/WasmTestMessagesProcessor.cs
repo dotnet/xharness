@@ -19,8 +19,10 @@ namespace Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 public class WasmTestMessagesProcessor
 {
     private static Regex xmlRx = new Regex(@"^STARTRESULTXML ([0-9]*) ([^ ]*) ENDRESULTXML", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private static Regex coverageRx = new Regex(@"^STARTCOVERAGEXML ([0-9]*) ([^ ]*) ENDCOVERAGEXML", RegexOptions.Compiled | RegexOptions.CultureInvariant);
     private readonly StreamWriter _stdoutFileWriter;
     private readonly string _xmlResultsFilePath;
+    private readonly string? _coverageOutputPath;
     private static TimeSpan s_logMessagesTimeout = TimeSpan.FromMinutes(2);
 
     private readonly ILogger _logger;
@@ -38,9 +40,10 @@ public class WasmTestMessagesProcessor
     public TaskCompletionSource WasmExitReceivedTcs { get; } = new ();
     public int? ForwardedExitCode {get; private set; }
 
-    public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger, string? errorPatternsFile = null, WasmSymbolicatorBase? symbolicator = null)
+    public WasmTestMessagesProcessor(string xmlResultsFilePath, string stdoutFilePath, ILogger logger, string? errorPatternsFile = null, WasmSymbolicatorBase? symbolicator = null, string? coverageOutputPath = null)
     {
         _xmlResultsFilePath = xmlResultsFilePath;
+        _coverageOutputPath = coverageOutputPath;
         _stdoutFileWriter = File.CreateText(stdoutFilePath);
         _stdoutFileWriter.AutoFlush = true;
         _logger = logger;
@@ -163,7 +166,10 @@ public class WasmTestMessagesProcessor
                 logMessage = JsonSerializer.Deserialize<WasmLogMessage>(message);
                 if (logMessage != null)
                 {
-                    line = logMessage.payload + " " + string.Join(" ", logMessage.arguments ?? Enumerable.Empty<object>());
+                    // Use payload (the formatted text) if available, otherwise join arguments.
+                    // Do not concatenate both — payload already contains the formatted output,
+                    // and arguments duplicates it for simple console.log() calls.
+                    line = logMessage.payload ?? string.Join(" ", logMessage.arguments ?? Enumerable.Empty<object>());
                 }
                 else
                 {
@@ -184,6 +190,7 @@ public class WasmTestMessagesProcessor
         line = line.TrimEnd();
 
         var match = xmlRx.Match(line);
+        var coverageMatch = coverageRx.Match(line);
         if (match.Success)
         {
             var expectedLength = Int32.Parse(match.Groups[1].Value);
@@ -199,6 +206,26 @@ public class WasmTestMessagesProcessor
                 {
                     _logger.LogInformation($"Received {bytes.Length} of {_xmlResultsFilePath} but expected {expectedLength}");
                 }
+            }
+        }
+        else if (coverageMatch.Success && _coverageOutputPath != null)
+        {
+            var expectedLength = Int32.Parse(coverageMatch.Groups[1].Value);
+            var bytes = System.Convert.FromBase64String(coverageMatch.Groups[2].Value);
+            var outputDir = Path.GetDirectoryName(_coverageOutputPath);
+            if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+            {
+                Directory.CreateDirectory(outputDir);
+            }
+
+            File.WriteAllBytes(_coverageOutputPath, bytes);
+            if (bytes.Length == expectedLength)
+            {
+                _logger.LogInformation($"Received expected {bytes.Length} bytes of coverage data, saved to {_coverageOutputPath}");
+            }
+            else
+            {
+                _logger.LogWarning($"Received {bytes.Length} bytes of coverage data but expected {expectedLength}, saved to {_coverageOutputPath}");
             }
         }
         else
@@ -232,7 +259,10 @@ public class WasmTestMessagesProcessor
             {
                 // the message on WASI looks like WASM EXIT 123
                 // here we strip the first 10 characters and parse the rest
-                ForwardedExitCode = int.Parse(line.Substring(10));
+                if (int.TryParse(line.Substring(10), out var exitCode))
+                    ForwardedExitCode = exitCode;
+                else
+                    _logger.LogWarning($"Could not parse exit code from: {line}");
             }
             if (!WasmExitReceivedTcs.TrySetResult())
                 _logger.LogDebug("Got a duplicate exit message.");

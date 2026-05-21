@@ -26,7 +26,7 @@ public interface IResultParser
     /// Generates an XML result that will consider to be an error by the CI. Allows to catch errors in cases in which we are not talking about a test
     /// failure per se but the situation in which the app could not be built, timeout or crashed.
     /// </summary>
-    void GenerateFailure(ILogs logs, string source, string appName, string variation, string title, string message, TextReader stderrReader, XmlResultJargon jargon);
+    void GenerateFailure(ILogs logs, string source, string appName, string? variation, string title, string message, TextReader stderrReader, XmlResultJargon jargon);
 
     /// <summary>
     /// Updates given xml result to contain a list of attachments. This is useful for CI to be able to add logs as part of the attachments of a failing test.

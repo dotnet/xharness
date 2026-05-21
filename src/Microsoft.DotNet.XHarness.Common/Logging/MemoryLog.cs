@@ -15,7 +15,7 @@ public class MemoryLog : ReadableLog
 {
     private readonly StringBuilder _captured = new();
 
-    protected override void WriteImpl(string value) => _captured.Append(value);
+    protected override void WriteImpl(string? value) => _captured.Append(value);
 
     public override StreamReader GetReader()
     {

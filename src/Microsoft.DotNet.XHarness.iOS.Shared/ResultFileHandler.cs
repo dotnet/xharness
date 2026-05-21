@@ -76,61 +76,121 @@ public class ResultFileHandler : IResultFileHandler
         string bundleIdentifier,
         string hostDestinationPath)
     {
-        // This file path is set in iOSApplicationEntryPointBase
-        string sourcePath = runMode == RunMode.iOS
-            ? "/Documents/test-results.xml"
-            : "/Library/Caches/Documents/test-results.xml";
-
-        if (IsVersionSupported(osVersion, isSimulator))
+        if (!ShouldCopyFromAppContainer(runMode, osVersion, isSimulator))
         {
-            string cmd;
-            if (isSimulator)
-            {
-                cmd = $"cp \"$(xcrun simctl get_app_container {udid} {bundleIdentifier} data){sourcePath}\" \"{hostDestinationPath}\"";
-            }
-            else
-            {
-                cmd = $"xcrun devicectl device copy from --device {udid} --source {sourcePath} --destination {hostDestinationPath} --user mobile --domain-type appDataContainer --domain-identifier {bundleIdentifier}";
-            }
+            return true;
+        }
 
-            // Retry up to 3 times with increasing delays to handle transient device communication errors
-            // (e.g., com.apple.Mercury.error 1000 or RSD error 0xE8000003 on tvOS devices).
-            for (int attempt = 0; attempt <= _retryDelaysMs.Length; attempt++)
-            {
-                if (attempt > 0)
-                {
-                    int delayMs = _retryDelaysMs[attempt - 1];
-                    _mainLog.WriteLine($"Retrying results file copy (attempt {attempt + 1}) after {delayMs / 1000}s delay...");
-                    await Task.Delay(delayMs);
+        return await CopyFileFromAppContainerAsync(
+            runMode,
+            isSimulator,
+            udid,
+            bundleIdentifier,
+            GetAppContainerSourcePath(runMode, "test-results.xml"),
+            hostDestinationPath,
+            "results file");
+    }
 
-                    // Remove a partial/failed destination file before retrying
-                    if (File.Exists(hostDestinationPath))
-                    {
-                        File.Delete(hostDestinationPath);
-                    }
-                }
-
-                await _processManager.ExecuteCommandAsync(
-                    "/bin/bash",
-                    new[] { "-c", cmd },
-                    _mainLog,
-                    _mainLog,
-                    _mainLog,
-                    TimeSpan.FromMinutes(1),
-                    null);
-
-                if (File.Exists(hostDestinationPath))
-                {
-                    return true;
-                }
-
-                _mainLog.WriteLine($"Failed to copy results file from {(isSimulator ? "simulator" : "device")} (attempt {attempt + 1}). Expected at: {hostDestinationPath}");
-            }
-
+    public async Task<bool> CopyCoverageResultsAsync(
+        RunMode runMode,
+        bool isSimulator,
+        string osVersion,
+        string udid,
+        string bundleIdentifier,
+        string coverageFileName,
+        string hostDestinationPath)
+    {
+        if (!ShouldCopyFromAppContainer(runMode, osVersion, isSimulator))
+        {
             return false;
         }
 
-        return true;
+        return await CopyFileFromAppContainerAsync(
+            runMode,
+            isSimulator,
+            udid,
+            bundleIdentifier,
+            GetAppContainerSourcePath(runMode, coverageFileName),
+            hostDestinationPath,
+            "coverage results file");
+    }
+
+    private bool ShouldCopyFromAppContainer(RunMode runMode, string osVersion, bool isSimulator)
+        => runMode == RunMode.MacOS || IsVersionSupported(osVersion, isSimulator);
+
+    private static string GetAppContainerSourcePath(RunMode runMode, string fileName)
+        => runMode is RunMode.iOS or RunMode.MacOS
+            ? $"/Documents/{fileName}"
+            : $"/Library/Caches/Documents/{fileName}";
+
+    private async Task<bool> CopyFileFromAppContainerAsync(
+        RunMode runMode,
+        bool isSimulator,
+        string udid,
+        string bundleIdentifier,
+        string sourcePath,
+        string hostDestinationPath,
+        string fileDescription)
+    {
+        string copySourceDescription;
+        string cmd;
+        if (runMode == RunMode.MacOS)
+        {
+            string containerPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "Library",
+                "Containers",
+                bundleIdentifier,
+                "Data");
+            copySourceDescription = "MacCatalyst app container";
+            cmd = $"cp \"{containerPath}{sourcePath}\" \"{hostDestinationPath}\"";
+        }
+        else if (isSimulator)
+        {
+            copySourceDescription = "simulator";
+            cmd = $"cp \"$(xcrun simctl get_app_container {udid} {bundleIdentifier} data){sourcePath}\" \"{hostDestinationPath}\"";
+        }
+        else
+        {
+            copySourceDescription = "device";
+            cmd = $"xcrun devicectl device copy from --device {udid} --source {sourcePath} --destination {hostDestinationPath} --user mobile --domain-type appDataContainer --domain-identifier {bundleIdentifier}";
+        }
+
+        // Retry up to 3 times with increasing delays to handle transient device communication errors
+        // (e.g., com.apple.Mercury.error 1000 or RSD error 0xE8000003 on tvOS devices).
+        for (int attempt = 0; attempt <= _retryDelaysMs.Length; attempt++)
+        {
+            if (attempt > 0)
+            {
+                int delayMs = _retryDelaysMs[attempt - 1];
+                _mainLog.WriteLine($"Retrying {fileDescription} copy (attempt {attempt + 1}) after {delayMs / 1000}s delay...");
+                await Task.Delay(delayMs);
+
+                // Remove a partial/failed destination file before retrying
+                if (File.Exists(hostDestinationPath))
+                {
+                    File.Delete(hostDestinationPath);
+                }
+            }
+
+            await _processManager.ExecuteCommandAsync(
+                "/bin/bash",
+                new[] { "-c", cmd },
+                _mainLog,
+                _mainLog,
+                _mainLog,
+                TimeSpan.FromMinutes(1),
+                null);
+
+            if (File.Exists(hostDestinationPath))
+            {
+                return true;
+            }
+
+            _mainLog.WriteLine($"Failed to copy {fileDescription} from {copySourceDescription} (attempt {attempt + 1}). Expected at: {hostDestinationPath}");
+        }
+
+        return false;
     }
 
     public async Task CopyCrashReportAsync(

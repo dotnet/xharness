@@ -31,7 +31,7 @@ public class MlaunchProcessManager : MacOSProcessManager, IMlaunchProcessManager
         MlaunchArguments args,
         ILog log,
         TimeSpan timeout,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         int verbosity = 0,
         CancellationToken? cancellationToken = null)
     {
@@ -45,7 +45,7 @@ public class MlaunchProcessManager : MacOSProcessManager, IMlaunchProcessManager
         ILog stdout,
         ILog stderr,
         TimeSpan timeout,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         int verbosity = 0,
         CancellationToken? cancellationToken = null)
     {
@@ -58,7 +58,7 @@ public class MlaunchProcessManager : MacOSProcessManager, IMlaunchProcessManager
         MlaunchArguments args,
         ILog log,
         TimeSpan? timeout = null,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         int verbosity = 0,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null) =>
@@ -72,7 +72,7 @@ public class MlaunchProcessManager : MacOSProcessManager, IMlaunchProcessManager
         ILog stdout,
         ILog stderr,
         TimeSpan? timeout = null,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         int verbosity = 0,
         CancellationToken? cancellationToken = null,
         bool? diagnostics = null)

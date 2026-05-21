@@ -29,7 +29,7 @@ public interface IJustRunOrchestrator
         bool enableLldb,
         bool signalAppEnd,
         bool waitForExit,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken);
 }
@@ -70,7 +70,7 @@ public class JustRunOrchestrator : RunOrchestrator, IJustRunOrchestrator
         bool enableLldb,
         bool signalAppEnd,
         bool waitForExit,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
         => OrchestrateRun(
