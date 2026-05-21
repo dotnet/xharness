@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.Extensions.Logging;
@@ -71,14 +72,7 @@ public static class RunSummaryEmitter
     {
         var resultData = BuildResultData(exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles);
 
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        };
-
-        string json = JsonSerializer.Serialize(resultData, options);
+        string json = resultData.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
         logInfo($"{JsonStartMarker}{Environment.NewLine}{json}{Environment.NewLine}{JsonEndMarker}");
     }
 
@@ -100,14 +94,7 @@ public static class RunSummaryEmitter
         {
             var resultData = BuildResultData(exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles);
 
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            };
-
-            string json = JsonSerializer.Serialize(resultData, options);
+            string json = resultData.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
             Directory.CreateDirectory(outputDirectory);
             File.WriteAllText(Path.Combine(outputDirectory, "xharness-result.json"), json);
         }
@@ -117,7 +104,10 @@ public static class RunSummaryEmitter
         }
     }
 
-    private static Dictionary<string, object?> BuildResultData(
+    // Uses JsonObject (not JsonSerializer.Serialize<Dictionary<string, object?>>) so that this
+    // type can be safely consumed from a NativeAOT-published xharness; reflection-based
+    // serialization of object-typed dictionary values is not supported under AOT.
+    private static JsonObject BuildResultData(
         ExitCode exitCode,
         string platform,
         string? deviceName,
@@ -129,19 +119,7 @@ public static class RunSummaryEmitter
         string? helixJobId = Environment.GetEnvironmentVariable("HELIX_CORRELATION_ID");
         string? helixWorkItem = Environment.GetEnvironmentVariable("HELIX_WORKITEM_FRIENDLYNAME");
 
-        var fileEntries = new List<object>();
-        foreach (var file in producedFiles)
-        {
-            var entry = new Dictionary<string, string>
-            {
-                ["name"] = file.Name,
-                ["type"] = file.Type,
-            };
-
-            fileEntries.Add(entry);
-        }
-
-        var resultData = new Dictionary<string, object?>
+        var resultData = new JsonObject
         {
             ["version"] = 1,
             ["machineName"] = Environment.MachineName,
@@ -179,8 +157,18 @@ public static class RunSummaryEmitter
             resultData["architecture"] = architecture;
         }
 
-        if (fileEntries.Count > 0)
+        if (producedFiles.Count > 0)
         {
+            var fileEntries = new JsonArray();
+            foreach (var file in producedFiles)
+            {
+                JsonNode entry = new JsonObject
+                {
+                    ["name"] = file.Name,
+                    ["type"] = file.Type,
+                };
+                fileEntries.Add(entry);
+            }
             resultData["files"] = fileEntries;
         }
 
