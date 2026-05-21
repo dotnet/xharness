@@ -142,8 +142,21 @@
           SourceFiles="@(_AotPublishMlaunchFiles)"
           DestinationFiles="@(_AotPublishMlaunchFiles->'$(PublishDir)runtimes/any/native/mlaunch/%(RecursiveDir)%(Filename)%(Extension)')"
           SkipUnchangedFiles="true" />
+    <!--
+      Drop a tiny 'dotnet' shim next to the native binary. The Helix SDK
+      xharness-runner.*.sh scripts unconditionally invoke
+      `dotnet exec $XHARNESS_CLI_PATH "$@"` to call xharness. The shim
+      translates that into a direct invocation of the native binary so
+      the AOT slice can run under the unmodified Helix work-item scripts.
+    -->
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\eng\aot\dotnet-shim.sh"
+          DestinationFiles="$(PublishDir)dotnet"
+          SkipUnchangedFiles="true" />
     <Exec Condition="$([MSBuild]::IsOSPlatform('OSX'))"
-          Command="chmod +x &quot;$(PublishDir)runtimes/any/native/adb/macos/adb&quot; &amp;&amp; chmod +x &quot;$(PublishDir)runtimes/any/native/mlaunch/bin/mlaunch&quot; &amp;&amp; chmod +x &quot;$(PublishDir)runtimes/any/native/mlaunch/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch&quot;"
+          Command="chmod +x &quot;$(PublishDir)runtimes/any/native/adb/macos/adb&quot; &amp;&amp; chmod +x &quot;$(PublishDir)runtimes/any/native/mlaunch/bin/mlaunch&quot; &amp;&amp; chmod +x &quot;$(PublishDir)runtimes/any/native/mlaunch/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch&quot; &amp;&amp; chmod +x &quot;$(PublishDir)dotnet&quot;"
+          IgnoreExitCode="true" />
+    <Exec Condition="!$([MSBuild]::IsOSPlatform('Windows')) AND !$([MSBuild]::IsOSPlatform('OSX'))"
+          Command="chmod +x &quot;$(PublishDir)dotnet&quot;"
           IgnoreExitCode="true" />
   </Target>
 
