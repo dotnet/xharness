@@ -134,9 +134,21 @@ public class MacOSProcessManager : UnixProcessManager, IMacOSProcessManager
             return pathFromEnv;
         }
 
-        // This path is where mlaunch is when the .NET tool is extracted from the .nupkg
-        var assemblyPath = Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(MacOSProcessManager))?.Location)!;
-        return Path.Combine(assemblyPath, "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
+        // AppContext.BaseDirectory works for both the unpacked global tool layout
+        // (tools/<tfm>/any/Microsoft.DotNet.XHarness.CLI.dll) and for a NativeAOT
+        // single-file publish (directory containing the native binary).
+        var baseDir = AppContext.BaseDirectory;
+
+        // For the global tool, mlaunch lives at <package-root>/runtimes/any/native/mlaunch/...
+        // i.e. three levels above the assembly directory.
+        // For the AOT publish, the same relative layout is copied next to the binary.
+        var globalToolPath = Path.Combine(baseDir, "..", "..", "..", "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
+        if (File.Exists(globalToolPath))
+        {
+            return globalToolPath;
+        }
+
+        return Path.Combine(baseDir, "runtimes", "any", "native", "mlaunch", "bin", "mlaunch");
     }
 
     #endregion

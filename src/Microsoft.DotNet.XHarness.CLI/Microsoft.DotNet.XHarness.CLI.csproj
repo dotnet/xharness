@@ -3,16 +3,25 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>$(XHarnessNetTFMs)</TargetFrameworks>
-    <IsPackable>true</IsPackable>
-    <PackAsTool>true</PackAsTool>
-    <ToolCommandName>xharness</ToolCommandName>
+    <!-- AOT build only targets the current TFM and ships as a per-RID native binary, not a global tool -->
+    <TargetFrameworks Condition="'$(XHarnessAotNative)' != 'true'">$(XHarnessNetTFMs)</TargetFrameworks>
+    <TargetFramework Condition="'$(XHarnessAotNative)' == 'true'">$(NetCurrent)</TargetFramework>
+    <IsPackable Condition="'$(XHarnessAotNative)' != 'true'">true</IsPackable>
+    <PackAsTool Condition="'$(XHarnessAotNative)' != 'true'">true</PackAsTool>
+    <ToolCommandName Condition="'$(XHarnessAotNative)' != 'true'">xharness</ToolCommandName>
     <RollForward>Major</RollForward>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>$(NoWarn);CS8002</NoWarn>
     <MlaunchDestinationDir Condition="'$(TargetFrameworks)' == '' OR $(TargetFrameworks.EndsWith($(TargetFramework)))">$(BaseIntermediateOutputPath)/mlaunch</MlaunchDestinationDir>
     <!-- Disable XLF localization since we're not using translation files -->
     <EnableXlfLocalization>false</EnableXlfLocalization>
+
+    <!-- NativeAOT-only switches: define a compile constant and turn on PublishAot when publishing -->
+    <DefineConstants Condition="'$(XHarnessAotNative)' == 'true'">$(DefineConstants);XHARNESS_AOT_NATIVE</DefineConstants>
+    <PublishAot Condition="'$(XHarnessAotNative)' == 'true'">true</PublishAot>
+    <InvariantGlobalization Condition="'$(XHarnessAotNative)' == 'true'">true</InvariantGlobalization>
+    <!-- mlaunch package contains a strong-named DLL that AOT analysis trips over; we don't actually link against it -->
+    <SuppressTrimAnalysisWarnings Condition="'$(XHarnessAotNative)' == 'true'">false</SuppressTrimAnalysisWarnings>
 
     <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
     <AndroidSdkVersion>32.0.0</AndroidSdkVersion>
@@ -30,7 +39,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Tools.Mlaunch" ExcludeAssets="runtime" />
     <PackageReference Include="Mono.Options" />
-    <PackageReference Include="Selenium.WebDriver" />
+    <PackageReference Include="Selenium.WebDriver" Condition="'$(XHarnessAotNative)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,8 +49,18 @@
     <ProjectReference Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(XHarnessAotNative)' != 'true'">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- For the AOT build, drop WASM/WASI commands and arguments - they depend on ASP.NET Core and Selenium which are not in the AOT slice -->
+  <ItemGroup Condition="'$(XHarnessAotNative)' == 'true'">
+    <Compile Remove="Commands\WASM\**\*.cs" />
+    <Compile Remove="Commands\WASI\**\*.cs" />
+    <Compile Remove="Commands\WebServer.cs" />
+    <Compile Remove="CommandArguments\WASM\**\*.cs" />
+    <Compile Remove="CommandArguments\WASI\**\*.cs" />
+    <Compile Remove="CommandArguments\Arguments\WebServer*.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -85,6 +104,45 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
+  </Target>
+
+  <!--
+    The AOT-native build is a single-TFM publish, so the DispatchToInnerBuilds /
+    _GetPackageFiles hooks the regular (multi-TFM, packed-as-tool) build relies on
+    never run. Copy adb and mlaunch into the publish directory ourselves so they
+    sit next to the native binary at runtimes/any/native/...
+  -->
+  <Target Name="CopyAdbAndMlaunchForAotPublish"
+          AfterTargets="Publish"
+          DependsOnTargets="DownloadAdb;GenerateCGManifest;ExtractMlaunch"
+          Condition="'$(XHarnessAotNative)' == 'true' AND '$(PublishDir)' != ''">
+    <ItemGroup>
+      <_AotPublishWindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb.exe" />
+      <_AotPublishWindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/AdbWinApi.dll" />
+      <_AotPublishWindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/AdbWinUsbApi.dll" />
+      <_AotPublishLinuxAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />
+      <_AotPublishMacOsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/adb" />
+      <_AotPublishMlaunchFiles Include="$(BaseIntermediateOutputPath)/mlaunch/**/*" />
+    </ItemGroup>
+    <Copy Condition="$([MSBuild]::IsOSPlatform('Windows'))"
+          SourceFiles="@(_AotPublishWindowsAdbFiles)"
+          DestinationFolder="$(PublishDir)runtimes/any/native/adb/windows"
+          SkipUnchangedFiles="true" />
+    <Copy Condition="$([MSBuild]::IsOSPlatform('Linux'))"
+          SourceFiles="@(_AotPublishLinuxAdbFiles)"
+          DestinationFolder="$(PublishDir)runtimes/any/native/adb/linux"
+          SkipUnchangedFiles="true" />
+    <Copy Condition="$([MSBuild]::IsOSPlatform('OSX'))"
+          SourceFiles="@(_AotPublishMacOsAdbFiles)"
+          DestinationFolder="$(PublishDir)runtimes/any/native/adb/macos"
+          SkipUnchangedFiles="true" />
+    <Copy Condition="$([MSBuild]::IsOSPlatform('OSX'))"
+          SourceFiles="@(_AotPublishMlaunchFiles)"
+          DestinationFiles="@(_AotPublishMlaunchFiles->'$(PublishDir)runtimes/any/native/mlaunch/%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('OSX'))"
+          Command="chmod +x &quot;$(PublishDir)runtimes/any/native/adb/macos/adb&quot; &amp;&amp; chmod +x &quot;$(PublishDir)runtimes/any/native/mlaunch/bin/mlaunch&quot; &amp;&amp; chmod +x &quot;$(PublishDir)runtimes/any/native/mlaunch/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch&quot;"
+          IgnoreExitCode="true" />
   </Target>
 
   <!-- The ExtractMlaunch target comes from the Mlaunch NuGet package and places files in the obj/ dir -->

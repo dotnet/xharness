@@ -31,5 +31,22 @@ internal class XHarnessVersionCommand : Command
         return 0;
     }
 
-    public static FileVersionInfo GetAssemblyVersion() => FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
+    public static FileVersionInfo GetAssemblyVersion()
+    {
+        // Assembly.Location is empty for single-file / NativeAOT bundles.
+        // Fall back to the version of the entry-point executable in that case.
+        var location = Assembly.GetExecutingAssembly().Location;
+        if (string.IsNullOrEmpty(location))
+        {
+            location = Environment.ProcessPath ?? string.Empty;
+        }
+
+        if (string.IsNullOrEmpty(location))
+        {
+            // Last-resort placeholder when neither path is available.
+            return FileVersionInfo.GetVersionInfo(typeof(XHarnessVersionCommand).Module.Name);
+        }
+
+        return FileVersionInfo.GetVersionInfo(location);
+    }
 }

@@ -36,13 +36,7 @@ internal class AndroidStateCommand : GetStateCommand<AndroidStateCommandArgument
 
             if (Arguments.UseJson)
             {
-                var options = new JsonSerializerOptions
-                {
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                    WriteIndented = true,
-                };
-
-                JsonSerializer.Serialize(Console.OpenStandardOutput(), data, options);
+                JsonSerializer.Serialize(Console.OpenStandardOutput(), data, AndroidStateJsonContext.Default.StateData);
                 return Task.FromResult(ExitCode.SUCCESS);
             }
 
@@ -104,15 +98,21 @@ internal class AndroidStateCommand : GetStateCommand<AndroidStateCommandArgument
 
         IReadOnlyCollection<AndroidDevice> allDevices = runner.GetDevices();
 
-        var emulators = allDevices.Where(d => d.DeviceSerial.StartsWith("emulator"));
-        var devices = allDevices.Except(emulators);
+        var emulators = allDevices.Where(d => d.DeviceSerial.StartsWith("emulator")).ToArray();
+        var devices = allDevices.Except(emulators).ToArray();
 
         return new StateData(state, adbVersion, emulators, devices);
     }
 
-    private record StateData(
+    internal record StateData(
         string DeviceState,
         string[] AdbVersion,
-        IEnumerable<AndroidDevice> Emulators,
-        IEnumerable<AndroidDevice> Devices);
+        IReadOnlyCollection<AndroidDevice> Emulators,
+        IReadOnlyCollection<AndroidDevice> Devices);
+}
+
+[JsonSourceGenerationOptions(WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(AndroidStateCommand.StateData))]
+internal partial class AndroidStateJsonContext : JsonSerializerContext
+{
 }
