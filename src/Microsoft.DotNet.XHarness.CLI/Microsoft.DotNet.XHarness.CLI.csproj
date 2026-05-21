@@ -22,6 +22,8 @@
     <InvariantGlobalization Condition="'$(XHarnessAotNative)' == 'true'">true</InvariantGlobalization>
     <!-- mlaunch package contains a strong-named DLL that AOT analysis trips over; we don't actually link against it -->
     <SuppressTrimAnalysisWarnings Condition="'$(XHarnessAotNative)' == 'true'">false</SuppressTrimAnalysisWarnings>
+    <!-- The AOT binary is consumed via PATH on Helix and is expected to be named 'xharness' -->
+    <AssemblyName Condition="'$(XHarnessAotNative)' == 'true'">xharness</AssemblyName>
 
     <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
     <AndroidSdkVersion>32.0.0</AndroidSdkVersion>

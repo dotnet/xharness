@@ -112,6 +112,49 @@ stages:
             testRunTitle: XHarness unit tests - $(Agent.JobName)
           condition: succeededOrFailed()
 
+- stage: Build_AOT_OSX
+  displayName: Build OSX NativeAOT (xharness)
+  dependsOn:
+  jobs:
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableTelemetry: true
+      enablePublishBuildArtifacts: false
+      helixRepo: dotnet/xharness
+
+      jobs:
+      - job: OSX_AOT_arm64
+        displayName: Publish xharness (NativeAOT, osx-arm64)
+        pool:
+          vmImage: macOS-15
+        timeoutInMinutes: 60
+        steps:
+        - script: ./build.sh --restore
+          displayName: Restore .NET SDK and packages
+          condition: succeeded()
+
+        - script: ./.dotnet/dotnet publish
+            src/Microsoft.DotNet.XHarness.CLI/Microsoft.DotNet.XHarness.CLI.csproj
+            -c Release
+            -r osx-arm64
+            -p:XHarnessAotNative=true
+            /bl:$(Build.SourcesDirectory)/artifacts/log/Release/Publish_AOT_osx-arm64.binlog
+          displayName: dotnet publish (osx-arm64, NativeAOT)
+          condition: succeeded()
+
+        - script: ls -lhR $(Build.SourcesDirectory)/artifacts/bin/Microsoft.DotNet.XHarness.CLI/Release/net*/osx-arm64/publish/
+          displayName: List published layout
+          condition: succeededOrFailed()
+
+        # The publish directory contains the native binary, adb and the full
+        # mlaunch tree under runtimes/any/native/. We upload the whole tree as
+        # the pipeline artifact so the e2e stage can pull it down verbatim
+        # and ship it as a Helix correlation payload.
+        - publish: $(Build.SourcesDirectory)/artifacts/bin/Microsoft.DotNet.XHarness.CLI/Release/net11.0/osx-arm64/publish
+          artifact: XHarnessCli_AOT_osx-arm64
+          displayName: Publish AOT xharness binary
+          condition: succeeded()
+
 # E2E tests
 
 - template: eng/e2e-test.yml
@@ -137,6 +180,17 @@ stages:
     name: E2E_Apple_Simulators
     displayName: Apple - Simulators
     testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Tests.proj
+
+# NativeAOT pilot: same integration test proj as E2E_Apple_Simulators, but
+# the Helix workers run the NativeAOT-published xharness produced by
+# Build_AOT_OSX instead of installing the Microsoft.DotNet.XHarness.CLI
+# global tool. Other AOT stages will be added once this one is stable.
+- template: eng/e2e-aot-test.yml
+  parameters:
+    name: E2E_Apple_Simulators_AOT
+    displayName: Apple - Simulators (NativeAOT)
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Tests.proj
+    aotPipelineArtifact: XHarnessCli_AOT_osx-arm64
 
 - template: eng/e2e-test.yml
   parameters:
