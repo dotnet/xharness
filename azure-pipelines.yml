@@ -56,12 +56,13 @@ extends:
           enableTelemetry: true
           enablePublishBuildArtifacts: true
           enableMicrobuild: true
-          enablePublishUsingPipelines: true
+          publishingVersion: 4
           ${{ if ne(variables['Build.Reason'], 'Schedule') }}:
             enablePublishBuildAssets: true
           helixRepo: dotnet/xharness
           jobs:
           - job: Windows_NT
+            enablePublishing: true
             displayName: Build Windows
             timeoutInMinutes: 120
             steps:
@@ -81,5 +82,6 @@ extends:
     - ${{ if ne(variables['Build.Reason'], 'Schedule') }}:
       - template: /eng/common/templates-official/post-build/post-build.yml@self
         parameters:
+          publishingInfraVersion: 4
           enableSymbolValidation: true
           enableSourceLinkValidation: true
