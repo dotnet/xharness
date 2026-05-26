@@ -22,9 +22,18 @@
 #     xharness         <-- the NativeAOT binary
 #     runtimes/any/native/...
 #
-# Any `dotnet` invocation that isn't of the form `dotnet exec <dll> <args>`
-# fails fast with a descriptive message — the shim deliberately does NOT
-# try to be a general-purpose dotnet CLI replacement.
+# Interception scope (intentionally narrow):
+#
+#   1. `dotnet exec <path-ending-in-Microsoft.DotNet.XHarness.CLI.dll> <args>`
+#      -> exec the native xharness binary with <args> (the dll path is
+#      discarded; it's only meaningful in the JIT flow).
+#
+#   2. Any other invocation (e.g. `dotnet --info`, `dotnet test`,
+#      `dotnet exec` of some other dll) -> forward to the next real
+#      `dotnet` on PATH, if one is present. If none is present, fail
+#      fast with a descriptive message. This keeps the shim from
+#      silently shadowing a real dotnet that future scenarios might
+#      need on the worker.
 
 set -eu
 
@@ -36,16 +45,26 @@ if [ ! -x "$native_xharness" ]; then
     exit 127
 fi
 
-if [ "${1:-}" != "exec" ]; then
-    echo "dotnet-shim: only 'dotnet exec <managed-dll> <args>' is supported by this shim (got: dotnet $*)" >&2
-    exit 64
+# Case 1: "dotnet exec <...XHarness.CLI.dll> <args>" -> native binary.
+if [ "${1:-}" = "exec" ] && [ "$#" -ge 2 ]; then
+    case "$2" in
+        *Microsoft.DotNet.XHarness.CLI.dll)
+            shift 2
+            exec "$native_xharness" "$@"
+            ;;
+    esac
 fi
 
-shift                          # consume 'exec'
-if [ "$#" -lt 1 ]; then
-    echo "dotnet-shim: 'dotnet exec' requires a path argument" >&2
-    exit 64
-fi
-shift                          # consume the managed dll path (ignored; the shim always runs the native binary)
+# Case 2: forward everything else to a real dotnet on PATH, if any.
+# Strip our own directory from PATH before resolving so we don't
+# recursively re-enter this shim.
+real_path=$(printf '%s' "$PATH" | tr ':' '\n' | grep -v -x -F "$shim_dir" | tr '\n' ':' | sed 's/:$//')
+real_dotnet=$(PATH="$real_path" command -v dotnet 2>/dev/null || true)
 
-exec "$native_xharness" "$@"
+if [ -n "$real_dotnet" ] && [ "$real_dotnet" != "$0" ]; then
+    exec "$real_dotnet" "$@"
+fi
+
+echo "dotnet-shim: invocation does not match the xharness pattern and no real 'dotnet' is on PATH (got: dotnet $*)" >&2
+exit 127
+
