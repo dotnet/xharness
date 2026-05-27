@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -1342,7 +1343,7 @@ public class AdbRunner
         {
             if (TryParseColonValue(line, "cpu MHz", out var cpuFrequency))
             {
-                return double.TryParse(cpuFrequency, out var megaHertz)
+                return double.TryParse(cpuFrequency, NumberStyles.Float, CultureInfo.InvariantCulture, out var megaHertz)
                     ? (long)(megaHertz * 1000)
                     : null;
             }

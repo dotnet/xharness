@@ -47,7 +47,8 @@ Arguments:
             apiVersion: Arguments.ApiVersion.Value,
             bootTimeoutSeconds: Arguments.LaunchTimeout,
             runner: runner,
-            DiagnosticsData);
+            DiagnosticsData,
+            captureEnvironmentInfo: true);
     }
 
     public static ExitCode InvokeHelper(

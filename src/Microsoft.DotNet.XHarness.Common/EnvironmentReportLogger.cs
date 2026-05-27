@@ -227,6 +227,8 @@ public static class EnvironmentReportLogger
             };
 
             process.Start();
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
             if (!process.WaitForExit(5000))
             {
                 try
@@ -240,12 +242,14 @@ public static class EnvironmentReportLogger
                 return null;
             }
 
+            var output = outputTask.GetAwaiter().GetResult().Trim();
+            _ = errorTask.GetAwaiter().GetResult();
+
             if (process.ExitCode != 0)
             {
                 return null;
             }
 
-            var output = process.StandardOutput.ReadToEnd().Trim();
             return string.IsNullOrWhiteSpace(output) ? null : output;
         }
 
