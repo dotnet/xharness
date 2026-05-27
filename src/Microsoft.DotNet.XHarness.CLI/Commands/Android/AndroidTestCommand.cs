@@ -48,7 +48,8 @@ Arguments:
             apiVersion: Arguments.ApiVersion.Value,
             bootTimeoutSeconds: Arguments.LaunchTimeout,
             runner,
-            DiagnosticsData);
+            DiagnosticsData,
+            captureEnvironmentInfo: true);
 
         if (Arguments.Wifi != WifiStatus.Unknown)
         {

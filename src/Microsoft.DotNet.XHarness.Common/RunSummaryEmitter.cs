@@ -31,11 +31,12 @@ public static class RunSummaryEmitter
         string? deviceOsVersion,
         string? architecture,
         int? instrumentationExitCode,
-        IReadOnlyList<DiagnosticsFile> producedFiles)
+        IReadOnlyList<DiagnosticsFile> producedFiles,
+        ExecutionEnvironmentInfo? environment = null)
     {
         EmitRunSummary(
             message => logger.LogInformation(message),
-            exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles);
+            exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles, environment);
     }
 
     /// <summary>
@@ -50,9 +51,10 @@ public static class RunSummaryEmitter
         string? deviceOsVersion,
         string? architecture,
         int? instrumentationExitCode,
-        IReadOnlyList<DiagnosticsFile> producedFiles)
+        IReadOnlyList<DiagnosticsFile> producedFiles,
+        ExecutionEnvironmentInfo? environment = null)
     {
-        EmitJsonResultBlock(logInfo, exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles);
+        EmitJsonResultBlock(logInfo, exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles, environment);
     }
 
     /// <summary>
@@ -67,9 +69,10 @@ public static class RunSummaryEmitter
         string? deviceOsVersion,
         string? architecture,
         int? instrumentationExitCode,
-        IReadOnlyList<DiagnosticsFile> producedFiles)
+        IReadOnlyList<DiagnosticsFile> producedFiles,
+        ExecutionEnvironmentInfo? environment = null)
     {
-        var resultData = BuildResultData(exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles);
+        var resultData = BuildResultData(exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles, environment);
 
         var options = new JsonSerializerOptions
         {
@@ -94,11 +97,12 @@ public static class RunSummaryEmitter
         string? deviceOsVersion,
         string? architecture,
         int? instrumentationExitCode,
-        IReadOnlyList<DiagnosticsFile> producedFiles)
+        IReadOnlyList<DiagnosticsFile> producedFiles,
+        ExecutionEnvironmentInfo? environment = null)
     {
         try
         {
-            var resultData = BuildResultData(exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles);
+            var resultData = BuildResultData(exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles, environment);
 
             var options = new JsonSerializerOptions
             {
@@ -124,7 +128,8 @@ public static class RunSummaryEmitter
         string? deviceOsVersion,
         string? architecture,
         int? instrumentationExitCode,
-        IReadOnlyList<DiagnosticsFile> producedFiles)
+        IReadOnlyList<DiagnosticsFile> producedFiles,
+        ExecutionEnvironmentInfo? environment)
     {
         string? helixJobId = Environment.GetEnvironmentVariable("HELIX_CORRELATION_ID");
         string? helixWorkItem = Environment.GetEnvironmentVariable("HELIX_WORKITEM_FRIENDLYNAME");
@@ -182,6 +187,11 @@ public static class RunSummaryEmitter
         if (fileEntries.Count > 0)
         {
             resultData["files"] = fileEntries;
+        }
+
+        if (environment != null)
+        {
+            resultData["environment"] = environment;
         }
 
         return resultData;

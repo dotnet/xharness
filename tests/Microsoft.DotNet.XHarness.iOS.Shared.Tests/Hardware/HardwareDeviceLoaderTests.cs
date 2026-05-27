@@ -118,6 +118,13 @@ public class HardwareDeviceLoaderTests
         Assert.Equal(2, _devices.Connected64BitIOS.Count());
         Assert.Single(_devices.Connected32BitIOS);
         Assert.Empty(_devices.ConnectedTV);
+
+        var iPhone = _devices.Connected64BitIOS.Single(device => device.ProductType == "iPhone12,1");
+        Assert.Equal("arm64e", iPhone.CpuArchitecture);
+        Assert.Equal("N104AP", iPhone.HardwareModel);
+        Assert.Equal("MWL72", iPhone.ModelNumber);
+        Assert.Equal(43999293440, iPhone.AmountDataAvailable);
+        Assert.Equal(54814302208, iPhone.TotalDataCapacity);
     }
 
     [Fact]

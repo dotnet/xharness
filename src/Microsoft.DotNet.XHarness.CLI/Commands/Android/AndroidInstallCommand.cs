@@ -59,7 +59,8 @@ Arguments:
         int? apiVersion,
         TimeSpan bootTimeoutSeconds,
         AdbRunner runner,
-        IDiagnosticsData diagnosticsData)
+        IDiagnosticsData diagnosticsData,
+        bool captureEnvironmentInfo = false)
     {
         using (logger.BeginScope("Initialization and setup of APK on device"))
         {
@@ -128,6 +129,11 @@ Arguments:
             }
 
             logger.LogDebug($"Working with {device.DeviceSerial} (API {device.ApiVersion})");
+
+            if (captureEnvironmentInfo)
+            {
+                diagnosticsData.Environment = AndroidEnvironmentReport.CreateEnvironmentInfo(runner, device);
+            }
 
             runner.CheckPackageVerificationSettings();
 

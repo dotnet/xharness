@@ -40,6 +40,11 @@ public interface IDiagnosticsData
     /// Files produced during the command execution.
     /// </summary>
     IList<DiagnosticsFile> Files { get; }
+
+    /// <summary>
+    /// Structured host and target environment details for the execution.
+    /// </summary>
+    ExecutionEnvironmentInfo? Environment { get; set; }
 }
 
 /// <summary>
@@ -71,6 +76,9 @@ public class CommandDiagnostics : IDiagnosticsData
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public IList<DiagnosticsFile> Files { get; } = new List<DiagnosticsFile>();
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ExecutionEnvironmentInfo? Environment { get; set; }
 
     public int Duration => (int)Math.Round(_timer.Elapsed.TotalSeconds);
 
@@ -105,6 +113,7 @@ public class CommandDiagnostics : IDiagnosticsData
                 WriteIndented = false,
 #endif
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         };
 
         _logger.LogDebug("Saving diagnostics data to '{path}'", targetFile);

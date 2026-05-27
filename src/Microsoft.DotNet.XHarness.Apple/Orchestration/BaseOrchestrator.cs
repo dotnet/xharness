@@ -14,6 +14,7 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -36,6 +37,7 @@ public abstract class BaseOrchestrator : IDisposable
     private readonly IAppInstaller _appInstaller;
     private readonly IAppUninstaller _appUninstaller;
     private readonly IDeviceFinder _deviceFinder;
+    private readonly IMlaunchProcessManager _processManager;
     private readonly ILogger _logger;
     private readonly ILogs _logs;
     private readonly IFileBackedLog _mainLog;
@@ -62,6 +64,7 @@ public abstract class BaseOrchestrator : IDisposable
         IAppInstaller appInstaller,
         IAppUninstaller appUninstaller,
         IDeviceFinder deviceFinder,
+        IMlaunchProcessManager processManager,
         ILogger consoleLogger,
         ILogs logs,
         IFileBackedLog mainLog,
@@ -73,6 +76,7 @@ public abstract class BaseOrchestrator : IDisposable
         _appInstaller = appInstaller ?? throw new ArgumentNullException(nameof(appInstaller));
         _appUninstaller = appUninstaller ?? throw new ArgumentNullException(nameof(appUninstaller));
         _deviceFinder = deviceFinder ?? throw new ArgumentNullException(nameof(deviceFinder));
+        _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
         _logs = logs ?? throw new ArgumentNullException(nameof(logs));
         _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
@@ -169,6 +173,7 @@ public abstract class BaseOrchestrator : IDisposable
             _diagnosticsData.Device = Environment.MachineName;
             _diagnosticsData.TargetOS = $"macOS {Environment.OSVersion.Version}";
             _diagnosticsData.IsDevice = false;
+            _diagnosticsData.Environment = AppleEnvironmentReport.CreateMacCatalystEnvironment();
 
             try
             {
@@ -288,6 +293,7 @@ public abstract class BaseOrchestrator : IDisposable
         }
 
         cancellationToken.ThrowIfCancellationRequested();
+        _diagnosticsData.Environment = await AppleEnvironmentReport.CreateTargetEnvironmentAsync(_processManager, device, companionDevice, cancellationToken);
 
         // Note down the actual test target
         // For simulators (e.g. "iOS 13.4"), we strip the iOS part and keep the version only, for devices there's no OS
@@ -413,7 +419,8 @@ public abstract class BaseOrchestrator : IDisposable
             deviceOsVersion: _diagnosticsData.TargetOS,
             architecture: null,
             instrumentationExitCode: null,
-            producedFiles: producedFiles);
+            producedFiles: producedFiles,
+            environment: _diagnosticsData.Environment);
 
         RunSummaryEmitter.WriteResultJsonFile(
             _logs.Directory,
@@ -423,7 +430,8 @@ public abstract class BaseOrchestrator : IDisposable
             deviceOsVersion: _diagnosticsData.TargetOS,
             architecture: null,
             instrumentationExitCode: null,
-            producedFiles: producedFiles);
+            producedFiles: producedFiles,
+            environment: _diagnosticsData.Environment);
     }
 
     public void Dispose()

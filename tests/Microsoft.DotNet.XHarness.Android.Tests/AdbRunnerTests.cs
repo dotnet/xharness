@@ -232,6 +232,24 @@ public class AdbRunnerTests : IDisposable
     }
 
     [Fact]
+    public void PopulateEnvironmentInfoLoadsDetailedDeviceMetadata()
+    {
+        var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+        var device = runner.GetDevice(requiredDeviceId: _fakeDeviceList.Single(d => d.Manufacturer == "Contoso").DeviceSerial);
+
+        runner.PopulateEnvironmentInfo(device);
+
+        Assert.Equal("Contoso", device.Manufacturer);
+        Assert.Equal("Android Test Device", device.Model);
+        Assert.Equal("android-test-product", device.ProductName);
+        Assert.Equal("14", device.OperatingSystemVersion);
+        Assert.Equal("Contoso/test-device/test-device:14/AP1A.240505.001/1234567:userdebug/dev-keys", device.BuildFingerprint);
+        Assert.Equal("Qualcomm Technologies, Inc SM8650", device.CpuModel);
+        Assert.Equal(2_800_000, device.CpuMaxFrequencyKiloHertz);
+        Assert.Equal(8L * 1024 * 1024 * 1024, device.TotalMemoryBytes);
+    }
+
+    [Fact]
     public void RebootAndroidDevice()
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
@@ -338,7 +356,15 @@ public class AdbRunnerTests : IDisposable
                 ApiVersion = 31,
                 Architecture = "arm64-v8a",
                 SupportedArchitectures = new[] { "arm64-v8a", "x86_64", "x86" },
-                InstalledApplications = new[] { "net.dot.E", "net.dot.F" }
+                InstalledApplications = new[] { "net.dot.E", "net.dot.F" },
+                Manufacturer = "Contoso",
+                Model = "Android Test Device",
+                ProductName = "android-test-product",
+                OperatingSystemVersion = "14",
+                BuildFingerprint = "Contoso/test-device/test-device:14/AP1A.240505.001/1234567:userdebug/dev-keys",
+                CpuModel = "Qualcomm Technologies, Inc SM8650",
+                CpuMaxFrequencyKiloHertz = 2_800_000,
+                TotalMemoryBytes = 8L * 1024 * 1024 * 1024
             },
 
             new AndroidDevice($"emulator-{r.Next(9999)}")
@@ -411,6 +437,31 @@ public class AdbRunnerTests : IDisposable
                     stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).ApiVersion + Environment.NewLine;
                 }
 
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.product.manufacturer"))
+                {
+                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).Manufacturer ?? string.Empty;
+                }
+
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.product.model"))
+                {
+                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).Model ?? string.Empty;
+                }
+
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.product.name"))
+                {
+                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).ProductName ?? string.Empty;
+                }
+
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.build.version.release"))
+                {
+                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).OperatingSystemVersion ?? string.Empty;
+                }
+
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.build.fingerprint"))
+                {
+                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).BuildFingerprint ?? string.Empty;
+                }
+
                 if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop sys.boot_completed"))
                 {
                     // Newline is strange, but this is actually what it looks like
@@ -429,6 +480,22 @@ public class AdbRunnerTests : IDisposable
                 if (string.Join(" ", arguments.Skip(argStart).Take(5)).Equals("shell pm list packages -3"))
                 {
                     stdOut = "package:" + string.Join("\npackage:", _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).InstalledApplications);
+                }
+
+                if (string.Join(" ", arguments.Skip(argStart).Take(3)).Equals("shell cat /proc/cpuinfo"))
+                {
+                    stdOut = $"Processor\t: {_fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).CpuModel}{Environment.NewLine}" +
+                        $"cpu MHz\t\t: {_fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).CpuMaxFrequencyKiloHertz!.Value / 1000d:0.###}";
+                }
+
+                if (string.Join(" ", arguments.Skip(argStart).Take(3)).Equals("shell cat /proc/meminfo"))
+                {
+                    stdOut = $"MemTotal:        {_fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).TotalMemoryBytes!.Value / 1024} kB";
+                }
+
+                if (string.Join(" ", arguments.Skip(argStart).Take(3)).Equals("shell cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq"))
+                {
+                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).CpuMaxFrequencyKiloHertz?.ToString() ?? string.Empty;
                 }
 
                 exitCode = 0;

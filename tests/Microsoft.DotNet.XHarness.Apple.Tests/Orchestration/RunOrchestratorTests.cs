@@ -51,6 +51,7 @@ public class RunOrchestratorTests : OrchestratorTestBase
             _appUninstaller.Object,
             _appRunnerFactory.Object,
             _deviceFinder.Object,
+            _processManager.Object,
             _iOSExitCodeDetector.Object,
             _macCatalystExitCodeDetector.Object,
             _logger.Object,
