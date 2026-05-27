@@ -129,7 +129,7 @@ public class AdbRunner
         device.CpuMaxFrequencyKiloHertz ??=
             ParseFrequencyKiloHertz(GetDeviceProperty(AdbProperty.CpuMaxFrequency, device.DeviceSerial, logOnError: false))
             ?? ParseFrequencyKiloHertz(GetDeviceProperty(AdbProperty.CpuMaxFrequencyFallback, device.DeviceSerial, logOnError: false))
-            ?? ParseFrequencyKiloHertz(ParseCpuFrequencyFromCpuInfo(GetDeviceProperty(AdbProperty.CpuInfo, device.DeviceSerial)));
+            ?? ParseCpuFrequencyFromCpuInfoKiloHertz(GetDeviceProperty(AdbProperty.CpuInfo, device.DeviceSerial));
     }
 
     private static string GetCliAdbExePath()
@@ -1331,7 +1331,7 @@ public class AdbRunner
         return null;
     }
 
-    internal static string? ParseCpuFrequencyFromCpuInfo(string? cpuInfo)
+    internal static long? ParseCpuFrequencyFromCpuInfoKiloHertz(string? cpuInfo)
     {
         if (string.IsNullOrWhiteSpace(cpuInfo))
         {
@@ -1342,7 +1342,9 @@ public class AdbRunner
         {
             if (TryParseColonValue(line, "cpu MHz", out var cpuFrequency))
             {
-                return cpuFrequency;
+                return double.TryParse(cpuFrequency, out var megaHertz)
+                    ? (long)(megaHertz * 1000)
+                    : null;
             }
         }
 

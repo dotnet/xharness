@@ -85,6 +85,7 @@ internal static class AppleEnvironmentReport
 
             var detailedInfo = await TryGetDetailedDeviceInfoAsync(processManager, hardwareDevice.UDID, cancellationToken);
             targetInfo.CpuModel = detailedInfo.CpuModel;
+            targetInfo.ProductName ??= detailedInfo.DeviceType;
             targetInfo.CpuMaxFrequencyHertz = detailedInfo.CpuMaxFrequencyHertz;
             targetInfo.TotalMemoryBytes = detailedInfo.TotalMemoryBytes;
             targetInfo.DetailAvailability = detailedInfo.DetailAvailability;
@@ -119,6 +120,10 @@ internal static class AppleEnvironmentReport
             var json = await File.ReadAllTextAsync(tempPath, cancellationToken);
             return ParseDetailedDeviceInfo(json, deviceIdentifier) ?? new AppleDetailedDeviceInfo(DetailAvailability: "Unavailable (matching devicectl entry not found)");
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch
         {
             return new AppleDetailedDeviceInfo(DetailAvailability: "Unavailable (failed to query devicectl metadata)");
@@ -138,7 +143,9 @@ internal static class AppleEnvironmentReport
         }
 
         return new AppleDetailedDeviceInfo(
-            CpuModel: FindStringValue(deviceElement, "cpu", "chip", "processor", "soc", "socName"),
+            CpuModel: FindStringValueAtPath(deviceElement, "hardwareProperties", "cpuType", "name")
+                ?? FindStringValue(deviceElement, "cpu", "chip", "processor", "soc", "socName"),
+            DeviceType: FindStringValueAtPath(deviceElement, "hardwareProperties", "deviceType"),
             CpuMaxFrequencyHertz: FindInt64Value(deviceElement, "cpuMaxFrequency", "clockSpeed", "maxClockSpeed", "cpuFrequency", "processorSpeed"),
             TotalMemoryBytes: FindInt64Value(deviceElement, "totalMemory", "physicalMemory", "memory", "ram"),
             DetailAvailability: null);
@@ -230,6 +237,36 @@ internal static class AppleEnvironmentReport
         return null;
     }
 
+    private static string? FindStringValueAtPath(JsonElement element, params string[] propertyPath)
+    {
+        foreach (var pathPart in propertyPath)
+        {
+            if (element.ValueKind != JsonValueKind.Object || !TryGetProperty(element, pathPart, out element))
+            {
+                return null;
+            }
+        }
+
+        return element.ValueKind == JsonValueKind.String
+            ? element.GetString()
+            : element.ToString();
+    }
+
+    private static bool TryGetProperty(JsonElement element, string propertyName, out JsonElement value)
+    {
+        foreach (var property in element.EnumerateObject())
+        {
+            if (property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                value = property.Value;
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
+    }
+
     private static long? FindInt64Value(JsonElement element, params string[] propertyNames)
     {
         var rawValue = FindStringValue(element, propertyNames);
@@ -251,5 +288,5 @@ internal static class AppleEnvironmentReport
         return null;
     }
 
-    private sealed record AppleDetailedDeviceInfo(string? CpuModel = null, long? CpuMaxFrequencyHertz = null, long? TotalMemoryBytes = null, string? DetailAvailability = null);
+    private sealed record AppleDetailedDeviceInfo(string? CpuModel = null, string? DeviceType = null, long? CpuMaxFrequencyHertz = null, long? TotalMemoryBytes = null, string? DetailAvailability = null);
 }
