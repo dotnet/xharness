@@ -227,7 +227,7 @@ internal class InstallCommand : SimulatorsCommand
                 : throw new InvalidOperationException($"Could not parse the simulator URL: {simulator.Source}");
 
             httpClient = new HttpClient(new HttpClientHandler() { CookieContainer = cookies, CheckCertificateRevocationList = true });
-            httpClient.DefaultRequestHeaders.Add("User-Agent", $"dotnet/xharness {XHarnessVersionCommand.GetAssemblyVersion().ProductVersion}"); // otherwise we get a 401 Unauthorized
+            httpClient.DefaultRequestHeaders.Add("User-Agent", $"dotnet/xharness {XHarnessVersionCommand.GetProductVersion()}"); // otherwise we get a 401 Unauthorized
 
             var adcDownloadUrl = $"https://developerservices2.apple.com/services/download?path={path}";
             using (var response = await httpClient.GetAsync(adcDownloadUrl, HttpCompletionOption.ResponseHeadersRead))
