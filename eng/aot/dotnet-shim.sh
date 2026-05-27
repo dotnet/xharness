@@ -45,10 +45,13 @@ if [ ! -x "$native_xharness" ]; then
     exit 127
 fi
 
-# Case 1: "dotnet exec <...XHarness.CLI.dll> <args>" -> native binary.
+# Case 1: "dotnet exec <…/Microsoft.DotNet.XHarness.CLI.dll | …/xharness> <args>"
+# -> native binary. Matches both the JIT shape (a managed CLI assembly path)
+# and the AOT shape (the native binary path; XHARNESS_CLI_PATH points there
+# in the AOT Helix flow because there is no managed CLI dll to point at).
 if [ "${1:-}" = "exec" ] && [ "$#" -ge 2 ]; then
     case "$2" in
-        *Microsoft.DotNet.XHarness.CLI.dll)
+        *Microsoft.DotNet.XHarness.CLI.dll | */xharness | xharness)
             shift 2
             exec "$native_xharness" "$@"
             ;;
