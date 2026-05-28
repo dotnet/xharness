@@ -1,12 +1,26 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
+  <!-- amd64 queue is excluded from the NativeAOT pilot because we currently only
+       publish an osx-arm64 AOT binary. JIT (the default) keeps using the amd64
+       queue with the historical iOS 18.1 + x64 combo. -->
   <ItemGroup>
-    <HelixTargetQueue Include="osx.15.amd64.open"/>
+    <HelixTargetQueue Include="osx.15.amd64.open" Condition="'$(UseXHarnessAotPayload)' != 'true'"/>
+    <HelixTargetQueue Include="osx.26.arm64.open" Condition="'$(UseXHarnessAotPayload)' == 'true'"/>
   </ItemGroup>
 
+  <!-- Derive architecture from the queue so the right test app bundle and TestTarget
+       are selected for arm64 vs amd64 workers (same pattern as Simulator.Tests.proj). -->
   <PropertyGroup>
-    <iOSSimulatorVersionUnderTest>18.1</iOSSimulatorVersionUnderTest>
-    <TestArch>x64</TestArch>
+    <IsArm64Queue>$(HelixTargetQueue.Contains('arm64'))</IsArm64Queue>
+    <IsAmd64Queue>$(HelixTargetQueue.Contains('amd64'))</IsAmd64Queue>
+    <TestArch Condition="'$(IsArm64Queue)' == 'true'">arm64</TestArch>
+    <TestArch Condition="'$(IsAmd64Queue)' == 'true'">x64</TestArch>
+
+    <!-- Pin the simulator version on the legacy amd64 queue (Xcode set is known there).
+         On the arm64 queue we let xharness pick whatever iOS simulator ships with the
+         worker's Xcode, so we don't have to chase image bumps in this proj. -->
+    <iOSSimulatorVersionUnderTest Condition="'$(IsAmd64Queue)' == 'true'">18.1</iOSSimulatorVersionUnderTest>
+    <_TestTargetSuffix Condition="'$(iOSSimulatorVersionUnderTest)' != ''">_$(iOSSimulatorVersionUnderTest)</_TestTargetSuffix>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -26,7 +40,7 @@
 
     <ItemGroup>
       <XHarnessAppBundleToTest Include="$(TestAppDestinationDir)\$(TestAppBundleName).app">
-        <TestTarget>ios-simulator-64_$(iOSSimulatorVersionUnderTest)</TestTarget>
+        <TestTarget>ios-simulator-64$(_TestTargetSuffix)</TestTarget>
         <WorkItemTimeout>00:20:00</WorkItemTimeout>
         <TestTimeout>00:07:00</TestTimeout>
         <LaunchTimeout>00:03:30</LaunchTimeout>

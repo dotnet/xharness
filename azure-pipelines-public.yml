@@ -212,6 +212,16 @@ stages:
     displayName: Apple - Simulator Commands
     testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Commands.Tests.proj
 
+# Phase 1 NativeAOT expansion: same simulator-commands integration tests,
+# running the NativeAOT xharness against osx.26.arm64.open. Reuses the
+# XHarnessCli_AOT_osx-arm64 artifact produced by Build_AOT_OSX.
+- template: eng/e2e-aot-test.yml
+  parameters:
+    name: E2E_Apple_Simulator_Commands_AOT
+    displayName: Apple - Simulator Commands (NativeAOT)
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Simulator.Commands.Tests.proj
+    aotPipelineArtifact: XHarnessCli_AOT_osx-arm64
+
 - template: eng/e2e-test.yml
   parameters:
     name: E2E_Apple_Device_Commands
@@ -223,6 +233,15 @@ stages:
     name: E2E_Apple_Simulator_Mgmt
     displayName: Apple - Simulator management
     testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/SimulatorInstaller.Tests.proj
+
+# Phase 1 NativeAOT expansion: simulator-installer integration tests against
+# osx.26.arm64.open with the NativeAOT xharness.
+- template: eng/e2e-aot-test.yml
+  parameters:
+    name: E2E_Apple_Simulator_Mgmt_AOT
+    displayName: Apple - Simulator management (NativeAOT)
+    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/SimulatorInstaller.Tests.proj
+    aotPipelineArtifact: XHarnessCli_AOT_osx-arm64
 
 - template: eng/e2e-test.yml
   parameters:
