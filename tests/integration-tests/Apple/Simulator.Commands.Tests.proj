@@ -1,33 +1,32 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
-  <!-- amd64 queue is excluded from the NativeAOT pilot because we currently only
-       publish an osx-arm64 AOT binary. JIT (the default) keeps using the amd64
-       queue with the historical iOS 18.1 + x64 combo. -->
   <ItemGroup>
+    <!-- Both queues run the JIT path (today's behaviour). The NativeAOT path
+         (UseXHarnessAotPayload=true) skips amd64 because the published binary
+         is osx-arm64 only - it would not execute on amd64 hardware. -->
     <HelixTargetQueue Include="osx.15.amd64.open" Condition="'$(UseXHarnessAotPayload)' != 'true'"/>
-    <HelixTargetQueue Include="osx.26.arm64.open" Condition="'$(UseXHarnessAotPayload)' == 'true'"/>
+    <HelixTargetQueue Include="osx.26.arm64.open"/>
   </ItemGroup>
 
   <!--
-    Derive arch / iOS-sim version directly from UseXHarnessAotPayload, not from
-    $(HelixTargetQueue). The HelixTargetQueue property (vs item-group) is empty
-    at the outer-project evaluation time where the test-app URL is composed
-    below, so a `.Contains('arm64')` check on it would silently produce empty
-    strings (which is what an earlier attempt did, producing 404s on the
-    download URL because TestArch was empty).
-
-    Since each queue maps 1:1 to a code path (AOT -> arm64-only; JIT -> the
-    legacy amd64 setup) we can take the simpler approach of branching on the
-    property that already gates the queue selection.
+    Derive architecture and the optional iOS-sim version pin from the queue.
+    Resolution timing matters: the Helix SDK re-invokes Test/CoreBuild once per
+    queue with HelixTargetQueue set as a *property*, so this PropertyGroup
+    re-evaluates per queue. The TestApple target below is wired to 'Test' (not
+    'CoreTest', which runs in the outer invocation before the per-queue dispatch
+    happens) so the per-queue $(HelixTargetQueue) value is in scope when the
+    download URL is composed.
   -->
   <PropertyGroup>
-    <TestArch Condition="'$(UseXHarnessAotPayload)' == 'true'">arm64</TestArch>
-    <TestArch Condition="'$(UseXHarnessAotPayload)' != 'true'">x64</TestArch>
+    <IsArm64Queue>$(HelixTargetQueue.Contains('arm64'))</IsArm64Queue>
+    <IsAmd64Queue>$(HelixTargetQueue.Contains('amd64'))</IsAmd64Queue>
+    <TestArch Condition="'$(IsArm64Queue)' == 'true'">arm64</TestArch>
+    <TestArch Condition="'$(IsAmd64Queue)' == 'true'">x64</TestArch>
 
     <!-- Pin the simulator version on the legacy amd64 queue (Xcode set is known there).
-         On the arm64 queue we let xharness pick whatever iOS simulator ships with the
+         On the arm64 queue let xharness pick whatever iOS simulator ships with the
          worker's Xcode, so we don't have to chase image bumps in this proj. -->
-    <iOSSimulatorVersionUnderTest Condition="'$(UseXHarnessAotPayload)' != 'true'">18.1</iOSSimulatorVersionUnderTest>
+    <iOSSimulatorVersionUnderTest Condition="'$(IsAmd64Queue)' == 'true'">18.1</iOSSimulatorVersionUnderTest>
     <_TestTargetSuffix Condition="'$(iOSSimulatorVersionUnderTest)' != ''">_$(iOSSimulatorVersionUnderTest)</_TestTargetSuffix>
   </PropertyGroup>
 
@@ -37,7 +36,10 @@
     <TestAppDestinationDir>$(ArtifactsTmpDir)test-app-new\ios-simulator-64\$(TestArch)</TestAppDestinationDir>
   </PropertyGroup>
 
-  <Target Name="TestApple" BeforeTargets="CoreTest">
+  <Target Name="TestApple" BeforeTargets="Test">
+    <Error Condition="'$(HelixTargetQueue)' != '' and '$(TestArch)' == ''"
+           Text="Unable to detect architecture from HelixTargetQueue '$(HelixTargetQueue)'. Queue name must contain 'arm64' or 'amd64'." />
+
     <DownloadFile SourceUrl="$(XHarnessTestAppBundleUrl)" DestinationFolder="$(TestAppDestinationDir)" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle" />
     </DownloadFile>
