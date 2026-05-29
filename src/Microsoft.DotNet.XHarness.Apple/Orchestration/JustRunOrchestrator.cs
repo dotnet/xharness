@@ -10,6 +10,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -47,6 +48,7 @@ public class JustRunOrchestrator : RunOrchestrator, IJustRunOrchestrator
         IAppUninstaller appUninstaller,
         IAppRunnerFactory appRunnerFactory,
         IDeviceFinder deviceFinder,
+        IMlaunchProcessManager processManager,
         IiOSExitCodeDetector iOSExitCodeDetector,
         IMacCatalystExitCodeDetector macCatalystExitCodeDetector,
         ILogger consoleLogger,
@@ -55,7 +57,7 @@ public class JustRunOrchestrator : RunOrchestrator, IJustRunOrchestrator
         IErrorKnowledgeBase errorKnowledgeBase,
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
-        : base(appBundleInformationParser, appInstaller, appUninstaller, appRunnerFactory, deviceFinder, iOSExitCodeDetector, macCatalystExitCodeDetector, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        : base(appBundleInformationParser, appInstaller, appUninstaller, appRunnerFactory, deviceFinder, processManager, iOSExitCodeDetector, macCatalystExitCodeDetector, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
     }
 

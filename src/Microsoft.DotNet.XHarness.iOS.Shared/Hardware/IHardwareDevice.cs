@@ -9,7 +9,11 @@ public interface IHardwareDevice : IDevice
     string DeviceIdentifier { get; }
     DeviceClass DeviceClass { get; }
     string? CompanionIdentifier { get; }
+    long? AmountDataAvailable { get; }
     string? BuildVersion { get; }
+    string? CpuArchitecture { get; }
+    string? HardwareModel { get; }
+    string? ModelNumber { get; }
     string? ProductVersion { get; }
     string? ProductType { get; }
     string InterfaceType { get; }
@@ -21,4 +25,5 @@ public interface IHardwareDevice : IDevice
     bool Supports64Bit { get; }
     bool Supports32Bit { get; }
     Architecture Architecture { get; }
+    long? TotalDataCapacity { get; }
 }

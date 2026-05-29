@@ -157,6 +157,34 @@ public class InstrumentationRunnerSummaryTests
         Assert.Equal(1, json.GetProperty("version").GetInt32());
     }
 
+    [Fact]
+    public void EmitJsonResultBlock_ContainsEnvironment()
+    {
+        var environment = new ExecutionEnvironmentInfo
+        {
+            Host = new HostEnvironmentInfo
+            {
+                MachineName = "host1",
+                CpuModel = "Test CPU",
+            },
+            Target = new TargetEnvironmentInfo
+            {
+                Kind = "emulator",
+                Identifier = "emulator-5554",
+                OperatingSystem = "Android",
+                ApiLevel = 35,
+            },
+        };
+
+        RunSummaryEmitter.EmitRunSummary(_mockLogger.Object, ExitCode.SUCCESS, "android", null, null, null, 0, new List<DiagnosticsFile>(), environment);
+
+        var json = ExtractJsonFromLogs();
+        var environmentJson = json.GetProperty("environment");
+        Assert.Equal("host1", environmentJson.GetProperty("host").GetProperty("machineName").GetString());
+        Assert.Equal("emulator", environmentJson.GetProperty("target").GetProperty("kind").GetString());
+        Assert.Equal(35, environmentJson.GetProperty("target").GetProperty("apiLevel").GetInt32());
+    }
+
     private JsonElement ExtractJsonFromLogs()
     {
         var jsonMessage = _loggedMessages.Find(m => m.Contains("<<XHARNESS_RESULT_START>>"));

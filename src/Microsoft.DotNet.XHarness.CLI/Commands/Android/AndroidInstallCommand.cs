@@ -47,7 +47,8 @@ Arguments:
             apiVersion: Arguments.ApiVersion.Value,
             bootTimeoutSeconds: Arguments.LaunchTimeout,
             runner: runner,
-            DiagnosticsData);
+            DiagnosticsData,
+            captureEnvironmentInfo: true);
     }
 
     public static ExitCode InvokeHelper(
@@ -59,7 +60,8 @@ Arguments:
         int? apiVersion,
         TimeSpan bootTimeoutSeconds,
         AdbRunner runner,
-        IDiagnosticsData diagnosticsData)
+        IDiagnosticsData diagnosticsData,
+        bool captureEnvironmentInfo = false)
     {
         using (logger.BeginScope("Initialization and setup of APK on device"))
         {
@@ -128,6 +130,11 @@ Arguments:
             }
 
             logger.LogDebug($"Working with {device.DeviceSerial} (API {device.ApiVersion})");
+
+            if (captureEnvironmentInfo)
+            {
+                diagnosticsData.Environment = AndroidEnvironmentReport.CreateEnvironmentInfo(runner, device);
+            }
 
             runner.CheckPackageVerificationSettings();
 

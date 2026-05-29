@@ -282,6 +282,7 @@ public class InstrumentationRunner
     {
         var device = _runner.GetActiveDevice();
         string? deviceOsVersion = device?.ApiVersion.HasValue == true ? $"API {device.ApiVersion}" : null;
+        var environment = device == null ? null : AndroidEnvironmentReport.CreateEnvironmentInfo(_runner, device);
 
         RunSummaryEmitter.EmitRunSummary(
             _logger,
@@ -291,7 +292,8 @@ public class InstrumentationRunner
             deviceOsVersion: deviceOsVersion,
             architecture: device?.Architecture,
             instrumentationExitCode: instrumentationExitCode,
-            producedFiles: producedFiles);
+            producedFiles: producedFiles,
+            environment: environment);
 
         RunSummaryEmitter.WriteResultJsonFile(
             outputDirectory,
@@ -301,6 +303,7 @@ public class InstrumentationRunner
             deviceOsVersion: deviceOsVersion,
             architecture: device?.Architecture,
             instrumentationExitCode: instrumentationExitCode,
-            producedFiles: producedFiles);
+            producedFiles: producedFiles,
+            environment: environment);
     }
 }
