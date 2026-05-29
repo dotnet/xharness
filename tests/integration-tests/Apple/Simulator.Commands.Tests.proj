@@ -8,18 +8,26 @@
     <HelixTargetQueue Include="osx.26.arm64.open" Condition="'$(UseXHarnessAotPayload)' == 'true'"/>
   </ItemGroup>
 
-  <!-- Derive architecture from the queue so the right test app bundle and TestTarget
-       are selected for arm64 vs amd64 workers (same pattern as Simulator.Tests.proj). -->
+  <!--
+    Derive arch / iOS-sim version directly from UseXHarnessAotPayload, not from
+    $(HelixTargetQueue). The HelixTargetQueue property (vs item-group) is empty
+    at the outer-project evaluation time where the test-app URL is composed
+    below, so a `.Contains('arm64')` check on it would silently produce empty
+    strings (which is what an earlier attempt did, producing 404s on the
+    download URL because TestArch was empty).
+
+    Since each queue maps 1:1 to a code path (AOT -> arm64-only; JIT -> the
+    legacy amd64 setup) we can take the simpler approach of branching on the
+    property that already gates the queue selection.
+  -->
   <PropertyGroup>
-    <IsArm64Queue>$(HelixTargetQueue.Contains('arm64'))</IsArm64Queue>
-    <IsAmd64Queue>$(HelixTargetQueue.Contains('amd64'))</IsAmd64Queue>
-    <TestArch Condition="'$(IsArm64Queue)' == 'true'">arm64</TestArch>
-    <TestArch Condition="'$(IsAmd64Queue)' == 'true'">x64</TestArch>
+    <TestArch Condition="'$(UseXHarnessAotPayload)' == 'true'">arm64</TestArch>
+    <TestArch Condition="'$(UseXHarnessAotPayload)' != 'true'">x64</TestArch>
 
     <!-- Pin the simulator version on the legacy amd64 queue (Xcode set is known there).
          On the arm64 queue we let xharness pick whatever iOS simulator ships with the
          worker's Xcode, so we don't have to chase image bumps in this proj. -->
-    <iOSSimulatorVersionUnderTest Condition="'$(IsAmd64Queue)' == 'true'">18.1</iOSSimulatorVersionUnderTest>
+    <iOSSimulatorVersionUnderTest Condition="'$(UseXHarnessAotPayload)' != 'true'">18.1</iOSSimulatorVersionUnderTest>
     <_TestTargetSuffix Condition="'$(iOSSimulatorVersionUnderTest)' != ''">_$(iOSSimulatorVersionUnderTest)</_TestTargetSuffix>
   </PropertyGroup>
 

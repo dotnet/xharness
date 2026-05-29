@@ -45,18 +45,34 @@ if [ ! -x "$native_xharness" ]; then
     exit 127
 fi
 
-# Case 1: "dotnet exec <…/Microsoft.DotNet.XHarness.CLI.dll | …/xharness> <args>"
-# -> native binary. Matches both the JIT shape (a managed CLI assembly path)
-# and the AOT shape (the native binary path; XHARNESS_CLI_PATH points there
-# in the AOT Helix flow because there is no managed CLI dll to point at).
-if [ "${1:-}" = "exec" ] && [ "$#" -ge 2 ]; then
-    case "$2" in
+# Case 1: "dotnet [exec] <…/Microsoft.DotNet.XHarness.CLI.dll | …/xharness> <args>"
+# -> native binary. Matches:
+#   * JIT shape with exec:    dotnet exec /…/Microsoft.DotNet.XHarness.CLI.dll …
+#   * AOT shape with exec:    dotnet exec /…/xharness-aot/xharness …
+#     (the Helix SDK xharness() bash alias inside xharness-runner.*.sh).
+#   * Direct invocation:      dotnet "$XHARNESS_CLI_PATH" …
+#     (the SimulatorInstaller helix-payload script uses this shape, and other
+#     legacy scripts may too). When $XHARNESS_CLI_PATH points at the native
+#     binary, $1 is the binary path and we still want to invoke it natively.
+_first="${1:-}"
+_second="${2:-}"
+
+if [ "$_first" = "exec" ] && [ "$#" -ge 2 ]; then
+    case "$_second" in
         *Microsoft.DotNet.XHarness.CLI.dll | */xharness | xharness)
             shift 2
             exec "$native_xharness" "$@"
             ;;
     esac
 fi
+
+# 'dotnet <path-to-xharness> …' (no exec keyword)
+case "$_first" in
+    *Microsoft.DotNet.XHarness.CLI.dll | */xharness | xharness)
+        shift
+        exec "$native_xharness" "$@"
+        ;;
+esac
 
 # Case 2: forward everything else to a real dotnet on PATH, if any.
 # Strip our own directory from PATH before resolving so we don't
