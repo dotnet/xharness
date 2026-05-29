@@ -4,53 +4,53 @@
     <!-- Both queues run the JIT path (today's behaviour). The NativeAOT path
          (UseXHarnessAotPayload=true) skips amd64 because the published binary
          is osx-arm64 only - it would not execute on amd64 hardware. -->
-    <HelixTargetQueue Include="osx.15.amd64.open" Condition="'$(UseXHarnessAotPayload)' != 'true'"/>
-    <HelixTargetQueue Include="osx.26.arm64.open"/>
+    <HelixTargetQueue Include="osx.15.amd64.open" Condition="'$(UseXHarnessAotPayload)' != 'true'">
+      <TestArch>x64</TestArch>
+      <iOSSimulatorVersionUnderTest>18.1</iOSSimulatorVersionUnderTest>
+    </HelixTargetQueue>
+    <HelixTargetQueue Include="osx.26.arm64.open">
+      <TestArch>arm64</TestArch>
+      <!-- Leave iOSSimulatorVersionUnderTest empty: let xharness pick whichever
+           iOS simulator ships with the arm64 worker's Xcode, so we don't have
+           to chase Xcode image bumps for this proj. -->
+    </HelixTargetQueue>
   </ItemGroup>
-
-  <!--
-    Derive architecture and the optional iOS-sim version pin from the queue.
-    Resolution timing matters: the Helix SDK re-invokes Test/CoreBuild once per
-    queue with HelixTargetQueue set as a *property*, so this PropertyGroup
-    re-evaluates per queue. The TestApple target below is wired to 'Test' (not
-    'CoreTest', which runs in the outer invocation before the per-queue dispatch
-    happens) so the per-queue $(HelixTargetQueue) value is in scope when the
-    download URL is composed.
-  -->
-  <PropertyGroup>
-    <IsArm64Queue>$(HelixTargetQueue.Contains('arm64'))</IsArm64Queue>
-    <IsAmd64Queue>$(HelixTargetQueue.Contains('amd64'))</IsAmd64Queue>
-    <TestArch Condition="'$(IsArm64Queue)' == 'true'">arm64</TestArch>
-    <TestArch Condition="'$(IsAmd64Queue)' == 'true'">x64</TestArch>
-
-    <!-- Pin the simulator version on the legacy amd64 queue (Xcode set is known there).
-         On the arm64 queue let xharness pick whatever iOS simulator ships with the
-         worker's Xcode, so we don't have to chase image bumps in this proj. -->
-    <iOSSimulatorVersionUnderTest Condition="'$(IsAmd64Queue)' == 'true'">18.1</iOSSimulatorVersionUnderTest>
-    <_TestTargetSuffix Condition="'$(iOSSimulatorVersionUnderTest)' != ''">_$(iOSSimulatorVersionUnderTest)</_TestTargetSuffix>
-  </PropertyGroup>
 
   <PropertyGroup>
     <TestAppBundleName>System.Numerics.Vectors.Tests</TestAppBundleName>
-    <XHarnessTestAppBundleUrl>$(AssetsBaseUri)/ios/test-app-new/ios-simulator-64/$(TestArch)/$(TestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
-    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app-new\ios-simulator-64\$(TestArch)</TestAppDestinationDir>
   </PropertyGroup>
 
-  <Target Name="TestApple" BeforeTargets="Test">
-    <Error Condition="'$(HelixTargetQueue)' != '' and '$(TestArch)' == ''"
-           Text="Unable to detect architecture from HelixTargetQueue '$(HelixTargetQueue)'. Queue name must contain 'arm64' or 'amd64'." />
+  <!--
+    Build one XHarnessAppBundleToTest per HelixTargetQueue. We can't rely on
+    $(HelixTargetQueue) being populated here (CreateAppleWorkItems runs in the
+    outer MSBuild invocation, before the Helix SDK dispatches one Test run per
+    queue), so iterate the items directly via the batched metadata syntax.
+    %(HelixTargetQueue.TestArch) and %(HelixTargetQueue.iOSSimulatorVersionUnderTest)
+    are queue-specific metadata defined in the ItemGroup above.
+  -->
+  <Target Name="TestApple" BeforeTargets="CoreTest"
+          Outputs="%(HelixTargetQueue.Identity)">
+    <PropertyGroup>
+      <_CurrentTestArch>%(HelixTargetQueue.TestArch)</_CurrentTestArch>
+      <_CurrentSimVersion>%(HelixTargetQueue.iOSSimulatorVersionUnderTest)</_CurrentSimVersion>
+      <_CurrentTestTargetSuffix Condition="'$(_CurrentSimVersion)' != ''">_$(_CurrentSimVersion)</_CurrentTestTargetSuffix>
+      <_CurrentAppUrl>$(AssetsBaseUri)/ios/test-app-new/ios-simulator-64/$(_CurrentTestArch)/$(TestAppBundleName).app.zip</_CurrentAppUrl>
+      <_CurrentAppDir>$(ArtifactsTmpDir)test-app-new\ios-simulator-64\$(_CurrentTestArch)</_CurrentAppDir>
+    </PropertyGroup>
 
-    <DownloadFile SourceUrl="$(XHarnessTestAppBundleUrl)" DestinationFolder="$(TestAppDestinationDir)" SkipUnchangedFiles="True" Retries="5">
-      <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle" />
+    <Error Condition="'$(_CurrentTestArch)' == ''"
+           Text="HelixTargetQueue '%(HelixTargetQueue.Identity)' has no TestArch metadata." />
+
+    <DownloadFile SourceUrl="$(_CurrentAppUrl)" DestinationFolder="$(_CurrentAppDir)" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="_ZippedAppBundle" />
     </DownloadFile>
 
-    <Message Text="Downloaded $(TestAppBundleName) from @(ZippedAppBundle). Extracting..." Importance="High" />
-    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(TestAppDestinationDir)" />
-    <Message Text="Extracted to $(TestAppDestinationDir)" Importance="High" />
+    <Message Text="Downloaded $(TestAppBundleName) ($(_CurrentTestArch)) from @(_ZippedAppBundle). Extracting..." Importance="High" />
+    <Exec Command="tar -xzf @(_ZippedAppBundle) -C $(_CurrentAppDir)" />
 
     <ItemGroup>
-      <XHarnessAppBundleToTest Include="$(TestAppDestinationDir)\$(TestAppBundleName).app">
-        <TestTarget>ios-simulator-64$(_TestTargetSuffix)</TestTarget>
+      <XHarnessAppBundleToTest Include="$(_CurrentAppDir)\$(TestAppBundleName).app">
+        <TestTarget>ios-simulator-64$(_CurrentTestTargetSuffix)</TestTarget>
         <WorkItemTimeout>00:20:00</WorkItemTimeout>
         <TestTimeout>00:07:00</TestTimeout>
         <LaunchTimeout>00:03:30</LaunchTimeout>
