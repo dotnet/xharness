@@ -3,7 +3,6 @@ name: Maestro Auto-Merge — Finalize
 on:
   schedule:
     - cron: "*/30 * * * *"
-  workflow_dispatch:
 
 permissions:
   contents: write
