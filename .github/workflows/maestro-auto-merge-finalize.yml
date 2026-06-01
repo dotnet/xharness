@@ -1,0 +1,147 @@
+name: Maestro Auto-Merge — Finalize
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: maestro-auto-merge-finalize
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    if: github.repository == 'dotnet/xharness'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+      WAIT_HOURS: "4"
+      MAX_ATTEMPTS: "3"
+    steps:
+      - name: Process candidates
+        run: |
+          set -euo pipefail
+
+          mapfile -t prs < <(
+            gh pr list \
+              --repo "$REPO" \
+              --label auto-merge-candidate \
+              --state open \
+              --json number,author,title,mergeable,updatedAt,headRefOid,isDraft \
+              --jq '.[] | select(.isDraft | not) | @json'
+          )
+
+          if [ "${#prs[@]}" -eq 0 ]; then
+            echo "No candidates."
+            exit 0
+          fi
+
+          now=$(date -u +%s)
+
+          for json in "${prs[@]}"; do
+            number=$(jq -r '.number'       <<<"$json")
+            author=$(jq -r '.author.login' <<<"$json")
+            title=$(jq  -r '.title'        <<<"$json")
+            mergeable=$(jq -r '.mergeable' <<<"$json")
+            updated=$(jq -r '.updatedAt'   <<<"$json")
+            sha=$(jq    -r '.headRefOid'   <<<"$json")
+
+            echo "::group::PR #$number"
+
+            case "$author" in
+              dotnet-maestro|app/dotnet-maestro) ;;
+              *) echo "author=$author not Maestro, skipping."; echo "::endgroup::"; continue;;
+            esac
+
+            case "$title" in
+              "Update dependencies from"*) ;;
+              *) echo "title not Maestro shape, skipping."; echo "::endgroup::"; continue;;
+            esac
+
+            if [ "$mergeable" != "MERGEABLE" ]; then
+              echo "mergeable=$mergeable, skipping."
+              echo "::endgroup::"
+              continue
+            fi
+
+            # Inspect required checks on the head SHA.
+            checks_json=$(gh pr checks "$number" --repo "$REPO" --required --json name,state,link)
+            failing=$(jq '[.[] | select(.state == "FAILURE" or .state == "CANCELLED")] | length' <<<"$checks_json")
+            pending=$(jq '[.[] | select(.state == "PENDING" or .state == "IN_PROGRESS" or .state == "QUEUED")] | length' <<<"$checks_json")
+
+            if [ "$pending" -gt 0 ] && [ "$failing" -eq 0 ]; then
+              echo "$pending required check(s) still running, will retry next cycle."
+              echo "::endgroup::"
+              continue
+            fi
+
+            # Red required checks: try to rerun failed jobs, up to MAX_ATTEMPTS.
+            if [ "$failing" -gt 0 ]; then
+              mapfile -t failed_runs < <(
+                gh run list \
+                  --repo "$REPO" \
+                  --commit "$sha" \
+                  --status failure \
+                  --limit 50 \
+                  --json databaseId,name,attempt,event \
+                  --jq '.[] | select(.event == "pull_request" or .event == "push") | @json'
+              )
+
+              rerun_count=0
+              giveup=0
+              for run_json in "${failed_runs[@]}"; do
+                run_id=$(jq -r '.databaseId' <<<"$run_json")
+                run_name=$(jq -r '.name'     <<<"$run_json")
+                attempt=$(jq -r '.attempt'   <<<"$run_json")
+
+                if [ "$attempt" -ge "$MAX_ATTEMPTS" ]; then
+                  echo "run $run_id ($run_name): attempt=$attempt >= $MAX_ATTEMPTS, giving up."
+                  giveup=1
+                  continue
+                fi
+
+                echo "run $run_id ($run_name): attempt=$attempt, rerunning failed jobs."
+                if gh run rerun "$run_id" --failed --repo "$REPO"; then
+                  rerun_count=$((rerun_count + 1))
+                else
+                  echo "run $run_id: rerun call failed, treating as giveup."
+                  giveup=1
+                fi
+              done
+
+              if [ "$giveup" -eq 1 ]; then
+                echo "Attempt cap reached. Removing auto-merge-candidate; a human needs to look."
+                gh pr edit "$number" --repo "$REPO" --remove-label auto-merge-candidate
+                gh pr comment "$number" --repo "$REPO" --body \
+                  "🤖 Maestro auto-merge: required CI is red after $MAX_ATTEMPTS attempts. Removing \`auto-merge-candidate\`. A human needs to triage. Re-add the label after the underlying issue is resolved."
+              elif [ "$rerun_count" -gt 0 ]; then
+                echo "Triggered $rerun_count rerun(s); will re-evaluate next cycle."
+              fi
+              echo "::endgroup::"
+              continue
+            fi
+
+            # All required checks green. Enforce minimum age.
+            updated_epoch=$(date -u -d "$updated" +%s 2>/dev/null || date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$updated" +%s)
+            age_hours=$(( (now - updated_epoch) / 3600 ))
+            if [ "$age_hours" -lt "$WAIT_HOURS" ]; then
+              echo "age ${age_hours}h < ${WAIT_HOURS}h required, skipping."
+              echo "::endgroup::"
+              continue
+            fi
+
+            echo "All gates green and minimum age reached. Merging."
+            gh pr merge "$number" \
+              --repo "$REPO" \
+              --squash \
+              --delete-branch \
+              --auto
+            echo "::endgroup::"
+          done
