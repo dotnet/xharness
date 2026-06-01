@@ -164,10 +164,10 @@ Use **not handled** only when the logs or evidence are too incomplete to give a
 useful assessment. In that case, say what evidence is missing.
 
 Use **already tracked problem** when a repository issue is a strong match for
-the same failure shape. Include the issue number, URL, and why it appears to
-match. A tracked issue does not automatically prove the failure is unrelated to
-the PR, but if you choose this bucket you should explain why the existing issue
-is the most useful summary outcome.
+the same failure shape. Include the issue as a clickable Markdown link and
+explain why it appears to match. A tracked issue does not automatically prove
+the failure is unrelated to the PR, but if you choose this bucket you should
+explain why the existing issue is the most useful summary outcome.
 
 ## Step 6: Draft one consolidated PR comment
 
@@ -185,33 +185,37 @@ I reviewed the current CI failures for this PR that Build Analysis did not
 already recognize.
 
 ## Already tracked problems
-- `<leg or build>` - `<short failure summary>`
-  - Tracked by: `#<issue>` - `<issue title>`
+- [`<leg or build>`](<build, timeline, or log URL>) - `<short failure summary>`
+  - Tracked by: [#<issue>](<issue URL>) - [<issue title>](<issue URL>)
   - Why it matches: `<brief evidence-based reasoning>`
 
 ## Failures likely caused by this PR
-- `<leg or build>` - `<short failure summary>`
+- [`<leg or build>`](<build, timeline, or log URL>) - `<short failure summary>`
   - Why: `<brief evidence-based reasoning>`
-  - Evidence: `<log, timeline, or check detail>`
+  - Evidence: [<log, timeline, or check detail label>](<URL>)
 
 ## Failures likely not caused by this PR
-- `<leg or build>` - `<short failure summary>`
+- [`<leg or build>`](<build, timeline, or log URL>) - `<short failure summary>`
   - Why: `<brief evidence-based reasoning>`
-  - Evidence: `<log, timeline, or check detail>`
+  - Evidence: [<log, timeline, or check detail label>](<URL>)
 
 ## Failures that need more investigation
-- `<leg or build>` - `<short failure summary>`
+- [`<leg or build>`](<build, timeline, or log URL>) - `<short failure summary>`
   - Why unclear: `<what is missing or conflicting>`
-  - Evidence: `<log, timeline, or check detail>`
+  - Evidence: [<log, timeline, or check detail label>](<URL>)
 
 ## Build Analysis gaps
-- `<summary of each miss, exclusion, or disagreement>`
+- `<summary of each miss, exclusion, or disagreement, using clickable links for referenced issues, PRs, builds, checks, logs, and other resources>`
 ````
 
 Guidance:
 
 - Omit empty sections.
 - Keep the comment concise but concrete.
+- Use clickable Markdown links for every reference that points to another
+  resource, including issues, PRs, builds, timelines, checks, logs, consoles,
+  artifacts, and documentation. Do not leave plain `#1234` / `PR #1234` / bare
+  URLs when you know the destination URL.
 - Link to the most relevant build, timeline, or log when possible.
 - Make it obvious which failures were Build Analysis misses versus excluded
   pipelines.
@@ -266,7 +270,7 @@ For each handled candidate, provide:
 - short failure summary,
 - whether Build Analysis missed it or excluded it,
 - assessment (`already tracked problem`, `likely PR-caused`, `likely not PR-caused`, or `unclear`),
-- matched issue number and URL when applicable,
+- matched issue as a clickable Markdown link when applicable,
 - brief reasoning.
 
 ### 3. Not handled items
