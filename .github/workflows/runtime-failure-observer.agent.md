@@ -34,7 +34,7 @@ network:
 tools:
   github:
     toolsets: [repos, pull_requests, issues, search]
-  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "curl", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname"]
+  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "curl", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "gh", "printf"]
   edit:
 
 checkout:
@@ -45,7 +45,7 @@ safe-outputs:
     report-as-issue: false
   create-pull-request:
     title-prefix: "[runtime-observer] "
-    labels: [agentic-workflows, infrastructure]
+    labels: [infrastructure]
     draft: true
     allowed-files:
       - "src/Microsoft.DotNet.XHarness.Apple/**"
@@ -54,14 +54,15 @@ safe-outputs:
       - "src/Microsoft.DotNet.XHarness.Common/**"
       - "src/Microsoft.DotNet.XHarness.iOS.Shared/**"
       - "src/Microsoft.DotNet.XHarness.TestRunners.*/**"
-      - "docs/**"
       - "tests/Microsoft.DotNet.XHarness.Apple.Tests/**"
       - "tests/Microsoft.DotNet.XHarness.Android.Tests/**"
       - "tests/Microsoft.DotNet.XHarness.CLI.Tests/**"
+      - "tests/Microsoft.DotNet.XHarness.Common.Tests/**"
+      - "tests/Microsoft.DotNet.XHarness.iOS.Shared.Tests/**"
+      - "tests/Microsoft.DotNet.XHarness.TestRunners.Tests/**"
     max: 2
   create-issue:
     title-prefix: "[runtime-observer] "
-    labels: [agentic-workflows]
     allowed-labels: [enhancement, bug, infrastructure, apple, android, wasm]
     max: 2
   add-comment:
@@ -202,16 +203,16 @@ Read the relevant xharness source file from the table below. If a small-bounds c
 
 | Exit code | Likely source file |
 |---|---|
-| 70 TIMED_OUT | `src/Microsoft.DotNet.XHarness.Common/CLI/Commands/XHarnessCommand.cs` (timeout reporting); platform runner under `Apple/` or `Android/` for the actual timeout path. |
-| 71 GENERAL_FAILURE | `src/Microsoft.DotNet.XHarness.Apple/ExitCodeDetector.cs` / `src/Microsoft.DotNet.XHarness.Android/` exit-code mappers. |
-| 78 PACKAGE_INSTALLATION_FAILURE | `src/Microsoft.DotNet.XHarness.Apple/AppInstaller.cs` / Android equivalent. |
-| 79 FAILED_TO_GET_BUNDLE_INFO | `src/Microsoft.DotNet.XHarness.Apple/AppBundleInformationParser.cs` (or similar; verify in source). |
-| 80 APP_CRASH | `src/Microsoft.DotNet.XHarness.Apple/CrashReporter.cs` / iOS / Android crash collectors. |
-| 81 DEVICE_NOT_FOUND | `src/Microsoft.DotNet.XHarness.iOS.Shared/Hardware/HardwareDeviceLoader.cs` / Android device loader. |
-| 82 RETURN_CODE_NOT_SET | Test runner orchestration under `src/Microsoft.DotNet.XHarness.Apple/Orchestration/` / Android orchestration. |
-| 83 APP_LAUNCH_FAILURE | `src/Microsoft.DotNet.XHarness.Apple/AppRunner.cs` / Android equivalent. |
+| 70 TIMED_OUT | `src/Microsoft.DotNet.XHarness.CLI/Commands/XHarnessCommand.cs` (timeout reporting); platform runner under `src/Microsoft.DotNet.XHarness.Apple/AppOperations/` or `src/Microsoft.DotNet.XHarness.Android/` for the actual timeout path. |
+| 71 GENERAL_FAILURE | `src/Microsoft.DotNet.XHarness.Apple/ExitCodeDetector.cs` and Android-side exit-code mappers under `src/Microsoft.DotNet.XHarness.Android/`. |
+| 78 PACKAGE_INSTALLATION_FAILURE | `src/Microsoft.DotNet.XHarness.Apple/AppOperations/AppInstaller.cs` and Android install commands under `src/Microsoft.DotNet.XHarness.CLI/Commands/Android/`. |
+| 79 FAILED_TO_GET_BUNDLE_INFO | `src/Microsoft.DotNet.XHarness.iOS.Shared/AppBundleInformationParser.cs` (note: lives in `iOS.Shared`, not `Apple`). |
+| 80 APP_CRASH | `src/Microsoft.DotNet.XHarness.Apple/CrashSnapshotReporterFactory.cs` and `src/Microsoft.DotNet.XHarness.iOS.Shared/CrashSnapshotReporter.cs`. |
+| 81 DEVICE_NOT_FOUND | `src/Microsoft.DotNet.XHarness.iOS.Shared/Hardware/HardwareDeviceLoader.cs` and Android device loader under `src/Microsoft.DotNet.XHarness.Android/`. |
+| 82 RETURN_CODE_NOT_SET | Test orchestration under `src/Microsoft.DotNet.XHarness.Apple/Orchestration/` (`TestOrchestrator.cs`, `RunOrchestrator.cs`, `BaseOrchestrator.cs`) and Android orchestration. |
+| 83 APP_LAUNCH_FAILURE | `src/Microsoft.DotNet.XHarness.Apple/AppOperations/AppRunner.cs` and Android-side run command under `src/Microsoft.DotNet.XHarness.CLI/Commands/Android/`. |
 
-Before drafting the fix, **read the file at HEAD**. If the recommendation is already implemented (the stderr line already includes the context the failure says is missing), skip with `recommendation already present in source`.
+Before drafting the fix, **read the file at HEAD** with the exact path above. If the path no longer exists (refactor since this table was written): record `skipped: source path stale, table needs update`, file an issue describing the stale entry, do not improvise. If the recommendation is already implemented (the stderr line already includes the context the failure says is missing): skip with `recommendation already present in source`.
 
 For DEVICE_NOT_FOUND retry: never blindly add retry. Verify (a) the discovery query is deterministic, (b) the failure is transient (signature appears, then absent in a later build on the same SHA), (c) the retry is bounded (`max=1`, pause 5s). If any of those don't hold, open an issue, not a PR.
 

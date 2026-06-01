@@ -35,6 +35,8 @@ safe-outputs:
     report-as-issue: false
   add-labels:
     allowed: [auto-merge-candidate, maestro-bump]
+  remove-labels:
+    allowed: [auto-merge-candidate, maestro-bump]
   add-comment:
     target: "triggering"
     max: 1
@@ -50,10 +52,11 @@ Decide whether PR #${{ github.event.pull_request.number }} is a safe Maestro dep
 1. Do not approve. Do not merge. Do not push.
 2. One comment per run. If the previous bot comment is identical, do not repost.
 3. Skip drafts.
+4. **Revoke on regression.** If a `synchronize` event re-runs this workflow and any gate now fails AND `auto-merge-candidate` is currently applied: remove `auto-merge-candidate` first, then post the failure comment. This prevents the finalizer from squashing a now-out-of-scope diff.
 
 ## Gates
 
-1. **Author.** Must be `dotnet-maestro` or `app/dotnet-maestro`. Title must start with `Update dependencies from`. Otherwise `noop`.
+1. **Author.** Must be `dotnet-maestro` or `dotnet-maestro[bot]`. Title must start with `Update dependencies from`. Otherwise `noop`.
 2. **Label.** Apply `maestro-bump`.
 3. **Diff scope.** Files changed must be a subset of `eng/Version.Details.xml`, `eng/Versions.props`, `global.json`. Anything else: comment the out-of-scope paths and stop.
 4. **Channel coherency.** Every updated `<Dependency>` in `eng/Version.Details.xml` must have populated `<Uri>` and `<Sha>` and come from a single channel. Otherwise comment the offending dependency and stop.

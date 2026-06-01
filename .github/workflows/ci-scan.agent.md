@@ -32,14 +32,13 @@ network:
 tools:
   github:
     toolsets: [repos, pull_requests, issues, search]
-  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "curl", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname"]
+  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "curl", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "gh", "printf"]
 
 safe-outputs:
   noop:
     report-as-issue: false
   create-issue:
     title-prefix: "[ci-scan] "
-    labels: [agentic-workflows]
     allowed-labels: ["Known Build Error", "infrastructure", "pipeline", "apple", "android", "wasm"]
     max: 3
   add-comment:

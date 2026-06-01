@@ -55,7 +55,7 @@ jobs:
             echo "::group::PR #$number"
 
             case "$author" in
-              dotnet-maestro|app/dotnet-maestro) ;;
+              dotnet-maestro|dotnet-maestro\[bot\]) ;;
               *) echo "author=$author not Maestro, skipping."; echo "::endgroup::"; continue;;
             esac
 
@@ -71,7 +71,11 @@ jobs:
             fi
 
             # Inspect required checks on the head SHA.
-            checks_json=$(gh pr checks "$number" --repo "$REPO" --required --json name,state,link)
+            if ! checks_json=$(gh pr checks "$number" --repo "$REPO" --required --json name,state,link 2>&1); then
+              echo "gh pr checks failed: $checks_json. Will retry next cycle."
+              echo "::endgroup::"
+              continue
+            fi
             failing=$(jq '[.[] | select(.state == "FAILURE" or .state == "CANCELLED")] | length' <<<"$checks_json")
             pending=$(jq '[.[] | select(.state == "PENDING" or .state == "IN_PROGRESS" or .state == "QUEUED")] | length' <<<"$checks_json")
 
@@ -117,9 +121,11 @@ jobs:
 
               if [ "$giveup" -eq 1 ]; then
                 echo "Attempt cap reached. Removing auto-merge-candidate; a human needs to look."
-                gh pr edit "$number" --repo "$REPO" --remove-label auto-merge-candidate
+                gh pr edit "$number" --repo "$REPO" --remove-label auto-merge-candidate \
+                  || echo "warning: failed to remove auto-merge-candidate on #$number"
                 gh pr comment "$number" --repo "$REPO" --body \
-                  "🤖 Maestro auto-merge: required CI is red after $MAX_ATTEMPTS attempts. Removing \`auto-merge-candidate\`. A human needs to triage. Re-add the label after the underlying issue is resolved."
+                  "🤖 Maestro auto-merge: required CI is red after $MAX_ATTEMPTS attempts. Removing \`auto-merge-candidate\`. A human needs to triage. Re-add the label after the underlying issue is resolved." \
+                  || echo "warning: failed to post failure comment on #$number"
               elif [ "$rerun_count" -gt 0 ]; then
                 echo "Triggered $rerun_count rerun(s); will re-evaluate next cycle."
               fi
@@ -137,10 +143,12 @@ jobs:
             fi
 
             echo "All gates green and minimum age reached. Merging."
-            gh pr merge "$number" \
+            if ! gh pr merge "$number" \
               --repo "$REPO" \
               --squash \
               --delete-branch \
-              --auto
+              --auto; then
+              echo "warning: merge call failed on #$number (auto-merge possibly not enabled, or race with another writer). Will retry next cycle."
+            fi
             echo "::endgroup::"
           done
