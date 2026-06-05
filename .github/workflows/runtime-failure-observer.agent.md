@@ -125,7 +125,6 @@ Exit codes outside this table: record `skipped: exit code <n> not in improvement
 ## Step 1. Set up
 
 ```bash
-mkdir -p /tmp/gh-aw/agent/coverage
 for def in 154 223 224 225 226 228 260 261 265; do
   url="https://dev.azure.com/dnceng-public/public/_apis/build/builds?definitions=${def}&branchName=refs/heads/main&statusFilter=completed&resultFilter=failed,partiallySucceeded&%24top=10&api-version=7.1"
   curl -s "$url" | tee "/tmp/gh-aw/agent/builds-${def}.json" | jq -r '.value[] | "\(.id) \(.result) \(.finishTime)"' | head
@@ -299,19 +298,3 @@ Observed in `>= <count>` of the last 5 builds on this definition.
 
 Filed by [`runtime-failure-observer`](https://github.com/dotnet/xharness/blob/main/.github/workflows/runtime-failure-observer.agent.md). Comment to add context or close as out-of-scope.
 ````
-
-## Step 8. Tally
-
-Append per-failure outcome to `/tmp/gh-aw/agent/coverage/runtime-observer.txt`:
-
-```
-<def-id>  <exit-code>  <outcome>  <reason-if-skipped>
-```
-
-Outcomes: `pr-drafted #aw_<id>`, `issue-filed #aw_<id>`, `existing-PR #<n>`, `existing-issue #<n>`, `skipped: <reason>`.
-
-At end of run, print this table to the agent log:
-
-```
-| definition | failures-scanned | prs-drafted | issues-filed | reused-existing | skipped-with-reason |
-```
