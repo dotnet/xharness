@@ -1,13 +1,5 @@
 name: Maestro Auto-Merge Finalize
 
-# Companion to the `maestro-auto-merge` reviewer. The reviewer labels a safe
-# Maestro dependency PR `auto-merge-candidate`; this scheduled job squash-merges
-# it once required CI is green and the PR has been idle for WAIT_HOURS.
-#
-# Scope is deliberately narrow: validate, then merge. It does not rerun CI or
-# manage labels. If required checks are red the PR is left for a human, and the
-# reviewer removes the label on the next `synchronize`.
-
 on:
   schedule:
     - cron: "*/30 * * * *"
