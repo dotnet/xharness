@@ -61,6 +61,6 @@ Decide whether PR #${{ github.event.pull_request.number }} is a safe Maestro dep
 3. **Diff scope.** Files changed must be a subset of `eng/Version.Details.xml`, `eng/Versions.props`, `global.json`. Anything else: comment the out-of-scope paths and stop.
 4. **Channel coherency.** Every updated `<Dependency>` in `eng/Version.Details.xml` must have populated `<Uri>` and `<Sha>` and come from a single channel. Otherwise comment the offending dependency and stop.
 5. **Version exists on nuget.org.** For each updated package: `curl -s https://api.nuget.org/v3-flatcontainer/<pkg>/index.json` and confirm the new version is listed. Missing: comment the `(pkg, version)` pairs and stop.
-6. **CI.** `gh pr checks <PR>`. Required check `failure` or `cancelled`: comment failing names and stop. Pending: exit silently; the `synchronize` event re-runs this workflow when CI completes.
+6. **CI.** `gh pr checks <PR>`. If any required check is `failure` or `cancelled`: comment the failing names and stop (do not label). Pending or all-green: continue. The finalize job re-checks required CI and only merges once it is fully green, so the reviewer does not need to wait for CI here.
 7. **Magnitude.** Any major-version bump: comment that a human must confirm and stop.
-8. **Pass.** Apply `auto-merge-candidate`. Post one comment with: channel name, package count, largest bump, and the rule that finalize will merge once the PR has been idle for 4 hours.
+8. **Pass.** Apply `auto-merge-candidate`. Post one comment with: channel name, package count, largest bump, and the rule that finalize will merge once required CI is green and the PR has been idle for 4 hours.
