@@ -61,10 +61,6 @@ safe-outputs:
       - "tests/Microsoft.DotNet.XHarness.iOS.Shared.Tests/**"
       - "tests/Microsoft.DotNet.XHarness.TestRunners.Tests/**"
     max: 2
-  create-issue:
-    title-prefix: "[runtime-observer] "
-    allowed-labels: [enhancement, bug, infrastructure, apple, android, wasm]
-    max: 2
   add-comment:
     target: "*"
     max: 5
@@ -79,12 +75,12 @@ The agent reads `dotnet/runtime` and the failing build logs. It never writes to 
 
 ## Hard rules
 
-1. **All writes via `safe-outputs`.** No direct `gh pr create`, no `gh issue create`. The fix PR is opened by the `create-pull-request` safe-output.
-2. **Cap per run: 2 PRs, 2 issues.** On cap, record `skipped: cap reached` and stop.
-3. **Every PR and issue title starts with `[runtime-observer] `.** PRs are opened as drafts.
-4. **Small-fix bounds for complete autofix PRs.** A *complete* fix PR must satisfy all of: `<=` 30 changed lines total, `<=` 2 files (one source + one test), no new public API, no protocol change, no native code change. If the fix needs more, do not silently truncate it: either open a clearly-marked best-effort/diagnosability **draft** PR (Step 5) that a human finishes, or open an issue. Best-effort and diagnosability draft PRs may exceed these bounds but must be marked work-in-progress and must still avoid new public API, protocol changes, and native code.
+1. **All writes via `safe-outputs`.** No direct `gh pr create`. The fix PR is opened by the `create-pull-request` safe-output. This workflow never opens issues; if a failure cannot be turned into a PR, emit nothing.
+2. **Cap per run: 2 PRs.** On cap, record `skipped: cap reached` and stop.
+3. **Every PR title starts with `[runtime-observer] `.** PRs are opened as drafts.
+4. **Small-fix bounds for complete autofix PRs.** A *complete* fix PR must satisfy all of: `<=` 30 changed lines total, `<=` 2 files (one source + one test), no new public API, no protocol change, no native code change. If the fix needs more, do not silently truncate it: open a clearly-marked best-effort/diagnosability **draft** PR (Step 5) that a human finishes. Best-effort and diagnosability draft PRs may exceed these bounds but must be marked work-in-progress and must still avoid new public API, protocol changes, and native code.
 5. **Don't propose fixes for runtime test bugs.** If the failure is in the test binary itself (assertion in the test code, missing mock, runtime API regression), record `skipped: runtime-side issue` and emit nothing.
-6. **Never assume.** Cite the runtime build URL, the Helix work item URL, the xharness command line, and the exact stderr / exit code in every PR or issue body.
+6. **Never assume.** Cite the runtime build URL, the Helix work item URL, the xharness command line, and the exact stderr / exit code in every PR body.
 7. **Dedup.** Before emitting, search open and recently merged PRs / issues in `dotnet/xharness` for the same xharness-signature. On match: `existing-PR #<n>` or `existing-issue #<n>`, emit nothing.
 8. **Same-run dedup cache.** Persist `(exit_code, command, signature_norm)` keys in `/tmp/gh-aw/agent/filed.tsv`. On hit: `dup-this-run`, skip.
 9. **All state under `/tmp/gh-aw/agent/`.**
@@ -196,14 +192,15 @@ test -f /tmp/gh-aw/agent/filed.tsv && cut -f1 /tmp/gh-aw/agent/filed.tsv | grep 
 printf '%s\t%s\n' "$key" "aw_<id>" >> /tmp/gh-aw/agent/filed.tsv
 ```
 
-## Step 5. Decide: PR or issue
+## Step 5. Decide which kind of PR
 
 Read the relevant xharness source file from the table below, then choose an outcome:
 
 - **Small-bounds fix** (rule 4 holds): emit `create-pull-request` with the complete fix (Step 6).
-- **Best-effort draft PR** (the right fix is clearly xharness-side but exceeds small-bounds, similar to runtime's "best effort PRs"): emit a draft `create-pull-request` that applies as much of the fix as you can safely do, with a detailed analysis and an explicit "human must finish this" note at the top of the body. Mark it clearly as work-in-progress. Prefer this over a bare issue whenever a partial diff plus analysis is more actionable than prose alone.
+- **Best-effort draft PR** (the right fix is clearly xharness-side but exceeds small-bounds, similar to runtime's "best effort PRs"): emit a draft `create-pull-request` that applies as much of the fix as you can safely do, with a detailed analysis and an explicit "human must finish this" note at the top of the body. Mark it clearly as work-in-progress.
 - **Diagnosability draft PR** (the analysis is inconclusive because the logs don't capture enough): if additional logging/diagnostics in the relevant xharness path would make the next occurrence diagnosable, emit a draft `create-pull-request` that adds that logging, with the analysis explaining what signal is currently missing and what the new logging will reveal.
-- **Issue** (none of the above fit, e.g. needs a new public API, a protocol change with `mlaunch`/`adb`/Helix, or coordination with runtime test infra): emit `create-issue` (Step 7).
+
+If none of these fit (the change needs a new public API, a protocol change with `mlaunch`/`adb`/Helix, native code, or coordination with runtime test infra): record `skipped: needs human design, out of small-fix scope` and emit nothing. This workflow does not open issues.
 
 | Exit code | Likely source file |
 |---|---|
@@ -216,9 +213,9 @@ Read the relevant xharness source file from the table below, then choose an outc
 | 82 RETURN_CODE_NOT_SET | Test orchestration under `src/Microsoft.DotNet.XHarness.Apple/Orchestration/` (`TestOrchestrator.cs`, `RunOrchestrator.cs`, `BaseOrchestrator.cs`) and Android orchestration. |
 | 83 APP_LAUNCH_FAILURE | `src/Microsoft.DotNet.XHarness.Apple/AppOperations/AppRunner.cs` and Android-side run command under `src/Microsoft.DotNet.XHarness.CLI/Commands/Android/`. |
 
-Before drafting the fix, **read the file** with the exact path above. Read it at the xharness version the failing runtime build actually consumed, not blindly at `HEAD`: the runtime build pins an xharness package (see its `eng/Version.Details.xml` / restored `Microsoft.DotNet.XHarness.CLI` version), and that can lag xharness `HEAD`. Assess "is the recommendation already implemented?" against the consumed version, then port the actual change onto `HEAD` (the PR targets xharness `main`). If the two diverge enough that the path or surrounding code differs, note the drift in the PR body. This matters more as we add repos that consume xharness at different versions (e.g. maui). If the path no longer exists at `HEAD` (refactor since this table was written): record `skipped: source path stale, table needs update`, file an issue describing the stale entry, do not improvise. If the recommendation is already implemented at `HEAD` (the stderr line already includes the context the failure says is missing): skip with `recommendation already present in source`.
+Before drafting the fix, **read the file** with the exact path above. Read it at the xharness version the failing runtime build actually consumed, not blindly at `HEAD`: the runtime build pins an xharness package (see its `eng/Version.Details.xml` / restored `Microsoft.DotNet.XHarness.CLI` version), and that can lag xharness `HEAD`. Assess "is the recommendation already implemented?" against the consumed version, then port the actual change onto `HEAD` (the PR targets xharness `main`). If the two diverge enough that the path or surrounding code differs, note the drift in the PR body. This matters more as we add repos that consume xharness at different versions (e.g. maui). If the path no longer exists at `HEAD` (refactor since this table was written): record `skipped: source path stale, table needs update` and stop, do not improvise. If the recommendation is already implemented at `HEAD` (the stderr line already includes the context the failure says is missing): skip with `recommendation already present in source`.
 
-For DEVICE_NOT_FOUND retry: never blindly add retry. Verify (a) the discovery query is deterministic, (b) the failure is transient (signature appears, then absent in a later build on the same SHA), (c) the retry is bounded (`max=1`, pause 5s). If any of those don't hold, open an issue, not a PR.
+For DEVICE_NOT_FOUND retry: never blindly add retry. Verify (a) the discovery query is deterministic, (b) the failure is transient (signature appears, then absent in a later build on the same SHA), (c) the retry is bounded (`max=1`, pause 5s). If any of those don't hold, record `skipped: retry preconditions not met` and emit nothing.
 
 ## Step 6. Draft the PR
 
@@ -267,39 +264,3 @@ Drafted by [`runtime-failure-observer`](https://github.com/dotnet/xharness/blob/
 ````
 
 Branch name: `runtime-observer/exit-<n>-<short-slug>`. Slug is `[a-z0-9-]+` derived from the command (e.g., `apple-test-ios-simulator`).
-
-## Step 7. Issue body (when neither a small-bounds fix nor a draft PR fits)
-
-````markdown
-## What we saw
-
-`dotnet/runtime` build [<build-id>](<azdo build url>) hit xharness exit code `<n> <NAME>` on `<helix queue>` (definition `<def-id> <def-name>`).
-
-Observed in `>= <count>` of the last 5 builds on this definition.
-
-### xharness command
-
-```
-<sanitized command line>
-```
-
-### Stderr excerpt
-
-```
-<sanitized last 20 lines before exit>
-```
-
-## Suggested improvement
-
-<one paragraph: what behavior would help; why a small-bounds PR is not enough (e.g., needs new API, protocol change, or coordination with runtime test infra)>
-
-## Links
-
-- runtime build: <url>
-- helix work item: <url>
-- relevant xharness source: `<path>:<line>`
-
----
-
-Filed by [`runtime-failure-observer`](https://github.com/dotnet/xharness/blob/main/.github/workflows/runtime-failure-observer.agent.md). Comment to add context or close as out-of-scope.
-````
