@@ -1,10 +1,15 @@
 ---
 name: pr-failure-scan
 description: >
-  Analyze a dotnet/xharness pull request's CI failures, identify failures not
-  already recognized by Build Analysis, search for existing matching issues,
-  assess whether each failure is likely caused by the PR, and prepare a single
-  AI-generated PR comment for explicit user approval before posting.
+  Analyze a dotnet/xharness pull request's CI failures: isolate the failures
+  Build Analysis did not already recognize, search existing repository issues
+  for matches, assess whether each failure is likely caused by the PR, and draft
+  a single AI-generated triage comment for explicit approval before posting. Use
+  this skill whenever the user wants to triage, investigate, or analyze a
+  dotnet/xharness PR's CI, build, or test failures, mentions Build Analysis
+  misses or pipelines excluded from Build Analysis, asks why a PR is red or
+  whether a failure is PR-caused, or invokes `/pr-failure-scan` with a PR number
+  or URL, even if they don't name the skill explicitly.
 ---
 
 # PR Failure Scan Skill
