@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -21,9 +22,18 @@ public class AdbRunner
     {
         Architecture,
         ApiVersion,
+        BuildFingerprint,
         SupportedArchitectures,
         InstalledApps,
         BootCompletion,
+        CpuInfo,
+        CpuMaxFrequency,
+        CpuMaxFrequencyFallback,
+        Manufacturer,
+        MemInfo,
+        Model,
+        OperatingSystemVersion,
+        ProductName,
     }
 
     #region Constructor and state variables
@@ -33,8 +43,17 @@ public class AdbRunner
         { AdbProperty.SupportedArchitectures, new[] { "shell", "getprop", "ro.product.cpu.abilist" } },
         { AdbProperty.ApiVersion, new[] { "shell", "getprop", "ro.build.version.sdk" } },
         { AdbProperty.Architecture, new[] { "shell", "getprop", "ro.product.cpu.abi" } },
+        { AdbProperty.BuildFingerprint, new[] { "shell", "getprop", "ro.build.fingerprint" } },
         { AdbProperty.InstalledApps, new[] { "shell", "pm", "list", "packages", "-3" } },
         { AdbProperty.BootCompletion, new[] { "shell", "getprop", "sys.boot_completed" } },
+        { AdbProperty.CpuInfo, new[] { "shell", "cat", "/proc/cpuinfo" } },
+        { AdbProperty.CpuMaxFrequency, new[] { "shell", "cat", "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq" } },
+        { AdbProperty.CpuMaxFrequencyFallback, new[] { "shell", "cat", "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq" } },
+        { AdbProperty.Manufacturer, new[] { "shell", "getprop", "ro.product.manufacturer" } },
+        { AdbProperty.MemInfo, new[] { "shell", "cat", "/proc/meminfo" } },
+        { AdbProperty.Model, new[] { "shell", "getprop", "ro.product.model" } },
+        { AdbProperty.OperatingSystemVersion, new[] { "shell", "getprop", "ro.build.version.release" } },
+        { AdbProperty.ProductName, new[] { "shell", "getprop", "ro.product.name" } },
     };
 
     private const string AdbEnvironmentVariableName = "ADB_EXE_PATH";
@@ -90,6 +109,28 @@ public class AdbRunner
             _log.LogDebug($"ADBRunner using ADB.exe supplied from {adbExePath}");
             _log.LogDebug($"Full resolved path:'{_absoluteAdbExePath}'");
         }
+    }
+
+    public void PopulateEnvironmentInfo(AndroidDevice device)
+    {
+        if (device is null)
+        {
+            throw new ArgumentNullException(nameof(device));
+        }
+
+        device.Manufacturer ??= GetDeviceProperty(AdbProperty.Manufacturer, device.DeviceSerial);
+        device.Model ??= GetDeviceProperty(AdbProperty.Model, device.DeviceSerial);
+        device.ProductName ??= GetDeviceProperty(AdbProperty.ProductName, device.DeviceSerial);
+        device.OperatingSystemVersion ??= GetDeviceProperty(AdbProperty.OperatingSystemVersion, device.DeviceSerial);
+        device.BuildFingerprint ??= GetDeviceProperty(AdbProperty.BuildFingerprint, device.DeviceSerial);
+        device.Architecture ??= GetDeviceProperty(AdbProperty.Architecture, device.DeviceSerial);
+        device.SupportedArchitectures ??= GetDeviceProperty(AdbProperty.SupportedArchitectures, device.DeviceSerial)?.Split(new[] { ',', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        device.CpuModel ??= ParseCpuModel(GetDeviceProperty(AdbProperty.CpuInfo, device.DeviceSerial));
+        device.TotalMemoryBytes ??= ParseTotalMemoryBytes(GetDeviceProperty(AdbProperty.MemInfo, device.DeviceSerial));
+        device.CpuMaxFrequencyKiloHertz ??=
+            ParseFrequencyKiloHertz(GetDeviceProperty(AdbProperty.CpuMaxFrequency, device.DeviceSerial, logOnError: false))
+            ?? ParseFrequencyKiloHertz(GetDeviceProperty(AdbProperty.CpuMaxFrequencyFallback, device.DeviceSerial, logOnError: false))
+            ?? ParseCpuFrequencyFromCpuInfoKiloHertz(GetDeviceProperty(AdbProperty.CpuInfo, device.DeviceSerial));
     }
 
     private static string GetCliAdbExePath()
@@ -1241,7 +1282,7 @@ public class AdbRunner
         return devices;
     }
 
-    private string? GetDeviceProperty(AdbProperty property, string? deviceName = null)
+    private string? GetDeviceProperty(AdbProperty property, string? deviceName = null, bool logOnError = true)
     {
         IEnumerable<string> args = s_commandList[property];
 
@@ -1268,13 +1309,133 @@ public class AdbRunner
 
         if (!result.Succeeded)
         {
-            _log.LogError($"Failed to get device's property {property}. Check if a device is attached / emulator is started" +
-                Environment.NewLine + result.StandardError);
+            if (logOnError)
+            {
+                _log.LogError($"Failed to get device's property {property}. Check if a device is attached / emulator is started" +
+                    Environment.NewLine + result.StandardError);
+            }
 
             return null;
         }
 
         return result.StandardOutput.Trim();
+    }
+
+    internal static string? ParseCpuModel(string? cpuInfo)
+    {
+        if (string.IsNullOrWhiteSpace(cpuInfo))
+        {
+            return null;
+        }
+
+        foreach (var line in cpuInfo.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (TryParseColonValue(line, "Hardware", out var hardware))
+            {
+                return hardware;
+            }
+
+            if (TryParseColonValue(line, "model name", out var modelName))
+            {
+                return modelName;
+            }
+
+            if (TryParseColonValue(line, "Processor", out var processor))
+            {
+                return processor;
+            }
+        }
+
+        return null;
+    }
+
+    internal static long? ParseCpuFrequencyFromCpuInfoKiloHertz(string? cpuInfo)
+    {
+        if (string.IsNullOrWhiteSpace(cpuInfo))
+        {
+            return null;
+        }
+
+        foreach (var line in cpuInfo.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (TryParseColonValue(line, "cpu MHz", out var cpuFrequency))
+            {
+                return double.TryParse(cpuFrequency, NumberStyles.Float, CultureInfo.InvariantCulture, out var megaHertz)
+                    ? (long)(megaHertz * 1000)
+                    : null;
+            }
+        }
+
+        return null;
+    }
+
+    internal static long? ParseFrequencyKiloHertz(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        if (long.TryParse(trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries)[0], out var kiloHertz))
+        {
+            return kiloHertz;
+        }
+
+        if (trimmed.EndsWith("MHz", StringComparison.OrdinalIgnoreCase)
+            && double.TryParse(trimmed.Replace("MHz", "", StringComparison.OrdinalIgnoreCase).Trim(), out var megaHertz))
+        {
+            return (long)(megaHertz * 1000);
+        }
+
+        if (trimmed.EndsWith("GHz", StringComparison.OrdinalIgnoreCase)
+            && double.TryParse(trimmed.Replace("GHz", "", StringComparison.OrdinalIgnoreCase).Trim(), out var gigaHertz))
+        {
+            return (long)(gigaHertz * 1_000_000);
+        }
+
+        return null;
+    }
+
+    internal static long? ParseTotalMemoryBytes(string? memInfo)
+    {
+        if (string.IsNullOrWhiteSpace(memInfo))
+        {
+            return null;
+        }
+
+        foreach (var line in memInfo.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!TryParseColonValue(line, "MemTotal", out var totalMemory))
+            {
+                continue;
+            }
+
+            if (long.TryParse(totalMemory.Split(' ', StringSplitOptions.RemoveEmptyEntries)[0], out var kiloBytes))
+            {
+                return kiloBytes * 1024;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool TryParseColonValue(string line, string key, out string value)
+    {
+        value = string.Empty;
+        if (!line.StartsWith(key, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var separatorIndex = line.IndexOf(':');
+        if (separatorIndex < 0 || separatorIndex == line.Length - 1)
+        {
+            return false;
+        }
+
+        value = line.Substring(separatorIndex + 1).Trim();
+        return true;
     }
 
     private bool TestFileExists(string path, string? deviceName = null)

@@ -39,6 +39,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             _appUninstaller.Object,
             _appTesterFactory.Object,
             _deviceFinder.Object,
+            _processManager.Object,
             _logger.Object,
             _logs,
             _mainLog.Object,

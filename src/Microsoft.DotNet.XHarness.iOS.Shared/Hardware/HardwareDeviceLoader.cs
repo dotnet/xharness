@@ -243,11 +243,19 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
             companionIdentifier: deviceNode.SelectSingleNode("CompanionIdentifier")?.InnerText,
             name: deviceNode.SelectSingleNode("Name")?.InnerText,
             buildVersion: deviceNode.SelectSingleNode("BuildVersion")?.InnerText,
+            cpuArchitecture: deviceNode.SelectSingleNode("CPUArchitecture")?.InnerText,
             productVersion: deviceNode.SelectSingleNode("ProductVersion")?.InnerText,
             productType: deviceNode.SelectSingleNode("ProductType")?.InnerText,
+            hardwareModel: deviceNode.SelectSingleNode("HardwareModel")?.InnerText,
             interfaceType: deviceNode.SelectSingleNode("InterfaceType")?.InnerText,
+            modelNumber: deviceNode.SelectSingleNode("ModelNumber")?.InnerText,
+            amountDataAvailable: TryParseLong(deviceNode.SelectSingleNode("AmountDataAvailable")?.InnerText),
+            totalDataCapacity: TryParseLong(deviceNode.SelectSingleNode("TotalDataCapacity")?.InnerText),
             isUsableForDebugging: usable == null ? (bool?)null : usable == "True",
             isLocked: bool.TryParse(deviceNode.SelectSingleNode("IsLocked")?.InnerText, out var locked) && locked,
             isPaired: bool.TryParse(deviceNode.SelectSingleNode("IsPaired")?.InnerText, out var isPaired) && isPaired);
     }
+
+    private static long? TryParseLong(string? value)
+        => long.TryParse(value, out var parsed) ? parsed : null;
 }

@@ -12,6 +12,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -56,13 +57,14 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         IAppUninstaller appUninstaller,
         IAppTesterFactory appTesterFactory,
         IDeviceFinder deviceFinder,
+        IMlaunchProcessManager processManager,
         ILogger consoleLogger,
         ILogs logs,
         IFileBackedLog mainLog,
         IErrorKnowledgeBase errorKnowledgeBase,
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
-        : base(appBundleInformationParser, appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        : base(appBundleInformationParser, appInstaller, appUninstaller, deviceFinder, processManager, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
         _appTesterFactory = appTesterFactory ?? throw new ArgumentNullException(nameof(appTesterFactory));
         _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
