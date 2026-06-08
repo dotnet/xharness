@@ -9,8 +9,10 @@ using Microsoft.DotNet.XHarness.CLI.Android;
 using Microsoft.DotNet.XHarness.CLI.AndroidHeadless;
 using Microsoft.DotNet.XHarness.CLI.Commands;
 using Microsoft.DotNet.XHarness.CLI.Commands.Apple;
+#if !XHARNESS_NATIVEAOT
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasm;
 using Microsoft.DotNet.XHarness.CLI.Commands.Wasi;
+#endif
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Mono.Options;
 
@@ -31,7 +33,7 @@ public static class Program
         if (shouldOutput)
         {
             Console.WriteLine(
-                $"[{XHarnessVersionCommand.GetAssemblyVersion().ProductVersion}] " +
+                $"[{XHarnessVersionCommand.GetProductVersion()}] " +
                 "XHarness command issued: " + string.Join(' ', args));
         }
 
@@ -84,8 +86,10 @@ public static class Program
 
         commandSet.Add(new AndroidCommandSet());
         commandSet.Add(new AndroidHeadlessCommandSet());
+#if !XHARNESS_NATIVEAOT
         commandSet.Add(new WasmCommandSet());
         commandSet.Add(new WasiCommandSet());
+#endif
         commandSet.Add(new XHarnessHelpCommand());
         commandSet.Add(new XHarnessVersionCommand());
 

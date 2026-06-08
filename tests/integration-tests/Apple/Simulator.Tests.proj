@@ -14,7 +14,11 @@
   </Target>
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.15.amd64.open"/>
+    <!-- amd64 queue is excluded from the NativeAOT pilot because we currently only
+         publish an osx-arm64 AOT binary; running it on amd64 hardware would fail
+         instantly. When UseXHarnessAotPayload is unset (the default JIT flow that
+         uses the global-tool nupkg), both queues are exercised as before. -->
+    <HelixTargetQueue Include="osx.15.amd64.open" Condition="'$(UseXHarnessAotPayload)' != 'true'"/>
     <HelixTargetQueue Include="osx.26.arm64.open"/>
 
     <!-- apple test / ios-simulator-64 -->

@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
   <ItemGroup>
-    <HelixTargetQueue Include="osx.15.amd64.open"/>
+    <!-- amd64 queue runs the JIT flow as today; arm64 queue runs only when the
+         AOT payload is in play (the published binary is osx-arm64 only). -->
+    <HelixTargetQueue Include="osx.15.amd64.open" Condition="'$(UseXHarnessAotPayload)' != 'true'"/>
+    <HelixTargetQueue Include="osx.26.arm64.open" Condition="'$(UseXHarnessAotPayload)' == 'true'"/>
 
     <HelixWorkItem Include="SimulatorInstaller.Tests">
       <PayloadDirectory>$(RepoRoot)\tests\integration-tests\Apple\helix-payloads</PayloadDirectory>

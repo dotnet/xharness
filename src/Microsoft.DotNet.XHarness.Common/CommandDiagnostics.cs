@@ -105,21 +105,20 @@ public class CommandDiagnostics : IDiagnosticsData
     {
         _timer.Stop();
 
-        var options = new JsonSerializerOptions
-        {
 #if DEBUG
-            WriteIndented = true,
+        bool writeIndented = true;
 #else
-                WriteIndented = false,
+        bool writeIndented = false;
 #endif
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        };
 
         _logger.LogDebug("Saving diagnostics data to '{path}'", targetFile);
 
         try
         {
+            var typeInfo = (writeIndented
+                ? CommandDiagnosticsJsonContext.Indented
+                : CommandDiagnosticsJsonContext.Default).CommandDiagnostics;
+
             // Either append current data to the JSON array or create a new file
             if (File.Exists(targetFile))
             {
@@ -127,7 +126,7 @@ public class CommandDiagnostics : IDiagnosticsData
 
                 var writerOptions = new JsonWriterOptions
                 {
-                    Indented = options.WriteIndented,
+                    Indented = writeIndented,
                 };
 
                 using var fileStream = new FileStream(targetFile, FileMode.Create, FileAccess.Write);
@@ -136,7 +135,6 @@ public class CommandDiagnostics : IDiagnosticsData
                 jsonWriter.WriteStartArray();
 
                 // Copy the existing elements without going into details of what they are
-                var newData = new List<JsonElement>();
                 var enumerator = data.RootElement.EnumerateArray();
                 while (enumerator.MoveNext())
                 {
@@ -144,18 +142,22 @@ public class CommandDiagnostics : IDiagnosticsData
                 }
 
                 // New element
-                JsonSerializer.Serialize(jsonWriter, this, options);
+                JsonSerializer.Serialize(jsonWriter, this, typeInfo);
 
                 jsonWriter.WriteEndArray();
             }
             else
             {
+                var arrayTypeInfo = (writeIndented
+                    ? CommandDiagnosticsJsonContext.Indented
+                    : CommandDiagnosticsJsonContext.Default).CommandDiagnosticsArray;
+
                 var data = new[]
                 {
                         this
                     };
 
-                string json = JsonSerializer.Serialize(data, options);
+                string json = JsonSerializer.Serialize(data, arrayTypeInfo);
                 File.WriteAllText(targetFile, json);
             }
         }
@@ -176,4 +178,16 @@ public class DiagnosticsFile
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Path { get; set; }
+}
+
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSerializable(typeof(CommandDiagnostics))]
+[JsonSerializable(typeof(CommandDiagnostics[]))]
+[JsonSerializable(typeof(DiagnosticsFile))]
+internal partial class CommandDiagnosticsJsonContext : JsonSerializerContext
+{
+    private static CommandDiagnosticsJsonContext? s_indented;
+
+    public static CommandDiagnosticsJsonContext Indented
+        => s_indented ??= new CommandDiagnosticsJsonContext(new JsonSerializerOptions(Default.Options) { WriteIndented = true });
 }

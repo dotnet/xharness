@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Apple;
 using Microsoft.DotNet.XHarness.CLI.CommandArguments.Apple;
@@ -24,7 +25,7 @@ internal class AppleStateCommand : GetStateCommand<AppleStateCommandArguments>
 {
     protected override string CommandUsage { get; } = "ios state [OPTIONS]";
 
-    private class DeviceInfo
+    internal class DeviceInfo
     {
         public string Name { get; }
         public string UDID { get; }
@@ -42,7 +43,7 @@ internal class AppleStateCommand : GetStateCommand<AppleStateCommandArguments>
         }
     }
 
-    private class SystemInfo
+    internal class SystemInfo
     {
         public string MachineName { get; }
         public string OSName { get; }
@@ -78,11 +79,7 @@ internal class AppleStateCommand : GetStateCommand<AppleStateCommandArguments>
 
     private static async Task AsJson(SystemInfo info)
     {
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true
-        };
-        await JsonSerializer.SerializeAsync(Console.OpenStandardOutput(), info, options);
+        await JsonSerializer.SerializeAsync(Console.OpenStandardOutput(), info, AppleStateJsonContext.Default.SystemInfo);
         Console.WriteLine();
     }
 
@@ -238,4 +235,10 @@ internal class AppleStateCommand : GetStateCommand<AppleStateCommandArguments>
         {
         }
     }
+}
+
+[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSerializable(typeof(AppleStateCommand.SystemInfo))]
+internal partial class AppleStateJsonContext : JsonSerializerContext
+{
 }

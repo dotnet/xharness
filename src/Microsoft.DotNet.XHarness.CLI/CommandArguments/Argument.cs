@@ -6,7 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+#if !XHARNESS_NATIVEAOT
 using OpenQA.Selenium;
+#endif
 
 namespace Microsoft.DotNet.XHarness.CLI.CommandArguments;
 
@@ -284,6 +286,7 @@ public abstract class SwitchArgument : Argument<bool>
     public override string ToString() => Value ? "true" : "false";
 }
 
+#if !XHARNESS_NATIVEAOT
 public abstract class EnumPageLoadStrategyArgument : Argument<PageLoadStrategy>
 {
     private readonly PageLoadStrategy _defaultValue;
@@ -309,6 +312,7 @@ public abstract class EnumPageLoadStrategyArgument : Argument<PageLoadStrategy>
         }
     }
 }
+#endif
 
 public abstract class RepeatableArgument : Argument<IEnumerable<string>>
 {

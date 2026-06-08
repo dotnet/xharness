@@ -9,7 +9,8 @@
     <TargetFrameworkVersion>10.0</TargetFrameworkVersion>
     <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
     <HelixType>test/product/</HelixType>
-    <IncludeXHarnessCli>true</IncludeXHarnessCli>
+    <IncludeXHarnessCli Condition="'$(UseXHarnessAotPayload)' != 'true'">true</IncludeXHarnessCli>
+    <IncludeXHarnessCli Condition="'$(UseXHarnessAotPayload)' == 'true'">false</IncludeXHarnessCli>
     <XHarnessTargetFramework>net10.0</XHarnessTargetFramework>
     <EnableXHarnessTelemetry>true</EnableXHarnessTelemetry>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
@@ -29,6 +30,40 @@
 
   <PropertyGroup>
     <XHarnessNupkgPath>$(ArtifactsShippingPackagesDir)/Microsoft.DotNet.XHarness.CLI.$(MicrosoftDotNetXHarnessCLIVersion).nupkg</XHarnessNupkgPath>
+  </PropertyGroup>
+
+  <!--
+    When UseXHarnessAotPayload=true, replace the Helix-SDK-managed global-tool
+    install with a correlation payload sourced from a per-RID NativeAOT publish
+    of Microsoft.DotNet.XHarness.CLI. The published binary is named 'xharness'
+    (see <AssemblyName> override in CLI csproj) and ships adb/mlaunch next to
+    it under runtimes/any/native/, so prepending the payload dir to PATH is
+    enough for the integration tests' work-item scripts to call 'xharness ...'.
+  -->
+  <ItemGroup Condition=" '$(UseXHarnessAotPayload)' == 'true' ">
+    <HelixCorrelationPayload Include="$(XHarnessAotPayloadPath)">
+      <Destination>xharness-aot</Destination>
+    </HelixCorrelationPayload>
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(UseXHarnessAotPayload)' == 'true' AND '$(IsPosixShell)' != 'false' ">
+    <HelixPreCommands>$(HelixPreCommands);chmod +x $HELIX_CORRELATION_PAYLOAD/xharness-aot/xharness</HelixPreCommands>
+    <HelixPreCommands>$(HelixPreCommands);chmod +x $HELIX_CORRELATION_PAYLOAD/xharness-aot/dotnet</HelixPreCommands>
+    <HelixPreCommands>$(HelixPreCommands);chmod +x $HELIX_CORRELATION_PAYLOAD/xharness-aot/runtimes/any/native/adb/macos/adb || true</HelixPreCommands>
+    <HelixPreCommands>$(HelixPreCommands);chmod +x $HELIX_CORRELATION_PAYLOAD/xharness-aot/runtimes/any/native/adb/linux/adb || true</HelixPreCommands>
+    <HelixPreCommands>$(HelixPreCommands);chmod +x $HELIX_CORRELATION_PAYLOAD/xharness-aot/runtimes/any/native/mlaunch/bin/mlaunch || true</HelixPreCommands>
+    <HelixPreCommands>$(HelixPreCommands);chmod +x $HELIX_CORRELATION_PAYLOAD/xharness-aot/runtimes/any/native/mlaunch/lib/mlaunch/mlaunch.app/Contents/MacOS/mlaunch || true</HelixPreCommands>
+    <!-- xharness-aot is prepended to PATH so both 'xharness' and the bundled 'dotnet' shim resolve there.
+         The dotnet shim turns 'dotnet exec <dll> <args>' into a direct invocation of the native binary,
+         which is what the Helix SDK xharness-runner.*.sh scripts call via their xharness() function. -->
+    <HelixPreCommands>$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD/xharness-aot:$PATH</HelixPreCommands>
+    <HelixPreCommands>$(HelixPreCommands);export XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
+    <HelixPreCommands>$(HelixPreCommands);export XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
+    <!-- Required by the Helix SDK xharness() bash alias. Path is unused (the dotnet shim ignores it
+         and invokes the native binary directly), but must be a non-empty string to satisfy any guards. -->
+    <HelixPreCommands>$(HelixPreCommands);export XHARNESS_CLI_PATH=$HELIX_CORRELATION_PAYLOAD/xharness-aot/xharness</HelixPreCommands>
+    <HelixPreCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">$(HelixPreCommands);export XHARNESS_DIAGNOSTICS_PATH=$HELIX_WORKITEM_ROOT/diagnostics.json</HelixPreCommands>
+    <HelixPostCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">"$HELIX_PYTHONPATH" -u "$HELIX_WORKITEM_PAYLOAD/xharness-event-processor.py";$(HelixPostCommands)</HelixPostCommands>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">

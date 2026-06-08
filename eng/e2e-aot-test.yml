@@ -1,0 +1,66 @@
+parameters:
+  # This template tests a given .proj file using the Helix SDK, supplying
+  # a NativeAOT-published xharness as a Helix correlation payload instead
+  # of having the Helix SDK install Microsoft.DotNet.XHarness.CLI as a
+  # global tool. The integration test proj is unchanged - the swap is
+  # driven by the UseXHarnessAotPayload property in
+  # tests/integration-tests/Directory.Build.props.
+  name: ''
+  displayName: ''
+  testProject: ''
+  # Name of the pipeline artifact produced by the AOT publish job
+  # (e.g. XHarnessCli_AOT_osx-arm64).
+  aotPipelineArtifact: ''
+  # macOS image used for the Helix submission build. The submission
+  # itself runs on the agent; the AOT binary executes on the Helix
+  # worker, so this agent only needs to be able to invoke the Helix SDK.
+  vmImage: 'macOS-15'
+
+stages:
+  - stage: ${{ parameters.name }}
+    displayName: E2E ${{ parameters.displayName }}
+    dependsOn:
+    - Build_OSX
+    - Build_AOT_OSX
+    jobs:
+    - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        workspace:
+          clean: all
+        jobs:
+        - job: AotHelix
+          timeoutInMinutes: 180
+          pool:
+            vmImage: ${{ parameters.vmImage }}
+          strategy:
+            matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+          preSteps:
+          - checkout: self
+            clean: true
+          displayName: AOT Helix Tests
+          steps:
+          - task: DownloadPipelineArtifact@2
+            displayName: Download NativeAOT xharness payload
+            inputs:
+              source: current
+              artifact: ${{ parameters.aotPipelineArtifact }}
+              path: $(Build.SourcesDirectory)/artifacts/xharness-aot-payload
+
+          - script: eng/common/build.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              --ci
+              --restore
+              --test
+              --projects ${{ parameters.testProject }}
+              --warnAsError false
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/${{ parameters.name }}.binlog
+              /p:RestoreUsingNuGetTargets=false
+              /p:UseXHarnessAotPayload=true
+              /p:XHarnessAotPayloadPath=$(Build.SourcesDirectory)/artifacts/xharness-aot-payload
+            displayName: Run tests in Helix (AOT xharness)
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''

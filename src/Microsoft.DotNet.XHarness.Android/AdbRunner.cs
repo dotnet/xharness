@@ -135,20 +135,37 @@ public class AdbRunner
 
     private static string GetCliAdbExePath()
     {
-        var currentAssemblyDirectory = Path.GetDirectoryName(typeof(AdbRunner).Assembly.Location);
+        // AppContext.BaseDirectory works for both the unpacked global tool layout and the AOT publish layout.
+        var baseDir = AppContext.BaseDirectory;
+
+        string relativePath;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            return Path.Join(currentAssemblyDirectory, @"..\..\..\runtimes\any\native\adb\windows\adb.exe");
+            relativePath = Path.Join("runtimes", "any", "native", "adb", "windows", "adb.exe");
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            return Path.Join(currentAssemblyDirectory, @"../../../runtimes/any/native/adb/linux/adb");
+            relativePath = Path.Join("runtimes", "any", "native", "adb", "linux", "adb");
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            return Path.Join(currentAssemblyDirectory, @"../../../runtimes/any/native/adb/macos/adb");
+            relativePath = Path.Join("runtimes", "any", "native", "adb", "macos", "adb");
         }
-        throw new NotSupportedException("Cannot determine OS platform being used, thus we can not select an ADB executable");
+        else
+        {
+            throw new NotSupportedException("Cannot determine OS platform being used, thus we can not select an ADB executable");
+        }
+
+        // For the global tool, adb lives at <package-root>/runtimes/any/native/adb/...,
+        // three levels above the assembly directory. For the AOT publish, the same
+        // relative layout is copied next to the binary.
+        var globalToolPath = Path.Join(baseDir, "..", "..", "..", relativePath);
+        if (File.Exists(globalToolPath))
+        {
+            return globalToolPath;
+        }
+
+        return Path.Join(baseDir, relativePath);
     }
 
     #endregion
