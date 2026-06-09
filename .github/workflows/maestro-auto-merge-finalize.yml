@@ -61,6 +61,25 @@ jobs:
               echo "skip: mergeable=$mergeable"; echo "::endgroup::"; continue
             fi
 
+            # Re-verify the reviewer's diff-scope gate independently of the
+            # auto-merge-candidate label: the changed files must be a subset of
+            # the dependency-flow files. A label can go stale or the diff can
+            # change after labeling, so the finalize merge never trusts it alone.
+            if ! files=$(gh pr view "$number" --repo "$REPO" --json files --jq '.files[].path' 2>/dev/null); then
+              echo "skip: could not read changed files"; echo "::endgroup::"; continue
+            fi
+            out_of_scope=""
+            while IFS= read -r f; do
+              [ -z "$f" ] && continue
+              case "$f" in
+                eng/Version.Details.xml|eng/Versions.props|global.json) ;;
+                *) out_of_scope="$out_of_scope $f";;
+              esac
+            done <<<"$files"
+            if [ -n "$out_of_scope" ]; then
+              echo "skip: out-of-scope file(s) changed:$out_of_scope"; echo "::endgroup::"; continue
+            fi
+
             # Required checks must all be green. A failed lookup, or no required
             # checks at all, is treated as "do not merge" rather than "safe".
             if ! checks=$(gh pr checks "$number" --repo "$REPO" --required --json state 2>/dev/null); then
