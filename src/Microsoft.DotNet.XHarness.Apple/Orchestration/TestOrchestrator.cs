@@ -368,7 +368,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
                 return ExitCode.APP_LAUNCH_TIMEOUT;
 
             case TestExecutingResult.TimedOut:
-                _logger.LogWarning($"Application test run timed out");
+                _logger.LogWarning("Application test run timed out. Use --timeout to adjust the configured timeout.");
                 return ExitCode.TIMED_OUT;
 
             default:
