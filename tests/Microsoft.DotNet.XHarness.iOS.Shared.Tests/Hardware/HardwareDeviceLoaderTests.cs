@@ -61,7 +61,6 @@ public class HardwareDeviceLoaderTests
             await _devices.LoadDevices(_executionLog.Object);
         });
 
-        // The exception message should contain structured context about what mlaunch did
         if (!timeout)
         {
             Assert.Contains("mlaunch exited with code 1", ex.Message);
