@@ -81,11 +81,12 @@ The agent reads `dotnet/runtime` and the failing build logs. It never writes to 
 4. **Small-fix bounds for complete autofix PRs.** A *complete* fix PR must satisfy all of: `<=` 30 changed lines total, `<=` 2 files (one source + one test), no new public API, no protocol change, no native code change. If the fix needs more, do not silently truncate it: open a clearly-marked best-effort/diagnosability **draft** PR (Step 5) that a human finishes. Best-effort and diagnosability draft PRs may exceed these bounds but must be marked work-in-progress and must still avoid new public API, protocol changes, and native code.
 5. **Don't propose fixes for runtime test bugs.** If the failure is in the test binary itself (assertion in the test code, missing mock, runtime API regression), record `skipped: runtime-side issue` and emit nothing.
 6. **Never assume.** Cite the runtime build URL, the Helix work item URL, the xharness command line, and the exact stderr / exit code in every PR body.
+6b. **No PR without fetched evidence.** Every PR must be backed by a build timeline and a Helix console that you actually downloaded *this run*. If any required fetch (build list, build timeline, Helix work-item list, console log) failed, was empty, or was denied, emit nothing for that candidate. Never reconstruct a build id, AzDO URL, Helix job GUID, console URL, exit code, or stderr excerpt from memory, from the prompt, or by inference. If you did not download it this run, you may not cite it.
 7. **Dedup.** Before emitting, search open and recently merged PRs / issues in `dotnet/xharness` for the same xharness-signature. On match: `existing-PR #<n>` or `existing-issue #<n>`, emit nothing.
 8. **Same-run dedup cache.** Persist `(exit_code, command, signature_norm)` keys in `/tmp/gh-aw/agent/filed.tsv`. On hit: `dup-this-run`, skip.
 9. **All state under `/tmp/gh-aw/agent/`.**
 10. **AzDO API: anonymous only.** Stay on `https://dev.azure.com/dnceng-public/public/_apis/build/...`.
-11. **Pre-bind every URL with `?` or `&` to a variable on its own line, then `curl -s "$url"`.**
+11. **Every shell command must begin with an allow-listed program (e.g. `curl`, `jq`, `gh`, `grep`).** The agent harness authorizes a command only by its first token. A command that starts with a variable assignment (`url=...`), a `for`/`while` loop, or any other keyword is rejected with `Permission denied and could not request permission from user` *even when the firewall allows the target domain*. Do not pre-bind URLs to shell variables and do not wrap `curl` in loops. Run one `curl` per request with the full URL inlined and double-quoted, writing to a file with `-o`, then process that file with a separate command. Keep `%24` for the literal `$top` query parameter. Example: `curl -s "https://dev.azure.com/dnceng-public/public/_apis/build/builds?definitions=154&branchName=refs/heads/main&statusFilter=completed&resultFilter=failed,partiallySucceeded&%24top=10&api-version=7.1" -o /tmp/gh-aw/agent/builds-154.json`.
 
 ## Pipelines to scan
 
@@ -118,25 +119,34 @@ These exit codes from `src/Microsoft.DotNet.XHarness.Common/CLI/ExitCode.cs` are
 
 Exit codes outside this table: record `skipped: exit code <n> not in improvement table` and stop.
 
-## Step 1. Set up
+## Step 0. Preflight: confirm network egress
+
+Before scanning, prove the harness will let `curl` reach the public AzDO API. Run exactly one inlined request (no variable, `curl` is the first token):
 
 ```bash
-for def in 154 223 224 225 226 228 260 261 265; do
-  url="https://dev.azure.com/dnceng-public/public/_apis/build/builds?definitions=${def}&branchName=refs/heads/main&statusFilter=completed&resultFilter=failed,partiallySucceeded&%24top=10&api-version=7.1"
-  curl -s "$url" | tee "/tmp/gh-aw/agent/builds-${def}.json" | jq -r '.value[] | "\(.id) \(.result) \(.finishTime)"' | head
-done
+curl -s "https://dev.azure.com/dnceng-public/public/_apis/build/builds?definitions=154&branchName=refs/heads/main&statusFilter=completed&resultFilter=failed,partiallySucceeded&%24top=1&api-version=7.1" -o /tmp/gh-aw/agent/preflight.json
+jq -r '.count' /tmp/gh-aw/agent/preflight.json
+```
+
+If `preflight.json` is valid JSON, continue. If the `curl` is rejected with `Permission denied and could not request permission from user`, the harness denied the *command form*, not the network: `.dev.azure.com` and `.helix.dot.net` are on the firewall allowlist. Re-issue with the URL inlined and `curl` as the first token (rule 11). If an inlined, first-token `curl` still fails, emit `report_incomplete` with reason `network egress unavailable: inlined first-token curl to dev.azure.com was denied by the agent harness; the firewall allowlist already contains .dev.azure.com and .helix.dot.net, so this is a harness command-authorization issue, not a firewall issue`, then stop. Do not blame the firewall allowlist and do not open any PR.
+
+## Step 1. Set up
+
+Run one inlined `curl` per definition (do not loop, do not pre-bind the URL). Repeat this pair for each definition id in `154 223 224 225 226 228 260 261 265`, substituting the id in both the URL and the `-o` path:
+
+```bash
+curl -s "https://dev.azure.com/dnceng-public/public/_apis/build/builds?definitions=154&branchName=refs/heads/main&statusFilter=completed&resultFilter=failed,partiallySucceeded&%24top=10&api-version=7.1" -o /tmp/gh-aw/agent/builds-154.json
+jq -r '.value[] | "\(.id) \(.result) \(.finishTime)"' /tmp/gh-aw/agent/builds-154.json | head
 ```
 
 Per definition, pick `source` = most recent failed build inside the last 7 days. Older: `skipped: stale (>7d)`.
 
 ## Step 2. Walk timelines, find xharness invocations
 
-For each `source`:
+For each `source` (inline the build id directly into the URL; do not use a variable):
 
 ```bash
-src_id=<source build id>
-url="https://dev.azure.com/dnceng-public/public/_apis/build/builds/${src_id}/timeline?api-version=7.1"
-curl -s "$url" | tee /tmp/gh-aw/agent/timeline-${src_id}.json
+curl -s "https://dev.azure.com/dnceng-public/public/_apis/build/builds/<src_id>/timeline?api-version=7.1" -o /tmp/gh-aw/agent/timeline-<src_id>.json
 ```
 
 Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. A failed leaf with non-null `log.id` is a candidate.
@@ -144,16 +154,14 @@ Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. A failed leaf with n
 Filter to Helix work items only. xharness runs inside Helix work items, not on the AzDO agent. From the `Send to Helix` task log, extract `Sent Helix Job: <GUID>`:
 
 ```bash
-log_url='<Send to Helix task log url>'
-curl -s "$log_url" | tee /tmp/gh-aw/agent/helix-send.log
+curl -s "<Send to Helix task log url>" -o /tmp/gh-aw/agent/helix-send.log
 grep -oE 'Sent Helix Job: [a-f0-9-]+' /tmp/gh-aw/agent/helix-send.log
 ```
 
-For each Helix job, list failing work items:
+For each Helix job, list failing work items (inline the job id into the URL):
 
 ```bash
-url="https://helix.dot.net/api/jobs/<jobId>/workitems?api-version=2019-06-17"
-curl -s "$url" | tee /tmp/gh-aw/agent/helix-${jobId}.json
+curl -s "https://helix.dot.net/api/jobs/<jobId>/workitems?api-version=2019-06-17" -o /tmp/gh-aw/agent/helix-<jobId>.json
 ```
 
 A work item is an xharness invocation candidate if `ConsoleOutputUri` contains an xharness command (`xharness apple`, `xharness android`, `xharness wasm`, or `dotnet exec .../Microsoft.DotNet.XHarness.CLI.dll`). Fetch the console and scan for:
@@ -185,11 +193,10 @@ gh pr list --repo dotnet/xharness --state all --limit 50 \
 
 On match (open or merged in last 30 days): `existing-PR #<n>` / `existing-issue #<n>`. Emit nothing.
 
-Same-run cache:
+Same-run cache. Compose the key as `<exit_code>|<command_norm>|<signature_norm>` and use it inline; do not assign it to a shell variable (a command that starts with `key=` is denied by the harness, rule 11):
 ```bash
-key="${exit_code}|<command_norm>|<signature_norm>"
-test -f /tmp/gh-aw/agent/filed.tsv && cut -f1 /tmp/gh-aw/agent/filed.tsv | grep -Fxq "$key" && echo "dup-this-run"
-printf '%s\t%s\n' "$key" "aw_<id>" >> /tmp/gh-aw/agent/filed.tsv
+grep -Fxq "70|apple-test-maccatalyst|run-timed-out" /tmp/gh-aw/agent/filed.tsv 2>/dev/null && echo "dup-this-run"
+printf '%s\n' "70|apple-test-maccatalyst|run-timed-out" >> /tmp/gh-aw/agent/filed.tsv
 ```
 
 ## Step 5. Decide which kind of PR
