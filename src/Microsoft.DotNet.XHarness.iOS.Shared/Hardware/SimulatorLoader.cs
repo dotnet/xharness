@@ -385,6 +385,10 @@ public class SimulatorLoader : ISimulatorLoader
         var runtimePrefix = _simulatorSelector.GetRuntimePrefix(target);
 
         var runtimeVersion = target.OSVersion;
+        // Device-type selection can depend on the OS version (e.g. tvOS 27 removed the legacy
+        // Apple-TV-1080p simulator device type). When the target doesn't specify a version we resolve
+        // the latest available runtime below, so pass that resolved version on to the selector too.
+        var deviceTypeTarget = target;
 
         if (runtimeVersion == null)
         {
@@ -401,13 +405,17 @@ public class SimulatorLoader : ISimulatorLoader
                 .Substring(runtimePrefix.Length);
 
             runtimeVersion = firstOsVersion ?? throw new NoDeviceFoundException($"Failed to find a suitable OS runtime version for {target.AsString()}");
+
+            // The runtime identifier uses '-' as the version separator (e.g. "27-0"); convert it back
+            // to the usual "27.0" form so the selector can parse it.
+            deviceTypeTarget = new TestTargetOs(target.Platform, runtimeVersion.Replace('-', '.'));
         }
 
         string simulatorRuntime = runtimePrefix + runtimeVersion.Replace('.', '-');
-        string simulatorDeviceType = _simulatorSelector.GetDeviceType(target, minVersion);
+        string simulatorDeviceType = _simulatorSelector.GetDeviceType(deviceTypeTarget, minVersion);
 
         // TODO: Allow to specify companion runtime
-        _simulatorSelector.GetCompanionRuntimeAndDeviceType(target, minVersion, out var companionRuntime, out var companionDeviceType);
+        _simulatorSelector.GetCompanionRuntimeAndDeviceType(deviceTypeTarget, minVersion, out var companionRuntime, out var companionDeviceType);
 
         var devices = await FindOrCreateDevicesAsync(log, simulatorRuntime, simulatorDeviceType, cancellationToken: cancellationToken);
         IEnumerable<ISimulatorDevice>? companionDevices = null;

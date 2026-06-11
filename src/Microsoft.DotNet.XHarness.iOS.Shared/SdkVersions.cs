@@ -5,11 +5,11 @@
 /// </summary>
 public static class SdkVersions
 {
-    public static string Xcode { get; private set; } = "14.3";
-    public static string OSX { get; private set; } = "13.00";
-    public static string iOS { get; private set; } = "16.4";
-    public static string WatchOS { get; private set; } = "6.2";
-    public static string TVOS { get; private set; } = "16.4";
+    public static string Xcode { get; private set; } = "27.0";
+    public static string OSX { get; private set; } = "27.0";
+    public static string iOS { get; private set; } = "27.0";
+    public static string WatchOS { get; private set; } = "27.0";
+    public static string TVOS { get; private set; } = "27.0";
 
     public static string MinOSX { get; private set; } = "10.9";
     public static string MiniOS { get; private set; } = "7.0";
@@ -21,17 +21,17 @@ public static class SdkVersions
     public static string MinWatchOSCompanionSimulator { get; private set; } = "10.3";
     public static string MinTVOSSimulator { get; private set; } = "10.2";
 
-    public static string MaxiOSSimulator { get; private set; } = "16.4";
-    public static string MaxWatchOSSimulator { get; private set; } = "8.0";
-    public static string MaxWatchOSCompanionSimulator { get; private set; } = "16.4";
-    public static string MaxTVOSSimulator { get; private set; } = "16.4";
+    public static string MaxiOSSimulator { get; private set; } = "27.0";
+    public static string MaxWatchOSSimulator { get; private set; } = "27.0";
+    public static string MaxWatchOSCompanionSimulator { get; private set; } = "27.0";
+    public static string MaxTVOSSimulator { get; private set; } = "27.0";
 
-    public static string MaxiOSDeploymentTarget { get; private set; } = "16.4";
-    public static string MaxWatchDeploymentTarget { get; private set; } = "8.0";
-    public static string MaxTVOSDeploymentTarget { get; private set; } = "16.4";
+    public static string MaxiOSDeploymentTarget { get; private set; } = "27.0";
+    public static string MaxWatchDeploymentTarget { get; private set; } = "27.0";
+    public static string MaxTVOSDeploymentTarget { get; private set; } = "27.0";
 
     public static string MinxrOSSimulator { get; private set; } = "1.0";
-    public static string MaxxrOSSimulator { get; private set; } = "1.0";
+    public static string MaxxrOSSimulator { get; private set; } = "27.0";
 
     public static void OverrideVersions(string xcode,
         string osx,
@@ -54,7 +54,7 @@ public static class SdkVersions
         string maxWatchDeploymentTarget,
         string maxTVOSDeploymentTarget,
         string minxrOSSimulator = "1.0",
-        string maxxrOSSimulator = "1.0")
+        string maxxrOSSimulator = "27.0")
     {
         Xcode = xcode;
         OSX = osx;

@@ -794,9 +794,9 @@
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/73EAFA5D-04C7-4194-8D51-6E32C913C3B6</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/73EAFA5D-04C7-4194-8D51-6E32C913C3B6</LogPath>
       </SimDevice>
-      <SimDevice UDID="3A12BAFF-0DAA-4052-AB0D-743AB85CE030" Name="Apple TV">
+      <SimDevice UDID="3A12BAFF-0DAA-4052-AB0D-743AB85CE030" Name="Apple TV 4K (3rd generation)">
         <SimRuntime>com.apple.CoreSimulator.SimRuntime.tvOS-{{MAX-TVOS-VERSION}}</SimRuntime>
-        <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p</SimDeviceType>
+        <SimDeviceType>com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K</SimDeviceType>
         <DataPath>/Users/mandel/Library/Developer/CoreSimulator/Devices/3A12BAFF-0DAA-4052-AB0D-743AB85CE030</DataPath>
         <LogPath>/Users/mandel/Library/Logs/CoreSimulator/3A12BAFF-0DAA-4052-AB0D-743AB85CE030</LogPath>
       </SimDevice>
