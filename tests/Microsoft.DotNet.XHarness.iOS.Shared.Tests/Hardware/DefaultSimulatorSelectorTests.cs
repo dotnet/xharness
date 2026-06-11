@@ -51,4 +51,23 @@ public class DefaultSimulatorSelectorTests
         // The Booted one
         Assert.Equal(simulator2, simulator);
     }
+
+    [Theory]
+    // iOS: the min-version device tracks the lowest available runtime. iPhone 6s was dropped in iOS 16, so
+    // iOS 16+ uses a still-available small device, while older runtimes keep iPhone 6s. Non-min is unchanged.
+    [InlineData(TestTarget.Simulator_iOS64, "15.0", true, "com.apple.CoreSimulator.SimDeviceType.iPhone-6s")]
+    [InlineData(TestTarget.Simulator_iOS64, "16.0", true, "com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation")]
+    [InlineData(TestTarget.Simulator_iOS64, "27.0", true, "com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation")]
+    [InlineData(TestTarget.Simulator_iOS64, "15.0", false, "com.apple.CoreSimulator.SimDeviceType.iPhone-11-Pro")]
+    [InlineData(TestTarget.Simulator_iOS64, "27.0", false, "com.apple.CoreSimulator.SimDeviceType.iPhone-11-Pro")]
+    // tvOS: Apple-TV-1080p was removed in tvOS 27, so tvOS 27+ uses the Apple TV 4K device type.
+    [InlineData(TestTarget.Simulator_tvOS, "16.0", true, "com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p")]
+    [InlineData(TestTarget.Simulator_tvOS, "26.5", false, "com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p")]
+    [InlineData(TestTarget.Simulator_tvOS, "27.0", true, "com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K")]
+    public void GetDeviceTypeTest(TestTarget platform, string osVersion, bool minVersion, string expectedDeviceType)
+    {
+        var target = new TestTargetOs(platform, osVersion);
+
+        Assert.Equal(expectedDeviceType, _simulatorSelector.GetDeviceType(target, minVersion));
+    }
 }
