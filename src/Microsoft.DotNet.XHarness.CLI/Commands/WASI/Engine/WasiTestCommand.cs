@@ -150,7 +150,7 @@ internal class WasiTestCommand : XHarnessCommand<WasiTestCommandArguments>
 
             if (result.ExitCode != Arguments.ExpectedExitCode)
             {
-                logger.LogError($"Application has finished with exit code {result.ExitCode} but {Arguments.ExpectedExitCode} was expected");
+                logger.LogError($"Application has finished with exit code {result.ExitCode} but {Arguments.ExpectedExitCode} was expected (engine: {Path.GetFileName(engineBinary)})");
                 return ExitCode.GENERAL_FAILURE;
             }
             else
