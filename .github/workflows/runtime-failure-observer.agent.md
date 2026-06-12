@@ -85,7 +85,7 @@ The agent reads `dotnet/runtime` and the failing build logs. It never writes to 
 8. **Same-run dedup cache.** Persist `(exit_code, command, signature_norm)` keys in `/tmp/gh-aw/agent/filed.tsv`. On hit: `dup-this-run`, skip.
 9. **All state under `/tmp/gh-aw/agent/`.**
 10. **AzDO API: anonymous only.** Stay on `https://dev.azure.com/dnceng-public/public/_apis/build/...`.
-11. **Start every shell command with an allow-listed program (`curl`, `jq`, `gh`, ...).** The harness authorizes by first token only, so a command beginning with `url=...`, `key=...`, or `for` is denied with `Permission denied and could not request permission from user` even when the firewall allows the domain. Inline each URL into a single `curl ... -o <file>` (keep `%24` for `$top`); never pre-bind URLs to variables or loop over `curl`.
+11. **Start every shell command with an allow-listed program (`curl`, `jq`, `gh`, `grep`, `printf`, ...).** The harness authorizes by first token only, so a command beginning with `url=...`, `key=...`, or `for` is denied with `Permission denied and could not request permission from user` even when the firewall allows the domain. Inline each URL into a single `curl ... -o <file>` (keep `%24` for `$top`); never pre-bind URLs to variables or loop over `curl`.
 
 ## Pipelines to scan
 
@@ -127,7 +127,7 @@ curl -s "https://dev.azure.com/dnceng-public/public/_apis/build/builds?definitio
 jq -r '.count' /tmp/gh-aw/agent/preflight.json
 ```
 
-Valid JSON: continue. If `curl` itself is denied, that is the harness rejecting the command form, not the firewall (`.dev.azure.com` and `.helix.dot.net` are allow-listed). If an inlined first-token `curl` still fails, emit `report_incomplete` with reason `harness denied inlined curl to dev.azure.com; firewall already allows it` and stop. Never blame the firewall allowlist and never open a PR.
+Valid JSON: continue. If `curl` itself is denied, that is the harness rejecting the command form, not the firewall (`.dev.azure.com` and `.helix.dot.net` are allow-listed). If an inlined first-token `curl` still fails, record `skipped: harness denied inlined curl to dev.azure.com; firewall already allows it` and stop. Never blame the firewall allowlist and never open a PR.
 
 ## Step 1. Set up
 
@@ -142,10 +142,10 @@ Per definition, pick `source` = most recent failed build inside the last 7 days.
 
 ## Step 2. Walk timelines, find xharness invocations
 
-For each `source` (inline the build id):
+For each `source` (inline the build id in place of `SRCID`):
 
 ```bash
-curl -s "https://dev.azure.com/dnceng-public/public/_apis/build/builds/<src_id>/timeline?api-version=7.1" -o /tmp/gh-aw/agent/timeline-<src_id>.json
+curl -s "https://dev.azure.com/dnceng-public/public/_apis/build/builds/SRCID/timeline?api-version=7.1" -o "/tmp/gh-aw/agent/timeline-SRCID.json"
 ```
 
 Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. A failed leaf with non-null `log.id` is a candidate.
@@ -157,10 +157,10 @@ curl -s "<Send to Helix task log url>" -o /tmp/gh-aw/agent/helix-send.log
 grep -oE 'Sent Helix Job: [a-f0-9-]+' /tmp/gh-aw/agent/helix-send.log
 ```
 
-For each Helix job, list failing work items (inline the job id):
+For each Helix job, list failing work items (inline the job id in place of `JOBID`):
 
 ```bash
-curl -s "https://helix.dot.net/api/jobs/<jobId>/workitems?api-version=2019-06-17" -o /tmp/gh-aw/agent/helix-<jobId>.json
+curl -s "https://helix.dot.net/api/jobs/JOBID/workitems?api-version=2019-06-17" -o "/tmp/gh-aw/agent/helix-JOBID.json"
 ```
 
 A work item is an xharness invocation candidate if `ConsoleOutputUri` contains an xharness command (`xharness apple`, `xharness android`, `xharness wasm`, or `dotnet exec .../Microsoft.DotNet.XHarness.CLI.dll`). Fetch the console and scan for:
