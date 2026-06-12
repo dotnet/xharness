@@ -44,6 +44,13 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
+  <!-- This tool embeds third-party OSS (adb, mlaunch, and bundled managed assemblies),
+       so the third-party notices must be installed with it (SDL/1CS Third-Party IP).
+       Only this package embeds OSS; the library packages merely reference it via NuGet. -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)../../NOTICE.txt" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Update="Resources\Strings.Designer.cs">
       <DesignTime>True</DesignTime>
