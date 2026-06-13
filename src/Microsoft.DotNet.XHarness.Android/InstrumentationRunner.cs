@@ -99,6 +99,11 @@ public class InstrumentationRunner
                 if (!string.IsNullOrEmpty(bugreportPath))
                 {
                     producedFiles.Add(new DiagnosticsFile { Name = Path.GetFileName(bugreportPath), Type = "bugreport" });
+                    _logger.LogError($"App crashed. Crash diagnostics: logcat='{logcatFilePath}', bugreport='{bugreportPath}'");
+                }
+                else
+                {
+                    _logger.LogError($"App crashed. No bugreport was generated. Crash diagnostics: logcat='{logcatFilePath}'");
                 }
             }
         }
