@@ -56,10 +56,19 @@ public class HardwareDeviceLoaderTests
                 }
             });
 
-        await Assert.ThrowsAsync<Exception>(async () =>
+        var ex = await Assert.ThrowsAsync<Exception>(async () =>
         {
             await _devices.LoadDevices(_executionLog.Object);
         });
+
+        if (!timeout)
+        {
+            Assert.Contains("mlaunch exited with code 1", ex.Message);
+        }
+        else
+        {
+            Assert.Contains("mlaunch timed out", ex.Message);
+        }
 
         MlaunchArgument listDevArg = passedArguments.Where(a => a is ListDevicesArgument).FirstOrDefault();
         Assert.NotNull(listDevArg);

@@ -101,7 +101,8 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
 
                 if (!result.Succeeded)
                 {
-                    throw new Exception("Failed to list devices.");
+                    var reason = result.TimedOut ? "mlaunch timed out" : $"mlaunch exited with code {result.ExitCode}";
+                    throw new Exception($"Failed to list devices: {reason}.");
                 }
 
                 var doc = new XmlDocument();
