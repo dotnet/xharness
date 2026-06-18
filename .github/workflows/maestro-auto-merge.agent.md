@@ -10,6 +10,13 @@ on:
     types: [opened, synchronize, ready_for_review]
   roles: [admin, maintain, write]
 
+environment: copilot-pat-pool
+
+engine:
+  id: copilot
+  env:
+    COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
+
 if: |
   github.repository == 'dotnet/xharness' &&
   (github.event.pull_request.user.login == 'dotnet-maestro' ||
