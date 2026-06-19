@@ -64,7 +64,7 @@ Arguments:
             runtimePath: Arguments.RuntimePath,
             testRequiredArchitecture: testRequiredArchitecture,
             deviceId: Arguments.DeviceId,
-            apiVersion: Arguments.ApiVersion.Value,
+            apiVersion: Arguments.ApiVersion.FirstApiVersion,
             bootTimeoutSeconds: Arguments.LaunchTimeout,
             runner: runner,
             DiagnosticsData);
