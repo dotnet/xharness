@@ -3,6 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>$(XHarnessNetTFMs)</TargetFrameworks>
     <IsPackable>true</IsPackable>
+    <IsShipping>true</IsShipping>
+    <Description>Shared test-runner primitives used by device-side XHarness test hosts (Android, iOS, tvOS, macOS, WASM). Exposes ApplicationEntryPoint, ApplicationOptions, and the built-in CoverageManager.</Description>
+    <PackageTags>xharness;testrunner;devicetests;dotnet</PackageTags>
     <!-- Mono.Options is apparently not strong-name signed -->
     <NoWarn>$(NoWarn);CS8002</NoWarn>
     <Nullable>disable</Nullable>
