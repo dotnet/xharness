@@ -19,6 +19,8 @@ public interface IDeviceLogCapturer : IDisposable
 
 public class DeviceLogCapturer : IDeviceLogCapturer
 {
+    internal const string WallClockAdjustmentWarning = "Wall Clock adjustment detected - results might be strange while using --end";
+
     private readonly ILog _mainLog;
     private readonly ILog _deviceLog;
     private readonly string _deviceUdid;
@@ -152,12 +154,58 @@ public class DeviceLogCapturer : IDeviceLogCapturer
 
             if (errors.Length > 0)
             {
-                _mainLog.WriteLine($"Errors while reading device logs: {errors}");
+                LogReadDiagnostics(_mainLog, errors.ToString());
             }
         }
 
         CleanupOutputPath();
     }
+
+    internal static void LogReadDiagnostics(ILog mainLog, string errors)
+    {
+        string diagnostics = errors.TrimEnd();
+        if (HasOnlyKnownWarningDiagnostics(diagnostics))
+        {
+            mainLog.WriteLine($"Warnings while reading device logs: {diagnostics}");
+        }
+        else
+        {
+            mainLog.WriteLine($"Errors while reading device logs: {diagnostics}");
+        }
+    }
+
+    internal static bool HasOnlyKnownWarningDiagnostics(string errors)
+    {
+        if (string.IsNullOrWhiteSpace(errors))
+        {
+            return false;
+        }
+
+        using StringReader reader = new StringReader(errors);
+        bool sawWarning = false;
+        string? line;
+
+        while ((line = reader.ReadLine()) is not null)
+        {
+            line = line.Trim();
+            if (line.Length == 0)
+            {
+                continue;
+            }
+
+            if (!IsKnownWarningDiagnostic(line))
+            {
+                return false;
+            }
+
+            sawWarning = true;
+        }
+
+        return sawWarning;
+    }
+
+    internal static bool IsKnownWarningDiagnostic(string diagnostic)
+        => string.Equals(diagnostic, WallClockAdjustmentWarning, StringComparison.Ordinal);
 
     private void CleanupOutputPath()
     {
@@ -169,4 +217,3 @@ public class DeviceLogCapturer : IDeviceLogCapturer
 
     public void Dispose() => StopCapture();
 }
-
