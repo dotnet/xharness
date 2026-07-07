@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -20,6 +21,10 @@ public interface IDeviceLogCapturer : IDisposable
 public class DeviceLogCapturer : IDeviceLogCapturer
 {
     internal const string WallClockAdjustmentWarning = "Wall Clock adjustment detected - results might be strange while using --end";
+    private static readonly HashSet<string> KnownWarningDiagnostics = new(StringComparer.Ordinal)
+    {
+        WallClockAdjustmentWarning,
+    };
 
     private readonly ILog _mainLog;
     private readonly ILog _deviceLog;
@@ -205,7 +210,7 @@ public class DeviceLogCapturer : IDeviceLogCapturer
     }
 
     internal static bool IsKnownWarningDiagnostic(string diagnostic)
-        => string.Equals(diagnostic, WallClockAdjustmentWarning, StringComparison.Ordinal);
+        => KnownWarningDiagnostics.Contains(diagnostic);
 
     private void CleanupOutputPath()
     {
