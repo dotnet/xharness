@@ -85,12 +85,6 @@ internal class WasmTestCommand : XHarnessCommand<WasmTestCommandArguments>
 
             var engineArgs = new List<string>();
 
-            if (Arguments.Engine == JavaScriptEngine.V8)
-            {
-                // v8 needs this flag to enable WASM support
-                engineArgs.Add("--expose_wasm");
-            }
-
             engineArgs.AddRange(Arguments.EngineArgs.Value);
             engineArgs.Add(Arguments.JSFile);
 
