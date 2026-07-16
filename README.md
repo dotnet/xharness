@@ -212,6 +212,20 @@ The workaround we went with lies in sharing a random string with the application
 To turn this workaround on, run XHarness with `--signal-app-end` and make sure your application logs the string it reads from the env variable.
 Using the `TestRunner` from this repository will automatically give you this functionality.
 
+## Code Coverage
+
+XHarness uses [Coverlet](https://github.com/coverlet-coverage/coverlet) for code coverage. To generate coverage reports:
+
+```bash
+# Run tests with coverage (Linux/macOS)
+./run-coverage.sh
+
+# Run tests with coverage (Windows)
+.\run-coverage.ps1
+```
+
+See [docs/code-coverage.md](docs/code-coverage.md) for detailed instructions on generating and viewing coverage reports.
+
 ## Contribution
 
 We welcome contributions! Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).
