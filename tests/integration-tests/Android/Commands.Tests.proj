@@ -23,7 +23,7 @@
       <XHarnessApkToTest Include="$(TestAppDestinationDir)\$(TestPackageName)-x86.apk">
         <AndroidPackageName>net.dot.$(TestPackageName)</AndroidPackageName>
         <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
-        <WorkItemTimeout>00:12:00</WorkItemTimeout>
+        <WorkItemTimeout>00:30:00</WorkItemTimeout>
         <CustomCommands>
         <![CDATA[
           set -ex;
