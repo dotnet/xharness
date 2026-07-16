@@ -1279,10 +1279,19 @@ public class AdbRunner
             action: () => RunAdbCommand(args, TimeSpan.FromSeconds(30)),
             needsRetry: r =>
             {
-                if (!r.Succeeded || r.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
+                if (IsTransientDeviceConnectionFailure(r))
                 {
-                    _log.LogWarning($"Device {deviceName} is offline; retrying up to five minutes");
+                    _log.LogWarning(
+                        $"Failed to get device property {property} from {deviceName ?? "the active device"} due to a transient ADB connection failure; " +
+                        $"retrying up to five minutes.{Environment.NewLine}{r}");
                     return true;
+                }
+
+                if (!r.Succeeded)
+                {
+                    _log.LogDebug(
+                        $"Failed to get device property {property} from {deviceName ?? "the active device"}; " +
+                        $"the failure is not a transient ADB connection failure and will not be retried.{Environment.NewLine}{r}");
                 }
 
                 return false;
@@ -1302,6 +1311,19 @@ public class AdbRunner
         }
 
         return result.StandardOutput.Trim();
+    }
+
+    private static bool IsTransientDeviceConnectionFailure(ProcessExecutionResults result)
+    {
+        if (result.TimedOut)
+        {
+            return true;
+        }
+
+        return result.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase)
+            || result.StandardError.Contains("no devices/emulators found", StringComparison.OrdinalIgnoreCase)
+            || (result.StandardError.Contains("device", StringComparison.OrdinalIgnoreCase)
+                && result.StandardError.Contains("not found", StringComparison.OrdinalIgnoreCase));
     }
 
     internal static string? ParseCpuModel(string? cpuInfo)

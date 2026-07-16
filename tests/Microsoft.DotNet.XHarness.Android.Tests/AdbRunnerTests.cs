@@ -25,6 +25,7 @@ public class AdbRunnerTests : IDisposable
     private static int s_bootCompleteCheckTimes = 0;
     private static int s_devicesCallCount = 0;
     private static int s_devicesReturnEmptyForNFirstCalls = 0;
+    private static bool s_cpuFrequencyFilesMissing = false;
     private readonly Mock<ILogger> _mainLog;
     private readonly Mock<IAdbProcessManager> _processManager;
     private readonly List<AndroidDevice> _fakeDeviceList;
@@ -41,6 +42,7 @@ public class AdbRunnerTests : IDisposable
         // Reset call counters for each test
         s_devicesCallCount = 0;
         s_devicesReturnEmptyForNFirstCalls = 0;
+        s_cpuFrequencyFilesMissing = false;
 
         // Fake ADB executable since its path is checked 
         Directory.CreateDirectory(s_scratchAndOutputPath);
@@ -247,6 +249,20 @@ public class AdbRunnerTests : IDisposable
         Assert.Equal("Qualcomm Technologies, Inc SM8650", device.CpuModel);
         Assert.Equal(2_800_000, device.CpuMaxFrequencyKiloHertz);
         Assert.Equal(8L * 1024 * 1024 * 1024, device.TotalMemoryBytes);
+    }
+
+    [Fact]
+    public void PopulateEnvironmentInfoDoesNotRetryMissingCpuFrequencyFiles()
+    {
+        s_cpuFrequencyFilesMissing = true;
+        var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+        var device = runner.GetDevice(requiredDeviceId: _fakeDeviceList.Single(d => d.Manufacturer == "Contoso").DeviceSerial);
+
+        runner.PopulateEnvironmentInfo(device);
+
+        VerifyAdbCall(Times.Once(), "-s", device.DeviceSerial, "shell", "cat", "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
+        VerifyAdbCall(Times.Once(), "-s", device.DeviceSerial, "shell", "cat", "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq");
+        Assert.Equal(2_800_000, device.CpuMaxFrequencyKiloHertz);
     }
 
     [Fact]
@@ -495,10 +511,24 @@ public class AdbRunnerTests : IDisposable
 
                 if (string.Join(" ", arguments.Skip(argStart).Take(3)).Equals("shell cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq"))
                 {
-                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).CpuMaxFrequencyKiloHertz?.ToString() ?? string.Empty;
+                    if (s_cpuFrequencyFilesMissing)
+                    {
+                        exitCode = 1;
+                        stdErr = "cat: /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq: No such file or directory";
+                    }
+                    else
+                    {
+                        stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).CpuMaxFrequencyKiloHertz?.ToString() ?? string.Empty;
+                    }
                 }
 
-                exitCode = 0;
+                if (string.Join(" ", arguments.Skip(argStart).Take(3)).Equals("shell cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq") &&
+                    s_cpuFrequencyFilesMissing)
+                {
+                    exitCode = 1;
+                    stdErr = "cat: /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: No such file or directory";
+                }
+
                 break;
 
             case "logcat":
