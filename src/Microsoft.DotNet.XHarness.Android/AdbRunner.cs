@@ -1322,8 +1322,11 @@ public class AdbRunner
 
         return result.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase)
             || result.StandardError.Contains("no devices/emulators found", StringComparison.OrdinalIgnoreCase)
-            || (result.StandardError.Contains("device", StringComparison.OrdinalIgnoreCase)
-                && result.StandardError.Contains("not found", StringComparison.OrdinalIgnoreCase));
+            || result.StandardError.Contains("device not found", StringComparison.OrdinalIgnoreCase)
+            || result.StandardError
+                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Any(line => line.Contains("device '", StringComparison.OrdinalIgnoreCase)
+                    && line.TrimEnd().EndsWith("' not found", StringComparison.OrdinalIgnoreCase));
     }
 
     internal static string? ParseCpuModel(string? cpuInfo)
