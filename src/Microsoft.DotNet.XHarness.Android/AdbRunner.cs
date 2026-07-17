@@ -444,14 +444,13 @@ public class AdbRunner
             _log.LogWarning($"Error restarting ADB server during recovery: {e.Message}");
         }
 
-        // Step 3: Re-check for devices after ADB reset - if a device reappeared, we are done
+        // Step 3: Re-check for devices after ADB reset - if an online device reappeared, we are done
         var recheckResult = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
         _log.LogInformation($"Devices after ADB server reset:{Environment.NewLine}{recheckResult.StandardOutput}");
 
-        var recheckLines = recheckResult.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-        if (recheckLines.Length >= 2)
+        if (HasOnlineDevice(recheckResult.StandardOutput))
         {
-            _log.LogInformation("Device(s) reappeared after ADB server reset; skipping emulator service restart");
+            _log.LogInformation("Online device(s) reappeared after ADB server reset; skipping emulator service restart");
             return true;
         }
 
@@ -488,7 +487,14 @@ public class AdbRunner
             {
                 var emuResult = RunAdbCommand(new[] { "emu", "restart" }, TimeSpan.FromSeconds(30));
                 _log.LogDebug($"adb emu restart output: {emuResult.StandardOutput}");
-                restartAttempted = true;
+                if (emuResult.Succeeded)
+                {
+                    restartAttempted = true;
+                }
+                else
+                {
+                    _log.LogWarning($"adb emu restart failed (exit code {emuResult.ExitCode}):{Environment.NewLine}{emuResult.StandardError}");
+                }
             }
             catch (Exception e)
             {
@@ -502,14 +508,13 @@ public class AdbRunner
             return false;
         }
 
-        // Step 5: Wait for a device to reappear
-        _log.LogInformation("Waiting for emulator to reappear after recovery (max 5 minutes)...");
+        // Step 5: Wait for an online device to reappear
+        _log.LogInformation("Waiting for emulator to come online after recovery (max 5 minutes)...");
         bool deviceAppeared = Retry(
             () =>
             {
                 var r = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
-                var lines = r.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-                return lines.Length >= 2;
+                return HasOnlineDevice(r.StandardOutput);
             },
             retryInterval: TimeSpan.FromSeconds(10),
             retryPeriod: TimeSpan.FromMinutes(5));
@@ -543,6 +548,20 @@ public class AdbRunner
             _log.LogWarning("Emulator appeared but did not complete boot within the timeout after recovery");
             return false;
         }
+    }
+
+    private static bool HasOnlineDevice(string adbDevicesOutput)
+    {
+        foreach (string line in adbDevicesOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries))
+        {
+            string[] parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (parts.Length >= 2 && parts[1].Equals("device", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
