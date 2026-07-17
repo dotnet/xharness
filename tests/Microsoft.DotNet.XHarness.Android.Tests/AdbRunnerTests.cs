@@ -26,6 +26,7 @@ public class AdbRunnerTests : IDisposable
     private static int s_devicesCallCount = 0;
     private static int s_devicesReturnEmptyForNFirstCalls = 0;
     private static bool s_cpuFrequencyFilesMissing = false;
+    private static int s_devicesReturnOfflineForNFirstCalls = 0;
     private readonly Mock<ILogger> _mainLog;
     private readonly Mock<IAdbProcessManager> _processManager;
     private readonly List<AndroidDevice> _fakeDeviceList;
@@ -43,6 +44,7 @@ public class AdbRunnerTests : IDisposable
         s_devicesCallCount = 0;
         s_devicesReturnEmptyForNFirstCalls = 0;
         s_cpuFrequencyFilesMissing = false;
+        s_devicesReturnOfflineForNFirstCalls = 0;
 
         // Fake ADB executable since its path is checked 
         Directory.CreateDirectory(s_scratchAndOutputPath);
@@ -340,6 +342,21 @@ public class AdbRunnerTests : IDisposable
         VerifyAdbCall(Times.Once(), "start-server");
     }
 
+    [Fact]
+    public void TryRecoverEmulator_WhenDeviceStaysOfflineAfterAdbReset_RestartsEmulator()
+    {
+        // The device is listed throughout recovery, but it only becomes usable after the emulator restart.
+        s_devicesReturnOfflineForNFirstCalls = 2;
+        s_bootCompleteCheckTimes = 1;
+
+        var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+        bool result = runner.TryRecoverEmulator();
+
+        Assert.True(result);
+        VerifyAdbCall(Times.AtLeast(3), "devices", "-l");
+        VerifyAdbCall(Times.Once(), "emu", "restart");
+    }
+
     #endregion
 
     #region Helper Functions
@@ -429,7 +446,9 @@ public class AdbRunnerTests : IDisposable
                     int transportId = 1;
                     foreach (var device in _fakeDeviceList)
                     {
-                        string state = device == _fakeDeviceList.Last() ? "offline" : "online";
+                        string state = s_devicesCallCount <= s_devicesReturnOfflineForNFirstCalls || device == _fakeDeviceList.Last()
+                            ? "offline"
+                            : "device";
                         s.AppendLine($"{device.DeviceSerial}          {state} transportid:{transportId++}");
                     }
                 }
