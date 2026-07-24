@@ -1,0 +1,2 @@
+This file exists solely to trigger and observe pull-request CI.
+Created: 2026-07-24T13:38:06Z
