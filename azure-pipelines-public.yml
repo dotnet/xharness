@@ -40,12 +40,15 @@ stages:
           matrix:
             Release:
               _BuildConfig: Release
+              _PublishArgs: ''
             Debug:
               _BuildConfig: Debug
+              _PublishArgs: /p:Publish=false
         steps:
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
+            $(_PublishArgs)
           name: Build
           displayName: Build and run tests
           condition: succeeded()
@@ -81,12 +84,15 @@ stages:
           matrix:
             Release:
               _BuildConfig: Release
+              _PublishArgs: ''
             Debug:
               _BuildConfig: Debug
+              _PublishArgs: /p:Publish=false
         steps:
         - script: eng/common/cibuild.sh
             --configuration $(_BuildConfig)
             --prepareMachine
+            $(_PublishArgs)
           name: Build
           displayName: Build and run tests
           condition: succeeded()
