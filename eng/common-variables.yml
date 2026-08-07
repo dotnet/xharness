@@ -20,7 +20,6 @@ variables:
       value: real
     - name: _BuildConfig
       value: Release
-    # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
     # DotNet-HelixApi-Access provides: HelixApiAccessToken
     - group: DotNet-HelixApi-Access
     - group: SDL_Settings
