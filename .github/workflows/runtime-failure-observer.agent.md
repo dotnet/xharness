@@ -51,10 +51,16 @@ network:
     - helix.dot.net
     - "*.blob.core.windows.net"
 
+pre-agent-steps:
+  - name: Install constrained observer HTTP helper
+    run: |
+      install -D -m 0555 .github/workflows/runtime-failure-observer-http "${RUNNER_TEMP}/gh-aw/observer-tools/bin/runtime-failure-observer-http"
+      printf '%s\n' "${RUNNER_TEMP}/gh-aw/observer-tools/bin" >> "$GITHUB_PATH"
+
 tools:
   github:
     toolsets: [repos, pull_requests, issues, search]
-  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "curl", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "gh", "printf"]
+  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "gh", "printf", "runtime-failure-observer-http:*"]
   edit:
 
 checkout:
@@ -110,7 +116,7 @@ The agent reads `dotnet/runtime` and the failing build logs. It never writes to 
 8. **Same-run dedup cache.** Persist `(exit_code, command, signature_norm)` keys in `/tmp/gh-aw/agent/filed.tsv`. On hit: `dup-this-run`, skip.
 9. **All state under `/tmp/gh-aw/agent/`.**
 10. **AzDO API: anonymous only.** Stay on `https://dev.azure.com/dnceng-public/public/_apis/build/...`.
-11. **Start every shell command with an allow-listed program (`curl`, `jq`, `gh`, `grep`, `printf`, ...).** The harness authorizes by first token only, so a command beginning with `url=...`, `key=...`, or `for` is denied with `Permission denied and could not request permission from user` even when the firewall allows the domain. Inline each URL into a single `curl ... -o <file>` (keep `%24` for `$top`); never pre-bind URLs to variables or loop over `curl`.
+11. **Use only `runtime-failure-observer-http` for AzDO and Helix HTTP reads.** A deterministic pre-agent step installs the repository-owned executable on `PATH` from gh-aw's read-only runtime mount, and the harness authorizes that command by first token. Never invoke the editable workspace copy, `curl`, `python`, or `python3`, and never construct HTTP URLs in shell. The helper is GET-only, constructs the permitted API URLs from constrained IDs, follows only allow-listed redirects, and writes only below `/tmp/gh-aw/agent/`.
 12. **`noop` means a successful scan found no actionable candidate.** Emit it only after all required scan inputs were fetched and evaluated successfully and no PR was produced. Never use `noop` for a blocked or incomplete scan.
 
 ## Pipelines to scan
@@ -144,23 +150,37 @@ These exit codes from `src/Microsoft.DotNet.XHarness.Common/CLI/ExitCode.cs` are
 
 Exit codes outside this table: record `skipped: exit code <n> not in improvement table` and stop.
 
+## HTTP helper commands
+
+The helper exposes only the traversal needed by this observer:
+
+```text
+runtime-failure-observer-http azdo-builds --definition ID [--top 1..10] --output /tmp/gh-aw/agent/NAME.json
+runtime-failure-observer-http azdo-timeline --build-id ID --output /tmp/gh-aw/agent/NAME.json
+runtime-failure-observer-http azdo-log --build-id ID --log-id ID --output /tmp/gh-aw/agent/NAME.log
+runtime-failure-observer-http helix-work-items --job-id UUID --output /tmp/gh-aw/agent/NAME.json
+runtime-failure-observer-http helix-console --job-id UUID --work-item NAME --output /tmp/gh-aw/agent/NAME.log
+```
+
+Always invoke it by the `runtime-failure-observer-http` command name; do not invoke the editable workspace file or its Python interpreter directly. `helix-console` resolves the console URI from the named work item itself so signed blob URLs never need to appear in an agent-generated command.
+
 ## Step 0. Preflight: confirm network egress
 
-Prove the harness will let `curl` reach the public AzDO API before scanning (rule 11):
+Prove the repository-owned helper can reach the public AzDO API before scanning (rule 11):
 
 ```bash
-curl -s "https://dev.azure.com/dnceng-public/public/_apis/build/builds?definitions=154&branchName=refs/heads/main&statusFilter=completed&resultFilter=failed,partiallySucceeded&%24top=1&api-version=7.1" -o /tmp/gh-aw/agent/preflight.json
+runtime-failure-observer-http azdo-builds --definition 154 --top 1 --output /tmp/gh-aw/agent/preflight.json
 jq -r '.count' /tmp/gh-aw/agent/preflight.json
 ```
 
-Valid non-empty JSON: continue. If `curl` itself is denied or unavailable, that is the harness rejecting the command form, not the firewall (`.dev.azure.com` and `.helix.dot.net` are allow-listed). Emit `missing_tool` with `tool: curl` and the denial as the reason, then stop without a PR or `noop`. If `curl` executes but the response is empty, malformed, or lacks the required build data, emit `missing_data` and stop. Never blame the firewall allowlist.
+Valid non-empty JSON: continue. If `runtime-failure-observer-http` is denied, unavailable, or cannot execute, emit `missing_tool` with `tool: runtime-failure-observer-http` and its exact stderr as the reason, then stop without a PR or `noop`. If the helper executes but its output is empty, malformed, or lacks the required build data, emit `missing_data` and stop. Never substitute another HTTP client or blame the firewall allowlist.
 
 ## Step 1. Set up
 
-Run one inlined `curl` per definition id in `154 223 224 225 226 228 260 261 265`, substituting the id in the URL and the `-o` path:
+Run one helper command per definition id in `154 223 224 225 226 228 260 261 265`, substituting the id and output path:
 
 ```bash
-curl -s "https://dev.azure.com/dnceng-public/public/_apis/build/builds?definitions=154&branchName=refs/heads/main&statusFilter=completed&resultFilter=failed,partiallySucceeded&%24top=10&api-version=7.1" -o /tmp/gh-aw/agent/builds-154.json
+runtime-failure-observer-http azdo-builds --definition 154 --top 10 --output /tmp/gh-aw/agent/builds-154.json
 jq -r '.value[] | "\(.id) \(.result) \(.finishTime)"' /tmp/gh-aw/agent/builds-154.json | head
 ```
 
@@ -173,7 +193,7 @@ Every definition's build-list request is required. Apply rule 6 to a denied/unav
 For each `source` (inline the build id in place of `SRCID`):
 
 ```bash
-curl -s "https://dev.azure.com/dnceng-public/public/_apis/build/builds/SRCID/timeline?api-version=7.1" -o "/tmp/gh-aw/agent/timeline-SRCID.json"
+runtime-failure-observer-http azdo-timeline --build-id SRCID --output "/tmp/gh-aw/agent/timeline-SRCID.json"
 ```
 
 Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. A failed leaf with non-null `log.id` is a candidate.
@@ -181,17 +201,21 @@ Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. A failed leaf with n
 Filter to Helix work items only. xharness runs inside Helix work items, not on the AzDO agent. From the `Send to Helix` task log, extract `Sent Helix Job: <GUID>`:
 
 ```bash
-curl -s "<Send to Helix task log url>" -o /tmp/gh-aw/agent/helix-send.log
+runtime-failure-observer-http azdo-log --build-id SRCID --log-id LOGID --output /tmp/gh-aw/agent/helix-send.log
 grep -oE 'Sent Helix Job: [a-f0-9-]+' /tmp/gh-aw/agent/helix-send.log
 ```
 
 For each Helix job, list failing work items (inline the job id in place of `JOBID`):
 
 ```bash
-curl -s "https://helix.dot.net/api/jobs/JOBID/workitems?api-version=2019-06-17" -o "/tmp/gh-aw/agent/helix-JOBID.json"
+runtime-failure-observer-http helix-work-items --job-id JOBID --output "/tmp/gh-aw/agent/helix-JOBID.json"
 ```
 
-A work item is an xharness invocation candidate if `ConsoleOutputUri` contains an xharness command (`xharness apple`, `xharness android`, `xharness wasm`, or `dotnet exec .../Microsoft.DotNet.XHarness.CLI.dll`). Fetch the console and scan for:
+A work item is an xharness invocation candidate if its console contains an xharness command (`xharness apple`, `xharness android`, `xharness wasm`, or `dotnet exec .../Microsoft.DotNet.XHarness.CLI.dll`). Fetch each failing work item's console by its exact `Name`, then scan it:
+
+```bash
+runtime-failure-observer-http helix-console --job-id JOBID --work-item "WORKITEM" --output "/tmp/gh-aw/agent/console-JOBID.log"
+```
 
 - An `xharness` command line (find the last "Running command" line if present, otherwise the launcher script invocation).
 - An exit code line: `Exit code: <n>` or `exited with code <n>` or `ExitCode=<n>`.
@@ -209,7 +233,7 @@ For each work-item failure, extract:
 
 If `exit_code` is not in the improvement table: `skipped: exit code <n> not in improvement table`.
 
-Look back at the previous 5 builds on the same definition. The same `(exit_code, command, signature_norm)` tuple must appear in `>= 2` of them to be considered stable. Otherwise: `skipped: weak signature`.
+Look back at the previous 5 builds on the same definition using `azdo-builds --top 5`, then use the same `azdo-timeline`, `azdo-log`, `helix-work-items`, and `helix-console` traversal. The same `(exit_code, command, signature_norm)` tuple must appear in `>= 2` of them to be considered stable. Otherwise: `skipped: weak signature`.
 
 The history needed for this stability check is required. Apply rule 6 if any required historical build, timeline, work-item, or console request fails; use `skipped: weak signature` only when the successfully fetched history contains fewer than 2 matches.
 
