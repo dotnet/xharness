@@ -67,8 +67,7 @@ safe-outputs:
     create-issue: false
   missing-data:
     create-issue: false
-  report-incomplete:
-    create-issue: false
+  report-incomplete: false
   create-pull-request:
     title-prefix: "[runtime-observer] "
     labels: [infrastructure]
@@ -106,7 +105,7 @@ The agent reads `dotnet/runtime` and the failing build logs. It never writes to 
 3. **Every PR title starts with `[runtime-observer] `.** PRs are opened as drafts.
 4. **Small-fix bounds for complete autofix PRs.** A *complete* fix PR must satisfy all of: `<=` 30 changed lines total, `<=` 2 files (one source + one test), no new public API, no protocol change, no native code change. If the fix needs more, do not silently truncate it: open a clearly-marked best-effort/diagnosability **draft** PR (Step 5) that a human finishes. Best-effort and diagnosability draft PRs may exceed these bounds but must be marked work-in-progress and must still avoid new public API, protocol changes, and native code.
 5. **Don't propose fixes for runtime test bugs.** If the failure is in the test binary itself (assertion in the test code, missing mock, runtime API regression), record `skipped: runtime-side issue`, do not emit `create_pull_request` for that candidate, and continue.
-6. **Never assume; cite only what you fetched this run.** Cite the runtime build URL, the Helix work item URL, the xharness command line, and the exact stderr / exit code in every PR body. Never reconstruct a build id, URL, GUID, exit code, or stderr from memory or inference. If a required tool or request is unavailable, denied, or cannot execute, emit `missing_tool`. If a required request executes but its response is missing, empty, malformed, or lacks required data, emit `missing_data`. For another infrastructure failure that prevents the required scan, emit `report_incomplete`. After any of these failure outputs, stop the run without emitting `noop` or `create_pull_request`.
+6. **Never assume; cite only what you fetched this run.** Cite the runtime build URL, the Helix work item URL, the xharness command line, and the exact stderr / exit code in every PR body. Never reconstruct a build id, URL, GUID, exit code, or stderr from memory or inference. If a required tool or request is unavailable, denied, or otherwise cannot execute, emit `missing_tool`. If a required request executes but its response is missing, empty, malformed, or lacks required data, emit `missing_data`. After either failure output, stop the run without emitting `noop` or `create_pull_request`.
 7. **Dedup.** Before emitting, search open and recently merged PRs / issues in `dotnet/xharness` for the same xharness-signature. On match: `existing-PR #<n>` or `existing-issue #<n>`, do not emit `create_pull_request` for that candidate, and continue.
 8. **Same-run dedup cache.** Persist `(exit_code, command, signature_norm)` keys in `/tmp/gh-aw/agent/filed.tsv`. On hit: `dup-this-run`, skip.
 9. **All state under `/tmp/gh-aw/agent/`.**
