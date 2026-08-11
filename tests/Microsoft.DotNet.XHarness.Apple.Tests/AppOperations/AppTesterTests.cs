@@ -528,7 +528,7 @@ public class AppTesterTests : AppRunTestBase
             .Verify(
                 x => x.ExecuteCommandAsync(
                    "open",
-                   It.Is<IList<string>>(args => args.Contains(_appPath) && args.Contains("--foo=bar") && args.Contains("--foo=bar")),
+                   It.Is<IList<string>>(args => args.Contains(_appPath) && args.Contains("--foo=bar") && args.Contains("--xyz")),
                    _mainLog.Object,
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
