@@ -101,7 +101,7 @@ The agent reads `dotnet/runtime` and the failing build logs. It never writes to 
 
 ## Hard rules
 
-1. **All writes via `safe-outputs`.** No direct `gh pr create`. The fix PR is opened by the `create-pull-request` safe-output. This workflow never opens candidate issues. A scan failure uses the failure safe-outputs in rule 6 and must never produce a fix PR.
+1. **All writes via `safe-outputs`.** No direct `gh pr create`. The fix PR is opened by the `create-pull-request` safe-output. If a detected runtime failure cannot be turned into a fix PR, do not open an issue or emit `create_pull_request` for that candidate. Separately, if the observer cannot complete the scan itself, use the failure safe-outputs in rule 6 and never produce a fix PR for that incomplete scan.
 2. **Cap per run: 2 PRs.** On cap, record `skipped: cap reached` and stop.
 3. **Every PR title starts with `[runtime-observer] `.** PRs are opened as drafts.
 4. **Small-fix bounds for complete autofix PRs.** A *complete* fix PR must satisfy all of: `<=` 30 changed lines total, `<=` 2 files (one source + one test), no new public API, no protocol change, no native code change. If the fix needs more, do not silently truncate it: open a clearly-marked best-effort/diagnosability **draft** PR (Step 5) that a human finishes. Best-effort and diagnosability draft PRs may exceed these bounds but must be marked work-in-progress and must still avoid new public API, protocol changes, and native code.
