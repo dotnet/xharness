@@ -25,8 +25,8 @@ public abstract class AppRunTestBase : IDisposable
     protected const string SimulatorDeviceName = "Test iPhone simulator";
     protected const string DeviceName = "Test iPhone";
 
-    protected static readonly string s_outputPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-    protected static readonly string s_appPath = Path.Combine(s_outputPath, AppName);
+    protected readonly string _outputPath;
+    protected readonly string _appPath;
 
     protected static readonly IHardwareDevice s_mockDevice = Mock.Of<IHardwareDevice>(x =>
         x.BuildVersion == "17A577" &&
@@ -39,14 +39,7 @@ public abstract class AppRunTestBase : IDisposable
         x.ProductType == "iPhone12,1" &&
         x.ProductVersion == "13.0");
 
-    protected readonly AppBundleInformation _appBundleInfo =
-        new(appName: AppName,
-            bundleIdentifier: AppBundleIdentifier,
-            appPath: s_appPath,
-            launchAppPath: s_appPath,
-            supports32b: false,
-            extension: null,
-            bundleExecutable: BundleExecutable);
+    protected readonly AppBundleInformation _appBundleInfo;
 
     protected readonly string _simulatorLogPath = Path.Combine(Path.GetTempPath(), "simulator-logs");
 
@@ -63,6 +56,17 @@ public abstract class AppRunTestBase : IDisposable
 
     protected AppRunTestBase()
     {
+        _outputPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        _appPath = Path.Combine(_outputPath, AppName);
+        _appBundleInfo = new AppBundleInformation(
+            appName: AppName,
+            bundleIdentifier: AppBundleIdentifier,
+            appPath: _appPath,
+            launchAppPath: _appPath,
+            supports32b: false,
+            extension: null,
+            bundleExecutable: BundleExecutable);
+
         _mainLog = new Mock<IFileBackedLog>();
 
         _processManager = new Mock<IMlaunchProcessManager>();
@@ -76,7 +80,7 @@ public abstract class AppRunTestBase : IDisposable
         _logs = new Mock<ILogs>();
         _logs
             .SetupGet(x => x.Directory)
-            .Returns(Path.Combine(s_outputPath, "logs"));
+            .Returns(Path.Combine(_outputPath, "logs"));
         _logs
             .Setup(x => x.CreateFile($"{AppBundleIdentifier}-mocked_timestamp.log", It.IsAny<LogType>()))
             .Returns($"./{AppBundleIdentifier}-mocked_timestamp.log");
@@ -111,22 +115,16 @@ public abstract class AppRunTestBase : IDisposable
             .Setup(x => x.GetLocalIpAddresses())
             .Returns(new[] { IPAddress.Loopback, IPAddress.IPv6Loopback });
 
-        Directory.CreateDirectory(s_outputPath);
+        Directory.CreateDirectory(_outputPath);
     }
 
     public void Dispose()
     {
-        try
+        if (Directory.Exists(_outputPath))
         {
-            Directory.Delete(s_outputPath, true);
+            Directory.Delete(_outputPath, true);
         }
-        catch
-        {
-            // Concurrency can cause these
-        }
-        finally
-        {
-            GC.SuppressFinalize(this);
-        }
+
+        GC.SuppressFinalize(this);
     }
 }
