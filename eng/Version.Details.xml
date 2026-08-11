@@ -11,5 +11,9 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>212960245c74330fbfb71776563638061e35446c</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.DotNet.Helix.JobMonitor" Version="11.0.0-beta.26407.8">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>212960245c74330fbfb71776563638061e35446c</Sha>
+    </Dependency>
   </ToolsetDependencies>
 </Dependencies>

@@ -9,6 +9,7 @@ stages:
     displayName: E2E ${{ parameters.displayName }}
     dependsOn: Build_OSX
     jobs:
+    - template: /eng/common/core-templates/job/helix-job-monitor.yml
     - template: /eng/common/templates/jobs/jobs.yml
       parameters:
         workspace:
@@ -43,6 +44,7 @@ stages:
               --projects ${{ parameters.testProject }}
               --warnAsError false
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/${{ parameters.name }}.binlog
+              /p:EnableHelixJobMonitor=true
               /p:RestoreUsingNuGetTargets=false
             displayName: Run tests in Helix
             env:
