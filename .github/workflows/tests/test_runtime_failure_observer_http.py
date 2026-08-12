@@ -119,6 +119,27 @@ class OutputPathTests(unittest.TestCase):
                 with self.assertRaises(observer_http.TransportError):
                     observer_http._validate_output_path(output, suffixes)
 
+    def test_rejects_existing_directory(self):
+        output = Path(self.temp.name) / "directory.json"
+        output.mkdir()
+        with self.assertRaisesRegex(
+            observer_http.TransportError, "regular file"
+        ):
+            observer_http._validate_output_path(str(output), (".json",))
+
+    def test_rejects_symlink_parent_during_write(self):
+        real_parent = Path(self.temp.name) / "real-parent"
+        real_parent.mkdir()
+        symlink_parent = Path(self.temp.name) / "symlink-parent"
+        symlink_parent.symlink_to(real_parent, target_is_directory=True)
+
+        with self.assertRaisesRegex(
+            observer_http.TransportError, "real directory"
+        ):
+            observer_http._write_output(
+                b"data", str(symlink_parent / "output.json"), (".json",)
+            )
+
 
 class RequestBehaviorTests(unittest.TestCase):
     def setUp(self):

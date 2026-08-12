@@ -4,8 +4,9 @@ import argparse
 import json
 import os
 import re
+import secrets
+import stat
 import sys
-import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -252,37 +253,91 @@ def _validate_output_path(value: str, suffixes: tuple[str, ...]) -> Path:
     if not candidate.is_absolute():
         raise TransportError("output path must be absolute")
 
-    root = OUTPUT_ROOT.resolve()
-    resolved = candidate.resolve(strict=False)
+    root = Path(os.path.abspath(OUTPUT_ROOT))
+    candidate = Path(os.path.abspath(candidate))
     try:
-        resolved.relative_to(root)
+        candidate.relative_to(root)
     except ValueError as error:
         raise TransportError(f"output path must be under {OUTPUT_ROOT}/") from error
-    if resolved == root or resolved.suffix.lower() not in suffixes:
+
+    resolved_root = root.resolve()
+    resolved = candidate.resolve(strict=False)
+    try:
+        resolved.relative_to(resolved_root)
+    except ValueError as error:
+        raise TransportError(f"output path must be under {OUTPUT_ROOT}/") from error
+    if candidate == root or candidate.suffix.lower() not in suffixes:
         raise TransportError(f"output path must end in one of: {', '.join(suffixes)}")
-    if candidate.exists() and candidate.is_symlink():
+    if candidate.is_symlink():
         raise TransportError("output path must not be a symlink")
-    return resolved
+    if candidate.exists() and not candidate.is_file():
+        raise TransportError("output path must be a regular file")
+    return candidate
+
+
+def _open_output_parent(output: Path) -> tuple[int, str]:
+    root = Path(os.path.abspath(OUTPUT_ROOT))
+    relative = output.relative_to(root)
+    root.mkdir(parents=True, exist_ok=True)
+
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    current_fd = -1
+    try:
+        current_fd = os.open(root, flags)
+        for component in relative.parts[:-1]:
+            try:
+                os.mkdir(component, mode=0o700, dir_fd=current_fd)
+            except FileExistsError:
+                pass
+            next_fd = os.open(component, flags, dir_fd=current_fd)
+            os.close(current_fd)
+            current_fd = next_fd
+        return current_fd, relative.name
+    except OSError as error:
+        if current_fd >= 0:
+            os.close(current_fd)
+        raise TransportError("output parent must be a real directory") from error
+
+
+def _reject_invalid_output(parent_fd: int, output_name: str) -> None:
+    try:
+        output_stat = os.stat(output_name, dir_fd=parent_fd, follow_symlinks=False)
+    except FileNotFoundError:
+        return
+    if not stat.S_ISREG(output_stat.st_mode):
+        raise TransportError("output path must be a regular file")
 
 
 def _write_output(data: bytes, value: str, suffixes: tuple[str, ...]) -> None:
     output = _validate_output_path(value, suffixes)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    descriptor, temporary_name = tempfile.mkstemp(
-        dir=output.parent, prefix=f".{output.name}.", suffix=".tmp"
-    )
+    parent_fd, output_name = _open_output_parent(output)
+    temporary_name = f".{output_name}.{secrets.token_hex(8)}.tmp"
     try:
+        _reject_invalid_output(parent_fd, output_name)
+        descriptor = os.open(
+            temporary_name,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+            0o600,
+            dir_fd=parent_fd,
+        )
         with os.fdopen(descriptor, "wb") as temporary:
             temporary.write(data)
             temporary.flush()
             os.fsync(temporary.fileno())
-        os.replace(temporary_name, output)
-    except BaseException:
+        os.replace(
+            temporary_name,
+            output_name,
+            src_dir_fd=parent_fd,
+            dst_dir_fd=parent_fd,
+        )
+    except OSError as error:
         try:
-            os.unlink(temporary_name)
+            os.unlink(temporary_name, dir_fd=parent_fd)
         except FileNotFoundError:
             pass
-        raise
+        raise TransportError("could not write output") from error
+    finally:
+        os.close(parent_fd)
     print(f"wrote {len(data)} bytes to {output}")
 
 
