@@ -78,6 +78,14 @@ public class TestResultsAnalyzerTests : IDisposable
     }
 
     [Fact]
+    public void EmptyXUnitResultsMeanNoFailures()
+    {
+        var path = WriteResultsFile(@"<assemblies />");
+
+        Assert.Equal(0, TestResultsAnalyzer.GetFailedTestCount(path));
+    }
+
+    [Fact]
     public void UnknownFormatIsNotEvaluated()
     {
         var path = WriteResultsFile(@"<some-other-format failed=""3"" />");

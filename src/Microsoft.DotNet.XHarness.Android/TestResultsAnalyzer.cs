@@ -51,11 +51,7 @@ public static class TestResultsAnalyzer
                     ? new[] { root }
                     : root.Elements().Where(e => e.Name.LocalName == "assembly").ToArray();
 
-                if (assemblies.Length == 0)
-                {
-                    return null;
-                }
-
+                // An empty <assemblies /> element is a valid result file with no failures
                 return assemblies.Sum(assembly => GetIntAttribute(assembly, "failed") + GetIntAttribute(assembly, "errors"));
 
             // NUnit v2 format
