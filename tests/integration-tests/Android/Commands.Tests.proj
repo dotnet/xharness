@@ -6,21 +6,20 @@
 
   <PropertyGroup>
     <TestPackageName>System.Numerics.Vectors.Tests</TestPackageName>
-    <XHarnessX86TestApkUrl>$(AssetsBaseUri)/android/test-apk/x86/$(TestPackageName)-x86.zip</XHarnessX86TestApkUrl>
-    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\android\x86</TestAppDestinationDir>
+    <TestArchitecture>x86_64</TestArchitecture>
+    <XHarnessTestApkUrl>$(AssetsBaseUri)/android/test-apk/$(TestArchitecture)/$(TestPackageName)-$(TestArchitecture).apk</XHarnessTestApkUrl>
+    <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\android\$(TestArchitecture)</TestAppDestinationDir>
   </PropertyGroup>
 
   <Target Name="TestAndroid" BeforeTargets="CoreTest">
-    <DownloadFile SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(TestAppDestinationDir)" SkipUnchangedFiles="True" Retries="5">
+    <DownloadFile SourceUrl="$(XHarnessTestApkUrl)" DestinationFolder="$(TestAppDestinationDir)" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
 
     <Message Text="Downloaded @(DownloadedApkFile) for XHarness Test purposes" Importance="High" />
-    <Unzip SourceFiles="@(DownloadedApkFile)" DestinationFolder="$(TestAppDestinationDir)" />
-    <Message Text="Extracted to $(TestAppDestinationDir)" Importance="High" />
 
     <ItemGroup>
-      <XHarnessApkToTest Include="$(TestAppDestinationDir)\$(TestPackageName)-x86.apk">
+      <XHarnessApkToTest Include="@(DownloadedApkFile)">
         <AndroidPackageName>net.dot.$(TestPackageName)</AndroidPackageName>
         <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
         <WorkItemTimeout>00:30:00</WorkItemTimeout>
@@ -28,10 +27,10 @@
         <![CDATA[
           set -ex;
           deviceId=`xharness android device --app="$app"`;
-          xharness android install --device-id="$deviceId" --output-directory="$output_directory" --package-name="$package_name" --app="$app" --device-arch=x86 --verbosity=Debug;
+          xharness android install --device-id="$deviceId" --output-directory="$output_directory" --package-name="$package_name" --app="$app" --device-arch=$(TestArchitecture) --verbosity=Debug;
           set +e;
           result=0;
-          xharness android run --device-id="$deviceId" --output-directory="$output_directory" --package-name="$package_name" --verbosity=Debug;
+          xharness android run --device-id="$deviceId" --output-directory="$output_directory" --package-name="$package_name" --instrumentation=net.dot.MonoRunner --verbosity=Debug;
           ((result|=$?));
           xharness android uninstall --device-id="$deviceId" --package-name="$package_name";
           ((result|=$?));

@@ -24,6 +24,7 @@ public class InstrumentationRunner
     private const string ShortMessageVariableName = "shortMsg";
     private const string ProcessCrashedShortMessage = "Process crashed";
     private const string InstrumentationResultPrefix = "INSTRUMENTATION_RESULT:";
+    private const string TestResultsFileType = "test-results";
 
     private readonly ILogger _logger;
     private readonly AdbRunner _runner;
@@ -105,6 +106,13 @@ public class InstrumentationRunner
 
         // Determine exit code and emit summary after all operations complete
         ExitCode exitCode = DetermineExitCode(result, logCatSucceeded, processCrashed, failurePullingFiles, instrumentationExitCode, expectedExitCode);
+
+        // Some applications report a zero exit code even when tests failed so we double check the test results
+        if (exitCode == ExitCode.SUCCESS && expectedExitCode == (int)ExitCode.SUCCESS && ContainsFailedTests(producedFiles))
+        {
+            exitCode = ExitCode.TESTS_FAILED;
+        }
+
         EmitRunSummary(exitCode, instrumentationExitCode, producedFiles, outputDirectory);
 
         return exitCode;
@@ -146,6 +154,30 @@ public class InstrumentationRunner
         }
 
         return ExitCode.SUCCESS;
+    }
+
+    private bool ContainsFailedTests(List<DiagnosticsFile> producedFiles)
+    {
+        bool failedTestsFound = false;
+
+        foreach (var resultFile in producedFiles.Where(file => file.Type == TestResultsFileType && !string.IsNullOrEmpty(file.Path)))
+        {
+            int? failedTests = TestResultsAnalyzer.GetFailedTestCount(resultFile.Path!);
+
+            if (failedTests is null)
+            {
+                _logger.LogDebug($"Unable to determine the number of failed tests from '{resultFile.Path}'");
+                continue;
+            }
+
+            if (failedTests > 0)
+            {
+                _logger.LogError($"Instrumentation reported a successful exit code but '{resultFile.Name}' contains {failedTests} failed test(s)");
+                failedTestsFound = true;
+            }
+        }
+
+        return failedTestsFound;
     }
 
     private (int? ExitCode, bool Crashed, bool FilePullFailed) ParseInstrumentationResult(string apkPackageName, string outputDirectory, string result, List<DiagnosticsFile> producedFiles)
@@ -231,7 +263,7 @@ public class InstrumentationRunner
                 producedFiles.Add(new DiagnosticsFile
                 {
                     Name = Path.GetFileName(resultFile),
-                    Type = "test-results",
+                    Type = TestResultsFileType,
                     Path = Path.Combine(outputDirectory, Path.GetFileName(resultFile)),
                 });
             }
