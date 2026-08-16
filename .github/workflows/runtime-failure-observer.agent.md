@@ -71,7 +71,6 @@ checkout:
   fetch-depth: 50
 
 safe-outputs:
-  report-failure-as-issue: false
   noop:
     report-as-issue: false
   missing-tool:
