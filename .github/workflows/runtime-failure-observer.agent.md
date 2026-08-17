@@ -51,6 +51,16 @@ network:
     - helix.dot.net
     - "*.blob.core.windows.net"
 
+# The conclusion job still receives the structured signal after this step fails.
+post-steps:
+  - name: Fail incomplete observer scan
+    if: always()
+    run: |
+      if [ -f /tmp/gh-aw/agent_output.json ] && jq -e 'any(.items[]?; .type == "missing_tool" or .type == "missing_data" or .type == "report_incomplete")' /tmp/gh-aw/agent_output.json > /dev/null; then
+        echo "::error::Runtime Failure Observer scan could not complete."
+        exit 1
+      fi
+
 tools:
   github:
     toolsets: [repos, pull_requests, issues, search]
