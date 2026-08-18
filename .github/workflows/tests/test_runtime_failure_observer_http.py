@@ -77,6 +77,22 @@ class UrlValidationTests(unittest.TestCase):
                 {"helix-console"},
             )
 
+    def test_rejects_undocumented_blob_query_parameter(self):
+        url = (
+            "https://helixre107v0xdeko0k025g8.blob.core.windows.net/"
+            "dotnet-runtime-refs-heads-main/job/1/console.1234.log?sk=value"
+        )
+        with self.assertRaisesRegex(
+            observer_http.TransportError, "unexpected Helix console blob"
+        ):
+            observer_http._validate_url(url, {"helix-console"})
+
+    def test_helix_work_items_use_specific_family(self):
+        url = observer_http._helix_work_items_url(
+            "00000000-0000-0000-0000-000000000000"
+        )
+        observer_http._validate_url(url, {"helix-work-items"})
+
     def test_redirect_handler_rejects_family_escape(self):
         handler = observer_http._ValidatingRedirectHandler({"azdo"})
         with self.assertRaises(observer_http.TransportError):

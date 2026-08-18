@@ -56,7 +56,6 @@ _BLOB_QUERY_KEYS = {
     "si",
     "sig",
     "sip",
-    "sk",
     "ske",
     "skoid",
     "sks",
@@ -155,7 +154,7 @@ def _validate_helix_api_url(
     if _HELIX_WORK_ITEMS_PATH.fullmatch(parts.path) and query == {
         "api-version": "2019-06-17"
     }:
-        return "helix-api"
+        return "helix-work-items"
     if _HELIX_CONSOLE_PATH.fullmatch(parts.path) and not query:
         return "helix-console"
     raise TransportError("URL is not a permitted Helix endpoint")
@@ -478,12 +477,12 @@ def _run(args: argparse.Namespace) -> None:
         )
     elif args.command == "helix-work-items":
         data = _request_bytes(
-            _helix_work_items_url(args.job_id), {"helix-api"}, JSON_LIMIT
+            _helix_work_items_url(args.job_id), {"helix-work-items"}, JSON_LIMIT
         )
         _write_output(data, args.output, (".json",))
     elif args.command == "helix-console":
         work_items = _request_bytes(
-            _helix_work_items_url(args.job_id), {"helix-api"}, JSON_LIMIT
+            _helix_work_items_url(args.job_id), {"helix-work-items"}, JSON_LIMIT
         )
         console_url = _console_url(work_items, args.work_item)
         _write_output(
