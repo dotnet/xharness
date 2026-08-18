@@ -2,4 +2,4 @@
 *.sh text eol=lf
 .github/workflows/runtime-failure-observer-http text eol=lf
 
-.github/workflows/*.lock.yml linguist-generated=true merge=ours
+.github/workflows/*.lock.yml linguist-generated=true

@@ -28,6 +28,8 @@ imports:
 
 environment: copilot-pat-pool
 
+model: gpt-5.6-terra
+
 engine:
   id: copilot
   env:
@@ -56,6 +58,16 @@ pre-agent-steps:
     run: |
       install -D -m 0555 .github/workflows/runtime-failure-observer-http "${RUNNER_TEMP}/gh-aw/observer-tools/bin/runtime-failure-observer-http"
       printf '%s\n' "${RUNNER_TEMP}/gh-aw/observer-tools/bin" >> "$GITHUB_PATH"
+
+# The conclusion job still receives the structured signal after this step fails.
+post-steps:
+  - name: Fail incomplete observer scan
+    if: always()
+    run: |
+      if [ -f /tmp/gh-aw/agent_output.json ] && jq -e 'any(.items[]?; .type == "missing_tool" or .type == "missing_data" or .type == "report_incomplete")' /tmp/gh-aw/agent_output.json > /dev/null; then
+        echo "::error::Runtime Failure Observer scan could not complete."
+        exit 1
+      fi
 
 tools:
   github:

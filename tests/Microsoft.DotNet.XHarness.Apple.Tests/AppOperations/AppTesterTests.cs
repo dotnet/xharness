@@ -63,8 +63,6 @@ public class AppTesterTests : AppRunTestBase
         var factory3 = new Mock<ITestReporterFactory>();
         factory3.SetReturnsDefault(_testReporter.Object);
         _testReporterFactory = factory3.Object;
-
-        Directory.CreateDirectory(s_outputPath);
     }
 
     [Theory]
@@ -530,7 +528,7 @@ public class AppTesterTests : AppRunTestBase
             .Verify(
                 x => x.ExecuteCommandAsync(
                    "open",
-                   It.Is<IList<string>>(args => args.Contains(s_appPath) && args.Contains("--foo=bar") && args.Contains("--foo=bar")),
+                   It.Is<IList<string>>(args => args.Contains(_appPath) && args.Contains("--foo=bar") && args.Contains("--xyz")),
                    _mainLog.Object,
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),

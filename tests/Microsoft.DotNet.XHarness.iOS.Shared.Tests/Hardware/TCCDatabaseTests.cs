@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
@@ -86,6 +87,7 @@ public class TCCDatabaseTests
     [InlineData("com.apple.CoreSimulator.SimRuntime.iOS-7-1", 1)]
     public async Task AgreeToPromptsAsyncSuccessTest(string runtime, int dbVersion)
     {
+        const string unixTimestampPlaceholder = "<unix-timestamp>";
         string bundleIdentifier = "my-bundle-identifier";
         var services = new string[] {
                     "kTCCServiceAll",
@@ -121,7 +123,7 @@ public class TCCDatabaseTests
                 case 3:
                     foreach (var s in services)
                     {
-                        expectedArgs.AppendFormat("INSERT OR REPLACE INTO access VALUES('{0}','{1}',0,1,0,NULL,NULL,NULL,'UNUSED',NULL,NULL,{2});\n", s, id, DateTimeOffset.Now.ToUnixTimeSeconds());
+                        expectedArgs.AppendFormat("INSERT OR REPLACE INTO access VALUES('{0}','{1}',0,1,0,NULL,NULL,NULL,'UNUSED',NULL,NULL,{2});\n", s, id, unixTimestampPlaceholder);
                     }
                     break;
             }
@@ -136,11 +138,24 @@ public class TCCDatabaseTests
                 return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
             });
 
+        long earliestUnixTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         await _database.AgreeToPromptsAsync(runtime, _dataPath, _udid, _executionLog.Object, bundleIdentifier);
+        long latestUnixTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
         Assert.Equal("sqlite3", processName);
         // assert that the sql is present
         Assert.Contains(_dataPath, args);
-        Assert.Contains(expectedArgs.ToString(), args);
+        Assert.Equal(2, args.Count);
+        // Production generates each timestamp while building the SQL, so the values can span second boundaries.
+        MatchCollection timestamps = Regex.Matches(args[1], @"(?<=,'UNUSED',NULL,NULL,)[0-9]+(?=\);)");
+        Assert.Equal(dbVersion == 3 ? services.Length * 2 : 0, timestamps.Count);
+        foreach (System.Text.RegularExpressions.Match match in timestamps)
+        {
+            Assert.True(long.TryParse(match.Value, out long timestamp));
+            Assert.InRange(timestamp, earliestUnixTimestamp, latestUnixTimestamp);
+        }
+
+        string actualSql = Regex.Replace(args[1], @"(?<=,'UNUSED',NULL,NULL,)[0-9]+(?=\);)", unixTimestampPlaceholder);
+        Assert.Equal(expectedArgs.ToString(), actualSql);
     }
 }
