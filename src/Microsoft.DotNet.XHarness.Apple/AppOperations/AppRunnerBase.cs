@@ -178,9 +178,12 @@ public abstract class AppRunnerBase
 
         _mainLog.WriteLine("Launching the app");
 
+        // Capture mlaunch stdout so the app's reported exit code can be detected.
+        var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
+
         if (waitForExit)
         {
-            var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+            var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, appOutputLog, appOutputLog, timeout, cancellationToken: cancellationToken);
             simulatorScanToken?.Cancel();
             return result;
         }
@@ -194,7 +197,7 @@ public abstract class AppRunnerBase
 
         _mainLog.WriteLine("Waiting for the app to launch..");
 
-        var runTask = _processManager.ExecuteCommandAsync(mlaunchArguments, Log.CreateAggregatedLog(_mainLog, scanLog), timeout, cancellationToken: cancellationToken);
+        var runTask = _processManager.ExecuteCommandAsync(mlaunchArguments, Log.CreateAggregatedLog(_mainLog, scanLog), appOutputLog, appOutputLog, timeout, cancellationToken: cancellationToken);
         await Task.WhenAny(runTask, appLaunched.Task);
 
         if (!appLaunched.Task.IsCompleted)

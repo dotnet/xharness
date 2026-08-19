@@ -51,4 +51,14 @@ public class DefaultSimulatorSelectorTests
         // The Booted one
         Assert.Equal(simulator2, simulator);
     }
+
+    [Theory]
+    [InlineData(true, "com.apple.CoreSimulator.SimDeviceType.iPhone-6s")]
+    [InlineData(false, "com.apple.CoreSimulator.SimDeviceType.iPhone-11-Pro")]
+    public void GetDeviceTypeForIosSimulator(bool minVersion, string expectedDeviceType)
+    {
+        var deviceType = _simulatorSelector.GetDeviceType(new TestTargetOs(TestTarget.Simulator_iOS64, null), minVersion);
+
+        Assert.Equal(expectedDeviceType, deviceType);
+    }
 }
