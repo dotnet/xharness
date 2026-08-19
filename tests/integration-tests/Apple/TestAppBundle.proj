@@ -9,8 +9,12 @@
 
   <PropertyGroup>
     <AppStorageUrl>$(AssetsBaseUri)/ios/test-app/$(TestTarget)</AppStorageUrl>
-    <XHarnessTestAppBundleUrl>$(AppStorageUrl)/$(TestAppBundleName).zip</XHarnessTestAppBundleUrl>
     <TestAppDestinationDir>$(ArtifactsTmpDir)test-app\$(TestTarget)</TestAppDestinationDir>
+
+    <!-- Other release/8.0 projects still consume the original architecture-neutral assets. -->
+    <AppStorageUrl Condition="'$(TestArch)' != ''">$(AssetsBaseUri)/ios/test-app-new/$(TestTarget)/$(TestArch)</AppStorageUrl>
+    <TestAppDestinationDir Condition="'$(TestArch)' != ''">$(ArtifactsTmpDir)test-app-new\$(TestTarget)\$(TestArch)</TestAppDestinationDir>
+    <XHarnessTestAppBundleUrl>$(AppStorageUrl)/$(TestAppBundleName).zip</XHarnessTestAppBundleUrl>
   </PropertyGroup>
 
   <Target Name="Build" Returns="@(XHarnessAppFoldersToTest)">
