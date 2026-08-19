@@ -5,27 +5,27 @@
 
     <!-- apple test / ios-simulator-64 -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=System.Numerics.Vectors.Tests.app</AdditionalProperties>
+      <AdditionalProperties>TestTarget=ios-simulator-64;TestArch=x64;TestAppBundleName=System.Numerics.Vectors.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple run / ios-simlator-64 -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=ios-simulator-64;TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
+      <AdditionalProperties>TestTarget=ios-simulator-64;TestArch=x64;TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple test / maccatalyst -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=System.Collections.NonGeneric.Tests.app</AdditionalProperties>
+      <AdditionalProperties>TestTarget=maccatalyst;TestArch=x64;TestAppBundleName=System.Collections.NonGeneric.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple run / maccatalyst -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=maccatalyst;TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
+      <AdditionalProperties>TestTarget=maccatalyst;TestArch=x64;TestAppBundleName=iOS.Simulator.PInvoke.Test.app;IncludesTestRunner=false;ExpectedExitCode=42</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple test / tvos-simulator -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=tvos-simulator;TestAppBundleName=Microsoft.Extensions.Configuration.Ini.Tests.app</AdditionalProperties>
+      <AdditionalProperties>TestTarget=tvos-simulator;TestArch=x64;TestAppBundleName=Microsoft.Extensions.Configuration.Ini.Tests.app</AdditionalProperties>
     </XHarnessAppleProject>
   </ItemGroup>
 
