@@ -203,27 +203,47 @@ public class AppTester : AppRunnerBase, IAppTester
                 timeout,
                 null,
                 (level, message) => _mainLog.WriteLine(message));
+            IResultFileHandler resultFileHandler = new ResultFileHandler(_processManager, _mainLog);
+            bool usesSimulatorResultFile = isSimulator &&
+                deviceListener.TestLog != null &&
+                resultFileHandler.IsSimulatorVersionSupported(device.OSVersion);
 
-            deviceListener.ConnectedTask
-                .TimeoutAfter(testLaunchTimeout)
-                .ContinueWith(async (Task<bool> task) =>
+            // iOS 18+ simulator apps write results to their data container instead of connecting over TCP.
+            if (usesSimulatorResultFile)
+            {
+                if (!await resultFileHandler.ClearSimulatorResultsAsync(
+                    runMode,
+                    device.OSVersion,
+                    device.UDID,
+                    appInformation.BundleIdentifier,
+                    cancellationToken))
                 {
-                    testReporter.LaunchCallback(task);
+                    throw new InvalidOperationException("Failed to clear previous test results from simulator.");
+                }
+            }
+            else
+            {
+                deviceListener.ConnectedTask
+                    .TimeoutAfter(testLaunchTimeout)
+                    .ContinueWith(async (Task<bool> task) =>
+                    {
+                        testReporter.LaunchCallback(task);
 
-                    // Stop listening so that TCP doesn't get connected before here and when we evaluate why we failed
-                    // If no TCP happens, app didn't start in time => APP_LAUNCH_TIMEOUT
-                    // If TCP connects during this method or right after - a very narrow race condition - we would categorize it as TIMED_OUT
-                    // because we would consider the app run started and actually timing out.
-                    if (!deviceListener.ConnectedTask.IsCompleted)
-                    {
-                        await deviceListener.StopAsync();
-                    }
-                    else if (task.IsCompleted && task.Result)
-                    {
-                        ListenerConnected = true;
-                    }
-                }, cancellationToken)
-                .DoNotAwait();
+                        // Stop listening so that TCP doesn't get connected before here and when we evaluate why we failed
+                        // If no TCP happens, app didn't start in time => APP_LAUNCH_TIMEOUT
+                        // If TCP connects during this method or right after - a very narrow race condition - we would categorize it as TIMED_OUT
+                        // because we would consider the app run started and actually timing out.
+                        if (!deviceListener.ConnectedTask.IsCompleted)
+                        {
+                            await deviceListener.StopAsync();
+                        }
+                        else if (task.IsCompleted && task.Result)
+                        {
+                            ListenerConnected = true;
+                        }
+                    }, cancellationToken)
+                    .DoNotAwait();
+            }
 
             _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{device.Name}' ***");
 
@@ -251,10 +271,13 @@ public class AppTester : AppRunnerBase, IAppTester
                     mlaunchArguments,
                     crashReporter,
                     testReporter,
+                    resultFileHandler,
+                    deviceListener,
                     (ISimulatorDevice)device,
                     companionDevice as ISimulatorDevice,
                     timeout,
-                    cancellationToken);
+                    cancellationToken,
+                    runMode);
             }
             else
             {
@@ -304,10 +327,13 @@ public class AppTester : AppRunnerBase, IAppTester
         MlaunchArguments mlaunchArguments,
         ICrashSnapshotReporter crashReporter,
         ITestReporter testReporter,
+        IResultFileHandler resultFileHandler,
+        ISimpleListener deviceListener,
         ISimulatorDevice simulator,
         ISimulatorDevice? companionSimulator,
         TimeSpan timeout,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        RunMode runMode)
     {
         var result = await RunSimulatorApp(
             appInformation,
@@ -320,6 +346,17 @@ public class AppTester : AppRunnerBase, IAppTester
             cancellationToken);
 
         await testReporter.CollectSimulatorResult(result);
+
+        if (deviceListener.TestLog != null)
+        {
+            await resultFileHandler.CopySimulatorResultsAsync(
+                runMode,
+                simulator.OSVersion,
+                simulator.UDID,
+                appInformation.BundleIdentifier,
+                deviceListener.TestLog.FullPath,
+                cancellationToken);
+        }
     }
 
     private async Task RunDeviceTests(

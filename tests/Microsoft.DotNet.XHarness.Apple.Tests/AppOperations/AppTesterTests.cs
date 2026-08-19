@@ -75,6 +75,7 @@ public class AppTesterTests : AppRunTestBase
         var testResultFilePath = Path.GetTempFileName();
         var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
         File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
+        _listener.SetupGet(x => x.TestLog).Returns(listenerLogFile);
 
         _logs
             .Setup(x => x.Create("test-ios-simulator-64-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
@@ -93,6 +94,17 @@ public class AppTesterTests : AppRunTestBase
             .Returns(captureLog.Object);
 
         _listenerFactory.Setup(f => f.UseTunnel).Returns(useTunnel);
+        _processManager
+            .Setup(x => x.ExecuteCommandAsync(
+                "/bin/bash",
+                It.IsAny<IList<string>>(),
+                _mainLog.Object,
+                _mainLog.Object,
+                _mainLog.Object,
+                TimeSpan.FromMinutes(1),
+                null,
+                It.IsAny<CancellationToken?>()))
+            .ReturnsAsync(new ProcessExecutionResult { ExitCode = 0 });
 
         // Act
         var appTester = new AppTester(
@@ -129,11 +141,46 @@ public class AppTesterTests : AppRunTestBase
                 x => x.ExecuteCommandAsync(
                    It.Is<MlaunchArguments>(args => args.AsCommandLine() == expectedArgs),
                    _mainLog.Object,
+                   It.IsAny<ILog>(),
+                   It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
                    It.IsAny<Dictionary<string, string>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
+
+        _processManager.Verify(
+            x => x.ExecuteCommandAsync(
+                "/bin/bash",
+                It.Is<IList<string>>(args =>
+                    args.Count == 2 &&
+                    args[0] == "-c" &&
+                    args[1].StartsWith("cp ") &&
+                    args[1].Contains("get_app_container") &&
+                    args[1].Contains("/Library/Caches/Documents/test-results.xml")),
+                _mainLog.Object,
+                _mainLog.Object,
+                _mainLog.Object,
+                TimeSpan.FromMinutes(1),
+                null,
+                It.IsAny<CancellationToken?>()),
+            Times.Once);
+
+        _processManager.Verify(
+            x => x.ExecuteCommandAsync(
+                "/bin/bash",
+                It.Is<IList<string>>(args =>
+                    args.Count == 2 &&
+                    args[0] == "-c" &&
+                    args[1].StartsWith("rm -f") &&
+                    args[1].Contains("/Library/Caches/Documents/test-results.xml")),
+                _mainLog.Object,
+                _mainLog.Object,
+                _mainLog.Object,
+                TimeSpan.FromMinutes(1),
+                null,
+                It.IsAny<CancellationToken?>()),
+            Times.Once);
 
         _processManager
             .Verify(

@@ -51,4 +51,14 @@ public class DefaultSimulatorSelectorTests
         // The Booted one
         Assert.Equal(simulator2, simulator);
     }
+
+    [Fact]
+    public void SelectsIOS26CompatibleDeviceType()
+    {
+        var target = new TestTargetOs(TestTarget.Simulator_iOS64, "26.0");
+
+        Assert.Equal(
+            "com.apple.CoreSimulator.SimDeviceType.iPhone-11-Pro",
+            _simulatorSelector.GetDeviceType(target, minVersion: false));
+    }
 }
