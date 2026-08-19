@@ -148,6 +148,12 @@ Other parameters can be overrided as well if needed.
 
 Currently we support Xunit and NUnit test assemblies but the `Microsoft.DotNet.XHarness.Tests.Runners` supports implementation of custom runner too.
 
+### Android test-result ownership
+
+Both `xharness android test` and `xharness android run` use the same final result handling in XHarness. Android instrumentations must report a `return-code` and can report a results file using `test-results-path` (xUnit v2 or NUnit v3) or the legacy `nunit2-results-path` (NUnit v2). When instrumentation reports the expected successful exit code, XHarness pulls recognized result files and returns `TESTS_FAILED` if any report failed tests.
+
+This XHarness analysis is the common final safeguard for standard and custom runners, including NativeAOT-style runners that produce xUnit v2 XML. Custom runners should still propagate failed tests through their instrumentation return code. That runner-side check remains necessary when a result file is missing, cannot be pulled, is malformed, uses an unknown format, or when a nonzero expected exit code intentionally defines success.
+
 ## Development instructions
 When working on XHarness, there are couple of neat hacks that can improve the inner loop.
 The repository can either be built using regular .NET, assuming you have new enough version:
