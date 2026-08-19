@@ -5,7 +5,7 @@
 
     <!-- apple test / ios-simulator-64 -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=ios-simulator-64;TestArch=x64;TestAppBundleName=System.Numerics.Vectors.Tests.app</AdditionalProperties>
+      <AdditionalProperties>TestTarget=ios-simulator-64;TestArch=x64;TestAppBundleName=System.Numerics.Vectors.Tests.app;IncludesTestRunner=false;ExpectedExitCode=0</AdditionalProperties>
     </XHarnessAppleProject>
 
     <!-- apple run / ios-simlator-64 -->
@@ -25,7 +25,7 @@
 
     <!-- apple test / tvos-simulator -->
     <XHarnessAppleProject Include="TestAppBundle.proj">
-      <AdditionalProperties>TestTarget=tvos-simulator;TestArch=x64;TestAppBundleName=Microsoft.Extensions.Configuration.Ini.Tests.app</AdditionalProperties>
+      <AdditionalProperties>TestTarget=tvos-simulator;TestArch=x64;TestAppBundleName=Microsoft.Extensions.Configuration.Ini.Tests.app;IncludesTestRunner=false;ExpectedExitCode=0</AdditionalProperties>
     </XHarnessAppleProject>
   </ItemGroup>
 
