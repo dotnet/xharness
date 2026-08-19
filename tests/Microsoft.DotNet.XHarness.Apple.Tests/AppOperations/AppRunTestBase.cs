@@ -94,6 +94,7 @@ public abstract class AppRunTestBase : IDisposable
         _mockSimulator = Mock.Of<ISimulatorDevice>(x =>
             x.UDID == "58F21118E4D34FD69EAB7860BB9B38A0" &&
             x.Name == SimulatorDeviceName &&
+            x.OSVersion == "Simulator 26.0" &&
             x.LogPath == _simulatorLogPath &&
             x.SystemLog == Path.Combine(_simulatorLogPath, "system.log"));
 
