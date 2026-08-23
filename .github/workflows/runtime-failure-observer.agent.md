@@ -128,7 +128,7 @@ The agent reads `dotnet/runtime` and the failing build logs. It never writes to 
 8. **Same-run dedup cache.** Persist `(exit_code, command, signature_norm)` keys in `/tmp/gh-aw/agent/filed.tsv`. On hit: `dup-this-run`, skip.
 9. **All state under `/tmp/gh-aw/agent/`.**
 10. **AzDO API: anonymous only.** Stay on `https://dev.azure.com/dnceng-public/public/_apis/build/...`.
-11. **Use only `runtime-failure-observer-http` for AzDO and Helix HTTP reads.** A deterministic pre-agent step installs the repository-owned executable on `PATH` from gh-aw's read-only runtime mount, and the harness authorizes that command by first token. Never invoke the editable workspace copy, `curl`, `python`, or `python3`, and never construct HTTP URLs in shell. The helper is GET-only, constructs the permitted API URLs from constrained IDs, follows only allow-listed redirects, and writes only below `/tmp/gh-aw/agent/`.
+11. **Use only `runtime-failure-observer-http` for AzDO and Helix HTTP reads.** A deterministic pre-agent step installs the repository-owned executable on `PATH` from gh-aw's read-only runtime mount, and the harness authorizes that command by first token. Never invoke the editable workspace copy, `curl`, `python`, or `python3`, and never construct HTTP URLs in shell. Invoke each helper request and each follow-up validation in its own shell tool call; never chain helper requests or use shell loops or variables. The helper is GET-only, constructs the permitted API URLs from constrained IDs, follows only allow-listed redirects, and writes only below `/tmp/gh-aw/agent/`.
 12. **`noop` means a successful scan found no actionable candidate.** Emit it only after all required scan inputs were fetched and evaluated successfully and no PR was produced. Never use `noop` for a blocked or incomplete scan.
 
 ## Pipelines to scan
@@ -189,10 +189,11 @@ Valid non-empty JSON: continue. If `runtime-failure-observer-http` is denied, un
 
 ## Step 1. Set up
 
-Run one helper command per definition id in `154 223 224 225 226 228 260 261 265`, substituting the id and output path:
+Run one helper command per definition id in `154 223 224 225 226 228 260 261 265`, substituting the id and output path. Validate each response in a separate shell tool call:
 
 ```bash
 runtime-failure-observer-http azdo-builds --definition 154 --top 10 --output /tmp/gh-aw/agent/builds-154.json
+jq -e '(.count | type) == "number" and (.value | type) == "array"' /tmp/gh-aw/agent/builds-154.json
 jq -r '.value[] | "\(.id) \(.result) \(.finishTime)"' /tmp/gh-aw/agent/builds-154.json | head
 ```
 
