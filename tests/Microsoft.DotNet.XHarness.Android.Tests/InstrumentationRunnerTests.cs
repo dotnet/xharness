@@ -29,7 +29,11 @@ public class InstrumentationRunnerTests : IDisposable
 
     public void Dispose()
     {
-        Directory.Delete(_tempDirectory, true);
+        if (Directory.Exists(_tempDirectory))
+        {
+            Directory.Delete(_tempDirectory, true);
+        }
+
         GC.SuppressFinalize(this);
     }
 
