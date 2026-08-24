@@ -207,6 +207,7 @@ public class CrashSnapshotReporter : ICrashSnapshotReporter
             string content = File.ReadAllText(path);
             using var reader = new StringReader(content);
             string firstLine = reader.ReadLine();
+            string headerLine = firstLine?.TrimStart('\uFEFF', ' ', '\t');
 
             string bundleId = null;
             string processName = null;
@@ -214,10 +215,10 @@ public class CrashSnapshotReporter : ICrashSnapshotReporter
             string timestamp = null;
             int? processId = null;
 
-            if (!string.IsNullOrWhiteSpace(firstLine) &&
-                firstLine.TrimStart('\uFEFF', ' ', '\t').StartsWith("{", StringComparison.Ordinal))
+            if (!string.IsNullOrWhiteSpace(headerLine) &&
+                headerLine.StartsWith("{", StringComparison.Ordinal))
             {
-                using (JsonDocument header = JsonDocument.Parse(firstLine))
+                using (JsonDocument header = JsonDocument.Parse(headerLine))
                 {
                     JsonElement root = header.RootElement;
                     bundleId = GetString(root, "bundleID");

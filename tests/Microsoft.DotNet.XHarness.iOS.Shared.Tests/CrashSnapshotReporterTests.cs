@@ -52,9 +52,10 @@ public class CrashReportSnapshotTests : IDisposable
     }
 
     [Theory]
-    [InlineData("{\"captureTime\":\"2026-08-24 14:00:00.00 +0200\",\"pid\":42,\"procName\":\"Sample-iPhone\",\"bundleInfo\":{\"CFBundleIdentifier\":\"com.example.sample\"}}", 42)]
-    [InlineData("{", null)]
-    public async Task DeviceCaptureTest(string payload, int? expectedProcessId)
+    [InlineData("{\"captureTime\":\"2026-08-24 14:00:00.00 +0200\",\"pid\":42,\"procName\":\"Sample-iPhone\",\"bundleInfo\":{\"CFBundleIdentifier\":\"com.example.sample\"}}", 42, false)]
+    [InlineData("{\"captureTime\":\"2026-08-24 14:00:00.00 +0200\",\"pid\":42,\"procName\":\"Sample-iPhone\",\"bundleInfo\":{\"CFBundleIdentifier\":\"com.example.sample\"}}", 42, true)]
+    [InlineData("{", null, false)]
+    public async Task DeviceCaptureTest(string payload, int? expectedProcessId, bool headerHasBom)
     {
         var tempFilePath = Path.GetTempFileName();
 
@@ -95,9 +96,12 @@ public class CrashReportSnapshotTests : IDisposable
         await snapshotReport.StartCaptureAsync();
 
         File.WriteAllLines(tempFilePath, new[] { "Sample-iPhone" });
+        string header =
+            "{\"app_name\":\"Sample-iPhone\",\"timestamp\":\"2026-08-24 14:00:00.00 +0200\",\"bundleID\":\"com.example.sample\",\"bug_type\":\"309\"}";
         File.WriteAllText(
             crashLogPath,
-            "{\"app_name\":\"Sample-iPhone\",\"timestamp\":\"2026-08-24 14:00:00.00 +0200\",\"bundleID\":\"com.example.sample\",\"bug_type\":\"309\"}" +
+            (headerHasBom ? "\uFEFF" : string.Empty) +
+            header +
             Environment.NewLine +
             payload);
 

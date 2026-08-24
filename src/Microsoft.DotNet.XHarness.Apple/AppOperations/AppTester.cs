@@ -677,9 +677,9 @@ public class AppTester : AppRunnerBase, IAppTester
             return;
         }
 
-        LaunchDiagnostics.TestProtocolStarted = LaunchDiagnostics.TestResultFile.CopyAttempts > 0
-            ? null
-            : testReporter.TestExecutionStarted;
+        LaunchDiagnostics.TestProtocolStarted = testReporter.TestExecutionStarted
+            ? true
+            : LaunchDiagnostics.TestResultFile.CopyAttempts > 0 ? null : false;
         LaunchDiagnostics.TestEndSignalDetected = AppEndSignalDetected;
         LaunchDiagnostics.CrashReport = crashReporter.CaptureDiagnostics ?? new AppleCrashReportDiagnostics();
         if (LaunchDiagnostics.TestResultFile.CopyAttempts == 0)
