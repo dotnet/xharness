@@ -88,10 +88,14 @@ class UrlValidationTests(unittest.TestCase):
             observer_http._validate_url(url, {"helix-console"})
 
     def test_helix_work_items_use_specific_family(self):
-        url = observer_http._helix_work_items_url(
-            "00000000-0000-0000-0000-000000000000"
-        )
+        job_id = "00000000-0000-0000-0000-000000000000"
+        url = observer_http._helix_work_items_url(job_id)
         observer_http._validate_url(url, {"helix-work-items"})
+        console_url = observer_http._helix_console_url(
+            job_id, "runtime tests/arm64"
+        )
+        observer_http._validate_url(console_url, {"helix-console"})
+        self.assertIn("runtime%20tests%2Farm64/console", console_url)
 
     def test_redirect_handler_rejects_family_escape(self):
         handler = observer_http._ValidatingRedirectHandler({"azdo"})
@@ -194,6 +198,8 @@ class RequestBehaviorTests(unittest.TestCase):
 
 
 class HelixTraversalTests(unittest.TestCase):
+    JOB_ID = "00000000-0000-0000-0000-000000000000"
+
     def test_console_url_is_selected_by_exact_work_item_name(self):
         payload = b"""[
           {
@@ -203,7 +209,22 @@ class HelixTraversalTests(unittest.TestCase):
         ]"""
         self.assertIn(
             "console.1.log",
-            observer_http._console_url(payload, "runtime-tests"),
+            observer_http._console_url(payload, self.JOB_ID, "runtime-tests"),
+        )
+
+    def test_console_url_uses_api_for_deadletter_sentinel(self):
+        payload = b"""[
+          {
+            "Name": "runtime tests/arm64",
+            "ConsoleOutputUri": "https://dotnet.github.io/core-eng/helix-workitem-deadletter.txt"
+          }
+        ]"""
+        self.assertEqual(
+            observer_http._console_url(
+                payload, self.JOB_ID, "runtime tests/arm64"
+            ),
+            "https://helix.dot.net/api/2019-06-17/jobs/"
+            f"{self.JOB_ID}/workitems/runtime%20tests%2Farm64/console",
         )
 
     def test_console_url_rejects_untrusted_metadata(self):
@@ -214,7 +235,7 @@ class HelixTraversalTests(unittest.TestCase):
           }
         ]"""
         with self.assertRaises(observer_http.TransportError):
-            observer_http._console_url(payload, "runtime-tests")
+            observer_http._console_url(payload, self.JOB_ID, "runtime-tests")
 
 
 if __name__ == "__main__":
