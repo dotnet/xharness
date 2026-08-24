@@ -178,9 +178,12 @@ public abstract class AppRunnerBase
 
         _mainLog.WriteLine("Launching the app");
 
+        // Capture mlaunch output because simctl writes the app exit code to stdout.
+        var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
+
         if (waitForExit)
         {
-            var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, timeout, cancellationToken: cancellationToken);
+            var result = await _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, appOutputLog, appOutputLog, timeout, cancellationToken: cancellationToken);
             simulatorScanToken?.Cancel();
             return result;
         }
@@ -194,7 +197,8 @@ public abstract class AppRunnerBase
 
         _mainLog.WriteLine("Waiting for the app to launch..");
 
-        var runTask = _processManager.ExecuteCommandAsync(mlaunchArguments, Log.CreateAggregatedLog(_mainLog, scanLog), timeout, cancellationToken: cancellationToken);
+        var launchOutputLog = Log.CreateAggregatedLog(appOutputLog, scanLog);
+        var runTask = _processManager.ExecuteCommandAsync(mlaunchArguments, _mainLog, launchOutputLog, launchOutputLog, timeout, cancellationToken: cancellationToken);
         await Task.WhenAny(runTask, appLaunched.Task);
 
         if (!appLaunched.Task.IsCompleted)
