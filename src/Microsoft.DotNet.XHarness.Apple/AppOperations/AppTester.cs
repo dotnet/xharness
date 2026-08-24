@@ -6,9 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common;
+using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.Common.Utilities;
 using Microsoft.DotNet.XHarness.iOS.Shared;
@@ -23,6 +25,7 @@ namespace Microsoft.DotNet.XHarness.Apple;
 public interface IAppTester
 {
     bool ListenerConnected { get; }
+    AppleLaunchDiagnostics? LaunchDiagnostics { get; }
 
     Task<(TestExecutingResult Result, string ResultMessage)> TestApp(
         AppBundleInformation appInformation,
@@ -58,6 +61,15 @@ public interface IAppTester
 /// </summary>
 public class AppTester : AppRunnerBase, IAppTester
 {
+    private static readonly Regex[] s_appExitCodeRegexes =
+    {
+        new(@"The app '[^']+' exited with exit code (?<exitCode>-?\d+)", RegexOptions.Compiled),
+        new(@"The app terminated with the exit code (?<exitCode>-?\d+)\.", RegexOptions.Compiled),
+        new(@"terminated \(with exit code '(?<exitCode>-?\d+)' and/or crashing signal", RegexOptions.Compiled),
+        new(@"DOTNET\.APP_EXIT_CODE:\s*(?<exitCode>-?\d+)\s*$", RegexOptions.Compiled),
+        new(@"Service exited with abnormal code:\s*(?<exitCode>-?\d+)\s*$", RegexOptions.Compiled),
+    };
+
     private readonly IMlaunchProcessManager _processManager;
     private readonly ISimpleListenerFactory _listenerFactory;
     private readonly ICrashSnapshotReporterFactory _snapshotReporterFactory;
@@ -73,6 +85,7 @@ public class AppTester : AppRunnerBase, IAppTester
     /// This is used later to determine if a cause for a failed run is a failing TCP connection.
     /// </summary>
     public bool ListenerConnected { get; private set; }
+    public AppleLaunchDiagnostics? LaunchDiagnostics { get; private set; }
 
     public AppTester(
         IMlaunchProcessManager processManager,
@@ -111,6 +124,8 @@ public class AppTester : AppRunnerBase, IAppTester
         string[]? skippedTestClasses = null,
         CancellationToken cancellationToken = default)
     {
+        LaunchDiagnostics = CreateLaunchDiagnostics(appInformation);
+
         var testLog = _logs.Create($"test-{TestTarget.MacCatalyst.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
         var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
 
@@ -169,6 +184,7 @@ public class AppTester : AppRunnerBase, IAppTester
     {
         var runMode = target.Platform.ToRunMode();
         var isSimulator = target.Platform.IsSimulator();
+        LaunchDiagnostics = CreateLaunchDiagnostics(appInformation);
 
         var testLog = _logs.Create($"test-{target.AsString()}-{_helpers.Timestamp}.log", LogType.TestLog.ToString(), timestamp: false);
 
@@ -187,9 +203,7 @@ public class AppTester : AppRunnerBase, IAppTester
             var deviceListenerPort = deviceListener.InitializeAndGetPort();
             deviceListener.StartAsync();
 
-            using var crashLogs = new Logs(_logs.Directory);
-
-            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: !isSimulator, device.Name);
+            ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, _logs, isDevice: !isSimulator, device.Name, appInformation);
             using ITestReporter testReporter = _testReporterFactory.Create(
                 _mainLog,
                 _mainLog,
@@ -315,7 +329,9 @@ public class AppTester : AppRunnerBase, IAppTester
             }
 
             // Check the final status, copy all the required data
-            return await testReporter.ParseResult();
+            var result = await testReporter.ParseResult();
+            CompleteLaunchDiagnostics(testReporter, crashReporter, deviceListener);
+            return result;
         }
     }
 
@@ -344,6 +360,7 @@ public class AppTester : AppRunnerBase, IAppTester
             waitForExit: true,
             cancellationToken);
 
+        RecordLaunchResult(result, SimulatorApplicationLog);
         await testReporter.CollectSimulatorResult(result);
 
         // On iOS 18 and later, transferring results over a TCP tunnel isn’t supported.
@@ -358,6 +375,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 simulator.UDID,
                 appInformation.BundleIdentifier,
                 deviceListener.TestLog.FullPath);
+            RecordResultFileCopy(resultFileHandler, runMode, resultsCopied);
 
             // If results weren't copied, it likely means the app crashed before tests could run
             // Try to retrieve the crash report, but only if the test run didn't already complete.
@@ -371,13 +389,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 }
                 else
                 {
-                    _mainLog.WriteLine("Test results file not found, app may have crashed before tests started.");
-                    await resultFileHandler.CopyCrashReportAsync(
-                        simulator.UDID,
-                        simulator.Name,
-                        appInformation,
-                        _mainLog,
-                        isSimulator: true);
+                    _mainLog.WriteLine("Test results file not found. Checking the pre-launch crash report snapshot for a matching report.");
                 }
             }
 
@@ -448,6 +460,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 envVars,
                 cancellationToken: cancellationToken));
 
+            RecordLaunchResult(result, appOutputLog as IReadableLog);
             await testReporter.CollectDeviceResult(result);
         }
         finally
@@ -480,6 +493,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 device.UDID,
                 appInformation.BundleIdentifier,
                 deviceListener.TestLog.FullPath);
+            RecordResultFileCopy(resultFileHandler, runMode, resultsCopied);
 
             // If results weren't copied, it likely means the app crashed before tests could run
             // Try to retrieve the crash report, but only if the test run didn't already complete.
@@ -493,13 +507,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 }
                 else
                 {
-                    _mainLog.WriteLine("Test results file not found, app may have crashed before tests started.");
-                    await resultFileHandler.CopyCrashReportAsync(
-                        device.UDID,
-                        device.Name,
-                        appInformation,
-                        _mainLog,
-                        isSimulator: false);
+                    _mainLog.WriteLine("Test results file not found. Checking the pre-launch crash report snapshot for a matching report.");
                 }
             }
 
@@ -539,9 +547,7 @@ public class AppTester : AppRunnerBase, IAppTester
         deviceListener.StartAsync();
         var (enableCoverage, coverageFileName) = GetCoverageSettings(extraEnvVariables);
 
-        using var crashLogs = new Logs(_logs.Directory);
-
-        ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, crashLogs, isDevice: false, null);
+        ICrashSnapshotReporter crashReporter = _snapshotReporterFactory.Create(_mainLog, _logs, isDevice: false, null, appInformation);
         IResultFileHandler resultFileHandler = new ResultFileHandler(_processManager, _mainLog);
         using ITestReporter testReporter = _testReporterFactory.Create(
             _mainLog,
@@ -602,6 +608,7 @@ public class AppTester : AppRunnerBase, IAppTester
             await crashReporter.StartCaptureAsync();
 
             var result = await RunMacCatalystApp(appInformation, appOutputLog, timeout, waitForExit: true, extraAppArguments, envVariables, combinedCancellationToken.Token);
+            RecordLaunchResult(result, appOutputLog as IReadableLog);
             await testReporter.CollectSimulatorResult(result);
 
             if (enableCoverage)
@@ -626,7 +633,113 @@ public class AppTester : AppRunnerBase, IAppTester
             deviceListener.Cancel();
         }
 
-        return await testReporter.ParseResult();
+        var parsedResult = await testReporter.ParseResult();
+        CompleteLaunchDiagnostics(testReporter, crashReporter, deviceListener);
+        return parsedResult;
+    }
+
+    private static AppleLaunchDiagnostics CreateLaunchDiagnostics(AppBundleInformation appInformation)
+        => new()
+        {
+            BundleId = appInformation.BundleIdentifier,
+        };
+
+    private void RecordLaunchResult(ProcessExecutionResult result, IReadableLog? appOutputLog)
+    {
+        if (LaunchDiagnostics is null)
+        {
+            return;
+        }
+
+        LaunchDiagnostics.LauncherExitCode = result.ExitCode;
+        LaunchDiagnostics.AppExitCode = TryReadAppExitCode(appOutputLog);
+    }
+
+    private void RecordResultFileCopy(IResultFileHandler resultFileHandler, RunMode runMode, bool resultsCopied)
+    {
+        if (LaunchDiagnostics is null)
+        {
+            return;
+        }
+
+        LaunchDiagnostics.TestResultFile.Path = ResultFileHandler.GetAppContainerSourcePath(runMode, "test-results.xml");
+        LaunchDiagnostics.TestResultFile.CopyAttempts = resultFileHandler.LastCopyAttempts;
+        LaunchDiagnostics.TestResultFile.Exists = resultsCopied;
+    }
+
+    private void CompleteLaunchDiagnostics(
+        ITestReporter testReporter,
+        ICrashSnapshotReporter crashReporter,
+        ISimpleListener deviceListener)
+    {
+        if (LaunchDiagnostics is null)
+        {
+            return;
+        }
+
+        LaunchDiagnostics.TestProtocolStarted = LaunchDiagnostics.TestResultFile.CopyAttempts > 0
+            ? null
+            : testReporter.TestExecutionStarted;
+        LaunchDiagnostics.TestEndSignalDetected = AppEndSignalDetected;
+        LaunchDiagnostics.CrashReport = crashReporter.CaptureDiagnostics ?? new AppleCrashReportDiagnostics();
+        if (LaunchDiagnostics.TestResultFile.CopyAttempts == 0)
+        {
+            LaunchDiagnostics.TestResultFile.Path = deviceListener.TestLog?.FullPath ?? string.Empty;
+            LaunchDiagnostics.TestResultFile.Exists =
+                deviceListener.TestLog is not null && File.Exists(deviceListener.TestLog.FullPath);
+        }
+    }
+
+    private static int? TryReadAppExitCode(IReadableLog? appOutputLog)
+    {
+        if (appOutputLog is null)
+        {
+            return null;
+        }
+
+        if (appOutputLog is IFileBackedLog fileBackedLog && !File.Exists(fileBackedLog.FullPath))
+        {
+            return null;
+        }
+
+        StreamReader? reader;
+        try
+        {
+            reader = appOutputLog.GetReader();
+        }
+        catch (FileNotFoundException)
+        {
+            return null;
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return null;
+        }
+
+        if (reader is null)
+        {
+            return null;
+        }
+
+        using (reader)
+        {
+            string? line;
+            int? exitCode = null;
+            while ((line = reader.ReadLine()) is not null)
+            {
+                foreach (Regex regex in s_appExitCodeRegexes)
+                {
+                    Match match = regex.Match(line);
+                    if (match.Success && int.TryParse(match.Groups["exitCode"].Value, out int parsedExitCode))
+                    {
+                        exitCode = parsedExitCode;
+                        break;
+                    }
+                }
+            }
+
+            return exitCode;
+        }
     }
 
     private static (bool EnableCoverage, string CoverageFileName) GetCoverageSettings(IEnumerable<(string, string?)> extraEnvVariables)

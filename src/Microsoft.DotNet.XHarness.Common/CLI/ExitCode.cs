@@ -116,5 +116,10 @@ public enum ExitCode
     /// Failure when TCP tunnel between XHarness and the device fail
     /// or the device cannot connect to TCP tunnel
     /// </summary>
-    TCP_CONNECTION_FAILED = 92
+    TCP_CONNECTION_FAILED = 92,
+
+    /// <summary>
+    /// The Apple app exited before the test protocol started without a matching crash report
+    /// </summary>
+    APP_EXITED_BEFORE_TEST_START = 93
 }

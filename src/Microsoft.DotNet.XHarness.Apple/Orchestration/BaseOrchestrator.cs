@@ -44,6 +44,7 @@ public abstract class BaseOrchestrator : IDisposable
     private readonly IErrorKnowledgeBase _errorKnowledgeBase;
     private readonly IDiagnosticsData _diagnosticsData;
     private readonly IHelpers _helpers;
+    private readonly Dictionary<string, object?> _runSummaryData = new();
 
     private bool _lldbFileCreated;
 
@@ -121,6 +122,18 @@ public abstract class BaseOrchestrator : IDisposable
         }
 
         return exitCode;
+    }
+
+    protected void SetRunSummaryData(string key, object? value)
+    {
+        if (value is null)
+        {
+            _runSummaryData.Remove(key);
+        }
+        else
+        {
+            _runSummaryData[key] = value;
+        }
     }
 
     private async Task<ExitCode> OrchestrateOperationInternal(
@@ -420,7 +433,8 @@ public abstract class BaseOrchestrator : IDisposable
             architecture: null,
             instrumentationExitCode: null,
             producedFiles: producedFiles,
-            environment: _diagnosticsData.Environment);
+            environment: _diagnosticsData.Environment,
+            additionalData: _runSummaryData);
 
         RunSummaryEmitter.WriteResultJsonFile(
             _logs.Directory,
@@ -431,7 +445,8 @@ public abstract class BaseOrchestrator : IDisposable
             architecture: null,
             instrumentationExitCode: null,
             producedFiles: producedFiles,
-            environment: _diagnosticsData.Environment);
+            environment: _diagnosticsData.Environment,
+            additionalData: _runSummaryData);
     }
 
     public void Dispose()

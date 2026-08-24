@@ -17,6 +17,7 @@ public interface ITestReporter : IDisposable
 {
     ILog CallbackLog { get; }
     bool? Success { get; }
+    bool TestExecutionStarted { get; }
     CancellationToken CancellationToken { get; }
 
     void LaunchCallback(Task<bool> launchResult);

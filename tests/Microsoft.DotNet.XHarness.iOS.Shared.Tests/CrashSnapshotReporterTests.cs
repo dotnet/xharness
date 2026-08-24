@@ -51,17 +51,25 @@ public class CrashReportSnapshotTests : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    [Fact]
-    public async Task DeviceCaptureTest()
+    [Theory]
+    [InlineData("{\"captureTime\":\"2026-08-24 14:00:00.00 +0200\",\"pid\":42,\"procName\":\"Sample-iPhone\",\"bundleInfo\":{\"CFBundleIdentifier\":\"com.example.sample\"}}", 42)]
+    [InlineData("{", null)]
+    public async Task DeviceCaptureTest(string payload, int? expectedProcessId)
     {
         var tempFilePath = Path.GetTempFileName();
 
         const string deviceName = "Sample-iPhone";
-        const string crashLogPath = "/path/to/crash.log";
-        const string symbolicateLogPath = "/path/to/" + deviceName + ".symbolicated.log";
+        string crashLogPath = Path.Combine(_tempXcodeRoot, "crash.log");
+        string symbolicateLogPath = Path.Combine(_tempXcodeRoot, "crash.symbolicated.log");
 
         var crashReport = Mock.Of<IFileBackedLog>(x => x.FullPath == crashLogPath);
         var symbolicateReport = Mock.Of<IFileBackedLog>(x => x.FullPath == symbolicateLogPath);
+        var inventoryLog = Mock.Of<IFileBackedLog>();
+
+        _logs.Setup(x => x.Create("crash-reports-before.txt", "Crash reports before launch", false))
+            .Returns(inventoryLog);
+        _logs.Setup(x => x.Create("crash-reports-after.txt", "Crash reports after launch", false))
+            .Returns(inventoryLog);
 
         // Crash report is added
         _logs.Setup(x => x.Create(deviceName, "Crash report: " + deviceName, It.IsAny<bool>()))
@@ -79,6 +87,7 @@ public class CrashReportSnapshotTests : IDisposable
             _logs.Object,
             true,
             deviceName,
+            new AppBundleInformation(deviceName, "com.example.sample", "/tmp", "/tmp", supports32b: false),
             () => tempFilePath);
 
         File.WriteAllLines(tempFilePath, new[] { "crash 1", "crash 2" });
@@ -86,11 +95,21 @@ public class CrashReportSnapshotTests : IDisposable
         await snapshotReport.StartCaptureAsync();
 
         File.WriteAllLines(tempFilePath, new[] { "Sample-iPhone" });
+        File.WriteAllText(
+            crashLogPath,
+            "{\"app_name\":\"Sample-iPhone\",\"timestamp\":\"2026-08-24 14:00:00.00 +0200\",\"bundleID\":\"com.example.sample\",\"bug_type\":\"309\"}" +
+            Environment.NewLine +
+            payload);
 
         await snapshotReport.EndCaptureAsync(TimeSpan.FromSeconds(10));
 
         // Verify
         _logs.VerifyAll();
+        Assert.Equal(2, snapshotReport.CaptureDiagnostics.ReportsBeforeLaunch);
+        Assert.Equal(1, snapshotReport.CaptureDiagnostics.ReportsCreatedDuringRun);
+        Assert.Equal("Sample-iPhone", snapshotReport.CaptureDiagnostics.MatchedReport.Name);
+        Assert.Equal("com.example.sample", snapshotReport.CaptureDiagnostics.MatchedReport.BundleId);
+        Assert.Equal(expectedProcessId, snapshotReport.CaptureDiagnostics.MatchedReport.ProcessId);
 
         // List of crash reports is retrieved
         _processManager.Verify(

@@ -185,6 +185,51 @@ public class InstrumentationRunnerSummaryTests
         Assert.Equal(35, environmentJson.GetProperty("target").GetProperty("apiLevel").GetInt32());
     }
 
+    [Fact]
+    public void EmitJsonResultBlock_ContainsAdditionalData()
+    {
+        var additionalData = new Dictionary<string, object?>
+        {
+            ["appleLaunch"] = new
+            {
+                bundleId = "net.dot.Tests",
+                launcherExitCode = 1,
+                appExitCode = 1,
+                testProtocolStarted = false,
+                testResultFile = new
+                {
+                    path = "/Documents/test-results.xml",
+                    copyAttempts = 4,
+                    exists = false,
+                },
+                crashReport = new
+                {
+                    reportsBeforeLaunch = 12,
+                    reportsCreatedDuringRun = 0,
+                },
+            },
+        };
+
+        RunSummaryEmitter.EmitRunSummary(
+            _mockLogger.Object,
+            ExitCode.APP_EXITED_BEFORE_TEST_START,
+            "apple",
+            "iPhone",
+            "iOS 18",
+            null,
+            null,
+            new List<DiagnosticsFile>(),
+            additionalData: additionalData);
+
+        var appleLaunch = ExtractJsonFromLogs().GetProperty("appleLaunch");
+        Assert.Equal("net.dot.Tests", appleLaunch.GetProperty("bundleId").GetString());
+        Assert.Equal(1, appleLaunch.GetProperty("appExitCode").GetInt32());
+        Assert.False(appleLaunch.GetProperty("testProtocolStarted").GetBoolean());
+        Assert.Equal(4, appleLaunch.GetProperty("testResultFile").GetProperty("copyAttempts").GetInt32());
+        Assert.Equal(12, appleLaunch.GetProperty("crashReport").GetProperty("reportsBeforeLaunch").GetInt32());
+        Assert.Equal("APP_EXITED_BEFORE_TEST_START", ExtractJsonFromLogs().GetProperty("exitCodeName").GetString());
+    }
+
     private JsonElement ExtractJsonFromLogs()
     {
         var jsonMessage = _loggedMessages.Find(m => m.Contains("<<XHARNESS_RESULT_START>>"));

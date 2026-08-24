@@ -130,7 +130,8 @@ public class AppRunner : AppRunnerBase, IAppRunner
             _mainLog,
             crashLogs,
             isDevice: !isSimulator,
-            device.Name);
+            device.Name,
+            appInformation);
 
         _mainLog.WriteLine($"*** Executing '{appInformation.AppName}' on {target.AsString()} '{device.Name}' ***");
 

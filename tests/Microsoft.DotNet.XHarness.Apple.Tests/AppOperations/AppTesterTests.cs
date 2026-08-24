@@ -253,6 +253,14 @@ public class AppTesterTests : AppRunTestBase
             .Setup(f => f.UseTunnel)
             .Returns(useTunnel);
 
+        string appOutputPath = _appLog.FullPath;
+        File.WriteAllText(
+            appOutputPath,
+            $"The app '{AppBundleIdentifier}' exited with exit code 7{Environment.NewLine}");
+        Mock.Get(_appLog)
+            .Setup(l => l.GetReader())
+            .Returns(() => new StreamReader(File.OpenRead(appOutputPath)));
+
         // Act
         var appTester = new AppTester(
             _processManager.Object,
@@ -280,6 +288,9 @@ public class AppTesterTests : AppRunTestBase
         // Verify
         Assert.Equal(TestExecutingResult.Succeeded, result);
         Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
+        Assert.NotNull(appTester.LaunchDiagnostics);
+        Assert.Equal(0, appTester.LaunchDiagnostics!.LauncherExitCode);
+        Assert.Equal(7, appTester.LaunchDiagnostics.AppExitCode);
 
         var expectedArgs = GetExpectedDeviceMlaunchArgs(
             useTunnel: useTunnel,
@@ -312,6 +323,7 @@ public class AppTesterTests : AppRunTestBase
         _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
 
         deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
+        File.Delete(appOutputPath);
     }
 
     [Theory]

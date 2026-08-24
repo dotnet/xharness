@@ -185,6 +185,63 @@ public class TestOrchestratorTests : OrchestratorTestBase
     }
 
     [Fact]
+    public async Task OrchestrateAppExitedBeforeTestStartReturnsDistinctExitCode()
+    {
+        var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
+        var launchDiagnostics = new AppleLaunchDiagnostics
+        {
+            BundleId = BundleIdentifier,
+            LauncherExitCode = 1,
+            AppExitCode = 1,
+            TestResultFile = new AppleTestResultFileDiagnostics
+            {
+                Path = "/Documents/test-results.xml",
+                CopyAttempts = 4,
+            },
+        };
+
+        _appTester.SetupGet(x => x.LaunchDiagnostics).Returns(launchDiagnostics);
+        _appTester
+            .Setup(x => x.TestApp(
+                _appBundleInformation,
+                testTarget,
+                _device.Object,
+                null,
+                TimeSpan.FromMinutes(30),
+                It.IsAny<TimeSpan>(),
+                false,
+                It.IsAny<IEnumerable<string>>(),
+                It.IsAny<IEnumerable<(string, string?)>>(),
+                It.IsAny<XmlResultJargon>(),
+                It.IsAny<string[]?>(),
+                It.IsAny<string[]?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((
+                TestExecutingResult.AppExitedBeforeTestStart,
+                "App exited before the test protocol started and no matching crash report was found"));
+
+        var result = await _testOrchestrator.OrchestrateTest(
+            AppPath,
+            testTarget,
+            DeviceName,
+            TimeSpan.FromMinutes(30),
+            TimeSpan.FromMinutes(3),
+            CommunicationChannel.UsbTunnel,
+            XmlResultJargon.xUnit,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
+            includeWirelessDevices: false,
+            resetSimulator: false,
+            enableLldb: false,
+            signalAppEnd: false,
+            Array.Empty<(string, string?)>(),
+            Array.Empty<string>(),
+            CancellationToken.None);
+
+        Assert.Equal(ExitCode.APP_EXITED_BEFORE_TEST_START, result);
+    }
+
+    [Fact]
     public async Task OrchestrateFailedSimulatorTestTest()
     {
         // Setup
@@ -474,8 +531,10 @@ public class TestOrchestratorTests : OrchestratorTestBase
         _appUninstaller.VerifyNoOtherCalls();
     }
 
-    [Fact]
-    public async Task OrchestrateDeviceTestWithFailingTcpTest()
+    [Theory]
+    [InlineData(TestExecutingResult.Crashed)]
+    [InlineData(TestExecutingResult.AppExitedBeforeTestStart)]
+    public async Task OrchestrateDeviceTestWithFailingTcpTest(TestExecutingResult testExecutingResult)
     {
         // Setup
         var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
@@ -497,7 +556,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
                 It.IsAny<string[]?>(),
                 It.IsAny<string[]?>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((TestExecutingResult.Crashed, "Test execution timed out"))
+            .ReturnsAsync((testExecutingResult, "Test execution timed out"))
             .Verifiable();
 
         _appTester
