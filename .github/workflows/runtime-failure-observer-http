@@ -23,6 +23,9 @@ DEFINITION_IDS = (154, 223, 224, 225, 226, 228, 260, 261, 265)
 AZDO_HOST = "dev.azure.com"
 AZDO_PATH_PREFIX = "/dnceng-public/public/_apis/build/"
 HELIX_HOST = "helix.dot.net"
+HELIX_DEADLETTER_URL = (
+    "https://dotnet.github.io/core-eng/helix-workitem-deadletter.txt"
+)
 USER_AGENT = "xharness-runtime-failure-observer/1.0"
 
 _AZDO_BUILD_PATH = re.compile(r"^/dnceng-public/public/_apis/build/builds$")
@@ -37,7 +40,7 @@ _HELIX_WORK_ITEMS_PATH = re.compile(
 )
 _HELIX_CONSOLE_PATH = re.compile(
     r"^/api/(?:2019-06-17/)?jobs/[0-9a-f-]{36}/workitems/"
-    r"[^/]+/files/console(?:\.[A-Za-z0-9_-]+)?\.log$",
+    r"[^/]+/(?:console|files/console(?:\.[A-Za-z0-9_-]+)?\.log)$",
     re.IGNORECASE,
 )
 _BLOB_CONSOLE_PATH = re.compile(
@@ -401,6 +404,14 @@ def _helix_work_items_url(job_id: str) -> str:
     )
 
 
+def _helix_console_url(job_id: str, work_item: str) -> str:
+    encoded_work_item = urllib.parse.quote(work_item, safe="")
+    return (
+        f"https://{HELIX_HOST}/api/2019-06-17/jobs/{job_id}/workitems/"
+        f"{encoded_work_item}/console"
+    )
+
+
 def _json_items(payload: bytes) -> list[dict]:
     try:
         document = json.loads(payload)
@@ -432,7 +443,7 @@ def _case_insensitive_field(item: dict, field_name: str):
     return None
 
 
-def _console_url(payload: bytes, work_item: str) -> str:
+def _console_url(payload: bytes, job_id: str, work_item: str) -> str:
     matches = [
         item
         for item in _json_items(payload)
@@ -449,6 +460,8 @@ def _console_url(payload: bytes, work_item: str) -> str:
     console_url = _case_insensitive_field(matches[0], "ConsoleOutputUri")
     if not isinstance(console_url, str) or not console_url:
         raise TransportError("Helix work item did not contain a console output URL")
+    if console_url == HELIX_DEADLETTER_URL:
+        console_url = _helix_console_url(job_id, work_item)
     _validate_url(console_url, {"helix-console"})
     return console_url
 
@@ -484,7 +497,7 @@ def _run(args: argparse.Namespace) -> None:
         work_items = _request_bytes(
             _helix_work_items_url(args.job_id), {"helix-work-items"}, JSON_LIMIT
         )
-        console_url = _console_url(work_items, args.work_item)
+        console_url = _console_url(work_items, args.job_id, args.work_item)
         _write_output(
             _request_bytes(console_url, {"helix-console"}, LOG_LIMIT),
             args.output,
