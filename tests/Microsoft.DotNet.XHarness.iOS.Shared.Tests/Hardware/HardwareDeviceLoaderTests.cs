@@ -27,7 +27,7 @@ public class HardwareDeviceLoaderTests
     public HardwareDeviceLoaderTests()
     {
         _processManager = new Mock<IMlaunchProcessManager>();
-        _devices = new HardwareDeviceLoader(_processManager.Object);
+        _devices = new HardwareDeviceLoader(_processManager.Object, Array.Empty<int>());
         _executionLog = new Mock<ILog>();
     }
 
@@ -92,20 +92,7 @@ public class HardwareDeviceLoaderTests
                 processPath = p.StartInfo.FileName;
                 passedArguments = args;
 
-                // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                var tempPath = args.Where(a => a is ListDevicesArgument).First().AsCommandLineArgument();
-                tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
-
-                var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("devices.xml", StringComparison.Ordinal)).FirstOrDefault();
-                using (var outputStream = new StreamWriter(tempPath))
-                using (var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name)))
-                {
-                    string line;
-                    while ((line = sampleStream.ReadLine()) != null)
-                    {
-                        outputStream.WriteLine(line);
-                    }
-                }
+                WriteSampleDeviceList(args);
                 return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
             });
 
@@ -137,6 +124,47 @@ public class HardwareDeviceLoaderTests
     }
 
     [Fact]
+    public async Task LoadDevicesRetriesTimedOutMlaunch()
+    {
+        var calls = 0;
+        var devices = new HardwareDeviceLoader(_processManager.Object, new[] { 0, 0 });
+
+        _processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
+            .Returns<Process, MlaunchArguments, ILog, TimeSpan?, Dictionary<string, string>, int, CancellationToken?, bool?>((p, args, log, t, env, verbosity, token, d) =>
+            {
+                calls++;
+                if (calls < 3)
+                {
+                    return Task.FromResult(new ProcessExecutionResult { ExitCode = 137, TimedOut = true });
+                }
+
+                WriteSampleDeviceList(args);
+                return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
+            });
+
+        await devices.LoadDevices(_executionLog.Object);
+
+        Assert.Equal(3, calls);
+        Assert.NotEmpty(devices.ConnectedDevices);
+    }
+
+    [Fact]
+    public async Task LoadDevicesDoesNotRetryMlaunchExitFailure()
+    {
+        var devices = new HardwareDeviceLoader(_processManager.Object, new[] { 0, 0 });
+
+        _processManager.Setup(p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()))
+            .ReturnsAsync(new ProcessExecutionResult { ExitCode = 1, TimedOut = false });
+
+        var ex = await Assert.ThrowsAsync<Exception>(() => devices.LoadDevices(_executionLog.Object));
+
+        Assert.Contains("mlaunch exited with code 1", ex.Message);
+        _processManager.Verify(
+            p => p.RunAsync(It.IsAny<Process>(), It.IsAny<MlaunchArguments>(), It.IsAny<ILog>(), It.IsAny<TimeSpan?>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<int>(), It.IsAny<CancellationToken?>(), It.IsAny<bool?>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task FindAndCacheDevicesWithFailingMlaunchTest()
     {
         string processPath = null;
@@ -160,18 +188,7 @@ public class HardwareDeviceLoaderTests
                 processPath = p.StartInfo.FileName;
                 passedArguments = args;
 
-                // we get the temp file that was passed as the args, and write our sample xml, which will be parsed to get the devices :)
-                var tempPath = args.Where(a => a is ListDevicesArgument).First().AsCommandLineArgument();
-                tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
-
-                var name = GetType().Assembly.GetManifestResourceNames().Where(a => a.EndsWith("devices.xml", StringComparison.Ordinal)).FirstOrDefault();
-                using (var outputStream = new StreamWriter(tempPath))
-                using (var sampleStream = new StreamReader(GetType().Assembly.GetManifestResourceStream(name)))
-                {
-                    string line;
-                    while ((line = sampleStream.ReadLine()) != null)
-                        outputStream.WriteLine(line);
-                }
+                WriteSampleDeviceList(args);
                 return Task.FromResult(new ProcessExecutionResult { ExitCode = 0, TimedOut = false });
             });
 
@@ -186,5 +203,18 @@ public class HardwareDeviceLoaderTests
         Assert.Equal(2, calls);
         await _devices.LoadDevices(_executionLog.Object);
         Assert.Equal(2, calls);
+    }
+
+    private static void WriteSampleDeviceList(MlaunchArguments args)
+    {
+        var tempPath = args.OfType<ListDevicesArgument>().Single().AsCommandLineArgument();
+        tempPath = tempPath.Substring(tempPath.IndexOf('=') + 1).Replace("\"", string.Empty);
+
+        var resourceName = typeof(HardwareDeviceLoaderTests).Assembly
+            .GetManifestResourceNames()
+            .Single(name => name.EndsWith("devices.xml", StringComparison.Ordinal));
+        using var outputStream = new StreamWriter(tempPath);
+        using var sampleStream = new StreamReader(typeof(HardwareDeviceLoaderTests).Assembly.GetManifestResourceStream(resourceName));
+        outputStream.Write(sampleStream.ReadToEnd());
     }
 }
