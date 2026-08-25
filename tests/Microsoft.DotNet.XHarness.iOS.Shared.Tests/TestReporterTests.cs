@@ -35,12 +35,14 @@ public class TestReporterTests : IDisposable
     public TestReporterTests()
     {
         _crashReporter = new Mock<ICrashSnapshotReporter>();
+        _crashReporter.SetupGet(r => r.CaptureDiagnostics).Returns(new AppleCrashReportDiagnostics());
         _processManager = new Mock<IMlaunchProcessManager>();
         _parser = new XmlResultParser();
         _runLog = new Mock<IReadableLog>();
         _mainLog = new Mock<IFileBackedLog>();
         _logs = new Mock<ILogs>();
         _listener = new Mock<ISimpleListener>();
+        _listener.Setup(l => l.ConnectedTask).Returns(Task.FromResult(false));
         _appInformation = new AppBundleInformation(
             appName: "test app",
             bundleIdentifier: "my.id.com",
@@ -504,5 +506,66 @@ public class TestReporterTests : IDisposable
         _mainLog.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Test run completed but results file was not available"))), Times.Once);
         // Crash reporter should be called with 0 delay since tests succeeded
         _crashReporter.Verify(c => c.EndCaptureAsync(It.Is<TimeSpan>(t => t.TotalSeconds == 0)), Times.Once);
+    }
+
+    [Fact]
+    public async Task ParseResult_WhenAppExitsWithoutTestStart_ReturnsEarlyExit()
+    {
+        var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
+        _listener.Setup(l => l.TestLog).Returns(listenerLog);
+
+        var testReporter = BuildTestReporter();
+        await testReporter.CollectDeviceResult(new ProcessExecutionResult { ExitCode = 1 });
+
+        var (result, resultMessage) = await testReporter.ParseResult();
+
+        Assert.Equal(TestExecutingResult.AppExitedBeforeTestStart, result);
+        Assert.Contains("no matching crash report", resultMessage);
+        _crashReporter.Verify(c => c.EndCaptureAsync(TimeSpan.FromSeconds(30)), Times.Once);
+    }
+
+    [Fact]
+    public async Task ParseResult_WhenProtocolConnectsButResultsAreMissing_ReturnsResultsMissing()
+    {
+        var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
+        _listener.Setup(l => l.TestLog).Returns(listenerLog);
+        _listener.Setup(l => l.ConnectedTask).Returns(Task.FromResult(true));
+
+        var testReporter = BuildTestReporter();
+        await testReporter.CollectDeviceResult(new ProcessExecutionResult { ExitCode = 1 });
+
+        var (result, resultMessage) = await testReporter.ParseResult();
+
+        Assert.Equal(TestExecutingResult.TestResultsMissing, result);
+        Assert.Contains("no test results were reported", resultMessage);
+    }
+
+    [Fact]
+    public async Task ParseResult_WhenAppExitsWithMatchingCrashReport_ReturnsCrashed()
+    {
+        var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
+        _listener.Setup(l => l.TestLog).Returns(listenerLog);
+        _listener.Setup(l => l.ConnectedTask).Returns(Task.FromResult(true));
+        string mainLogPath = Path.Combine(_logsDirectory, "main.log");
+        File.WriteAllText(mainLogPath, string.Empty);
+        _mainLog.SetupGet(l => l.FullPath).Returns(mainLogPath);
+        _crashReporter
+            .SetupGet(r => r.CaptureDiagnostics)
+            .Returns(new AppleCrashReportDiagnostics
+            {
+                MatchedReport = new AppleCrashReportMetadata
+                {
+                    Name = "test-app.ips",
+                    MatchReason = "bundle identifier",
+                },
+            });
+
+        var testReporter = BuildTestReporter();
+        await testReporter.CollectDeviceResult(new ProcessExecutionResult { ExitCode = 1 });
+
+        var (result, resultMessage) = await testReporter.ParseResult();
+
+        Assert.Equal(TestExecutingResult.Crashed, result);
+        Assert.Contains("test-app.ips", resultMessage);
     }
 }

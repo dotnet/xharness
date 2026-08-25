@@ -31,6 +31,9 @@ public abstract class AppRunnerBase
 
     private bool _appEndSignalDetected = false;
 
+    protected bool AppEndSignalDetected => _appEndSignalDetected;
+    protected IReadableLog? SimulatorApplicationLog { get; private set; }
+
     protected AppRunnerBase(
         IMlaunchProcessManager processManager,
         ICaptureLogFactory captureLogFactory,
@@ -182,6 +185,7 @@ public abstract class AppRunnerBase
         // This is needed for exit code detection, as the app exit code (e.g., DOTNET.APP_EXIT_CODE)
         // is printed to stdout by the simulator and captured by mlaunch
         var appOutputLog = _logs.Create(appInformation.BundleIdentifier + ".log", LogType.ApplicationLog.ToString(), timestamp: true);
+        SimulatorApplicationLog = appOutputLog;
 
         if (waitForExit)
         {

@@ -10,6 +10,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared;
 
 public interface IResultFileHandler
 {
+    int LastCopyAttempts { get; }
+
     /// <summary>
     /// Determines whether the result file handler supports the given OS version and simulator status.
     /// </summary>
@@ -39,14 +41,4 @@ public interface IResultFileHandler
         string bundleIdentifier,
         string coverageFileName,
         string hostDestinationPath);
-
-    /// <summary>
-    /// Copy the latest crash report from the device and dumps its content to the log.
-    /// </summary>
-    Task CopyCrashReportAsync(
-        string deviceUdid,
-        string? deviceName,
-        AppBundleInformation appInformation,
-        Common.Logging.ILog outputLog,
-        bool isSimulator);
 }

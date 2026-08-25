@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.XHarness.Apple;
 
 public interface ICrashSnapshotReporterFactory
 {
-    ICrashSnapshotReporter Create(ILog log, ILogs logs, bool isDevice, string? deviceName);
+    ICrashSnapshotReporter Create(ILog log, ILogs logs, bool isDevice, string? deviceName, AppBundleInformation appInformation);
 }
 
 public class CrashSnapshotReporterFactory : ICrashSnapshotReporterFactory
@@ -24,6 +24,6 @@ public class CrashSnapshotReporterFactory : ICrashSnapshotReporterFactory
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
     }
 
-    public ICrashSnapshotReporter Create(ILog log, ILogs logs, bool isDevice, string? deviceName) =>
-        new CrashSnapshotReporter(_processManager, log, logs, isDevice, deviceName);
+    public ICrashSnapshotReporter Create(ILog log, ILogs logs, bool isDevice, string? deviceName, AppBundleInformation appInformation) =>
+        new CrashSnapshotReporter(_processManager, log, logs, isDevice, deviceName, appInformation);
 }

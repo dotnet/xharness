@@ -32,11 +32,12 @@ public static class RunSummaryEmitter
         string? architecture,
         int? instrumentationExitCode,
         IReadOnlyList<DiagnosticsFile> producedFiles,
-        ExecutionEnvironmentInfo? environment = null)
+        ExecutionEnvironmentInfo? environment = null,
+        IReadOnlyDictionary<string, object?>? additionalData = null)
     {
         EmitRunSummary(
             message => logger.LogInformation(message),
-            exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles, environment);
+            exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles, environment, additionalData);
     }
 
     /// <summary>
@@ -52,9 +53,10 @@ public static class RunSummaryEmitter
         string? architecture,
         int? instrumentationExitCode,
         IReadOnlyList<DiagnosticsFile> producedFiles,
-        ExecutionEnvironmentInfo? environment = null)
+        ExecutionEnvironmentInfo? environment = null,
+        IReadOnlyDictionary<string, object?>? additionalData = null)
     {
-        EmitJsonResultBlock(logInfo, exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles, environment);
+        EmitJsonResultBlock(logInfo, exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles, environment, additionalData);
     }
 
     /// <summary>
@@ -70,9 +72,10 @@ public static class RunSummaryEmitter
         string? architecture,
         int? instrumentationExitCode,
         IReadOnlyList<DiagnosticsFile> producedFiles,
-        ExecutionEnvironmentInfo? environment = null)
+        ExecutionEnvironmentInfo? environment = null,
+        IReadOnlyDictionary<string, object?>? additionalData = null)
     {
-        var resultData = BuildResultData(exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles, environment);
+        var resultData = BuildResultData(exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles, environment, additionalData);
 
         var options = new JsonSerializerOptions
         {
@@ -98,11 +101,12 @@ public static class RunSummaryEmitter
         string? architecture,
         int? instrumentationExitCode,
         IReadOnlyList<DiagnosticsFile> producedFiles,
-        ExecutionEnvironmentInfo? environment = null)
+        ExecutionEnvironmentInfo? environment = null,
+        IReadOnlyDictionary<string, object?>? additionalData = null)
     {
         try
         {
-            var resultData = BuildResultData(exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles, environment);
+            var resultData = BuildResultData(exitCode, platform, deviceName, deviceOsVersion, architecture, instrumentationExitCode, producedFiles, environment, additionalData);
 
             var options = new JsonSerializerOptions
             {
@@ -129,7 +133,8 @@ public static class RunSummaryEmitter
         string? architecture,
         int? instrumentationExitCode,
         IReadOnlyList<DiagnosticsFile> producedFiles,
-        ExecutionEnvironmentInfo? environment)
+        ExecutionEnvironmentInfo? environment,
+        IReadOnlyDictionary<string, object?>? additionalData)
     {
         string? helixJobId = Environment.GetEnvironmentVariable("HELIX_CORRELATION_ID");
         string? helixWorkItem = Environment.GetEnvironmentVariable("HELIX_WORKITEM_FRIENDLYNAME");
@@ -192,6 +197,17 @@ public static class RunSummaryEmitter
         if (environment != null)
         {
             resultData["environment"] = environment;
+        }
+
+        if (additionalData != null)
+        {
+            foreach (var (key, value) in additionalData)
+            {
+                if (!resultData.TryAdd(key, value))
+                {
+                    throw new ArgumentException($"Additional run-summary key '{key}' conflicts with a core result field.", nameof(additionalData));
+                }
+            }
         }
 
         return resultData;

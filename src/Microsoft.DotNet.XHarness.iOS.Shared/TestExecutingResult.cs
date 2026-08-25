@@ -39,4 +39,6 @@ public enum TestExecutingResult
     // Other results
     BuildSucceeded = 0x10000 | Succeeded,
     LaunchTimedOut = 0x20000 | LaunchFailure | TimedOut,
+    AppExitedBeforeTestStart = 0x40000 | Failed,
+    TestResultsMissing = 0x80000 | Failed,
 }

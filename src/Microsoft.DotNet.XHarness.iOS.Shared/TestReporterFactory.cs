@@ -9,8 +9,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 
-using ExceptionLogger = System.Action<int, string>;
-
 #nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared;
 
@@ -28,7 +26,6 @@ public interface ITestReporterFactory
         string? device,
         TimeSpan timeout,
         string? additionalLogsDirectory = null,
-        ExceptionLogger? exceptionLogger = null,
         bool generateHtml = false);
 }
 
@@ -53,7 +50,6 @@ public class TestReporterFactory : ITestReporterFactory
         string? device,
         TimeSpan timeout,
         string? additionalLogsDirectory = null,
-        ExceptionLogger? exceptionLogger = null,
         bool generateHtml = false) => new TestReporter(_processManager,
             mainLog,
             runLog,
@@ -67,7 +63,5 @@ public class TestReporterFactory : ITestReporterFactory
             device,
             timeout,
             additionalLogsDirectory,
-            exceptionLogger,
             generateHtml);
 }
-

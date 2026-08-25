@@ -251,6 +251,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
 
+        SetRunSummaryData("appleLaunch", appTester.LaunchDiagnostics);
         ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
 
         // Copy application logs to the main log for better failure investigation.
@@ -286,6 +287,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
 
+        SetRunSummaryData("appleLaunch", appTester.LaunchDiagnostics);
         ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
 
         // Copy system log to the main log — MacCatalyst output goes to SystemLog, not ApplicationLog
@@ -337,7 +339,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
 
             // TCP errors are encounter all the time but they are not always the cause of the failure
             // If the app crashed, TCP_CONNECTION_FAILED and there was not other exit code we will return TCP_CONNECTION_FAILED
-            if (defaultExitCode == ExitCode.APP_CRASH && tcpErrorFound)
+            if ((defaultExitCode == ExitCode.APP_CRASH || defaultExitCode == ExitCode.APP_EXITED_BEFORE_TEST_START) && tcpErrorFound)
             {
                 return ExitCode.TCP_CONNECTION_FAILED;
             }
@@ -362,6 +364,12 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
 
             case TestExecutingResult.Crashed:
                 return LogProblem("Application test run crashed", ExitCode.APP_CRASH);
+
+            case TestExecutingResult.AppExitedBeforeTestStart:
+                return LogProblem("Application exited before test startup was observed", ExitCode.APP_EXITED_BEFORE_TEST_START);
+
+            case TestExecutingResult.TestResultsMissing:
+                return LogProblem("Application did not produce a test results file", ExitCode.TEST_RESULTS_MISSING);
 
             case TestExecutingResult.LaunchTimedOut:
                 _logger.LogError("Application launch timed out before the test execution has started");
