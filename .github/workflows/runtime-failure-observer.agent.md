@@ -203,6 +203,14 @@ Every definition's build-list request is required. Apply rule 6 to a denied/unav
 
 ## Step 2. Walk timelines, find xharness invocations
 
+Process one selected build completely before starting another; never parallelize requests across build ids. Before every `azdo-log` request, verify in a separate shell call that the log id belongs to that build's saved timeline:
+
+```bash
+jq -e 'any(.records[]; .log.id? == LOGID)' "/tmp/gh-aw/agent/timeline-SRCID.json"
+```
+
+If validation fails, correct the build/log pairing. Do not make the request or report missing data for that mismatched pair.
+
 For each `source` (inline the build id in place of `SRCID`):
 
 ```bash
