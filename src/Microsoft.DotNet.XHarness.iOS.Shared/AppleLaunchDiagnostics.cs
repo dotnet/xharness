@@ -8,7 +8,8 @@ public sealed class AppleLaunchDiagnostics
     public string BundleId { get; set; } = string.Empty;
     public int? LauncherExitCode { get; set; }
     public int? AppExitCode { get; set; }
-    public bool? TestProtocolStarted { get; set; }
+    public bool TestProtocolExpected { get; set; } = true;
+    public bool TestProtocolConnected { get; set; }
     public bool TestEndSignalDetected { get; set; }
     public AppleTestResultFileDiagnostics TestResultFile { get; set; } = new();
     public AppleCrashReportDiagnostics CrashReport { get; set; } = new();

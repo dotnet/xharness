@@ -215,9 +215,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 runMode,
                 xmlResultJargon,
                 device.Name,
-                timeout,
-                null,
-                (level, message) => _mainLog.WriteLine(message));
+                timeout);
             IResultFileHandler resultFileHandler = new ResultFileHandler(_processManager, _mainLog);
 
             // For iOS 18+ devices/simulators, result files are copied directly from the app container
@@ -389,7 +387,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 }
                 else
                 {
-                    _mainLog.WriteLine("Test results file not found. Checking the pre-launch crash report snapshot for a matching report.");
+                    _mainLog.WriteLine("Test results file not found. New crash reports will be matched when the run result is finalized.");
                 }
             }
 
@@ -507,7 +505,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 }
                 else
                 {
-                    _mainLog.WriteLine("Test results file not found. Checking the pre-launch crash report snapshot for a matching report.");
+                    _mainLog.WriteLine("Test results file not found. New crash reports will be matched when the run result is finalized.");
                 }
             }
 
@@ -560,9 +558,7 @@ public class AppTester : AppRunnerBase, IAppTester
             RunMode.MacOS,
             xmlResultJargon,
             null,
-            timeout,
-            null,
-            (level, message) => _mainLog.WriteLine(message));
+            timeout);
 
         deviceListener.ConnectedTask
             .TimeoutAfter(testLaunchTimeout)
@@ -646,25 +642,18 @@ public class AppTester : AppRunnerBase, IAppTester
 
     private void RecordLaunchResult(ProcessExecutionResult result, IReadableLog? appOutputLog)
     {
-        if (LaunchDiagnostics is null)
-        {
-            return;
-        }
-
-        LaunchDiagnostics.LauncherExitCode = result.ExitCode;
-        LaunchDiagnostics.AppExitCode = TryReadAppExitCode(appOutputLog);
+        AppleLaunchDiagnostics launchDiagnostics = GetLaunchDiagnostics();
+        launchDiagnostics.LauncherExitCode = result.ExitCode;
+        launchDiagnostics.AppExitCode = TryReadAppExitCode(appOutputLog);
     }
 
     private void RecordResultFileCopy(IResultFileHandler resultFileHandler, RunMode runMode, bool resultsCopied)
     {
-        if (LaunchDiagnostics is null)
-        {
-            return;
-        }
-
-        LaunchDiagnostics.TestResultFile.Path = ResultFileHandler.GetAppContainerSourcePath(runMode, "test-results.xml");
-        LaunchDiagnostics.TestResultFile.CopyAttempts = resultFileHandler.LastCopyAttempts;
-        LaunchDiagnostics.TestResultFile.Exists = resultsCopied;
+        AppleLaunchDiagnostics launchDiagnostics = GetLaunchDiagnostics();
+        launchDiagnostics.TestProtocolExpected = false;
+        launchDiagnostics.TestResultFile.Path = ResultFileHandler.GetAppContainerSourcePath(runMode, "test-results.xml");
+        launchDiagnostics.TestResultFile.CopyAttempts = resultFileHandler.LastCopyAttempts;
+        launchDiagnostics.TestResultFile.Exists = resultsCopied;
     }
 
     private void CompleteLaunchDiagnostics(
@@ -672,23 +661,20 @@ public class AppTester : AppRunnerBase, IAppTester
         ICrashSnapshotReporter crashReporter,
         ISimpleListener deviceListener)
     {
-        if (LaunchDiagnostics is null)
+        AppleLaunchDiagnostics launchDiagnostics = GetLaunchDiagnostics();
+        launchDiagnostics.TestProtocolConnected = testReporter.TestProtocolConnected;
+        launchDiagnostics.TestEndSignalDetected = AppEndSignalDetected;
+        launchDiagnostics.CrashReport = crashReporter.CaptureDiagnostics ?? new AppleCrashReportDiagnostics();
+        if (launchDiagnostics.TestResultFile.CopyAttempts == 0)
         {
-            return;
-        }
-
-        LaunchDiagnostics.TestProtocolStarted = testReporter.TestExecutionStarted
-            ? true
-            : LaunchDiagnostics.TestResultFile.CopyAttempts > 0 ? null : false;
-        LaunchDiagnostics.TestEndSignalDetected = AppEndSignalDetected;
-        LaunchDiagnostics.CrashReport = crashReporter.CaptureDiagnostics ?? new AppleCrashReportDiagnostics();
-        if (LaunchDiagnostics.TestResultFile.CopyAttempts == 0)
-        {
-            LaunchDiagnostics.TestResultFile.Path = deviceListener.TestLog?.FullPath ?? string.Empty;
-            LaunchDiagnostics.TestResultFile.Exists =
+            launchDiagnostics.TestResultFile.Path = deviceListener.TestLog?.FullPath ?? string.Empty;
+            launchDiagnostics.TestResultFile.Exists =
                 deviceListener.TestLog is not null && File.Exists(deviceListener.TestLog.FullPath);
         }
     }
+
+    private AppleLaunchDiagnostics GetLaunchDiagnostics()
+        => LaunchDiagnostics ?? throw new InvalidOperationException("Launch diagnostics have not been initialized.");
 
     private static int? TryReadAppExitCode(IReadableLog? appOutputLog)
     {

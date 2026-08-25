@@ -184,8 +184,12 @@ public class TestOrchestratorTests : OrchestratorTestBase
         _appTester.VerifyAll();
     }
 
-    [Fact]
-    public async Task OrchestrateAppExitedBeforeTestStartReturnsDistinctExitCode()
+    [Theory]
+    [InlineData(TestExecutingResult.AppExitedBeforeTestStart, ExitCode.APP_EXITED_BEFORE_TEST_START)]
+    [InlineData(TestExecutingResult.TestResultsMissing, ExitCode.TEST_RESULTS_MISSING)]
+    public async Task OrchestrateMissingTestResultsReturnsSpecificExitCode(
+        TestExecutingResult testExecutingResult,
+        ExitCode expectedExitCode)
     {
         var testTarget = new TestTargetOs(TestTarget.Device_iOS, "14.2");
         var launchDiagnostics = new AppleLaunchDiagnostics
@@ -216,9 +220,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
                 It.IsAny<string[]?>(),
                 It.IsAny<string[]?>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((
-                TestExecutingResult.AppExitedBeforeTestStart,
-                "App exited before the test protocol started and no matching crash report was found"));
+            .ReturnsAsync((testExecutingResult, "No test results were reported"));
 
         var result = await _testOrchestrator.OrchestrateTest(
             AppPath,
@@ -238,7 +240,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
             Array.Empty<string>(),
             CancellationToken.None);
 
-        Assert.Equal(ExitCode.APP_EXITED_BEFORE_TEST_START, result);
+        Assert.Equal(expectedExitCode, result);
     }
 
     [Fact]

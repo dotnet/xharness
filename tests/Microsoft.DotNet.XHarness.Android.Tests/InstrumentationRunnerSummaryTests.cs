@@ -195,7 +195,8 @@ public class InstrumentationRunnerSummaryTests
                 bundleId = "net.dot.Tests",
                 launcherExitCode = 1,
                 appExitCode = 1,
-                testProtocolStarted = false,
+                testProtocolExpected = false,
+                testProtocolConnected = false,
                 testResultFile = new
                 {
                     path = "/Documents/test-results.xml",
@@ -224,7 +225,8 @@ public class InstrumentationRunnerSummaryTests
         var appleLaunch = ExtractJsonFromLogs().GetProperty("appleLaunch");
         Assert.Equal("net.dot.Tests", appleLaunch.GetProperty("bundleId").GetString());
         Assert.Equal(1, appleLaunch.GetProperty("appExitCode").GetInt32());
-        Assert.False(appleLaunch.GetProperty("testProtocolStarted").GetBoolean());
+        Assert.False(appleLaunch.GetProperty("testProtocolExpected").GetBoolean());
+        Assert.False(appleLaunch.GetProperty("testProtocolConnected").GetBoolean());
         Assert.Equal(4, appleLaunch.GetProperty("testResultFile").GetProperty("copyAttempts").GetInt32());
         Assert.Equal(12, appleLaunch.GetProperty("crashReport").GetProperty("reportsBeforeLaunch").GetInt32());
         Assert.Equal("APP_EXITED_BEFORE_TEST_START", ExtractJsonFromLogs().GetProperty("exitCodeName").GetString());

@@ -366,7 +366,10 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
                 return LogProblem("Application test run crashed", ExitCode.APP_CRASH);
 
             case TestExecutingResult.AppExitedBeforeTestStart:
-                return LogProblem("Application exited before the test protocol started", ExitCode.APP_EXITED_BEFORE_TEST_START);
+                return LogProblem("Application exited before test startup was observed", ExitCode.APP_EXITED_BEFORE_TEST_START);
+
+            case TestExecutingResult.TestResultsMissing:
+                return LogProblem("Application did not produce a test results file", ExitCode.TEST_RESULTS_MISSING);
 
             case TestExecutingResult.LaunchTimedOut:
                 _logger.LogError("Application launch timed out before the test execution has started");

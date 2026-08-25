@@ -121,5 +121,10 @@ public enum ExitCode
     /// <summary>
     /// The Apple app exited before the test protocol started without a matching crash report
     /// </summary>
-    APP_EXITED_BEFORE_TEST_START = 93
+    APP_EXITED_BEFORE_TEST_START = 93,
+
+    /// <summary>
+    /// The test protocol connected, but the application did not produce test results
+    /// </summary>
+    TEST_RESULTS_MISSING = 94
 }

@@ -509,7 +509,7 @@ public class TestReporterTests : IDisposable
     }
 
     [Fact]
-    public async Task ParseResult_WhenAppExitsBeforeProtocolWithoutCrashReport_ReturnsEarlyExit()
+    public async Task ParseResult_WhenAppExitsWithoutTestStart_ReturnsEarlyExit()
     {
         var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
         _listener.Setup(l => l.TestLog).Returns(listenerLog);
@@ -525,10 +525,27 @@ public class TestReporterTests : IDisposable
     }
 
     [Fact]
+    public async Task ParseResult_WhenProtocolConnectsButResultsAreMissing_ReturnsResultsMissing()
+    {
+        var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
+        _listener.Setup(l => l.TestLog).Returns(listenerLog);
+        _listener.Setup(l => l.ConnectedTask).Returns(Task.FromResult(true));
+
+        var testReporter = BuildTestReporter();
+        await testReporter.CollectDeviceResult(new ProcessExecutionResult { ExitCode = 1 });
+
+        var (result, resultMessage) = await testReporter.ParseResult();
+
+        Assert.Equal(TestExecutingResult.TestResultsMissing, result);
+        Assert.Contains("no test results were reported", resultMessage);
+    }
+
+    [Fact]
     public async Task ParseResult_WhenAppExitsWithMatchingCrashReport_ReturnsCrashed()
     {
         var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
         _listener.Setup(l => l.TestLog).Returns(listenerLog);
+        _listener.Setup(l => l.ConnectedTask).Returns(Task.FromResult(true));
         string mainLogPath = Path.Combine(_logsDirectory, "main.log");
         File.WriteAllText(mainLogPath, string.Empty);
         _mainLog.SetupGet(l => l.FullPath).Returns(mainLogPath);

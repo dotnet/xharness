@@ -16,8 +16,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
-using ExceptionLogger = System.Action<int, string>;
-
 #nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared;
 
@@ -53,9 +51,6 @@ public class TestReporter : ITestReporter
 
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
-    /// <summary>
-    /// Callback needed for the Xamarin.Xharness project that does extra logging in case of a crash.
-    /// </summary>
     private bool _waitedForExit = true;
     private bool _launchFailure;
     private bool _isSimulatorTest;
@@ -70,7 +65,7 @@ public class TestReporter : ITestReporter
 
     public bool ResultsUseXml => _xmlJargon != XmlResultJargon.Missing;
 
-    public bool TestExecutionStarted => _listener.ConnectedTask.IsCompletedSuccessfully && _listener.ConnectedTask.Result;
+    public bool TestProtocolConnected => _listener.ConnectedTask.IsCompletedSuccessfully && _listener.ConnectedTask.Result;
 
     public TestReporter(
         IMlaunchProcessManager processManager,
@@ -86,7 +81,6 @@ public class TestReporter : ITestReporter
         string? device,
         TimeSpan timeout,
         string? additionalLogsDirectory = null,
-        ExceptionLogger? exceptionLogger = null,
         bool generateHtml = false)
     {
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
@@ -125,11 +119,6 @@ public class TestReporter : ITestReporter
         int pid = -1;
 
         using var reader = _runLog.GetReader();
-        if (reader is null)
-        {
-            return pid;
-        }
-
         if (reader.Peek() == -1)
         {
             // Empty file! If the app never connected to our listener, it probably never launched
@@ -247,7 +236,7 @@ public class TestReporter : ITestReporter
         _cancellationTokenSource.Cancel();
         _timedout = true;
 
-        if (TestExecutionStarted)
+        if (TestProtocolConnected)
         {
             _mainLog.WriteLine($"Test execution timed out after {_timeoutWatch.Elapsed.TotalMinutes:0.##} minutes");
             return;
@@ -455,27 +444,12 @@ public class TestReporter : ITestReporter
     }
 
     /// <summary>
-    /// Generate all the xml failures that will help the integration with the CI and return the failure reason
+    /// Generate XML failures for CI integration.
     /// </summary>
-    private async Task GenerateXmlFailures(string failure, bool crashed, string? crashReason)
+    private async Task GenerateXmlFailures(string failure, bool crashed)
     {
         if (!ResultsUseXml) // nothing to do
         {
-            return;
-        }
-
-        if (!string.IsNullOrEmpty(crashReason))
-        {
-            _resultParser.GenerateFailure(
-                _logs,
-                "crash",
-                _appInfo.AppName,
-                _appInfo.Variation,
-                $"App Crash {_appInfo.AppName} {_appInfo.Variation}",
-                $"App crashed: {failure}",
-                _mainLog.FullPath,
-                _xmlJargon);
-
             return;
         }
 
@@ -494,7 +468,7 @@ public class TestReporter : ITestReporter
             return;
         }
 
-        if (!_isSimulatorTest && crashed && string.IsNullOrEmpty(crashReason))
+        if (!_isSimulatorTest && crashed)
         {
             // this happens more that what we would like on devices, the main reason most of the time is that we have had netwoking problems and the
             // tcp connection could not be stablished. We are going to report it as an error since we have not parsed the logs, evne when the app might have
@@ -532,6 +506,7 @@ public class TestReporter : ITestReporter
         var crashed = false;
         var missingResultFile = false;
         var appExitedBeforeTestStart = false;
+        var testResultsMissing = false;
         if (File.Exists(_listener.TestLog.FullPath))
         {
             WrenchLog.WriteLine("AddFile: {0}", _listener.TestLog.FullPath);
@@ -592,25 +567,29 @@ public class TestReporter : ITestReporter
         if (missingResultFile)
         {
             AppleCrashReportDiagnostics? crashDiagnostics = _crashReporter.CaptureDiagnostics;
-            if (!TestExecutionStarted && crashDiagnostics?.MatchedReport is null)
+            if (crashDiagnostics?.MatchedReport is not null)
+            {
+                crashed = true;
+                result.ResultMessage = $"Application crash matched report '{crashDiagnostics.MatchedReport.Name}'";
+                _mainLog.WriteLine(result.ResultMessage);
+            }
+            else if (!TestProtocolConnected)
             {
                 appExitedBeforeTestStart = true;
-                result.ResultMessage = "App exited before the test protocol started and no matching crash report was found";
+                result.ResultMessage = "App exited without evidence that the test run started and no matching crash report was found";
                 _mainLog.WriteLine(result.ResultMessage);
             }
             else
             {
-                crashed = true;
-                result.ResultMessage = crashDiagnostics?.MatchedReport is null
-                    ? "Test run started but no test results were reported"
-                    : $"Application crash matched report '{crashDiagnostics.MatchedReport.Name}'";
+                testResultsMissing = true;
+                result.ResultMessage = "Test protocol connected but no test results were reported";
                 _mainLog.WriteLine(result.ResultMessage);
             }
         }
 
         if (_timedout)
         {
-            if (TestExecutionStarted)
+            if (TestProtocolConnected)
             {
                 result.ExecutingResult = TestExecutingResult.TimedOut;
             }
@@ -631,6 +610,10 @@ public class TestReporter : ITestReporter
         {
             result.ExecutingResult = TestExecutingResult.Crashed;
         }
+        else if (testResultsMissing)
+        {
+            result.ExecutingResult = TestExecutingResult.TestResultsMissing;
+        }
         else if (Success.Value)
         {
             result.ExecutingResult = TestExecutingResult.Succeeded;
@@ -647,7 +630,7 @@ public class TestReporter : ITestReporter
                 result.ResultMessage = $"Launch failure";
             }
 
-            await GenerateXmlFailures(result.ResultMessage, crashed, crashReason: null);
+            await GenerateXmlFailures(result.ResultMessage, crashed);
         }
 
         return result;

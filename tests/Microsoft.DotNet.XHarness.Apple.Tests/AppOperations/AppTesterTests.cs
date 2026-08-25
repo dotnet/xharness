@@ -12,6 +12,7 @@ using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
@@ -217,10 +218,18 @@ public class AppTesterTests : AppRunTestBase
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestOnDeviceTest(bool useTunnel)
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task TestOnDeviceTest(bool useTunnel, bool useContainerResultCopy)
     {
+        string osVersion = useContainerResultCopy ? "18.0" : "13.0";
+        IHardwareDevice device = Mock.Of<IHardwareDevice>(x =>
+            x.DeviceIdentifier == s_mockDevice.DeviceIdentifier &&
+            x.UDID == s_mockDevice.UDID &&
+            x.Name == s_mockDevice.Name &&
+            x.OSVersion == osVersion &&
+            x.InterfaceType == "Usb");
         var deviceSystemLog = new Mock<IFileBackedLog>();
         deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
 
@@ -228,12 +237,13 @@ public class AppTesterTests : AppRunTestBase
 
         var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
         deviceLogCapturerFactory
-            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID))
+            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, device.UDID))
             .Returns(deviceLogCapturer.Object);
 
         var testResultFilePath = Path.GetTempFileName();
         var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
         File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
+        _listener.SetupGet(x => x.TestLog).Returns(listenerLogFile);
 
         _logs
             .Setup(x => x.Create("test-ios-device-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
@@ -277,7 +287,7 @@ public class AppTesterTests : AppRunTestBase
         var (result, resultMessage) = await appTester.TestApp(
             _appBundleInfo,
             new TestTargetOs(TestTarget.Device_iOS, null),
-            s_mockDevice,
+            device,
             null,
             timeout: TimeSpan.FromSeconds(30),
             testLaunchTimeout: TimeSpan.FromSeconds(30),
@@ -291,6 +301,10 @@ public class AppTesterTests : AppRunTestBase
         Assert.NotNull(appTester.LaunchDiagnostics);
         Assert.Equal(0, appTester.LaunchDiagnostics!.LauncherExitCode);
         Assert.Equal(7, appTester.LaunchDiagnostics.AppExitCode);
+        Assert.Equal(!useContainerResultCopy, appTester.LaunchDiagnostics.TestProtocolExpected);
+        Assert.False(appTester.LaunchDiagnostics.TestProtocolConnected);
+        Assert.Equal(useContainerResultCopy ? 1 : 0, appTester.LaunchDiagnostics.TestResultFile.CopyAttempts);
+        Assert.True(appTester.LaunchDiagnostics.TestResultFile.Exists);
 
         var expectedArgs = GetExpectedDeviceMlaunchArgs(
             useTunnel: useTunnel,
@@ -317,7 +331,7 @@ public class AppTesterTests : AppRunTestBase
         // we dont want to leak a process
         if (useTunnel)
         {
-            _tunnelBore.Verify(t => t.Close(s_mockDevice.DeviceIdentifier));
+            _tunnelBore.Verify(t => t.Close(device.DeviceIdentifier));
         }
 
         _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);

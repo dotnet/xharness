@@ -21,6 +21,7 @@ public class TestExecutingResultTests
             TestExecutingResult.BuildFailure,
             TestExecutingResult.LaunchTimedOut,
             TestExecutingResult.AppExitedBeforeTestStart,
+            TestExecutingResult.TestResultsMissing,
             TestExecutingResult.Failed,
         },
         TestExecutingResult.Failed
