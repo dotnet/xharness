@@ -219,11 +219,15 @@ runtime-failure-observer-http azdo-timeline --build-id SRCID --output "/tmp/gh-a
 
 Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. A failed leaf with non-null `log.id` is a candidate.
 
-Filter to Helix work items only. xharness runs inside Helix work items, not on the AzDO agent. From the `Send to Helix` task log, extract `Sent Helix Job: <GUID>`:
+Filter to Helix work items only. xharness runs inside Helix work items, not on the AzDO agent. From the `Send to Helix` task log, extract the GUID from either supported completion message:
+
+- `Sent Helix Job: <GUID>`
+- `Sent Helix Job; see work items at https://helix.dot.net/api/jobs/<GUID>/workitems`
 
 ```bash
 runtime-failure-observer-http azdo-log --build-id SRCID --log-id LOGID --output /tmp/gh-aw/agent/helix-send.log
-grep -oE 'Sent Helix Job: [a-f0-9-]+' /tmp/gh-aw/agent/helix-send.log
+grep -oE 'Sent Helix Job(: |; see work items at https://helix\.dot\.net/api/jobs/)[a-f0-9-]+' /tmp/gh-aw/agent/helix-send.log \
+  | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
 ```
 
 For each Helix job, list failing work items (inline the job id in place of `JOBID`):
