@@ -236,6 +236,8 @@ For each Helix job, list failing work items (inline the job id in place of `JOBI
 runtime-failure-observer-http helix-work-items --job-id JOBID --output "/tmp/gh-aw/agent/helix-JOBID.json"
 ```
 
+Before requesting consoles, skip any work item whose Helix `ExitCode` is a negative integer and record `skipped: Helix infrastructure exit code <n>`. Negative Helix exit codes are service-side outcomes rather than xharness process exit codes, so they cannot match the Step 3 improvement table. If `ExitCode` is missing or is not an integer, apply rule 6.
+
 A work item is an xharness invocation candidate if its console contains an xharness command (`xharness apple`, `xharness android`, `xharness wasm`, or `dotnet exec .../Microsoft.DotNet.XHarness.CLI.dll`). Fetch each failing work item's console by its exact `Name`, then scan it:
 
 ```bash
