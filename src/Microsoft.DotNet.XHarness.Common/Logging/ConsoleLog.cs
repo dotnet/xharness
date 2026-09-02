@@ -15,7 +15,7 @@ public class ConsoleLog : ReadableLog
 {
     readonly StringBuilder _captured = new();
 
-    protected override void WriteImpl(string value)
+    protected override void WriteImpl(string? value)
     {
         lock (_captured)
         {

@@ -28,12 +28,13 @@ stages:
       enableTelemetry: true
       enablePublishBuildArtifacts: true
       enableMicrobuild: true
-      enablePublishUsingPipelines: true
+      publishingVersion: 4
       enablePublishBuildAssets: true
       helixRepo: dotnet/xharness
 
       jobs:
       - job: OSX
+        enablePublishing: true
         pool:
           vmImage: macOS-15
         strategy:
@@ -70,14 +71,20 @@ stages:
 
 # E2E tests
 
-- template: eng/e2e-test.yml
-  parameters:
-    name: E2E_iOS_Devices
-    displayName: Apple - iOS devices
-    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.iOS.Tests.proj
+- stage: E2E
+  displayName: E2E
+  dependsOn: Build_OSX
+  jobs:
+  - template: /eng/common/core-templates/job/helix-job-monitor.yml
 
-- template: eng/e2e-test.yml
-  parameters:
-    name: E2E_Apple_Device_Commands
-    displayName: Apple - Device Commands
-    testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Commands.Tests.proj
+  - template: eng/e2e-test.yml
+    parameters:
+      name: E2E_iOS_Devices
+      displayName: Apple - iOS devices
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.iOS.Tests.proj
+
+  - template: eng/e2e-test.yml
+    parameters:
+      name: E2E_Apple_Device_Commands
+      displayName: Apple - Device Commands
+      testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Commands.Tests.proj

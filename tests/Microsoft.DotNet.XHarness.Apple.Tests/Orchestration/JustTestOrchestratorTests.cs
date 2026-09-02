@@ -39,6 +39,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             _appUninstaller.Object,
             _appTesterFactory.Object,
             _deviceFinder.Object,
+            _processManager.Object,
             _logger.Object,
             _logs,
             _mainLog.Object,
@@ -53,7 +54,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
         // Setup
         var testTarget = new TestTargetOs(TestTarget.Simulator_iOS64, "13.5");
 
-        var envVars = new[] { ("envVar1", "value1"), ("envVar2", "value2") };
+        var envVars = new (string, string?)[] { ("envVar1", "value1"), ("envVar2", "value2") };
 
         _appTester
             .Setup(x => x.TestApp(
@@ -127,7 +128,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
                 It.IsAny<TimeSpan>(),
                 false,
                 extraArguments,
-                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<IEnumerable<(string, string?)>>(),
                 It.IsAny<XmlResultJargon>(),
                 It.IsAny<string[]?>(),
                 It.IsAny<string[]?>(),
@@ -149,7 +150,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             includeWirelessDevices: true,
             enableLldb: false,
             signalAppEnd: false,
-            Array.Empty<(string, string)>(),
+            Array.Empty<(string, string?)>(),
             extraArguments,
             new CancellationToken());
 
@@ -184,7 +185,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
                 It.IsAny<TimeSpan>(),
                 false,
                 It.IsAny<IEnumerable<string>>(),
-                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<IEnumerable<(string, string?)>>(),
                 It.IsAny<XmlResultJargon>(),
                 It.IsAny<string[]?>(),
                 It.IsAny<string[]?>(),
@@ -212,7 +213,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             includeWirelessDevices: false,
             enableLldb: true,
             signalAppEnd: false,
-            Array.Empty<(string, string)>(),
+            Array.Empty<(string, string?)>(),
             Array.Empty<string>(),
             new CancellationToken());
 
@@ -253,7 +254,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
                 It.IsAny<TimeSpan>(),
                 true,
                 extraArguments,
-                It.IsAny<IEnumerable<(string, string)>>(),
+                It.IsAny<IEnumerable<(string, string?)>>(),
                 It.IsAny<XmlResultJargon>(),
                 It.IsAny<string[]?>(),
                 It.IsAny<string[]?>(),
@@ -275,7 +276,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
             includeWirelessDevices: true,
             enableLldb: false,
             signalAppEnd: true,
-            Array.Empty<(string, string)>(),
+            Array.Empty<(string, string?)>(),
             extraArguments,
             new CancellationToken());
 
@@ -304,7 +305,7 @@ public class JustTestOrchestratorTests : OrchestratorTestBase
 
         var testTarget = new TestTargetOs(TestTarget.MacCatalyst, null);
 
-        var envVars = new[] { ("envVar1", "value1"), ("envVar2", "value2") };
+        var envVars = new (string, string?)[] { ("envVar1", "value1"), ("envVar2", "value2") };
 
         _appTester
             .Setup(x => x.TestMacCatalystApp(

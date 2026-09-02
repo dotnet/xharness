@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 
@@ -22,6 +21,8 @@ public class ResultFileHandler : IResultFileHandler
     private IMlaunchProcessManager _processManager;
     private IFileBackedLog _mainLog;
     private readonly int[] _retryDelaysMs;
+
+    public int LastCopyAttempts { get; private set; }
 
     public ResultFileHandler(IMlaunchProcessManager pm, IFileBackedLog fs, int[]? retryDelaysMs = null)
     {
@@ -76,154 +77,124 @@ public class ResultFileHandler : IResultFileHandler
         string bundleIdentifier,
         string hostDestinationPath)
     {
-        // This file path is set in iOSApplicationEntryPointBase
-        string sourcePath = runMode == RunMode.iOS
-            ? "/Documents/test-results.xml"
-            : "/Library/Caches/Documents/test-results.xml";
-
-        if (IsVersionSupported(osVersion, isSimulator))
+        if (!ShouldCopyFromAppContainer(runMode, osVersion, isSimulator))
         {
-            string cmd;
-            if (isSimulator)
-            {
-                cmd = $"cp \"$(xcrun simctl get_app_container {udid} {bundleIdentifier} data){sourcePath}\" \"{hostDestinationPath}\"";
-            }
-            else
-            {
-                cmd = $"xcrun devicectl device copy from --device {udid} --source {sourcePath} --destination {hostDestinationPath} --user mobile --domain-type appDataContainer --domain-identifier {bundleIdentifier}";
-            }
+            return true;
+        }
 
-            // Retry up to 3 times with increasing delays to handle transient device communication errors
-            // (e.g., com.apple.Mercury.error 1000 or RSD error 0xE8000003 on tvOS devices).
-            for (int attempt = 0; attempt <= _retryDelaysMs.Length; attempt++)
-            {
-                if (attempt > 0)
-                {
-                    int delayMs = _retryDelaysMs[attempt - 1];
-                    _mainLog.WriteLine($"Retrying results file copy (attempt {attempt + 1}) after {delayMs / 1000}s delay...");
-                    await Task.Delay(delayMs);
+        return await CopyFileFromAppContainerAsync(
+            runMode,
+            isSimulator,
+            udid,
+            bundleIdentifier,
+            GetAppContainerSourcePath(runMode, "test-results.xml"),
+            hostDestinationPath,
+            "results file");
+    }
 
-                    // Remove a partial/failed destination file before retrying
-                    if (File.Exists(hostDestinationPath))
-                    {
-                        File.Delete(hostDestinationPath);
-                    }
-                }
-
-                await _processManager.ExecuteCommandAsync(
-                    "/bin/bash",
-                    new[] { "-c", cmd },
-                    _mainLog,
-                    _mainLog,
-                    _mainLog,
-                    TimeSpan.FromMinutes(1),
-                    null);
-
-                if (File.Exists(hostDestinationPath))
-                {
-                    return true;
-                }
-
-                _mainLog.WriteLine($"Failed to copy results file from {(isSimulator ? "simulator" : "device")} (attempt {attempt + 1}). Expected at: {hostDestinationPath}");
-            }
-
+    public async Task<bool> CopyCoverageResultsAsync(
+        RunMode runMode,
+        bool isSimulator,
+        string osVersion,
+        string udid,
+        string bundleIdentifier,
+        string coverageFileName,
+        string hostDestinationPath)
+    {
+        if (!ShouldCopyFromAppContainer(runMode, osVersion, isSimulator))
+        {
             return false;
         }
 
-        return true;
+        return await CopyFileFromAppContainerAsync(
+            runMode,
+            isSimulator,
+            udid,
+            bundleIdentifier,
+            GetAppContainerSourcePath(runMode, coverageFileName),
+            hostDestinationPath,
+            "coverage results file");
     }
 
-    public async Task CopyCrashReportAsync(
-        string deviceUdid,
-        string? deviceName,
-        AppBundleInformation appInformation,
-        ILog outputLog,
-        bool isSimulator)
+    private bool ShouldCopyFromAppContainer(RunMode runMode, string osVersion, bool isSimulator)
+        => runMode == RunMode.MacOS || IsVersionSupported(osVersion, isSimulator);
+
+    public static string GetAppContainerSourcePath(RunMode runMode, string fileName)
+        => runMode is RunMode.iOS or RunMode.MacOS
+            ? $"/Documents/{fileName}"
+            : $"/Library/Caches/Documents/{fileName}";
+
+    private async Task<bool> CopyFileFromAppContainerAsync(
+        RunMode runMode,
+        bool isSimulator,
+        string udid,
+        string bundleIdentifier,
+        string sourcePath,
+        string hostDestinationPath,
+        string fileDescription)
     {
-        _mainLog.WriteLine("Attempting to retrieve crash report from device...");
+        LastCopyAttempts = 0;
 
-        // List all crash reports on the device
-        string tempCrashListFile = Path.GetTempFileName();
-
-        MlaunchArguments listArgs = new MlaunchArguments(new ListCrashReportsArgument(tempCrashListFile));
-
-        if (!string.IsNullOrEmpty(deviceName))
+        string copySourceDescription;
+        string cmd;
+        if (runMode == RunMode.MacOS)
         {
-            listArgs.Add(new DeviceNameArgument(deviceName));
+            string containerPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "Library",
+                "Containers",
+                bundleIdentifier,
+                "Data");
+            copySourceDescription = "MacCatalyst app container";
+            cmd = $"cp \"{containerPath}{sourcePath}\" \"{hostDestinationPath}\"";
         }
-
-        ProcessExecutionResult listResult = await _processManager.ExecuteCommandAsync(
-            listArgs,
-            _mainLog,
-            TimeSpan.FromMinutes(1));
-
-        if (!listResult.Succeeded || !File.Exists(tempCrashListFile))
+        else if (isSimulator)
         {
-            _mainLog.WriteLine("Failed to list crash reports from device.");
-            return;
-        }
-
-        List<string> crashReports = File.ReadAllLines(tempCrashListFile)
-            .Where(line => !string.IsNullOrWhiteSpace(line))
-            .ToList();
-
-        if (crashReports.Count == 0)
-        {
-            _mainLog.WriteLine("No crash reports found on device.");
-            return;
-        }
-
-        // Filter for crash reports that might be related to our app
-        // .ips files typically follow the format: AppName-YYYY-MM-DD-HHMMSS.ips or similar
-        List<string> appRelatedCrashes = crashReports
-            .Where(crash => crash.Contains(appInformation.AppName, StringComparison.OrdinalIgnoreCase) ||
-                            crash.EndsWith(".ips", StringComparison.OrdinalIgnoreCase))
-            .ToList();
-
-        // Use the last crash report (most recent) from the filtered list
-        string latestCrashReport = (appRelatedCrashes.Count > 0 ? appRelatedCrashes : crashReports).Last();
-
-        _mainLog.WriteLine($"Found crash report: {latestCrashReport}");
-
-        // Download the crash report
-        string? uploadRoot = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
-        string crashReportContent;
-
-        if (!string.IsNullOrEmpty(uploadRoot) && Directory.Exists(uploadRoot))
-        {
-            string crashFileName = Path.GetFileName(latestCrashReport);
-            crashReportContent = Path.Combine(uploadRoot, crashFileName);
+            copySourceDescription = "simulator";
+            cmd = $"cp \"$(xcrun simctl get_app_container {udid} {bundleIdentifier} data){sourcePath}\" \"{hostDestinationPath}\"";
         }
         else
         {
-            crashReportContent = Path.GetTempFileName();
+            copySourceDescription = "device";
+            cmd = $"xcrun devicectl device copy from --device {udid} --source {sourcePath} --destination {hostDestinationPath} --user mobile --domain-type appDataContainer --domain-identifier {bundleIdentifier}";
         }
 
-        MlaunchArguments downloadArgs = new MlaunchArguments(
-            new DownloadCrashReportArgument(latestCrashReport),
-            new DownloadCrashReportToArgument(crashReportContent));
-
-        if (!string.IsNullOrEmpty(deviceName))
+        // Retry up to 3 times with increasing delays to handle transient device communication errors
+        // (e.g., com.apple.Mercury.error 1000 or RSD error 0xE8000003 on tvOS devices).
+        for (int attempt = 0; attempt <= _retryDelaysMs.Length; attempt++)
         {
-            downloadArgs.Add(new DeviceNameArgument(deviceName));
+            LastCopyAttempts = attempt + 1;
+
+            if (attempt > 0)
+            {
+                int delayMs = _retryDelaysMs[attempt - 1];
+                _mainLog.WriteLine($"Retrying {fileDescription} copy (attempt {attempt + 1}) after {delayMs / 1000}s delay...");
+                await Task.Delay(delayMs);
+
+                // Remove a partial/failed destination file before retrying
+                if (File.Exists(hostDestinationPath))
+                {
+                    File.Delete(hostDestinationPath);
+                }
+            }
+
+            await _processManager.ExecuteCommandAsync(
+                "/bin/bash",
+                new[] { "-c", cmd },
+                _mainLog,
+                _mainLog,
+                _mainLog,
+                TimeSpan.FromMinutes(1),
+                null);
+
+            if (File.Exists(hostDestinationPath))
+            {
+                return true;
+            }
+
+            _mainLog.WriteLine($"Failed to copy {fileDescription} from {copySourceDescription} (attempt {attempt + 1}). Expected at: {hostDestinationPath}");
         }
 
-        ProcessExecutionResult downloadResult = await _processManager.ExecuteCommandAsync(
-            downloadArgs,
-            _mainLog,
-            TimeSpan.FromMinutes(1));
-
-        if (!downloadResult.Succeeded || !File.Exists(crashReportContent))
-        {
-            _mainLog.WriteLine("Failed to download crash report from device.");
-            return;
-        }
-
-        // Dump the crash report content to the log
-        _mainLog.WriteLine($"==================== Crash report ====================");
-        _mainLog.WriteLine($"Crash report file: {crashReportContent}");
-        string crashContent = await File.ReadAllTextAsync(crashReportContent);
-        _mainLog.WriteLine(crashContent);
-        _mainLog.WriteLine($"==================== End of Crash report ====================");
+        return false;
     }
 }

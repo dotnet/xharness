@@ -12,13 +12,10 @@ variables:
       value: real
     - name: _BuildConfig
       value: Release
-    # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
     # DotNet-HelixApi-Access provides: HelixApiAccessToken
-    - group: Publish-Build-Assets
     - group: DotNet-HelixApi-Access
     - group: SDL_Settings
     - name: _InternalBuildArgs
-      value: /p:DotNetSignType=$(_SignType) 
+      value: /p:DotNetSignType=$(_SignType)
         /p:TeamName=$(_TeamName)
-        /p:DotNetPublishUsingPipelines=true
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,6 +14,7 @@ using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -35,12 +37,14 @@ public abstract class BaseOrchestrator : IDisposable
     private readonly IAppInstaller _appInstaller;
     private readonly IAppUninstaller _appUninstaller;
     private readonly IDeviceFinder _deviceFinder;
+    private readonly IMlaunchProcessManager _processManager;
     private readonly ILogger _logger;
     private readonly ILogs _logs;
     private readonly IFileBackedLog _mainLog;
     private readonly IErrorKnowledgeBase _errorKnowledgeBase;
     private readonly IDiagnosticsData _diagnosticsData;
     private readonly IHelpers _helpers;
+    private readonly Dictionary<string, object?> _runSummaryData = new();
 
     private bool _lldbFileCreated;
 
@@ -61,6 +65,7 @@ public abstract class BaseOrchestrator : IDisposable
         IAppInstaller appInstaller,
         IAppUninstaller appUninstaller,
         IDeviceFinder deviceFinder,
+        IMlaunchProcessManager processManager,
         ILogger consoleLogger,
         ILogs logs,
         IFileBackedLog mainLog,
@@ -72,6 +77,7 @@ public abstract class BaseOrchestrator : IDisposable
         _appInstaller = appInstaller ?? throw new ArgumentNullException(nameof(appInstaller));
         _appUninstaller = appUninstaller ?? throw new ArgumentNullException(nameof(appUninstaller));
         _deviceFinder = deviceFinder ?? throw new ArgumentNullException(nameof(deviceFinder));
+        _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
         _logs = logs ?? throw new ArgumentNullException(nameof(logs));
         _mainLog = mainLog ?? throw new ArgumentNullException(nameof(mainLog));
@@ -91,9 +97,10 @@ public abstract class BaseOrchestrator : IDisposable
         ExecuteAppFunc executeApp,
         CancellationToken cancellationToken)
     {
+        ExitCode exitCode = ExitCode.GENERAL_FAILURE;
         try
         {
-            return await OrchestrateOperationInternal(
+            exitCode = await OrchestrateOperationInternal(
                 target,
                 deviceName,
                 includeWirelessDevices,
@@ -107,7 +114,25 @@ public abstract class BaseOrchestrator : IDisposable
         catch (OperationCanceledException e)
         {
             _logger.LogDebug(e.ToString());
-            return ExitCode.APP_LAUNCH_TIMEOUT;
+            exitCode = ExitCode.APP_LAUNCH_TIMEOUT;
+        }
+        finally
+        {
+            EmitAppleRunSummary(exitCode);
+        }
+
+        return exitCode;
+    }
+
+    protected void SetRunSummaryData(string key, object? value)
+    {
+        if (value is null)
+        {
+            _runSummaryData.Remove(key);
+        }
+        else
+        {
+            _runSummaryData[key] = value;
         }
     }
 
@@ -157,6 +182,12 @@ public abstract class BaseOrchestrator : IDisposable
 
         if (target.Platform == TestTarget.MacCatalyst)
         {
+            // MacCatalyst runs on the local Mac — set device info accordingly
+            _diagnosticsData.Device = Environment.MachineName;
+            _diagnosticsData.TargetOS = $"macOS {Environment.OSVersion.Version}";
+            _diagnosticsData.IsDevice = false;
+            _diagnosticsData.Environment = AppleEnvironmentReport.CreateMacCatalystEnvironment();
+
             try
             {
                 appBundleInfo = await getAppBundle(target, null!, cancellationToken);
@@ -170,7 +201,7 @@ public abstract class BaseOrchestrator : IDisposable
 
             try
             {
-                return await executeMacCatalystApp(appBundleInfo);
+                exitCode = await executeMacCatalystApp(appBundleInfo);
             }
             catch (Exception e)
             {
@@ -196,9 +227,9 @@ public abstract class BaseOrchestrator : IDisposable
                 }
 
                 _logger.LogError(message.ToString());
-
-                return exitCode;
             }
+
+            return exitCode;
         }
 
         try
@@ -275,6 +306,7 @@ public abstract class BaseOrchestrator : IDisposable
         }
 
         cancellationToken.ThrowIfCancellationRequested();
+        _diagnosticsData.Environment = await AppleEnvironmentReport.CreateTargetEnvironmentAsync(_processManager, device, companionDevice, cancellationToken);
 
         // Note down the actual test target
         // For simulators (e.g. "iOS 13.4"), we strip the iOS part and keep the version only, for devices there's no OS
@@ -354,6 +386,67 @@ public abstract class BaseOrchestrator : IDisposable
         }
 
         return exitCode;
+    }
+
+    protected void EmitAppleRunSummary(ExitCode exitCode)
+    {
+        var producedFiles = new List<DiagnosticsFile>();
+
+        // Collect files from the logs collection
+        foreach (var log in _logs.OfType<IFileBackedLog>())
+        {
+            if (string.IsNullOrEmpty(log.FullPath) || !File.Exists(log.FullPath))
+            {
+                continue;
+            }
+
+            // Skip empty log files
+            var fileInfo = new FileInfo(log.FullPath);
+            if (fileInfo.Length == 0)
+            {
+                continue;
+            }
+
+            var fileName = Path.GetFileName(log.FullPath);
+            var fileType = log.Description ?? "log";
+
+            producedFiles.Add(new DiagnosticsFile
+            {
+                Name = fileName,
+                Type = fileType.ToLowerInvariant().Replace(" ", "-"),
+                Path = log.FullPath,
+            });
+        }
+
+        // Also populate diagnostics data files
+        foreach (var file in producedFiles)
+        {
+            _diagnosticsData.Files.Add(file);
+        }
+
+        RunSummaryEmitter.EmitRunSummary(
+            message => _logger.LogInformation(message),
+            exitCode,
+            platform: "apple",
+            deviceName: _diagnosticsData.Device,
+            deviceOsVersion: _diagnosticsData.TargetOS,
+            architecture: null,
+            instrumentationExitCode: null,
+            producedFiles: producedFiles,
+            environment: _diagnosticsData.Environment,
+            additionalData: _runSummaryData);
+
+        RunSummaryEmitter.WriteResultJsonFile(
+            _logs.Directory,
+            exitCode,
+            platform: "apple",
+            deviceName: _diagnosticsData.Device,
+            deviceOsVersion: _diagnosticsData.TargetOS,
+            architecture: null,
+            instrumentationExitCode: null,
+            producedFiles: producedFiles,
+            environment: _diagnosticsData.Environment,
+            additionalData: _runSummaryData);
     }
 
     public void Dispose()

@@ -32,8 +32,13 @@ public class ScanLog : Log
         _startIndex = -1;
     }
 
-    protected override void WriteImpl(string value)
+    protected override void WriteImpl(string? value)
     {
+        if( value == null)
+        {
+            return;
+        }
+
         foreach (var c in value)
         {
             Add(c);

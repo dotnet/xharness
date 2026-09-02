@@ -53,11 +53,16 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
         var serviceProvider = Services.BuildServiceProvider();
         var diagnosticsData = serviceProvider.GetRequiredService<IDiagnosticsData>();
 
+        var coverageOutputPath = Arguments.EnableCoverage
+            ? Path.Combine(Arguments.OutputDirectory, "coverage.cobertura.xml")
+            : null;
+
         var logProcessor = new WasmTestMessagesProcessor(xmlResultsFilePath,
                                                          stdoutFilePath,
                                                          logger,
                                                          Arguments.ErrorPatternsFile,
-                                                         symbolicator);
+                                                         symbolicator,
+                                                         coverageOutputPath);
         var runner = new WasmBrowserTestRunner(
                             Arguments,
                             PassThroughArguments,
@@ -181,9 +186,42 @@ internal class WasmTestBrowserCommand : XHarnessCommand<WasmTestBrowserCommandAr
 
         logger.LogInformation($"Starting Firefox with args: {string.Join(' ', options.ToCapabilities())} and load strategy: {Arguments.PageLoadStrategy.Value}");
 
-        return CreateWebDriver(
-                    () => FirefoxDriverService.CreateDefaultService(),
-                    (driverService) => new FirefoxDriver(driverService, options, Arguments.Timeout));
+        string[] err_snippets = new[]
+        {
+            "exited abnormally",
+            "Cannot start the driver service",
+            "failed to start",
+            "Connection refused"
+        };
+
+        int max_retries = 3;
+        int retry_num = 0;
+        while (true)
+        {
+            FirefoxDriverService? driverService = null;
+            try
+            {
+                driverService = FirefoxDriverService.CreateDefaultService();
+
+                return (driverService, new FirefoxDriver(driverService, options, Arguments.Timeout));
+            }
+            catch (WebDriverException wde) when
+                (err_snippets.Any(s => wde.ToString().Contains(s)) && retry_num < max_retries - 1)
+            {
+                // geckodriver can fail with "Cannot start the driver service" due to
+                // a race between the driver process binding to a port and Selenium
+                // trying to connect. Retry a few times as a workaround.
+                logger.LogWarning($"Failed to start Firefox, attempt #{retry_num}: {wde}");
+                driverService?.Dispose();
+            }
+            catch
+            {
+                driverService?.Dispose();
+                throw;
+            }
+
+            retry_num++;
+        }
     }
 
     private (DriverService, IWebDriver) GetChromeDriver(string sessionLanguage, ILogger logger)

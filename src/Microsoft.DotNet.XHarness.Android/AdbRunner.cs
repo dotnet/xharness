@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -21,9 +22,18 @@ public class AdbRunner
     {
         Architecture,
         ApiVersion,
+        BuildFingerprint,
         SupportedArchitectures,
         InstalledApps,
         BootCompletion,
+        CpuInfo,
+        CpuMaxFrequency,
+        CpuMaxFrequencyFallback,
+        Manufacturer,
+        MemInfo,
+        Model,
+        OperatingSystemVersion,
+        ProductName,
     }
 
     #region Constructor and state variables
@@ -33,8 +43,17 @@ public class AdbRunner
         { AdbProperty.SupportedArchitectures, new[] { "shell", "getprop", "ro.product.cpu.abilist" } },
         { AdbProperty.ApiVersion, new[] { "shell", "getprop", "ro.build.version.sdk" } },
         { AdbProperty.Architecture, new[] { "shell", "getprop", "ro.product.cpu.abi" } },
+        { AdbProperty.BuildFingerprint, new[] { "shell", "getprop", "ro.build.fingerprint" } },
         { AdbProperty.InstalledApps, new[] { "shell", "pm", "list", "packages", "-3" } },
         { AdbProperty.BootCompletion, new[] { "shell", "getprop", "sys.boot_completed" } },
+        { AdbProperty.CpuInfo, new[] { "shell", "cat", "/proc/cpuinfo" } },
+        { AdbProperty.CpuMaxFrequency, new[] { "shell", "cat", "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq" } },
+        { AdbProperty.CpuMaxFrequencyFallback, new[] { "shell", "cat", "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq" } },
+        { AdbProperty.Manufacturer, new[] { "shell", "getprop", "ro.product.manufacturer" } },
+        { AdbProperty.MemInfo, new[] { "shell", "cat", "/proc/meminfo" } },
+        { AdbProperty.Model, new[] { "shell", "getprop", "ro.product.model" } },
+        { AdbProperty.OperatingSystemVersion, new[] { "shell", "getprop", "ro.build.version.release" } },
+        { AdbProperty.ProductName, new[] { "shell", "getprop", "ro.product.name" } },
     };
 
     private const string AdbEnvironmentVariableName = "ADB_EXE_PATH";
@@ -49,6 +68,11 @@ public class AdbRunner
     private readonly IAdbProcessManager _processManager;
 
     private AndroidDevice? _activeDevice = null;
+
+    /// <summary>
+    /// Returns the currently active device, if one has been selected.
+    /// </summary>
+    public AndroidDevice? GetActiveDevice() => _activeDevice;
 
     public AdbRunner(ILogger log, string adbExePath = "") : this(log, new AdbProcessManager(log), adbExePath) { }
 
@@ -85,6 +109,28 @@ public class AdbRunner
             _log.LogDebug($"ADBRunner using ADB.exe supplied from {adbExePath}");
             _log.LogDebug($"Full resolved path:'{_absoluteAdbExePath}'");
         }
+    }
+
+    public void PopulateEnvironmentInfo(AndroidDevice device)
+    {
+        if (device is null)
+        {
+            throw new ArgumentNullException(nameof(device));
+        }
+
+        device.Manufacturer ??= GetDeviceProperty(AdbProperty.Manufacturer, device.DeviceSerial);
+        device.Model ??= GetDeviceProperty(AdbProperty.Model, device.DeviceSerial);
+        device.ProductName ??= GetDeviceProperty(AdbProperty.ProductName, device.DeviceSerial);
+        device.OperatingSystemVersion ??= GetDeviceProperty(AdbProperty.OperatingSystemVersion, device.DeviceSerial);
+        device.BuildFingerprint ??= GetDeviceProperty(AdbProperty.BuildFingerprint, device.DeviceSerial);
+        device.Architecture ??= GetDeviceProperty(AdbProperty.Architecture, device.DeviceSerial);
+        device.SupportedArchitectures ??= GetDeviceProperty(AdbProperty.SupportedArchitectures, device.DeviceSerial)?.Split(new[] { ',', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        device.CpuModel ??= ParseCpuModel(GetDeviceProperty(AdbProperty.CpuInfo, device.DeviceSerial));
+        device.TotalMemoryBytes ??= ParseTotalMemoryBytes(GetDeviceProperty(AdbProperty.MemInfo, device.DeviceSerial));
+        device.CpuMaxFrequencyKiloHertz ??=
+            ParseFrequencyKiloHertz(GetDeviceProperty(AdbProperty.CpuMaxFrequency, device.DeviceSerial, logOnError: false))
+            ?? ParseFrequencyKiloHertz(GetDeviceProperty(AdbProperty.CpuMaxFrequencyFallback, device.DeviceSerial, logOnError: false))
+            ?? ParseCpuFrequencyFromCpuInfoKiloHertz(GetDeviceProperty(AdbProperty.CpuInfo, device.DeviceSerial));
     }
 
     private static string GetCliAdbExePath()
@@ -154,12 +200,60 @@ public class AdbRunner
         {
             Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath) ?? throw new ArgumentNullException(nameof(outputFilePath)));
             File.WriteAllText(outputFilePath, result.StandardOutput);
-            _log.LogInformation($"Wrote current ADB log to {outputFilePath}");
-            // The adb log is not directly accessible.
-            // Hence, we duplicate the log to the main console log to simplify the UX of failure investigation.
-            _log.LogInformation($"ADB log output:{Environment.NewLine}{result.StandardOutput}");
+            _log.LogInformation($"Wrote full ADB log ({CountLines(result.StandardOutput)} lines) to {outputFilePath}");
+
+            // Filter to only DOTNET-tagged lines for console output (full log is in the file above)
+            var filteredLog = FilterToDotnetLines(result.StandardOutput);
+            if (!string.IsNullOrEmpty(filteredLog))
+            {
+                _log.LogInformation($"ADB log (DOTNET entries):{Environment.NewLine}{filteredLog}");
+            }
+            else
+            {
+                _log.LogInformation("ADB log contained no DOTNET-tagged entries (see full log file for details)");
+            }
+
             return true;
         }
+    }
+
+    public static string FilterToDotnetLines(string logcatOutput)
+    {
+        if (string.IsNullOrEmpty(logcatOutput))
+        {
+            return string.Empty;
+        }
+
+        var sb = new StringBuilder();
+        foreach (var line in logcatOutput.Split('\n'))
+        {
+            // Match lines from the DOTNET log tag used by the Mono Android test runner
+            if (line.Contains(" DOTNET  ") || line.Contains(" DOTNET: "))
+            {
+                sb.AppendLine(line.TrimEnd('\r'));
+            }
+        }
+
+        return sb.ToString().TrimEnd();
+    }
+
+    private static int CountLines(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return 0;
+        }
+
+        int count = 0;
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (text[i] == '\n')
+            {
+                count++;
+            }
+        }
+
+        return count + 1;
     }
 
     public string DumpBugReport(string outputFilePathWithoutFormat)
@@ -350,14 +444,13 @@ public class AdbRunner
             _log.LogWarning($"Error restarting ADB server during recovery: {e.Message}");
         }
 
-        // Step 3: Re-check for devices after ADB reset - if a device reappeared, we are done
+        // Step 3: Re-check for devices after ADB reset - if an online device reappeared, we are done
         var recheckResult = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
         _log.LogInformation($"Devices after ADB server reset:{Environment.NewLine}{recheckResult.StandardOutput}");
 
-        var recheckLines = recheckResult.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-        if (recheckLines.Length >= 2)
+        if (HasOnlineDevice(recheckResult.StandardOutput))
         {
-            _log.LogInformation("Device(s) reappeared after ADB server reset; skipping emulator service restart");
+            _log.LogInformation("Online device(s) reappeared after ADB server reset; skipping emulator service restart");
             return true;
         }
 
@@ -394,7 +487,14 @@ public class AdbRunner
             {
                 var emuResult = RunAdbCommand(new[] { "emu", "restart" }, TimeSpan.FromSeconds(30));
                 _log.LogDebug($"adb emu restart output: {emuResult.StandardOutput}");
-                restartAttempted = true;
+                if (emuResult.Succeeded)
+                {
+                    restartAttempted = true;
+                }
+                else
+                {
+                    _log.LogWarning($"adb emu restart failed (exit code {emuResult.ExitCode}):{Environment.NewLine}{emuResult.StandardError}");
+                }
             }
             catch (Exception e)
             {
@@ -408,14 +508,13 @@ public class AdbRunner
             return false;
         }
 
-        // Step 5: Wait for a device to reappear
-        _log.LogInformation("Waiting for emulator to reappear after recovery (max 5 minutes)...");
+        // Step 5: Wait for an online device to reappear
+        _log.LogInformation("Waiting for emulator to come online after recovery (max 5 minutes)...");
         bool deviceAppeared = Retry(
             () =>
             {
                 var r = RunAdbCommand(new[] { "devices", "-l" }, TimeSpan.FromSeconds(30));
-                var lines = r.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-                return lines.Length >= 2;
+                return HasOnlineDevice(r.StandardOutput);
             },
             retryInterval: TimeSpan.FromSeconds(10),
             retryPeriod: TimeSpan.FromMinutes(5));
@@ -449,6 +548,20 @@ public class AdbRunner
             _log.LogWarning("Emulator appeared but did not complete boot within the timeout after recovery");
             return false;
         }
+    }
+
+    private static bool HasOnlineDevice(string adbDevicesOutput)
+    {
+        foreach (string line in adbDevicesOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries))
+        {
+            string[] parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (parts.Length >= 2 && parts[1].Equals("device", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -1171,7 +1284,7 @@ public class AdbRunner
         return devices;
     }
 
-    private string? GetDeviceProperty(AdbProperty property, string? deviceName = null)
+    private string? GetDeviceProperty(AdbProperty property, string? deviceName = null, bool logOnError = true)
     {
         IEnumerable<string> args = s_commandList[property];
 
@@ -1185,10 +1298,19 @@ public class AdbRunner
             action: () => RunAdbCommand(args, TimeSpan.FromSeconds(30)),
             needsRetry: r =>
             {
-                if (!r.Succeeded || r.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase))
+                if (IsTransientDeviceConnectionFailure(r))
                 {
-                    _log.LogWarning($"Device {deviceName} is offline; retrying up to five minutes");
+                    _log.LogWarning(
+                        $"Failed to get device property {property} from {deviceName ?? "the active device"} due to a transient ADB connection failure; " +
+                        $"retrying up to five minutes.{Environment.NewLine}{r}");
                     return true;
+                }
+
+                if (!r.Succeeded)
+                {
+                    _log.LogDebug(
+                        $"Failed to get device property {property} from {deviceName ?? "the active device"}; " +
+                        $"the failure is not a transient ADB connection failure and will not be retried.{Environment.NewLine}{r}");
                 }
 
                 return false;
@@ -1198,13 +1320,149 @@ public class AdbRunner
 
         if (!result.Succeeded)
         {
-            _log.LogError($"Failed to get device's property {property}. Check if a device is attached / emulator is started" +
-                Environment.NewLine + result.StandardError);
+            if (logOnError)
+            {
+                _log.LogError($"Failed to get device's property {property}. Check if a device is attached / emulator is started" +
+                    Environment.NewLine + result.StandardError);
+            }
 
             return null;
         }
 
         return result.StandardOutput.Trim();
+    }
+
+    private static bool IsTransientDeviceConnectionFailure(ProcessExecutionResults result)
+    {
+        if (result.TimedOut)
+        {
+            return true;
+        }
+
+        return result.StandardError.Contains("device offline", StringComparison.OrdinalIgnoreCase)
+            || result.StandardError.Contains("no devices/emulators found", StringComparison.OrdinalIgnoreCase)
+            || result.StandardError.Contains("device not found", StringComparison.OrdinalIgnoreCase)
+            || result.StandardError
+                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Any(line => line.Contains("device '", StringComparison.OrdinalIgnoreCase)
+                    && line.TrimEnd().EndsWith("' not found", StringComparison.OrdinalIgnoreCase));
+    }
+
+    internal static string? ParseCpuModel(string? cpuInfo)
+    {
+        if (string.IsNullOrWhiteSpace(cpuInfo))
+        {
+            return null;
+        }
+
+        foreach (var line in cpuInfo.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (TryParseColonValue(line, "Hardware", out var hardware))
+            {
+                return hardware;
+            }
+
+            if (TryParseColonValue(line, "model name", out var modelName))
+            {
+                return modelName;
+            }
+
+            if (TryParseColonValue(line, "Processor", out var processor))
+            {
+                return processor;
+            }
+        }
+
+        return null;
+    }
+
+    internal static long? ParseCpuFrequencyFromCpuInfoKiloHertz(string? cpuInfo)
+    {
+        if (string.IsNullOrWhiteSpace(cpuInfo))
+        {
+            return null;
+        }
+
+        foreach (var line in cpuInfo.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (TryParseColonValue(line, "cpu MHz", out var cpuFrequency))
+            {
+                return double.TryParse(cpuFrequency, NumberStyles.Float, CultureInfo.InvariantCulture, out var megaHertz)
+                    ? (long)(megaHertz * 1000)
+                    : null;
+            }
+        }
+
+        return null;
+    }
+
+    internal static long? ParseFrequencyKiloHertz(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        if (long.TryParse(trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries)[0], out var kiloHertz))
+        {
+            return kiloHertz;
+        }
+
+        if (trimmed.EndsWith("MHz", StringComparison.OrdinalIgnoreCase)
+            && double.TryParse(trimmed.Replace("MHz", "", StringComparison.OrdinalIgnoreCase).Trim(), out var megaHertz))
+        {
+            return (long)(megaHertz * 1000);
+        }
+
+        if (trimmed.EndsWith("GHz", StringComparison.OrdinalIgnoreCase)
+            && double.TryParse(trimmed.Replace("GHz", "", StringComparison.OrdinalIgnoreCase).Trim(), out var gigaHertz))
+        {
+            return (long)(gigaHertz * 1_000_000);
+        }
+
+        return null;
+    }
+
+    internal static long? ParseTotalMemoryBytes(string? memInfo)
+    {
+        if (string.IsNullOrWhiteSpace(memInfo))
+        {
+            return null;
+        }
+
+        foreach (var line in memInfo.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!TryParseColonValue(line, "MemTotal", out var totalMemory))
+            {
+                continue;
+            }
+
+            if (long.TryParse(totalMemory.Split(' ', StringSplitOptions.RemoveEmptyEntries)[0], out var kiloBytes))
+            {
+                return kiloBytes * 1024;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool TryParseColonValue(string line, string key, out string value)
+    {
+        value = string.Empty;
+        if (!line.StartsWith(key, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var separatorIndex = line.IndexOf(':');
+        if (separatorIndex < 0 || separatorIndex == line.Length - 1)
+        {
+            return false;
+        }
+
+        value = line.Substring(separatorIndex + 1).Trim();
+        return true;
     }
 
     private bool TestFileExists(string path, string? deviceName = null)

@@ -175,6 +175,8 @@ XHarness uses standardized exit codes (see `src/Microsoft.DotNet.XHarness.Common
 - Check device/simulator state before test execution
 - Verify app signing and provisioning for Apple platforms
 - Monitor TCP connections for test result streaming
+- If Helix `ConsoleOutputUri` is the `helix-workitem-deadletter.txt` sentinel, use the canonical `/api/2019-06-17/jobs/{jobId}/workitems/{workItem}/console` endpoint; an uploaded console log may still be available there.
+- Negative Helix work-item exit codes are service-side outcomes, not xharness process exit codes. Observer scans should skip them before console retrieval because crash/dead-letter work items may not have a console at the canonical endpoint.
 
 ## Development Workflow
 

@@ -60,11 +60,22 @@ Arguments:
 
         // enumerate the devices attached and their architectures
         // Tell ADB to only use that one (will always use the present one for systems w/ only 1 machine)
-        var device = runner.GetDevice(
+        AndroidDevice? FindDevice() => runner.GetDevice(
             loadApiVersion: true,
             loadArchitecture: true,
             requiredApiVersion: Arguments.ApiVersion.Value,
             requiredArchitectures: apkRequiredArchitecture);
+
+        var device = FindDevice();
+
+        if (device is null)
+        {
+            logger.LogWarning("No compatible device found on first attempt; trying emulator recovery...");
+            if (runner.TryRecoverEmulator())
+            {
+                device = FindDevice();
+            }
+        }
 
         if (device is null)
         {

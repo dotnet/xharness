@@ -69,7 +69,7 @@ public class SimulatorDevice : ISimulatorDevice
     {
         await _processManager.ExecuteCommandAsync("launchctl", new[] { "remove", "com.apple.CoreSimulator.CoreSimulatorService" }, log, TimeSpan.FromSeconds(10));
 
-        var toKill = new string[] { "iPhone Simulator", "iOS Simulator", "Simulator", "Simulator (Watch)", "com.apple.CoreSimulator.CoreSimulatorService", "ibtoold" };
+        var toKill = new string[] { "iPhone Simulator", "iOS Simulator", "Simulator", "Simulator (Watch)", "DeviceHub", "DevicesTrampoline", "com.apple.CoreSimulator.CoreSimulatorService", "ibtoold" };
 
         var args = new List<string>
             {
@@ -99,26 +99,6 @@ public class SimulatorDevice : ISimulatorDevice
                 log.WriteLine("Could not delete the directory '{0}': {1}", dir, e.Message);
             }
         }
-    }
-
-    private async Task OpenSimulator(ILog log)
-    {
-        string simulator_app;
-
-        if (IsWatchSimulator && _processManager.XcodeVersion.Major < 9)
-        {
-            simulator_app = Path.Combine(_processManager.XcodeRoot, "Contents", "Developer", "Applications", "Simulator (Watch).app");
-        }
-        else
-        {
-            simulator_app = Path.Combine(_processManager.XcodeRoot, "Contents", "Developer", "Applications", "Simulator.app");
-            if (!Directory.Exists(simulator_app))
-            {
-                simulator_app = Path.Combine(_processManager.XcodeRoot, "Contents", "Developer", "Applications", "iOS Simulator.app");
-            }
-        }
-
-        await _processManager.ExecuteCommandAsync("open", new[] { "-a", simulator_app, "--args", "-CurrentDeviceUDID", UDID }, log, TimeSpan.FromSeconds(15));
     }
 
     public async Task<bool> PrepareSimulator(ILog log, params string[] bundleIdentifiers)

@@ -75,6 +75,7 @@ public class DeviceFinder : IDeviceFinder
                 log,
                 includeLocked: false,
                 forceRefresh: false,
+                listExtraData: true,
                 includeWirelessDevices: includeWirelessDevices,
                 cancellationToken: cancellationToken);
 

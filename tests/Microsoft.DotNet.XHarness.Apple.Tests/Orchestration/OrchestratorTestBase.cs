@@ -7,6 +7,7 @@ using System.Threading;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -33,6 +34,7 @@ public abstract class OrchestratorTestBase
     protected readonly Mock<IFileBackedLog> _mainLog;
     protected readonly Mock<ILogger> _logger;
     protected readonly Mock<IHelpers> _helpers;
+    protected readonly Mock<IMlaunchProcessManager> _processManager;
     protected readonly Mock<IAppInstaller> _appInstaller;
     protected readonly Mock<IAppUninstaller> _appUninstaller;
     protected readonly AppBundleInformation _appBundleInformation;
@@ -48,7 +50,12 @@ public abstract class OrchestratorTestBase
         _errorKnowledgeBase = new();
         _appInstaller = new();
         _appUninstaller = new();
+        _processManager = new();
         _logs = new();
+
+        _processManager
+            .SetupGet(x => x.XcodeVersion)
+            .Returns(new System.Version(14, 0));
 
         _logs.AddFile("system.log", LogType.SystemLog.ToString());
 

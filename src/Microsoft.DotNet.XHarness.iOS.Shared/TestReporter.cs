@@ -6,11 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.Serialization.Json;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
 using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
@@ -19,8 +16,6 @@ using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
-using ExceptionLogger = System.Action<int, string>;
-
 #nullable enable
 namespace Microsoft.DotNet.XHarness.iOS.Shared;
 
@@ -36,7 +31,6 @@ public class TestReporter : ITestReporter
 
     private readonly ISimpleListener _listener;
     private readonly IFileBackedLog _mainLog;
-    private readonly ILogs _crashLogs;
     private readonly IReadableLog _runLog;
     private readonly ILogs _logs;
     private readonly ICrashSnapshotReporter _crashReporter;
@@ -57,11 +51,6 @@ public class TestReporter : ITestReporter
 
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
-    /// <summary>
-    /// Callback needed for the Xamarin.Xharness project that does extra logging in case of a crash.
-    /// </summary>
-    private readonly ExceptionLogger? _exceptionLogger;
-
     private bool _waitedForExit = true;
     private bool _launchFailure;
     private bool _isSimulatorTest;
@@ -76,7 +65,7 @@ public class TestReporter : ITestReporter
 
     public bool ResultsUseXml => _xmlJargon != XmlResultJargon.Missing;
 
-    private bool TestExecutionStarted => _listener.ConnectedTask.IsCompleted && _listener.ConnectedTask.Result;
+    public bool TestProtocolConnected => _listener.ConnectedTask.IsCompletedSuccessfully && _listener.ConnectedTask.Result;
 
     public TestReporter(
         IMlaunchProcessManager processManager,
@@ -92,7 +81,6 @@ public class TestReporter : ITestReporter
         string? device,
         TimeSpan timeout,
         string? additionalLogsDirectory = null,
-        ExceptionLogger? exceptionLogger = null,
         bool generateHtml = false)
     {
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
@@ -102,14 +90,12 @@ public class TestReporter : ITestReporter
         _runLog = runLog ?? throw new ArgumentNullException(nameof(runLog));
         _logs = logs ?? throw new ArgumentNullException(nameof(logs));
         _crashReporter = crashReporter ?? throw new ArgumentNullException(nameof(crashReporter));
-        _crashLogs = new Logs(logs.Directory);
         _resultParser = parser ?? throw new ArgumentNullException(nameof(parser));
         _appInfo = appInformation ?? throw new ArgumentNullException(nameof(appInformation));
         _runMode = runMode;
         _xmlJargon = xmlJargon;
         _timeout = timeout;
         _additionalLogsDirectory = additionalLogsDirectory;
-        _exceptionLogger = exceptionLogger;
         _timeoutWatch = Stopwatch.StartNew();
         _generateHtml = generateHtml;
 
@@ -132,11 +118,11 @@ public class TestReporter : ITestReporter
     {
         int pid = -1;
 
-        using var reader = _runLog.GetReader(); // diposed at the end of the method, which is what we want
+        using var reader = _runLog.GetReader();
         if (reader.Peek() == -1)
         {
             // Empty file! If the app never connected to our listener, it probably never launched
-            if (!_listener.ConnectedTask.IsCompleted || !_listener.ConnectedTask.Result)
+            if (!_listener.ConnectedTask.IsCompletedSuccessfully || !_listener.ConnectedTask.Result)
             {
                 _launchFailure = true;
             }
@@ -170,55 +156,6 @@ public class TestReporter : ITestReporter
         }
 
         return pid;
-    }
-
-    /// <summary>
-    /// Parse the main log to get the pid
-    /// </summary>
-    private async Task<int> GetPidFromMainLog()
-    {
-        int pid = -1;
-        using var log_reader = _mainLog.GetReader(); // dispose when we leave the method, which is what we want
-        string? line;
-        while ((line = await log_reader.ReadLineAsync()) != null)
-        {
-            const string str = "was launched with pid '";
-            var idx = line.IndexOf(str, StringComparison.Ordinal);
-            if (idx > 0)
-            {
-                idx += str.Length;
-                var next_idx = line.IndexOf('\'', idx);
-                if (next_idx > idx)
-                {
-                    int.TryParse(line.Substring(idx, next_idx - idx), out pid);
-                }
-            }
-            if (pid != -1)
-            {
-                return pid;
-            }
-        }
-        return pid;
-    }
-
-    /// <summary>
-    /// Return the reason for a crash found in a log
-    /// </summary>
-    private void GetCrashReason(int pid, IReadableLog crashLog, out string? crashReason)
-    {
-        crashReason = null;
-        using var crashReader = crashLog.GetReader(); // dispose when we leave the method
-        var text = crashReader.ReadToEnd();
-
-        var reader = JsonReaderWriterFactory.CreateJsonReader(Encoding.UTF8.GetBytes(text), new XmlDictionaryReaderQuotas());
-        var doc = new XmlDocument();
-        doc.Load(reader);
-        foreach (XmlNode? node in doc.SelectNodes($"/root/processes/item[pid = '" + pid + "']"))
-        {
-            Console.WriteLine(node?.InnerXml);
-            Console.WriteLine(node?.SelectSingleNode("reason")?.InnerText);
-            crashReason = node?.SelectSingleNode("reason")?.InnerText;
-        }
     }
 
     /// <summary>
@@ -299,7 +236,7 @@ public class TestReporter : ITestReporter
         _cancellationTokenSource.Cancel();
         _timedout = true;
 
-        if (TestExecutionStarted)
+        if (TestProtocolConnected)
         {
             _mainLog.WriteLine($"Test execution timed out after {_timeoutWatch.Elapsed.TotalMinutes:0.##} minutes");
             return;
@@ -397,7 +334,7 @@ public class TestReporter : ITestReporter
                 {
                     var logFiles = new List<string>();
                     // add our logs AND the logs of the previous task, which is the build task
-                    logFiles.AddRange(Directory.GetFiles(_crashLogs.Directory));
+                    logFiles.AddRange(Directory.GetFiles(_logs.Directory));
                     if (_additionalLogsDirectory != null) // when using the run command, we do not have a build task, ergo, there are no logs to add.
                     {
                         logFiles.AddRange(Directory.GetFiles(_additionalLogsDirectory));
@@ -507,27 +444,12 @@ public class TestReporter : ITestReporter
     }
 
     /// <summary>
-    /// Generate all the xml failures that will help the integration with the CI and return the failure reason
+    /// Generate XML failures for CI integration.
     /// </summary>
-    private async Task GenerateXmlFailures(string failure, bool crashed, string? crashReason)
+    private async Task GenerateXmlFailures(string failure, bool crashed)
     {
         if (!ResultsUseXml) // nothing to do
         {
-            return;
-        }
-
-        if (!string.IsNullOrEmpty(crashReason))
-        {
-            _resultParser.GenerateFailure(
-                _logs,
-                "crash",
-                _appInfo.AppName,
-                _appInfo.Variation,
-                $"App Crash {_appInfo.AppName} {_appInfo.Variation}",
-                $"App crashed: {failure}",
-                _mainLog.FullPath,
-                _xmlJargon);
-
             return;
         }
 
@@ -546,7 +468,7 @@ public class TestReporter : ITestReporter
             return;
         }
 
-        if (!_isSimulatorTest && crashed && string.IsNullOrEmpty(crashReason))
+        if (!_isSimulatorTest && crashed)
         {
             // this happens more that what we would like on devices, the main reason most of the time is that we have had netwoking problems and the
             // tcp connection could not be stablished. We are going to report it as an error since we have not parsed the logs, evne when the app might have
@@ -582,6 +504,9 @@ public class TestReporter : ITestReporter
     {
         (TestExecutingResult ExecutingResult, string? ResultMessage) result = (ExecutingResult: TestExecutingResult.Finished, ResultMessage: null);
         var crashed = false;
+        var missingResultFile = false;
+        var appExitedBeforeTestStart = false;
+        var testResultsMissing = false;
         if (File.Exists(_listener.TestLog.FullPath))
         {
             WrenchLog.WriteLine("AddFile: {0}", _listener.TestLog.FullPath);
@@ -614,10 +539,10 @@ public class TestReporter : ITestReporter
         }
         else
         {
-            WrenchLog.WriteLine("AddSummary: <b><i>{0} crashed at startup (no log)</i></b><br/>", _runMode);
-            _mainLog.WriteLine("Test run started but crashed and no test results were reported");
+            WrenchLog.WriteLine("AddSummary: <b><i>{0} exited without test results</i></b><br/>", _runMode);
+            _mainLog.WriteLine("The application exited without producing test results");
             result.ResultMessage = "No test log file was produced";
-            crashed = true;
+            missingResultFile = true;
             Success = false;
         }
 
@@ -632,16 +557,39 @@ public class TestReporter : ITestReporter
             crashLogWaitTime = 5;
         }
 
-        if (crashed)
+        if (crashed || missingResultFile)
         {
             crashLogWaitTime = 30;
         }
 
         await _crashReporter.EndCaptureAsync(TimeSpan.FromSeconds(crashLogWaitTime));
 
+        if (missingResultFile)
+        {
+            AppleCrashReportDiagnostics? crashDiagnostics = _crashReporter.CaptureDiagnostics;
+            if (crashDiagnostics?.MatchedReport is not null)
+            {
+                crashed = true;
+                result.ResultMessage = $"Application crash matched report '{crashDiagnostics.MatchedReport.Name}'";
+                _mainLog.WriteLine(result.ResultMessage);
+            }
+            else if (!TestProtocolConnected)
+            {
+                appExitedBeforeTestStart = true;
+                result.ResultMessage = "App exited without evidence that the test run started and no matching crash report was found";
+                _mainLog.WriteLine(result.ResultMessage);
+            }
+            else
+            {
+                testResultsMissing = true;
+                result.ResultMessage = "Test protocol connected but no test results were reported";
+                _mainLog.WriteLine(result.ResultMessage);
+            }
+        }
+
         if (_timedout)
         {
-            if (TestExecutionStarted)
+            if (TestProtocolConnected)
             {
                 result.ExecutingResult = TestExecutingResult.TimedOut;
             }
@@ -654,9 +602,17 @@ public class TestReporter : ITestReporter
         {
             result.ExecutingResult = TestExecutingResult.LaunchFailure;
         }
+        else if (appExitedBeforeTestStart)
+        {
+            result.ExecutingResult = TestExecutingResult.AppExitedBeforeTestStart;
+        }
         else if (crashed)
         {
             result.ExecutingResult = TestExecutingResult.Crashed;
+        }
+        else if (testResultsMissing)
+        {
+            result.ExecutingResult = TestExecutingResult.TestResultsMissing;
         }
         else if (Success.Value)
         {
@@ -667,55 +623,14 @@ public class TestReporter : ITestReporter
             result.ExecutingResult = TestExecutingResult.Failed;
         }
 
-        // Check crash reports to see if any of them explains why the test run crashed.
         if (!Success.Value)
         {
-            int pid = -1;
-            string? crashReason = null;
-            foreach (var crashLog in _crashLogs)
+            if (_launchFailure)
             {
-                try
-                {
-                    _logs.Add(crashLog);
-
-                    if (pid == -1)
-                    {
-                        // Find the pid
-                        pid = await GetPidFromMainLog();
-                    }
-
-                    GetCrashReason(pid, crashLog, out crashReason);
-                    if (crashReason != null)
-                    {
-                        break;
-                    }
-                }
-                catch (Exception e)
-                {
-                    var message = string.Format("Failed to process crash report '{1}': {0}", e.Message, crashLog.Description);
-                    _mainLog.WriteLine(message);
-                    _exceptionLogger?.Invoke(2, message);
-                }
-            }
-
-            if (!string.IsNullOrEmpty(crashReason))
-            {
-                if (crashReason == "per-process-limit")
-                {
-                    result.ResultMessage = "Killed due to using too much memory (per-process-limit).";
-                }
-                else
-                {
-                    result.ResultMessage = $"Killed by the OS ({crashReason})";
-                }
-            }
-            else if (_launchFailure)
-            {
-                // same as with a crash
                 result.ResultMessage = $"Launch failure";
             }
 
-            await GenerateXmlFailures(result.ResultMessage, crashed, crashReason);
+            await GenerateXmlFailures(result.ResultMessage, crashed);
         }
 
         return result;
@@ -723,7 +638,6 @@ public class TestReporter : ITestReporter
 
     public void Dispose()
     {
-        _crashLogs.Dispose();
         GC.SuppressFinalize(this);
     }
 }

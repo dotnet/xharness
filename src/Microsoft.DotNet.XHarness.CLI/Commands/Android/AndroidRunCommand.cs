@@ -62,13 +62,13 @@ Arguments:
         }
 
         DiagnosticsData.CaptureDeviceInfo(device);
+        DiagnosticsData.Environment = AndroidEnvironmentReport.CreateEnvironmentInfo(runner, device);
 
         // Wait till at least device(s) are ready
         if (!runner.WaitForDevice())
         {
             return ExitCode.DEVICE_NOT_FOUND;
         }
-
         logger.LogDebug($"Working with API {runner.GetAdbVersion()}");
 
         // Empty log as we'll be uploading the full logcat for this execution
@@ -77,6 +77,11 @@ Arguments:
         if (Arguments.Wifi != WifiStatus.Unknown)
         {
             runner.EnableWifi(Arguments.Wifi == WifiStatus.Enable);
+        }
+
+        if (Arguments.EnableCoverage)
+        {
+            Arguments.InstrumentationArguments.Value["enable-coverage"] = "true";
         }
 
         var instrumentationRunner = new InstrumentationRunner(logger, runner);

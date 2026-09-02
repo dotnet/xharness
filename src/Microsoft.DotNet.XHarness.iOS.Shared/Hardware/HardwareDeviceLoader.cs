@@ -39,7 +39,10 @@ public interface IHardwareDeviceLoader : IDeviceLoader
 
 public class HardwareDeviceLoader : IHardwareDeviceLoader
 {
+    private static readonly int[] DefaultDeviceListingRetryDelaysMs = { 5_000, 10_000 };
+
     private readonly IMlaunchProcessManager _processManager;
+    private readonly int[] _deviceListingRetryDelaysMs;
     private bool _loaded;
     private readonly BlockingEnumerableCollection<IHardwareDevice> _connectedDevices = new();
     private readonly SemaphoreSlim _semaphore = new(1);
@@ -53,8 +56,15 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
     public IEnumerable<IHardwareDevice> ConnectedxrOS => _connectedDevices.Where(x => x.DevicePlatform == DevicePlatform.xrOS);
 
     public HardwareDeviceLoader(IMlaunchProcessManager processManager)
+        : this(processManager, DefaultDeviceListingRetryDelaysMs)
+    {
+    }
+
+    internal HardwareDeviceLoader(IMlaunchProcessManager processManager, int[] deviceListingRetryDelaysMs)
     {
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+        _deviceListingRetryDelaysMs = deviceListingRetryDelaysMs?.ToArray()
+            ?? throw new ArgumentNullException(nameof(deviceListingRetryDelaysMs));
     }
 
     public async Task LoadDevices(
@@ -81,8 +91,9 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
         var tmpfile = Path.GetTempFileName();
         try
         {
-            using (var process = new Process())
+            for (int attempt = 0; ; attempt++)
             {
+                using var process = new Process();
                 var arguments = new MlaunchArguments(
                     new ListDevicesArgument(tmpfile),
                     new ListWirelessDevicesArgument(includeWirelessDevices),
@@ -94,44 +105,57 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
                     arguments.Add(new ListExtraDataArgument());
                 }
 
+                File.WriteAllText(tmpfile, string.Empty);
                 var task = _processManager.RunAsync(process, arguments, log, timeout: TimeSpan.FromSeconds(120), cancellationToken: cancellationToken);
                 log.WriteLine("Launching {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
 
                 var result = await task;
 
-                if (!result.Succeeded)
+                if (result.Succeeded)
                 {
-                    throw new Exception("Failed to list devices.");
+                    break;
                 }
 
-                var doc = new XmlDocument();
-                doc.LoadWithoutNetworkAccess(tmpfile);
-
-                var devices = doc.SelectNodes("/MTouch/Device");
-
-                log.WriteLine($"Found {devices.Count} devices");
-                log.Flush();
-
-                foreach (XmlNode dev in devices)
+                if (!result.TimedOut || attempt == _deviceListingRetryDelaysMs.Length)
                 {
-                    Device d = GetDevice(dev);
-                    if (d == null)
-                    {
-                        continue;
-                    }
-
-                    if (!includeLocked && d.IsLocked)
-                    {
-                        log.WriteLine($"Skipping device {d.Name} ({d.DeviceIdentifier}) because it's locked.");
-                        continue;
-                    }
-                    if (d.IsUsableForDebugging.HasValue && !d.IsUsableForDebugging.Value)
-                    {
-                        log.WriteLine($"Skipping device {d.Name} ({d.DeviceIdentifier}) because it's not usable for debugging.");
-                        continue;
-                    }
-                    _connectedDevices.Add(d);
+                    var reason = result.TimedOut ? "mlaunch timed out" : $"mlaunch exited with code {result.ExitCode}";
+                    throw new Exception($"Failed to list devices: {reason}.");
                 }
+
+                int delayMs = _deviceListingRetryDelaysMs[attempt];
+                log.WriteLine(
+                    $"Device listing timed out. Retrying in {delayMs / 1000}s " +
+                    $"(attempt {attempt + 2}/{_deviceListingRetryDelaysMs.Length + 1})...");
+                await Task.Delay(delayMs, cancellationToken);
+            }
+
+            var doc = new XmlDocument();
+            doc.LoadWithoutNetworkAccess(tmpfile);
+
+            var devices = doc.SelectNodes("/MTouch/Device");
+
+            log.WriteLine($"Found {devices.Count} devices");
+            log.Flush();
+
+            foreach (XmlNode dev in devices)
+            {
+                Device d = GetDevice(dev);
+                if (d == null)
+                {
+                    continue;
+                }
+
+                if (!includeLocked && d.IsLocked)
+                {
+                    log.WriteLine($"Skipping device {d.Name} ({d.DeviceIdentifier}) because it's locked.");
+                    continue;
+                }
+                if (d.IsUsableForDebugging.HasValue && !d.IsUsableForDebugging.Value)
+                {
+                    log.WriteLine($"Skipping device {d.Name} ({d.DeviceIdentifier}) because it's not usable for debugging.");
+                    continue;
+                }
+                _connectedDevices.Add(d);
             }
 
             _loaded = true;
@@ -243,11 +267,19 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
             companionIdentifier: deviceNode.SelectSingleNode("CompanionIdentifier")?.InnerText,
             name: deviceNode.SelectSingleNode("Name")?.InnerText,
             buildVersion: deviceNode.SelectSingleNode("BuildVersion")?.InnerText,
+            cpuArchitecture: deviceNode.SelectSingleNode("CPUArchitecture")?.InnerText,
             productVersion: deviceNode.SelectSingleNode("ProductVersion")?.InnerText,
             productType: deviceNode.SelectSingleNode("ProductType")?.InnerText,
+            hardwareModel: deviceNode.SelectSingleNode("HardwareModel")?.InnerText,
             interfaceType: deviceNode.SelectSingleNode("InterfaceType")?.InnerText,
+            modelNumber: deviceNode.SelectSingleNode("ModelNumber")?.InnerText,
+            amountDataAvailable: TryParseLong(deviceNode.SelectSingleNode("AmountDataAvailable")?.InnerText),
+            totalDataCapacity: TryParseLong(deviceNode.SelectSingleNode("TotalDataCapacity")?.InnerText),
             isUsableForDebugging: usable == null ? (bool?)null : usable == "True",
             isLocked: bool.TryParse(deviceNode.SelectSingleNode("IsLocked")?.InnerText, out var locked) && locked,
             isPaired: bool.TryParse(deviceNode.SelectSingleNode("IsPaired")?.InnerText, out var isPaired) && isPaired);
     }
+
+    private static long? TryParseLong(string? value)
+        => long.TryParse(value, out var parsed) ? parsed : null;
 }

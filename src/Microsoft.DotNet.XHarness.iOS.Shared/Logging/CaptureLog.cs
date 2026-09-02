@@ -216,7 +216,7 @@ public class CaptureLog : FileBackedLog, ICaptureLog
 
     public override void Flush() => Capture();
 
-    protected override void WriteImpl(string value) => throw new InvalidOperationException();
+    protected override void WriteImpl(string? value) => throw new InvalidOperationException();
 
     public override void Dispose()
     {

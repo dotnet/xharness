@@ -9,6 +9,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -35,13 +36,14 @@ public class SimulatorResetOrchestrator : BaseOrchestrator, ISimulatorResetOrche
         IAppInstaller appInstaller,
         IAppUninstaller appUninstaller,
         IDeviceFinder deviceFinder,
+        IMlaunchProcessManager processManager,
         ILogger consoleLogger,
         ILogs logs,
         IFileBackedLog mainLog,
         IErrorKnowledgeBase errorKnowledgeBase,
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
-        : base(new FakeAppBundleInformationParser(), appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        : base(new FakeAppBundleInformationParser(), appInstaller, appUninstaller, deviceFinder, processManager, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
         _consoleLogger = consoleLogger;
     }

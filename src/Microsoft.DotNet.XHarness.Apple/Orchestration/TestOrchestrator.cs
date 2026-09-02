@@ -12,6 +12,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -34,7 +35,7 @@ public interface ITestOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken);
 }
@@ -56,13 +57,14 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         IAppUninstaller appUninstaller,
         IAppTesterFactory appTesterFactory,
         IDeviceFinder deviceFinder,
+        IMlaunchProcessManager processManager,
         ILogger consoleLogger,
         ILogs logs,
         IFileBackedLog mainLog,
         IErrorKnowledgeBase errorKnowledgeBase,
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
-        : base(appBundleInformationParser, appInstaller, appUninstaller, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        : base(appBundleInformationParser, appInstaller, appUninstaller, deviceFinder, processManager, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
         _appTesterFactory = appTesterFactory ?? throw new ArgumentNullException(nameof(appTesterFactory));
         _logger = consoleLogger ?? throw new ArgumentNullException(nameof(consoleLogger));
@@ -85,7 +87,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
         => OrchestrateTest(
@@ -120,7 +122,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         bool resetSimulator,
         bool enableLldb,
         bool signalAppEnd,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
     {
@@ -209,7 +211,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         XmlResultJargon xmlResultJargon,
         IEnumerable<string> singleMethodFilters,
         IEnumerable<string> classMethodFilters,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         bool signalAppEnd,
         CancellationToken cancellationToken)
@@ -249,13 +251,11 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
 
+        SetRunSummaryData("appleLaunch", appTester.LaunchDiagnostics);
         ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
 
-        if (!target.Platform.IsSimulator()) // Simulator app logs are already included in the main log
-        {
-            // Copy system and application logs to the main log for better failure investigation.
-            CopyLogsToMainLog();
-        }
+        // Copy application logs to the main log for better failure investigation.
+        CopyLogsToMainLog();
 
         return exitCode;
     }
@@ -268,7 +268,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
         XmlResultJargon xmlResultJargon,
         IEnumerable<string> singleMethodFilters,
         IEnumerable<string> classMethodFilters,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         bool signalAppEnd,
         CancellationToken cancellationToken)
@@ -287,10 +287,11 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             skippedTestClasses: classMethodFilters?.ToArray(),
             cancellationToken: cancellationToken);
 
+        SetRunSummaryData("appleLaunch", appTester.LaunchDiagnostics);
         ExitCode exitCode = ParseResult(testResult, resultMessage, appTester.ListenerConnected);
 
-        // Copy system and application logs to the main log for better failure investigation.
-        CopyLogsToMainLog();
+        // Copy system log to the main log — MacCatalyst output goes to SystemLog, not ApplicationLog
+        CopyLogsToMainLog(isMacCatalyst: true);
 
         return exitCode;
     }
@@ -338,7 +339,7 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
 
             // TCP errors are encounter all the time but they are not always the cause of the failure
             // If the app crashed, TCP_CONNECTION_FAILED and there was not other exit code we will return TCP_CONNECTION_FAILED
-            if (defaultExitCode == ExitCode.APP_CRASH && tcpErrorFound)
+            if ((defaultExitCode == ExitCode.APP_CRASH || defaultExitCode == ExitCode.APP_EXITED_BEFORE_TEST_START) && tcpErrorFound)
             {
                 return ExitCode.TCP_CONNECTION_FAILED;
             }
@@ -364,12 +365,18 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
             case TestExecutingResult.Crashed:
                 return LogProblem("Application test run crashed", ExitCode.APP_CRASH);
 
+            case TestExecutingResult.AppExitedBeforeTestStart:
+                return LogProblem("Application exited before test startup was observed", ExitCode.APP_EXITED_BEFORE_TEST_START);
+
+            case TestExecutingResult.TestResultsMissing:
+                return LogProblem("Application did not produce a test results file", ExitCode.TEST_RESULTS_MISSING);
+
             case TestExecutingResult.LaunchTimedOut:
                 _logger.LogError("Application launch timed out before the test execution has started");
                 return ExitCode.APP_LAUNCH_TIMEOUT;
 
             case TestExecutingResult.TimedOut:
-                _logger.LogWarning($"Application test run timed out");
+                _logger.LogWarning("Application test run timed out. Use --timeout to adjust the configured timeout.");
                 return ExitCode.TIMED_OUT;
 
             default:
@@ -382,9 +389,14 @@ public class TestOrchestrator : BaseOrchestrator, ITestOrchestrator
     /// <summary>
     /// Copy system and application logs to the main log for better failure investigation.
     /// </summary>
-    private void CopyLogsToMainLog()
+    private void CopyLogsToMainLog(bool isMacCatalyst = false)
     {
-        var logs = _logs.Where(log => log.Description == LogType.ApplicationLog.ToString()).ToList();
+        // ApplicationLog: app console output captured via simctl (iOS/tvOS simulators, devices)
+        // SystemLog: macOS system log where MacCatalyst app output goes (runs as native process)
+        var targetLogType = isMacCatalyst ? LogType.SystemLog : LogType.ApplicationLog;
+        var logs = _logs.Where(log => log.Description == targetLogType.ToString()).ToList();
+
+        _logger.LogInformation($"Copying {targetLogType} logs to the main log for better failure investigation. Logs count: {logs.Count}.");
 
         foreach (var log in logs)
         {

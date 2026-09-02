@@ -10,6 +10,7 @@ using Microsoft.DotNet.XHarness.Common;
 using Microsoft.DotNet.XHarness.Common.CLI;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
+using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
 using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.Utilities;
@@ -31,7 +32,7 @@ public interface IJustTestOrchestrator
         bool includeWirelessDevices,
         bool enableLldb,
         bool signalAppEnd,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken);
 }
@@ -52,13 +53,14 @@ public class JustTestOrchestrator : TestOrchestrator, IJustTestOrchestrator
         IAppUninstaller appUninstaller,
         IAppTesterFactory appTesterFactory,
         IDeviceFinder deviceFinder,
+        IMlaunchProcessManager processManager,
         ILogger consoleLogger,
         ILogs logs,
         IFileBackedLog mainLog,
         IErrorKnowledgeBase errorKnowledgeBase,
         IDiagnosticsData diagnosticsData,
         IHelpers helpers)
-        : base(appBundleInformationParser, appInstaller, appUninstaller, appTesterFactory, deviceFinder, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
+        : base(appBundleInformationParser, appInstaller, appUninstaller, appTesterFactory, deviceFinder, processManager, consoleLogger, logs, mainLog, errorKnowledgeBase, diagnosticsData, helpers)
     {
     }
 
@@ -75,7 +77,7 @@ public class JustTestOrchestrator : TestOrchestrator, IJustTestOrchestrator
         bool includeWirelessDevices,
         bool enableLldb,
         bool signalAppEnd,
-        IReadOnlyCollection<(string, string)> environmentalVariables,
+        IReadOnlyCollection<(string, string?)> environmentalVariables,
         IEnumerable<string> passthroughArguments,
         CancellationToken cancellationToken)
         => OrchestrateTest(

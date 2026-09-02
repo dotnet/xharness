@@ -5,8 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.XHarness.Common.Execution;
@@ -177,83 +175,6 @@ public class ResultFileHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task CopyCrashReportUsesHelixUploadRootWhenAvailable()
-    {
-        // Skip on Windows as mlaunch is not available
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
-        string originalUploadRoot = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
-        string uploadRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        Directory.CreateDirectory(uploadRoot);
-
-        try
-        {
-            Environment.SetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT", uploadRoot);
-
-            Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
-            Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
-            ResultFileHandler handler = CreateHandler(pm, log);
-
-            string crashReportName = "MyApp-2025-11-25-223847.ips";
-            string expectedDownloadPath = Path.Combine(uploadRoot, crashReportName);
-            string crashContent = "Dummy crash content";
-            string actualDownloadPath = null;
-
-            int callCount = 0;
-
-            pm.Setup(m => m.ExecuteCommandAsync(
-                    It.IsAny<MlaunchArguments>(),
-                    It.IsAny<ILog>(),
-                    It.IsAny<TimeSpan>(),
-                    It.IsAny<Dictionary<string, string>>(),
-                    It.IsAny<int>(),
-                    It.IsAny<CancellationToken?>()))
-                .Returns((MlaunchArguments args, ILog _, TimeSpan _, Dictionary<string, string> _, int _, CancellationToken? _) =>
-                {
-                    callCount++;
-                    if (callCount == 1)
-                    {
-                        string listFilePath = GetArgumentValue(args, "list-crash-reports");
-                        File.WriteAllLines(listFilePath, new[] { crashReportName });
-                    }
-                    else if (callCount == 2)
-                    {
-                        actualDownloadPath = GetArgumentValue(args, "download-crash-report-to");
-                        File.WriteAllText(actualDownloadPath, crashContent);
-                    }
-
-                    return Task.FromResult(new ProcessExecutionResult { ExitCode = 0 });
-                });
-
-            var appInfo = new AppBundleInformation("MyApp", "com.example.myapp", "/tmp", "/tmp", supports32b: false);
-
-            await handler.CopyCrashReportAsync("device-udid", null, appInfo, log.Object, isSimulator: false);
-
-            Assert.Equal(expectedDownloadPath, actualDownloadPath);
-            Assert.True(File.Exists(expectedDownloadPath));
-
-            log.Verify(l => l.WriteLine("Attempting to retrieve crash report from device..."), Times.Once);
-            log.Verify(l => l.WriteLine($"Found crash report: {crashReportName}"), Times.Once);
-            log.Verify(l => l.WriteLine("==================== Crash report ===================="), Times.Once);
-            log.Verify(l => l.WriteLine($"Crash report file: {expectedDownloadPath}"), Times.Once);
-            log.Verify(l => l.WriteLine(crashContent), Times.Once);
-            log.Verify(l => l.WriteLine("==================== End of Crash report ===================="), Times.Once);
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT", originalUploadRoot);
-
-            if (Directory.Exists(uploadRoot))
-            {
-                Directory.Delete(uploadRoot, true);
-            }
-        }
-    }
-
-    [Fact]
     public async Task CopyResultsAsync_WhenFirstAttemptFailsAndSecondSucceeds_ReturnsTrue()
     {
         Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
@@ -290,6 +211,7 @@ public class ResultFileHandlerTests : IDisposable
 
         Assert.True(result);
         Assert.Equal(2, callCount);
+        Assert.Equal(2, handler.LastCopyAttempts);
         log.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Retrying results file copy (attempt 2)"))), Times.Once);
     }
 
@@ -326,16 +248,82 @@ public class ResultFileHandlerTests : IDisposable
         Assert.False(result);
         // 1 initial attempt + 2 retries = 3 total
         Assert.Equal(3, callCount);
+        Assert.Equal(3, handler.LastCopyAttempts);
         log.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Retrying results file copy (attempt 2)"))), Times.Once);
         log.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Retrying results file copy (attempt 3)"))), Times.Once);
     }
 
-    private static string GetArgumentValue(MlaunchArguments args, string argumentName)
+    [Fact]
+    public async Task CopyCoverageResultsAsync_WhenFirstAttemptFailsAndSecondSucceeds_ReturnsTrue()
     {
-        string prefix = $"--{argumentName}=";
-        string argument = args.Select(a => a.AsCommandLineArgument())
-            .First(a => a.StartsWith(prefix, StringComparison.Ordinal));
+        Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
+        Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
+        ResultFileHandler handler = CreateHandler(pm, log, new[] { 1 });
 
-        return argument.Substring(prefix.Length).Trim('"');
+        if (File.Exists(_tempFile))
+            File.Delete(_tempFile);
+
+        int callCount = 0;
+        pm.Setup(m => m.ExecuteCommandAsync(
+                It.IsAny<string>(),
+                It.IsAny<IList<string>>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken?>()))
+            .Returns(() =>
+            {
+                callCount++;
+                if (callCount == 2)
+                {
+                    File.WriteAllText(_tempFile, "coverage");
+                }
+                return Task.FromResult(new ProcessExecutionResult { ExitCode = 0 });
+            });
+
+        bool result = await handler.CopyCoverageResultsAsync(
+            RunMode.iOS, false, "18.0", "udid", "bundle", "coverage.cobertura.xml", _tempFile);
+
+        Assert.True(result);
+        Assert.Equal(2, callCount);
+        log.Verify(l => l.WriteLine(It.Is<string>(s => s.Contains("Retrying coverage results file copy (attempt 2)"))), Times.Once);
     }
+
+    [Fact]
+    public async Task CopyCoverageResultsAsync_MacCatalystUsesLocalContainerPath()
+    {
+        Mock<IMlaunchProcessManager> pm = new Mock<IMlaunchProcessManager>();
+        Mock<IFileBackedLog> log = new Mock<IFileBackedLog>();
+        ResultFileHandler handler = CreateHandler(pm, log);
+
+        string command = null;
+        pm.Setup(m => m.ExecuteCommandAsync(
+                It.IsAny<string>(),
+                It.IsAny<IList<string>>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken?>()))
+            .Returns((string _, IList<string> args, ILog _, ILog _, ILog _, TimeSpan _, Dictionary<string, string> _, CancellationToken? _) =>
+            {
+                command = args[1];
+                File.WriteAllText(_tempFile, "coverage");
+                return Task.FromResult(new ProcessExecutionResult { ExitCode = 0 });
+            });
+
+        bool result = await handler.CopyCoverageResultsAsync(
+            RunMode.MacOS, false, Environment.OSVersion.Version.ToString(), string.Empty, "com.example.maccatalyst", "coverage.cobertura.xml", _tempFile);
+
+        Assert.True(result);
+        Assert.Contains("Library", command);
+        Assert.Contains("Containers", command);
+        Assert.Contains("com.example.maccatalyst", command);
+        Assert.Contains("Documents", command);
+        Assert.Contains("coverage.cobertura.xml", command);
+    }
+
 }

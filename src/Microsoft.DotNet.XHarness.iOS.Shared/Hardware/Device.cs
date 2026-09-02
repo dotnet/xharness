@@ -27,19 +27,29 @@ public class Device : IHardwareDevice
         string? productVersion,
         string? productType,
         string interfaceType,
+        string? modelNumber = null,
+        long? amountDataAvailable = null,
+        long? totalDataCapacity = null,
         string? companionIdentifier = null,
         bool? isUsableForDebugging = null,
         bool isLocked = false,
-        bool isPaired = false)
+        bool isPaired = false,
+        string? cpuArchitecture = null,
+        string? hardwareModel = null)
     {
         DeviceIdentifier = deviceIdentifier;
         DeviceClass = deviceClass;
         CompanionIdentifier = companionIdentifier;
         Name = name;
         BuildVersion = buildVersion;
+        CpuArchitecture = cpuArchitecture;
         ProductVersion = productVersion;
         ProductType = productType;
+        HardwareModel = hardwareModel;
         InterfaceType = interfaceType;
+        ModelNumber = modelNumber;
+        AmountDataAvailable = amountDataAvailable;
+        TotalDataCapacity = totalDataCapacity;
         IsUsableForDebugging = isUsableForDebugging;
         IsLocked = isLocked;
         IsPaired = isPaired;
@@ -48,11 +58,16 @@ public class Device : IHardwareDevice
     public string DeviceIdentifier { get; }
     public DeviceClass DeviceClass { get; }
     public string? CompanionIdentifier { get; }
+    public long? AmountDataAvailable { get; }
     public string Name { get; }
     public string? BuildVersion { get; }
+    public string? CpuArchitecture { get; }
+    public string? HardwareModel { get; }
+    public string? ModelNumber { get; }
     public string? ProductVersion { get; }
     public string? ProductType { get; }
     public string InterfaceType { get; }
+    public long? TotalDataCapacity { get; }
     public bool? IsUsableForDebugging { get; }
     public bool IsLocked { get; }
     public bool IsPaired { get; }

@@ -74,7 +74,7 @@ public class SimulatorDeviceTest
     {
         Func<IList<string>, bool> verifyKillAll = (args) =>
         {
-            var toKill = new List<string> { "-9", "iPhone Simulator", "iOS Simulator", "Simulator", "Simulator (Watch)", "com.apple.CoreSimulator.CoreSimulatorService", "ibtoold" };
+            var toKill = new List<string> { "-9", "iPhone Simulator", "iOS Simulator", "Simulator", "Simulator (Watch)", "DeviceHub", "DevicesTrampoline", "com.apple.CoreSimulator.CoreSimulatorService", "ibtoold" };
             return args.Where(a => toKill.Contains(a)).Count() == toKill.Count;
         };
 

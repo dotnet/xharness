@@ -25,6 +25,8 @@ public class AdbRunnerTests : IDisposable
     private static int s_bootCompleteCheckTimes = 0;
     private static int s_devicesCallCount = 0;
     private static int s_devicesReturnEmptyForNFirstCalls = 0;
+    private static bool s_cpuFrequencyFilesMissing = false;
+    private static int s_devicesReturnOfflineForNFirstCalls = 0;
     private readonly Mock<ILogger> _mainLog;
     private readonly Mock<IAdbProcessManager> _processManager;
     private readonly List<AndroidDevice> _fakeDeviceList;
@@ -41,6 +43,8 @@ public class AdbRunnerTests : IDisposable
         // Reset call counters for each test
         s_devicesCallCount = 0;
         s_devicesReturnEmptyForNFirstCalls = 0;
+        s_cpuFrequencyFilesMissing = false;
+        s_devicesReturnOfflineForNFirstCalls = 0;
 
         // Fake ADB executable since its path is checked 
         Directory.CreateDirectory(s_scratchAndOutputPath);
@@ -232,6 +236,38 @@ public class AdbRunnerTests : IDisposable
     }
 
     [Fact]
+    public void PopulateEnvironmentInfoLoadsDetailedDeviceMetadata()
+    {
+        var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+        var device = runner.GetDevice(requiredDeviceId: _fakeDeviceList.Single(d => d.Manufacturer == "Contoso").DeviceSerial);
+
+        runner.PopulateEnvironmentInfo(device);
+
+        Assert.Equal("Contoso", device.Manufacturer);
+        Assert.Equal("Android Test Device", device.Model);
+        Assert.Equal("android-test-product", device.ProductName);
+        Assert.Equal("14", device.OperatingSystemVersion);
+        Assert.Equal("Contoso/test-device/test-device:14/AP1A.240505.001/1234567:userdebug/dev-keys", device.BuildFingerprint);
+        Assert.Equal("Qualcomm Technologies, Inc SM8650", device.CpuModel);
+        Assert.Equal(2_800_000, device.CpuMaxFrequencyKiloHertz);
+        Assert.Equal(8L * 1024 * 1024 * 1024, device.TotalMemoryBytes);
+    }
+
+    [Fact]
+    public void PopulateEnvironmentInfoDoesNotRetryMissingCpuFrequencyFiles()
+    {
+        s_cpuFrequencyFilesMissing = true;
+        var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+        var device = runner.GetDevice(requiredDeviceId: _fakeDeviceList.Single(d => d.Manufacturer == "Contoso").DeviceSerial);
+
+        runner.PopulateEnvironmentInfo(device);
+
+        VerifyAdbCall(Times.Once(), "-s", device.DeviceSerial, "shell", "cat", "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
+        VerifyAdbCall(Times.Once(), "-s", device.DeviceSerial, "shell", "cat", "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq");
+        Assert.Equal(2_800_000, device.CpuMaxFrequencyKiloHertz);
+    }
+
+    [Fact]
     public void RebootAndroidDevice()
     {
         var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
@@ -306,6 +342,21 @@ public class AdbRunnerTests : IDisposable
         VerifyAdbCall(Times.Once(), "start-server");
     }
 
+    [Fact]
+    public void TryRecoverEmulator_WhenDeviceStaysOfflineAfterAdbReset_RestartsEmulator()
+    {
+        // The device is listed throughout recovery, but it only becomes usable after the emulator restart.
+        s_devicesReturnOfflineForNFirstCalls = 2;
+        s_bootCompleteCheckTimes = 1;
+
+        var runner = new AdbRunner(_mainLog.Object, _processManager.Object, s_adbPath);
+        bool result = runner.TryRecoverEmulator();
+
+        Assert.True(result);
+        VerifyAdbCall(Times.AtLeast(3), "devices", "-l");
+        VerifyAdbCall(Times.Once(), "emu", "restart");
+    }
+
     #endregion
 
     #region Helper Functions
@@ -338,7 +389,15 @@ public class AdbRunnerTests : IDisposable
                 ApiVersion = 31,
                 Architecture = "arm64-v8a",
                 SupportedArchitectures = new[] { "arm64-v8a", "x86_64", "x86" },
-                InstalledApplications = new[] { "net.dot.E", "net.dot.F" }
+                InstalledApplications = new[] { "net.dot.E", "net.dot.F" },
+                Manufacturer = "Contoso",
+                Model = "Android Test Device",
+                ProductName = "android-test-product",
+                OperatingSystemVersion = "14",
+                BuildFingerprint = "Contoso/test-device/test-device:14/AP1A.240505.001/1234567:userdebug/dev-keys",
+                CpuModel = "Qualcomm Technologies, Inc SM8650",
+                CpuMaxFrequencyKiloHertz = 2_800_000,
+                TotalMemoryBytes = 8L * 1024 * 1024 * 1024
             },
 
             new AndroidDevice($"emulator-{r.Next(9999)}")
@@ -387,7 +446,9 @@ public class AdbRunnerTests : IDisposable
                     int transportId = 1;
                     foreach (var device in _fakeDeviceList)
                     {
-                        string state = device == _fakeDeviceList.Last() ? "offline" : "online";
+                        string state = s_devicesCallCount <= s_devicesReturnOfflineForNFirstCalls || device == _fakeDeviceList.Last()
+                            ? "offline"
+                            : "device";
                         s.AppendLine($"{device.DeviceSerial}          {state} transportid:{transportId++}");
                     }
                 }
@@ -411,6 +472,31 @@ public class AdbRunnerTests : IDisposable
                     stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).ApiVersion + Environment.NewLine;
                 }
 
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.product.manufacturer"))
+                {
+                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).Manufacturer ?? string.Empty;
+                }
+
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.product.model"))
+                {
+                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).Model ?? string.Empty;
+                }
+
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.product.name"))
+                {
+                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).ProductName ?? string.Empty;
+                }
+
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.build.version.release"))
+                {
+                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).OperatingSystemVersion ?? string.Empty;
+                }
+
+                if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop ro.build.fingerprint"))
+                {
+                    stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).BuildFingerprint ?? string.Empty;
+                }
+
                 if ($"{arguments[argStart + 1]} {arguments[argStart + 2]}".Equals("getprop sys.boot_completed"))
                 {
                     // Newline is strange, but this is actually what it looks like
@@ -431,7 +517,37 @@ public class AdbRunnerTests : IDisposable
                     stdOut = "package:" + string.Join("\npackage:", _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).InstalledApplications);
                 }
 
-                exitCode = 0;
+                if (string.Join(" ", arguments.Skip(argStart).Take(3)).Equals("shell cat /proc/cpuinfo"))
+                {
+                    stdOut = $"Processor\t: {_fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).CpuModel}{Environment.NewLine}" +
+                        $"cpu MHz\t\t: {_fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).CpuMaxFrequencyKiloHertz!.Value / 1000d:0.###}";
+                }
+
+                if (string.Join(" ", arguments.Skip(argStart).Take(3)).Equals("shell cat /proc/meminfo"))
+                {
+                    stdOut = $"MemTotal:        {_fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).TotalMemoryBytes!.Value / 1024} kB";
+                }
+
+                if (string.Join(" ", arguments.Skip(argStart).Take(3)).Equals("shell cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq"))
+                {
+                    if (s_cpuFrequencyFilesMissing)
+                    {
+                        exitCode = 1;
+                        stdErr = "cat: /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq: No such file or directory";
+                    }
+                    else
+                    {
+                        stdOut = _fakeDeviceList.Single(d => d.DeviceSerial == s_currentDeviceSerial).CpuMaxFrequencyKiloHertz?.ToString() ?? string.Empty;
+                    }
+                }
+
+                if (string.Join(" ", arguments.Skip(argStart).Take(3)).Equals("shell cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq") &&
+                    s_cpuFrequencyFilesMissing)
+                {
+                    exitCode = 1;
+                    stdErr = "cat: /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: No such file or directory";
+                }
+
                 break;
 
             case "logcat":

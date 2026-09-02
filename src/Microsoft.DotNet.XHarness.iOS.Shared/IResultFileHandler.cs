@@ -10,6 +10,8 @@ namespace Microsoft.DotNet.XHarness.iOS.Shared;
 
 public interface IResultFileHandler
 {
+    int LastCopyAttempts { get; }
+
     /// <summary>
     /// Determines whether the result file handler supports the given OS version and simulator status.
     /// </summary>
@@ -27,12 +29,16 @@ public interface IResultFileHandler
         string hostDestinationPath);
 
     /// <summary>
-    /// Copy the latest crash report from the device and dumps its content to the log.
+    /// Copy the coverage results file from the app container (simulator or device) to the host path.
+    /// <paramref name="coverageFileName"/> is the relative file name inside the app's Documents directory.
+    /// Returns true if the file was successfully copied.
     /// </summary>
-    Task CopyCrashReportAsync(
-        string deviceUdid,
-        string? deviceName,
-        AppBundleInformation appInformation,
-        Common.Logging.ILog outputLog,
-        bool isSimulator);
+    Task<bool> CopyCoverageResultsAsync(
+        RunMode runMode,
+        bool isSimulator,
+        string osVersion,
+        string udid,
+        string bundleIdentifier,
+        string coverageFileName,
+        string hostDestinationPath);
 }

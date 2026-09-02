@@ -26,6 +26,7 @@ internal class AppleTestCommandArguments : XHarnessCommandArguments, IAppleAppRu
     public EnvironmentalVariablesArgument EnvironmentalVariables { get; } = new();
     public ResetSimulatorArgument ResetSimulator { get; } = new();
     public SignalAppEndArgument SignalAppEnd { get; } = new();
+    public CommandArguments.EnableCoverageArgument EnableCoverage { get; } = new();
 
     protected override IEnumerable<Argument> GetArguments() => new Argument[]
     {
@@ -46,5 +47,6 @@ internal class AppleTestCommandArguments : XHarnessCommandArguments, IAppleAppRu
         SignalAppEnd,
         EnvironmentalVariables,
         ResetSimulator,
+        EnableCoverage,
     };
 }

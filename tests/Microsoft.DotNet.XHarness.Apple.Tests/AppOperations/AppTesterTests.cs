@@ -12,6 +12,7 @@ using Microsoft.DotNet.XHarness.Common.Execution;
 using Microsoft.DotNet.XHarness.Common.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared;
 using Microsoft.DotNet.XHarness.iOS.Shared.Execution;
+using Microsoft.DotNet.XHarness.iOS.Shared.Hardware;
 using Microsoft.DotNet.XHarness.iOS.Shared.Listeners;
 using Microsoft.DotNet.XHarness.iOS.Shared.Logging;
 using Microsoft.DotNet.XHarness.iOS.Shared.XmlResults;
@@ -63,8 +64,6 @@ public class AppTesterTests : AppRunTestBase
         var factory3 = new Mock<ITestReporterFactory>();
         factory3.SetReturnsDefault(_testReporter.Object);
         _testReporterFactory = factory3.Object;
-
-        Directory.CreateDirectory(s_outputPath);
     }
 
     [Theory]
@@ -116,7 +115,7 @@ public class AppTesterTests : AppRunTestBase
             TimeSpan.FromSeconds(30),
             signalAppEnd: false,
             extraAppArguments: new string[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") });
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") });
 
         // Verify
         Assert.Equal(TestExecutingResult.Succeeded, result);
@@ -132,7 +131,7 @@ public class AppTesterTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -156,11 +155,81 @@ public class AppTesterTests : AppRunTestBase
         captureLog.Verify(x => x.StartCapture(), Times.AtLeastOnce);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestOnDeviceTest(bool useTunnel)
+    [Fact]
+    public async Task TestOnSimulatorWithNullEnvVariableSkipsArgument()
     {
+        var testResultFilePath = Path.GetTempFileName();
+        var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
+        File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
+
+        _logs
+            .Setup(x => x.Create("test-ios-simulator-64-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
+            .Returns(listenerLogFile);
+
+        var captureLog = new Mock<ICaptureLog>();
+        captureLog.SetupGet(x => x.FullPath).Returns(_simulatorLogPath);
+
+        var captureLogFactory = new Mock<ICaptureLogFactory>();
+        captureLogFactory
+            .Setup(x => x.Create(
+               Path.Combine(_logs.Object.Directory, _mockSimulator.Name + ".log"),
+               _mockSimulator.SystemLog,
+               false,
+               It.IsAny<LogType>()))
+            .Returns(captureLog.Object);
+
+        var appTester = new AppTester(
+            _processManager.Object,
+            _listenerFactory.Object,
+            _snapshotReporterFactory,
+            captureLogFactory.Object,
+            Mock.Of<IDeviceLogCapturerFactory>(),
+            _testReporterFactory,
+            new XmlResultParser(),
+            _mainLog.Object,
+            _logs.Object,
+            _helpers.Object);
+
+        var (result, resultMessage) = await appTester.TestApp(
+            _appBundleInfo,
+            new TestTargetOs(TestTarget.Simulator_tvOS, null),
+            _mockSimulator,
+            null,
+            TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(30),
+            signalAppEnd: false,
+            extraAppArguments: new[] { "--foo=bar", "--xyz" },
+            extraEnvVariables: new (string, string?)[] { ("appArg1", null) });
+
+        Assert.Equal(TestExecutingResult.Succeeded, result);
+        Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
+
+        _processManager.Verify(
+            x => x.ExecuteCommandAsync(
+               It.Is<MlaunchArguments>(args => !args.AsCommandLine().Contains("-setenv=appArg1=")),
+               _mainLog.Object,
+               It.IsAny<ILog>(),
+               It.IsAny<ILog>(),
+               It.IsAny<TimeSpan>(),
+               It.IsAny<Dictionary<string, string?>>(),
+               It.IsAny<int>(),
+               It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task TestOnDeviceTest(bool useTunnel, bool useContainerResultCopy)
+    {
+        string osVersion = useContainerResultCopy ? "18.0" : "13.0";
+        IHardwareDevice device = Mock.Of<IHardwareDevice>(x =>
+            x.DeviceIdentifier == s_mockDevice.DeviceIdentifier &&
+            x.UDID == s_mockDevice.UDID &&
+            x.Name == s_mockDevice.Name &&
+            x.OSVersion == osVersion &&
+            x.InterfaceType == "Usb");
         var deviceSystemLog = new Mock<IFileBackedLog>();
         deviceSystemLog.SetupGet(x => x.FullPath).Returns(Path.GetTempFileName());
 
@@ -168,12 +237,13 @@ public class AppTesterTests : AppRunTestBase
 
         var deviceLogCapturerFactory = new Mock<IDeviceLogCapturerFactory>();
         deviceLogCapturerFactory
-            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, s_mockDevice.UDID))
+            .Setup(x => x.Create(_mainLog.Object, deviceSystemLog.Object, device.UDID))
             .Returns(deviceLogCapturer.Object);
 
         var testResultFilePath = Path.GetTempFileName();
         var listenerLogFile = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
         File.WriteAllLines(testResultFilePath, new[] { "Some result here", "Tests run: 124", "Some result there" });
+        _listener.SetupGet(x => x.TestLog).Returns(listenerLogFile);
 
         _logs
             .Setup(x => x.Create("test-ios-device-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
@@ -193,6 +263,14 @@ public class AppTesterTests : AppRunTestBase
             .Setup(f => f.UseTunnel)
             .Returns(useTunnel);
 
+        string appOutputPath = _appLog.FullPath;
+        File.WriteAllText(
+            appOutputPath,
+            $"The app '{AppBundleIdentifier}' exited with exit code 7{Environment.NewLine}");
+        Mock.Get(_appLog)
+            .Setup(l => l.GetReader())
+            .Returns(() => new StreamReader(File.OpenRead(appOutputPath)));
+
         // Act
         var appTester = new AppTester(
             _processManager.Object,
@@ -209,17 +287,24 @@ public class AppTesterTests : AppRunTestBase
         var (result, resultMessage) = await appTester.TestApp(
             _appBundleInfo,
             new TestTargetOs(TestTarget.Device_iOS, null),
-            s_mockDevice,
+            device,
             null,
             timeout: TimeSpan.FromSeconds(30),
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") });
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") });
 
         // Verify
         Assert.Equal(TestExecutingResult.Succeeded, result);
         Assert.Equal("Tests run: 1194 Passed: 1191 Inconclusive: 0 Failed: 0 Ignored: 0", resultMessage);
+        Assert.NotNull(appTester.LaunchDiagnostics);
+        Assert.Equal(0, appTester.LaunchDiagnostics!.LauncherExitCode);
+        Assert.Equal(7, appTester.LaunchDiagnostics.AppExitCode);
+        Assert.Equal(!useContainerResultCopy, appTester.LaunchDiagnostics.TestProtocolExpected);
+        Assert.False(appTester.LaunchDiagnostics.TestProtocolConnected);
+        Assert.Equal(useContainerResultCopy ? 1 : 0, appTester.LaunchDiagnostics.TestResultFile.CopyAttempts);
+        Assert.True(appTester.LaunchDiagnostics.TestResultFile.Exists);
 
         var expectedArgs = GetExpectedDeviceMlaunchArgs(
             useTunnel: useTunnel,
@@ -233,7 +318,7 @@ public class AppTesterTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.Is<Dictionary<string, string>>(d => d["appArg1"] == "value1"),
+                   It.Is<Dictionary<string, string?>>(d => d["appArg1"] == "value1"),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -246,12 +331,13 @@ public class AppTesterTests : AppRunTestBase
         // we dont want to leak a process
         if (useTunnel)
         {
-            _tunnelBore.Verify(t => t.Close(s_mockDevice.DeviceIdentifier));
+            _tunnelBore.Verify(t => t.Close(device.DeviceIdentifier));
         }
 
         _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
 
         deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
+        File.Delete(appOutputPath);
     }
 
     [Theory]
@@ -303,7 +389,7 @@ public class AppTesterTests : AppRunTestBase
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") },
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") },
             skippedMethods: skippedTests);
 
         // Verify
@@ -322,7 +408,7 @@ public class AppTesterTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -381,7 +467,7 @@ public class AppTesterTests : AppRunTestBase
             s_mockDevice,
             null,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") },
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") },
             timeout: TimeSpan.FromSeconds(30),
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
@@ -402,7 +488,7 @@ public class AppTesterTests : AppRunTestBase
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>>(),
+                   It.IsAny<Dictionary<string, string?>>(),
                    It.IsAny<int>(),
                    It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -458,7 +544,7 @@ public class AppTesterTests : AppRunTestBase
             testLaunchTimeout: TimeSpan.FromSeconds(30),
             signalAppEnd: false,
             extraAppArguments: new[] { "--foo=bar", "--xyz" },
-            extraEnvVariables: new[] { ("appArg1", "value1") });
+            extraEnvVariables: new (string, string?)[] { ("appArg1", "value1") });
 
         // Verify
         Assert.Equal(TestExecutingResult.Succeeded, result);
@@ -468,12 +554,12 @@ public class AppTesterTests : AppRunTestBase
             .Verify(
                 x => x.ExecuteCommandAsync(
                    "open",
-                   It.Is<IList<string>>(args => args.Contains(s_appPath) && args.Contains("--foo=bar") && args.Contains("--foo=bar")),
+                   It.Is<IList<string>>(args => args.Contains(_appPath) && args.Contains("--foo=bar") && args.Contains("--xyz")),
                    _mainLog.Object,
                    It.IsAny<ILog>(),
                    It.IsAny<ILog>(),
                    It.IsAny<TimeSpan>(),
-                   It.Is<Dictionary<string, string>>(envVars =>
+                   It.Is<Dictionary<string, string?>>(envVars =>
                         envVars["NUNIT_HOSTNAME"] == "127.0.0.1" &&
                         envVars["NUNIT_HOSTPORT"] == Port.ToString() &&
                         envVars["NUNIT_AUTOEXIT"] == "true" &&
@@ -537,7 +623,7 @@ public class AppTesterTests : AppRunTestBase
                    Capture.In(appOutputLogs),
                    Capture.In(appOutputLogs),
                    It.IsAny<TimeSpan>(),
-                   It.IsAny<Dictionary<string, string>?>(),
+                   It.IsAny<Dictionary<string, string?>?>(),
                    It.IsAny<int>(),
                    Capture.In(cancellationTokens)))
             .Callback(() =>
@@ -575,7 +661,7 @@ public class AppTesterTests : AppRunTestBase
             testLaunchTimeout: TimeSpan.FromMinutes(30),
             signalAppEnd: true,
             Array.Empty<string>(),
-            Array.Empty<(string, string)>());
+            Array.Empty<(string, string?)>());
 
         // Everything should hang now since we mimicked mlaunch not being able to tell the app quits
         // We will wait for XHarness to kick off the mlaunch (the app)

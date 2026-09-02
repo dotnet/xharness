@@ -134,12 +134,29 @@ internal class WasmBrowserTestRunner
             if (task == wasmExitReceivedTcs.Task && wasmExitReceivedTcs.Task.IsCompletedSuccessfully)
             {
                 _logger.LogTrace($"Looking for `tests_done` element, to get the exit code");
-                var testsDoneElement = new WebDriverWait(driver, TimeSpan.FromSeconds(30))
-                                            .Until(e => e.FindElement(By.Id("tests_done")));
-
-                if (int.TryParse(testsDoneElement.Text, out var code))
+                try
                 {
-                    var appExitCode = (ExitCode)Enum.ToObject(typeof(ExitCode), code);
+                    var testsDoneElement = new WebDriverWait(driver, TimeSpan.FromSeconds(30))
+                                                .Until(e => e.FindElement(By.Id("tests_done")));
+
+                    if (int.TryParse(testsDoneElement.Text, out var code))
+                    {
+                        var appExitCode = (ExitCode)Enum.ToObject(typeof(ExitCode), code);
+                        if (logProcessorExitCode != ExitCode.SUCCESS)
+                        {
+                            _logger.LogInformation($"Application has finished with exit code {appExitCode}. But the log processor failed with {logProcessorExitCode}.");
+                            return logProcessorExitCode;
+                        }
+
+                        return appExitCode;
+                    }
+                }
+                catch (WebDriverException e) when (_messagesProcessor.ForwardedExitCode.HasValue)
+                {
+                    // The browser session may have already closed before we could read the DOM element.
+                    // Fall back to the exit code parsed from the "WASM EXIT <code>" console message.
+                    _logger.LogWarning($"Browser session ended before reading tests_done element ({e.Message}). Using exit code from console message.");
+                    var appExitCode = (ExitCode)Enum.ToObject(typeof(ExitCode), _messagesProcessor.ForwardedExitCode.Value);
                     if (logProcessorExitCode != ExitCode.SUCCESS)
                     {
                         _logger.LogInformation($"Application has finished with exit code {appExitCode}. But the log processor failed with {logProcessorExitCode}.");

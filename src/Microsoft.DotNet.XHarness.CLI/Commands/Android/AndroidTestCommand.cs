@@ -48,7 +48,8 @@ Arguments:
             apiVersion: Arguments.ApiVersion.Value,
             bootTimeoutSeconds: Arguments.LaunchTimeout,
             runner,
-            DiagnosticsData);
+            DiagnosticsData,
+            captureEnvironmentInfo: true);
 
         if (Arguments.Wifi != WifiStatus.Unknown)
         {
@@ -60,6 +61,11 @@ Arguments:
             if (exitCode == ExitCode.SUCCESS)
             {
                 runner.ClearAdbLog();
+
+                if (Arguments.EnableCoverage)
+                {
+                    Arguments.InstrumentationArguments.Value["enable-coverage"] = "true";
+                }
 
                 var instrumentationRunner = new InstrumentationRunner(logger, runner);
                 exitCode = instrumentationRunner.RunApkInstrumentation(
