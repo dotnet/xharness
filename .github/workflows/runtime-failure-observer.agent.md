@@ -271,7 +271,7 @@ gh pr list --repo dotnet/xharness --state all --limit 50 \
   --search "$sig_short" --json number,title,state,closedAt,mergedAt,url
 ```
 
-Confirm each result. Suppress only for an open/merged PR (`existing-PR #<n>`) or a fix confirmed in `HEAD` (`fixed in xharness <commit/PR>`); issues and closed-unmerged PRs are context only. Search `HEAD` and history using stack-trace paths first, then the Step 5 table. Do this before stability or consumed-version checks, and skip a confirmed `HEAD` fix even if runtime has not consumed it. The searches are required; apply rule 6 if they fail.
+Confirm each result. Suppress only for an open/merged PR (`existing-PR #<n>`) or a fix confirmed in `HEAD` (`fixed in xharness <commit/PR>`); issues and closed-unmerged PRs are context to reference in any new PR. Search `HEAD` and history using stack-trace paths first, then the Step 5 table. Do this before stability or consumed-version checks, and skip a confirmed `HEAD` fix even if runtime has not consumed it. The searches are required; apply rule 6 if they fail.
 
 Same-run cache. Use the `<exit_code>|<command_norm>|<signature_norm>` key inline, never via a variable (rule 11):
 ```bash
@@ -279,7 +279,7 @@ grep -Fxq "70|apple-test-maccatalyst|run-timed-out" /tmp/gh-aw/agent/filed.tsv 2
 printf '%s\n' "70|apple-test-maccatalyst|run-timed-out" >> /tmp/gh-aw/agent/filed.tsv
 ```
 
-For remaining candidates, find the same tuple in `>= 2` of the previous 5 builds using the Step 2 traversal; otherwise record `skipped: weak signature`. This history is required only after Step 4; apply rule 6 if a required request fails.
+For remaining candidates, select up to 5 builds preceding `source` from that definition's Step 1 list and traverse them as in Step 2. Apply rule 6 if any required request or response fails; record `skipped: weak signature` only when the fetched history has fewer than 2 exact tuple matches.
 
 ## Step 5. Decide which kind of PR
 
@@ -302,7 +302,7 @@ If none of these fit (the change needs a new public API, a protocol change with 
 | 82 RETURN_CODE_NOT_SET | Test orchestration under `src/Microsoft.DotNet.XHarness.Apple/Orchestration/` (`TestOrchestrator.cs`, `RunOrchestrator.cs`, `BaseOrchestrator.cs`) and Android orchestration. |
 | 83 APP_LAUNCH_FAILURE | `src/Microsoft.DotNet.XHarness.Apple/AppOperations/AppRunner.cs` and Android-side run command under `src/Microsoft.DotNet.XHarness.CLI/Commands/Android/`. |
 
-After Step 4 rules out an existing fix, read the relevant file in `HEAD` and the consumed XHarness version. Use the informational-version SHA when available; otherwise resolve the pin from runtime's `eng/Version.Details.xml`. Apply rule 6 if source required for a new PR cannot be fetched.
+After Step 4 rules out an existing fix, validate the behavior at the consumed XHarness commit, using the informational-version SHA or runtime's `eng/Version.Details.xml` at the failing runtime commit. Port the fix to `HEAD` and note material source drift. If required source cannot be fetched, apply rule 6. If the table path is absent at `HEAD`, record `skipped: source path stale, table needs update` and continue; do not infer a replacement.
 
 For DEVICE_NOT_FOUND retry: never blindly add retry. Verify (a) the discovery query is deterministic, (b) the failure is transient (signature appears, then absent in a later build on the same SHA), (c) the retry is bounded (`max=1`, pause 5s). If any of those don't hold, record `skipped: retry preconditions not met`, do not emit `create_pull_request` for that candidate, and continue.
 
