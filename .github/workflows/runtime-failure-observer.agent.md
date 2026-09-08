@@ -76,7 +76,7 @@ tools:
   edit:
 
 checkout:
-  fetch-depth: 50
+  fetch-depth: 100
 
 safe-outputs:
   noop:
@@ -124,7 +124,7 @@ The agent reads `dotnet/runtime` and the failing build logs. It never writes to 
 4. **Small-fix bounds for complete autofix PRs.** A *complete* fix PR must satisfy all of: `<=` 30 changed lines total, `<=` 2 files (one source + one test), no new public API, no protocol change, no native code change. If the fix needs more, do not silently truncate it: open a clearly-marked best-effort/diagnosability **draft** PR (Step 5) that a human finishes. Best-effort and diagnosability draft PRs may exceed these bounds but must be marked work-in-progress and must still avoid new public API, protocol changes, and native code.
 5. **Don't propose fixes for runtime test bugs.** If the failure is in the test binary itself (assertion in the test code, missing mock, runtime API regression), record `skipped: runtime-side issue`, do not emit `create_pull_request` for that candidate, and continue.
 6. **Never assume; cite only what you fetched this run.** Cite the runtime build URL, the Helix work item URL, the xharness command line, and the exact stderr / exit code in every PR body. Never reconstruct a build id, URL, GUID, exit code, or stderr from memory or inference. If a required tool or request is unavailable, denied, or otherwise cannot execute, emit `missing_tool`. If a required request executes but its response is missing, empty, malformed, or lacks required data, emit `missing_data`. After either failure output, stop the run without emitting `noop` or `create_pull_request`.
-7. **Dedup.** Before emitting, search open and recently merged PRs / issues in `dotnet/xharness` for the same xharness-signature. On match: `existing-PR #<n>` or `existing-issue #<n>`, do not emit `create_pull_request` for that candidate, and continue.
+7. **Dedup fixes, not reports.** Suppress a candidate only for an open/merged PR or a fix confirmed in `HEAD`. Issues and closed-unmerged PRs are context only.
 8. **Same-run dedup cache.** Persist `(exit_code, command, signature_norm)` keys in `/tmp/gh-aw/agent/filed.tsv`. On hit: `dup-this-run`, skip.
 9. **All state under `/tmp/gh-aw/agent/`.**
 10. **AzDO API: anonymous only.** Stay on `https://dev.azure.com/dnceng-public/public/_apis/build/...`.
@@ -245,8 +245,10 @@ runtime-failure-observer-http helix-console --job-id JOBID --work-item "WORKITEM
 ```
 
 - An `xharness` command line (find the last "Running command" line if present, otherwise the launcher script invocation).
+- The XHarness informational version when present; parse its 40-character commit SHA after `+`.
 - An exit code line: `Exit code: <n>` or `exited with code <n>` or `ExitCode=<n>`.
 - The error context: the last 50 lines before exit.
+- Any XHarness source paths and line numbers in the fetched stack trace.
 
 Every selected build's timeline and every identified Helix candidate's `Send to Helix` task log, Helix work-items response, and console log is required. Apply rule 6 if a request is denied/unavailable or its payload is empty, malformed, or lacks evidence required for an identified candidate; stop the run without a PR or `noop`. A valid timeline or work-items payload with no Helix/xharness candidate is a successful result: record no candidates and continue.
 
@@ -260,28 +262,24 @@ For each work-item failure, extract:
 
 If `exit_code` is not in the improvement table: `skipped: exit code <n> not in improvement table`.
 
-Look back at the previous 5 builds on the same definition using `azdo-builds --top 5`, then use the same `azdo-timeline`, `azdo-log`, `helix-work-items`, and `helix-console` traversal. The same `(exit_code, command, signature_norm)` tuple must appear in `>= 2` of them to be considered stable. Otherwise: `skipped: weak signature`.
-
-The history needed for this stability check is required. Apply rule 6 if any required historical build, timeline, work-item, or console request fails; use `skipped: weak signature` only when the successfully fetched history contains fewer than 2 matches.
-
-## Step 4. Dedup against existing xharness work
+## Step 4. Dedup against existing xharness work and fixes
 
 ```bash
 gh issue list --repo dotnet/xharness --state all --limit 50 \
-  --search "[runtime-observer] in:title $sig_short" --json number,title,state,url
+  --search "$sig_short" --json number,title,state,url
 gh pr list --repo dotnet/xharness --state all --limit 50 \
-  --search "[runtime-observer] in:title $sig_short" --json number,title,state,url
+  --search "$sig_short" --json number,title,state,closedAt,mergedAt,url
 ```
 
-On match (open or merged in last 30 days): `existing-PR #<n>` / `existing-issue #<n>`. Do not emit `create_pull_request` for that candidate.
-
-The dedup searches are required before opening a PR. Apply rule 6 if `gh` is denied/unavailable or a search result cannot be obtained; stop the run without a PR or `noop`. A valid empty search result means no duplicate was found.
+Confirm each result. Suppress only for an open/merged PR (`existing-PR #<n>`) or a fix confirmed in `HEAD` (`fixed in xharness <commit/PR>`); issues and closed-unmerged PRs are context to reference in any new PR. Search `HEAD` and history using stack-trace paths first, then the Step 5 table. Do this before stability or consumed-version checks, and skip a confirmed `HEAD` fix even if runtime has not consumed it. The searches are required; apply rule 6 if they fail.
 
 Same-run cache. Use the `<exit_code>|<command_norm>|<signature_norm>` key inline, never via a variable (rule 11):
 ```bash
 grep -Fxq "70|apple-test-maccatalyst|run-timed-out" /tmp/gh-aw/agent/filed.tsv 2>/dev/null && echo "dup-this-run"
 printf '%s\n' "70|apple-test-maccatalyst|run-timed-out" >> /tmp/gh-aw/agent/filed.tsv
 ```
+
+For remaining candidates, select up to 5 builds preceding `source` from that definition's Step 1 list and traverse them as in Step 2. Apply rule 6 if any required request or response fails; record `skipped: weak signature` only when the fetched history has fewer than 2 exact tuple matches.
 
 ## Step 5. Decide which kind of PR
 
@@ -304,7 +302,7 @@ If none of these fit (the change needs a new public API, a protocol change with 
 | 82 RETURN_CODE_NOT_SET | Test orchestration under `src/Microsoft.DotNet.XHarness.Apple/Orchestration/` (`TestOrchestrator.cs`, `RunOrchestrator.cs`, `BaseOrchestrator.cs`) and Android orchestration. |
 | 83 APP_LAUNCH_FAILURE | `src/Microsoft.DotNet.XHarness.Apple/AppOperations/AppRunner.cs` and Android-side run command under `src/Microsoft.DotNet.XHarness.CLI/Commands/Android/`. |
 
-Before drafting the fix, **read the file** with the exact path above. Read it at the xharness version the failing runtime build actually consumed, not blindly at `HEAD`: the runtime build pins an xharness package (see its `eng/Version.Details.xml` / restored `Microsoft.DotNet.XHarness.CLI` version), and that can lag xharness `HEAD`. Assess "is the recommendation already implemented?" against the consumed version, then port the actual change onto `HEAD` (the PR targets xharness `main`). If the two diverge enough that the path or surrounding code differs, note the drift in the PR body. This matters more as we add repos that consume xharness at different versions (e.g. maui). Apply rule 6 if the consumed version or required source cannot be fetched. If the path no longer exists at `HEAD` (refactor since this table was written): record `skipped: source path stale, table needs update` and stop, do not improvise. If the recommendation is already implemented at `HEAD` (the stderr line already includes the context the failure says is missing): skip with `recommendation already present in source`.
+After Step 4 rules out an existing fix, validate the behavior at the consumed XHarness commit, using the informational-version SHA or runtime's `eng/Version.Details.xml` at the failing runtime commit. Port the fix to `HEAD` and note material source drift. If required source cannot be fetched, apply rule 6. If the table path is absent at `HEAD`, record `skipped: source path stale, table needs update` and continue; do not infer a replacement.
 
 For DEVICE_NOT_FOUND retry: never blindly add retry. Verify (a) the discovery query is deterministic, (b) the failure is transient (signature appears, then absent in a later build on the same SHA), (c) the retry is bounded (`max=1`, pause 5s). If any of those don't hold, record `skipped: retry preconditions not met`, do not emit `create_pull_request` for that candidate, and continue.
 
