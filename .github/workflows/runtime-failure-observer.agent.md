@@ -217,7 +217,7 @@ For each `source` (inline the build id in place of `SRCID`):
 runtime-failure-observer-http azdo-timeline --build-id SRCID --output "/tmp/gh-aw/agent/timeline-SRCID.json"
 ```
 
-Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. A failed leaf with non-null `log.id` is a candidate.
+Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. A failed leaf with non-null `log.id` is a candidate. Retain the Helix submission task as a special case for identifying downstream Helix work items, even though it is normally not a failed leaf.
 
 Only inspect a Helix submission task (for example, `Send to Helix` or `Send tests to Helix (Unix)`) when its timeline `result` is `succeeded` or `succeededWithIssues`. A skipped or failed submission task did not identify a Helix job: record `skipped: Helix job not submitted`, do not fetch its log, and continue.
 
