@@ -217,11 +217,11 @@ For each `source` (inline the build id in place of `SRCID`):
 runtime-failure-observer-http azdo-timeline --build-id SRCID --output "/tmp/gh-aw/agent/timeline-SRCID.json"
 ```
 
-Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. A failed leaf with non-null `log.id` is a candidate. Retain the Helix submission task as a special case for identifying downstream Helix work items, even though it is normally not a failed leaf.
+Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. For ordinary failed leaves, a non-null `log.id` makes the leaf a candidate. Treat the Helix submission task as a separate candidate for identifying downstream Helix work items: it may have succeeded even when downstream Helix work items fail, so do not require it to be a failed leaf.
 
-Only inspect a Helix submission task (for example, `Send to Helix` or `Send tests to Helix (Unix)`) when its timeline `result` is `succeeded` or `succeededWithIssues`. A skipped or failed submission task did not identify a Helix job: record `skipped: Helix job not submitted`, do not fetch its log, and continue.
+Identify the Helix submission task by its role rather than an exact task name (for example, `Send to Helix` or `Send tests to Helix (Unix)`). Inspect that task only when its own timeline `result` is `succeeded` or `succeededWithIssues`. A skipped or failed submission task did not identify a Helix job: record `skipped: Helix job not submitted`, do not fetch its log, and continue.
 
-Filter to Helix work items only. xharness runs inside Helix work items, not on the AzDO agent. From the `Send to Helix` task log, extract the GUID from either supported completion message:
+Filter to Helix work items only. xharness runs inside Helix work items, not on the AzDO agent. From the selected Helix submission task's log, extract the GUID from either supported completion message:
 
 - `Sent Helix Job: <GUID>`
 - `Sent Helix Job; see work items at https://helix.dot.net/api/jobs/<GUID>/workitems`
