@@ -220,11 +220,15 @@ runtime-failure-observer-http azdo-timeline --build-id SRCID --output "/tmp/gh-a
 
 Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. A failed leaf with non-null `log.id` is a candidate.
 
-Filter to Helix work items only. xharness runs inside Helix work items, not on the AzDO agent. From the `Send to Helix` task log, extract `Sent Helix Job: <GUID>`:
+Filter to Helix work items only. xharness runs inside Helix work items, not on the AzDO agent. From the `Send to Helix` task log, extract the GUID from either supported completion message:
+
+- `Sent Helix Job: <GUID>`
+- `Sent Helix Job; see work items at https://helix.dot.net/api/jobs/<GUID>/workitems`
 
 ```bash
 runtime-failure-observer-http azdo-log --build-id SRCID --log-id LOGID --output /tmp/gh-aw/agent/helix-send.log
-grep -oE 'Sent Helix Job: [a-f0-9-]+' /tmp/gh-aw/agent/helix-send.log
+grep -oE 'Sent Helix Job(: |; see work items at https://helix\.dot\.net/api/jobs/)[a-f0-9-]+' /tmp/gh-aw/agent/helix-send.log \
+  | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
 ```
 
 For each Helix job, list failing work items (inline the job id in place of `JOBID`):
@@ -232,6 +236,8 @@ For each Helix job, list failing work items (inline the job id in place of `JOBI
 ```bash
 runtime-failure-observer-http helix-work-items --job-id JOBID --output "/tmp/gh-aw/agent/helix-JOBID.json"
 ```
+
+Before requesting consoles, skip any work item whose Helix `ExitCode` is a negative integer and record `skipped: Helix infrastructure exit code <n>`. Negative Helix exit codes are service-side outcomes rather than xharness process exit codes, so they cannot match the Step 3 improvement table. If `ExitCode` is missing or is not an integer, apply rule 6.
 
 A work item is an xharness invocation candidate if its console contains an xharness command (`xharness apple`, `xharness android`, `xharness wasm`, or `dotnet exec .../Microsoft.DotNet.XHarness.CLI.dll`). Identify its numeric array index `INDEX` in the saved work-items response, then fetch its console using the quoted `jq` substitution so the exact name remains one shell argument:
 

@@ -1,8 +1,6 @@
 variables:
 - template: /eng/common-variables.yml
 - template: /eng/common/templates/variables/pool-providers.yml
-- name: enableHelixJobMonitor
-  value: false
 
 # CI and PR triggers
 trigger:
@@ -122,8 +120,7 @@ stages:
   displayName: E2E
   dependsOn: Build_OSX
   jobs:
-  - ${{ if eq(variables['enableHelixJobMonitor'], true) }}:
-    - template: /eng/common/core-templates/job/helix-job-monitor.yml
+  - template: /eng/common/core-templates/job/helix-job-monitor.yml
 
   - template: eng/e2e-test.yml
     parameters:
