@@ -82,18 +82,15 @@ stages:
       name: E2E_iOS_Devices
       displayName: Apple - iOS devices
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.iOS.Tests.proj
-      testArguments: /p:XHarnessAppleProvisioningProfileUrl=https://netcorenativeassets.blob.core.windows.net/resource-packages/external/macos/signing-test/NET_Apple_Development_{PLATFORM}.mobileprovision
 
   - template: eng/e2e-test.yml
     parameters:
       name: E2E_tvOS_Devices
       displayName: Apple - tvOS devices
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.tvOS.Tests.proj
-      testArguments: /p:XHarnessAppleProvisioningProfileUrl=https://netcorenativeassets.blob.core.windows.net/resource-packages/external/macos/signing-test/NET_Apple_Development_{PLATFORM}.mobileprovision
 
   - template: eng/e2e-test.yml
     parameters:
       name: E2E_Apple_Device_Commands
       displayName: Apple - Device Commands
       testProject: $(Build.SourcesDirectory)/tests/integration-tests/Apple/Device.Commands.Tests.proj
-      testArguments: /p:XHarnessAppleProvisioningProfileUrl=https://netcorenativeassets.blob.core.windows.net/resource-packages/external/macos/signing-test/NET_Apple_Development_{PLATFORM}.mobileprovision

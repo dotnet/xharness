@@ -3,7 +3,6 @@ parameters:
   name: ''
   displayName: ''
   testProject: ''
-  testArguments: ''
 
 jobs:
 - template: /eng/common/templates/jobs/jobs.yml
@@ -42,7 +41,6 @@ jobs:
           /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/${{ parameters.name }}.binlog
           /p:EnableHelixJobMonitor=true
           /p:RestoreUsingNuGetTargets=false
-          ${{ parameters.testArguments }}
         displayName: Run tests in Helix
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
