@@ -3,6 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>$(XHarnessNetTFMs)</TargetFrameworks>
     <IsPackable>true</IsPackable>
+    <IsShipping>true</IsShipping>
+    <Description>xUnit.net test runner for XHarness device-side test hosts. Consumes Microsoft.DotNet.XHarness.TestRunners.Common and runs xUnit tests inside Android / Apple / WASM app containers.</Description>
+    <PackageTags>xharness;testrunner;xunit;devicetests;dotnet</PackageTags>
     <Nullable>disable</Nullable>
   </PropertyGroup>
 
