@@ -71,7 +71,7 @@ post-steps:
 
 tools:
   github:
-    toolsets: [repos, pull_requests, issues, search]
+    toolsets: [repos, pull_requests, issues]
   bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "gh", "printf", "runtime-failure-observer-http:*"]
   edit:
 
@@ -259,6 +259,12 @@ Look back at the previous 5 builds on the same definition using `azdo-builds --t
 The history needed for this stability check is required. Apply rule 6 if any required historical build, timeline, work-item, or console request fails; use `skipped: weak signature` only when the successfully fetched history contains fewer than 2 matches.
 
 ## Step 4. Dedup against existing xharness work
+
+Use the configured GitHub MCP read tools `search_issues` and
+`search_pull_requests` for these searches. Include `repo:dotnet/xharness` and
+the `[runtime-observer]` title prefix in each query. Use the shell commands
+below only if those MCP tools are unavailable and `GH_TOKEN` is set.
+Do not emit `missing_tool` solely because the shell fallback is unavailable.
 
 ```bash
 gh issue list --repo dotnet/xharness --state all --limit 50 \
