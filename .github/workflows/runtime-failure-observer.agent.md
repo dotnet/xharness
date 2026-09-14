@@ -269,11 +269,20 @@ If `exit_code` is not in the improvement table: `skipped: exit code <n> not in i
 
 Use the configured GitHub MCP read tools `search_issues` and
 `search_pull_requests`; these tools are part of the action environment and are
-the only permitted GitHub read path. Search with
-`repo:dotnet/xharness in:title "[runtime-observer]" $sig_short` and confirm
-each result before applying deduplication. If either required MCP search cannot
-be used, emit `missing_tool` and stop rather than substituting an unscoped
-search.
+the only permitted GitHub read path. Call each with the explicit
+`owner=dotnet`, `repo=xharness`, and a query for `[runtime-observer]`. Request a
+page size and paginate until every returned page is processed; if pagination
+metadata is missing or reports incomplete results, emit `missing_data` and
+stop. Then fetch and verify every returned item before applying deduplication:
+require the exact repository, a title starting with `[runtime-observer] ` for
+pull requests, and the normalized Step 3 `signature` to appear in the item's
+title or body. New observer PRs carry the exact signature in the mandatory
+Step 6 body marker; do not suppress an older item unless its signature can be
+verified from the fetched title or body. Do not require the signature to be in
+the title; the PR contract only guarantees the `[runtime-observer] ` prefix. If
+either search, a required follow-up fetch, or the verification data cannot be
+used, emit `missing_tool` or `missing_data` as appropriate and stop rather than
+guessing.
 
 Confirm each result. Suppress only for an open/merged PR (`existing-PR #<n>`) or a fix confirmed in `HEAD` (`fixed in xharness <commit/PR>`); issues and closed-unmerged PRs are context to reference in any new PR. Search `HEAD` and history using stack-trace paths first, then the Step 5 table. Do this before stability or consumed-version checks, and skip a confirmed `HEAD` fix even if runtime has not consumed it. The searches are required; apply rule 6 if they fail.
 
@@ -312,7 +321,11 @@ For DEVICE_NOT_FOUND retry: never blindly add retry. Verify (a) the discovery qu
 
 ## Step 6. Draft the PR
 
-Use the PR body template below. Stage exactly the files you change; never `git add -A`.
+Use the PR body template below. Before emitting `create-pull-request`, verify
+that its body contains the dedicated Observer signature marker and the exact
+normalized Step 3 `signature`; if either is absent or altered, emit
+`missing_data` and do not create the PR. Stage exactly the files you change;
+never `git add -A`.
 
 ````markdown
 ## Why
@@ -331,6 +344,12 @@ Observed in `>= <count>` of the last 5 builds on this definition. Latest occurre
 
 ```
 <sanitized last 20 lines before exit, no paths/GUIDs/machine names>
+```
+
+### Observer signature
+
+```
+<normalized signature>
 ```
 
 ## What this PR changes
