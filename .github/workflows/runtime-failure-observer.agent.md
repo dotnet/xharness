@@ -72,7 +72,7 @@ post-steps:
 tools:
   github:
     toolsets: [repos, pull_requests, issues]
-  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "gh", "printf", "runtime-failure-observer-http:*"]
+  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "printf", "runtime-failure-observer-http:*"]
   edit:
 
 checkout:
@@ -268,17 +268,12 @@ If `exit_code` is not in the improvement table: `skipped: exit code <n> not in i
 ## Step 4. Dedup against existing xharness work and fixes
 
 Use the configured GitHub MCP read tools `search_issues` and
-`search_pull_requests` for these searches. Include `repo:dotnet/xharness` and
-the `[runtime-observer]` title prefix in each query. Use the shell commands
-below only if those MCP tools are unavailable and `GH_TOKEN` is set.
-Do not emit `missing_tool` solely because the shell fallback is unavailable.
-
-```bash
-gh issue list --repo dotnet/xharness --state all --limit 50 \
-  --search "$sig_short" --json number,title,state,url
-gh pr list --repo dotnet/xharness --state all --limit 50 \
-  --search "$sig_short" --json number,title,state,closedAt,mergedAt,url
-```
+`search_pull_requests`; these tools are part of the action environment and are
+the only permitted GitHub read path. Search with
+`repo:dotnet/xharness in:title "[runtime-observer]" $sig_short` and confirm
+each result before applying deduplication. If either required MCP search cannot
+be used, emit `missing_tool` and stop rather than substituting an unscoped
+search.
 
 Confirm each result. Suppress only for an open/merged PR (`existing-PR #<n>`) or a fix confirmed in `HEAD` (`fixed in xharness <commit/PR>`); issues and closed-unmerged PRs are context to reference in any new PR. Search `HEAD` and history using stack-trace paths first, then the Step 5 table. Do this before stability or consumed-version checks, and skip a confirmed `HEAD` fix even if runtime has not consumed it. The searches are required; apply rule 6 if they fail.
 
