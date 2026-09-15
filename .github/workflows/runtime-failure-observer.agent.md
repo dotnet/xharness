@@ -270,10 +270,12 @@ If `exit_code` is not in the improvement table: `skipped: exit code <n> not in i
 Use the configured GitHub MCP read tools `search_issues` and
 `search_pull_requests`; these tools are part of the action environment and are
 the only permitted GitHub read path. Call each with the explicit
-`owner=dotnet`, `repo=xharness`, and a query for `[runtime-observer]`. Request a
-page size and paginate until every returned page is processed; if pagination
-metadata is missing or reports incomplete results, emit `missing_data` and
-stop. Then fetch and verify every returned item before applying deduplication:
+`owner=dotnet`, `repo=xharness`, and the title-filtered query
+`in:title "[runtime-observer]"`. Apply that query to both searches so the
+prefix is matched in the title rather than the body. Request a page size and
+paginate until every returned page is processed; if pagination metadata is
+missing or reports incomplete results, emit `missing_data` and stop. Then fetch
+and verify every returned item before applying deduplication:
 require the exact repository, a title starting with `[runtime-observer] ` for
 pull requests, and the normalized Step 3 `signature` to appear in the item's
 title or body. New observer PRs carry the exact signature in the mandatory
