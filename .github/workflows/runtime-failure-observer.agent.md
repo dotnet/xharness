@@ -172,10 +172,11 @@ runtime-failure-observer-http azdo-builds --definition ID [--top 1..10] --output
 runtime-failure-observer-http azdo-timeline --build-id ID --output /tmp/gh-aw/agent/NAME.json
 runtime-failure-observer-http azdo-log --build-id ID --log-id ID --output /tmp/gh-aw/agent/NAME.log
 runtime-failure-observer-http helix-work-items --job-id UUID --output /tmp/gh-aw/agent/NAME.json
-runtime-failure-observer-http helix-console --job-id UUID --work-item "$(jq -r 'if type == "array" then . else .value end | .[INDEX] | (.Name // .WorkItemName)' "/tmp/gh-aw/agent/WORK_ITEMS_JSON")" --output /tmp/gh-aw/agent/NAME.log
+jq -er 'def field($name): ([to_entries[] | select((.key | ascii_downcase) == $name) | .value] | first); def work_item_name: field("name") as $name | if ($name | type) == "string" and ($name | length) > 0 then $name else field("workitemname") end; (if type == "array" then . else .value end) | .[INDEX] | if type == "object" then work_item_name else error("selected Helix work item is not an object") end | select(type == "string" and length > 0)' "/tmp/gh-aw/agent/WORK_ITEMS_JSON"
+runtime-failure-observer-http helix-console --job-id UUID --work-item "$(jq -er 'def field($name): ([to_entries[] | select((.key | ascii_downcase) == $name) | .value] | first); def work_item_name: field("name") as $name | if ($name | type) == "string" and ($name | length) > 0 then $name else field("workitemname") end; (if type == "array" then . else .value end) | .[INDEX] | work_item_name' "/tmp/gh-aw/agent/WORK_ITEMS_JSON")" --output /tmp/gh-aw/agent/NAME.log
 ```
 
-Always invoke it by the `runtime-failure-observer-http` command name; do not invoke the editable workspace file or its Python interpreter directly. The quoted `jq` substitution is mandatory when selecting a work-item name from saved JSON; never copy that name into shell text. `helix-console` resolves the console URI from the named work item itself so signed blob URLs never need to appear in an agent-generated command.
+Always invoke it by the `runtime-failure-observer-http` command name; do not invoke the editable workspace file or its Python interpreter directly. Validate the selected index and non-empty work-item name with `jq -e` before the helper request; the quoted `jq` substitution is mandatory when selecting that name from saved JSON, and the lookup must be case-insensitive as shown. Never copy the name into shell text. `helix-console` resolves the console URI from the named work item itself so signed blob URLs never need to appear in an agent-generated command.
 
 ## Step 0. Preflight: confirm network egress
 
@@ -229,11 +230,18 @@ Filter to Helix work items only. xharness runs inside Helix work items, not on t
 
 ```bash
 runtime-failure-observer-http azdo-log --build-id SRCID --log-id LOGID --output /tmp/gh-aw/agent/helix-send.log
-grep -oE 'Sent Helix Job(: |; see work items at https://helix\.dot\.net/api/jobs/)[a-f0-9-]+' /tmp/gh-aw/agent/helix-send.log \
-  | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' || true
+test -f /tmp/gh-aw/agent/helix-send.log && test -r /tmp/gh-aw/agent/helix-send.log
 ```
 
-The final `grep` may return no match for an evidence-retention skip; after confirming the saved response is a readable log, do not treat that expected no-match status as a helper failure.
+If the saved response is not a readable regular file, apply rule 6. Otherwise, extract the GUID:
+
+```bash
+set -o pipefail
+grep -oE 'Sent Helix Job(: |; see work items at https://helix\.dot\.net/api/jobs/)[a-f0-9-]+' /tmp/gh-aw/agent/helix-send.log \
+  | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+```
+
+With `pipefail`, status 0 means a GUID was found, status 1 means no supported completion message or GUID was found, and any other nonzero status is a failure. Only treat status 1 as the evidence-retention skip after the readability check above; do not mask other `grep` failures.
 
 If the completed submission log is a normal text payload but is empty or contains neither supported completion message, record `skipped: Helix job identifier unavailable` for that build's candidate and continue with the next build or candidate. Do not emit `missing_data` for this case: the submission completed, but the retained log cannot identify a Helix job to traverse. If the log request is denied, fails, is malformed, or is not a readable log payload, apply rule 6 instead.
 
@@ -245,10 +253,45 @@ runtime-failure-observer-http helix-work-items --job-id JOBID --output "/tmp/gh-
 
 Before requesting consoles, skip any work item whose Helix `ExitCode` is a negative integer and record `skipped: Helix infrastructure exit code <n>`. Negative Helix exit codes are service-side outcomes rather than xharness process exit codes, so they cannot match the Step 3 improvement table. If `ExitCode` is missing or is not an integer, apply rule 6.
 
-A work item is an xharness invocation candidate if its console contains an xharness command (`xharness apple`, `xharness android`, `xharness wasm`, or `dotnet exec .../Microsoft.DotNet.XHarness.CLI.dll`). Identify its zero-based numeric array index `INDEX` (the first array item is `0`) in the saved work-items response, then fetch its console using the quoted `jq` substitution so the exact name remains one shell argument:
+A work item is an xharness invocation candidate if its console contains an xharness command (`xharness apple`, `xharness android`, `xharness wasm`, or `dotnet exec .../Microsoft.DotNet.XHarness.CLI.dll`). Identify its zero-based numeric array index `INDEX` (the first array item is `0`) in the saved work-items response. Before requesting its console, validate that the selected item exists and has a non-empty string `Name` or `WorkItemName`; the lookup is case-insensitive to match the helper:
 
 ```bash
-runtime-failure-observer-http helix-console --job-id JOBID --work-item "$(jq -r 'if type == "array" then . else .value end | .[INDEX] | (.Name // .WorkItemName)' "/tmp/gh-aw/agent/helix-JOBID.json")" --output "/tmp/gh-aw/agent/console-JOBID.log"
+jq -e '
+  def field($name):
+    ([to_entries[] | select((.key | ascii_downcase) == $name) | .value] | first);
+  def work_item_name:
+    field("name") as $name
+    | if ($name | type) == "string" and ($name | length) > 0
+      then $name
+      else field("workitemname")
+      end;
+  (if type == "array" then . else .value end) as $items
+  | if ($items | type) == "array" then $items[INDEX] else error("Helix work-item response is not an array") end
+  | if type == "object" then . else error("selected Helix work item is not an object") end
+  | work_item_name as $name
+  | if ($name | type) == "string" and ($name | length) > 0
+    then $name
+    else error("selected Helix work item has no non-empty name")
+    end
+' "/tmp/gh-aw/agent/helix-JOBID.json"
+```
+
+If this validation fails, apply rule 6 rather than treating the work item as unavailable. After it succeeds, fetch the console using the quoted `jq` substitution so the exact name remains one shell argument:
+
+```bash
+runtime-failure-observer-http helix-console --job-id JOBID --work-item "$(jq -er '
+  def field($name):
+    ([to_entries[] | select((.key | ascii_downcase) == $name) | .value] | first);
+  def work_item_name:
+    field("name") as $name
+    | if ($name | type) == "string" and ($name | length) > 0
+      then $name
+      else field("workitemname")
+      end;
+  (if type == "array" then . else .value end)
+  | .[INDEX]
+  | work_item_name
+' "/tmp/gh-aw/agent/helix-JOBID.json")" --output "/tmp/gh-aw/agent/console-JOBID.log"
 ```
 
 For an identified candidate, treat only these explicit evidence-retention failures as per-candidate skips; record the exact signal and continue scanning other work items and builds:
