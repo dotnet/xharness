@@ -196,6 +196,20 @@ class RequestBehaviorTests(unittest.TestCase):
                 self.url, {"azdo"}, 10, FakeOpener(error=error)
             )
 
+    def test_labels_console_http_errors(self):
+        error = urllib.error.HTTPError(self.url, 404, "Not Found", {}, None)
+        with self.assertRaisesRegex(
+            observer_http.TransportError,
+            "Helix console request failed with status 404",
+        ):
+            observer_http._request_bytes(
+                self.url,
+                {"azdo"},
+                10,
+                FakeOpener(error=error),
+                request_name="Helix console request",
+            )
+
 
 class HelixTraversalTests(unittest.TestCase):
     JOB_ID = "00000000-0000-0000-0000-000000000000"
@@ -236,6 +250,17 @@ class HelixTraversalTests(unittest.TestCase):
         ]"""
         with self.assertRaises(observer_http.TransportError):
             observer_http._console_url(payload, self.JOB_ID, "runtime-tests")
+
+    def test_console_url_reports_missing_work_item(self):
+        with self.assertRaisesRegex(
+            observer_http.TransportError,
+            "expected exactly one Helix work item named 'runtime-tests', found 0",
+        ):
+            observer_http._console_url(
+                b'[{"Name": "other-work-item"}]',
+                self.JOB_ID,
+                "runtime-tests",
+            )
 
 
 if __name__ == "__main__":
