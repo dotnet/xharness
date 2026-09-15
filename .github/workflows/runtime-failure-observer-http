@@ -229,6 +229,8 @@ def _request_bytes(
     allowed_families: set[str],
     limit: int,
     opener=None,
+    *,
+    request_name: str = "HTTP request",
 ) -> bytes:
     _validate_url(url, allowed_families)
     if opener is None:
@@ -240,10 +242,10 @@ def _request_bytes(
         with opener.open(request, timeout=TIMEOUT_SECONDS) as response:
             status = getattr(response, "status", 200)
             if not 200 <= status < 300:
-                raise TransportError(f"HTTP request failed with status {status}")
+                raise TransportError(f"{request_name} failed with status {status}")
             return _read_response(response, limit)
     except urllib.error.HTTPError as error:
-        raise TransportError(f"HTTP request failed with status {error.code}") from error
+        raise TransportError(f"{request_name} failed with status {error.code}") from error
     except urllib.error.URLError as error:
         raise TransportError(f"HTTP request failed: {error.reason}") from error
     except TimeoutError as error:
@@ -499,7 +501,12 @@ def _run(args: argparse.Namespace) -> None:
         )
         console_url = _console_url(work_items, args.job_id, args.work_item)
         _write_output(
-            _request_bytes(console_url, {"helix-console"}, LOG_LIMIT),
+            _request_bytes(
+                console_url,
+                {"helix-console"},
+                LOG_LIMIT,
+                request_name="Helix console request",
+            ),
             args.output,
             (".log", ".txt"),
         )
