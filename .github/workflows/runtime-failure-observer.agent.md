@@ -233,7 +233,19 @@ runtime-failure-observer-http azdo-log --build-id SRCID --log-id LOGID --output 
 test -f /tmp/gh-aw/agent/helix-send.log && test -r /tmp/gh-aw/agent/helix-send.log
 ```
 
-If the saved response is not a readable regular file, apply rule 6. Otherwise, extract the GUID:
+If the saved response is not a readable regular file, apply rule 6. Otherwise, check whether it is empty:
+
+```bash
+test -s /tmp/gh-aw/agent/helix-send.log
+```
+
+With the `test -s` command, status 0 means the file is non-empty, status 1 means it is empty, and any other nonzero status is a failure. For status 1, record `skipped: empty Helix evidence` and do not attempt GUID extraction. For a non-empty file, validate that it is text:
+
+```bash
+file -b --mime-encoding /tmp/gh-aw/agent/helix-send.log
+```
+
+If this command fails, or reports `binary`, apply rule 6. Otherwise, extract the GUID:
 
 ```bash
 set -o pipefail
@@ -243,7 +255,7 @@ grep -oE 'Sent Helix Job(: |; see work items at https://helix\.dot\.net/api/jobs
 
 With `pipefail`, status 0 means a GUID was found, status 1 means no supported completion message or GUID was found, and any other nonzero status is a failure. Only treat status 1 as the evidence-retention skip after the readability check above; do not mask other `grep` failures.
 
-If the completed submission log is a normal text payload but is empty or contains neither supported completion message, record `skipped: Helix job identifier unavailable` for that build's candidate and continue with the next build or candidate. Do not emit `missing_data` for this case: the submission completed, but the retained log cannot identify a Helix job to traverse. If the log request is denied, fails, is malformed, or is not a readable log payload, apply rule 6 instead.
+If the completed submission log is a non-empty normal text payload but contains neither supported completion message, record `skipped: Helix job identifier unavailable` for that build's candidate and continue with the next build or candidate. Do not emit `missing_data` for this case: the submission completed, but the retained log cannot identify a Helix job to traverse. Empty logs are classified only as `skipped: empty Helix evidence`; do not also classify them as unavailable job identifiers. If the log request is denied, fails, is malformed, or is not a readable text log payload, apply rule 6 instead.
 
 For each Helix job, list failing work items (inline the job id in place of `JOBID`):
 
