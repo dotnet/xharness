@@ -459,7 +459,7 @@ public class AppTester : AppRunnerBase, IAppTester
                 cancellationToken: cancellationToken));
 
             RecordLaunchResult(result, appOutputLog as IReadableLog);
-            await testReporter.CollectDeviceResult(result);
+            await testReporter.CollectDeviceResult(result, AppEndSignalDetected);
         }
         finally
         {
@@ -495,11 +495,11 @@ public class AppTester : AppRunnerBase, IAppTester
 
             // If results weren't copied, it likely means the app crashed before tests could run
             // Try to retrieve the crash report, but only if the test run didn't already complete.
-            // When test run completed (Success=true from CollectDeviceResult), the failure is a
-            // device communication issue, not an app crash, so we skip crash report retrieval.
+            // Protocol connection or an app end signal confirms that the failure is a device
+            // communication issue, not an app crash.
             if (!resultsCopied)
             {
-                if (testReporter.Success == true)
+                if (testReporter.Success == true && (testReporter.TestProtocolConnected || AppEndSignalDetected))
                 {
                     _mainLog.WriteLine("Test results file not found after retries, but test run completed successfully. Device communication issue likely caused the copy failure.");
                 }

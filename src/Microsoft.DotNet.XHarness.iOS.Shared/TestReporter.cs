@@ -53,6 +53,7 @@ public class TestReporter : ITestReporter
 
     private bool _waitedForExit = true;
     private bool _launchFailure;
+    private bool _appEndSignalDetected;
     private bool _isSimulatorTest;
     private bool _timedout;
     private readonly bool _generateHtml;
@@ -264,9 +265,10 @@ public class TestReporter : ITestReporter
         }
     }
 
-    public async Task CollectDeviceResult(ProcessExecutionResult runResult)
+    public async Task CollectDeviceResult(ProcessExecutionResult runResult, bool appEndSignalDetected = false)
     {
         _isSimulatorTest = false;
+        _appEndSignalDetected = appEndSignalDetected;
         await CollectResult(runResult);
     }
 
@@ -526,12 +528,10 @@ public class TestReporter : ITestReporter
             result.ResultMessage = "Test runner failed to launch";
             Success = false;
         }
-        else if (Success == true)
+        else if (Success == true && (_isSimulatorTest || TestProtocolConnected || _appEndSignalDetected))
         {
-            // Test run completed (detected via app end signal or mlaunch exit) but the results file
-            // was not found. This can happen when the device file copy (devicectl) fails due to
-            // transient device communication issues (e.g., tvOS Mercury error 1000, RSD 0xE8000003).
-            // Since we already confirmed test completion, treat this as success with a warning.
+            // Test execution was observed through the protocol, the app end signal, or a reliable
+            // simulator/MacCatalyst process exit, but the results file was not found.
             WrenchLog.WriteLine("AddSummary: <b><i>{0} completed but results unavailable</i></b><br/>", _runMode);
             _mainLog.WriteLine("Test run completed but results file was not available (device communication issue)");
             result.ResultMessage = "Test run completed but results file was not available";

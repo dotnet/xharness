@@ -49,6 +49,9 @@ public class AppTesterTests : AppRunTestBase
         _testReporter
             .Setup(x => x.CollectSimulatorResult(It.IsAny<ProcessExecutionResult>()))
             .Returns(Task.CompletedTask);
+        _testReporter
+            .Setup(x => x.CollectDeviceResult(It.IsAny<ProcessExecutionResult>(), It.IsAny<bool>()))
+            .Returns(Task.CompletedTask);
 
         _tunnelBore = new Mock<ITunnelBore>();
         _tunnelBore.Setup(t => t.Close(It.IsAny<string>()));
@@ -335,6 +338,7 @@ public class AppTesterTests : AppRunTestBase
         }
 
         _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
+        _testReporter.Verify(x => x.CollectDeviceResult(It.IsAny<ProcessExecutionResult>(), false), Times.Once);
 
         deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
         File.Delete(appOutputPath);
@@ -704,6 +708,7 @@ public class AppTesterTests : AppRunTestBase
         _tunnelBore.Verify(t => t.Close(s_mockDevice.DeviceIdentifier));
 
         _snapshotReporter.Verify(x => x.StartCaptureAsync(), Times.AtLeastOnce);
+        _testReporter.Verify(x => x.CollectDeviceResult(It.IsAny<ProcessExecutionResult>(), true), Times.Once);
 
         deviceSystemLog.Verify(x => x.Dispose(), Times.AtLeastOnce);
     }

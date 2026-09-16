@@ -489,9 +489,9 @@ public class TestReporterTests : IDisposable
 
         var testReporter = BuildTestReporter();
 
-        // Simulate mlaunch exiting with 0 (after app end signal detection → RunAndWatchForAppSignal sets ExitCode=0)
+        // Simulate RunAndWatchForAppSignal returning success after it detects the app end signal.
         var processResult = new ProcessExecutionResult() { TimedOut = false, ExitCode = 0 };
-        await testReporter.CollectDeviceResult(processResult);
+        await testReporter.CollectDeviceResult(processResult, appEndSignalDetected: true);
 
         // At this point Success=true (set by CollectDeviceResult via CollectResult)
         Assert.True(testReporter.Success, "Success should be true after CollectDeviceResult with ExitCode=0");
@@ -509,17 +509,19 @@ public class TestReporterTests : IDisposable
     }
 
     [Fact]
-    public async Task ParseResult_WhenAppExitsWithoutTestStart_ReturnsEarlyExit()
+    public async Task ParseResult_WhenLauncherReturnsSuccessWithoutTestStart_ReturnsEarlyExit()
     {
         var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
         _listener.Setup(l => l.TestLog).Returns(listenerLog);
 
         var testReporter = BuildTestReporter();
-        await testReporter.CollectDeviceResult(new ProcessExecutionResult { ExitCode = 1 });
+        // devicectl can deny the launch while mlaunch still reports exit code 0.
+        await testReporter.CollectDeviceResult(new ProcessExecutionResult { ExitCode = 0 });
 
         var (result, resultMessage) = await testReporter.ParseResult();
 
         Assert.Equal(TestExecutingResult.AppExitedBeforeTestStart, result);
+        Assert.False(testReporter.Success);
         Assert.Contains("no matching crash report", resultMessage);
         _crashReporter.Verify(c => c.EndCaptureAsync(TimeSpan.FromSeconds(30)), Times.Once);
     }

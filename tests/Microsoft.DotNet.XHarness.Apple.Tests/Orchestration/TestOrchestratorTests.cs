@@ -240,6 +240,7 @@ public class TestOrchestratorTests : OrchestratorTestBase
             Array.Empty<string>(),
             CancellationToken.None);
 
+        Assert.NotEqual(ExitCode.SUCCESS, result);
         Assert.Equal(expectedExitCode, result);
     }
 
