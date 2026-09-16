@@ -71,8 +71,8 @@ post-steps:
 
 tools:
   github:
-    toolsets: [repos, pull_requests, issues, search]
-  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "gh", "printf", "runtime-failure-observer-http:*"]
+    toolsets: [repos, pull_requests, issues]
+  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "printf", "runtime-failure-observer-http:*"]
   edit:
 
 checkout:
@@ -335,12 +335,29 @@ If `exit_code` is not in the improvement table: `skipped: exit code <n> not in i
 
 ## Step 4. Dedup against existing xharness work and fixes
 
-```bash
-gh issue list --repo dotnet/xharness --state all --limit 50 \
-  --search "$sig_short" --json number,title,state,url
-gh pr list --repo dotnet/xharness --state all --limit 50 \
-  --search "$sig_short" --json number,title,state,closedAt,mergedAt,url
-```
+Use the configured GitHub MCP read tools `search_issues` and
+`search_pull_requests`; these tools are part of the action environment and are
+the only permitted GitHub read path. Make the two title-qualified searches
+explicit:
+
+1. Call `search_issues` with `owner=dotnet`, `repo=xharness`, and
+   `query=in:title "[runtime-observer]"`.
+2. Call `search_pull_requests` with `owner=dotnet`, `repo=xharness`, and
+   `query=in:title "[runtime-observer]"`.
+
+Request a page size for each call and paginate until every returned page is
+processed; if pagination metadata is missing or reports incomplete results,
+emit `missing_data` and stop. Then fetch and verify every returned item before
+applying deduplication:
+require the exact repository, a title starting with `[runtime-observer] ` for
+pull requests, and the normalized Step 3 `signature` to appear in the item's
+title or body. New observer PRs carry the exact signature in the mandatory
+Step 6 body marker; do not suppress an older item unless its signature can be
+verified from the fetched title or body. Do not require the signature to be in
+the title; the PR contract only guarantees the `[runtime-observer] ` prefix. If
+either search, a required follow-up fetch, or the verification data cannot be
+used, emit `missing_tool` or `missing_data` as appropriate and stop rather than
+guessing.
 
 Confirm each result. Suppress only for an open/merged PR (`existing-PR #<n>`) or a fix confirmed in `HEAD` (`fixed in xharness <commit/PR>`); issues and closed-unmerged PRs are context to reference in any new PR. Search `HEAD` and history using stack-trace paths first, then the Step 5 table. Do this before stability or consumed-version checks, and skip a confirmed `HEAD` fix even if runtime has not consumed it. The searches are required; apply rule 6 if they fail.
 
@@ -379,7 +396,11 @@ For DEVICE_NOT_FOUND retry: never blindly add retry. Verify (a) the discovery qu
 
 ## Step 6. Draft the PR
 
-Use the PR body template below. Stage exactly the files you change; never `git add -A`.
+Use the PR body template below. Before emitting `create-pull-request`, verify
+that its body contains the dedicated Observer signature marker and the exact
+normalized Step 3 `signature`; if either is absent or altered, emit
+`missing_data` and do not create the PR. Stage exactly the files you change;
+never `git add -A`.
 
 ````markdown
 ## Why
@@ -398,6 +419,12 @@ Observed in `>= <count>` of the last 5 builds on this definition. Latest occurre
 
 ```
 <sanitized last 20 lines before exit, no paths/GUIDs/machine names>
+```
+
+### Observer signature
+
+```
+<normalized signature>
 ```
 
 ## What this PR changes
