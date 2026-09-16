@@ -29,6 +29,13 @@ public class HardwareDeviceLoaderTests
         _processManager = new Mock<IMlaunchProcessManager>();
         _devices = new HardwareDeviceLoader(_processManager.Object, Array.Empty<int>());
         _executionLog = new Mock<ILog>();
+
+        _processManager.Setup(p => p.ExecuteXcodeCommandAsync("simctl", It.IsAny<IList<string>>(), It.IsAny<ILog>(), It.IsAny<ILog>(), It.IsAny<ILog>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
+            .Returns<string, IList<string>, ILog, ILog, ILog, TimeSpan, CancellationToken>((command, args, log, stdout, stderr, timeout, token) =>
+            {
+                stdout.WriteLine("{\"devices\":{}}");
+                return Task.FromResult(new ProcessExecutionResult { ExitCode = 0 });
+            });
     }
 
     [Theory]
