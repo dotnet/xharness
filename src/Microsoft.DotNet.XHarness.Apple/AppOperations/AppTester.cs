@@ -605,7 +605,7 @@ public class AppTester : AppRunnerBase, IAppTester
 
             var result = await RunMacCatalystApp(appInformation, appOutputLog, timeout, waitForExit: true, extraAppArguments, envVariables, combinedCancellationToken.Token);
             RecordLaunchResult(result, appOutputLog as IReadableLog);
-            await testReporter.CollectSimulatorResult(result);
+            await testReporter.CollectSimulatorResult(result, AppEndSignalDetected);
 
             if (enableCoverage)
             {

@@ -246,9 +246,13 @@ public class TestReporter : ITestReporter
         _mainLog.WriteLine($"Test failed to start in {_timeoutWatch.Elapsed.TotalMinutes:0.##} minutes");
     }
 
-    public async Task CollectSimulatorResult(ProcessExecutionResult runResult)
+    public Task CollectSimulatorResult(ProcessExecutionResult runResult)
+        => CollectSimulatorResult(runResult, appEndSignalDetected: false);
+
+    public async Task CollectSimulatorResult(ProcessExecutionResult runResult, bool appEndSignalDetected)
     {
         _isSimulatorTest = true;
+        _appEndSignalDetected = appEndSignalDetected;
         await CollectResult(runResult);
 
         if (Success != null && !Success.Value)
@@ -265,7 +269,10 @@ public class TestReporter : ITestReporter
         }
     }
 
-    public async Task CollectDeviceResult(ProcessExecutionResult runResult, bool appEndSignalDetected = false)
+    public Task CollectDeviceResult(ProcessExecutionResult runResult)
+        => CollectDeviceResult(runResult, appEndSignalDetected: false);
+
+    public async Task CollectDeviceResult(ProcessExecutionResult runResult, bool appEndSignalDetected)
     {
         _isSimulatorTest = false;
         _appEndSignalDetected = appEndSignalDetected;
@@ -528,10 +535,10 @@ public class TestReporter : ITestReporter
             result.ResultMessage = "Test runner failed to launch";
             Success = false;
         }
-        else if (Success == true && (_isSimulatorTest || TestProtocolConnected || _appEndSignalDetected))
+        else if (Success == true && (TestProtocolConnected || _appEndSignalDetected))
         {
-            // Test execution was observed through the protocol, the app end signal, or a reliable
-            // simulator/MacCatalyst process exit, but the results file was not found.
+            // Test execution was observed through the protocol or the app end signal, but the
+            // results file was not found.
             WrenchLog.WriteLine("AddSummary: <b><i>{0} completed but results unavailable</i></b><br/>", _runMode);
             _mainLog.WriteLine("Test run completed but results file was not available (device communication issue)");
             result.ResultMessage = "Test run completed but results file was not available";

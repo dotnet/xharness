@@ -50,6 +50,9 @@ public class AppTesterTests : AppRunTestBase
             .Setup(x => x.CollectSimulatorResult(It.IsAny<ProcessExecutionResult>()))
             .Returns(Task.CompletedTask);
         _testReporter
+            .Setup(x => x.CollectSimulatorResult(It.IsAny<ProcessExecutionResult>(), It.IsAny<bool>()))
+            .Returns(Task.CompletedTask);
+        _testReporter
             .Setup(x => x.CollectDeviceResult(It.IsAny<ProcessExecutionResult>(), It.IsAny<bool>()))
             .Returns(Task.CompletedTask);
 

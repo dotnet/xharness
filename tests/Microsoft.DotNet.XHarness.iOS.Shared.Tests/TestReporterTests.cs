@@ -509,14 +509,41 @@ public class TestReporterTests : IDisposable
     }
 
     [Fact]
-    public async Task ParseResult_WhenLauncherReturnsSuccessWithoutTestStart_ReturnsEarlyExit()
+    public async Task ParseResult_WhenProtocolConnectedButResultsUnavailable_ReturnsSucceeded()
+    {
+        var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
+        _listener.Setup(l => l.TestLog).Returns(listenerLog);
+        _listener.Setup(l => l.ConnectedTask).Returns(Task.FromResult(true));
+
+        var testReporter = BuildTestReporter();
+        await testReporter.CollectDeviceResult(new ProcessExecutionResult { ExitCode = 0 });
+
+        var (result, resultMessage) = await testReporter.ParseResult();
+
+        Assert.Equal(TestExecutingResult.Succeeded, result);
+        Assert.True(testReporter.Success);
+        Assert.Contains("completed but results file was not available", resultMessage);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ParseResult_WhenLauncherReturnsSuccessWithoutTestStart_ReturnsEarlyExit(bool isSimulator)
     {
         var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
         _listener.Setup(l => l.TestLog).Returns(listenerLog);
 
         var testReporter = BuildTestReporter();
         // devicectl can deny the launch while mlaunch still reports exit code 0.
-        await testReporter.CollectDeviceResult(new ProcessExecutionResult { ExitCode = 0 });
+        var processResult = new ProcessExecutionResult { ExitCode = 0 };
+        if (isSimulator)
+        {
+            await testReporter.CollectSimulatorResult(processResult);
+        }
+        else
+        {
+            await testReporter.CollectDeviceResult(processResult);
+        }
 
         var (result, resultMessage) = await testReporter.ParseResult();
 

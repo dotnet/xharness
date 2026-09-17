@@ -22,6 +22,10 @@ public interface ITestReporter : IDisposable
 
     void LaunchCallback(Task<bool> launchResult);
     Task CollectSimulatorResult(ProcessExecutionResult runResult);
-    Task CollectDeviceResult(ProcessExecutionResult runResult, bool appEndSignalDetected = false);
+    Task CollectSimulatorResult(ProcessExecutionResult runResult, bool appEndSignalDetected)
+        => CollectSimulatorResult(runResult);
+    Task CollectDeviceResult(ProcessExecutionResult runResult);
+    Task CollectDeviceResult(ProcessExecutionResult runResult, bool appEndSignalDetected)
+        => CollectDeviceResult(runResult);
     Task<(TestExecutingResult ExecutingResult, string ResultMessage)> ParseResult();
 }
