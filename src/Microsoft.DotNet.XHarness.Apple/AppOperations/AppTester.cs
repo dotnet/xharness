@@ -603,7 +603,7 @@ public class AppTester : AppRunnerBase, IAppTester
 
             await crashReporter.StartCaptureAsync();
 
-            var result = await RunMacCatalystApp(appInformation, appOutputLog, timeout, waitForExit: true, extraAppArguments, envVariables, combinedCancellationToken.Token);
+            var result = await RunAndWatchForAppSignal(() => RunMacCatalystApp(appInformation, appOutputLog, timeout, waitForExit: true, extraAppArguments, envVariables, combinedCancellationToken.Token));
             RecordLaunchResult(result, appOutputLog as IReadableLog);
             await testReporter.CollectSimulatorResult(result, AppEndSignalDetected);
 

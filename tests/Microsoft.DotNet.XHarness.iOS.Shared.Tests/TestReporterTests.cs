@@ -526,16 +526,19 @@ public class TestReporterTests : IDisposable
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task ParseResult_WhenLauncherReturnsSuccessWithoutTestStart_ReturnsEarlyExit(bool isSimulator)
+    [InlineData(false, 0)]
+    [InlineData(false, 1)]
+    [InlineData(true, 0)]
+    [InlineData(true, 1)]
+    public async Task ParseResult_WhenAppExitsWithoutTestStart_ReturnsEarlyExit(bool isSimulator, int processExitCode)
     {
         var listenerLog = Mock.Of<IFileBackedLog>(l => l.FullPath == "/this/path/does/not/exist");
         _listener.Setup(l => l.TestLog).Returns(listenerLog);
+        _runLog.Setup(l => l.GetReader()).Returns(() => new StreamReader(GetRunLogSample()));
 
         var testReporter = BuildTestReporter();
         // devicectl can deny the launch while mlaunch still reports exit code 0.
-        var processResult = new ProcessExecutionResult { ExitCode = 0 };
+        var processResult = new ProcessExecutionResult { ExitCode = processExitCode };
         if (isSimulator)
         {
             await testReporter.CollectSimulatorResult(processResult);

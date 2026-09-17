@@ -580,6 +580,88 @@ public class AppTesterTests : AppRunTestBase
         _listener.Verify(x => x.Dispose(), Times.AtLeastOnce);
     }
 
+    [Theory]
+    [InlineData(true, TestExecutingResult.Succeeded)]
+    [InlineData(false, TestExecutingResult.AppExitedBeforeTestStart)]
+    public async Task TestOnMacCatalystWithMissingResultsRequiresAppEndSignal(
+        bool emitAppEndSignal,
+        TestExecutingResult expectedResult)
+    {
+        var testResultFilePath = Path.Combine(_outputPath, "test-results.xml");
+        var listenerLog = Mock.Of<IFileBackedLog>(x => x.FullPath == testResultFilePath);
+        _listener.SetupGet(x => x.TestLog).Returns(listenerLog);
+        _listener.SetupGet(x => x.ConnectedTask).Returns(new TaskCompletionSource<bool>().Task);
+        _logs
+            .Setup(x => x.Create("test-maccatalyst-mocked_timestamp.log", "TestLog", It.IsAny<bool?>()))
+            .Returns(listenerLog);
+        var mainLogPath = Path.Combine(_outputPath, "main.log");
+        File.WriteAllText(mainLogPath, "Launching test app");
+        _mainLog.SetupGet(x => x.FullPath).Returns(mainLogPath);
+        _mainLog.Setup(x => x.GetReader()).Returns(() => new StreamReader(mainLogPath));
+        _helpers.Setup(x => x.GenerateGuid()).Returns(Guid.NewGuid());
+
+        var captureLogFactory = new Mock<ICaptureLogFactory>();
+        captureLogFactory.SetReturnsDefault(Mock.Of<ICaptureLog>());
+
+        using var cancellation = new CancellationTokenSource();
+        _processManager
+            .Setup(x => x.ExecuteCommandAsync(
+                "open",
+                It.IsAny<IList<string>>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<ILog>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<Dictionary<string, string?>?>(),
+                It.IsAny<CancellationToken?>()))
+            .Returns((string filename, IList<string> arguments, ILog log, ILog stdout, ILog stderr,
+                TimeSpan timeout, Dictionary<string, string?>? environmentVariables, CancellationToken? cancellationToken) =>
+            {
+                if (emitAppEndSignal)
+                {
+                    Assert.NotNull(environmentVariables);
+                    stdout.WriteLine(environmentVariables[EnviromentVariables.AppEndTag]);
+                }
+                else
+                {
+                    cancellation.Cancel();
+                }
+
+                Assert.True(cancellationToken?.IsCancellationRequested);
+                return Task.FromResult(new ProcessExecutionResult { ExitCode = 137 });
+            })
+            .Verifiable();
+
+        var appTester = new AppTester(
+            _processManager.Object,
+            _listenerFactory.Object,
+            _snapshotReporterFactory,
+            captureLogFactory.Object,
+            Mock.Of<IDeviceLogCapturerFactory>(),
+            new TestReporterFactory(_processManager.Object),
+            new XmlResultParser(),
+            _mainLog.Object,
+            _logs.Object,
+            _helpers.Object);
+
+        var (result, resultMessage) = await appTester.TestMacCatalystApp(
+            _appBundleInfo,
+            timeout: TimeSpan.FromSeconds(30),
+            testLaunchTimeout: TimeSpan.FromSeconds(30),
+            signalAppEnd: true,
+            extraAppArguments: Array.Empty<string>(),
+            extraEnvVariables: Array.Empty<(string, string?)>(),
+            cancellationToken: cancellation.Token);
+
+        Assert.Equal(expectedResult, result);
+        Assert.Contains(emitAppEndSignal ? "completed but results file was not available" : "no matching crash report", resultMessage);
+        Assert.NotNull(appTester.LaunchDiagnostics);
+        Assert.Equal(emitAppEndSignal, appTester.LaunchDiagnostics.TestEndSignalDetected);
+        Assert.False(appTester.LaunchDiagnostics.TestProtocolConnected);
+        Assert.False(appTester.LaunchDiagnostics.TestResultFile.Exists);
+        _processManager.Verify();
+    }
+
     [Fact]
     public async Task TestOnDeviceWithAppEndSignalTest()
     {
