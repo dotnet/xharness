@@ -337,8 +337,12 @@ If `exit_code` is not in the improvement table: `skipped: exit code <n> not in i
 
 Use the configured GitHub MCP read tools `search_issues` and
 `search_pull_requests`; these tools are part of the action environment and are
-the only permitted GitHub read path. Make the two title-qualified searches
-explicit:
+the only permitted GitHub read path. These tools may be deferred by the
+Copilot CLI. Before calling either one, use its tool-search capability to load
+the tool by exact name; do not infer that a deferred tool is unavailable from
+the initial tool list. Emit `missing_tool` only when tool search returns no
+matching tool or a discovered invocation is unavailable. Make the two
+title-qualified searches explicit:
 
 1. Call `search_issues` with `owner=dotnet`, `repo=xharness`, and
    `query=in:title "[runtime-observer]"`.
