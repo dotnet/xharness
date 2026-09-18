@@ -98,7 +98,6 @@ XHarness uses standardized exit codes (see `src/Microsoft.DotNet.XHarness.Common
 - Requires proper code signing and provisioning profiles
 - Complex simulator runtime management
 - TCP connection workarounds for test result streaming
-- Xcode 27 can expose simulators through `mlaunch --listdev`. Hardware discovery excludes UDIDs from the full `simctl list devices --json` catalog, including unavailable simulators. Do not classify devices by name, product type, or transport. If this catalog cannot be read, discovery fails rather than accepting unclassified records.
 
 ### WASM/WASI Development
 - Browser-based test execution
@@ -176,7 +175,6 @@ XHarness uses standardized exit codes (see `src/Microsoft.DotNet.XHarness.Common
 - Check device/simulator state before test execution
 - Verify app signing and provisioning for Apple platforms
 - Monitor TCP connections for test result streaming
-- Device listing logs contain the mlaunch command and device names, not the raw `--listdev` XML. The loader deletes the temporary XML after parsing. Capture the XML separately when investigating enumeration metadata.
 - If Helix `ConsoleOutputUri` is the `helix-workitem-deadletter.txt` sentinel, use the canonical `/api/2019-06-17/jobs/{jobId}/workitems/{workItem}/console` endpoint; an uploaded console log may still be available there.
 - Negative Helix work-item exit codes are service-side outcomes, not xharness process exit codes. Observer scans should skip them before console retrieval because crash/dead-letter work items may not have a console at the canonical endpoint.
 - A skipped or failed Helix submission timeline task (for example, `Send to Helix` or `Send tests to Helix (Unix)`) did not submit a Helix job and therefore has no job identifier; observer scans should skip it without requesting its log.

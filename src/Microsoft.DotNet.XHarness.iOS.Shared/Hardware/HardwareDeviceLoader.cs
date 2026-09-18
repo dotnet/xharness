@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -138,49 +137,11 @@ public class HardwareDeviceLoader : IHardwareDeviceLoader
             log.WriteLine($"Found {devices.Count} devices");
             log.Flush();
 
-            var simulatorIdentifiers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            if (devices.Count > 0)
-            {
-                // mlaunch --listdev can include simulators. Unlike --listsim, the full
-                // simctl catalog also includes simulators with unavailable runtimes.
-                using var output = new MemoryLog { Timestamp = false };
-                var result = await _processManager.ExecuteXcodeCommandAsync(
-                    "simctl", new[] { "list", "devices", "--json" },
-                    log, output, log, TimeSpan.FromMinutes(2), cancellationToken);
-                cancellationToken.ThrowIfCancellationRequested();
-                if (!result.Succeeded)
-                {
-                    var reason = result.TimedOut ? "simctl timed out" : $"simctl exited with code {result.ExitCode}";
-                    throw new Exception($"Failed to list simulators for physical device discovery: {reason}.");
-                }
-
-                using var simulatorData = JsonDocument.Parse(output.ToString());
-                foreach (var runtime in simulatorData.RootElement.GetProperty("devices").EnumerateObject())
-                {
-                    foreach (var simulator in runtime.Value.EnumerateArray())
-                    {
-                        var identifier = simulator.GetProperty("udid").GetString();
-                        if (string.IsNullOrEmpty(identifier))
-                        {
-                            throw new JsonException("Simulator has no UDID.");
-                        }
-
-                        simulatorIdentifiers.Add(identifier);
-                    }
-                }
-            }
-
             foreach (XmlNode dev in devices)
             {
                 Device d = GetDevice(dev);
                 if (d == null)
                 {
-                    continue;
-                }
-
-                if (simulatorIdentifiers.Contains(d.DeviceIdentifier))
-                {
-                    log.WriteLine($"Skipping device {d.Name} ({d.DeviceIdentifier}) because it's a simulator.");
                     continue;
                 }
 
