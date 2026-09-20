@@ -335,21 +335,25 @@ If `exit_code` is not in the improvement table: `skipped: exit code <n> not in i
 
 ## Step 4. Dedup against existing xharness work and fixes
 
-Use the configured GitHub MCP read tools `search_issues` and
-`search_pull_requests`; these tools are part of the action environment and are
-the only permitted GitHub read path. These tools may be deferred by the
-Copilot CLI. Before calling either one, call `tool_search_tool_regex` with an
-anchored exact-name pattern (`^search_issues$` or
-`^search_pull_requests$`, as applicable) to load it. Treat discovery as
-successful only when the returned tool name exactly matches the requested name;
-do not infer that a deferred tool is unavailable from the initial tool list.
-Emit `missing_tool` when `tool_search_tool_regex` returns no exact match, a
-different tool name, or an unavailable discovered invocation. Make the two
-title-qualified searches explicit:
+Use the configured GitHub MCP read tools `github-mcp-server-search_issues` and
+`github-mcp-server-search_pull_requests`; these are the exposed functions for
+issue and pull-request search, are part of the action environment, and are the
+only permitted GitHub read path. These tools may be deferred by the Copilot
+CLI. Before calling either one, call `tool_search_tool_regex` with an anchored
+exact-name pattern (`^github-mcp-server-search_issues$` or
+`^github-mcp-server-search_pull_requests$`, as applicable) to load it. Treat
+discovery as successful only when the returned tool name exactly matches the
+requested namespaced tool; do not infer that a deferred tool is unavailable
+from the initial tool list. Emit `missing_tool` when
+`tool_search_tool_regex` returns no exact match, a different tool name, or an
+unavailable discovered invocation. Make the two title-qualified searches
+explicit:
 
-1. Call `search_issues` with `owner=dotnet`, `repo=xharness`, and
+1. Call the discovered `github-mcp-server-search_issues` tool with
+   `owner=dotnet`, `repo=xharness`, and
    `query=in:title "[runtime-observer]"`.
-2. Call `search_pull_requests` with `owner=dotnet`, `repo=xharness`, and
+2. Call the discovered `github-mcp-server-search_pull_requests` tool with
+   `owner=dotnet`, `repo=xharness`, and
    `query=in:title "[runtime-observer]"`.
 
 Request a page size for each call and paginate until every returned page is
