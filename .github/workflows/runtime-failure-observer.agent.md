@@ -339,11 +339,13 @@ Use the configured GitHub MCP read tools `search_issues` and
 `search_pull_requests`; these tools are part of the action environment and are
 the only permitted GitHub read path. These tools may be deferred by the
 Copilot CLI. Before calling either one, call `tool_search_tool_regex` with an
-exact-name pattern for that tool (`search_issues` or `search_pull_requests`) to
-load it; do not infer that a deferred tool is unavailable from the initial tool
-list. Emit `missing_tool` when `tool_search_tool_regex` returns no exact match
-or the discovered invocation is unavailable. Make the two title-qualified
-searches explicit:
+anchored exact-name pattern (`^search_issues$` or
+`^search_pull_requests$`, as applicable) to load it. Treat discovery as
+successful only when the returned tool name exactly matches the requested name;
+do not infer that a deferred tool is unavailable from the initial tool list.
+Emit `missing_tool` when `tool_search_tool_regex` returns no exact match, a
+different tool name, or an unavailable discovered invocation. Make the two
+title-qualified searches explicit:
 
 1. Call `search_issues` with `owner=dotnet`, `repo=xharness`, and
    `query=in:title "[runtime-observer]"`.
