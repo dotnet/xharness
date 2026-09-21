@@ -306,6 +306,8 @@ runtime-failure-observer-http helix-console --job-id JOBID --work-item "$(jq -er
 ' "/tmp/gh-aw/agent/helix-JOBID.json")" --output "/tmp/gh-aw/agent/console-JOBID.log"
 ```
 
+A successfully fetched, readable text console that contains none of the xharness command patterns above is not an xharness candidate. Record `skipped: no xharness invocation` and continue. Do not emit `missing_data` merely because the console contains `XHARNESS_CLI_PATH` or other environment setup without an invocation command.
+
 For an identified candidate, treat only these explicit evidence-retention failures as per-candidate skips; record the exact signal and continue scanning other work items and builds:
 
 - A successfully fetched AzDO or Helix log is a normal readable log payload but has zero bytes: `skipped: empty Helix evidence`.
@@ -321,7 +323,7 @@ These skips apply only after the helper request itself succeeded far enough to p
 - The error context: the last 50 lines before exit.
 - Any XHarness source paths and line numbers in the fetched stack trace.
 
-Every selected build's timeline and every identified Helix candidate's `Send to Helix` task log, Helix work-items response, and console log is required. Apply the explicit per-candidate skip rules above for evidence-retention failures. Apply rule 6 if a request is denied/unavailable or its payload is malformed, unexpectedly shaped, or lacks evidence outside those rules; stop the run without a PR or `noop`. A valid timeline or work-items payload with no Helix/xharness candidate is a successful result: record no candidates and continue.
+Every selected build's timeline and every identified xharness candidate's `Send to Helix` task log, Helix work-items response, and console log is required. Apply the explicit per-candidate skip rules above for evidence-retention failures. Apply rule 6 if a request is denied/unavailable or its payload is malformed, unexpectedly shaped, or lacks evidence outside those rules; stop the run without a PR or `noop`. A valid timeline or work-items payload with no Helix/xharness candidate is a successful result: record no candidates and continue.
 
 ## Step 3. Match against the improvement table
 
