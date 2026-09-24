@@ -72,7 +72,7 @@ post-steps:
 tools:
   github:
     toolsets: [repos, pull_requests, issues]
-  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "printf", "runtime-failure-observer-http:*"]
+  bash: ["git", "file", "find", "ls", "cat", "grep", "head", "tail", "wc", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "printf", "runtime-failure-observer-http:*"]
   edit:
 
 checkout:
@@ -221,7 +221,7 @@ runtime-failure-observer-http azdo-timeline --build-id SRCID --output "/tmp/gh-a
 
 Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. For ordinary failed leaves, a non-null `log.id` makes the leaf a candidate. Treat failed `Monitor Helix Jobs` tasks as aggregate signals only: do not require a parent/child or one-to-one timeline relationship between a monitor failure and a Helix submission.
 
-When a selected build has a failed `Monitor Helix Jobs` task, enumerate every Helix submission task in that build, deduplicate them by `log.id`, and inspect each independently. Identify submission tasks by role rather than an exact task name (for example, `Send to Helix` or `Send tests to Helix (Unix)`). Inspect a submission only when its own timeline `result` is `succeeded` or `succeededWithIssues`; it may have succeeded even when downstream Helix work items fail. A skipped or failed submission did not identify a Helix job: record `skipped: Helix job not submitted`, do not fetch its log, and continue. The absence of a timeline relationship between the aggregate monitor and successful submissions is not `missing_data`.
+When a selected build has a failed `Monitor Helix Jobs` task, enumerate every Helix submission task in that build, deduplicate them by `log.id`, and inspect each independently. Process one submission completely, including all resulting Helix jobs, before starting the next submission. Reuse the fixed `/tmp/gh-aw/agent/helix-send.log` path; never collect submission logs for batch validation or use a shell loop. Identify submission tasks by role rather than an exact task name (for example, `Send to Helix` or `Send tests to Helix (Unix)`). Inspect a submission only when its own timeline `result` is `succeeded` or `succeededWithIssues`; it may have succeeded even when downstream Helix work items fail. A skipped or failed submission did not identify a Helix job: record `skipped: Helix job not submitted`, do not fetch its log, and continue. The absence of a timeline relationship between the aggregate monitor and successful submissions is not `missing_data`.
 
 Filter to Helix work items only. xharness runs inside Helix work items, not on the AzDO agent. From each selected Helix submission task's log, extract the GUID from either supported completion message:
 
@@ -230,7 +230,16 @@ Filter to Helix work items only. xharness runs inside Helix work items, not on t
 
 ```bash
 runtime-failure-observer-http azdo-log --build-id SRCID --log-id LOGID --output /tmp/gh-aw/agent/helix-send.log
-test -f /tmp/gh-aw/agent/helix-send.log && test -r /tmp/gh-aw/agent/helix-send.log
+```
+
+Run each validation below in its own shell tool call:
+
+```bash
+test -f /tmp/gh-aw/agent/helix-send.log
+```
+
+```bash
+test -r /tmp/gh-aw/agent/helix-send.log
 ```
 
 If the saved response is not a readable regular file, apply rule 6. Otherwise, check whether it is empty:
