@@ -219,11 +219,11 @@ For each `source` (inline the build id in place of `SRCID`):
 runtime-failure-observer-http azdo-timeline --build-id SRCID --output "/tmp/gh-aw/agent/timeline-SRCID.json"
 ```
 
-Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. For ordinary failed leaves, a non-null `log.id` makes the leaf a candidate. Record the Helix submission task separately to identify downstream Helix work items: it may have succeeded even when downstream Helix work items fail, so do not require it to be a failed leaf.
+Reconstruct `Stage -> Phase -> Job -> Task` via `parentId`. For ordinary failed leaves, a non-null `log.id` makes the leaf a candidate. Treat failed `Monitor Helix Jobs` tasks as aggregate signals only: do not require a parent/child or one-to-one timeline relationship between a monitor failure and a Helix submission.
 
-Identify the Helix submission task by its role rather than an exact task name (for example, `Send to Helix` or `Send tests to Helix (Unix)`). Inspect that task only when its own timeline `result` is `succeeded` or `succeededWithIssues`. A skipped or failed submission task did not identify a Helix job: record `skipped: Helix job not submitted`, do not fetch its log, and continue.
+When a selected build has a failed `Monitor Helix Jobs` task, enumerate every Helix submission task in that build, deduplicate them by `log.id`, and inspect each independently. Identify submission tasks by role rather than an exact task name (for example, `Send to Helix` or `Send tests to Helix (Unix)`). Inspect a submission only when its own timeline `result` is `succeeded` or `succeededWithIssues`; it may have succeeded even when downstream Helix work items fail. A skipped or failed submission did not identify a Helix job: record `skipped: Helix job not submitted`, do not fetch its log, and continue. The absence of a timeline relationship between the aggregate monitor and successful submissions is not `missing_data`.
 
-Filter to Helix work items only. xharness runs inside Helix work items, not on the AzDO agent. From the selected Helix submission task's log, extract the GUID from either supported completion message:
+Filter to Helix work items only. xharness runs inside Helix work items, not on the AzDO agent. From each selected Helix submission task's log, extract the GUID from either supported completion message:
 
 - `Sent Helix Job: <GUID>`
 - `Sent Helix Job; see work items at https://helix.dot.net/api/jobs/<GUID>/workitems`
@@ -306,6 +306,8 @@ runtime-failure-observer-http helix-console --job-id JOBID --work-item "$(jq -er
 ' "/tmp/gh-aw/agent/helix-JOBID.json")" --output "/tmp/gh-aw/agent/console-JOBID.log"
 ```
 
+A successfully fetched, readable text console that contains none of the xharness command patterns above is not an xharness candidate. Record `skipped: no xharness invocation` and continue. Do not emit `missing_data` merely because the console contains `XHARNESS_CLI_PATH` or other environment setup without an invocation command.
+
 For an identified candidate, treat only these explicit evidence-retention failures as per-candidate skips; record the exact signal and continue scanning other work items and builds:
 
 - A successfully fetched AzDO or Helix log is a normal readable log payload but has zero bytes: `skipped: empty Helix evidence`.
@@ -321,7 +323,7 @@ These skips apply only after the helper request itself succeeded far enough to p
 - The error context: the last 50 lines before exit.
 - Any XHarness source paths and line numbers in the fetched stack trace.
 
-Every selected build's timeline and every identified Helix candidate's `Send to Helix` task log, Helix work-items response, and console log is required. Apply the explicit per-candidate skip rules above for evidence-retention failures. Apply rule 6 if a request is denied/unavailable or its payload is malformed, unexpectedly shaped, or lacks evidence outside those rules; stop the run without a PR or `noop`. A valid timeline or work-items payload with no Helix/xharness candidate is a successful result: record no candidates and continue.
+Every selected build's timeline and every identified xharness candidate's `Send to Helix` task log, Helix work-items response, and console log is required. Apply the explicit per-candidate skip rules above for evidence-retention failures. Apply rule 6 if a request is denied/unavailable or its payload is malformed, unexpectedly shaped, or lacks evidence outside those rules; stop the run without a PR or `noop`. A valid timeline or work-items payload with no Helix/xharness candidate is a successful result: record no candidates and continue.
 
 ## Step 3. Match against the improvement table
 
