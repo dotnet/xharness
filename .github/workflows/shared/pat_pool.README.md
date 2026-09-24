@@ -19,6 +19,20 @@ gh extension install github/gh-aw --force
 gh aw --version
 ```
 
+### XHarness workflow maintenance
+
+XHarness workflow lock files are generated with `gh aw` **v0.89.17**. Use that
+release when regenerating them, and compile all agentic workflows from the
+repository root:
+
+```sh
+gh aw compile --schedule-seed dotnet/xharness
+```
+
+Keep the setup action and `GH_AW_COMPILED_VERSION` in `validate-pat-pool.yml`
+aligned with the compiler release. The validator then selects Copilot CLI
+from the same compatibility window as the agentic workflows.
+
 ### Environment
 
 Create an environment for the agentic workflows:

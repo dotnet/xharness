@@ -337,14 +337,21 @@ If `exit_code` is not in the improvement table: `skipped: exit code <n> not in i
 
 ## Step 4. Dedup against existing xharness work and fixes
 
-Use the configured GitHub MCP read tools `search_issues` and
-`search_pull_requests`; these tools are part of the action environment and are
-the only permitted GitHub read path. Make the two title-qualified searches
-explicit:
+Use `search_issues` and `search_pull_requests` from the configured `github`
+MCP server, the only permitted GitHub read path. Use already-loaded tool
+definitions directly; otherwise, use the discovery interface exposed by the
+running CLI, if available, to load them. Verify that each selected tool
+belongs to the configured `github` server and provides the required search
+operation, then invoke its exposed name and schema. Do not assume a
+tool-name prefix or a particular discovery function. If a required tool
+cannot be loaded or invoked, emit `missing_tool` and stop. Make the two
+title-qualified searches explicit:
 
-1. Call `search_issues` with `owner=dotnet`, `repo=xharness`, and
+1. Call the resolved issue-search tool with
+   `owner=dotnet`, `repo=xharness`, and
    `query=in:title "[runtime-observer]"`.
-2. Call `search_pull_requests` with `owner=dotnet`, `repo=xharness`, and
+2. Call the resolved pull-request-search tool with
+   `owner=dotnet`, `repo=xharness`, and
    `query=in:title "[runtime-observer]"`.
 
 Request a page size for each call and paginate until every returned page is
