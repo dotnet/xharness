@@ -335,24 +335,20 @@ If `exit_code` is not in the improvement table: `skipped: exit code <n> not in i
 
 ## Step 4. Dedup against existing xharness work and fixes
 
-Use the configured GitHub MCP read tools `github-mcp-server-search_issues` and
-`github-mcp-server-search_pull_requests`; these are the exposed functions for
-issue and pull-request search, are part of the action environment, and are the
-only permitted GitHub read path. These tools may be deferred by the Copilot
-CLI. Before calling either one, call `tool_search_tool_regex` with an anchored
-exact-name pattern (`^github-mcp-server-search_issues$` or
-`^github-mcp-server-search_pull_requests$`, as applicable) to load it. Treat
-discovery as successful only when the returned tool name exactly matches the
-requested namespaced tool; do not infer that a deferred tool is unavailable
-from the initial tool list. Emit `missing_tool` when
-`tool_search_tool_regex` returns no exact match, a different tool name, or an
-unavailable discovered invocation. Make the two title-qualified searches
-explicit:
+Use `search_issues` and `search_pull_requests` from the configured `github`
+MCP server, the only permitted GitHub read path. Use already-loaded tool
+definitions directly; otherwise, use the discovery interface exposed by the
+running CLI, if available, to load them. Verify that each selected tool
+belongs to the configured `github` server and provides the required search
+operation, then invoke its exposed name and schema. Do not assume a
+tool-name prefix or a particular discovery function. If a required tool
+cannot be loaded or invoked, emit `missing_tool` and stop. Make the two
+title-qualified searches explicit:
 
-1. Call the discovered `github-mcp-server-search_issues` tool with
+1. Call the resolved issue-search tool with
    `owner=dotnet`, `repo=xharness`, and
    `query=in:title "[runtime-observer]"`.
-2. Call the discovered `github-mcp-server-search_pull_requests` tool with
+2. Call the resolved pull-request-search tool with
    `owner=dotnet`, `repo=xharness`, and
    `query=in:title "[runtime-observer]"`.
 
