@@ -257,10 +257,12 @@ With `pipefail`, status 0 means a GUID was found, status 1 means no supported co
 
 If the completed submission log is a non-empty normal text payload but contains neither supported completion message, record `skipped: Helix job identifier unavailable` for that build's candidate and continue with the next build or candidate. Do not emit `missing_data` for this case: the submission completed, but the retained log cannot identify a Helix job to traverse. Empty logs are classified only as `skipped: empty Helix evidence`; do not also classify them as unavailable job identifiers. If the log request is denied, fails, is malformed, or is not a readable text log payload, apply rule 6 instead.
 
+Process Helix jobs one at a time. Complete the work-item and console inspection for the current job before starting the next job. Use the fixed output paths below; never reconstruct an output filename from a job id.
+
 For each Helix job, list failing work items (inline the job id in place of `JOBID`):
 
 ```bash
-runtime-failure-observer-http helix-work-items --job-id JOBID --output "/tmp/gh-aw/agent/helix-JOBID.json"
+runtime-failure-observer-http helix-work-items --job-id JOBID --output "/tmp/gh-aw/agent/helix-work-items.json"
 ```
 
 Before requesting consoles, skip any work item whose Helix `ExitCode` is a negative integer and record `skipped: Helix infrastructure exit code <n>`. Negative Helix exit codes are service-side outcomes rather than xharness process exit codes, so they cannot match the Step 3 improvement table. If `ExitCode` is missing or is not an integer, apply rule 6.
@@ -285,7 +287,7 @@ jq -e '
     then $name
     else error("selected Helix work item has no non-empty name")
     end
-' "/tmp/gh-aw/agent/helix-JOBID.json"
+' "/tmp/gh-aw/agent/helix-work-items.json"
 ```
 
 If this validation fails, apply rule 6 rather than treating the work item as unavailable. After it succeeds, fetch the console using the quoted `jq` substitution so the exact name remains one shell argument:
@@ -303,7 +305,7 @@ runtime-failure-observer-http helix-console --job-id JOBID --work-item "$(jq -er
   (if type == "array" then . else .value end)
   | .[INDEX]
   | work_item_name
-' "/tmp/gh-aw/agent/helix-JOBID.json")" --output "/tmp/gh-aw/agent/console-JOBID.log"
+' "/tmp/gh-aw/agent/helix-work-items.json")" --output "/tmp/gh-aw/agent/helix-console.log"
 ```
 
 A successfully fetched, readable text console that contains none of the xharness command patterns above is not an xharness candidate. Record `skipped: no xharness invocation` and continue. Do not emit `missing_data` merely because the console contains `XHARNESS_CLI_PATH` or other environment setup without an invocation command.
