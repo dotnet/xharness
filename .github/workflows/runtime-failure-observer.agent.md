@@ -72,6 +72,11 @@ post-steps:
 tools:
   github:
     toolsets: [repos, pull_requests, issues]
+    allowed:
+      - issue_read
+      - pull_request_read
+      - search_issues
+      - search_pull_requests
   bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "printf", "runtime-failure-observer-http:*"]
   edit:
 
