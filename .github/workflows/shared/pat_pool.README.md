@@ -21,7 +21,7 @@ gh aw --version
 
 ### XHarness workflow maintenance
 
-XHarness workflow lock files are generated with `gh aw` **v0.89.17**. Use that
+XHarness workflow lock files are generated with `gh aw` **v0.89.21**. Use that
 release when regenerating them, and compile all agentic workflows from the
 repository root:
 
@@ -32,6 +32,10 @@ gh aw compile --schedule-seed dotnet/xharness
 Keep the setup action and `GH_AW_COMPILED_VERSION` in `validate-pat-pool.yml`
 aligned with the compiler release. The validator then selects Copilot CLI
 from the same compatibility window as the agentic workflows.
+
+Leave `sandbox.agent.version` unset so the firewall runtime follows the compiler's
+default when upgrading and recompiling. The generated lock file still records
+the exact runtime version and image digests used by Actions.
 
 ### Environment
 
