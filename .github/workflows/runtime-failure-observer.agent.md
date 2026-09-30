@@ -30,6 +30,11 @@ environment: copilot-pat-pool
 
 model: gpt-5.6-terra
 
+sandbox:
+  agent:
+    # Fixes malformed Responses requests: https://github.com/github/gh-aw-firewall/pull/8720
+    version: v0.28.21
+
 engine:
   id: copilot
   env:
