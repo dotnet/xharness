@@ -21,12 +21,12 @@ gh aw --version
 
 ### XHarness workflow maintenance
 
-XHarness workflow lock files are generated with `gh aw` **v0.89.21**. Use that
+XHarness workflow lock files are generated with `gh aw` **v0.91.12**. Use that
 release when regenerating them, and compile all agentic workflows from the
 repository root:
 
 ```sh
-gh aw compile --schedule-seed dotnet/xharness
+gh aw compile --schedule-seed dotnet/xharness --no-check-update
 ```
 
 Keep the setup action and `GH_AW_COMPILED_VERSION` in `validate-pat-pool.yml`
