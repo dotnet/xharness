@@ -8,7 +8,7 @@ Selects a random Copilot PAT from a numbered pool of secrets. This addresses lim
 
 To use Agentic Workflows in a dotnet org repository:
 
-1. Follow the instructions for [Configuring Your Repository | Agentic Authoring | GitHub Agentic Workflows][configure-repo]. Use `gh aw` **v0.80.9 or newer**, which supports the agent job dependencies required for this implementation.
+1. Follow the instructions for [Configuring Your Repository | Agentic Authoring | GitHub Agentic Workflows][configure-repo]. Use the compiler version specified in the [XHarness workflow maintenance](#xharness-workflow-maintenance) section.
 2. Copy the `pat_pool.md` and `pat_pool.README.md` files into the repository under `.github/workflows/shared`.
 3. Merge those additions into the repository and then follow the instructions for the PAT Creation and Usage below.
 
@@ -21,12 +21,12 @@ gh aw --version
 
 ### XHarness workflow maintenance
 
-XHarness workflow lock files are generated with `gh aw` **v0.89.21**. Use that
+XHarness workflow lock files are generated with `gh aw` **v0.92.0**. Use that
 release when regenerating them, and compile all agentic workflows from the
 repository root:
 
 ```sh
-gh aw compile --schedule-seed dotnet/xharness
+gh aw compile --schedule-seed dotnet/xharness --no-check-update
 ```
 
 Keep the setup action and `GH_AW_COMPILED_VERSION` in `validate-pat-pool.yml`
