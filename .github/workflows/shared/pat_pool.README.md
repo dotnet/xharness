@@ -21,7 +21,7 @@ gh aw --version
 
 ### XHarness workflow maintenance
 
-XHarness workflow lock files are generated with `gh aw` **v0.92.0**. Use that
+XHarness workflow lock files are generated with `gh aw` **v1.0.1**. Use that
 release when regenerating them, and compile all agentic workflows from the
 repository root:
 
