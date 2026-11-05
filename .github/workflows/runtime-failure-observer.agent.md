@@ -75,7 +75,8 @@ safe-outputs:
     create-issue: false
   report-missing-data:
     create-issue: false
-  report-incomplete: false
+  report-incomplete:
+    create-issue: false
   create-pull-request:
     title-prefix: "[runtime-observer] "
     labels: [infrastructure]
