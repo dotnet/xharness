@@ -1,6 +1,7 @@
 import importlib.machinery
 import importlib.util
 import io
+import os
 import tempfile
 import unittest
 import urllib.error
@@ -126,7 +127,7 @@ class OutputPathTests(unittest.TestCase):
         output = Path(self.temp.name) / "metadata" / "builds.json"
         self.assertEqual(
             observer_http._validate_output_path(str(output), (".json",)),
-            output.resolve(),
+            Path(os.path.abspath(output)),
         )
 
     def test_rejects_output_outside_root_and_wrong_suffix(self):
@@ -147,6 +148,10 @@ class OutputPathTests(unittest.TestCase):
         ):
             observer_http._validate_output_path(str(output), (".json",))
 
+    @unittest.skipUnless(
+        os.name == "posix",
+        "output parent hardening uses POSIX directory descriptors",
+    )
     def test_rejects_symlink_parent_during_write(self):
         real_parent = Path(self.temp.name) / "real-parent"
         real_parent.mkdir()

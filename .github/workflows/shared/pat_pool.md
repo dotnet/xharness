@@ -111,8 +111,9 @@ import-schema:
     required: false
     default: ${{ secrets.COPILOT_PAT_9 }}
   random_seed:
-    type: number
+    type: string
     required: false
+    default: ""
     description: >-
       A seed number to use for the random PAT number selection,
       for deterministic selection if needed.

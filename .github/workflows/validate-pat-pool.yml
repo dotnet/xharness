@@ -22,7 +22,7 @@ jobs:
         else echo "status=invalid" >> "$GITHUB_OUTPUT"; fi
     steps:
       - name: Setup gh-aw scripts
-        uses: github/gh-aw-actions/setup@d9128eb3ea40c18b77c76184eda03c0ff2608d79 # v0.93.2
+        uses: github/gh-aw-actions/setup@4607d462dc213dbe54d02f77ec31215776fd5554 # gh-aw v1.2.0
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
 
@@ -30,7 +30,7 @@ jobs:
         run: bash "${RUNNER_TEMP}/gh-aw/actions/install_copilot_cli.sh"
         env:
           GH_HOST: github.com
-          GH_AW_COMPILED_VERSION: v0.93.2
+          GH_AW_COMPILED_VERSION: v1.2.0
 
       - name: Validate COPILOT_PAT_0
         id: pat0
