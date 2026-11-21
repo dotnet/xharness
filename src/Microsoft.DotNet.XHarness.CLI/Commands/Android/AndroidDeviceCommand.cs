@@ -63,7 +63,7 @@ Arguments:
         AndroidDevice? FindDevice() => runner.GetDevice(
             loadApiVersion: true,
             loadArchitecture: true,
-            requiredApiVersion: Arguments.ApiVersion.Value,
+            requiredApiVersion: Arguments.ApiVersion.FirstApiVersion,
             requiredArchitectures: apkRequiredArchitecture);
 
         var device = FindDevice();
