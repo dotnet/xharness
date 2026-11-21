@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <!-- Adjust to the desired souting queue. -->
-    <HelixTargetQueue Include="osx.amd64.iphone.scouting.open"/>
+    <HelixTargetQueue Include="osx.26.arm64.open"/>
   </ItemGroup>
 
   <PropertyGroup>
@@ -10,8 +10,8 @@
       Change to specify the exact Xcode version for testing.
       In the CustomCommands below we can probe installed Xcode versions on Helix with `ls -al /Applications` and then choosing the write path.
     -->
-    <XcodeVersionUnderTest>Xcode_16_beta_6</XcodeVersionUnderTest>
-    <iOSSimulatorVersionUnderTest>18.0</iOSSimulatorVersionUnderTest>
+    <XcodeVersionUnderTest>Xcode_26.0.1</XcodeVersionUnderTest>
+    <iOSSimulatorVersionUnderTest>26.0</iOSSimulatorVersionUnderTest>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -37,6 +37,7 @@
         <LaunchTimeout>00:03:30</LaunchTimeout>
         <CustomCommands>
         <![CDATA[
+          ls -al /Applications
           set -ex
           xharness apple simulators install $target --verbosity=Debug --xcode /Applications/$(XcodeVersionUnderTest).app
           xharness apple simulators reset-simulator --output-directory="$output_directory" --target=$target --verbosity=Debug --xcode /Applications/$(XcodeVersionUnderTest).app
